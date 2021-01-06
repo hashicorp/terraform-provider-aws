@@ -50,6 +50,9 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						///
+						// Destinations.
+						///
 						"cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -66,6 +69,14 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 								validation.StringIsEmpty,
 								validateIpv6CIDRNetworkAddress,
 							),
+						},
+
+						//
+						// Targets.
+						//
+						"carrier_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						"egress_only_gateway_id": {
@@ -88,6 +99,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"network_interface_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -99,11 +115,6 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 						},
 
 						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
