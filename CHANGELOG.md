@@ -18,6 +18,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* resource/aws_emr_cluster: Remove from state instead of returning an error on long terminated cluster [GH-16924]
 * resource/aws_glue_catalog_table: Glue table partition keys should be set to empty list instead of being unset [GH-16727]
 * resource/aws_imagebuilder_distribution_configuration: Remove `user_ids` argument maximum limit [GH-16905]
 * resource/aws_transfer_user: Update `user_name` argument validation to support 100 characters [GH-16938]
