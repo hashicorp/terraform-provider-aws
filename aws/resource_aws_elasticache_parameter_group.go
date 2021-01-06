@@ -74,14 +74,14 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 		Description:               aws.String(d.Get("description").(string)),
 	}
 
-	log.Printf("[DEBUG] Create Cache Parameter Group: %#v", createOpts)
+	log.Printf("[DEBUG] Create ElastiCache Parameter Group: %#v", createOpts)
 	resp, err := conn.CreateCacheParameterGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Cache Parameter Group: %s", err)
+		return fmt.Errorf("error creating ElastiCache Parameter Group: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.CacheParameterGroup.CacheParameterGroupName))
-	log.Printf("[INFO] Cache Parameter Group ID: %s", d.Id())
+	log.Printf("[INFO] ElastiCache Parameter Group ID: %s", d.Id())
 
 	return resourceAwsElasticacheParameterGroupUpdate(d, meta)
 }
@@ -100,7 +100,7 @@ func resourceAwsElasticacheParameterGroupRead(d *schema.ResourceData, meta inter
 
 	if len(describeResp.CacheParameterGroups) != 1 ||
 		aws.StringValue(describeResp.CacheParameterGroups[0].CacheParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.CacheParameterGroups)
+		return fmt.Errorf("unable to find Parameter Group: %#v", describeResp.CacheParameterGroups)
 	}
 
 	d.Set("name", describeResp.CacheParameterGroups[0].CacheParameterGroupName)
@@ -162,7 +162,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 				ParameterNameValues:     paramsToModify,
 			}
 
-			log.Printf("[DEBUG] Reset Cache Parameter Group: %s", resetOpts)
+			log.Printf("[DEBUG] Reset ElastiCache Parameter Group: %s", resetOpts)
 			err := resource.Retry(30*time.Second, func() *resource.RetryError {
 				_, err := conn.ResetCacheParameterGroup(&resetOpts)
 				if err != nil {
@@ -201,7 +201,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 
 					allConfiguredParameters := expandElastiCacheParameters(d.Get("parameter").(*schema.Set).List())
 					if err != nil {
-						return fmt.Errorf("error expanding parameter configuration: %s", err)
+						return fmt.Errorf("error expanding parameter configuration: %w", err)
 					}
 
 					for _, configuredParameter := range allConfiguredParameters {
@@ -218,7 +218,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					// The reserved-memory-percentage parameter does not exist in redis2.6 and redis2.8
 					family := d.Get("family").(string)
 					if family == "redis2.6" || family == "redis2.8" {
-						log.Printf("[WARN] Cannot reset Elasticache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
+						log.Printf("[WARN] Cannot reset ElastiCache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
 						break
 					}
 
@@ -269,7 +269,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 			}
 
 			if err != nil {
-				return fmt.Errorf("Error resetting Cache Parameter Group: %s", err)
+				return fmt.Errorf("error resetting ElastiCache Parameter Group: %w", err)
 			}
 		}
 
@@ -285,10 +285,10 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 				ParameterNameValues:     paramsToModify,
 			}
 
-			log.Printf("[DEBUG] Modify Cache Parameter Group: %s", modifyOpts)
+			log.Printf("[DEBUG] Modify ElastiCache Parameter Group: %s", modifyOpts)
 			_, err := conn.ModifyCacheParameterGroup(&modifyOpts)
 			if err != nil {
-				return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
+				return fmt.Errorf("error modifying ElastiCache Parameter Group: %w", err)
 			}
 		}
 	}
@@ -324,7 +324,7 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Elasticache Parameter Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting ElastiCache Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
