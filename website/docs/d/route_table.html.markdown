@@ -68,6 +68,7 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected Route Table. In addition the following attributes are exported:
 
+* `arn` - The ARN of the route table.
 * `owner_id` - The ID of the AWS account that owns the route table
 
 `routes` are also exported with the following attributes, when there are relevants:
@@ -75,6 +76,7 @@ Each route supports the following:
 
 * `cidr_block` - The CIDR block of the route.
 * `ipv6_cidr_block` - The IPv6 CIDR block of the route.
+* `carrier_gateway_id` - The ID of the Carrier Gateway.
 * `egress_only_gateway_id` - The ID of the Egress Only Internet Gateway.
 * `gateway_id` - The Internet Gateway ID.
 * `nat_gateway_id` - The NAT Gateway ID.
