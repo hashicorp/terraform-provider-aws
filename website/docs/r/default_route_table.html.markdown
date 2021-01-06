@@ -55,6 +55,7 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
+* `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
@@ -71,6 +72,7 @@ Note that the default route, mapping the VPC's CIDR block to "local", is created
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the route table.
+* `arn` - The ARN of the route table.
 * `owner_id` - ID of the AWS account that owns the route table.
 * `vpc_id` - ID of the VPC.
 
