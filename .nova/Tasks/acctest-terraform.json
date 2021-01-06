@@ -1,0 +1,10 @@
+{
+  "actions" : {
+    "run" : {
+      "enabled" : true,
+      "script" : "act -W .\/.github\/workflows\/acctest-terraform-lint.yml -j validate-terraform"
+    }
+  },
+  "identifier" : "8F20BADE-1E64-441C-8311-51299FDBE717",
+  "openLogOnRun" : "start"
+}

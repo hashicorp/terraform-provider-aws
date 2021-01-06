@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -177,7 +177,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +216,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 	newName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -251,7 +251,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
@@ -272,6 +272,65 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
+	resourceName := "aws_globalaccelerator_accelerator.example"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckGlobalAccelerator(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalAcceleratorAccelerator_tags(rName, false, "foo", "var"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "var"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlobalAcceleratorAccelerator_tags(rName, false, "foo", "var2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "var2"),
+				),
+			},
+			{
+				Config: testAccGlobalAcceleratorAccelerator_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPreCheckGlobalAccelerator(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).globalacceleratorconn
+
+	input := &globalaccelerator.ListAcceleratorsInput{}
+
+	_, err := conn.ListAccelerators(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCheckFunc {
@@ -343,9 +402,25 @@ resource "aws_globalaccelerator_accelerator" "example" {
 
   attributes {
     flow_logs_enabled   = true
-    flow_logs_s3_bucket = "${aws_s3_bucket.example.bucket}"
+    flow_logs_s3_bucket = aws_s3_bucket.example.bucket
     flow_logs_s3_prefix = "flow-logs/"
   }
 }
 `, rName)
+}
+
+func testAccGlobalAcceleratorAccelerator_tags(rName string, enabled bool, tagKey string, tagValue string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "example" {
+  name            = "%s"
+  ip_address_type = "IPV4"
+  enabled         = %t
+
+  tags = {
+    Name = "%[1]s"
+
+    %[3]s = "%[4]s"
+  }
+}
+`, rName, enabled, tagKey, tagValue)
 }
