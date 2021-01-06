@@ -14,6 +14,7 @@ ENHANCEMENTS
 * resource/aws_glue_crawler: add plan time validations to `name`, `description` and `table_prefix` [GH-16714]
 * resource/aws_kinesis_stream: Update `retention_period` argument plan-time validation to include up to 8760 hours [GH-16608]
 * resource/aws_msk_cluster: Support `PER_TOPIC_PER_PARTITION` value for `enhanced_monitoring` argument plan-time validation [GH-16914]
+* resource/aws_route53_zone: Add length validations for `delegation_set_id` and `name` arguments [GH-12340]
 * resource/aws_vpc_endpoint_service: Make `private_dns_name` configurable and add `private_dns_name_configuration` attribute [GH-16495]
 
 BUG FIXES
