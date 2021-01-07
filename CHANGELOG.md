@@ -2,7 +2,12 @@
 
 FEATURES
 
+* **New Data Source:** `aws_ssoadmin_instances` [GH-15808]
+* **New Data Source:** `aws_ssoadmin_permission_set` [GH-15808]
 * **New Resource:** `aws_sagemaker_image` [GH-16082]
+* **New Resource:** `aws_ssoadmin_managed_policy_attachment` [GH-15808]
+* **New Resource:** `aws_ssoadmin_permission_set` [GH-15808]
+* **New Resource:** `aws_ssoadmin_permission_set_inline_policy` [GH-15808]
 
 ENHANCEMENTS
 
