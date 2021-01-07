@@ -128,23 +128,11 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
+		toRemove, toAdd := elastiCacheParameterChanges(o, n)
 
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		log.Printf("[WARN] Parameters to remove: %#v", toRemove)
 
-		toRemove := expandElastiCacheParameters(os.Difference(ns).List())
-
-		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
-
-		toAdd := expandElastiCacheParameters(ns.Difference(os).List())
-
-		log.Printf("[DEBUG] Parameters to add: %#v", toAdd)
+		log.Printf("[WARN] Parameters to add or update: %#v", toAdd)
 
 		// We can only modify 20 parameters at a time, so walk them until
 		// we've got them all.
@@ -337,6 +325,48 @@ func resourceAwsElasticacheParameterHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
 
 	return hashcode.String(buf.String())
+}
+
+func elastiCacheParameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
+
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+
+	om := make(map[string]*elasticache.ParameterNameValue, os.Len())
+	for _, raw := range os.List() {
+		param := raw.(map[string]interface{})
+		om[param["name"].(string)] = expandElastiCacheParameter(param)
+	}
+	nm := make(map[string]*elasticache.ParameterNameValue, len(addOrUpdate))
+	for _, raw := range ns.List() {
+		param := raw.(map[string]interface{})
+		nm[param["name"].(string)] = expandElastiCacheParameter(param)
+	}
+
+	// Remove: key is in old, but not in new
+	remove = make([]*elasticache.ParameterNameValue, 0, os.Len())
+	for k := range om {
+		if _, ok := nm[k]; !ok {
+			remove = append(remove, om[k])
+		}
+	}
+
+	// Add or Update: key is in new, but not in old or has changed value
+	addOrUpdate = make([]*elasticache.ParameterNameValue, 0, ns.Len())
+	for k, nv := range nm {
+		ov, ok := om[k]
+		if !ok || ok && (aws.StringValue(nv.ParameterValue) != aws.StringValue(ov.ParameterValue)) {
+			addOrUpdate = append(addOrUpdate, nm[k])
+		}
+	}
+
+	return remove, addOrUpdate
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}

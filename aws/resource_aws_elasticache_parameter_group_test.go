@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -486,5 +487,119 @@ func TestExpandElasticacheParameters(t *testing.T) {
 			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
 			parameters[0],
 			expected)
+	}
+}
+
+func TestElastiCacheParameterChanges(t *testing.T) {
+	cases := []struct {
+		Name                string
+		Old                 *schema.Set
+		New                 *schema.Set
+		ExpectedRemove      []*elasticache.ParameterNameValue
+		ExpectedAddOrUpdate []*elasticache.ParameterNameValue
+	}{
+		{
+			Name:                "Empty",
+			Old:                 new(schema.Set),
+			New:                 new(schema.Set),
+			ExpectedRemove:      []*elasticache.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},
+		},
+		{
+			Name: "Remove all",
+			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "reserved-memory",
+					"value": "0",
+				},
+			}),
+			New: new(schema.Set),
+			ExpectedRemove: []*elasticache.ParameterNameValue{
+				{
+					ParameterName:  aws.String("reserved-memory"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},
+		},
+		{
+			Name: "No change",
+			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "reserved-memory",
+					"value": "0",
+				},
+			}),
+			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "reserved-memory",
+					"value": "0",
+				},
+			}),
+			ExpectedRemove:      []*elasticache.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},
+		},
+		{
+			Name: "Remove partial",
+			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "reserved-memory",
+					"value": "0",
+				},
+				map[string]interface{}{
+					"name":  "appendonly",
+					"value": "yes",
+				},
+			}),
+			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "appendonly",
+					"value": "yes",
+				},
+			}),
+			ExpectedRemove: []*elasticache.ParameterNameValue{
+				{
+					ParameterName:  aws.String("reserved-memory"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},
+		},
+		{
+			Name: "Add to existing",
+			Old: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "appendonly",
+					"value": "yes",
+				},
+			}),
+			New: schema.NewSet(resourceAwsElasticacheParameterHash, []interface{}{
+				map[string]interface{}{
+					"name":  "appendonly",
+					"value": "yes",
+				},
+				map[string]interface{}{
+					"name":  "appendfsync",
+					"value": "always",
+				},
+			}),
+			ExpectedRemove: []*elasticache.ParameterNameValue{},
+			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{
+				{
+					ParameterName:  aws.String("appendfsync"),
+					ParameterValue: aws.String("always"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		remove, addOrUpdate := elastiCacheParameterChanges(tc.Old, tc.New)
+		if !reflect.DeepEqual(remove, tc.ExpectedRemove) {
+			t.Errorf("Case %q: Remove did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemove, remove)
+		}
+		if !reflect.DeepEqual(addOrUpdate, tc.ExpectedAddOrUpdate) {
+			t.Errorf("Case %q: AddOrUpdate did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedAddOrUpdate, addOrUpdate)
+		}
 	}
 }
