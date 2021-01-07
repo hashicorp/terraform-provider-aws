@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 )
 
 func resourceAwsSsoAdminPermissionSetInlinePolicy() *schema.Resource {
@@ -80,7 +79,12 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, me
 		return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID: %w", err)
 	}
 
-	policy, err := finder.InlinePolicy(conn, instanceArn, permissionSetArn)
+	input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	}
+
+	output, err := conn.GetInlinePolicyForPermissionSet(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Inline Policy for SSO Permission Set (%s) not found, removing from state", permissionSetArn)
@@ -92,13 +96,11 @@ func resourceAwsSsoAdminPermissionSetInlinePolicyRead(d *schema.ResourceData, me
 		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 
-	if policy == nil {
-		log.Printf("[WARN] Inline Policy for SSO Permission Set (%s) not found, removing from state", permissionSetArn)
-		d.SetId("")
-		return nil
+	if output == nil {
+		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): empty output", permissionSetArn)
 	}
 
-	d.Set("inline_policy", policy)
+	d.Set("inline_policy", output.InlinePolicy)
 	d.Set("instance_arn", instanceArn)
 	d.Set("permission_set_arn", permissionSetArn)
 

@@ -10,7 +10,8 @@ description: |-
 
 Provides an IAM inline policy for a Single Sign-On (SSO) Permission Set resource
 
-~> **NOTE:** Creating or updating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
+~> **NOTE:** AWS Single Sign-On (SSO) only supports one IAM inline policy per [`aws_ssoadmin_permission_set`](ssoadmin_permission_set.html) resource.
+Creating or updating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
 
 ## Example Usage
 
@@ -22,7 +23,7 @@ resource "aws_ssoadmin_permission_set" "example" {
   instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
 }
 
-data "aws_iam_policy_document" "test" {
+data "aws_iam_policy_document" "example" {
   statement {
     sid = "1"
 
@@ -38,7 +39,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_ssoadmin_permission_set_inline_policy" "example" {
-  inline_policy      = data.aws_iam_policy_document.test.json
+  inline_policy      = data.aws_iam_policy_document.example.json
   instance_arn       = aws_ssoadmin_permission_set.example.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
@@ -56,7 +57,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Permission Set Amazon Resource Name (ARN) and SSO Instance Amazon Resource Name (ARN), separated by a comma (`,`).
+* `id` - The Amazon Resource Names (ARNs) of the Permission Set and SSO Instance, separated by a comma (`,`).
 
 ## Import
 
