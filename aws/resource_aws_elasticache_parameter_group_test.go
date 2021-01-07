@@ -125,9 +125,9 @@ func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 	})
 }
 
-// The API throws 500 errors when attempting to reset the reserved-memory parameter.
+// The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
-func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter(t *testing.T) {
+func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParameters(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
 	resourceName := "aws_elasticache_parameter_group.test"
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
@@ -164,7 +164,54 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter(t *testin
 	})
 }
 
-// The API throws 500 errors when attempting to reset the reserved-memory parameter.
+// The API returns errors when attempting to reset the reserved-memory parameter.
+// This covers our custom logic handling for this situation.
+func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_RemainingParameters(t *testing.T) {
+	var cacheParameterGroup1 elasticache.CacheParameterGroup
+	resourceName := "aws_elasticache_parameter_group.test"
+	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheParameterGroupConfigParameter2(rName, "redis3.2", "reserved-memory", "0", "tcp-keepalive", "360"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "reserved-memory",
+						"value": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "tcp-keepalive",
+						"value": "360",
+					}),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheParameterGroupConfigParameter1(rName, "redis3.2", "tcp-keepalive", "360"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &cacheParameterGroup1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "tcp-keepalive",
+						"value": "360",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
 func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup
@@ -207,7 +254,7 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 	})
 }
 
-// The API throws 500 errors when attempting to reset the reserved-memory parameter.
+// The API returns errors when attempting to reset the reserved-memory parameter.
 // This covers our custom logic handling for this situation.
 func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testing.T) {
 	var cacheParameterGroup1 elasticache.CacheParameterGroup

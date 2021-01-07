@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
@@ -130,13 +131,12 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 		o, n := d.GetChange("parameter")
 		toRemove, toAdd := elastiCacheParameterChanges(o, n)
 
-		log.Printf("[WARN] Parameters to remove: %#v", toRemove)
-
-		log.Printf("[WARN] Parameters to add or update: %#v", toAdd)
+		log.Printf("[DEBUG] Parameters to remove: %#v", toRemove)
+		log.Printf("[DEBUG] Parameters to add or update: %#v", toAdd)
 
 		// We can only modify 20 parameters at a time, so walk them until
 		// we've got them all.
-		maxParams := 20
+		const maxParams = 20
 
 		for len(toRemove) > 0 {
 			var paramsToModify []*elasticache.ParameterNameValue
@@ -145,32 +145,24 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 			} else {
 				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
 			}
-			resetOpts := elasticache.ResetCacheParameterGroupInput{
-				CacheParameterGroupName: aws.String(d.Get("name").(string)),
-				ParameterNameValues:     paramsToModify,
-			}
 
-			log.Printf("[DEBUG] Reset ElastiCache Parameter Group: %s", resetOpts)
-			err := resource.Retry(30*time.Second, func() *resource.RetryError {
-				_, err := conn.ResetCacheParameterGroup(&resetOpts)
-				if err != nil {
-					if isAWSErr(err, "InvalidCacheParameterGroupState", " has pending changes") {
-						return resource.RetryableError(err)
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
+			err := resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
 
 			// When attempting to reset the reserved-memory parameter, the API
-			// can return the below 500 error, which causes the AWS Go SDK to
-			// automatically retry and hence timeout resource.Retry():
+			// can return two types of error.
+			//
+			// In the commercial partition, it will return a 400 error with:
+			//   InvalidParameterValue: Parameter reserved-memory doesn't exist
+			//
+			// In the GovCloud partition it will return the below 500 error,
+			// which causes the AWS Go SDK to automatically retry and timeout:
 			//   InternalFailure: An internal error has occurred. Please try your query again at a later time.
+			//
 			// Instead of hardcoding the reserved-memory parameter removal
 			// above, which may become out of date, here we add logic to
 			// workaround this API behavior
 
-			if isResourceTimeoutError(err) {
+			if isResourceTimeoutError(err) || tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "Parameter reserved-memory doesn't exist") {
 				for i, paramToModify := range paramsToModify {
 					if aws.StringValue(paramToModify.ParameterName) != "reserved-memory" {
 						continue
@@ -181,19 +173,13 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					paramsToModify = append(paramsToModify[:i], paramsToModify[i+1:]...)
 
 					// If we are only trying to remove reserved-memory and not perform
-					// an update to reserved-memory or reserved-memory-percentage, we
+					// an update to reserved-memory or reserved-memory-percent, we
 					// can attempt to workaround the API issue by switching it to
-					// reserved-memory-percentage first then reset that temporary parameter.
+					// reserved-memory-percent first then reset that temporary parameter.
 
 					tryReservedMemoryPercentageWorkaround := true
-
-					allConfiguredParameters := expandElastiCacheParameters(d.Get("parameter").(*schema.Set).List())
-					if err != nil {
-						return fmt.Errorf("error expanding parameter configuration: %w", err)
-					}
-
-					for _, configuredParameter := range allConfiguredParameters {
-						if aws.StringValue(configuredParameter.ParameterName) == "reserved-memory" || aws.StringValue(configuredParameter.ParameterName) == "reserved-memory-percentage" {
+					for _, configuredParameter := range toAdd {
+						if aws.StringValue(configuredParameter.ParameterName) == "reserved-memory-percent" {
 							tryReservedMemoryPercentageWorkaround = false
 							break
 						}
@@ -203,43 +189,28 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 						break
 					}
 
-					// The reserved-memory-percentage parameter does not exist in redis2.6 and redis2.8
+					// The reserved-memory-percent parameter does not exist in redis2.6 and redis2.8
 					family := d.Get("family").(string)
 					if family == "redis2.6" || family == "redis2.8" {
 						log.Printf("[WARN] Cannot reset ElastiCache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
 						break
 					}
 
-					modifyInput := &elasticache.ModifyCacheParameterGroupInput{
-						CacheParameterGroupName: aws.String(d.Get("name").(string)),
-						ParameterNameValues: []*elasticache.ParameterNameValue{
-							{
-								ParameterName:  aws.String("reserved-memory-percentage"),
-								ParameterValue: aws.String("0"),
-							},
+					workaroundParams := []*elasticache.ParameterNameValue{
+						{
+							ParameterName:  aws.String("reserved-memory-percent"),
+							ParameterValue: aws.String("0"),
 						},
 					}
-					_, err = conn.ModifyCacheParameterGroup(modifyInput)
-
+					err = resourceAwsElastiCacheModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
 					if err != nil {
-						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percentage: %s", err)
+						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percent: %s", err)
 						break
 					}
 
-					resetInput := &elasticache.ResetCacheParameterGroupInput{
-						CacheParameterGroupName: aws.String(d.Get("name").(string)),
-						ParameterNameValues: []*elasticache.ParameterNameValue{
-							{
-								ParameterName:  aws.String("reserved-memory-percentage"),
-								ParameterValue: aws.String("0"),
-							},
-						},
-					}
-
-					_, err = conn.ResetCacheParameterGroup(resetInput)
-
+					err = resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), workaroundParams)
 					if err != nil {
-						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percentage: %s", err)
+						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percent: %s", err)
 					}
 
 					break
@@ -247,12 +218,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 
 				// Retry any remaining parameter resets with reserved-memory potentially removed
 				if len(paramsToModify) > 0 {
-					resetOpts = elasticache.ResetCacheParameterGroupInput{
-						CacheParameterGroupName: aws.String(d.Get("name").(string)),
-						ParameterNameValues:     paramsToModify,
-					}
-					// Reset top level error with potentially any new errors
-					_, err = conn.ResetCacheParameterGroup(&resetOpts)
+					err = resourceAwsElastiCacheResetParameterGroup(conn, d.Get("name").(string), paramsToModify)
 				}
 			}
 
@@ -268,13 +234,8 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 			} else {
 				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
 			}
-			modifyOpts := elasticache.ModifyCacheParameterGroupInput{
-				CacheParameterGroupName: aws.String(d.Get("name").(string)),
-				ParameterNameValues:     paramsToModify,
-			}
 
-			log.Printf("[DEBUG] Modify ElastiCache Parameter Group: %s", modifyOpts)
-			_, err := conn.ModifyCacheParameterGroup(&modifyOpts)
+			err := resourceAwsElastiCacheModifyParameterGroup(conn, d.Get("name").(string), paramsToModify)
 			if err != nil {
 				return fmt.Errorf("error modifying ElastiCache Parameter Group: %w", err)
 			}
@@ -367,6 +328,32 @@ func elastiCacheParameterChanges(o, n interface{}) (remove, addOrUpdate []*elast
 	}
 
 	return remove, addOrUpdate
+}
+
+func resourceAwsElastiCacheResetParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+	input := elasticache.ResetCacheParameterGroupInput{
+		CacheParameterGroupName: aws.String(name),
+		ParameterNameValues:     parameters,
+	}
+	return resource.Retry(30*time.Second, func() *resource.RetryError {
+		_, err := conn.ResetCacheParameterGroup(&input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault, " has pending changes") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+}
+
+func resourceAwsElastiCacheModifyParameterGroup(conn *elasticache.ElastiCache, name string, parameters []*elasticache.ParameterNameValue) error {
+	input := elasticache.ModifyCacheParameterGroupInput{
+		CacheParameterGroupName: aws.String(name),
+		ParameterNameValues:     parameters,
+	}
+	_, err := conn.ModifyCacheParameterGroup(&input)
+	return err
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
