@@ -269,6 +269,36 @@ func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
+	resourceName := "aws_ssoadmin_permission_set.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSOAdminPermissionSetBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSOAdminPermissionSetExists(resourceName),
+				),
+			},
+			{
+				Config: testAccAWSSSOAdminPermissionSetMixedPolicyAttachmentsConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSOAdminPermissionSetExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSSOAdminPermissionSetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
 
@@ -412,4 +442,42 @@ resource "aws_ssoadmin_permission_set" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSSSOAdminPermissionSetMixedPolicyAttachmentsConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_ssoadmin_permission_set" "test" {
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+
+resource "aws_ssoadmin_managed_policy_attachment" "test" {
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  managed_policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AlexaForBusinessDeviceSetup"
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "s3:ListAllMyBuckets",
+    ]
+
+    resources = [
+      "arn:${data.aws_partition.current.partition}:s3:::*",
+    ]
+  }
+}
+resource "aws_ssoadmin_permission_set_inline_policy" "test" {
+  inline_policy      = data.aws_iam_policy_document.test.json
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
+}
+`, rName)
 }
