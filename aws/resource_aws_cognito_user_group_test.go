@@ -199,6 +199,8 @@ resource "aws_cognito_user_pool" "main" {
   name = "%[1]s"
 }
 
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "group_role" {
   name = "%[2]s"
 
@@ -215,7 +217,7 @@ resource "aws_iam_role" "group_role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "%[5]s:12345678-dead-beef-cafe-123456790ab"
+          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.name}:12345678-dead-beef-cafe-123456790ab"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -234,7 +236,7 @@ resource "aws_cognito_user_group" "main" {
   precedence   = %[4]d
   role_arn     = aws_iam_role.group_role.arn
 }
-`, poolName, groupName, groupDescription, precedence, testAccGetRegion())
+`, poolName, groupName, groupDescription, precedence)
 }
 
 func testAccAWSCognitoUserGroupConfig_RoleArn(rName string) string {
