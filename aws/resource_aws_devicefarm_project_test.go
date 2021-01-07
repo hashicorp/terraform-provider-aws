@@ -46,26 +46,6 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDeviceFarmProject_otherRegion(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	if testAccGetRegion() == endpoints.UsWest2RegionID {
-		t.Skipf("skipping test; test does not run in current region (%s)", testAccGetRegion())
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccDeviceFarmProjectConfig(rName),
-				ExpectError: regexp.MustCompile(`no such host`),
-			},
-		},
-	})
-}
-
 func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 	var proj devicefarm.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
