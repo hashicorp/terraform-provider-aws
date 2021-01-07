@@ -871,6 +871,7 @@ func Provider() *schema.Provider {
 			"aws_route_table_association":                             resourceAwsRouteTableAssociation(),
 			"aws_sagemaker_code_repository":                           resourceAwsSagemakerCodeRepository(),
 			"aws_sagemaker_endpoint_configuration":                    resourceAwsSagemakerEndpointConfiguration(),
+			"aws_sagemaker_image":                                     resourceAwsSagemakerImage(),
 			"aws_sagemaker_endpoint":                                  resourceAwsSagemakerEndpoint(),
 			"aws_sagemaker_model":                                     resourceAwsSagemakerModel(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),
