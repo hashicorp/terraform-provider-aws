@@ -122,7 +122,7 @@ The `egress` block supports:
 * `prefix_list_ids` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints)
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
 * `protocol` - (Required) The protocol. If you select a protocol of
-"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. The supported values are defined in the "IpProtocol" argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
+"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0.  The supported values are defined in the "IpProtocol" argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
 * `security_groups` - (Optional) List of security group Group Names if using
     EC2-Classic, or Group IDs if using a VPC.
 * `self` - (Optional) If true, the security group itself will be added as
