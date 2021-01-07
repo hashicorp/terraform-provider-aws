@@ -940,6 +940,7 @@ func Provider() *schema.Provider {
 			"aws_ssm_parameter":                                       resourceAwsSsmParameter(),
 			"aws_ssm_resource_data_sync":                              resourceAwsSsmResourceDataSync(),
 			"aws_ssoadmin_permission_set":                             resourceAwsSsoAdminPermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":               resourceAwsSsoAdminPermissionSetInlinePolicy(),
 			"aws_storagegateway_cache":                                resourceAwsStorageGatewayCache(),
 			"aws_storagegateway_cached_iscsi_volume":                  resourceAwsStorageGatewayCachedIscsiVolume(),
 			"aws_storagegateway_gateway":                              resourceAwsStorageGatewayGateway(),
