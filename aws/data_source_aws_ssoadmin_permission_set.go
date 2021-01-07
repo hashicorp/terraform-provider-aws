@@ -22,6 +22,7 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ValidateFunc: validateArn,
 				ExactlyOneOf: []string{"arn", "name"},
 			},
 
@@ -44,6 +45,7 @@ func dataSourceAwsSsoAdminPermissionSet() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
@@ -92,8 +94,8 @@ func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interfa
 		}
 
 		permissionSet = output.PermissionSet
-	} else {
-		name := d.Get("name").(string)
+	} else if v, ok := d.GetOk("name"); ok {
+		name := v.(string)
 		var describeErr error
 
 		input := &ssoadmin.ListPermissionSetsInput{
@@ -106,6 +108,10 @@ func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interfa
 			}
 
 			for _, permissionSetArn := range page.PermissionSets {
+				if permissionSetArn == nil {
+					continue
+				}
+
 				output, describeErr := conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
 					InstanceArn:      aws.String(instanceArn),
 					PermissionSetArn: permissionSetArn,
@@ -133,7 +139,7 @@ func dataSourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interfa
 		}
 
 		if describeErr != nil {
-			return fmt.Errorf("error reading SSO Permission Set: %w", describeErr)
+			return fmt.Errorf("error reading SSO Permission Set (%s): %w", name, describeErr)
 		}
 	}
 

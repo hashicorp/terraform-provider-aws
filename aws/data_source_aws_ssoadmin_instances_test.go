@@ -9,10 +9,10 @@ import (
 )
 
 func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
-	ssoadminconn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
 
 	var instances []*ssoadmin.InstanceMetadata
-	err := ssoadminconn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -35,7 +35,7 @@ func testAccPreCheckAWSSSOAdminInstances(t *testing.T) {
 	}
 }
 
-func TestAccDataSourceAWSSSOAdminInstances_Basic(t *testing.T) {
+func TestAccDataSourceAWSSSOAdminInstances_basic(t *testing.T) {
 	dataSourceName := "data.aws_ssoadmin_instances.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -43,7 +43,7 @@ func TestAccDataSourceAWSSSOAdminInstances_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSSSOAdminInstancesConfigBasic(),
+				Config: testAccDataSourceAWSSSOAdminInstancesConfigBasic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", "1"),
@@ -55,6 +55,4 @@ func TestAccDataSourceAWSSSOAdminInstances_Basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSSSOAdminInstancesConfigBasic() string {
-	return `data "aws_ssoadmin_instances" "test" {}`
-}
+const testAccDataSourceAWSSSOAdminInstancesConfigBasic = `data "aws_ssoadmin_instances" "test" {}`

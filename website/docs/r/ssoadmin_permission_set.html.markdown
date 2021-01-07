@@ -10,6 +10,8 @@ description: |-
 
 Provides a Single Sign-On (SSO) Permission Set resource
 
+~> **NOTE:** Updating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
+
 ## Example Usage
 
 ```hcl
@@ -29,8 +31,8 @@ resource "aws_ssoadmin_permission_set" "example" {
 The following arguments are supported:
 
 * `description` - (Optional) The description of the Permission Set.
-* `instance_arn` - (Required) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
-* `name` - (Required) The name of the Permission Set.
+* `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
+* `name` - (Required, Forces new resource) The name of the Permission Set.
 * `relay_state` - (Optional) The relay state URL used to redirect users within the application during the federation authentication process.
 * `session_duration` - (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. Default: `PT1H`.
 * `tags` - (Optional) Key-value map of resource tags.
@@ -39,13 +41,13 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) of the Permission Set.
 * `arn` - The Amazon Resource Name (ARN) of the Permission Set.
+* `id` - The Amazon Resource Names (ARNs) of the Permission Set and SSO Instance, separated by a comma (`,`).
 * `created_date` - The date the Permission Set was created in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
 ## Import
 
-SSO Permission Sets can be imported by their ARN and SSO Instance ARN, e.g.
+SSO Permission Sets can be imported using the `arn` and `instance_arn` separated by a comma (`,`) e.g.
 
 ```
 $ terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72

@@ -21,6 +21,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByArnConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "relay_state", dataSourceName, "relay_state"),
@@ -44,6 +45,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "relay_state", dataSourceName, "relay_state"),
@@ -55,7 +57,7 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSSSOAdminPermissionSet_NonExistent(t *testing.T) {
+func TestAccDataSourceAWSSSOAdminPermissionSet_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
@@ -69,15 +71,15 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_NonExistent(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSSSOPermissionSetByArnConfig(rName string) string {
+func testAccDataSourceAWSSSOPermissionSetBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %[1]q
-  description         = %[1]q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  relay_state         = "https://example.com"
+  name         = %[1]q
+  description  = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  relay_state  = "https://example.com"
 
   tags = {
     Key1 = "Value1"
@@ -85,36 +87,29 @@ resource "aws_ssoadmin_permission_set" "test" {
     Key3 = "Value3"
   }
 }
+`, rName)
+}
 
+func testAccDataSourceAWSSSOPermissionSetByArnConfig(rName string) string {
+	return composeConfig(
+		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
+		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   arn          = aws_ssoadmin_permission_set.test.arn
 }
-`, rName)
+`)
 }
 
 func testAccDataSourceAWSSSOPermissionSetByNameConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_ssoadmin_permission_set" "test" {
-  name                = %[1]q
-  description         = %[1]q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  relay_state         = "https://example.com"
-
-  tags = {
-    Key1 = "Value1"
-    Key2 = "Value2"
-    Key3 = "Value3"
-  }
-}
-
+	return composeConfig(
+		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
+		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
   name         = aws_ssoadmin_permission_set.test.name
 }
-`, rName)
+`)
 }
 
 const testAccDataSourceAWSSSOPermissionSetByNameConfig_nonExistent = `

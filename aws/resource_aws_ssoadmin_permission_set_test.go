@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -277,7 +277,7 @@ func testAccCheckAWSSSOAdminPermissionSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		arn, instanceArn, err := parseSsoAdminPermissionSetID(rs.Primary.ID)
+		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)
@@ -317,7 +317,7 @@ func testAccCheckAWSSOAdminPermissionSetExists(resourceName string) resource.Tes
 
 		conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
 
-		arn, instanceArn, err := parseSsoAdminPermissionSetID(rs.Primary.ID)
+		arn, instanceArn, err := parseSsoAdminResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)
@@ -341,8 +341,8 @@ func testAccAWSSSOAdminPermissionSetBasicConfig(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 `, rName)
 }
@@ -388,8 +388,8 @@ func testAccAWSSSOAdminPermissionSetConfigTagsSingle(rName, tagKey1, tagValue1 s
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
     %[2]q = %[3]q
@@ -403,8 +403,8 @@ func testAccAWSSSOAdminPermissionSetConfigTagsMultiple(rName, tagKey1, tagValue1
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
     %[2]q = %[3]q

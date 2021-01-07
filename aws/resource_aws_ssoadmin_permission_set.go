@@ -130,9 +130,9 @@ func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).ssoadminconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	arn, instanceArn, err := parseSsoAdminPermissionSetID(d.Id())
+	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permision Set ID: %w", err)
+		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
 
 	output, err := conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
@@ -179,7 +179,7 @@ func resourceAwsSsoAdminPermissionSetRead(d *schema.ResourceData, meta interface
 func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssoadminconn
 
-	arn, instanceArn, err := parseSsoAdminPermissionSetID(d.Id())
+	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
@@ -216,8 +216,7 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	// Re-provision ALL accounts after making the above changes
-	err = provisionSsoAdminPermissionSet(conn, arn, instanceArn)
-	if err != nil {
+	if err := provisionSsoAdminPermissionSet(conn, arn, instanceArn); err != nil {
 		return err
 	}
 
@@ -227,7 +226,7 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsSsoAdminPermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssoadminconn
 
-	arn, instanceArn, err := parseSsoAdminPermissionSetID(d.Id())
+	arn, instanceArn, err := parseSsoAdminResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
 	}
@@ -248,7 +247,7 @@ func resourceAwsSsoAdminPermissionSetDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func parseSsoAdminPermissionSetID(id string) (string, string, error) {
+func parseSsoAdminResourceID(id string) (string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format for ID (%q), expected PERMISSION_SET_ARN,INSTANCE_ARN", id)

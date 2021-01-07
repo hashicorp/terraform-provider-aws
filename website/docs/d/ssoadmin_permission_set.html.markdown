@@ -1,7 +1,7 @@
 ---
 subcategory: "SSO Admin"
 layout: "aws"
-page_title: "AWS: aws_sso_permission_set"
+page_title: "AWS: aws_ssoadmin_permission_set"
 description: |-
   Get information on a Single Sign-On (SSO) Permission Set.
 ---
@@ -39,8 +39,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) of the permission set.
+* `id` - The Amazon Resource Name (ARN) of the Permission Set.
 * `description` - The description of the Permission Set.
 * `relay_state` - The relay state URL used to redirect users within the application during the federation authentication process.
-* `session_duration` - The length of time that the application user sessions are valid in the ISO-8601 standard. Default: `PT1H`.
+* `session_duration` - The length of time that the application user sessions are valid in the ISO-8601 standard.
 * `tags` - Key-value map of resource tags.
