@@ -5,12 +5,11 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsSnsTopicPolicy() *schema.Resource {
@@ -19,6 +18,10 @@ func resourceAwsSnsTopicPolicy() *schema.Resource {
 		Read:   resourceAwsSnsTopicPolicyRead,
 		Update: resourceAwsSnsTopicPolicyUpsert,
 		Delete: resourceAwsSnsTopicPolicyDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -29,7 +32,7 @@ func resourceAwsSnsTopicPolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 		},
@@ -91,6 +94,7 @@ func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("policy", policy)
+	d.Set("arn", attrmap["TopicArn"])
 
 	return nil
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpc_attachment"
-sidebar_current: "docs-aws-datasource-ec2-transit-gateway-vpc-attachment"
 description: |-
   Get information on an EC2 Transit Gateway VPC Attachment
 ---
@@ -47,6 +47,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6_support` - Whether IPv6 support is enabled.

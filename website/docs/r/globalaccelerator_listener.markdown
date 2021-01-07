@@ -1,7 +1,7 @@
 ---
+subcategory: "Global Accelerator"
 layout: "aws"
 page_title: "AWS: aws_globalaccelerator_listener"
-sidebar_current: "docs-aws-resource-globalaccelerator-listener"
 description: |-
   Provides a Global Accelerator listener.
 ---
@@ -26,7 +26,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  accelerator_arn = aws_globalaccelerator_accelerator.example.id
   client_affinity = "SOURCE_IP"
   protocol        = "TCP"
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "SNS"
 layout: "aws"
 page_title: "AWS: aws_sns_topic"
-sidebar_current: "docs-aws-datasource-sns-topic"
 description: |-
   Get information on a Amazon Simple Notification Service (SNS) Topic
 ---
@@ -26,4 +26,7 @@ data "aws_sns_topic" "example" {
 
 ## Attributes Reference
 
-* `arn` - Set to the ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the found topic, suitable for referencing in other resources that support SNS topics.
+* `id` - Amazon Resource Name (ARN) of the found topic, suitable for referencing in other resources that support SNS topics.

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDocDBSubnetGroup() *schema.Resource {
@@ -66,7 +66,7 @@ func resourceAwsDocDBSubnetGroup() *schema.Resource {
 
 func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags()
 
 	subnetIds := expandStringSet(d.Get("subnet_ids").(*schema.Set))
 
@@ -99,6 +99,7 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -135,24 +136,23 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	resp, err := conn.ListTagsForResource(&docdb.ListTagsForResourceInput{
-		ResourceName: subnetGroup.DBSubnetGroupArn,
-	})
+	tags, err := keyvaluetags.DocdbListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error retrieving tags for ARN (%s): %s", aws.StringValue(subnetGroup.DBSubnetGroupArn), err)
+		return fmt.Errorf("error listing tags for DocumentDB Subnet Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tagsToMapDocDB(resp.TagList)); err != nil {
-		return fmt.Errorf("error setting DocDB Subnet Group tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
+
 	return nil
 }
 
 func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
 
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
@@ -170,10 +170,13 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if err := setTagsDocDB(conn, d); err != nil {
-		return fmt.Errorf("error setting DocDB Subnet Group (%s) tags: %s", d.Id(), err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating DocumentDB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
-	d.SetPartial("tags")
 
 	return resourceAwsDocDBSubnetGroupRead(d, meta)
 }
@@ -203,7 +206,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 		DBSubnetGroupName: aws.String(name),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
 		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
@@ -216,4 +219,14 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 
 		return resource.RetryableError(fmt.Errorf("DocDB Subnet Group (%s) still exists", name))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeDBSubnetGroups(params)
+		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DocDB subnet group: %s", err)
+	}
+	return nil
 }

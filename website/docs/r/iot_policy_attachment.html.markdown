@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_policy_attachment"
-sidebar_current: "docs-aws-resource-iot-policy-attachment"
 description: |-
   Provides an IoT policy attachment.
 ---
@@ -33,13 +33,13 @@ EOF
 }
 
 resource "aws_iot_certificate" "cert" {
-  csr    = "${file("csr.pem")}"
+  csr    = file("csr.pem")
   active = true
 }
 
 resource "aws_iot_policy_attachment" "att" {
-  policy = "${aws_iot_policy.pubsub.name}"
-  target = "${aws_iot_certificate.cert.arn}"
+  policy = aws_iot_policy.pubsub.name
+  target = aws_iot_certificate.cert.arn
 }
 ```
 

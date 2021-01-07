@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-x"
 description: |-
   Manages an EC2 Transit Gateway
 ---
@@ -31,7 +31,7 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway.
 * `vpn_ecmp_support` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

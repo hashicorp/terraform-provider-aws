@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_document"
-sidebar_current: "docs-aws-datasource-ssm-document"
 description: |-
   Provides a SSM Document datasource
 ---
@@ -21,14 +21,15 @@ data "aws_ssm_document" "foo" {
 }
 
 output "content" {
-  value = "${data.aws_ssm_document.foo.content}"
+  value = data.aws_ssm_document.foo.content
 }
 ```
+
 To get the contents of the custom document.
 
 ```hcl
 data "aws_ssm_document" "test" {
-  name            = "${aws_ssm_document.test.name}"
+  name            = aws_ssm_document.test.name
   document_format = "JSON"
 }
 ```

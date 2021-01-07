@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
-sidebar_current: "docs-aws-datasource-elasticache-replication-group"
 description: |-
   Get information on an ElastiCache Replication Group resource.
 ---
@@ -40,3 +40,4 @@ In addition to all arguments above, the following attributes are exported:
 * `port` – The port number on which the configuration endpoint will accept connections.
 * `configuration_endpoint_address` - The configuration endpoint address to allow host discovery.
 * `primary_endpoint_address` - The endpoint of the primary node in this node group (shard).
+* `reader_endpoint_address` - The endpoint of the reader node in this node group (shard).

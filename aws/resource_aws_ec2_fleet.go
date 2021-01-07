@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEc2Fleet() *schema.Resource {
@@ -189,15 +190,48 @@ func resourceAwsEc2Fleet() *schema.Resource {
 							Default:      1,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
+						"maintenance_strategies": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_rebalance": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											if old == "1" && new == "0" {
+												return true
+											}
+											return false
+										},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"replacement_strategy": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ForceNew: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"launch",
+													}, false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 			"target_capacity_specification": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -312,8 +346,16 @@ func resourceAwsEc2FleetCreate(d *schema.ResourceData, meta interface{}) error {
 		SpotOptions:                      expandEc2SpotOptionsRequest(d.Get("spot_options").([]interface{})),
 		TargetCapacitySpecification:      expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		TagSpecifications:                expandEc2TagSpecifications(d.Get("tags").(map[string]interface{})),
+		TagSpecifications:                ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeFleet),
 		Type:                             aws.String(d.Get("type").(string)),
+	}
+
+	if d.Get("type").(string) != ec2.FleetTypeMaintain {
+		if input.SpotOptions.MaintenanceStrategies != nil {
+			log.Printf("[WARN] EC2 Fleet (%s) has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.", input)
+			d.SetId("")
+			return nil
+		}
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
@@ -354,6 +396,7 @@ func resourceAwsEc2FleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeFleetsInput{
 		FleetIds: []*string{aws.String(d.Id())},
@@ -435,7 +478,7 @@ func resourceAwsEc2FleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
 	d.Set("type", fleet.Type)
 
-	if err := d.Set("tags", tagsToMap(fleet.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fleet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -473,6 +516,14 @@ func resourceAwsEc2FleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("error waiting for EC2 Fleet (%s) modification: %s", d.Id(), err)
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsEc2FleetRead(d, meta)
@@ -683,6 +734,7 @@ func expandEc2SpotOptionsRequest(l []interface{}) *ec2.SpotOptionsRequest {
 	spotOptionsRequest := &ec2.SpotOptionsRequest{
 		AllocationStrategy:           aws.String(m["allocation_strategy"].(string)),
 		InstanceInterruptionBehavior: aws.String(m["instance_interruption_behavior"].(string)),
+		MaintenanceStrategies:        expandFleetSpotMaintenanceStrategiesRequest(m["maintenance_strategies"].([]interface{})),
 	}
 
 	// InvalidFleetConfig: InstancePoolsToUseCount option is only available with the lowestPrice allocation strategy.
@@ -693,17 +745,34 @@ func expandEc2SpotOptionsRequest(l []interface{}) *ec2.SpotOptionsRequest {
 	return spotOptionsRequest
 }
 
-func expandEc2TagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
-	if len(m) == 0 {
+func expandFleetSpotMaintenanceStrategiesRequest(l []interface{}) *ec2.FleetSpotMaintenanceStrategiesRequest {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String("fleet"),
-			Tags:         tagsFromMap(m),
-		},
+	m := l[0].(map[string]interface{})
+
+	fleetSpotMaintenanceStrategiesRequest := &ec2.FleetSpotMaintenanceStrategiesRequest{
+		CapacityRebalance: expandFleetSpotCapacityRebalanceRequest(m["capacity_rebalance"].([]interface{})),
 	}
+
+	return fleetSpotMaintenanceStrategiesRequest
+}
+
+func expandFleetSpotCapacityRebalanceRequest(l []interface{}) *ec2.FleetSpotCapacityRebalanceRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	capacityRebalance := &ec2.FleetSpotCapacityRebalanceRequest{}
+
+	if v, ok := m["replacement_strategy"]; ok && v.(string) != "" {
+		capacityRebalance.ReplacementStrategy = aws.String(v.(string))
+	}
+
+	return capacityRebalance
 }
 
 func expandEc2TargetCapacitySpecificationRequest(l []interface{}) *ec2.TargetCapacitySpecificationRequest {
@@ -807,12 +876,37 @@ func flattenEc2SpotOptions(spotOptions *ec2.SpotOptions) []interface{} {
 		"allocation_strategy":            aws.StringValue(spotOptions.AllocationStrategy),
 		"instance_interruption_behavior": aws.StringValue(spotOptions.InstanceInterruptionBehavior),
 		"instance_pools_to_use_count":    aws.Int64Value(spotOptions.InstancePoolsToUseCount),
+		"maintenance_strategies":         flattenFleetSpotMaintenanceStrategies(spotOptions.MaintenanceStrategies),
 	}
 
 	// API will omit InstancePoolsToUseCount if AllocationStrategy is diversified, which breaks our Default: 1
 	// Here we just reset it to 1 to prevent removing the Default and setting up a special DiffSuppressFunc
 	if spotOptions.InstancePoolsToUseCount == nil && aws.StringValue(spotOptions.AllocationStrategy) == ec2.SpotAllocationStrategyDiversified {
 		m["instance_pools_to_use_count"] = 1
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFleetSpotMaintenanceStrategies(fleetSpotMaintenanceStrategies *ec2.FleetSpotMaintenanceStrategies) []interface{} {
+	if fleetSpotMaintenanceStrategies == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"capacity_rebalance": flattenFleetSpotCapacityRebalance(fleetSpotMaintenanceStrategies.CapacityRebalance),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFleetSpotCapacityRebalance(fleetSpotCapacityRebalance *ec2.FleetSpotCapacityRebalance) []interface{} {
+	if fleetSpotCapacityRebalance == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"replacement_strategy": aws.StringValue(fleetSpotCapacityRebalance.ReplacementStrategy),
 	}
 
 	return []interface{}{m}

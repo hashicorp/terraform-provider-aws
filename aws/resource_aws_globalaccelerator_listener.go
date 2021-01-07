@@ -8,10 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsGlobalAcceleratorListener() *schema.Resource {
@@ -90,7 +89,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating Global Accelerator listener: %s", err)
 	}
 
-	d.SetId(*resp.Listener.ListenerArn)
+	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
@@ -212,17 +211,9 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 	}
 
 	// Creating a listener triggers the accelerator to change status to InPending
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, d.Get("accelerator_arn").(string)),
-		Timeout: 5 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator listener (%s) availability", d.Id())
-	_, err = stateConf.WaitForState()
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Get("accelerator_arn").(string))
 	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator listener (%s) availability: %s", d.Id(), err)
+		return err
 	}
 
 	return resourceAwsGlobalAcceleratorListenerRead(d, meta)
@@ -244,17 +235,10 @@ func resourceAwsGlobalAcceleratorListenerDelete(d *schema.ResourceData, meta int
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, d.Get("accelerator_arn").(string)),
-		Timeout: 5 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator listener (%s) deletion", d.Id())
-	_, err = stateConf.WaitForState()
+	// }
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Get("accelerator_arn").(string))
 	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator listener (%s) deletion: %s", d.Id(), err)
+		return err
 	}
 
 	return nil
