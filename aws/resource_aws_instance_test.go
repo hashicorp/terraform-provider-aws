@@ -4398,7 +4398,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfigRootBlockDeviceMismatch(rName string) string {
 	return testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
-  # This is an AMI in endpoints.UsWest2RegionID with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
+  # This is an AMI in UsWest2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
   ami = "ami-ef5b69df"
 
   # tflint-ignore: aws_instance_previous_type
