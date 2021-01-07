@@ -208,14 +208,14 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
 resource "aws_ssoadmin_permission_set_inline_policy" "test" {
-  inline_policy        = data.aws_iam_policy_document.test.json
-  instance_arn         = aws_ssoadmin_permission_set.test.instance_arn
-  permission_set_arn   = aws_ssoadmin_permission_set.test.arn
+  inline_policy      = data.aws_iam_policy_document.test.json
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
 `, rName)
 }
@@ -239,14 +239,14 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name                = %q
-  instance_arn        = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  name         = %q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 
 resource "aws_ssoadmin_permission_set_inline_policy" "test" {
-  inline_policy        = data.aws_iam_policy_document.test.json
-  instance_arn         = aws_ssoadmin_permission_set.test.instance_arn
-  permission_set_arn   = aws_ssoadmin_permission_set.test.arn
+  inline_policy      = data.aws_iam_policy_document.test.json
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
 `, rName)
 }
