@@ -63,7 +63,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{batch.PlatformCapabilityEc2, batch.PlatformCapabilityFargate}, true),
+					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), true),
 				},
 			},
 			"retry_strategy": {
