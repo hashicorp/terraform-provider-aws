@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -299,7 +300,7 @@ func testAccAwsServerlessApplicationRepositoryCloudFormationStackNameNoPrefixImp
 
 func testAccAwsServerlessApplicationRepositoryCloudFormationStackConfig(stackName string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -320,7 +321,7 @@ data "aws_region" "current" {}
 
 func testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_updateInitial(stackName, functionName string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -344,7 +345,7 @@ data "aws_region" "current" {}
 
 func testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_updateUpdated(stackName, functionName string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -368,7 +369,7 @@ data "aws_region" "current" {}
 
 func testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_versioned(stackName, version string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name             = "%[1]s"
@@ -389,7 +390,7 @@ data "aws_region" "current" {}
 
 func testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_versioned2(stackName, version string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -411,7 +412,7 @@ data "aws_region" "current" {}
 
 func testAccAWSServerlessApplicationRepositoryCloudFormationStackConfig_versionedPaired(stackName, version string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name             = "%[1]s"
@@ -435,7 +436,7 @@ data "aws_region" "current" {}
 
 func testAccAwsServerlessApplicationRepositoryCloudFormationStackConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -459,7 +460,7 @@ data "aws_region" "current" {}
 
 func testAccAwsServerlessApplicationRepositoryCloudFormationStackConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(
-		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication,
+		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
 		fmt.Sprintf(`
 resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-rotator" {
   name           = "%[1]s"
@@ -482,7 +483,8 @@ data "aws_region" "current" {}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-const testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication = `
+func testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication() string {
+	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 locals {
@@ -492,12 +494,13 @@ locals {
   application_account = local.security_manager_accounts[data.aws_partition.current.partition]
 
   security_manager_regions = {
-    "aws"        = "us-east-1",
-    "aws-us-gov" = "us-gov-west-1",
+    %[1]q = %[3]q,
+    %[2]q = %[4]q,
   }
   security_manager_accounts = {
-    "aws"        = "297356227824",
-    "aws-us-gov" = "023102451235",
+    %[1]q = "297356227824",
+    %[2]q = "023102451235",
   }
 }
-`
+`, endpoints.AwsPartitionID, endpoints.AwsUsGovPartitionID, endpoints.UsEast1RegionID, endpoints.UsGovWest1RegionID)
+}
