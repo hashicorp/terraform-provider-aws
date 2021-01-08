@@ -95,11 +95,11 @@ func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceID(n str
 func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig() string {
 	return composeConfig(
 		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
-		fmt.Sprintf(`
+		`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id = local.postgres_single_user_rotator_arn
 }
-`))
+`)
 }
 
 const testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_NonExistent = `
@@ -126,10 +126,10 @@ data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres
 func testAccCheckAwsServerlessApplicationRepositoryApplicationDataSourceConfig_Versioned_NonExistent() string {
 	return composeConfig(
 		testAccCheckAwsServerlessApplicationRepositoryPostgresSingleUserRotatorApplication(),
-		fmt.Sprintf(`
+		`
 data "aws_serverlessapplicationrepository_application" "secrets_manager_postgres_single_user_rotator" {
   application_id   = local.postgres_single_user_rotator_arn
   semantic_version = "42.13.7"
 }
-`))
+`)
 }
