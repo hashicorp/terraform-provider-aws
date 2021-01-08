@@ -839,23 +839,27 @@ resource "aws_eip" "test" {
 func testAccAWSEIPInstanceConfig() string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		`
-resource "aws_default_subnet" "default" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-  lifecycle {
-    ignore_changes = [
-      # testing environments often change the Name tag
-      tags["Name"],
-    ]
-  }
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0) 
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.small"
-  subnet_id     = aws_default_subnet.default.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_eip" "test" {
@@ -1177,24 +1181,27 @@ resource "aws_route_table_association" "test" {
 
 func testAccAWSEIPAssociate_not_associated() string {
 	return composeConfig(
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
-resource "aws_default_subnet" "default" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-  lifecycle {
-    ignore_changes = [
-      # testing environments often change the Name tag
-      tags["Name"],
-    ]
-  }
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0) 
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_default_subnet.default.id
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_eip" "test" {
@@ -1204,24 +1211,27 @@ resource "aws_eip" "test" {
 
 func testAccAWSEIPAssociate_associated() string {
 	return composeConfig(
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
-resource "aws_default_subnet" "default" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-  lifecycle {
-    ignore_changes = [
-      # testing environments often change the Name tag
-      tags["Name"],
-    ]
-  }
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0) 
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_default_subnet.default.id
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_eip" "test" {
