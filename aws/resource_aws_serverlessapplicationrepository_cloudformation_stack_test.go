@@ -494,12 +494,13 @@ locals {
   application_account = local.security_manager_accounts[data.aws_partition.current.partition]
 
   security_manager_regions = {
-    %[1]q = %[3]q,
-    %[2]q = %[4]q,
+    %[1]q = %[3]q
+    %[2]q = %[4]q
   }
+
   security_manager_accounts = {
-    %[1]q = "297356227824",
-    %[2]q = "023102451235",
+    %[1]q = "297356227824"
+    %[2]q = "023102451235"
   }
 }
 `, endpoints.AwsPartitionID, endpoints.AwsUsGovPartitionID, endpoints.UsEast1RegionID, endpoints.UsGovWest1RegionID)
