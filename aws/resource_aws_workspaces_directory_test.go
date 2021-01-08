@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
@@ -648,21 +647,15 @@ func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 }
 
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		//lintignore:AWSAT003
+		fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 locals {
   region_workspaces_az_ids = {
-    %q = formatlist("use1-az%%d", [2, 4, 6])
+    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
   }
 
   workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
@@ -710,7 +703,7 @@ resource "aws_directory_service_directory" "main" {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName, endpoints.UsEast1RegionID)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
