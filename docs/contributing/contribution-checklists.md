@@ -103,6 +103,7 @@ Implementing name generation support for Terraform AWS Provider resources requir
 "name_prefix": {
   Type:          schema.TypeString,
   Optional:      true,
+  Computed:      true,
   ForceNew:      true,
   ConflictsWith: []string{"name"},
 },
@@ -120,7 +121,7 @@ name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 ```go
 d.Set("name", resp.Name)
-d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(resp.Name))))
+d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
 ```
 
 ### Resource Name Generation Testing Implementation
@@ -143,6 +144,7 @@ func TestAccAWSServiceThing_Name_Generated(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAWSServiceThingExists(resourceName, &thing),
           naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
         ),
       },
       // If the resource supports import:
@@ -169,6 +171,7 @@ func TestAccAWSServiceThing_NamePrefix(t *testing.T) {
         Check: resource.ComposeTestCheckFunc(
           testAccCheckAWSServiceThingExists(resourceName, &thing),
           naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+          resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),
       },
       // If the resource supports import:
