@@ -24,22 +24,21 @@ resource "aws_fms_policy" "example" {
 
     managed_service_data = <<EOF
       {
-        "type": "WAF", 
-        "ruleGroups": 
+        "type": "WAF",
+        "ruleGroups":
           [{
-            "id":"${aws_wafregional_rule_group.test.id}", 
+            "id":"${aws_wafregional_rule_group.test.id}",
             "overrideAction" : {
               "type": "COUNT"
             }
           }],
-        "defaultAction": 
+        "defaultAction":
         {
           "type": "BLOCK"
-        }, 
+        },
         "overrideCustomerWebACLAssociation": false
       }
 EOF
-    }
   }
 }
 
@@ -64,12 +63,15 @@ The following arguments are supported:
 * `security_service_policy_data` - (Required) The objects to include in Security Service Policy Data. Documented below.
 
 ## `exclude_map` Configuration Block
+
 * `account` - (Required) A list of AWS Organization member Accounts that you want to exclude from this AWS FMS Policy.
 
 ## `include_map` Configuration Block
+
 * `account` - (Required) A list of AWS Organization member Accounts that you want to include for this AWS FMS Policy.
 
 ## `security_service_policy_data` Configuration Block
+
 * `managed_service_data` (Optional) Details about the service that are specific to the service type, in JSON format. For service type SHIELD_ADVANCED, this is an empty string.
 * `type` (Required, Forces new resource) The service that the policy is using to protect the resources. Valid values are WAFV2, WAF, SHIELD_ADVANCED, SECURITY_GROUPS_COMMON, SECURITY_GROUPS_CONTENT_AUDIT, and SECURITY_GROUPS_USAGE_AUDIT.
 
