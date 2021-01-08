@@ -171,25 +171,25 @@ func testAccFmsPolicyConfig(name string, group string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = %[1]q
+  name                  = "%[1]s"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
-	exclude_map {
-	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
-	}
+  exclude_map {
+    account = [data.aws_organizations_organization.example.accounts[0].id]
+  }
 
   security_service_policy_data {
-	  type                 = "WAF"
-		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-	}
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
 }
 
 data "aws_organizations_organization" "example" {}
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 `, name, group)
 }
@@ -198,34 +198,34 @@ func testAccFmsPolicyConfig_updated(name string, group string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = %[1]q
+  name                  = "%[1]s"
   remediation_enabled   = true
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
-	exclude_map {
-	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
-	}
+  exclude_map {
+    account = [data.aws_organizations_organization.example.accounts[0].id]
+  }
 
   security_service_policy_data {
-	  type                 = "WAF"
-		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"ALLOW\"}, \"overrideCustomerWebACLAssociation\": false}"
-	}
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"ALLOW\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
 
-	lifecycle {
-	  create_before_destroy = false
-	}
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 data "aws_organizations_organization" "example" {}
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 
 resource "aws_wafregional_rule_group" "test2" {
   metric_name = "MyTest2"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 `, name, group)
 }
@@ -234,25 +234,25 @@ func testAccFmsPolicyConfig_include(name string, group string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = %[1]q
+  name                  = "%[1]s"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
-	include_map {
-	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
-	}
+  include_map {
+    account = [data.aws_organizations_organization.example.accounts[0].id]
+  }
 
   security_service_policy_data {
-	  type                 = "WAF"
-		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-	}
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
 }
 
 data "aws_organizations_organization" "example" {}
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 `, name, group)
 }
@@ -261,25 +261,25 @@ func testAccFmsPolicyConfig_tags(name string, group string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = %[1]q
+  name                  = "%[1]s"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   security_service_policy_data {
-	  type                 = "WAF"
-		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-	}
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
 
   resource_tags = {
     Environment = "Testing"
-    Usage= "original"
+    Usage       = "original"
   }
 
 }
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 `, name, group)
 }
@@ -288,14 +288,14 @@ func testAccFmsPolicyConfig_tagsChanged(name string, group string) string {
 	return fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
-  name                  = %[1]q
+  name                  = "%[1]s"
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   security_service_policy_data {
-	  type                 = "WAF"
-		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
-	}
+    type                 = "WAF"
+    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+  }
 
   resource_tags = {
     Usage = "changed"
@@ -305,7 +305,7 @@ resource "aws_fms_policy" "test" {
 
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
-  name        = %[2]q
+  name        = "%[2]s"
 }
 `, name, group)
 }

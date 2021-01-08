@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_fms_policy"
-sidebar_current: "docs-aws-resource-fms-policy"
 description: |-
   Provides a resource to create an AWS Firewall Manager policy
 ---
