@@ -708,7 +708,8 @@ resource "aws_directory_service_directory" "main" {
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -720,7 +721,7 @@ resource "aws_workspaces_directory" "main" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
