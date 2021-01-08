@@ -3553,6 +3553,12 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"iotfleethub": service{
+
+			Endpoints: endpoints{
+				"us-east-1": endpoint{},
+			},
+		},
 		"iotsecuredtunneling": service{
 
 			Endpoints: endpoints{
