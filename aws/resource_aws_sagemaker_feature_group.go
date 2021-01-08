@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
 )
@@ -221,9 +223,23 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Sagemaker Feature Group create config: %#v", *input)
-	_, err := conn.CreateFeatureGroup(input)
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		_, err := conn.CreateFeatureGroup(input)
+		if err != nil {
+			if isAWSErr(err, "ValidationException", "The execution role ARN is invalid.") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateFeatureGroup(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Feature Group: %w", err)
+		return fmt.Errorf("Error creating SageMaker Feature Group: %w", err)
 	}
 
 	d.SetId(name)
