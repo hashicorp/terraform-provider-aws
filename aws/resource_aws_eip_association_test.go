@@ -469,7 +469,7 @@ func testAccAWSEIPAssociationConfig_instance() string {
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		fmt.Sprintf(`
+		`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -498,7 +498,7 @@ resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_instance.test.id
 }
-`))
+`)
 }
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
