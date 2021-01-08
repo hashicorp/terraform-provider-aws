@@ -305,7 +305,7 @@ func resourceAwsSagemakerFeatureGroupUpdate(d *schema.ResourceData, meta interfa
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Feature Store (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
