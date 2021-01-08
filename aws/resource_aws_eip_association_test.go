@@ -422,18 +422,21 @@ resource "aws_eip_association" "test" {
 func testAccAWSEIPAssociationConfig_spotInstance(rInt int) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
-resource "aws_default_subnet" "default" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-  lifecycle {
-    ignore_changes = [
-      # testing environments often change the Name tag
-      tags["Name"],
-    ]
-  }
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0) 
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_key_pair" "test" {
@@ -447,7 +450,7 @@ resource "aws_spot_instance_request" "test" {
   key_name             = aws_key_pair.test.key_name
   spot_price           = "0.10"
   wait_for_fulfillment = true
-  subnet_id            = aws_default_subnet.default.id
+  subnet_id            = aws_subnet.test.id
 }
 
 resource "aws_eip" "test" {
@@ -463,25 +466,28 @@ resource "aws_eip_association" "test" {
 
 func testAccAWSEIPAssociationConfig_instance() string {
 	return composeConfig(
-		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
 		testAccAvailableAZsNoOptInConfig(),
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
-resource "aws_default_subnet" "default" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-  lifecycle {
-    ignore_changes = [
-      # testing environments often change the Name tag
-      tags["Name"],
-    ]
-  }
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0) 
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_default_subnet.default.id
+  subnet_id     = aws_subnet.test.id
 }
 
 resource "aws_eip" "test" {
@@ -492,7 +498,7 @@ resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_instance.test.id
 }
-`)
+`))
 }
 
 const testAccAWSEIPAssociationConfig_networkInterface = `
