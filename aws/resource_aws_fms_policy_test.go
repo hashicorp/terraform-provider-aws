@@ -31,9 +31,64 @@ func TestAccAWSFmsPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            "aws_fms_policy.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy_update_token"},
+				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFmsPolicy_includeMap(t *testing.T) {
+	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
+	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFmsPolicyConfig_include(fmsPolicyName, wafRuleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
+					testAccMatchResourceAttrRegionalARN("aws_fms_policy.test", "arn", "fms", regexp.MustCompile(`policy/`)),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+				),
+			},
+			{
+				ResourceName:            "aws_fms_policy.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
+			},
+		},
+	})
+}
+
+func TestAccAWSFmsPolicy_update(t *testing.T) {
+	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
+	fmsPolicyName2 := fmt.Sprintf("tf-fms-%s2", acctest.RandString(5))
+	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFmsPolicyConfig(fmsPolicyName, wafRuleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
+					testAccMatchResourceAttrRegionalARN("aws_fms_policy.test", "arn", "fms", regexp.MustCompile(`policy/`)),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+				),
+			},
+			{
+				Config: testAccFmsPolicyConfig_updated(fmsPolicyName2, wafRuleGroupName),
 			},
 		},
 	})
@@ -114,38 +169,90 @@ func testAccCheckAwsFmsPolicyExists(name string) resource.TestCheckFunc {
 
 func testAccFmsPolicyConfig(name string, group string) string {
 	return fmt.Sprintf(`
-#resource "aws_fms_policy" "test" {
-#  exclude_resource_tags = false
-#  name                  = %[1]q
-#  remediation_enabled   = false
-#  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
-#
-#	security_service_policy_data {
-#		waf {
-#		  rule_groups {id = aws_waf_rule.wafrule.id}
-#		}
-#	}
-#}
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
-resource "aws_waf_ipset" "ipset" {
-  name = "tfIPSet"
+	exclude_map {
+	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
+	}
 
-  ip_set_descriptors {
-    type  = "IPV4"
-    value = "192.0.7.0/24"
-  }
+  security_service_policy_data {
+	  type                 = "WAF"
+		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+	}
 }
 
-resource "aws_waf_rule" "wafrule" {
-  depends_on  = [aws_waf_ipset.ipset]
-  name        = %[2]q
-  metric_name = "tfWAFRule"
+data "aws_organizations_organization" "example" {}
 
-  predicates {
-    data_id = aws_waf_ipset.ipset.id
-    negated = false
-    type    = "IPMatch"
-  }
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[2]q
+}
+`, name, group)
+}
+
+func testAccFmsPolicyConfig_updated(name string, group string) string {
+	return fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = true
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+	exclude_map {
+	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
+	}
+
+  security_service_policy_data {
+	  type                 = "WAF"
+		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"ALLOW\"}, \"overrideCustomerWebACLAssociation\": false}"
+	}
+
+	lifecycle {
+	  create_before_destroy = false
+	}
+}
+
+data "aws_organizations_organization" "example" {}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[2]q
+}
+
+resource "aws_wafregional_rule_group" "test2" {
+  metric_name = "MyTest2"
+  name        = %[2]q
+}
+`, name, group)
+}
+
+func testAccFmsPolicyConfig_include(name string, group string) string {
+	return fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+
+	include_map {
+	  account = [ data.aws_organizations_organization.example.accounts[0].id ]
+	}
+
+  security_service_policy_data {
+	  type                 = "WAF"
+		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+	}
+}
+
+data "aws_organizations_organization" "example" {}
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = %[2]q
 }
 `, name, group)
 }
@@ -158,26 +265,14 @@ resource "aws_fms_policy" "test" {
   remediation_enabled   = false
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
-  security_service_policy_data = <<EOF
-		{
-			"type": "WAF",
-			"managedServiceData": {
-				"type": "WAF",
-				"ruleGroups": [{
-					"id": "${aws_wafregional_rule_group.test.id}",
-					"ruleGroups": {
-						"type": "COUNT",
-					}
-				}],
-				"defaultAction": {
-					"type": "BLOCK:
-				}
-			}
-		}
-		EOF
-  resource_tags {
-    "Environment" = "Testing",
-    "Usage"= "original",
+  security_service_policy_data {
+	  type                 = "WAF"
+		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+	}
+
+  resource_tags = {
+    Environment = "Testing"
+    Usage= "original"
   }
 
 }
@@ -198,11 +293,12 @@ resource "aws_fms_policy" "test" {
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   security_service_policy_data {
-		shield_advanced = true
+	  type                 = "WAF"
+		managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
 	}
 
   resource_tags = {
-    "Usage"= "changed",
+    Usage = "changed"
   }
 
 }

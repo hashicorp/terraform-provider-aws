@@ -22,20 +22,23 @@ resource "aws_fms_policy" "example" {
   security_service_policy_data {
     type = "WAF"
 
-    managed_service_data {
-      type = "WAF"
-
-      rule_groups {
-        id = "${aws_wafregional_rule_group.test.id}"
-
-        override_action {
-          type = "COUNT"
-        }
+    managed_service_data = <<EOF
+      {
+        "type": "WAF", 
+        "ruleGroups": 
+          [{
+            "id":"${aws_wafregional_rule_group.test.id}", 
+            "overrideAction" : {
+              "type": "COUNT"
+            }
+          }],
+        "defaultAction": 
+        {
+          "type": "BLOCK"
+        }, 
+        "overrideCustomerWebACLAssociation": false
       }
-
-      default_action {
-        type = "BLOCK"
-      }
+EOF
     }
   }
 }
@@ -60,17 +63,17 @@ The following arguments are supported:
 * `resource_type_list` - (Required, Forces new resource) A list of resource types to protect, valid values are: `AWS::ElasticLoadBalancingV2::LoadBalancer`, `AWS::ApiGateway::Stage`, `AWS::CloudFront::Distribution`.
 * `security_service_policy_data` - (Required) The objects to include in Security Service Policy Data. Documented below.
 
-## exclude_map Configuration block
+## `exclude_map` Configuration Block
 * `account` - (Required) A list of AWS Organization member Accounts that you want to exclude from this AWS FMS Policy.
 
-## include_map Configuration block
+## `include_map` Configuration Block
 * `account` - (Required) A list of AWS Organization member Accounts that you want to include for this AWS FMS Policy.
 
-## security_service_policy_data Configuration block
-* `managed_service_data` (Optional) Configuration block containing WAF data, required if type is set to WAF. 
-* `type` (Required, Forces new resource) The service that the policy is using to protect the resources. Values WAF or SHIELD_ADVANCED.
+## `security_service_policy_data` Configuration Block
+* `managed_service_data` (Optional) Details about the service that are specific to the service type, in JSON format. For service type SHIELD_ADVANCED, this is an empty string.
+* `type` (Required, Forces new resource) The service that the policy is using to protect the resources. Valid values are WAFV2, WAF, SHIELD_ADVANCED, SECURITY_GROUPS_COMMON, SECURITY_GROUPS_CONTENT_AUDIT, and SECURITY_GROUPS_USAGE_AUDIT.
 
-## managed_service_data Configuration block
+## `managed_service_data` Configuration Block
 
 -> Additional information about this configuration can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html)
 
