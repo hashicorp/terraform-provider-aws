@@ -31,22 +31,36 @@ the separate resource.
 
 ## Example Usage
 
-```terraform
-resource "aws_route_table" "r" {
-  vpc_id = aws_vpc.default.id
+```hcl
+resource "aws_route_table" "example" {
+  vpc_id = aws_vpc.example.id
 
   route {
     cidr_block = "10.0.1.0/24"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.example.id
   }
 
   route {
     ipv6_cidr_block        = "::/0"
-    egress_only_gateway_id = aws_egress_only_internet_gateway.foo.id
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
   }
 
   tags = {
-    Name = "main"
+    Name = "example"
+  }
+}
+```
+
+To subsequently remove all managed routes:
+
+```hcl
+resource "aws_route_table" "example" {
+  vpc_id = aws_vpc.example.id
+
+  route = []
+
+  tags = {
+    Name = "example"
   }
 }
 ```
@@ -57,6 +71,7 @@ The following arguments are supported:
 
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
 * `tags` - (Optional) A map of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
