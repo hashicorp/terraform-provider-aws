@@ -305,7 +305,7 @@ func TestAccAWSFsxLustreFileSystem_StorageCapacity(t *testing.T) {
 				Config: testAccAwsFsxLustreFileSystemConfigStorageCapacity(1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem2),
-					testAccCheckFsxLustreFileSystemRecreated(&filesystem1, &filesystem2),
+					testAccCheckFsxLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 				),
 			},

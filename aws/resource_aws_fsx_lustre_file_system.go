@@ -89,7 +89,6 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1200),
 			},
 			"subnet_ids": {
@@ -302,6 +301,11 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("auto_import_policy") {
 		input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_capacity") {
+		input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		requestUpdate = true
 	}
 
