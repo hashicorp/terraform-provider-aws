@@ -679,8 +679,8 @@ resource "aws_sagemaker_domain" "test" {
 
     sharing_settings {
       domain_output_option = "Allowed"
-      s3_kms_key_id          = aws_kms_key.test.arn
-      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
+      s3_kms_key_id        = aws_kms_key.test.arn
+      s3_output_path       = "s3://${aws_s3_bucket.test.bucket}/sharing"
     }
   }
 }
@@ -726,7 +726,7 @@ resource "aws_sagemaker_domain" "test" {
 
     tensor_board_app_settings {
       default_resource_spec {
-		instance_type       = "ml.t3.micro"
+        instance_type       = "ml.t3.micro"
         sagemaker_image_arn = aws_sagemaker_image.test.arn
       }
     }
