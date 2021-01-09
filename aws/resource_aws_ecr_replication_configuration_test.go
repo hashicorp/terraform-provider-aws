@@ -20,6 +20,11 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccAWSEcrReplicationConfiguration(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_configuration.0.rule.0.destination.0.region"),
+					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 				),
 			},
 			{
@@ -31,6 +36,11 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccAWSEcrReplicationConfigurationUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_configuration.0.rule.0.destination.0.region"),
+					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 				),
 			},
 		},
@@ -64,7 +74,7 @@ resource "aws_ecr_replication_configuration" "test" {
     }
   }
 }
-`)
+`
 }
 
 func testAccAWSEcrReplicationConfigurationUpdated() string {
@@ -83,5 +93,5 @@ resource "aws_ecr_replication_configuration" "test" {
     }
   }
 }
-`)
+`
 }
