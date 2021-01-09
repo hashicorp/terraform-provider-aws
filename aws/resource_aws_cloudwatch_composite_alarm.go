@@ -6,11 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/finder"
 )
 
 func resourceAwsCloudWatchCompositeAlarm() *schema.Resource {
@@ -96,7 +97,7 @@ func resourceAwsCloudWatchCompositeAlarmCreate(
 	input := expandAwsCloudWatchPutCompositeAlarmInput(d)
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 	if err != nil {
-		return diag.Errorf("create composite alarm: %s", err)
+		return diag.Errorf("error creating composite alarm: %s", err)
 	}
 
 	log.Printf("[INFO] Created Composite Alarm %s.", name)
@@ -114,20 +115,25 @@ func resourceAwsCloudWatchCompositeAlarmRead(
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	name := d.Id()
 
-	alarm, ok, err := getAwsCloudWatchCompositeAlarm(ctx, conn, name)
-	switch {
-	case err != nil:
-		return diag.FromErr(err)
-	case !ok:
-		log.Printf("[WARN] Composite alarm %s has disappeared!", name)
-		d.SetId("")
-		return nil
+	alarm, err := finder.CompositeAlarmByName(conn, name)
+	if err != nil {
+		return diag.Errorf("error reading composite alarm (%s): %s", name, err)
+	}
+
+	if alarm == nil {
+		if !d.IsNewResource() {
+			log.Printf("[WARN] CloudWatch Composite alarm %s not found, removing from state", name)
+			d.SetId("")
+			return nil
+		}
+
+		return diag.Errorf("error reading composite alarm (%s): alarm not filtered", name)
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
 
 	if err := d.Set("alarm_actions", flattenStringSet(alarm.AlarmActions)); err != nil {
-		return diag.Errorf("set alarm_actions: %s", err)
+		return diag.Errorf("error setting alarm_actions: %s", err)
 	}
 
 	d.Set("alarm_description", alarm.AlarmDescription)
@@ -136,20 +142,20 @@ func resourceAwsCloudWatchCompositeAlarmRead(
 	d.Set("arn", alarm.AlarmArn)
 
 	if err := d.Set("insufficient_data_actions", flattenStringSet(alarm.InsufficientDataActions)); err != nil {
-		return diag.Errorf("set insufficient_data_actions: %s", err)
+		return diag.Errorf("error setting insufficient_data_actions: %s", err)
 	}
 
 	if err := d.Set("ok_actions", flattenStringSet(alarm.OKActions)); err != nil {
-		return diag.Errorf("set ok_actions: %s", err)
+		return diag.Errorf("error setting ok_actions: %s", err)
 	}
 
 	tags, err := keyvaluetags.CloudwatchListTags(conn, aws.StringValue(alarm.AlarmArn))
 	if err != nil {
-		return diag.Errorf("list tags of alarm: %s", err)
+		return diag.Errorf("error listing tags of alarm: %s", err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("set tags: %s", err)
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -168,7 +174,7 @@ func resourceAwsCloudWatchCompositeAlarmUpdate(
 	input := expandAwsCloudWatchPutCompositeAlarmInput(d)
 	_, err := conn.PutCompositeAlarmWithContext(ctx, &input)
 	if err != nil {
-		return diag.Errorf("create composite alarm: %s", err)
+		return diag.Errorf("error creating composite alarm: %s", err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -176,7 +182,7 @@ func resourceAwsCloudWatchCompositeAlarmUpdate(
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.CloudwatchUpdateTags(conn, arn, o, n); err != nil {
-			return diag.Errorf("update tags: %s", err)
+			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -198,12 +204,11 @@ func resourceAwsCloudWatchCompositeAlarmDelete(
 	}
 
 	_, err := conn.DeleteAlarmsWithContext(ctx, &input)
-	switch {
-	case isAWSErr(err, "ResourceNotFound", ""):
-		log.Printf("[WARN] Composite Alarm %s has disappeared!", name)
-		return nil
-	case err != nil:
-		return diag.FromErr(err)
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
+			return nil
+		}
+		return diag.Errorf("error deleting composite alarm: %s", err)
 	}
 
 	return nil
@@ -245,25 +250,4 @@ func expandAwsCloudWatchPutCompositeAlarmInput(d *schema.ResourceData) cloudwatc
 	}
 
 	return out
-}
-
-func getAwsCloudWatchCompositeAlarm(
-	ctx context.Context,
-	conn *cloudwatch.CloudWatch,
-	name string,
-) (*cloudwatch.CompositeAlarm, bool, error) {
-	input := cloudwatch.DescribeAlarmsInput{
-		AlarmNames: aws.StringSlice([]string{name}),
-		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeCompositeAlarm}),
-	}
-
-	output, err := conn.DescribeAlarmsWithContext(ctx, &input)
-	switch {
-	case err != nil:
-		return nil, false, err
-	case len(output.CompositeAlarms) != 1:
-		return nil, false, nil
-	}
-
-	return output.CompositeAlarms[0], true, nil
 }

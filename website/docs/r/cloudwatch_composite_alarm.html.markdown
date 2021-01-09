@@ -32,12 +32,12 @@ EOF
 ## Argument Reference
 
 * `actions_enabled` - (Optional) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
-* `alarm_actions` - (Optional) The set of actions to execute when this alarm transitions to the ALARM state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+* `alarm_actions` - (Optional) The set of actions to execute when this alarm transitions to the `ALARM` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `alarm_description` - (Optional) The description for the composite alarm.
 * `alarm_name` - (Required) The name for the composite alarm. This name must be unique within the region.
 * `alarm_rule` - (Required) An expression that specifies which other alarms are to be evaluated to determine this composite alarm's state. For syntax, see [Creating a Composite Alarm](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Create_Composite_Alarm.html). The maximum length is 10240 characters.
-* `insufficient_data_actions` - (Optional) The set of actions to execute when this alarm transitions to the INSUFFICIENT_DATA state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
-* `ok_actions` - (Optional) The set of actions to execute when this alarm transitions to an OK state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+* `insufficient_data_actions` - (Optional) The set of actions to execute when this alarm transitions to the `INSUFFICIENT_DATA` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
+* `ok_actions` - (Optional) The set of actions to execute when this alarm transitions to an `OK` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `tags` - (Optional) A map of tags to associate with the alarm. Up to 50 tags are allowed.
 
 ## Attributes Reference
