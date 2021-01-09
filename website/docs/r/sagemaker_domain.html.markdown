@@ -53,6 +53,7 @@ The following arguments are supported:
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default-user-settings) below.
+* `kms_key_id` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `tags` - (Optional) A map of tags to assign to the resource.
 

@@ -58,6 +58,13 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				MaxItems: 16,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
+			},
 			"app_network_access_type": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -251,6 +258,10 @@ func resourceAwsSagemakerDomainCreate(d *schema.ResourceData, meta interface{}) 
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
 	}
 
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] sagemaker domain create config: %#v", *input)
 	output, err := conn.CreateDomain(input)
 	if err != nil {
@@ -294,7 +305,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("url", domain.Url)
-	d.Set("vpc_id", domain.VpcId)
+	d.Set("kms_key_id", domain.KmsKeyId)
 
 	if err := d.Set("subnet_ids", flattenStringSet(domain.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids for SageMaker domain (%s): %w", d.Id(), err)

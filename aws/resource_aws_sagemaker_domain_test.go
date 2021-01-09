@@ -93,6 +93,34 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerDomain_kms(t *testing.T) {
+	var domain sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainKMSConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
@@ -572,6 +600,27 @@ resource "aws_sagemaker_domain" "test" {
 `, rName)
 }
 
+func testAccAWSSagemakerDomainKMSConfig(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test"
+  deletion_window_in_days = 7
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+  kms_key_id  = aws_kms_key.test.arn
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName)
+}
+
 func testAccAWSSagemakerDomainConfigSecurityGroup1(rName string) string {
 	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -678,9 +727,9 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     sharing_settings {
-      domain_output_option = "Allowed"
-      s3_kms_key_id        = aws_kms_key.test.arn
-      s3_output_path       = "s3://${aws_s3_bucket.test.bucket}/sharing"
+      notebook_output_option = "Allowed"
+      s3_kms_key_id          = aws_kms_key.test.arn
+      s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
     }
   }
 }
