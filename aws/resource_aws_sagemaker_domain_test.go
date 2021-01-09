@@ -69,7 +69,7 @@ func testSweepSagemakerDomains(region string) error {
 }
 
 func TestAccAWSSagemakerDomain_basic(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -81,7 +81,7 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
@@ -106,7 +106,7 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_tags(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -118,7 +118,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -131,7 +131,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -140,7 +140,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
@@ -151,7 +151,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -163,7 +163,7 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigSecurityGroup1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "1"),
 				),
@@ -176,7 +176,7 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigSecurityGroup2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "2"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -199,10 +199,10 @@ func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigSharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.domain_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
@@ -218,7 +218,7 @@ func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -230,7 +230,7 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigTensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
@@ -247,8 +247,39 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
+	var domain sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigTensorBoardAppSettingsWithImage(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", "arn"),
+					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -260,7 +291,7 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigKernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
@@ -278,7 +309,7 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -290,7 +321,7 @@ func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainConfigJupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
@@ -308,7 +339,7 @@ func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 }
 
 func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
-	var notebook sagemaker.DescribeDomainOutput
+	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
 
@@ -320,7 +351,7 @@ func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerDomainExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerDomain(), resourceName),
 				),
@@ -647,7 +678,7 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     sharing_settings {
-      notebook_output_option = "Allowed"
+      domain_output_option = "Allowed"
       s3_kms_key_id          = aws_kms_key.test.arn
       s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
     }
@@ -670,6 +701,33 @@ resource "aws_sagemaker_domain" "test" {
     tensor_board_app_settings {
       default_resource_spec {
         instance_type = "ml.t3.micro"
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerDomainConfigTensorBoardAppSettingsWithImage(rName string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    tensor_board_app_settings {
+      default_resource_spec {
+		instance_type       = "ml.t3.micro"
+        sagemaker_image_arn = aws_sagemaker_image.test.arn
       }
     }
   }
