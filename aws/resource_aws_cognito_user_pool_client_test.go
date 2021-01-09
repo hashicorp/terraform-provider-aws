@@ -491,7 +491,7 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
