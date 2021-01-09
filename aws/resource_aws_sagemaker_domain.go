@@ -305,6 +305,7 @@ func resourceAwsSagemakerDomainRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("home_efs_file_system_id", domain.HomeEfsFileSystemId)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("url", domain.Url)
+	d.Set("vpc_id", domain.VpcId)
 	d.Set("kms_key_id", domain.KmsKeyId)
 
 	if err := d.Set("subnet_ids", flattenStringSet(domain.SubnetIds)); err != nil {
