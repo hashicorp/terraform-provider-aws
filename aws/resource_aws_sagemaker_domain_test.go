@@ -93,7 +93,6 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
 					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},

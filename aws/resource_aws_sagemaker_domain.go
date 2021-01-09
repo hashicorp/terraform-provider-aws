@@ -62,7 +62,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validateArn,
 			},
 			"app_network_access_type": {
