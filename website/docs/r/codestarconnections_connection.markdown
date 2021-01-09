@@ -38,10 +38,10 @@ resource "aws_codepipeline" "example" {
       version          = "1"
       output_artifacts = ["source_output"]
       configuration = {
-        Owner         = "my-organization"
-        ConnectionArn = aws_codestarconnections_connection.example.arn
-        Repo          = "foo/test"
-        Branch        = "master"
+        Owner            = "my-organization"
+        ConnectionArn    = aws_codestarconnections_connection.example.arn
+        FullRepositoryId = "foo/test"
+        BranchName        = "master"
       }
     }
   }
