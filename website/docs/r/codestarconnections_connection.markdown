@@ -41,7 +41,7 @@ resource "aws_codepipeline" "example" {
         Owner            = "my-organization"
         ConnectionArn    = aws_codestarconnections_connection.example.arn
         FullRepositoryId = "foo/test"
-        BranchName        = "master"
+        BranchName       = "master"
       }
     }
   }
