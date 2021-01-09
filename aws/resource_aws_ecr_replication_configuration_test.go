@@ -27,6 +27,12 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSEcrReplicationConfigurationUpdated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
+				),
+			},
 		},
 	})
 }
@@ -43,7 +49,7 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 }
 
 func testAccAWSEcrReplicationConfiguration() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_caller_identity" "current" {}
 
 data "aws_regions" "test" {}
@@ -52,7 +58,26 @@ resource "aws_ecr_replication_configuration" "test" {
   replication_configuration {
     rule {
       destination {
-        region      = data.aws_regions.test.names[0]
+        region      = tolist(data.aws_regions.test.names)[0]
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccAWSEcrReplicationConfigurationUpdated() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_regions" "test" {}
+
+resource "aws_ecr_replication_configuration" "test" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = tolist(data.aws_regions.test.names)[1]
         registry_id = data.aws_caller_identity.current.account_id
       }
     }
