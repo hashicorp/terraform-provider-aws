@@ -483,6 +483,7 @@ func Provider() *schema.Provider {
 			"aws_cloudformation_stack_set":                            resourceAwsCloudFormationStackSet(),
 			"aws_cloudformation_stack_set_instance":                   resourceAwsCloudFormationStackSetInstance(),
 			"aws_cloudfront_distribution":                             resourceAwsCloudFrontDistribution(),
+			"aws_cloudfront_key_group":                                resourceAwsCloudFrontKeyGroup(),
 			"aws_cloudfront_origin_access_identity":                   resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_public_key":                               resourceAwsCloudFrontPublicKey(),
 			"aws_cloudtrail":                                          resourceAwsCloudTrail(),
