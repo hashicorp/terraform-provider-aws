@@ -99,6 +99,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+				ForceNew: true,
 			},
 			"content_based_deduplication": {
 				Type:     schema.TypeBool,
