@@ -39,6 +39,27 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_public_key.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontPublicKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-")
 	resourceName := "aws_cloudfront_public_key.example"
