@@ -13,12 +13,7 @@ func dataSourceAwsService() *schema.Resource {
 		Read: dataSourceAwsServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			"dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"name": {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -27,17 +22,17 @@ func dataSourceAwsService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
 			"region": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"reverse_dns": {
+			"reverse_dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			"reverse_dns_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -58,15 +53,26 @@ func dataSourceAwsService() *schema.Resource {
 func dataSourceAwsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient)
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk("reverse_dns_name"); ok {
 		serviceParts := strings.Split(v.(string), ".")
 		if len(serviceParts) < 4 {
-			return fmt.Errorf("service names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
+			return fmt.Errorf("reverse service DNS names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
 		}
 
 		d.Set("service_id", serviceParts[len(serviceParts)-1])
 		d.Set("region", serviceParts[len(serviceParts)-2])
-		d.Set("prefix", strings.Join(serviceParts[0:len(serviceParts)-2], "."))
+		d.Set("reverse_dns_prefix", strings.Join(serviceParts[0:len(serviceParts)-2], "."))
+	}
+
+	if v, ok := d.GetOk("dns_name"); ok {
+		serviceParts := strings.Split(v.(string), ".")
+		if len(serviceParts) < 4 {
+			return fmt.Errorf("service DNS names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
+		}
+
+		d.Set("service_id", serviceParts[0])
+		d.Set("region", serviceParts[1])
+		d.Set("reverse_dns_prefix", strings.Join(serviceParts[2:len(serviceParts)-1], "."))
 	}
 
 	if _, ok := d.GetOk("region"); !ok {
@@ -77,16 +83,14 @@ func dataSourceAwsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("service_id", endpoints.Ec2ServiceID)
 	}
 
-	if _, ok := d.GetOk("prefix"); !ok {
+	if _, ok := d.GetOk("reverse_dns_prefix"); !ok {
 		dnsParts := strings.Split(meta.(*AWSClient).dnsSuffix, ".")
-		d.Set("prefix", strings.Join(invertStringSlice(dnsParts), "."))
+		d.Set("reverse_dns_prefix", strings.Join(invertStringSlice(dnsParts), "."))
 	}
 
-	name := fmt.Sprintf("%s.%s.%s", d.Get("prefix").(string), d.Get("region").(string), d.Get("service_id").(string))
-	d.Set("name", name)
-	d.Set("reverse_dns", name)
-
-	d.Set("dns", strings.ToLower(strings.Join(invertStringSlice(strings.Split(name, ".")), ".")))
+	reverseDNS := fmt.Sprintf("%s.%s.%s", d.Get("reverse_dns_prefix").(string), d.Get("region").(string), d.Get("service_id").(string))
+	d.Set("reverse_dns_name", reverseDNS)
+	d.Set("dns_name", strings.ToLower(strings.Join(invertStringSlice(strings.Split(reverseDNS, ".")), ".")))
 
 	d.Set("supported", true)
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), d.Get("region").(string)); ok {
@@ -96,7 +100,7 @@ func dataSourceAwsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.SetId(name)
+	d.SetId(reverseDNS)
 
 	return nil
 }
