@@ -663,6 +663,7 @@ func Provider() *schema.Provider {
 			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
 			"aws_fsx_windows_file_system":                             resourceAwsFsxWindowsFileSystem(),
 			"aws_fms_admin_account":                                   resourceAwsFmsAdminAccount(),
+			"aws_fms_policy":                                          resourceAwsFmsPolicy(),
 			"aws_gamelift_alias":                                      resourceAwsGameliftAlias(),
 			"aws_gamelift_build":                                      resourceAwsGameliftBuild(),
 			"aws_gamelift_fleet":                                      resourceAwsGameliftFleet(),
