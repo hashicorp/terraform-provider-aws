@@ -59,6 +59,17 @@ rules:
     pattern: 'd.SetId(*$VALUE)'
     severity: WARNING
 
+  - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
+    languages: [go]
+    message: Prefer `flattenStringSet()` function for casting a list of string pointers to a set
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
+      - pattern-not-inside: func flattenStringSet(list []*string) *schema.Set { ... }
+    severity: WARNING
+
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
     languages: [go]
     message: Zero value conditional check after `d.GetOk()` is extraneous
