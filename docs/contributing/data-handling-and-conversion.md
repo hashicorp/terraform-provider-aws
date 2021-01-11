@@ -605,7 +605,7 @@ To read:
 ```go
 input := service.ExampleOperationInput{}
 
-if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}; ok && len(v) > 0 {
+if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
     apiObject.NestedAttributeName = stringMapToPointers(v)
 }
 ```
