@@ -4,6 +4,10 @@ FEATURES
 
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
 
+BUX FIXES
+
+* resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
+
 ## 3.23.0 (January 08, 2021)
 
 FEATURES
