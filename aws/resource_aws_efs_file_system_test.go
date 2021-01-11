@@ -192,7 +192,7 @@ func TestAccAWSEFSFileSystem_pagedTags(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfigPagedTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "11"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "10"),
 				),
 			},
 			{
@@ -667,10 +667,9 @@ resource "aws_efs_file_system" "test" {
     AcceptanceTest = "PagedTags"
     CreationToken  = "radek"
     PerfMode       = "max"
-    Region         = %[2]q
   }
 }
-`, rInt, testAccGetRegion())
+`, rInt)
 }
 
 func testAccAWSEFSFileSystemConfigWithMaxTags(rName string) string {
