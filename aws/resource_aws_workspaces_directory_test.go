@@ -647,17 +647,11 @@ func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 }
 
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		//lintignore:AWSAT003
+		fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 locals {
   region_workspaces_az_ids = {
@@ -709,12 +703,13 @@ resource "aws_directory_service_directory" "main" {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -726,7 +721,7 @@ resource "aws_workspaces_directory" "main" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
