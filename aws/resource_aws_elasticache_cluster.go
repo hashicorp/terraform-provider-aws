@@ -21,6 +21,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	elasticacheDefaultRedisPort     = "6379"
+	elasticacheDefaultMemcachedPort = "11211"
+)
+
 func resourceAwsElasticacheCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsElasticacheClusterCreate,
@@ -154,7 +159,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					if !d.IsNewResource() && new == "0" && (old == elasticacheDefaultRedisPort || old == elasticacheDefaultMemcachedPort) {
 						return true
 					}
 					return false
@@ -205,7 +210,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 			"snapshot_arns": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -216,7 +221,6 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 						validation.StringDoesNotContainAny(","),
 					),
 				},
-				Set: schema.HashString,
 			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
@@ -324,15 +328,9 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		req.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		securityNameSet := d.Get("security_group_names").(*schema.Set)
-		securityIdSet := d.Get("security_group_ids").(*schema.Set)
-		securityNames := expandStringSet(securityNameSet)
-		securityIds := expandStringSet(securityIdSet)
-		tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
-
-		req.CacheSecurityGroupNames = securityNames
-		req.SecurityGroupIds = securityIds
-		req.Tags = tags
+		req.CacheSecurityGroupNames = expandStringSet(d.Get("security_group_names").(*schema.Set))
+		req.SecurityGroupIds = expandStringSet(d.Get("security_group_ids").(*schema.Set))
+		req.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
