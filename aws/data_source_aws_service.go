@@ -65,14 +65,14 @@ func dataSourceAwsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("dns_name"); ok {
-		serviceParts := strings.Split(v.(string), ".")
+		serviceParts := invertStringSlice(strings.Split(v.(string), "."))
 		if len(serviceParts) < 4 {
 			return fmt.Errorf("service DNS names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
 		}
 
-		d.Set("service_id", serviceParts[0])
-		d.Set("region", serviceParts[1])
-		d.Set("reverse_dns_prefix", strings.Join(serviceParts[2:len(serviceParts)-1], "."))
+		d.Set("service_id", serviceParts[len(serviceParts)-1])
+		d.Set("region", serviceParts[len(serviceParts)-2])
+		d.Set("reverse_dns_prefix", strings.Join(serviceParts[0:len(serviceParts)-2], "."))
 	}
 
 	if _, ok := d.GetOk("region"); !ok {

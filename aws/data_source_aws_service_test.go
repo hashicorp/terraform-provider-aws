@@ -45,10 +45,11 @@ func TestAccAWSService_byReverseDNSName(t *testing.T) {
 			{
 				Config: testAccCheckAwsServiceConfig_byReverseDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), s3.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.CnNorth1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, s3.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "cn.com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "service_id", s3.EndpointsID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
 				),
 			},
 		},
@@ -65,10 +66,11 @@ func TestAccAWSService_byDNSName(t *testing.T) {
 			{
 				Config: testAccCheckAwsServiceConfig_byDNSName(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsEast1RegionID, rds.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), s3.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "service_id", rds.EndpointsID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
 				),
 			},
 		},
