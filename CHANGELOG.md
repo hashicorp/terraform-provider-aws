@@ -1,3 +1,9 @@
+## 3.24.0 (Unreleased)
+
+FEATURES
+
+* **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
+
 ## 3.23.0 (January 08, 2021)
 
 FEATURES
