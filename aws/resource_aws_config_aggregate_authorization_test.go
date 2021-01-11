@@ -60,6 +60,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := acctest.RandStringFromCharSet(12, "0123456789")
 	resourceName := "aws_config_aggregate_authorization.example"
+	dataSourceName := "data.aws_region.current"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,11 +68,11 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString, testAccGetAlternateRegion()),
+				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
-					resource.TestCheckResourceAttr(resourceName, "region", testAccGetAlternateRegion()),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, testAccGetAlternateRegion()))),
+					resource.TestCheckResourceAttrPair(resourceName, "region", dataSourceName, "name"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf(`aggregation-authorization/%s/%s$`, rString, testAccGetRegion()))),
 				),
 			},
 			{
@@ -93,7 +94,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz", testAccGetAlternateRegion()),
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
@@ -102,7 +103,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2", testAccGetAlternateRegion()),
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
@@ -116,7 +117,7 @@ func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString, testAccGetAlternateRegion()),
+				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -154,20 +155,24 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccAWSConfigAggregateAuthorizationConfig_basic(rString, region string) string {
+func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_aggregate_authorization" "example" {
   account_id = %[1]q
-  region     = %[2]q
+  region     = data.aws_region.current.name
 }
-`, rString, region)
+`, rString)
 }
 
-func testAccAWSConfigAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2, region string) string {
+func testAccAWSConfigAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_config_aggregate_authorization" "example" {
   account_id = %[1]q
-  region     = %[6]q
+  region     = data.aws_region.current.name
 
   tags = {
     Name = %[1]q
@@ -176,5 +181,5 @@ resource "aws_config_aggregate_authorization" "example" {
     %[4]s = %[5]q
   }
 }
-`, rString, tagKey1, tagValue1, tagKey2, tagValue2, region)
+`, rString, tagKey1, tagValue1, tagKey2, tagValue2)
 }
