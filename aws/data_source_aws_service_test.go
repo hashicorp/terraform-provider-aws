@@ -77,6 +77,25 @@ func TestAccAWSService_byDNSName(t *testing.T) {
 	})
 }
 
+func TestAccAWSService_byParts(t *testing.T) {
+	dataSourceName := "data.aws_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsServiceConfig_byPart(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", s3.EndpointsID, testAccGetRegion(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), s3.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSService_unsupported(t *testing.T) {
 	dataSourceName := "data.aws_service.test"
 
@@ -101,31 +120,31 @@ func TestAccAWSService_unsupported(t *testing.T) {
 }
 
 func testAccCheckAwsServiceConfig_basic() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_service" "default" {}
-`)
+`
 }
 
 func testAccCheckAwsServiceConfig_byReverseDNSName() string {
 	// lintignore:AWSAT003
-	return fmt.Sprintf(`
+	return `
 data "aws_service" "test" {
   reverse_dns_name = "cn.com.amazonaws.cn-north-1.s3"
 }
-`)
+`
 }
 
 func testAccCheckAwsServiceConfig_byDNSName() string {
 	// lintignore:AWSAT003
-	return fmt.Sprintf(`
+	return `
 data "aws_service" "test" {
   dns_name = "rds.us-east-1.amazonaws.com"
 }
-`)
+`
 }
 
 func testAccCheckAwsServiceConfig_byPart() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_region" "current" {}
 
 data "aws_service" "test" {
@@ -133,14 +152,14 @@ data "aws_service" "test" {
   region             = data.aws_region.current.name
   service_id         = "s3"
 }
-`)
+`
 }
 
 func testAccCheckAwsServiceConfig_unsupported() string {
 	// lintignore:AWSAT003
-	return fmt.Sprintf(`
+	return `
 data "aws_service" "test" {
   reverse_dns_name = "com.amazonaws.us-gov-west-1.waf"
 }
-`)
+`
 }
