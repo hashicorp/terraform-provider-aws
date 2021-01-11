@@ -6,6 +6,7 @@ FEATURES
 
 BUX FIXES
 
+* resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
 * resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
 
 ## 3.23.0 (January 08, 2021)
