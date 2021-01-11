@@ -32,7 +32,7 @@ While a goal of the provider is to gain as much resource coverage as possible, f
 
 ## Resource Type Considerations
 
-The general heuristic of when to create or not create a separate Terraform resource is if the AWS service API implements create, read, and delete operations for a component. Terraform resources work best as the smallest blocks of infrastructure, where configurations can build abstractions on top of these such as [Terraform Modules](https://www.terraform.io/docs/modules/). However, not all AWS service API functionality falls cleanly into components to be managed with those types of operations. It may be necessary to consider other patterns of mapping API operations to Terraform resources and operations. This section highlights these design recommendations, such as when to consider implemantations within the same Terraform resource or as a separate Terraform resource.
+The general heuristic of whether or not to create a separate Terraform resource is if the AWS service API implements create, read, and delete operations for a component. Terraform resources work best as the smallest blocks of infrastructure, where configurations can build abstractions on top of these such as [Terraform Modules](https://www.terraform.io/docs/modules/). However, not all AWS service API functionality falls cleanly into components to be managed with those types of operations. It may be necessary to consider other patterns of mapping API operations to Terraform resources and operations. This section highlights these design recommendations, such as when to consider implemantations within the same Terraform resource or as a separate Terraform resource.
 
 Please note: the overall design and implementation across all AWS functionality is federated. This means that individual services may implement concepts and use terminology differently. As such, this guide may not be fully exhaustive in all situations. The goal is to provide enough hints about these concepts and towards specific terminology to point contributors in the correct direction, especially when researching prior implementations.
 
@@ -50,10 +50,10 @@ This type of API model either implements a form of an invitation/proposal identi
 
 To model the separate invitation/proposal in Terraform resources:
 
-* Typically the authorization side has separate and sufficient creation and read API functionality to create an "invite" or "proposal" resource.
+* Typically the authorization side has separate and sufficient creation and read API functionality to create an "invitation" or "proposal" resource.
 * If the acceptance side has separate and sufficient accept, read, and reject API functionality, then an "accepter" resource may be created, where the operations are mapped as:
     * Create: Accepts the invitation/proposal.
-    * Read: Reads the invitation/proposal to determine status. If not found, then it should fallback to reading the API resource associated with the invitation/proposal/association. As evidenced in some previous API implementations, the invitation/proposal may be temporary and removed from the API after an indeterminate amount of time which may not be documented or easily discoverable from testing.
+    * Read: Reads the invitation/proposal to determine status. If not found, then it should fallback to reading the API resource associated with the invitation/proposal. As evidenced in some previous API implementations, the invitation/proposal may be temporary and removed from the API after an indeterminate amount of time which may not be documented or easily discoverable from testing.
     * Delete: Rejects or otherwise deletes the invitation/proposal.
 
 Otherwise, to model an implicit acceptance in Terraform resources:
