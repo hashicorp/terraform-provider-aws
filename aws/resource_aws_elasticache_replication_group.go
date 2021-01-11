@@ -155,8 +155,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					// Suppress default Redis ports when not defined
+					if !d.IsNewResource() && new == "0" && old == elasticacheDefaultRedisPort {
 						return true
 					}
 					return false
