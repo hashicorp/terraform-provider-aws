@@ -16,8 +16,8 @@ Provides a CodeStar Connection.
 
 ```hcl
 resource "aws_codestarconnections_connection" "example" {
-  connection_name = "example-connection"
-  provider_type   = "Bitbucket"
+  name          = "example-connection"
+  provider_type = "Bitbucket"
 }
 
 resource "aws_codepipeline" "example" {

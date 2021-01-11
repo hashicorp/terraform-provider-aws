@@ -19,7 +19,7 @@ with `load_balancers` and `target_group_arns` defined in-line. These two methods
 mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
 `load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
-[`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
+[`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
 ## Example Usage
 
@@ -445,7 +445,7 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 ## Timeouts
 
 `autoscaling_group` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `delete` - (Default `10 minutes`) Used for destroying ASG.
 

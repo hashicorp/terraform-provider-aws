@@ -212,8 +212,6 @@ type Schema struct {
 	//
 	// ValidateFunc is honored only when the schema's Type is set to TypeInt,
 	// TypeFloat, TypeString, TypeBool, or TypeMap. It is ignored for all other types.
-	//
-	// Deprecated: please use ValidateDiagFunc
 	ValidateFunc SchemaValidateFunc
 
 	// ValidateDiagFunc allows individual fields to define arbitrary validation
