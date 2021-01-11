@@ -204,19 +204,17 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			// A single-element string list containing an Amazon Resource Name (ARN) that
-			// uniquely identifies a Redis RDB snapshot file stored in Amazon S3. The snapshot
-			// file will be used to populate the node group.
-			//
-			// See also:
-			// https://github.com/aws/aws-sdk-go/blob/4862a174f7fc92fb523fc39e68f00b87d91d2c3d/service/elasticache/api.go#L2079
 			"snapshot_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
+				// Note: Unlike aws_elasticache_cluster, this does not have a limit of 1 item.
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validateArn,
+						validation.StringDoesNotContainAny(","),
+					),
 				},
 				Set: schema.HashString,
 			},
