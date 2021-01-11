@@ -21,13 +21,13 @@ func TestAccAWSService_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsServiceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns", fmt.Sprintf("%s.%s.%s", ec2.ServiceID, testAccGetRegion(), "amazonaws.com")),
-					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.ServiceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "dns", fmt.Sprintf("%s.%s.%s", ec2.EndpointsID, testAccGetRegion(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", testAccGetPartition()),
 					resource.TestCheckResourceAttr(dataSourceName, "prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.ServiceID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.ServiceID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.EndpointsID),
 					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
 				),
 			},
@@ -45,12 +45,12 @@ func TestAccAWSService_byName(t *testing.T) {
 			{
 				Config: testAccCheckAwsServiceConfig_byServiceName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns", fmt.Sprintf("%s.%s.%s", s3.ServiceID, endpoints.CnNorth1RegionID, "amazonaws.com.cn")),
-					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, s3.ServiceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "dns", fmt.Sprintf("%s.%s.%s", s3.EndpointsID, endpoints.CnNorth1RegionID, "amazonaws.com.cn")),
+					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, s3.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", endpoints.AwsCnPartitionID),
 					resource.TestCheckResourceAttr(dataSourceName, "prefix", "cn.com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.CnNorth1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", s3.ServiceID),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", s3.EndpointsID),
 					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
 				),
 			},
@@ -68,10 +68,10 @@ func TestAccAWSService_byPart(t *testing.T) {
 			{
 				Config: testAccCheckAwsServiceConfig_byPart(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.ServiceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", testAccGetRegion(), ec2.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "region", testAccGetRegion()),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.ServiceID),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.EndpointsID),
 				),
 			},
 		},
@@ -129,6 +129,7 @@ data "aws_service" "test" {
 }
 
 func testAccCheckAwsServiceConfig_unsupported() string {
+	// lintignore:AWSAT003
 	return fmt.Sprintf(`
 data "aws_service" "test" {
   name = "com.amazonaws.us-gov-west-1.waf"
