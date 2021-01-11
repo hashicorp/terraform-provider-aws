@@ -302,6 +302,15 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				}
 				return diff.ForceNew("node_type")
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+					return nil
+				}
+				if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
+					return nil
+				}
+				return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
+			},
 		),
 	}
 }
@@ -793,7 +802,9 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
-	input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
+	if finalSnapshotID != "" {
+		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
+	}
 
 	log.Printf("[DEBUG] Deleting Elasticache Cache Cluster: %s", input)
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
