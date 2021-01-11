@@ -56,13 +56,7 @@ To model the separate invitation/proposal in Terraform resources:
     * Read: Reads the invitation/proposal to determine status. If not found, then it should fallback to reading the API resource associated with the invitation/proposal. As evidenced in some previous API implementations, the invitation/proposal may be temporary and removed from the API after an indeterminate amount of time which may not be documented or easily discoverable from testing.
     * Delete: Rejects or otherwise deletes the invitation/proposal.
 
-Otherwise, to model an implicit acceptance in Terraform resources:
-
-* If the authorization side has separate and sufficient creation and read API functionality, an "authorization" resource is created.
-* An "association" resource is created, where the operations are mapped as:
-    * Create: Create the association
-    * Read: Reads the association
-    * Delete: Deletes the association
+Otherwise to model an implicit acceptance in Terraform resources, usually there is an "association" resource with an optional "authorization" resource, each mapped to the create/read/delete functionality of the API for the associated part of the relationship.
 
 ### Cross-Service Functionality
 
