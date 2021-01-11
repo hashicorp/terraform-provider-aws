@@ -2,10 +2,14 @@ package aws
 
 import (
 	"context"
+	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -14,14 +18,16 @@ func dataSourceAwsEksAddon() *schema.Resource {
 		ReadContext: dataSourceAwsEksAddonRead,
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 			"cluster_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -74,13 +80,13 @@ func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("EKS Addon (%s) not found", addonName)
 	}
 
-	d.SetId(addonName)
+	d.SetId(fmt.Sprintf("%s:%s", clusterName, addonName))
 	d.Set("arn", addon.AddonArn)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 	d.Set("status", addon.Status)
-	d.Set("created_at", aws.TimeValue(addon.CreatedAt).String())
-	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).String())
+	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
+	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 
 	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags attribute: %s", err)
