@@ -23,7 +23,7 @@ func dataSourceAwsPartition() *schema.Resource {
 				Computed: true,
 			},
 
-			"service_prefix": {
+			"reverse_dns_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func dataSourceAwsPartitionRead(d *schema.ResourceData, meta interface{}) error 
 	dnsParts := strings.Split(meta.(*AWSClient).dnsSuffix, ".")
 	sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
 	servicePrefix := strings.Join(dnsParts, ".")
-	d.Set("service_prefix", servicePrefix)
+	d.Set("reverse_dns_prefix", servicePrefix)
 	log.Printf("[DEBUG] Setting service prefix to %s.", servicePrefix)
 
 	return nil
