@@ -58,3 +58,5 @@ the selected COIP Pool.
 The following attribute is additionally exported:
 
 * `pool_cidrs` - Set of CIDR blocks in pool
+
+* `pool_arn` - ARN of the COIP pool
