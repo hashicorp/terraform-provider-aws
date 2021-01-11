@@ -1,12 +1,12 @@
 ---
 subcategory: ""
 layout: "aws"
-page_title: "AWS: aws_service_name"
+page_title: "AWS: aws_service"
 description: |-
   Construct AWS service names
 ---
 
-# Data Source: aws_service_name
+# Data Source: aws_service
 
 Use this data source to compose AWS service names.
 
@@ -17,13 +17,13 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-data "aws_service_name" "s3" {
+data "aws_service" "s3" {
   service = "s3"
 }
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = data.aws_service_name.s3.id
+  service_name = data.aws_service.s3.id
 }
 ```
 
