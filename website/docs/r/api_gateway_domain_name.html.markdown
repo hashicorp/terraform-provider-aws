@@ -36,7 +36,7 @@ from the validation resource where it will be available after the resource creat
 `regional_certificate_arn = aws_acm_certificate_validation.cert.certificate_arn`.
 
 ~> **Note:** All arguments including the private key will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
@@ -185,7 +185,7 @@ When uploading a certificate, the following arguments are supported:
 
 ## Attributes Reference
 
-In addition to the arguments, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The internal id assigned to this domain name by API Gateway.
 * `certificate_upload_date` - The upload date associated with the domain certificate.

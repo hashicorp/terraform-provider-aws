@@ -7,11 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -128,7 +126,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("Error creating Global Accelerator accelerator: %s", err)
 	}
 
-	d.SetId(*resp.Accelerator.AcceleratorArn)
+	d.SetId(aws.StringValue(resp.Accelerator.AcceleratorArn))
 
 	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 	if err != nil {

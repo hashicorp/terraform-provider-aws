@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -90,7 +89,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating Global Accelerator listener: %s", err)
 	}
 
-	d.SetId(*resp.Listener.ListenerArn)
+	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{

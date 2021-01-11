@@ -1,11 +1,10 @@
 package aws
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
-
-	"encoding/base64"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"

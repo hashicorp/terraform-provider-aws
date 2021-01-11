@@ -51,7 +51,7 @@ func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5073
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5073
 func testAccAwsOrganizationsPolicy_concurrent(t *testing.T) {
 	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -165,6 +165,28 @@ func testAccAwsOrganizationsPolicy_tags(t *testing.T) {
 	})
 }
 
+func testAccAwsOrganizationsPolicy_disappears(t *testing.T) {
+	var p organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Description(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &p),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsOrganizationsPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsOrganizationsPolicy_type_AI_OPT_OUT(t *testing.T) {
 	var policy organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -198,7 +220,7 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html
-	backupPolicyContent := `{
+	backupPolicyContent := fmt.Sprintf(`{
    "plans":{
       "PII_Backup_Plan":{
          "regions":{
@@ -231,9 +253,9 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
                   "@@assign":"FortKnox"
                },
                "copy_actions":{
-                  "arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault":{
+                  "arn:%[1]s:backup:us-east-1:$account:backup-vault:secondary_vault":{
                      "target_backup_vault_arn":{
-                        "@@assign":"arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault"
+                        "@@assign":"arn:%[1]s:backup:us-east-1:$account:backup-vault:secondary_vault"
                      },
                      "lifecycle":{
                         "delete_after_days":{
@@ -251,7 +273,7 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
             "tags":{
                "datatype":{
                   "iam_role_arn":{
-                     "@@assign":"arn:aws:iam::$account:role/MyIamRole"
+                     "@@assign":"arn:%[1]s:iam::$account:role/MyIamRole"
                   },
                   "tag_key":{
                      "@@assign":"dataType"
@@ -267,7 +289,7 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
          }
       }
    }
-}`
+}`, testAccGetPartition())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -346,6 +368,30 @@ func testAccAwsOrganizationsPolicy_type_Tag(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicy_ImportAwsManagedPolicy(t *testing.T) {
+	resourceName := "aws_organizations_policy.test"
+
+	resourceID := "p-FullAWSAccess"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_AwsManagedPolicySetup,
+			},
+			{
+				Config:        testAccAwsOrganizationsPolicyConfig_AwsManagedPolicy,
+				ResourceName:  resourceName,
+				ImportStateId: resourceID,
+				ImportState:   true,
+				ExpectError:   regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf("AWS-managed Organizations policy (%s) cannot be imported.", resourceID))),
 			},
 		},
 	})
@@ -454,7 +500,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -482,7 +528,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -510,7 +556,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 
@@ -537,7 +583,7 @@ resource "aws_organizations_policy" "test" {
 }
 EOF
 
-  name        = "%s"
+  name = "%s"
 
   depends_on = [aws_organizations_organization.test]
 }
@@ -661,3 +707,19 @@ resource "aws_organizations_policy" "test" {
 }
 `, strconv.Quote(content), rName, policyType)
 }
+
+const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicySetup = `
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+`
+
+const testAccAwsOrganizationsPolicyConfig_AwsManagedPolicy = `
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+
+resource "aws_organizations_policy" "test" {
+  name = "FullAWSAccess"
+}
+`

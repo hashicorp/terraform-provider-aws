@@ -2,7 +2,6 @@ package aws
 
 import (
 	"log"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -28,7 +27,7 @@ func dataSourceAwsPartitionRead(d *schema.ResourceData, meta interface{}) error 
 	client := meta.(*AWSClient)
 
 	log.Printf("[DEBUG] Reading Partition.")
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).partition)
 
 	log.Printf("[DEBUG] Setting AWS Partition to %s.", client.partition)
 	d.Set("partition", meta.(*AWSClient).partition)

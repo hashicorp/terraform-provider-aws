@@ -84,10 +84,12 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>codecommit</code></li>
   <li><code>codedeploy</code></li>
   <li><code>codepipeline</code></li>
+  <li><code>codestarconnections</code></li>
   <li><code>codestarnotifications</code></li>
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
   <li><code>configservice</code></li>
+  <li><code>connect</code></li>
   <li><code>cur</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
@@ -102,6 +104,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
   <li><code>ecr</code></li>
+  <li><code>ecrpublic</code></li>
   <li><code>ecs</code></li>
   <li><code>efs</code></li>
   <li><code>eks</code></li>
@@ -140,6 +143,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>macie</code></li>
+  <li><code>macie2</code></li>
   <li><code>managedblockchain</code></li>
   <li><code>marketplacecatalog</code></li>
   <li><code>mediaconnect</code></li>
@@ -149,7 +153,9 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediastore</code></li>
   <li><code>mediastoredata</code></li>
   <li><code>mq</code></li>
+  <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
@@ -169,6 +175,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>route53resolver</code></li>
   <li><code>s3</code></li>
   <li><code>s3control</code></li>
+  <li><code>s3outposts</code></li>
   <li><code>sagemaker</code></li>
   <li><code>sdb</code></li>
   <li><code>secretsmanager</code></li>
@@ -179,6 +186,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
   <li><code>shield</code></li>
+  <li><code>signer</code></li>
   <li><code>sns</code></li>
   <li><code>sqs</code></li>
   <li><code>ssm</code></li>
@@ -188,6 +196,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreamwrite</code></li>
   <li><code>transfer</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>

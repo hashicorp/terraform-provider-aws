@@ -11,16 +11,18 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 const (
-	AwsTagKeyPrefix              = `aws:`
-	ElasticbeanstalkTagKeyPrefix = `elasticbeanstalk:`
-	NameTagKey                   = `Name`
-	RdsTagKeyPrefix              = `rds:`
+	AwsTagKeyPrefix                             = `aws:`
+	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
+	NameTagKey                                  = `Name`
+	RdsTagKeyPrefix                             = `rds:`
+	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
 // IgnoreConfig contains various options for removing resource tags.
@@ -117,6 +119,25 @@ func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 		}
 
 		if strings.HasPrefix(k, RdsTagKeyPrefix) {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
+func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+			continue
+		}
+
+		if strings.HasPrefix(k, ServerlessApplicationRepositoryTagKeyPrefix) {
 			continue
 		}
 
@@ -378,6 +399,25 @@ func (tags KeyValueTags) Hash() int {
 	}
 
 	return hash
+}
+
+// String returns the default string representation of the KeyValueTags.
+func (tags KeyValueTags) String() string {
+	var builder strings.Builder
+
+	keys := tags.Keys()
+	sort.Strings(keys)
+
+	builder.WriteString("map[")
+	for i, k := range keys {
+		if i > 0 {
+			builder.WriteString(" ")
+		}
+		fmt.Fprintf(&builder, "%s:%s", k, tags[k].String())
+	}
+	builder.WriteString("]")
+
+	return builder.String()
 }
 
 // UrlEncode returns the KeyValueTags encoded as URL Query parameters.

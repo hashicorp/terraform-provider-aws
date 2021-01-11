@@ -3,9 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -61,7 +60,7 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
-				ValidateFunc: validation.IntBetween(24, 168),
+				ValidateFunc: validation.IntBetween(24, 8760),
 			},
 
 			"shard_level_metrics": {
