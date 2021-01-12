@@ -11,6 +11,11 @@ BUX FIXES
 * resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association [GH-17023]
 * resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks [GH-17055]
 
+ENHANCEMENTS
+
+* resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
+* resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
+
 ## 3.23.0 (January 08, 2021)
 
 FEATURES
