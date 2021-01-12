@@ -428,14 +428,14 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 		}
 
 		if raw, ok := data["db_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.DBSecurityGroupMemberships = memberships
 			}
 		}
 
 		if raw, ok := data["vpc_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.VpcSecurityGroupMemberships = memberships
 			}
@@ -1509,10 +1509,10 @@ func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 	options := elasticsearch.VPCOptions{}
 
 	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+		options.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+		options.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
 	return &options
@@ -1531,7 +1531,7 @@ func expandConfigRecordingGroup(configured []interface{}) *configservice.Recordi
 	}
 
 	if v, ok := group["resource_types"]; ok {
-		recordingGroup.ResourceTypes = expandStringList(v.(*schema.Set).List())
+		recordingGroup.ResourceTypes = expandStringSet(v.(*schema.Set))
 	}
 	return &recordingGroup
 }
@@ -2277,7 +2277,7 @@ func expandConfigRuleScope(l []interface{}) *configservice.Scope {
 	if v, ok := configured["compliance_resource_types"]; ok {
 		l := v.(*schema.Set)
 		if l.Len() > 0 {
-			scope.ComplianceResourceTypes = expandStringList(l.List())
+			scope.ComplianceResourceTypes = expandStringSet(l)
 		}
 	}
 	if v, ok := configured["tag_key"].(string); ok && v != "" {
@@ -3631,7 +3631,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
 		if v, ok := u["groups"]; ok {
-			user.Groups = expandStringList(v.(*schema.Set).List())
+			user.Groups = expandStringSet(v.(*schema.Set))
 		}
 		users[i] = &user
 	}
@@ -4228,7 +4228,7 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 	}
 
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
-		projection.NonKeyAttributes = expandStringList(v.List())
+		projection.NonKeyAttributes = expandStringSet(v)
 	}
 
 	return projection
@@ -4323,7 +4323,7 @@ func flattenDynamoDbTableItemAttributes(attrs map[string]*dynamodb.AttributeValu
 
 func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
 	properties := &iot.ThingTypeProperties{
-		SearchableAttributes: expandStringList(config["searchable_attributes"].(*schema.Set).List()),
+		SearchableAttributes: expandStringSet(config["searchable_attributes"].(*schema.Set)),
 	}
 
 	if v, ok := config["description"]; ok && v.(string) != "" {
