@@ -474,27 +474,6 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
-	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-
-		p := &elasticache.ParameterNameValue{
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
-		}
-
-		parameters = append(parameters, p)
-	}
-
-	return parameters
-}
-
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
 func expandNeptuneParameters(configured []interface{}) []*neptune.Parameter {
 	parameters := make([]*neptune.Parameter, 0, len(configured))
 
@@ -957,20 +936,6 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 			"name":  strings.ToLower(*i.ParameterName),
 			"value": strings.ToLower(*i.ParameterValue),
 		})
-	}
-	return result
-}
-
-// Flattens an array of Parameters into a []map[string]interface{}
-func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		if i.ParameterValue != nil {
-			result = append(result, map[string]interface{}{
-				"name":  strings.ToLower(*i.ParameterName),
-				"value": *i.ParameterValue,
-			})
-		}
 	}
 	return result
 }
