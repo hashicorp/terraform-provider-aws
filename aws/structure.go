@@ -428,14 +428,14 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 		}
 
 		if raw, ok := data["db_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.DBSecurityGroupMemberships = memberships
 			}
 		}
 
 		if raw, ok := data["vpc_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.VpcSecurityGroupMemberships = memberships
 			}
@@ -470,27 +470,6 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 	}
 
 	return options
-}
-
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
-	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-
-		p := &elasticache.ParameterNameValue{
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
-		}
-
-		parameters = append(parameters, p)
-	}
-
-	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
@@ -962,20 +941,6 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		if i.ParameterValue != nil {
-			result = append(result, map[string]interface{}{
-				"name":  strings.ToLower(*i.ParameterName),
-				"value": *i.ParameterValue,
-			})
-		}
-	}
-	return result
-}
-
-// Flattens an array of Parameters into a []map[string]interface{}
 func flattenNeptuneParameters(list []*neptune.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
@@ -1158,23 +1123,31 @@ func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
 }
 
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
-	att := make(map[string]interface{})
+	tfMap := map[string]interface{}{}
+
 	if a.AllocationId != nil {
-		att["allocation_id"] = *a.AllocationId
+		tfMap["allocation_id"] = aws.StringValue(a.AllocationId)
 	}
 	if a.AssociationId != nil {
-		att["association_id"] = *a.AssociationId
+		tfMap["association_id"] = aws.StringValue(a.AssociationId)
+	}
+	if a.CarrierIp != nil {
+		tfMap["carrier_ip"] = aws.StringValue(a.CarrierIp)
+	}
+	if a.CustomerOwnedIp != nil {
+		tfMap["customer_owned_ip"] = aws.StringValue(a.CustomerOwnedIp)
 	}
 	if a.IpOwnerId != nil {
-		att["ip_owner_id"] = *a.IpOwnerId
+		tfMap["ip_owner_id"] = aws.StringValue(a.IpOwnerId)
 	}
 	if a.PublicDnsName != nil {
-		att["public_dns_name"] = *a.PublicDnsName
+		tfMap["public_dns_name"] = aws.StringValue(a.PublicDnsName)
 	}
 	if a.PublicIp != nil {
-		att["public_ip"] = *a.PublicIp
+		tfMap["public_ip"] = aws.StringValue(a.PublicIp)
 	}
-	return []interface{}{att}
+
+	return []interface{}{tfMap}
 }
 
 func flattenEc2NetworkInterfaceIpv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
@@ -1501,10 +1474,10 @@ func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 	options := elasticsearch.VPCOptions{}
 
 	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+		options.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+		options.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
 	return &options
@@ -1523,7 +1496,7 @@ func expandConfigRecordingGroup(configured []interface{}) *configservice.Recordi
 	}
 
 	if v, ok := group["resource_types"]; ok {
-		recordingGroup.ResourceTypes = expandStringList(v.(*schema.Set).List())
+		recordingGroup.ResourceTypes = expandStringSet(v.(*schema.Set))
 	}
 	return &recordingGroup
 }
@@ -2269,7 +2242,7 @@ func expandConfigRuleScope(l []interface{}) *configservice.Scope {
 	if v, ok := configured["compliance_resource_types"]; ok {
 		l := v.(*schema.Set)
 		if l.Len() > 0 {
-			scope.ComplianceResourceTypes = expandStringList(l.List())
+			scope.ComplianceResourceTypes = expandStringSet(l)
 		}
 	}
 	if v, ok := configured["tag_key"].(string); ok && v != "" {
@@ -3623,7 +3596,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
 		if v, ok := u["groups"]; ok {
-			user.Groups = expandStringList(v.(*schema.Set).List())
+			user.Groups = expandStringSet(v.(*schema.Set))
 		}
 		users[i] = &user
 	}
@@ -4220,7 +4193,7 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 	}
 
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
-		projection.NonKeyAttributes = expandStringList(v.List())
+		projection.NonKeyAttributes = expandStringSet(v)
 	}
 
 	return projection
@@ -4315,7 +4288,7 @@ func flattenDynamoDbTableItemAttributes(attrs map[string]*dynamodb.AttributeValu
 
 func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
 	properties := &iot.ThingTypeProperties{
-		SearchableAttributes: expandStringList(config["searchable_attributes"].(*schema.Set).List()),
+		SearchableAttributes: expandStringSet(config["searchable_attributes"].(*schema.Set)),
 	}
 
 	if v, ok := config["description"]; ok && v.(string) != "" {

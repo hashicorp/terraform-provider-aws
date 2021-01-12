@@ -33,6 +33,7 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"transit_gateway_id": {
 				Type:     schema.TypeString,

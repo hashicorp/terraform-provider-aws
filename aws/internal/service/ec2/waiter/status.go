@@ -12,6 +12,36 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
+const (
+	carrierGatewayStateNotFound = "NotFound"
+	carrierGatewayStateUnknown  = "Unknown"
+)
+
+// CarrierGatewayState fetches the CarrierGateway and its State
+func CarrierGatewayState(conn *ec2.EC2, carrierGatewayID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		carrierGateway, err := finder.CarrierGatewayByID(conn, carrierGatewayID)
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidCarrierGatewayIDNotFound) {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+		if err != nil {
+			return nil, carrierGatewayStateUnknown, err
+		}
+
+		if carrierGateway == nil {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+
+		state := aws.StringValue(carrierGateway.State)
+
+		if state == ec2.CarrierGatewayStateDeleted {
+			return nil, carrierGatewayStateNotFound, nil
+		}
+
+		return carrierGateway, state, nil
+	}
+}
+
 // LocalGatewayRouteTableVpcAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
 func LocalGatewayRouteTableVpcAssociationState(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -265,5 +295,24 @@ func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) res
 		}
 
 		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+	}
+}
+
+const (
+	managedPrefixListStateNotFound = "NotFound"
+	managedPrefixListStateUnknown  = "Unknown"
+)
+
+func ManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		managedPrefixList, err := finder.ManagedPrefixListByID(conn, prefixListId)
+		if err != nil {
+			return nil, managedPrefixListStateUnknown, err
+		}
+		if managedPrefixList == nil {
+			return nil, managedPrefixListStateNotFound, nil
+		}
+
+		return managedPrefixList, aws.StringValue(managedPrefixList.State), nil
 	}
 }

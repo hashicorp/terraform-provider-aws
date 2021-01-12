@@ -262,7 +262,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating Security Group: %s", err)
 	}
 
-	d.SetId(*createResp.GroupId)
+	d.SetId(aws.StringValue(createResp.GroupId))
 
 	log.Printf("[INFO] Security Group ID: %s", d.Id())
 

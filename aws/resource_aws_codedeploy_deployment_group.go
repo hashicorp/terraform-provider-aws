@@ -574,7 +574,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating CodeDeploy deployment group: %s", err)
 	}
 
-	d.SetId(*resp.DeploymentGroupId)
+	d.SetId(aws.StringValue(resp.DeploymentGroupId))
 
 	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
 }

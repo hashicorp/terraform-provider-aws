@@ -111,7 +111,9 @@ For greater detail, the following Go language resources provide common coding pr
 
 ### Resource Contribution Guidelines
 
-The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge.
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. Some of these are not handled by the automated code testing that occurs during submission, so reviewers (even those outside the maintainers) are encouraged to reach out to contributors about any issues to save time.
+
+This Contribution Guide also includes separate sections on topics such as [Error Handling](error-handling.md), which also applies to contributions.
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
@@ -154,16 +156,12 @@ The following resource checks need to be addressed before your contribution can 
   }
   ```
 
-- [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
 - [ ] __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
 The below are style-based items that _may_ be noted during review and are recommended for simplicity, consistency, and quality assurance:
 
 - [ ] __Avoids CustomizeDiff__: Usage of `CustomizeDiff` is generally discouraged.
-- [ ] __Implements Error Message Context__: Returning errors from resource `Create`, `Read`, `Update`, and `Delete` functions should include additional messaging about the location or cause of the error for operators and code maintainers by wrapping with [`fmt.Errorf()`](https://godoc.org/golang.org/x/exp/errors/fmt#Errorf).
-    - An example `Delete` API error: `return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %w", d.Id(), err)`
-    - An example `d.Set()` error: `return fmt.Errorf("error setting {ATTRIBUTE}: %w", err)`
 - [ ] __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN) should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
 
   ```go
@@ -182,38 +180,7 @@ The below are style-based items that _may_ be noted during review and are recomm
   When the `arn` attribute is synthesized this way, add the resource to the [list](https://www.terraform.io/docs/providers/aws/index.html#argument-reference) of those affected by the provider's `skip_requesting_account_id` attribute.
 
 - [ ] __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g. via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
-- [ ] __Uses Functions from aws-sdk-go-base/tfawserr with AWS Go SDK Error Objects__: Use the [`ErrCodeEquals(err error, code string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrCodeEquals) and [`ErrMessageContains(err error, code string, message string)`](https://godoc.org/github.com/hashicorp/aws-sdk-go-base/tfawserr#ErrMessageContains) helper functions instead of the `awserr` package to compare error code and message contents.
-- [ ] __Uses %s fmt Verb with AWS Go SDK Objects__: AWS Go SDK objects implement `String()` so using the `%v`, `%#v`, or `%+v` fmt verbs with the object are extraneous or provide unhelpful detail.
 - [ ] __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g. `color` instead of `colour`.
 - [ ] __Skips Timestamp Attributes__: Generally, creation and modification dates from the API should be omitted from the schema.
-- [ ] __Skips Error() Call with AWS Go SDK Error Objects__: Error objects do not need to have `Error()` called.
-- [ ] __Adds Error Codes Missing from the AWS Go SDK to Internal Service Package__: If an AWS API error code is checked and the AWS Go SDK has no constant string value defined for that error code, a new constant should be added to a file named `errors.go` in a per-service internal package. For example:
-
-```go
-// In `aws/internal/service/s3/errors.go`.
-
-package s3
-
-const (
-	ErrCodeNoSuchTagSet = "NoSuchTagSet"
-)
-```
-
-```go
-// Example usage.
-
-import (
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
-)
-
-output, err := conn.GetBucketTagging(input)
-
-if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
-	return nil
-}
-```
-
 - [ ] __Uses Paginated AWS Go SDK Functions When Iterating Over a Collection of Objects__: When the API for listing a collection of objects provides a paginated function, use it instead of looping until the next page token is not set. For example, with the EC2 API, [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) should be used instead of [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances) when more than one result is expected.
 - [ ] __Adds Paginated Functions Missing from the AWS Go SDK to Internal Service Package__: If the AWS Go SDK does not define a paginated equivalent for a function to list a collection of objects, it should be added to a per-service internal package using the [`listpages` generator](../../aws/internal/generators/listpages/README.md). A support case should also be opened with AWS to have the paginated functions added to the AWS Go SDK.

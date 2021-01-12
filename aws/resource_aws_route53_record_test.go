@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -762,7 +763,7 @@ func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
 
 func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 	var record1, record2, record3 route53.ResourceRecordSet
-	resourceName := "aws_route53_record.us-east-1"
+	resourceName := "aws_route53_record.first_region"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -771,11 +772,11 @@ func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 		CheckDestroy: testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53LatencyCNAMERecord,
+				Config: testAccRoute53LatencyCNAMERecord(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					testAccCheckRoute53RecordExists("aws_route53_record.eu-west-1", &record2),
-					testAccCheckRoute53RecordExists("aws_route53_record.ap-northeast-1", &record3),
+					testAccCheckRoute53RecordExists("aws_route53_record.second_region", &record2),
+					testAccCheckRoute53RecordExists("aws_route53_record.third_region", &record3),
 				),
 			},
 			{
@@ -1595,53 +1596,55 @@ resource "aws_route53_record" "denmark" {
 }
 `
 
-const testAccRoute53LatencyCNAMERecord = `
+func testAccRoute53LatencyCNAMERecord(firstRegion, secondRegion, thirdRegion string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
 
-resource "aws_route53_record" "us-east-1" {
+resource "aws_route53_record" "first_region" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
 
   latency_routing_policy {
-    region = "us-east-1"
+    region = %[1]q
   }
 
-  set_identifier = "us-east-1"
+  set_identifier = %[1]q
   records        = ["dev.notexample.com"]
 }
 
-resource "aws_route53_record" "eu-west-1" {
+resource "aws_route53_record" "second_region" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
 
   latency_routing_policy {
-    region = "eu-west-1"
+    region = %[2]q
   }
 
-  set_identifier = "eu-west-1"
+  set_identifier = %[2]q
   records        = ["dev.notexample.com"]
 }
 
-resource "aws_route53_record" "ap-northeast-1" {
+resource "aws_route53_record" "third_region" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www"
   type    = "CNAME"
   ttl     = "5"
 
   latency_routing_policy {
-    region = "ap-northeast-1"
+    region = %[3]q
   }
 
-  set_identifier = "ap-northeast-1"
+  set_identifier = %[3]q
   records        = ["dev.notexample.com"]
 }
-`
+`, firstRegion, secondRegion, thirdRegion)
+}
 
 const testAccRoute53RecordConfigAliasElb = `
 data "aws_availability_zones" "available" {

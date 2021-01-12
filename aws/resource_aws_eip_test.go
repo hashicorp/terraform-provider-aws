@@ -468,6 +468,35 @@ func TestAccAWSEIP_NetworkBorderGroup(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_CarrierIP(t *testing.T) {
+	var conf ec2.Address
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigCarrierIP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "carrier_ip"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_border_group"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEIP_PublicIpv4Pool_custom(t *testing.T) {
 	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
 		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
@@ -1176,3 +1205,22 @@ resource "aws_eip" "test" {
   network_border_group = data.aws_region.current.name
 }
 `
+
+func testAccAWSEIPConfigCarrierIP(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
+		fmt.Sprintf(`
+data "aws_availability_zone" "available" {
+  name = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_eip" "test" {
+  vpc                  = true
+  network_border_group = data.aws_availability_zone.available.network_border_group
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}

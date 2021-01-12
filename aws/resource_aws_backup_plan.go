@@ -78,9 +78,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 										Optional: true,
 									},
 									"delete_after": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(90),
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 								},
 							},
@@ -101,9 +100,8 @@ func resourceAwsBackupPlan() *schema.Resource {
 													Optional: true,
 												},
 												"delete_after": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(90),
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
 											},
 										},
@@ -314,19 +312,8 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 			rule.RecoveryPointTags = keyvaluetags.New(vRecoveryPointTags).IgnoreAws().BackupTags()
 		}
 
-		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {
-			lifecycle := &backup.Lifecycle{}
-
-			mLifecycle := vLifecycle[0].(map[string]interface{})
-
-			if vDeleteAfter, ok := mLifecycle["delete_after"].(int); ok && vDeleteAfter > 0 {
-				lifecycle.DeleteAfterDays = aws.Int64(int64(vDeleteAfter))
-			}
-			if vColdStorageAfter, ok := mLifecycle["cold_storage_after"].(int); ok && vColdStorageAfter > 0 {
-				lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(vColdStorageAfter))
-			}
-
-			rule.Lifecycle = lifecycle
+		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
+			rule.Lifecycle = expandBackupPlanLifecycle(vLifecycle)
 		}
 
 		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
@@ -409,12 +396,7 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
-			mRule["lifecycle"] = []interface{}{
-				map[string]interface{}{
-					"delete_after":       int(aws.Int64Value(lifecycle.DeleteAfterDays)),
-					"cold_storage_after": int(aws.Int64Value(lifecycle.MoveToColdStorageAfterDays)),
-				},
-			}
+			mRule["lifecycle"] = flattenBackupPlanCopyActionLifecycle(lifecycle)
 		}
 
 		mRule["copy_action"] = flattenBackupPlanCopyActions(rule.CopyActions)

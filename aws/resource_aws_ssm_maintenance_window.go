@@ -124,7 +124,7 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error creating SSM Maintenance Window: %s", err)
 	}
 
-	d.SetId(*resp.WindowId)
+	d.SetId(aws.StringValue(resp.WindowId))
 
 	if !d.Get("enabled").(bool) {
 		input := &ssm.UpdateMaintenanceWindowInput{
