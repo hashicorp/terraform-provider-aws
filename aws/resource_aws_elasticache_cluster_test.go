@@ -1342,7 +1342,7 @@ resource "aws_elasticache_cluster" "test" {
   engine          = "memcached"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  
+
   final_snapshot_identifier = %[1]q
 }
 `, rName)
@@ -1355,7 +1355,7 @@ resource "aws_elasticache_cluster" "test" {
   engine          = "redis"
   node_type       = "cache.t3.small"
   num_cache_nodes = 1
-  
+
   final_snapshot_identifier = %[1]q
 }
 `, rName)
