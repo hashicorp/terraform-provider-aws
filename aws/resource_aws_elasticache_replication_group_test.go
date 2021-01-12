@@ -839,6 +839,27 @@ func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_FinalSnapshot(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfigFinalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
+				),
+			},
+		},
+	})
+}
+
 func TestResourceAWSElastiCacheReplicationGroupEngineValidation(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -1760,4 +1781,17 @@ resource "aws_elasticache_replication_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSElasticacheReplicationGroupConfigFinalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  number_cache_clusters         = 1
+
+  final_snapshot_identifier = %[1]q
+}
+`, rName)
 }

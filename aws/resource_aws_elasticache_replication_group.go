@@ -907,7 +907,9 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	input := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
 	}
-	input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
+	if finalSnapshotID != "" {
+		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
+	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
