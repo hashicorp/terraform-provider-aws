@@ -1302,15 +1302,13 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
-	imageConfig := response.ImageConfig
-
-	if response == nil || response.Error != nil || imageConfig == nil {
+	if response == nil || response.Error != nil || response.ImageConfig == nil {
 		return nil
 	}
 
-	settings["command"] = imageConfig.Command
-	settings["entry_point"] = imageConfig.EntryPoint
-	settings["working_directory"] = imageConfig.WorkingDirectory
+	settings["command"] = response.ImageConfig.Command
+	settings["entry_point"] = response.ImageConfig.EntryPoint
+	settings["working_directory"] = response.ImageConfig.WorkingDirectory
 
 	return []map[string]interface{}{settings}
 }
