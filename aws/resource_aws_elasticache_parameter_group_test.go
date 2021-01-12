@@ -316,7 +316,7 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_elasticache_parameter_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
