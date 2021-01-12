@@ -30,6 +30,28 @@ func resourceAwsTransferServer() *schema.Resource {
 				Computed: true,
 			},
 
+			"certificate": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+
+			"protocols": {
+				Type:     schema.TypeSet,
+				MinItems: 1,
+				MaxItems: 3,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						transfer.ProtocolSftp,
+						transfer.ProtocolFtps,
+						transfer.ProtocolFtp,
+					}, false),
+				},
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -172,6 +194,14 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.LoggingRole = aws.String(attr.(string))
 	}
 
+	if attr, ok := d.GetOk("certificate"); ok {
+		createOpts.Certificate = aws.String(attr.(string))
+	}
+
+	if v, ok := d.GetOk("protocols"); ok {
+		createOpts.Protocols = expandStringSet(v.(*schema.Set))
+	}
+
 	if attr, ok := d.GetOk("endpoint_type"); ok {
 		createOpts.EndpointType = aws.String(attr.(string))
 	}
@@ -289,6 +319,11 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	endpoint := meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id()))
 
 	d.Set("arn", resp.Server.Arn)
+	d.Set("certificate", resp.Server.Certificate)
+	if err := d.Set("protocols", flattenStringSet(resp.Server.Protocols)); err != nil {
+		return fmt.Errorf("Error setting protocols: %s", err)
+	}
+
 	d.Set("endpoint", endpoint)
 	d.Set("invocation_role", "")
 	d.Set("url", "")
@@ -352,6 +387,18 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		if attr, ok := d.GetOk("endpoint_type"); ok {
 			updateOpts.EndpointType = aws.String(attr.(string))
 		}
+	}
+
+	if d.HasChange("certificate") {
+		updateFlag = true
+		if attr, ok := d.GetOk("certificate"); ok {
+			updateOpts.Certificate = aws.String(attr.(string))
+		}
+	}
+
+	if d.HasChange("protocols") {
+		updateFlag = true
+		updateOpts.Protocols = expandStringSet(d.Get("protocols").(*schema.Set))
 	}
 
 	if d.HasChange("endpoint_details") {
