@@ -29,9 +29,6 @@ func dataSourceAwsEc2CoipPool() *schema.Resource {
 			},
 
 			"pool_id": {
-
-
-				
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
