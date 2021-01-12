@@ -37,7 +37,7 @@ func TestAccAWSSSOAssignmentGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSSSOInstance(t)
+			testAccPreCheckAWSSSOAdminInstances(t)
 			testAccPreCheckAWSSIdentityStoreGroup(t, identityStoreGroup)
 		},
 		Providers:    testAccProviders,
@@ -72,7 +72,7 @@ func TestAccAWSSSOAssignmentUser_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSSSOInstance(t)
+			testAccPreCheckAWSSSOAdminInstances(t)
 			testAccPreCheckAWSSIdentityStoreUser(t, identityStoreUser)
 		},
 		Providers:    testAccProviders,
@@ -107,7 +107,7 @@ func TestAccAWSSSOAssignmentGroup_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSSSOInstance(t)
+			testAccPreCheckAWSSSOAdminInstances(t)
 			testAccPreCheckAWSSIdentityStoreGroup(t, identityStoreGroup)
 		},
 		Providers:    testAccProviders,
@@ -248,8 +248,9 @@ func testAccCheckAWSSSOAssignmentDestroy(s *terraform.State) error {
 func testAccSSOAssignmentBasicGroupConfig(identityStoreGroup, rName string) string {
 	return fmt.Sprintf(`
 data "aws_sso_instance" "selected" {}
+
 data "aws_caller_identity" "current" {}
-  
+
 data "aws_identity_store_group" "example_group" {
   identity_store_id = data.aws_sso_instance.selected.identity_store_id
   display_name      = "%s"
@@ -276,6 +277,7 @@ resource "aws_sso_assignment" "example" {
 func testAccSSOAssignmentBasicUserConfig(identityStoreUser, rName string) string {
 	return fmt.Sprintf(`
 data "aws_sso_instance" "selected" {}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_identity_store_user" "example_user" {
