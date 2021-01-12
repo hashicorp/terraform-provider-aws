@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-
 	"testing"
 	"time"
 
@@ -573,11 +572,6 @@ resource "aws_iam_role" "test-service-role" {
   ]
 }
 EOF
-}
-
-resource "aws_iam_role_policy_attachment" "test-AmazonEKS_CNI_Policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role       = aws_iam_role.test-service-role.name
 }
 
 resource "aws_eks_addon" "test" {

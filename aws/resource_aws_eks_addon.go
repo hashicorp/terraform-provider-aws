@@ -139,7 +139,7 @@ func resourceAwsEksAddonCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(fmt.Sprintf("%s:%s", clusterName, addonName))
 
-	// TODO: refactor and move all waiters and status getters to waiter package for easier maintainance
+	// TODO: refactor and move all waiters and status getters to waiter package for easier maintenance
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.AddonStatusCreating},
 		Target:  []string{eks.AddonStatusActive},
