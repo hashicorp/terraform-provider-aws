@@ -1,9 +1,12 @@
 package aws
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -104,9 +107,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
 									"category": {
 										Type:         schema.TypeString,
@@ -620,4 +624,29 @@ func resourceAwsCodePipelineValidateActionProvider(i interface{}, path cty.Path)
 	}
 
 	return nil
+}
+
+func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
+	parts := strings.Split(k, ".")
+	parts = parts[:len(parts)-2]
+	providerAddr := strings.Join(append(parts, "provider"), ".")
+	provider := d.Get(providerAddr).(string)
+
+	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
+		hash := hashCodePipelineGitHubToken(new)
+		return old == hash
+	}
+
+	return false
+}
+
+const codePipelineGitHubTokenHashPrefix = "hash-"
+
+func hashCodePipelineGitHubToken(token string) string {
+	// Without this check, the value was getting encoded twice
+	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
+		return token
+	}
+	sum := sha256.Sum256([]byte(token))
+	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
 }
