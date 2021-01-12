@@ -4088,7 +4088,7 @@ resource "aws_volume_attachment" "test" {
 }
 
 func testAccCheckInstanceConfigBlockDeviceRootTagsConflictWithVolumeTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4112,11 +4112,11 @@ resource "aws_instance" "test" {
     Name = "volume-tags"
   }
 }
-`))
+`)
 }
 
 func testAccCheckInstanceConfigBlockDeviceEbsTagsConflictWithVolumeTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4140,7 +4140,7 @@ resource "aws_instance" "test" {
     Name = "volume-tags"
   }
 }
-`))
+`)
 }
 
 func testAccCheckInstanceConfigNoVolumeTags() string {
@@ -4182,7 +4182,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4211,11 +4211,11 @@ resource "aws_instance" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`))
+`)
 }
 
 func testAccCheckInstanceConfigBlockDeviceCreateVolumeTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4249,11 +4249,11 @@ resource "aws_instance" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`))
+`)
 }
 
 func testAccCheckInstanceConfigBlockDeviceUpdateVolumeTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4288,7 +4288,7 @@ resource "aws_instance" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`))
+`)
 }
 
 var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
