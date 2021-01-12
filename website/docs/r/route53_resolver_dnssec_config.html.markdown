@@ -34,6 +34,7 @@ The following argument is supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN for a configuration for DNSSEC validation.
 * `id` - The ID for a configuration for DNSSEC validation.
 * `owner_id` - The owner account ID of the virtual private cloud (VPC) for a configuration for DNSSEC validation.
 * `validation_status` - The validation status for a DNSSEC configuration. The status can be one of the following: `ENABLING`, `ENABLED`, `DISABLING` and `DISABLED`.

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -87,6 +88,7 @@ func TestAccAWSRoute53ResolverDnssecConfig_basic(t *testing.T) {
 				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ResolverDnssecConfigExists(resourceName, &config),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexp.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),

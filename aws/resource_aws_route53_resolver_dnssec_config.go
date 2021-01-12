@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,6 +26,11 @@ func resourceAwsRoute53ResolverDnssecConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -112,6 +118,15 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 	d.Set("owner_id", out.OwnerId)
 	d.Set("resource_id", out.ResourceId)
 	d.Set("validation_status", out.ValidationStatus)
+
+	configArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "route53resolver",
+		Region:    meta.(*AWSClient).region,
+		AccountID: aws.StringValue(out.OwnerId),
+		Resource:  fmt.Sprintf("resolver-dnssec-config/%s", aws.StringValue(out.ResourceId)),
+	}.String()
+	d.Set("arn", configArn)
 
 	return nil
 }
