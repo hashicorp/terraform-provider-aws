@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -20,7 +20,6 @@ func dataSourceAwsElastiCacheCluster() *schema.Resource {
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					value := v.(string)
 					return strings.ToLower(value)
@@ -153,6 +152,7 @@ func dataSourceAwsElastiCacheCluster() *schema.Resource {
 
 func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &elasticache.DescribeCacheClustersInput{
 		CacheClusterId:    aws.String(d.Get("cluster_id").(string)),
@@ -174,7 +174,7 @@ func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{
 
 	cluster := resp.CacheClusters[0]
 
-	d.SetId(*cluster.CacheClusterId)
+	d.SetId(aws.StringValue(cluster.CacheClusterId))
 
 	d.Set("cluster_id", cluster.CacheClusterId)
 	d.Set("node_type", cluster.CacheNodeType)
@@ -229,7 +229,7 @@ func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
