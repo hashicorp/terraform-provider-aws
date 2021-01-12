@@ -250,6 +250,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 		SchemaVersion: 1,
 
@@ -611,7 +615,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Kick off all the Cache Cluster deletions
 			for _, cacheClusterID := range removeClusterIDs {
-				err := deleteElasticacheCacheCluster(conn, cacheClusterID)
+				var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+				err := deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
 				if err != nil {
 					// Future enhancement: we could retry deletion with random existing ID on missing name
 					// if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") { ... }
@@ -695,7 +700,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 					}
 
 					// Finally retry deleting the cache cluster
-					err = deleteElasticacheCacheCluster(conn, cacheClusterID)
+					var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+					err = deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
 					if err != nil {
 						return fmt.Errorf("error deleting Elasticache Cache Cluster (%s) (removing replica after setting new primary): %w", cacheClusterID, err)
 					}
@@ -840,7 +846,8 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheReplicationGroup(d.Id(), conn)
+	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+	err := deleteElasticacheReplicationGroup(d.Id(), conn, finalSnapshotID)
 	if err != nil {
 		return fmt.Errorf("error deleting Elasticache Replication Group (%s): %w", d.Id(), err)
 	}
@@ -896,9 +903,12 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 	}
 }
 
-func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache) error {
+func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string) error {
 	input := &elasticache.DeleteReplicationGroupInput{
 		ReplicationGroupId: aws.String(replicationGroupID),
+	}
+	if finalSnapshotID != "" {
+		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 	}
 
 	// 10 minutes should give any creating/deleting cache clusters or snapshots time to complete
