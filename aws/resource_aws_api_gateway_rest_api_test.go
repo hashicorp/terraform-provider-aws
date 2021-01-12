@@ -513,99 +513,34 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_openapi_body_base_path_ignore(t *testing.T) {
+func TestAccAWSAPIGatewayRestApi_Parameters(t *testing.T) {
 	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathIgnore,
+				Config: testAccAWSAPIGatewayRestAPIConfigParameters1(rName, "basepath", "prepend"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/foo", "/foo/bar", "/foo/bar/baz", "/foo/bar/baz/test"}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body", "parameters"},
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigParameters1(rName, "basepath", "ignore"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
-				),
-			},
-			{
-				ResourceName:            "aws_api_gateway_rest_api.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
-			},
-			{
-				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathIgnore,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
-					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayRestApi_openapi_body_base_path_prepend(t *testing.T) {
-	var conf apigateway.RestApi
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathPrepend,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
-					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/foo/bar/baz/test"}),
-				),
-			},
-			{
-				ResourceName:            "aws_api_gateway_rest_api.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
-			},
-			{
-				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathPrepend,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
-					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/foo/bar/baz/update"}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayRestApi_openapi_body_base_path_split(t *testing.T) {
-	var conf apigateway.RestApi
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathSplit,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
-					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/bar/baz/test"}),
-				),
-			},
-			{
-				ResourceName:            "aws_api_gateway_rest_api.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
-			},
-			{
-				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathSplit,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
-					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/bar/baz/update"}),
 				),
 			},
 		},
@@ -1120,18 +1055,18 @@ EOF
 `, rName, rName)
 }
 
-const testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathIgnore = `
+func testAccAWSAPIGatewayRestAPIConfigParameters1(rName string, parameterKey1 string, parameterValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-  body_base_path = "ignore"
+  name = %[1]q
   body = <<EOF
 {
   "swagger": "2.0",
   "info": {
-    "title": "test",
+    "title": %[1]q,
     "version": "2017-04-20T04:08:08Z"
-	},
-	"basePath": "/foo/bar/baz",
+  },
+  "basePath": "/foo/bar/baz",
   "schemes": [
     "https"
   ],
@@ -1158,207 +1093,10 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 EOF
-}
-`
 
-const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathIgnore = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-	body_base_path = "ignore"
-	body = <<EOF
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "test",
-    "version": "2017-04-20T04:08:08Z"
-  },
-  "schemes": [
-    "https"
-  ],
-  "paths": {
-    "/update": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "uri": "https://www.google.de",
-          "httpMethod": "GET",
-          "responses": {
-            "default": {
-              "statusCode": 200
-            }
-          }
-        }
-      }
-    }
+  parameters = {
+    %[2]s = %[3]q
   }
 }
-EOF
+`, rName, parameterKey1, parameterValue1)
 }
-`
-
-const testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathPrepend = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-  body_base_path = "prepend"
-  body = <<EOF
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "test",
-    "version": "2017-04-20T04:08:08Z"
-	},
-	"basePath": "/foo/bar/baz",
-  "schemes": [
-    "https"
-  ],
-  "paths": {
-    "/test": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "uri": "https://www.google.de",
-          "httpMethod": "GET",
-          "responses": {
-            "default": {
-              "statusCode": 200
-            }
-          }
-        }
-      }
-    }
-  }
-}
-EOF
-}
-`
-
-const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathPrepend = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-	body_base_path = "prepend"
-	body = <<EOF
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "test",
-    "version": "2017-04-20T04:08:08Z"
-  },
-  "schemes": [
-    "https"
-  ],
-  "paths": {
-    "/update": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "uri": "https://www.google.de",
-          "httpMethod": "GET",
-          "responses": {
-            "default": {
-              "statusCode": 200
-            }
-          }
-        }
-      }
-    }
-  }
-}
-EOF
-}
-`
-
-const testAccAWSAPIGatewayRestAPIConfigOpenAPIBasePathSplit = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-  body_base_path = "split"
-  body = <<EOF
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "test",
-    "version": "2017-04-20T04:08:08Z"
-	},
-	"basePath": "/foo/bar/baz",
-  "schemes": [
-    "https"
-  ],
-  "paths": {
-    "/test": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "uri": "https://www.google.de",
-          "httpMethod": "GET",
-          "responses": {
-            "default": {
-              "statusCode": 200
-            }
-          }
-        }
-      }
-    }
-  }
-}
-EOF
-}
-`
-
-const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPIBasePathSplit = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-	body_base_path = "split"
-	body = <<EOF
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "test",
-    "version": "2017-04-20T04:08:08Z"
-  },
-  "schemes": [
-    "https"
-  ],
-  "paths": {
-    "/update": {
-      "get": {
-        "responses": {
-          "200": {
-            "description": "200 response"
-          }
-        },
-        "x-amazon-apigateway-integration": {
-          "type": "HTTP",
-          "uri": "https://www.google.de",
-          "httpMethod": "GET",
-          "responses": {
-            "default": {
-              "statusCode": 200
-            }
-          }
-        }
-      }
-    }
-  }
-}
-EOF
-}
-`
