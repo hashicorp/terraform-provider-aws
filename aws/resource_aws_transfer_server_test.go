@@ -896,7 +896,7 @@ POLICY
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
   logging_role           = aws_iam_role.foo.arn
-  protocols = ["SFTP"]
+  protocols              = ["SFTP"]
 
   tags = {
     NAME = "tf-acc-test-transfer-server"
@@ -950,7 +950,7 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on        = [aws_api_gateway_integration.test]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id       = aws_api_gateway_rest_api.test.id
   stage_name        = "test"
@@ -958,7 +958,7 @@ resource "aws_api_gateway_deployment" "test" {
   stage_description = "%[1]s"
 
   variables = {
-    "a" = "2"
+	"a" = "2"
   }
 }
 
@@ -969,85 +969,84 @@ resource "aws_iam_role" "foo" {
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Effect": "Allow",
+	{
+	  "Effect": "Allow",
       "Principal": {
         "Service": "transfer.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
+    },
+    "Action": "sts:AssumeRole"
+   }
   ]
 }
 EOF
 }
-	  
 
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
-  
-	tags = {
-	  Name = "terraform-testacc-vpc"
-	}
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpc"
   }
-  
-  resource "aws_internet_gateway" "test" {
-	vpc_id = aws_vpc.test.id
-  
-	tags = {
-	  Name = "terraform-testacc-igw"
-	}
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-igw"
   }
-  
-  resource "aws_subnet" "test" {
-	vpc_id                  = aws_vpc.test.id
-	cidr_block              = "10.0.0.0/24"
-	map_public_ip_on_launch = true
-  
-	depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+	cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
   }
-  
-  resource "aws_default_route_table" "test" {
-	default_route_table_id = aws_vpc.test.default_route_table_id
-  
-	route {
-	  cidr_block = "0.0.0.0/0"
-	  gateway_id = aws_internet_gateway.test.id
-	}
-  
-	tags = {
-	  Name = "terraform-testacc-subnet"
-	}
+
+  tags = {
+    Name = "terraform-testacc-subnet"
   }
-  
-  resource "aws_security_group" "test" {
-	name   = "terraform-testacc-security-group"
-	vpc_id = aws_vpc.test.id
-  
-	tags = {
-	  Name = "terraform-testacc-security-group"
-	}
+}
+
+resource "aws_security_group" "test" {
+  name   = "terraform-testacc-security-group"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "terraform-testacc-security-group"
   }
-  
+}
+
 
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "API_GATEWAY"
-	url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
-	invocation_role        = aws_iam_role.foo.arn
-	logging_role           = aws_iam_role.foo.arn
-	protocols              = ["FTP"]
+  identity_provider_type = "API_GATEWAY"
+  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
+  invocation_role        = aws_iam_role.foo.arn
+  logging_role           = aws_iam_role.foo.arn
+  protocols              = ["FTP"]
 
-	endpoint_type = "VPC"
-	endpoint_details {
-		subnet_ids         = [aws_subnet.test.id]
-		vpc_id             = aws_vpc.test.id
-	}
-	
-	tags = {
-		NAME = "tf-acc-test-transfer-server"
-		TYPE = "apigateway"
-	}
+  endpoint_type = "VPC"
+  endpoint_details {
+    subnet_ids = [aws_subnet.test.id]
+    vpc_id     = aws_vpc.test.id
+  }
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+    TYPE = "apigateway"
+  }
 }
 `, rName)
 
