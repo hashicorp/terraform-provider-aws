@@ -4,6 +4,13 @@ FEATURES
 
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
 
+ENHANCEMENTS
+
+* resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
+* resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
+* resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
+* resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
+
 BUX FIXES
 
 * resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
@@ -11,12 +18,6 @@ BUX FIXES
 * resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
 * resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association [GH-17023]
 * resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks [GH-17055]
-
-ENHANCEMENTS
-
-* resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
-* resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
-* resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
 
 ## 3.23.0 (January 08, 2021)
 
