@@ -312,7 +312,7 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 				Config: testAccAWSElasticacheParameterGroupConfigParameter1(rName, "redis2.8", "appendonly", "yes"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheParameterGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr("aws_elasticache_parameter_group.test", "name", fmt.Sprintf("tf-elastipg-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-elastipg-%d", rInt)),
 				),
 			},
 			{
