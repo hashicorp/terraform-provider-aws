@@ -29,14 +29,16 @@ func dataSourceAwsEc2CoipPool() *schema.Resource {
 			},
 
 			"pool_id": {
+
+
+				
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			"pool_arn": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -96,7 +98,7 @@ func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(aws.StringValue(coip.PoolId))
 
 	d.Set("local_gateway_route_table_id", coip.LocalGatewayRouteTableId)
-	d.Set("pool_arn", coip.PoolArn)
+	d.Set("arn", coip.PoolArn)
 
 	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
 		return fmt.Errorf("error setting pool_cidrs: %s", err)
