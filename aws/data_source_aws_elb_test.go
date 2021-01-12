@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSELB_basic(t *testing.T) {
 	// Must be less than 32 characters for ELB name
-	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -29,6 +29,7 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "tags.TestName", t.Name()),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "dns_name"),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "zone_id"),
+					resource.TestCheckResourceAttrPair("data.aws_elb.elb_test", "arn", "aws_elb.elb_test", "arn"),
 				),
 			},
 		},
@@ -36,12 +37,12 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 }
 
 func testAccDataSourceAWSELBConfigBasic(rName, testName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "elb_test" {
   name            = "%[1]s"
   internal        = true
-  security_groups = ["${aws_security_group.elb_test.id}"]
-  subnets         = ["${aws_subnet.elb_test.*.id}"]
+  security_groups = [aws_security_group.elb_test.id]
+  subnets         = aws_subnet.elb_test[*].id
 
   idle_timeout = 30
 
@@ -52,7 +53,7 @@ resource "aws_elb" "elb_test" {
     lb_protocol       = "http"
   }
 
-  tags {
+  tags = {
     TestName = "%[2]s"
   }
 }
@@ -62,24 +63,22 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "aws_vpc" "elb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-elb-data-source"
   }
 }
 
 resource "aws_subnet" "elb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.elb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.elb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
-  tags {
+  tags = {
     Name = "tf-acc-elb-data-source"
   }
 }
@@ -87,13 +86,13 @@ resource "aws_subnet" "elb_test" {
 resource "aws_security_group" "elb_test" {
   name        = "%[1]s"
   description = "%[2]s"
-  vpc_id      = "${aws_vpc.elb_test.id}"
+  vpc_id      = aws_vpc.elb_test.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -103,12 +102,13 @@ resource "aws_security_group" "elb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "%[2]s"
   }
 }
 
 data "aws_elb" "elb_test" {
-	name = "${aws_elb.elb_test.name}"
-}`, rName, testName)
+  name = aws_elb.elb_test.name
+}
+`, rName, testName)
 }

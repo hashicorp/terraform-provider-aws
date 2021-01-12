@@ -6,49 +6,124 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
-	name := acctest.RandString(10)
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	roleResourceName := "aws_iam_role.iam_for_sfn"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfig(name, 5),
+				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "name"),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "definition"),
-					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "definition"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfig(name, 10),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "name"),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
-					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
-					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
+func TestAccAWSSfnStateMachine_tags(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSfnStateMachineConfig(rName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName, &sm),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSfnStateMachine(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSfnExists(n string, sm *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -61,13 +136,15 @@ func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).sfnconn
 
-		_, err := conn.DescribeStateMachine(&sfn.DescribeStateMachineInput{
+		resp, err := conn.DescribeStateMachine(&sfn.DescribeStateMachineInput{
 			StateMachineArn: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
 			return err
 		}
+
+		*sm = *resp
 
 		return nil
 	}
@@ -86,49 +163,26 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == "StateMachineDoesNotExist" {
-				return nil
+			if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
+				continue
 			}
-			return err
 		}
 
-		if out != nil && *out.Status != sfn.StateMachineStatusDeleting {
+		if out != nil && aws.StringValue(out.Status) != sfn.StateMachineStatusDeleting {
 			return fmt.Errorf("Expected AWS Step Function State Machine to be destroyed, but was still found")
 		}
 
-		return nil
+		return err
 	}
 
-	return fmt.Errorf("Default error in Step Function Test")
+	return nil
 }
 
-func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
+func testAccAWSSfnStateMachineConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
-
-resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "iam_policy_for_lambda_%s"
-  role = "${aws_iam_role.iam_for_lambda.id}"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ],
-    "Resource": "arn:aws:logs:*:*:*"
-  }]
-}
-EOF
-}
-
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda_%s"
+  name = "%[1]s-2"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -146,9 +200,20 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+
+data "aws_region" "current" {}
+
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
-  name = "iam_policy_for_sfn_%s"
-  role = "${aws_iam_role.iam_for_sfn.id}"
+  name = %[1]q
+  role = aws_iam_role.iam_for_sfn.id
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -158,15 +223,16 @@ resource "aws_iam_role_policy" "iam_policy_for_sfn" {
       "Action": [
         "lambda:InvokeFunction"
       ],
-        "Resource": "*"
-      }
+      "Resource": "${aws_lambda_function.test.arn}"
+    }
   ]
 }
 EOF
 }
 
 resource "aws_iam_role" "iam_for_sfn" {
-  name = "iam_for_sfn_%s"
+  name = %[1]q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -176,24 +242,21 @@ resource "aws_iam_role" "iam_for_sfn" {
       "Principal": {
         "Service": "states.${data.aws_region.current.name}.amazonaws.com"
       },
-      "Action": "sts:AssumeRole"
+      "Action": "sts:AssumeRole",
+      "Sid": ""
     }
   ]
 }
 EOF
 }
-
-resource "aws_lambda_function" "lambda_function_test" {
-  filename = "test-fixtures/lambdatest.zip"
-  function_name = "sfn-%s"
-  role = "${aws_iam_role.iam_for_lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs4.3"
+`, rName)
 }
 
-resource "aws_sfn_state_machine" "foo" {
-  name     = "test_sfn_%s"
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
+	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %q
+  role_arn = aws_iam_role.iam_for_sfn.arn
 
   definition = <<EOF
 {
@@ -202,13 +265,15 @@ resource "aws_sfn_state_machine" "foo" {
   "States": {
     "HelloWorld": {
       "Type": "Task",
-      "Resource": "${aws_lambda_function.lambda_function_test.arn}",
+      "Resource": "${aws_lambda_function.test.arn}",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 5,
           "MaxAttempts": %d,
-          "BackoffRate": 8.0
+          "BackoffRate": 8
         }
       ],
       "End": true
@@ -217,6 +282,80 @@ resource "aws_sfn_state_machine" "foo" {
 }
 EOF
 }
+`, rName, rMaxAttempts)
+}
 
-`, rName, rName, rName, rName, rName, rName, rMaxAttempts)
+func testAccAWSSfnStateMachineConfigTags1(rName, tag1Key, tag1Value string) string {
+	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.iam_for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSSfnStateMachineConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.iam_for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

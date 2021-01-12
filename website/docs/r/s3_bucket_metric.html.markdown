@@ -1,12 +1,12 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_metric"
-sidebar_current: "docs-aws-resource-s3-bucket-metric"
 description: |-
   Provides a S3 bucket metrics configuration resource.
 ---
 
-# aws_s3_bucket_metric
+# Resource: aws_s3_bucket_metric
 
 Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html) resource.
 
@@ -20,7 +20,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_metric" "example-entire-bucket" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "EntireBucket"
 }
 ```
@@ -33,15 +33,15 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_metric" "example-filtered" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"
 
   filter {
     prefix = "documents/"
 
-    tags {
+    tags = {
       priority = "high"
-      class = "blue"
+      class    = "blue"
     }
   }
 }
@@ -56,6 +56,8 @@ The following arguments are supported:
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 
 The `filter` metric configuration supports the following:
+
+~> **NOTE**: At least one of `prefix` or `tags` is required when specifying a `filter`
 
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).

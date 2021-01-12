@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
@@ -18,8 +18,8 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -34,9 +34,11 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers: testAccProviders,
+		// master account associated with Macie it can't be disassociated.
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMacieMemberAccountAssociationConfig_self,
@@ -126,6 +128,6 @@ const testAccAWSMacieMemberAccountAssociationConfig_self = `
 data "aws_caller_identity" "current" {}
 
 resource "aws_macie_member_account_association" "test" {
-  member_account_id = "${data.aws_caller_identity.current.account_id}"
+  member_account_id = data.aws_caller_identity.current.account_id
 }
 `

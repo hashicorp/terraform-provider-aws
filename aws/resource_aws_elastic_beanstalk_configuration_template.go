@@ -5,11 +5,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
@@ -20,33 +19,33 @@ func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
 		Delete: resourceAwsElasticBeanstalkConfigurationTemplateDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"application": &schema.Schema{
+			"application": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"environment_id": &schema.Schema{
+			"environment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"setting": &schema.Schema{
+			"setting": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem:     resourceAwsElasticBeanstalkOptionSetting(),
 				Set:      optionSettingValueHash,
 			},
-			"solution_stack_name": &schema.Schema{
+			"solution_stack_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,

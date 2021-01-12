@@ -1,15 +1,15 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_key_pair"
-sidebar_current: "docs-aws-resource-lightsail-key-pair"
 description: |-
   Provides an Lightsail Key Pair
 ---
 
-# aws_lightsail_key_pair
+# Resource: aws_lightsail_key_pair
 
 Provides a Lightsail Key Pair, for use with Lightsail Instances. These key pairs
-are seperate from EC2 Key Pairs, and must be created or imported for use with
+are separate from EC2 Key Pairs, and must be created or imported for use with
 Lightsail.
 
 ~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
@@ -37,7 +37,7 @@ resource "aws_lightsail_key_pair" "lg_key_pair" {
 ```hcl
 resource "aws_lightsail_key_pair" "lg_key_pair" {
   name       = "importing"
-  public_key = "${file("~/.ssh/id_rsa.pub")}"
+  public_key = file("~/.ssh/id_rsa.pub")
 }
 ```
 
@@ -58,7 +58,7 @@ Without a PGP key, the private key material will be stored in state unencrypted.
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name used for this key pair
 * `arn` - The ARN of the Lightsail key pair

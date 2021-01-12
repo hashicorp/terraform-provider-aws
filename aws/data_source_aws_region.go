@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsRegion() *schema.Resource {
@@ -17,13 +17,6 @@ func dataSourceAwsRegion() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-
-			"current": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "Defaults to current provider region if no other filtering is enabled",
 			},
 
 			"endpoint": {
@@ -76,7 +69,6 @@ func dataSourceAwsRegionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(region.ID())
-	d.Set("current", region.ID() == providerRegion)
 
 	regionEndpointEc2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
 	if err != nil {

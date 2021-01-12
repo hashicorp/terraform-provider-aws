@@ -6,12 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsS3BucketNotification() *schema.Resource {
@@ -25,35 +24,35 @@ func resourceAwsS3BucketNotification() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": &schema.Schema{
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"topic": &schema.Schema{
+			"topic": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": &schema.Schema{
+						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"filter_prefix": &schema.Schema{
+						"filter_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"filter_suffix": &schema.Schema{
+						"filter_suffix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"topic_arn": &schema.Schema{
+						"topic_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"events": &schema.Schema{
+						"events": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -63,29 +62,29 @@ func resourceAwsS3BucketNotification() *schema.Resource {
 				},
 			},
 
-			"queue": &schema.Schema{
+			"queue": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": &schema.Schema{
+						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"filter_prefix": &schema.Schema{
+						"filter_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"filter_suffix": &schema.Schema{
+						"filter_suffix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"queue_arn": &schema.Schema{
+						"queue_arn": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"events": &schema.Schema{
+						"events": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -95,29 +94,29 @@ func resourceAwsS3BucketNotification() *schema.Resource {
 				},
 			},
 
-			"lambda_function": &schema.Schema{
+			"lambda_function": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": &schema.Schema{
+						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"filter_prefix": &schema.Schema{
+						"filter_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"filter_suffix": &schema.Schema{
+						"filter_suffix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"lambda_function_arn": &schema.Schema{
+						"lambda_function_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"events": &schema.Schema{
+						"events": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -304,13 +303,14 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 		notificationConfiguration.TopicConfigurations = topicConfigs
 	}
 	i := &s3.PutBucketNotificationConfigurationInput{
-		Bucket: aws.String(bucket),
+		Bucket:                    aws.String(bucket),
 		NotificationConfiguration: notificationConfiguration,
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		if _, err := s3conn.PutBucketNotificationConfiguration(i); err != nil {
+		_, err := s3conn.PutBucketNotificationConfiguration(i)
+		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				switch awserr.Message() {
 				case "Unable to validate the following destination configurations":
@@ -323,6 +323,9 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 		// Successful put configuration
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.PutBucketNotificationConfiguration(i)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 notification configuration: %s", err)
 	}
@@ -336,7 +339,7 @@ func resourceAwsS3BucketNotificationDelete(d *schema.ResourceData, meta interfac
 	s3conn := meta.(*AWSClient).s3conn
 
 	i := &s3.PutBucketNotificationConfigurationInput{
-		Bucket: aws.String(d.Id()),
+		Bucket:                    aws.String(d.Id()),
 		NotificationConfiguration: &s3.NotificationConfiguration{},
 	}
 
@@ -399,6 +402,10 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 
 func flattenNotificationConfigurationFilter(filter *s3.NotificationConfigurationFilter) map[string]interface{} {
 	filterRules := map[string]interface{}{}
+	if filter.Key == nil || filter.Key.FilterRules == nil {
+		return filterRules
+	}
+
 	for _, f := range filter.Key.FilterRules {
 		if strings.ToLower(*f.Name) == s3.FilterRuleNamePrefix {
 			filterRules["filter_prefix"] = *f.Value
@@ -421,7 +428,7 @@ func flattenTopicConfigurations(configs []*s3.TopicConfiguration) []map[string]i
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = schema.NewSet(schema.HashString, flattenStringList(notification.Events))
+		conf["events"] = flattenStringSet(notification.Events)
 		conf["topic_arn"] = *notification.TopicArn
 		topicNotifications = append(topicNotifications, conf)
 	}
@@ -440,7 +447,7 @@ func flattenQueueConfigurations(configs []*s3.QueueConfiguration) []map[string]i
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = schema.NewSet(schema.HashString, flattenStringList(notification.Events))
+		conf["events"] = flattenStringSet(notification.Events)
 		conf["queue_arn"] = *notification.QueueArn
 		queueNotifications = append(queueNotifications, conf)
 	}
@@ -459,7 +466,7 @@ func flattenLambdaFunctionConfigurations(configs []*s3.LambdaFunctionConfigurati
 		}
 
 		conf["id"] = *notification.Id
-		conf["events"] = schema.NewSet(schema.HashString, flattenStringList(notification.Events))
+		conf["events"] = flattenStringSet(notification.Events)
 		conf["lambda_function_arn"] = *notification.LambdaFunctionArn
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)
 	}

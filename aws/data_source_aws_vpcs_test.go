@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
 
 func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccDataSourceAwsVpcs_tags(t *testing.T) {
 
 func TestAccDataSourceAwsVpcs_filters(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -103,49 +103,50 @@ func testAccCheckAwsVpcsDataSourceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccDataSourceAwsVpcsConfig() string {
-	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "10.0.0.0/24"
-	}
+	return `
+resource "aws_vpc" "test-vpc" {
+  cidr_block = "10.0.0.0/24"
+}
 
-	data "aws_vpcs" "all" {}
-	`)
+data "aws_vpcs" "all" {}
+`
 }
 
 func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "10.0.0.0/24"
+resource "aws_vpc" "test-vpc" {
+  cidr_block = "10.0.0.0/24"
 
-  		tags {
-  			Name = "testacc-vpc-%s"
-  			Service = "testacc-test"
-  		}
-	}
+  tags = {
+    Name    = "testacc-vpc-%s"
+    Service = "testacc-test"
+  }
+}
 
-	data "aws_vpcs" "selected" {
-		tags {
-			Name = "testacc-vpc-%s"
-			Service = "${aws_vpc.test-vpc.tags["Service"]}"
-		}
-	}
-	`, rName, rName)
+data "aws_vpcs" "selected" {
+  tags = {
+    Name    = "testacc-vpc-%s"
+    Service = aws_vpc.test-vpc.tags["Service"]
+  }
+}
+`, rName, rName)
 }
 
 func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "192.168.0.0/25"
-  		tags {
-  			Name = "testacc-vpc-%s"
-  		}
-	}
+resource "aws_vpc" "test-vpc" {
+  cidr_block = "192.168.0.0/25"
 
-	data "aws_vpcs" "selected" {
-		filter {
-			name = "cidr"
-    		values = ["${aws_vpc.test-vpc.cidr_block}"]
-		}
-	}
-	`, rName)
+  tags = {
+    Name = "testacc-vpc-%s"
+  }
+}
+
+data "aws_vpcs" "selected" {
+  filter {
+    name   = "cidr"
+    values = [aws_vpc.test-vpc.cidr_block]
+  }
+}
+`, rName)
 }

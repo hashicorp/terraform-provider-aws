@@ -3,13 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsApiGatewayResource() *schema.Resource {
@@ -18,25 +16,38 @@ func resourceAwsApiGatewayResource() *schema.Resource {
 		Read:   resourceAwsApiGatewayResourceRead,
 		Update: resourceAwsApiGatewayResourceUpdate,
 		Delete: resourceAwsApiGatewayResourceDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID", d.Id())
+				}
+				restApiID := idParts[0]
+				resourceID := idParts[1]
+				d.Set("rest_api_id", restApiID)
+				d.SetId(resourceID)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": &schema.Schema{
+			"rest_api_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"parent_id": &schema.Schema{
+			"parent_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"path_part": &schema.Schema{
+			"path_part": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +56,7 @@ func resourceAwsApiGatewayResource() *schema.Resource {
 }
 
 func resourceAwsApiGatewayResourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Creating API Gateway Resource for API %s", d.Get("rest_api_id").(string))
 
 	var err error
@@ -59,13 +70,13 @@ func resourceAwsApiGatewayResourceCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error creating API Gateway Resource: %s", err)
 	}
 
-	d.SetId(*resource.Id)
+	d.SetId(aws.StringValue(resource.Id))
 
 	return resourceAwsApiGatewayResourceRead(d, meta)
 }
 
 func resourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Resource %s", d.Id())
 	resource, err := conn.GetResource(&apigateway.GetResourceInput{
@@ -74,7 +85,7 @@ func resourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Resource (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -93,7 +104,7 @@ func resourceAwsApiGatewayResourceUpdateOperations(d *schema.ResourceData) []*ap
 	operations := make([]*apigateway.PatchOperation, 0)
 	if d.HasChange("path_part") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/pathPart"),
 			Value: aws.String(d.Get("path_part").(string)),
 		})
@@ -101,7 +112,7 @@ func resourceAwsApiGatewayResourceUpdateOperations(d *schema.ResourceData) []*ap
 
 	if d.HasChange("parent_id") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/parentId"),
 			Value: aws.String(d.Get("parent_id").(string)),
 		})
@@ -110,7 +121,7 @@ func resourceAwsApiGatewayResourceUpdateOperations(d *schema.ResourceData) []*ap
 }
 
 func resourceAwsApiGatewayResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
 	_, err := conn.UpdateResource(&apigateway.UpdateResourceInput{
@@ -127,23 +138,21 @@ func resourceAwsApiGatewayResourceUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsApiGatewayResourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Resource: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] schema is %#v", d)
-		_, err := conn.DeleteResource(&apigateway.DeleteResourceInput{
-			ResourceId: aws.String(d.Id()),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		if apigatewayErr, ok := err.(awserr.Error); ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	log.Printf("[DEBUG] schema is %#v", d)
+	_, err := conn.DeleteResource(&apigateway.DeleteResourceInput{
+		ResourceId: aws.String(d.Id()),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway Resource: %s", err)
+	}
+	return nil
 }

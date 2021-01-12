@@ -5,15 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -36,6 +36,8 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 				),
 			},
 		},
@@ -44,10 +46,10 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 
 func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_vpc_dhcp_options.test"
+	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -66,11 +68,19 @@ func TestAccDataSourceAwsVpcDhcpOptions_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
 				),
 			},
 			{
 				Config:      testAccDataSourceAwsVpcDhcpOptionsConfig_Filter(rInt, 2),
 				ExpectError: regexp.MustCompile(`Multiple matching EC2 DHCP Options found`),
+			},
+			{
+				// We have one last empty step here because otherwise we'll leave the
+				// test case with resources in the state and an erroneous config, and
+				// thus the automatic destroy step will fail. This ensures we end with
+				// both an empty state and a valid config.
+				Config: `/* this config intentionally left blank */`,
 			},
 		},
 	})
@@ -94,13 +104,13 @@ resource "aws_vpc_dhcp_options" "test" {
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
 
 data "aws_vpc_dhcp_options" "test" {
-  dhcp_options_id = "${aws_vpc_dhcp_options.test.id}"
+  dhcp_options_id = aws_vpc_dhcp_options.test.id
 }
 `
 
@@ -111,16 +121,16 @@ resource "aws_vpc_dhcp_options" "incorrect" {
 }
 
 resource "aws_vpc_dhcp_options" "test" {
-  count = %d
+  count = %[2]d
 
-  domain_name          = "tf-acc-test-%d.example.com"
+  domain_name          = "tf-acc-test-%[1]d.example.com"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
   netbios_name_servers = ["127.0.0.1"]
   netbios_node_type    = 2
   ntp_servers          = ["127.0.0.1"]
 
-  tags {
-    Name = "tf-acc-test-%d"
+  tags = {
+    Name = "tf-acc-test-%[1]d"
   }
 }
 
@@ -132,8 +142,8 @@ data "aws_vpc_dhcp_options" "test" {
 
   filter {
     name   = "value"
-    values = ["${aws_vpc_dhcp_options.test.0.domain_name}"]
+    values = [aws_vpc_dhcp_options.test[0].domain_name]
   }
 }
-`, count, rInt, rInt)
+`, rInt, count)
 }

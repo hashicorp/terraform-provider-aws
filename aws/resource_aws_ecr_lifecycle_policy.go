@@ -3,7 +3,8 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsEcrLifecyclePolicy() *schema.Resource {
@@ -17,19 +18,19 @@ func resourceAwsEcrLifecyclePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository": &schema.Schema{
+			"repository": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": &schema.Schema{
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
-			"registry_id": &schema.Schema{
+			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +50,7 @@ func resourceAwsEcrLifecyclePolicyCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	d.SetId(*resp.RepositoryName)
+	d.SetId(aws.StringValue(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
 	return resourceAwsEcrLifecyclePolicyRead(d, meta)
 }

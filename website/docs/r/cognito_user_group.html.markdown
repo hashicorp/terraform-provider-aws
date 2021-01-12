@@ -1,12 +1,12 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_group"
-sidebar_current: "docs-aws-resource-cognito-user-group"
 description: |-
   Provides a Cognito User Group resource.
 ---
 
-# aws_cognito_user_group
+# Resource: aws_cognito_user_group
 
 Provides a Cognito User Group resource.
 
@@ -19,6 +19,7 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role" {
   name = "user-group-role"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -46,10 +47,10 @@ EOF
 
 resource "aws_cognito_user_group" "main" {
   name         = "user-group"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  user_pool_id = aws_cognito_user_pool.main.id
   description  = "Managed by Terraform"
   precedence   = 42
-  role_arn     = "${aws_iam_role.group_role.arn}"
+  role_arn     = aws_iam_role.group_role.arn
 }
 ```
 

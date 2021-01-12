@@ -7,10 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsApiGatewayDeployment() *schema.Resource {
@@ -29,7 +27,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 
 			"stage_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -42,6 +40,13 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"variables": {
@@ -70,7 +75,7 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 }
 
 func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
@@ -91,14 +96,14 @@ func resourceAwsApiGatewayDeploymentCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating API Gateway Deployment: %s", err)
 	}
 
-	d.SetId(*deployment.Id)
+	d.SetId(aws.StringValue(deployment.Id))
 	log.Printf("[DEBUG] API Gateway Deployment ID: %s", d.Id())
 
 	return resourceAwsApiGatewayDeploymentRead(d, meta)
 }
 
 func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Reading API Gateway Deployment %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -107,7 +112,7 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 		DeploymentId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -117,10 +122,9 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Received API Gateway Deployment: %s", out)
 	d.Set("description", out.Description)
 
-	region := meta.(*AWSClient).region
 	stageName := d.Get("stage_name").(string)
 
-	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
+	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -143,7 +147,7 @@ func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*
 
 	if d.HasChange("description") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
@@ -153,7 +157,7 @@ func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*
 }
 
 func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
@@ -170,35 +174,54 @@ func resourceAwsApiGatewayDeploymentUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsApiGatewayDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] schema is %#v", d)
+	// If the stage has been updated to point at a different deployment, then
+	// the stage should not be removed when this deployment is deleted.
+	shouldDeleteStage := false
+
+	// API Gateway allows an empty state name (e.g. ""), but the AWS Go SDK
+	// now has validation for the parameter, so we must check first.
+	// InvalidParameter: 1 validation error(s) found.
+	//  - minimum field size of 1, GetStageInput.StageName.
+	stageName := d.Get("stage_name").(string)
+	if stageName != "" {
+		stage, err := conn.GetStage(&apigateway.GetStageInput{
+			StageName: aws.String(stageName),
+			RestApiId: aws.String(d.Get("rest_api_id").(string)),
+		})
+
+		if err != nil && !isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+			return fmt.Errorf("error getting referenced stage: %s", err)
+		}
+
+		if stage != nil && aws.StringValue(stage.DeploymentId) == d.Id() {
+			shouldDeleteStage = true
+		}
+	}
+
+	if shouldDeleteStage {
 		if _, err := conn.DeleteStage(&apigateway.DeleteStageInput{
 			StageName: aws.String(d.Get("stage_name").(string)),
 			RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		}); err == nil {
 			return nil
 		}
+	}
 
-		_, err := conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
-			DeploymentId: aws.String(d.Id()),
-			RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
+		DeploymentId: aws.String(d.Id()),
+		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Deployment (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

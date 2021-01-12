@@ -7,16 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSOpsworksUserProfile(t *testing.T) {
+func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -133,32 +133,32 @@ func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
 func testAccAwsOpsworksUserProfileCreate(rn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.user.arn}"
-  ssh_username = "${aws_iam_user.user.name}"
+  user_arn     = aws_iam_user.user.arn
+  ssh_username = aws_iam_user.user.name
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn)
+`, rn)
 }
 
 func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.new-user.arn}"
-  ssh_username = "${aws_iam_user.new-user.name}"
+  user_arn     = aws_iam_user.new-user.arn
+  ssh_username = aws_iam_user.new-user.name
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 
 resource "aws_iam_user" "new-user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn, updateRn)
+`, rn, updateRn)
 }

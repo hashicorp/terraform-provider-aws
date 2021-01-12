@@ -6,8 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsIAMInstanceProfile() *schema.Resource {
@@ -59,7 +58,7 @@ func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Reading IAM Instance Profile: %s", req)
 	resp, err := iamconn.GetInstanceProfile(req)
 	if err != nil {
-		return errwrap.Wrapf("Error getting instance profiles: {{err}}", err)
+		return fmt.Errorf("Error getting instance profiles: %s", err)
 	}
 	if resp == nil {
 		return fmt.Errorf("no IAM instance profile found")
@@ -67,7 +66,7 @@ func dataSourceAwsIAMInstanceProfileRead(d *schema.ResourceData, meta interface{
 
 	instanceProfile := resp.InstanceProfile
 
-	d.SetId(*instanceProfile.InstanceProfileId)
+	d.SetId(aws.StringValue(instanceProfile.InstanceProfileId))
 	d.Set("arn", instanceProfile.Arn)
 	d.Set("create_date", fmt.Sprintf("%v", instanceProfile.CreateDate))
 	d.Set("path", instanceProfile.Path)

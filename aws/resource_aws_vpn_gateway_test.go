@@ -3,14 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -18,6 +19,9 @@ func init() {
 	resource.AddTestSweepers("aws_vpn_gateway", &resource.Sweeper{
 		Name: "aws_vpn_gateway",
 		F:    testSweepVPNGateways,
+		Dependencies: []string{
+			"aws_dx_gateway_association",
+		},
 	})
 }
 
@@ -27,17 +31,9 @@ func testSweepVPNGateways(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeVpnGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeVpnGatewaysInput{}
 	resp, err := conn.DescribeVpnGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -53,21 +49,46 @@ func testSweepVPNGateways(region string) error {
 	}
 
 	for _, vpng := range resp.VpnGateways {
-		_, err := conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
-			VpnGatewayId: vpng.VpnGatewayId,
-		})
+		if aws.StringValue(vpng.State) == ec2.VpnStateDeleted {
+			continue
+		}
+
+		for _, vpcAttachment := range vpng.VpcAttachments {
+			if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusDetached {
+				continue
+			}
+
+			r := resourceAwsVpnGatewayAttachment()
+			d := r.Data(nil)
+			d.Set("vpc_id", vpcAttachment.VpcId)
+			d.Set("vpn_gateway_id", vpng.VpnGatewayId)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		r := resourceAwsVpnGateway()
+		d := r.Data(nil)
+		d.SetId(aws.StringValue(vpng.VpnGatewayId))
+		err := r.Delete(d, client)
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting VPN Gateway (%s): %s",
-				*vpng.VpnGatewayId, err)
+			log.Printf("[ERROR] %s", err)
+			sweeperErrs = multierror.Append(sweeperErrs, err)
+			continue
 		}
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpnGateway_basic(t *testing.T) {
 	var v, v2 ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
 	testNotEqual := func(*terraform.State) error {
 		if len(v.VpcAttachments) == 0 {
@@ -86,25 +107,29 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.foo", &v),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-gateway/vgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
-
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccVpnGatewayConfigChangeVPC,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.foo", &v2),
+					testAccCheckVpnGatewayExists(resourceName, &v2),
 					testNotEqual,
 				),
 			},
@@ -114,38 +139,51 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 
 func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	var v ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
+	azDataSourceName := "data.aws_availability_zones.available"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccVpnGatewayConfigWithAZ,
+			{
+				Config: testAccVpnGatewayConfigWithAZ(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
-					resource.TestCheckResourceAttr(
-						"aws_vpn_gateway.foo", "availability_zone", "us-west-2a"),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", azDataSourceName, "names.0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"availability_zone"},
 			},
 		},
 	})
 }
 func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 	var v ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfigWithASN,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
+					testAccCheckVpnGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_vpn_gateway.foo", "amazon_side_asn", "4294967294"),
+						resourceName, "amazon_side_asn", "4294967294"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -153,17 +191,18 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 
 func TestAccAWSVpnGateway_disappears(t *testing.T) {
 	var v ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
-					testAccAWSVpnGatewayDisappears(&v),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,6 +213,8 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 func TestAccAWSVpnGateway_reattach(t *testing.T) {
 	var vpc1, vpc2 ec2.Vpc
 	var vgw1, vgw2 ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
+	resourceName2 := "aws_vpn_gateway.test2"
 
 	testAttachmentFunc := func(vgw *ec2.VpnGateway, vpc *ec2.Vpc) func(*terraform.State) error {
 		return func(*terraform.State) error {
@@ -209,43 +250,48 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcExists("aws_vpc.foo", &vpc1),
-					testAccCheckVpcExists("aws_vpc.bar", &vpc2),
+					testAccCheckVpcExists("aws_vpc.test", &vpc1),
+					testAccCheckVpcExists("aws_vpc.test2", &vpc2),
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.foo", &vgw1),
+						resourceName, &vgw1),
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.bar", &vgw2),
+						resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
 					testAttachmentFunc(&vgw2, &vpc2),
 				),
 			},
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccCheckVpnGatewayConfigReattachChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.foo", &vgw1),
+						resourceName, &vgw1),
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.bar", &vgw2),
+						resourceName2, &vgw2),
 					testAttachmentFunc(&vgw2, &vpc1),
 					testAttachmentFunc(&vgw1, &vpc2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.foo", &vgw1),
+						resourceName, &vgw1),
 					testAccCheckVpnGatewayExists(
-						"aws_vpn_gateway.bar", &vgw2),
+						resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
 					testAttachmentFunc(&vgw2, &vpc2),
 				),
@@ -256,6 +302,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 
 func TestAccAWSVpnGateway_delete(t *testing.T) {
 	var vpnGateway ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
 	testDeleted := func(r string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
@@ -267,20 +314,25 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &vpnGateway)),
+					testAccCheckVpnGatewayExists(resourceName, &vpnGateway)),
 			},
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccNoVpnGatewayConfig,
-				Check:  resource.ComposeTestCheckFunc(testDeleted("aws_vpn_gateway.foo")),
+				Check:  resource.ComposeTestCheckFunc(testDeleted(resourceName)),
 			},
 		},
 	})
@@ -288,85 +340,46 @@ func TestAccAWSVpnGateway_delete(t *testing.T) {
 
 func TestAccAWSVpnGateway_tags(t *testing.T) {
 	var v ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_gateway.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckVpnGatewayConfigTags,
+			{
+				Config: testAccCheckVpnGatewayConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-vpn-gateway-tags"),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
-			resource.TestStep{
-				Config: testAccCheckVpnGatewayConfigTagsUpdate,
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCheckVpnGatewayConfigTags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.foo", &v),
-					testAccCheckTags(&v.Tags, "foo", ""),
-					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-vpn-gateway-tags-updated"),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCheckVpnGatewayConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
 	})
-}
-
-func testAccAWSVpnGatewayDisappears(gateway *ec2.VpnGateway) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		_, err := conn.DetachVpnGateway(&ec2.DetachVpnGatewayInput{
-			VpnGatewayId: gateway.VpnGatewayId,
-			VpcId:        gateway.VpcAttachments[0].VpcId,
-		})
-		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if ok {
-				if ec2err.Code() == "InvalidVpnGatewayID.NotFound" {
-					return nil
-				} else if ec2err.Code() == "InvalidVpnGatewayAttachment.NotFound" {
-					return nil
-				}
-			}
-
-			if err != nil {
-				return err
-			}
-		}
-
-		opts := &ec2.DeleteVpnGatewayInput{
-			VpnGatewayId: gateway.VpnGatewayId,
-		}
-		if _, err := conn.DeleteVpnGateway(opts); err != nil {
-			return err
-		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			opts := &ec2.DescribeVpnGatewaysInput{
-				VpnGatewayIds: []*string{gateway.VpnGatewayId},
-			}
-			resp, err := conn.DescribeVpnGateways(opts)
-			if err != nil {
-				cgw, ok := err.(awserr.Error)
-				if ok && cgw.Code() == "InvalidVpnGatewayID.NotFound" {
-					return nil
-				}
-				if ok && cgw.Code() == "IncorrectState" {
-					return resource.RetryableError(fmt.Errorf(
-						"Waiting for VPN Gateway to be in the correct state: %v", gateway.VpnGatewayId))
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving VPN Gateway: %s", err))
-			}
-			if *resp.VpnGateways[0].State == "deleted" {
-				return nil
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for VPN Gateway: %v", gateway.VpnGatewayId))
-		})
-	}
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
@@ -442,165 +455,196 @@ func testAccCheckVpnGatewayExists(n string, ig *ec2.VpnGateway) resource.TestChe
 }
 
 const testAccNoVpnGatewayConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-removed"
   }
 }
 `
 
 const testAccVpnGatewayConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-basic"
-  }
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 }
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway"
+  }
+}
+
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-change-vpc"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.bar.id}"
-  tags {
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-basic"
   }
 }
 `
 
-const testAccCheckVpnGatewayConfigTags = `
-resource "aws_vpc" "foo" {
+func testAccCheckVpnGatewayConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-tags"
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    %[1]q = %[2]q
   }
 }
-`
+`, tagKey1, tagValue1)
+}
 
-const testAccCheckVpnGatewayConfigTagsUpdate = `
-resource "aws_vpc" "foo" {
+func testAccCheckVpnGatewayConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-tags"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-tags-updated"
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccCheckVpnGatewayConfigReattach = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway-reattach-test"
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 
-resource "aws_vpn_gateway" "bar" {
-  vpc_id = "${aws_vpc.bar.id}"
-  tags {
+resource "aws_vpn_gateway" "test2" {
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 `
 
 const testAccCheckVpnGatewayConfigReattachChange = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-reattach-foo"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway-reattach-test"
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
-  tags {
-    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+
+  tags = {
+    Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.bar.id}"
-  tags {
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test2.id
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 
-resource "aws_vpn_gateway" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
+resource "aws_vpn_gateway" "test2" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 `
 
-const testAccVpnGatewayConfigWithAZ = `
-resource "aws_vpc" "foo" {
+func testAccVpnGatewayConfigWithAZ() string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-with-az"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  availability_zone = "us-west-2a"
-  tags {
+resource "aws_vpn_gateway" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-with-az"
   }
 }
-`
+`)
+}
 
 const testAccVpnGatewayConfigWithASN = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-vpn-gateway-with-asn"
   }
 }
 
-resource "aws_vpn_gateway" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_vpn_gateway" "test" {
+  vpc_id          = aws_vpc.test.id
   amazon_side_asn = 4294967294
 }
 `

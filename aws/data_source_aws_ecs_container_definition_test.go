@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
@@ -14,11 +14,11 @@ func TestAccAWSEcsDataSource_ecsContainerDefinition(t *testing.T) {
 	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
 	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsEcsContainerDefinitionDataSourceConfig(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ecs_container_definition.mongo", "image", "mongo:latest"),
@@ -41,14 +41,17 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
     "cpu": 128,
-    "environment": [{
-      "name": "SECRET",
-      "value": "KEY"
-    }],
+    "environment": [
+      {
+        "name": "SECRET",
+        "value": "KEY"
+      }
+    ],
     "essential": true,
     "image": "mongo:latest",
     "memory": 128,
@@ -60,15 +63,15 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  name            = "%s"
+  cluster         = aws_ecs_cluster.default.id
+  task_definition = aws_ecs_task_definition.mongo.arn
+  desired_count   = 1
 }
 
 data "aws_ecs_container_definition" "mongo" {
-  task_definition = "${aws_ecs_task_definition.mongo.id}"
-  container_name = "mongodb"
+  task_definition = aws_ecs_task_definition.mongo.id
+  container_name  = "mongodb"
 }
 `, clusterName, tdName, svcName)
 }

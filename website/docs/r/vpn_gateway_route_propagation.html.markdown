@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_route_propagation"
-sidebar_current: "docs-aws-resource-vpn-gateway-route-propagation"
 description: |-
   Requests automatic route propagation between a VPN gateway and a route table.
 ---
 
-# aws_vpn_gateway_route_propagation
+# Resource: aws_vpn_gateway_route_propagation
 
 Requests automatic route propagation between a VPN gateway and a route table.
 
@@ -18,8 +18,8 @@ propagation not explicitly listed in its value will be removed.
 
 ```hcl
 resource "aws_vpn_gateway_route_propagation" "example" {
-  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
-  route_table_id = "${aws_route_table.example.id}"
+  vpn_gateway_id = aws_vpn_gateway.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 

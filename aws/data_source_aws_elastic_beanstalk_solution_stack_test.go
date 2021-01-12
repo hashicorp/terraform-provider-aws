@@ -5,12 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccAWSElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -23,10 +23,6 @@ func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceDestroy(s *terraform.State) error {
-	return nil
 }
 
 func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource.TestCheckFunc {
@@ -46,7 +42,7 @@ func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource
 
 const testAccCheckAwsElasticBeanstalkSolutionStackDataSourceConfig = `
 data "aws_elastic_beanstalk_solution_stack" "multi_docker" {
-	most_recent = true
-	name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
+  most_recent = true
+  name_regex  = "^64bit Amazon Linux (.*) Multi-container Docker (.*)$"
 }
 `

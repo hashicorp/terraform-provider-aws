@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
@@ -21,12 +21,12 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}{
 		{
 			name:   "valid suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067`), //lintignore:AWSAT003,AWSAT005
 			suffix: `targetgroup/my-targets/73e2d6bc24d8a067`,
 		},
 		{
 			name:   "no suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup`), //lintignore:AWSAT003,AWSAT005
 			suffix: ``,
 		},
 		{
@@ -46,9 +46,9 @@ func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -90,7 +90,7 @@ func TestAccAWSALBTargetGroup_basic(t *testing.T) {
 func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -110,7 +110,7 @@ func TestAccAWSALBTargetGroup_namePrefix(t *testing.T) {
 func TestAccAWSALBTargetGroup_generatedName(t *testing.T) {
 	var conf elbv2.TargetGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -128,10 +128,10 @@ func TestAccAWSALBTargetGroup_generatedName(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlphaNum))
+	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandString(4))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -157,9 +157,9 @@ func TestAccAWSALBTargetGroup_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -185,9 +185,9 @@ func TestAccAWSALBTargetGroup_changeProtocolForceNew(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -213,9 +213,9 @@ func TestAccAWSALBTargetGroup_changePortForceNew(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_changeVpcForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -239,9 +239,9 @@ func TestAccAWSALBTargetGroup_changeVpcForceNew(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -270,9 +270,9 @@ func TestAccAWSALBTargetGroup_tags(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -332,9 +332,9 @@ func TestAccAWSALBTargetGroup_updateHealthCheck(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -417,9 +417,9 @@ func TestAccAWSALBTargetGroup_updateSticknessEnabled(t *testing.T) {
 
 func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_alb_target_group.test",
 		Providers:     testAccProviders,
@@ -437,6 +437,47 @@ func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &after),
 					resource.TestCheckResourceAttr("aws_alb_target_group.test", "slow_start", "60"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_updateLoadBalancingAlgorithmType(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_alb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "round_robin"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, true, "round_robin"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "round_robin"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, true, "least_outstanding_requests"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "least_outstanding_requests"),
 				),
 			},
 		},
@@ -504,32 +545,139 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambda(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+					"load_balancing_algorithm_type",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_lambdaMultiValueHeadersEnabled(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+					"load_balancing_algorithm_type",
+				},
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_port(targetGroupName),
+				ExpectError: regexp.MustCompile(`port should be set when target type is`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName),
+				ExpectError: regexp.MustCompile(`protocol should be set when target type is`),
+			},
+			{
+				Config:      testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName),
+				ExpectError: regexp.MustCompile(`vpc_id should be set when target type is`),
+			},
+		},
+	})
+}
+
 func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -537,38 +685,39 @@ func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 442
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 442
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -576,38 +725,39 @@ func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id   = aws_vpc.test2.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -615,7 +765,7 @@ func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) stri
 resource "aws_vpc" "test2" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic-2"
   }
 }
@@ -623,38 +773,39 @@ resource "aws_vpc" "test2" {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_basic"
   }
 }
@@ -662,82 +813,84 @@ func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     Environment = "Production"
-    Type = "ALB Target Group"
+    Type        = "ALB Target Group"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
 }`, targetGroupName)
@@ -747,71 +900,100 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 	var stickinessBlock string
 
 	if addStickinessBlock {
-		stickinessBlock = fmt.Sprintf(`stickiness {
-	    enabled = "%t"
-	    type = "lb_cookie"
+		stickinessBlock = fmt.Sprintf(`
+	  stickiness {
+	    enabled         = "%t"
+	    type            = "lb_cookie"
 	    cookie_duration = 10000
 	  }`, enabled)
 	}
 
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
   %s
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-stickiness"
   }
 }`, targetGroupName, stickinessBlock)
 }
 
+func testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName string, nonDefault bool, algoType string) string {
+	var algoTypeParam string
+
+	if nonDefault {
+		algoTypeParam = fmt.Sprintf(`load_balancing_algorithm_type = "%s"`, algoType)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  %s
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-alb-target-group-load-balancing-algo"
+  }
+}`, targetGroupName, algoTypeParam)
+}
+
 func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
-  slow_start = %d
+  slow_start           = %d
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALBTargetGroup_SlowStart"
   }
 }
@@ -819,7 +1001,7 @@ func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slow
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-alb-target-group-slowstart"
   }
 }`, targetGroupName, slowStartDuration)
@@ -828,30 +1010,93 @@ resource "aws_vpc" "test" {
 const testAccAWSALBTargetGroupConfig_namePrefix = `
 resource "aws_alb_target_group" "test" {
   name_prefix = "tf-"
-  port = 80
-  protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.test.id
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
-		Name = "terraform-testacc-alb-target-group-name-prefix"
-	}
+  tags = {
+    Name = "terraform-testacc-alb-target-group-name-prefix"
+  }
 }
 `
 
 const testAccAWSALBTargetGroupConfig_generatedName = `
 resource "aws_alb_target_group" "test" {
-  port = 80
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags {
-		Name = "terraform-testacc-alb-target-group-generated-name"
-	}
+  tags = {
+    Name = "terraform-testacc-alb-target-group-generated-name"
+  }
 }
 `
+
+func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name        = "%s"
+  target_type = "lambda"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  lambda_multi_value_headers_enabled = %[1]t
+  name                               = %[2]q
+  target_type                        = "lambda"
+}
+`, lambdaMultiValueHadersEnabled, rName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name   = "%s"
+  port   = 443
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = "%s"
+  port     = 443
+  protocol = "HTTPS"
+}
+`, targetGroupName)
+}

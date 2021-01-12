@@ -4,54 +4,54 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSWafRegionalByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &v),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "name", byteMatchSet),
+						resourceName, "name", byteMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.target_string", "badrefer1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.target_string", "badrefer2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.text_transformation", "NONE"),
+						resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer1",
+						"text_transformation":   "NONE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer2",
+						"text_transformation":   "NONE",
+					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -61,71 +61,69 @@ func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &before),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "name", byteMatchSet),
+						resourceName, "name", byteMatchSet),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.target_string", "badrefer1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.target_string", "badrefer2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.text_transformation", "NONE"),
+						resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer1",
+						"text_transformation":   "NONE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer2",
+						"text_transformation":   "NONE",
+					}),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfigChangeName(byteMatchSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &after),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "name", byteMatchSetNewName),
+						resourceName, "name", byteMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.target_string", "badrefer1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.target_string", "badrefer2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.text_transformation", "NONE"),
+						resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer1",
+						"text_transformation":   "NONE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer2",
+						"text_transformation":   "NONE",
+					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -134,71 +132,67 @@ func TestAccAWSWafRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &before),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "name", byteMatchSetName),
+						resourceName, "name", byteMatchSetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.target_string", "badrefer1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2174619346.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.data", "referer"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.field_to_match.2991901334.type", "HEADER"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.positional_constraint", "CONTAINS"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.target_string", "badrefer2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.839525137.text_transformation", "NONE"),
+						resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer1",
+						"text_transformation":   "NONE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.0.data": "referer",
+						"field_to_match.0.type": "HEADER",
+						"positional_constraint": "CONTAINS",
+						"target_string":         "badrefer2",
+						"text_transformation":   "NONE",
+					}),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(byteMatchSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &after),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "name", byteMatchSetName),
+						resourceName, "name", byteMatchSetName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2397850647.field_to_match.4253810390.data", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2397850647.field_to_match.4253810390.type", "METHOD"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2397850647.positional_constraint", "STARTS_WITH"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2397850647.target_string", "badrefer1+"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.2397850647.text_transformation", "LOWERCASE"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.4153613423.field_to_match.3756326843.data", ""),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.4153613423.field_to_match.3756326843.type", "URI"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.4153613423.positional_constraint", "ENDS_WITH"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.4153613423.target_string", "badrefer2+"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_byte_match_set.byte_set", "byte_match_tuples.4153613423.text_transformation", "LOWERCASE"),
+						resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "METHOD",
+						"positional_constraint": "EXACTLY",
+						"target_string":         "GET",
+						"text_transformation":   "NONE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "URI",
+						"positional_constraint": "ENDS_WITH",
+						"target_string":         "badrefer2+",
+						"text_transformation":   "LOWERCASE",
+					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -207,19 +201,25 @@ func TestAccAWSWafRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 func TestAccAWSWafRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 	var byteMatchSet waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byte-batch-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_byte_match_set.byte_match_set"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(byteMatchSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_match_set", &byteMatchSet),
-					resource.TestCheckResourceAttr("aws_wafregional_byte_match_set.byte_match_set", "name", byteMatchSetName),
-					resource.TestCheckResourceAttr("aws_wafregional_byte_match_set.byte_match_set", "byte_match_tuples.#", "0"),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &byteMatchSet),
+					resource.TestCheckResourceAttr(resourceName, "name", byteMatchSetName),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -228,16 +228,17 @@ func TestAccAWSWafRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 func TestAccAWSWafRegionalByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_byte_match_set.byte_set"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalByteMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalByteMatchSetConfig(byteMatchSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.byte_set", &v),
+					testAccCheckAWSWafRegionalByteMatchSetExists(resourceName, &v),
 					testAccCheckAWSWafRegionalByteMatchSetDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -274,7 +275,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resou
 			return conn.UpdateByteMatchSet(req)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error updating ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error updating ByteMatchSet: %s", err)
 		}
 
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -285,7 +286,7 @@ func testAccCheckAWSWafRegionalByteMatchSetDisappears(v *waf.ByteMatchSet) resou
 			return conn.DeleteByteMatchSet(opts)
 		})
 		if err != nil {
-			return errwrap.Wrapf("[ERROR] Error deleting ByteMatchSet: {{err}}", err)
+			return fmt.Errorf("Error deleting ByteMatchSet: %s", err)
 		}
 
 		return nil
@@ -339,11 +340,8 @@ func testAccCheckAWSWafRegionalByteMatchSetDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Return nil if the ByteMatchSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
-				return nil
-			}
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+			continue
 		}
 
 		return err
@@ -356,10 +354,12 @@ func testAccAWSWafRegionalByteMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -367,25 +367,29 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -393,45 +397,51 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_match_set" {
-	name = "%s"
-}`, name)
+  name = "%s"
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "LOWERCASE"
-    target_string = "badrefer1+"
-    positional_constraint = "STARTS_WITH"
+    text_transformation   = "NONE"
+    target_string         = "GET"
+    positional_constraint = "EXACTLY"
+
     field_to_match {
       type = "METHOD"
-      data = "GET"
     }
   }
 
   byte_match_tuples {
-    text_transformation = "LOWERCASE"
-    target_string = "badrefer2+"
+    text_transformation   = "LOWERCASE"
+    target_string         = "badrefer2+"
     positional_constraint = "ENDS_WITH"
+
     field_to_match {
       type = "URI"
     }
   }
-}`, name)
+}
+`, name)
 }

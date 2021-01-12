@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_resource_server"
 side_bar_current: "docs-aws-resource-cognito-resource-server"
@@ -6,7 +7,7 @@ description: |-
   Provides a Cognito Resource Server.
 ---
 
-# aws_cognito_resource_server
+# Resource: aws_cognito_resource_server
 
 Provides a Cognito Resource Server.
 
@@ -23,7 +24,7 @@ resource "aws_cognito_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 ```
 
@@ -38,12 +39,12 @@ resource "aws_cognito_resource_server" "resource" {
   identifier = "https://example.com"
   name       = "example"
 
-  scope = [{
-    scope_name = "sample-scope"
+  scope {
+    scope_name        = "sample-scope"
     scope_description = "a Sample Scope Description"
-  }]
+  }
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 ```
 
@@ -60,9 +61,9 @@ The following arguments are supported:
 * `scope_name` - (Required) The scope name.
 * `scope_description` - (Required) The scope description.
 
-## Attribute Reference
+## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `scope_identifiers` - A list of all scopes configured for this resource server in the format identifier/scope_name.
 

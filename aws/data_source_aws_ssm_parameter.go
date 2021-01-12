@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsSsmParameter() *schema.Resource {
@@ -38,6 +37,10 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -56,11 +59,11 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := ssmconn.GetParameter(paramInput)
 
 	if err != nil {
-		return errwrap.Wrapf("[ERROR] Error describing SSM parameter: {{err}}", err)
+		return fmt.Errorf("Error describing SSM parameter (%s): %w", name, err)
 	}
 
 	param := resp.Parameter
-	d.SetId(*param.Name)
+	d.SetId(aws.StringValue(param.Name))
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -73,6 +76,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
+	d.Set("version", param.Version)
 
 	return nil
 }

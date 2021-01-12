@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsMainRouteTableAssociation() *schema.Resource {
@@ -17,12 +17,12 @@ func resourceAwsMainRouteTableAssociation() *schema.Resource {
 		Delete: resourceAwsMainRouteTableAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"route_table_id": &schema.Schema{
+			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -31,7 +31,7 @@ func resourceAwsMainRouteTableAssociation() *schema.Resource {
 			// created when the VPC is created. We need this to be able to "destroy"
 			// our main route table association, which we do by returning this route
 			// table to its original place as the Main Route Table for the VPC.
-			"original_route_table_id": &schema.Schema{
+			"original_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,8 +47,13 @@ func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta int
 	log.Printf("[INFO] Creating main route table association: %s => %s", vpcId, routeTableId)
 
 	mainAssociation, err := findMainRouteTableAssociation(conn, vpcId)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error finding EC2 VPC (%s) main route table association for replacement: %w", vpcId, err)
+	}
+
+	if mainAssociation == nil {
+		return fmt.Errorf("error finding EC2 VPC (%s) main route table association for replacement: association not found", vpcId)
 	}
 
 	resp, err := conn.ReplaceRouteTableAssociation(&ec2.ReplaceRouteTableAssociationInput{
@@ -60,7 +65,7 @@ func resourceAwsMainRouteTableAssociationCreate(d *schema.ResourceData, meta int
 	}
 
 	d.Set("original_route_table_id", mainAssociation.RouteTableId)
-	d.SetId(*resp.NewAssociationId)
+	d.SetId(aws.StringValue(resp.NewAssociationId))
 	log.Printf("[INFO] New main route table association ID: %s", d.Id())
 
 	return nil
@@ -102,7 +107,7 @@ func resourceAwsMainRouteTableAssociationUpdate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	d.SetId(*resp.NewAssociationId)
+	d.SetId(aws.StringValue(resp.NewAssociationId))
 	log.Printf("[INFO] New main route table association ID: %s", d.Id())
 
 	return nil

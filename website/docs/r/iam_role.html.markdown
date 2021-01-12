@@ -1,14 +1,16 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_role"
-sidebar_current: "docs-aws-resource-iam-role"
 description: |-
   Provides an IAM role.
 ---
 
-# aws_iam_role
+# Resource: aws_iam_role
 
 Provides an IAM role.
+
+~> *NOTE:* If policies are attached to the role via the [`aws_iam_policy_attachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the role `name` or `path`, the `force_detach_policies` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `DeleteConflict` error. The [`aws_iam_role_policy_attachment` resource (recommended)](/docs/providers/aws/r/iam_role_policy_attachment.html) does not have this requirement.
 
 ## Example Usage
 
@@ -31,6 +33,10 @@ resource "aws_iam_role" "test_role" {
   ]
 }
 EOF
+
+  tags = {
+    tag-key = "tag-value"
+  }
 }
 ```
 
@@ -42,7 +48,7 @@ The following arguments are supported:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `assume_role_policy` - (Required) The policy that grants an entity permission to assume the role.
 
-~> **NOTE:** This `assume_role_policy` is very similar but slightly different than just a standard IAM policy and cannot use an `aws_iam_policy` resource.  It _can_ however, use an `aws_iam_policy_document` [data source](https://www.terraform.io/docs/providers/aws/d/iam_policy_document.html), see example below for how this could work.
+~> **NOTE:** This `assume_role_policy` is very similar but slightly different than just a standard IAM policy and cannot use an `aws_iam_policy` resource.  It _can_ however, use an `aws_iam_policy_document` [data source](/docs/providers/aws/d/iam_policy_document.html), see example below for how this could work.
 
 * `force_detach_policies` - (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to `false`.
 * `path` - (Optional) The path to the role.
@@ -51,6 +57,7 @@ The following arguments are supported:
 
 * `max_session_duration` - (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
 * `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the role.
+* `tags` - Key-value map of tags for the IAM role
 
 ## Attributes Reference
 
@@ -58,9 +65,10 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `create_date` - The creation date of the IAM role.
-* `unique_id` - The stable and unique string identifying the role.
-* `name` - The name of the role.
 * `description` - The description of the role.
+* `id` - The name of the role.
+* `name` - The name of the role.
+* `unique_id` - The stable and unique string identifying the role.
 
 ## Example of Using Data Source for Assume Role Policy
 
@@ -79,7 +87,7 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 resource "aws_iam_role" "instance" {
   name               = "instance_role"
   path               = "/system/"
-  assume_role_policy = "${data.aws_iam_policy_document.instance-assume-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
 }
 ```
 

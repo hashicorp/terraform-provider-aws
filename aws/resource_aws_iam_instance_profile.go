@@ -2,15 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -45,19 +45,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8196-L8201
-					value := v.(string)
-					if len(value) > 128 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 128 characters", k))
-					}
-					if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"name_prefix": {
@@ -65,19 +56,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8196-L8201
-					value := v.(string)
-					if len(value) > 64 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 64 characters, name is limited to 128", k))
-					}
-					if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"path": {
@@ -87,21 +69,9 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"roles": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"role"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Set:           schema.HashString,
-				Deprecated:    "Use `role` instead. Only a single role can be passed to an IAM Instance Profile",
-			},
-
 			"role": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"roles"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -117,13 +87,6 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 		name = resource.PrefixedUniqueId(v.(string))
 	} else {
 		name = resource.UniqueId()
-	}
-
-	_, hasRoles := d.GetOk("roles")
-	_, hasRole := d.GetOk("role")
-
-	if hasRole == false && hasRoles == false {
-		return fmt.Errorf("Either `role` or `roles` (deprecated) must be specified when creating an IAM Instance Profile")
 	}
 
 	request := &iam.CreateInstanceProfileInput{
@@ -160,7 +123,27 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		RoleName:            aws.String(roleName),
 	}
 
-	_, err := iamconn.AddRoleToInstanceProfile(request)
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+		// IAM unfortunately does not provide a better error code or message for eventual consistency
+		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
+		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
+		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, "NoSuchEntity", "The role with name") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+	}
+	if err != nil {
+		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
+	}
+
 	return err
 }
 
@@ -171,69 +154,25 @@ func instanceProfileRemoveRole(iamconn *iam.IAM, profileName, roleName string) e
 	}
 
 	_, err := iamconn.RemoveRoleFromInstanceProfile(request)
-	if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+	if isAWSErr(err, "NoSuchEntity", "") {
 		return nil
 	}
 	return err
 }
 
-func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
-	oldInterface, newInterface := d.GetChange("roles")
-	oldRoles := oldInterface.(*schema.Set)
-	newRoles := newInterface.(*schema.Set)
-
-	currentRoles := schema.CopySet(oldRoles)
-
-	d.Partial(true)
-
-	for _, role := range oldRoles.Difference(newRoles).List() {
-		err := instanceProfileRemoveRole(iamconn, d.Id(), role.(string))
-		if err != nil {
-			return fmt.Errorf("Error removing role %s from IAM instance profile %s: %s", role, d.Id(), err)
-		}
-		currentRoles.Remove(role)
-		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
-	}
-
-	for _, role := range newRoles.Difference(oldRoles).List() {
-		err := instanceProfileAddRole(iamconn, d.Id(), role.(string))
-		if err != nil {
-			return fmt.Errorf("Error adding role %s to IAM instance profile %s: %s", role, d.Id(), err)
-		}
-		currentRoles.Add(role)
-		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
-	}
-
-	d.Partial(false)
-
-	return nil
-}
-
 func instanceProfileRemoveAllRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
-	role, hasRole := d.GetOk("role")
-	roles, hasRoles := d.GetOk("roles")
-	if hasRole && !hasRoles { // "roles" will always be a superset of "role", if set
+	if role, ok := d.GetOk("role"); ok {
 		err := instanceProfileRemoveRole(iamconn, d.Id(), role.(string))
 		if err != nil {
 			return fmt.Errorf("Error removing role %s from IAM instance profile %s: %s", role, d.Id(), err)
 		}
-	} else {
-		for _, role := range roles.(*schema.Set).List() {
-			err := instanceProfileRemoveRole(iamconn, d.Id(), role.(string))
-			if err != nil {
-				return fmt.Errorf("Error removing role %s from IAM instance profile %s: %s", role, d.Id(), err)
-			}
-		}
 	}
+
 	return nil
 }
 
 func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
-
-	d.Partial(true)
 
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
@@ -251,15 +190,7 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 				return fmt.Errorf("Error adding role %s to IAM instance profile %s: %s", newRole.(string), d.Id(), err)
 			}
 		}
-
-		d.SetPartial("role")
 	}
-
-	if d.HasChange("roles") {
-		return instanceProfileSetRoles(d, iamconn)
-	}
-
-	d.Partial(false)
 
 	return nil
 }
@@ -272,11 +203,12 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := iamconn.GetInstanceProfile(request)
+	if isAWSErr(err, "NoSuchEntity", "") {
+		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error reading IAM instance profile %s: %s", d.Id(), err)
 	}
 
@@ -302,7 +234,7 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 }
 
 func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile) error {
-	d.SetId(*result.InstanceProfileName)
+	d.SetId(aws.StringValue(result.InstanceProfileName))
 	if err := d.Set("name", result.InstanceProfileName); err != nil {
 		return err
 	}
@@ -319,14 +251,6 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 
 	if result.Roles != nil && len(result.Roles) > 0 {
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
-	}
-
-	roles := &schema.Set{F: schema.HashString}
-	for _, role := range result.Roles {
-		roles.Add(*role.RoleName)
-	}
-	if err := d.Set("roles", roles); err != nil {
-		return err
 	}
 
 	return nil

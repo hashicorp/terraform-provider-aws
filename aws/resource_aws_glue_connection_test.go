@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -28,10 +27,6 @@ func testSweepGlueConnections(region string) error {
 	conn := client.(*AWSClient).glueconn
 	catalogID := client.(*AWSClient).accountid
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetConnectionsInput{
 		CatalogId: aws.String(catalogID),
 	}
@@ -41,23 +36,12 @@ func testSweepGlueConnections(region string) error {
 			return false
 		}
 		for _, connection := range page.ConnectionList {
-			skip := true
-			name := connection.Name
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Connection: %s", *name)
-				continue
-			}
+			name := aws.StringValue(connection.Name)
 
-			log.Printf("[INFO] Deleting Glue Connection: %s", *name)
-			err := deleteGlueConnection(conn, catalogID, *name)
+			log.Printf("[INFO] Deleting Glue Connection: %s", name)
+			err := deleteGlueConnection(conn, catalogID, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", *name, err)
+				log.Printf("[ERROR] Failed to delete Glue Connection %s: %s", name, err)
 			}
 		}
 		return !lastPage
@@ -73,13 +57,13 @@ func testSweepGlueConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSGlueConnection_Basic(t *testing.T) {
+func TestAccAWSGlueConnection_basic(t *testing.T) {
 	var connection glue.Connection
 
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -88,10 +72,75 @@ func TestAccAWSGlueConnection_Basic(t *testing.T) {
 				Config: testAccAWSGlueConnectionConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", "jdbc:mysql://terraformacctesting.com/testdatabase"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_MongoDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", "mongodb://testdb.com:27017/databasename"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "MONGODB"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_Kafka(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Kafka(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.KAFKA_BOOTSTRAP_SERVERS", "a.terraformtest.com:9094,b.terraformtest.com:9094"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "KAFKA"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
 				),
@@ -111,7 +160,7 @@ func TestAccAWSGlueConnection_Description(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -145,7 +194,7 @@ func TestAccAWSGlueConnection_MatchCriteria(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -194,7 +243,7 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
@@ -219,6 +268,29 @@ func TestAccAWSGlueConnection_PhysicalConnectionRequirements(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueConnection_disappears(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -359,19 +431,26 @@ resource "aws_glue_connection" "test" {
 
 func testAccAWSGlueConnectionConfig_PhysicalConnectionRequirements(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-glue-connection-base"
   }
 }
 
 resource "aws_security_group" "test" {
   name   = "%[1]s"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port = 1
@@ -384,34 +463,34 @@ resource "aws_security_group" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
-  tags {
+  tags = {
     Name = "terraform-testacc-glue-connection-base"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
   name       = "%[1]s"
-  subnet_ids = ["${aws_subnet.test.0.id}", "${aws_subnet.test.1.id}"]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s"
   database_name                   = "gluedatabase"
   db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  db_subnet_group_name            = "${aws_db_subnet_group.test.name}"
+  db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = "aurora-mysql"
   master_password                 = "gluepassword"
   master_username                 = "glueusername"
   skip_final_snapshot             = true
-  vpc_security_group_ids          = ["${aws_security_group.test.id}"]
+  vpc_security_group_ids          = [aws_security_group.test.id]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier = "${aws_rds_cluster.test.id}"
+  cluster_identifier = aws_rds_cluster.test.id
   engine             = "aurora-mysql"
   identifier         = "%[1]s"
   instance_class     = "db.t2.medium"
@@ -420,16 +499,16 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_glue_connection" "test" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://${aws_rds_cluster.test.endpoint}/${aws_rds_cluster.test.database_name}"
-    PASSWORD            = "${aws_rds_cluster.test.master_password}"
-    USERNAME            = "${aws_rds_cluster.test.master_username}"
+    PASSWORD            = aws_rds_cluster.test.master_password
+    USERNAME            = aws_rds_cluster.test.master_username
   }
 
   name = "%[1]s"
 
   physical_connection_requirements {
-    availability_zone      = "${aws_subnet.test.0.availability_zone}"
-    security_group_id_list = ["${aws_security_group.test.id}"]
-    subnet_id              = "${aws_subnet.test.0.id}"
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
   }
 }
 `, rName)
@@ -443,6 +522,36 @@ resource "aws_glue_connection" "test" {
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
+
+  name = "%s"
+}
+`, rName)
+}
+
+func testAccAWSGlueConnectionConfig_MongoDB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+
+  connection_type = "MONGODB"
+
+  name = "%s"
+}
+`, rName)
+}
+
+func testAccAWSGlueConnectionConfig_Kafka(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    KAFKA_BOOTSTRAP_SERVERS = "a.terraformtest.com:9094,b.terraformtest.com:9094"
+  }
+
+  connection_type = "KAFKA"
 
   name = "%s"
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_domain"
-sidebar_current: "docs-aws-resource-lightsail-domain"
 description: |-
   Provides an Lightsail Domain
 ---
 
-# aws_lightsail_domain
+# Resource: aws_lightsail_domain
 
 Creates a domain resource for the specified domain (e.g., example.com).
 You cannot register a new domain name using Lightsail. You must register
@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name used for this domain
 * `arn` - The ARN of the Lightsail domain

@@ -8,17 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -36,17 +36,17 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
+func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailKeyPairConfig_imported(lightsailName, testLightsailKeyPairPubKey1),
+				Config: testAccAWSLightsailKeyPairConfig_imported(lightsailName, lightsailPubKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailKeyPairExists("aws_lightsail_key_pair.lightsail_key_pair_test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test", "arn"),
@@ -65,8 +65,8 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -89,8 +89,8 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
 	var conf1, conf2 lightsail.KeyPair
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +137,6 @@ func testAccCheckAWSLightsailKeyPairExists(n string, res *lightsail.KeyPair) res
 }
 
 func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_key_pair" {
 			continue
@@ -169,37 +168,28 @@ func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
 
 func testAccAWSLightsailKeyPairConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 }
 `, lightsailName)
 }
 
-func testAccAWSLightsailKeyPairConfig_imported(lightsailName, key string) string {
+func testAccAWSLightsailKeyPairConfig_imported(lightsailName, publicKey string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	public_key = "%s"
+
+  public_key = "%s"
 }
-`, lightsailName, lightsailPubKey)
+`, lightsailName, publicKey)
 }
 
 func testAccAWSLightsailKeyPairConfig_encrypted(lightsailName, key string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	pgp_key = <<EOF
+
+  pgp_key = <<EOF
 %s
 EOF
 }
@@ -207,15 +197,13 @@ EOF
 }
 
 func testAccAWSLightsailKeyPairConfig_prefixed() string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
+	return `
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_omit" {}
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {
-	name_prefix = "cts"
+  name_prefix = "cts"
 }
-`)
+`
 }
 
 const lightsailPubKey = `ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com`
