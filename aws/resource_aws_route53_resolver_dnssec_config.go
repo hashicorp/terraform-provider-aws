@@ -65,7 +65,7 @@ func resourceAwsRoute53ResolverDnssecConfigCreate(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Creating Route53 Resolver DNSSEC config: %#v", req)
 	resp, err := conn.UpdateResolverDnssecConfig(req)
 	if err != nil {
-		return fmt.Errorf("error creating Route53 Resolver DNSSEC config: %s", err)
+		return fmt.Errorf("error creating Route53 Resolver DNSSEC config: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ResolverDNSSECConfig.ResourceId))
@@ -86,7 +86,7 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 
 	vpc, err := vpcDescribe(ec2Conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error getting VPC associated with Route53 Resolver DNSSEC config (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting VPC associated with Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
 	}
 
 	// GetResolverDnssecConfig returns AccessDeniedException if sending a request with non-existing VPC id
@@ -98,7 +98,7 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 
 	raw, state, err := route53ResolverDnssecConfigRefresh(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Resolver DNSSEC config (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
 	}
 
 	if state == route53ResolverDnssecConfigStatusNotFound || state == route53resolver.ResolverDNSSECValidationStatusDisabled {
@@ -128,7 +128,7 @@ func resourceAwsRoute53ResolverDnssecConfigDelete(d *schema.ResourceData, meta i
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Resolver DNSSEC config (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
 	}
 
 	err = route53ResolverDnssecConfigWait(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
@@ -151,7 +151,7 @@ func route53ResolverDnssecConfigWait(conn *route53resolver.Route53Resolver, id s
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for Route53 Resolver DNSSEC config (%s) to reach target state: %s", id, err)
+		return fmt.Errorf("error waiting for Route53 Resolver DNSSEC config (%s) to reach target state: %w", id, err)
 	}
 
 	return nil
