@@ -52,272 +52,17 @@ func resourceAwsInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Computed: true,
 				Optional: true,
 			},
-
 			"availability_zone": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"placement_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"key_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"get_password_data": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"password_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"subnet_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validation.StringIsEmpty,
-					validation.IsIPv4Address,
-				),
-			},
-
-			"secondary_private_ips": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv4Address,
-				},
-			},
-
-			"source_dest_check": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Suppress diff if network_interface is set
-					_, ok := d.GetOk("network_interface")
-					return ok
-				},
-			},
-
-			"user_data": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data_base64"},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
-					// echo -n "" | shasum
-					if (old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "") ||
-						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
-						return true
-					}
-					return false
-				},
-				StateFunc: func(v interface{}) string {
-					switch v := v.(type) {
-					case string:
-						return userDataHashSum(v)
-					default:
-						return ""
-					}
-				},
-				ValidateFunc: validation.StringLenBetween(0, 16384),
-			},
-
-			"user_data_base64": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !isBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
-			},
-
-			"security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"vpc_security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-
-			"public_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"outpost_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"primary_network_interface_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-							ForceNew: true,
-						},
-						"network_interface_id": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"device_index": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-
-			"public_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"instance_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"private_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"disable_api_termination": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"instance_initiated_shutdown_behavior": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"hibernation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"monitoring": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"ipv6_address_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"ipv6_addresses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv6Address,
-				},
-			},
-
-			"tenancy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.TenancyDedicated,
-					ec2.TenancyDefault,
-					ec2.TenancyHost,
-				}, false),
-			},
-			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -329,211 +74,12 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"cpu_threads_per_core": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
-			"tags": tagsSchema(),
-
-			"volume_tags": tagsSchema(),
-
-			"ebs_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-						},
-
-						"device_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"iops": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							DiffSuppressFunc: iopsDiffSuppressFunc,
-						},
-
-						"kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"snapshot_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"throughput": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							ForceNew:         true,
-							DiffSuppressFunc: throughputDiffSuppressFunc,
-						},
-						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
-
-						"volume_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"volume_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
-						},
-
-						"volume_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
-					return hashcode.String(buf.String())
-				},
-			},
-
-			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"virtual_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"no_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
-					if v, ok := m["no_device"].(bool); ok && v {
-						buf.WriteString(fmt.Sprintf("%t-", v))
-					}
-					return hashcode.String(buf.String())
-				},
-			},
-
-			"root_block_device": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// "You can only modify the volume size, volume type, and Delete on
-					// Termination flag on the block device mapping entry for the root
-					// device volume." - bit.ly/ec2bdmap
-					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-
-						"device_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"iops": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							DiffSuppressFunc: iopsDiffSuppressFunc,
-						},
-
-						"throughput": {
-							Type:             schema.TypeInt,
-							Optional:         true,
-							Computed:         true,
-							DiffSuppressFunc: throughputDiffSuppressFunc,
-						},
-						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
-
-						"volume_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-
-						"volume_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
-						},
-
-						"volume_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
 			"credit_specification": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -568,36 +114,92 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
-
-			"metadata_options": {
-				Type:     schema.TypeList,
+			"disable_api_termination": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"ebs_block_device": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+							ForceNew: true,
+						},
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"iops": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: iopsDiffSuppressFunc,
+						},
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"snapshot_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
+						},
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"volume_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"volume_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{ec2.InstanceMetadataEndpointStateEnabled, ec2.InstanceMetadataEndpointStateDisabled}, false),
-						},
-						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
-						},
-						"http_put_response_hop_limit": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 64),
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
 						},
 					},
 				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					return hashcode.String(buf.String())
+				},
 			},
-
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"enclave_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -613,6 +215,344 @@ func resourceAwsInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+			"ephemeral_block_device": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"virtual_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					if v, ok := m["no_device"].(bool); ok && v {
+						buf.WriteString(fmt.Sprintf("%t-", v))
+					}
+					return hashcode.String(buf.String())
+				},
+			},
+			"get_password_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"hibernation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"host_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"iam_instance_profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"instance_initiated_shutdown_behavior": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"instance_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"ipv6_address_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"ipv6_addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv6Address,
+				},
+			},
+			"key_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.InstanceMetadataEndpointStateEnabled, ec2.InstanceMetadataEndpointStateDisabled}, false),
+						},
+						"http_put_response_hop_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.HttpTokensStateOptional, ec2.HttpTokensStateRequired}, false),
+						},
+					},
+				},
+			},
+			"monitoring": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"network_interface": {
+				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+							ForceNew: true,
+						},
+						"device_index": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ForceNew: true,
+						},
+						"network_interface_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"password_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"placement_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"primary_network_interface_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.StringIsEmpty,
+					validation.IsIPv4Address,
+				),
+			},
+			"public_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"root_block_device": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					// "You can only modify the volume size, volume type, and Delete on
+					// Termination flag on the block device mapping entry for the root
+					// device volume." - bit.ly/ec2bdmap
+					Schema: map[string]*schema.Schema{
+						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"iops": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: iopsDiffSuppressFunc,
+						},
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+						"tags": tagsSchemaConflictsWith([]string{"volume_tags"}),
+						"throughput": {
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: throughputDiffSuppressFunc,
+						},
+						"volume_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"volume_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"volume_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
+						},
+					},
+				},
+			},
+			"secondary_private_ips": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+			},
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"source_dest_check": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff if network_interface is set
+					_, ok := d.GetOk("network_interface")
+					return ok
+				},
+			},
+			"subnet_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"tags": tagsSchema(),
+			"tenancy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.TenancyDedicated,
+					ec2.TenancyDefault,
+					ec2.TenancyHost,
+				}, false),
+			},
+			"user_data": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data_base64"},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Sometimes the EC2 API responds with the equivalent, empty SHA1 sum
+					// echo -n "" | shasum
+					if (old == "da39a3ee5e6b4b0d3255bfef95601890afd80709" && new == "") ||
+						(old == "" && new == "da39a3ee5e6b4b0d3255bfef95601890afd80709") {
+						return true
+					}
+					return false
+				},
+				StateFunc: func(v interface{}) string {
+					switch v := v.(type) {
+					case string:
+						return userDataHashSum(v)
+					default:
+						return ""
+					}
+				},
+				ValidateFunc: validation.StringLenBetween(0, 16384),
+			},
+			"user_data_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"user_data"},
+				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
+					s := v.(string)
+					if !isBase64Encoded([]byte(s)) {
+						errs = append(errs, fmt.Errorf(
+							"%s: must be base64-encoded", name,
+						))
+					}
+					return
+				},
+			},
+			"volume_tags": tagsSchema(),
+			"vpc_security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 		},
 	}
