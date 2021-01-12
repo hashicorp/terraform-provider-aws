@@ -65,6 +65,12 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"minimum_compression_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -177,11 +183,19 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
-		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+
+		input := &apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
 			Mode:      aws.String(apigateway.PutModeOverwrite),
 			Body:      []byte(body.(string)),
-		})
+		}
+
+		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+			input.Parameters = stringMapToPointers(v.(map[string]interface{}))
+		}
+
+		_, err := conn.PutRestApi(input)
+
 		if err != nil {
 			return fmt.Errorf("error creating API Gateway specification: %s", err)
 		}
@@ -410,14 +424,22 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("body") {
+	if d.HasChanges("body", "parameters") {
 		if body, ok := d.GetOk("body"); ok {
 			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
-			_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+
+			input := &apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
 				Mode:      aws.String(apigateway.PutModeOverwrite),
 				Body:      []byte(body.(string)),
-			})
+			}
+
+			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+				input.Parameters = stringMapToPointers(v.(map[string]interface{}))
+			}
+
+			_, err := conn.PutRestApi(input)
+
 			if err != nil {
 				return fmt.Errorf("error updating API Gateway specification: %s", err)
 			}
