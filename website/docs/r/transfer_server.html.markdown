@@ -83,7 +83,7 @@ The following arguments are supported:
 * `protocols` - (Optional) Specifies the file transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint. This defaults to `SFTP` . The available protocols are:
     * `SFTP`: File transfer over SSH
     * `FTPS`: File transfer with TLS encryption
-	* `FTP`: Unencrypted file transfer
+    * `FTP`: Unencrypted file transfer
 * `endpoint_details` - (Optional) The virtual private cloud (VPC) endpoint settings that you want to configure for your SFTP server. Fields documented below.
 * `endpoint_type` - (Optional) The type of endpoint that you want your SFTP server connect to. If you connect to a `VPC` (or `VPC_ENDPOINT`), your SFTP server isn't accessible over the public internet. If you want to connect your SFTP server via public internet, set `PUBLIC`.  Defaults to `PUBLIC`.
 * `invocation_role` - (Optional) Amazon Resource Name (ARN) of the IAM role used to authenticate the user account with an `identity_provider_type` of `API_GATEWAY`.
