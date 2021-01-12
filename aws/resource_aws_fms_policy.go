@@ -142,7 +142,7 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 		PolicyName:          aws.String(d.Get("name").(string)),
 		RemediationEnabled:  aws.Bool(d.Get("remediation_enabled").(bool)),
 		ResourceType:        aws.String("ResourceTypeList"),
-		ResourceTypeList:    expandStringList(d.Get("resource_type_list").(*schema.Set).List()),
+		ResourceTypeList:    expandStringSet(d.Get("resource_type_list").(*schema.Set)),
 		ExcludeResourceTags: aws.Bool(d.Get("exclude_resource_tags").(bool)),
 	}
 
@@ -240,7 +240,7 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		PolicyUpdateToken:   aws.String(d.Get("policy_update_token").(string)),
 		RemediationEnabled:  aws.Bool(d.Get("remediation_enabled").(bool)),
 		ResourceType:        aws.String("ResourceTypeList"),
-		ResourceTypeList:    expandStringList(d.Get("resource_type_list").(*schema.Set).List()),
+		ResourceTypeList:    expandStringSet(d.Get("resource_type_list").(*schema.Set)),
 		ExcludeResourceTags: aws.Bool(d.Get("exclude_resource_tags").(bool)),
 	}
 

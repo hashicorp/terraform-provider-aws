@@ -133,7 +133,7 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("authorization_scopes"); ok {
-		input.AuthorizationScopes = expandStringList(v.(*schema.Set).List())
+		input.AuthorizationScopes = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
