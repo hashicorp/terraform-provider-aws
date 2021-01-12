@@ -316,6 +316,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/emr" = [
       "aws_emr_",
     ],
+    "service/emrcontainers" = [
+      "aws_emrcontainers_",
+    ],
     "service/eventbridge" = [
       # EventBridge is rebranded CloudWatch Events
       "aws_cloudwatch_event_",
@@ -1077,6 +1080,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/emr/**/*",
       "**/*_emr_*",
       "**/emr_*"
+    ]
+    "service/emrcontainers" = [
+      "aws/internal/service/emrcontainers/**/*",
+      "**/*_emrcontainers_*",
+      "**/emrcontainers_*"
     ]
     "service/eventbridge" = [
       # EventBridge is rebranded CloudWatch Events
