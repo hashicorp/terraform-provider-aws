@@ -185,6 +185,50 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferServer_protocols_basic(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.foo"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		IDRefreshName: "aws_transfer_server.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerConfig_protocols_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
+					resource.TestMatchResourceAttr(
+						resourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
+					resource.TestCheckResourceAttr(
+						resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", transfer.ProtocolSftp),
+				),
+			},
+			{
+				ResourceName:            "aws_transfer_server.foo",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccAWSTransferServerConfig_protocols_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", transfer.ProtocolFtp),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
@@ -804,4 +848,207 @@ resource "aws_transfer_server" "test" {
   host_key = file(%[1]q)
 }
 `, hostKey)
+}
+
+func testAccAWSTransferServerConfig_protocols_basic(rName string) string {
+
+	return fmt.Sprintf(`
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-server-iam-role-%s"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "transfer.amazonaws.com"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "foo" {
+  name = "tf-test-transfer-server-iam-policy-%s"
+  role = aws_iam_role.foo.id
+
+  policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Sid": "AllowFullAccesstoCloudWatchLogs",
+		"Effect": "Allow",
+		"Action": [
+			"logs:*"
+		],
+		"Resource": "*"
+		}
+	]
+}
+POLICY
+}
+
+resource "aws_transfer_server" "foo" {
+  identity_provider_type = "SERVICE_MANAGED"
+  logging_role           = aws_iam_role.foo.arn
+  protocols = ["SFTP"]
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+    ENV  = "test"
+  }
+}
+`, rName, rName)
+}
+
+func testAccAWSTransferServerConfig_protocols_update(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "test"
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "error" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = "400"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = "GET"
+}
+
+resource "aws_api_gateway_integration_response" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  depends_on        = [aws_api_gateway_integration.test]
+
+  rest_api_id       = aws_api_gateway_rest_api.test.id
+  stage_name        = "test"
+  description       = "%[1]s"
+  stage_description = "%[1]s"
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-server-iam-role-for-apigateway-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+	  
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+	cidr_block = "10.0.0.0/16"
+  
+	tags = {
+	  Name = "terraform-testacc-vpc"
+	}
+  }
+  
+  resource "aws_internet_gateway" "test" {
+	vpc_id = aws_vpc.test.id
+  
+	tags = {
+	  Name = "terraform-testacc-igw"
+	}
+  }
+  
+  resource "aws_subnet" "test" {
+	vpc_id                  = aws_vpc.test.id
+	cidr_block              = "10.0.0.0/24"
+	map_public_ip_on_launch = true
+  
+	depends_on = [aws_internet_gateway.test]
+  }
+  
+  resource "aws_default_route_table" "test" {
+	default_route_table_id = aws_vpc.test.default_route_table_id
+  
+	route {
+	  cidr_block = "0.0.0.0/0"
+	  gateway_id = aws_internet_gateway.test.id
+	}
+  
+	tags = {
+	  Name = "terraform-testacc-subnet"
+	}
+  }
+  
+  resource "aws_security_group" "test" {
+	name   = "terraform-testacc-security-group"
+	vpc_id = aws_vpc.test.id
+  
+	tags = {
+	  Name = "terraform-testacc-security-group"
+	}
+  }
+  
+
+resource "aws_transfer_server" "foo" {
+	identity_provider_type = "API_GATEWAY"
+	url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
+	invocation_role        = aws_iam_role.foo.arn
+	logging_role           = aws_iam_role.foo.arn
+	protocols              = ["FTP"]
+
+	endpoint_type = "VPC"
+	endpoint_details {
+		subnet_ids         = [aws_subnet.test.id]
+		vpc_id             = aws_vpc.test.id
+	}
+	
+	tags = {
+		NAME = "tf-acc-test-transfer-server"
+		TYPE = "apigateway"
+	}
+}
+`, rName)
+
 }
