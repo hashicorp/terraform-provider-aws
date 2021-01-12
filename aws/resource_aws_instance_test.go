@@ -334,7 +334,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidIopsForVolumeType(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckInstanceConfigEBSBlockDeviceInvalidIops,
+				Config:      testAccInstanceConfigEBSBlockDeviceInvalidIops,
 				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
@@ -348,7 +348,7 @@ func TestAccAWSInstance_EbsBlockDevice_InvalidThroughputForVolumeType(t *testing
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckInstanceConfigEBSBlockDeviceInvalidThroughput,
+				Config:      testAccInstanceConfigEBSBlockDeviceInvalidThroughput,
 				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
@@ -1042,7 +1042,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigTags(),
+				Config: testAccInstanceConfigTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1055,7 +1055,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckInstanceConfigTagsUpdate(),
+				Config: testAccInstanceConfigTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1066,7 +1066,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_volumeTags(t *testing.T) {
+func TestAccAWSInstance_blockDeviceTags_volumeTags(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1076,7 +1076,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigNoVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsNoVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "volume_tags"),
@@ -1089,7 +1089,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 			{
-				Config: testAccCheckInstanceConfigWithVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
@@ -1097,7 +1097,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigWithVolumeTagsUpdate(),
+				Config: testAccInstanceConfigBlockDeviceTagsVolumeTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
@@ -1106,7 +1106,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigNoVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsNoVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "volume_tags"),
@@ -1116,7 +1116,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_volumeTagsWithAttachedVolume(t *testing.T) {
+func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1126,7 +1126,7 @@ func TestAccAWSInstance_volumeTagsWithAttachedVolume(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigWithAttachedVolume(),
+				Config: testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
@@ -1140,7 +1140,24 @@ func TestAccAWSInstance_volumeTagsWithAttachedVolume(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
+/*
+TestAccAWSInstance_blockDeviceTags_volumeTags
+	testAccInstanceConfigBlockDeviceTagsVolumeTagsUpdate
+	testAccInstanceConfigBlockDeviceTagsVolumeTags
+	testAccInstanceConfigBlockDeviceTagsNoVolumeTags
+
+TestAccAWSInstance_blockDeviceTags_ebsAndRoot
+	testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate
+	testAccInstanceConfigBlockDeviceTagsEBSAndRootTags
+	testAccInstanceConfigBlockDeviceTagsEBSTags
+	testAccInstanceConfigBlockDeviceTagsEBSTagsConflict
+	testAccInstanceConfigBlockDeviceTagsRootTagsConflict
+
+TestAccAWSInstance_blockDeviceTags_withAttachedVolume
+	testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags
+*/
+
+func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
@@ -1150,15 +1167,15 @@ func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCheckInstanceConfigBlockDeviceRootTagsConflictWithVolumeTags(),
+				Config:      testAccInstanceConfigBlockDeviceTagsRootTagsConflict(),
 				ExpectError: regexp.MustCompile(`"root_block_device\.0\.tags": conflicts with volume_tags`),
 			},
 			{
-				Config:      testAccCheckInstanceConfigBlockDeviceEbsTagsConflictWithVolumeTags(),
+				Config:      testAccInstanceConfigBlockDeviceTagsEBSTagsConflict(),
 				ExpectError: regexp.MustCompile(`"ebs_block_device\.0\.tags": conflicts with volume_tags`),
 			},
 			{
-				Config: testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
@@ -1168,7 +1185,7 @@ func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigBlockDeviceCreateVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
@@ -1177,7 +1194,7 @@ func TestAccAWSInstance_blockDeviceVolumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigBlockDeviceUpdateVolumeTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
@@ -4026,7 +4043,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccCheckInstanceConfigTags() string {
+func testAccInstanceConfigTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4090,7 +4107,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigWithAttachedVolume() string {
+func testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4125,7 +4142,7 @@ resource "aws_volume_attachment" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigBlockDeviceRootTagsConflictWithVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsRootTagsConflict() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4153,7 +4170,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigBlockDeviceEbsTagsConflictWithVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsEBSTagsConflict() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4181,7 +4198,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigNoVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsNoVolumeTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4219,7 +4236,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigBlockDeviceNoRootVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsEBSTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4252,7 +4269,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigBlockDeviceCreateVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsEBSAndRootTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4290,7 +4307,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigBlockDeviceUpdateVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4329,7 +4346,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
+var testAccInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
@@ -4344,7 +4361,7 @@ resource "aws_instance" "test" {
 }
 `)
 
-var testAccCheckInstanceConfigEBSBlockDeviceInvalidThroughput = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
+var testAccInstanceConfigEBSBlockDeviceInvalidThroughput = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
 resource "aws_instance" "test" {
   ami = data.aws_ami.ami.id
 
@@ -4359,7 +4376,7 @@ resource "aws_instance" "test" {
 }
 `)
 
-func testAccCheckInstanceConfigWithVolumeTags() string {
+func testAccInstanceConfigBlockDeviceTagsVolumeTags() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4401,7 +4418,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigWithVolumeTagsUpdate() string {
+func testAccInstanceConfigBlockDeviceTagsVolumeTagsUpdate() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -4444,7 +4461,7 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccCheckInstanceConfigTagsUpdate() string {
+func testAccInstanceConfigTagsUpdate() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
