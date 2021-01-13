@@ -13,6 +13,8 @@ const (
 	NotebookInstanceDeletedTimeout   = 10 * time.Minute
 	ImageCreatedTimeout              = 10 * time.Minute
 	ImageDeletedTimeout              = 10 * time.Minute
+	DomainInServiceTimeout           = 10 * time.Minute
+	DomainDeletedTimeout             = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -112,6 +114,47 @@ func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// DomainInService waits for a Domain to return InService
+func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			SagemakerDomainStatusNotFound,
+			sagemaker.DomainStatusPending,
+		},
+		Target:  []string{sagemaker.DomainStatusInService},
+		Refresh: DomainStatus(conn, domainID),
+		Timeout: DomainInServiceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// DomainDeleted waits for a Domain to return Deleted
+func DomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.DomainStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: DomainStatus(conn, domainID),
+		Timeout: DomainDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
 		return output, err
 	}
 
