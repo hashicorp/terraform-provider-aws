@@ -382,11 +382,10 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	snaps := d.Get("snapshot_arns").(*schema.Set)
-	if snaps.Len() > 0 {
-		s := expandStringSet(snaps)
-		req.SnapshotArns = s
-		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", s)
+	snaps := d.Get("snapshot_arns").([]interface{})
+	if len(snaps) > 0 {
+		req.SnapshotArns = expandStringList(snaps)
+		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
