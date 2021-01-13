@@ -645,11 +645,11 @@ func (c *Config) Client() (interface{}, error) {
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
 	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		switch r.Operation.Name {
-		case "CreateUsagePlanKey", "DeleteUsagePlanKey":
-			if tfawserr.ErrMessageContains(r.Error, apigateway.ErrCodeConflictException, "try again later") {
-				r.Retryable = aws.Bool(true)
-			}
+		// Many operations can return an error such as:
+		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+		// Handle them all globally for the service client.
+		if tfawserr.ErrMessageContains(r.Error, apigateway.ErrCodeConflictException, "try again later") {
+			r.Retryable = aws.Bool(true)
 		}
 	})
 
