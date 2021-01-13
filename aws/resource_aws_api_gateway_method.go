@@ -93,6 +93,11 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"operation_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -138,6 +143,10 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
 		input.RequestValidatorId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("operation_name"); ok {
+		input.OperationName = aws.String(v.(string))
 	}
 
 	_, err := conn.PutMethod(&input)
@@ -188,6 +197,8 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("request_validator_id", out.RequestValidatorId)
+
+	d.Set("operation_name", out.OperationName)
 
 	return nil
 }
@@ -286,6 +297,20 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/requestValidatorId"),
 			Value: request_validator_id,
+		})
+	}
+
+	if d.HasChange("operation_name") {
+		var operation_name *string
+		if v, ok := d.GetOk("operation_name"); ok {
+			if s := v.(string); len(s) > 0 {
+				operation_name = &s
+			}
+		}
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/operationName"),
+			Value: operation_name,
 		})
 	}
 
