@@ -1119,6 +1119,8 @@ func TestAccAWSInstance_blockDeviceTags_volumeTags(t *testing.T) {
 func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	ebsVolumeName := "aws_ebs_volume.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1126,9 +1128,31 @@ func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "PerAsperaAdAstra"),
+				),
+			},
+			{
+				//https://github.com/hashicorp/terraform-provider-aws/issues/17074
+				Config: testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "PerAsperaAdAstra"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTagsUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "VincitQuiSeVincit"),
 				),
 			},
 			{
@@ -1140,26 +1164,10 @@ func TestAccAWSInstance_blockDeviceTags_withAttachedVolume(t *testing.T) {
 	})
 }
 
-/*
-TestAccAWSInstance_blockDeviceTags_volumeTags
-	testAccInstanceConfigBlockDeviceTagsVolumeTagsUpdate
-	testAccInstanceConfigBlockDeviceTagsVolumeTags
-	testAccInstanceConfigBlockDeviceTagsNoVolumeTags
-
-TestAccAWSInstance_blockDeviceTags_ebsAndRoot
-	testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate
-	testAccInstanceConfigBlockDeviceTagsEBSAndRootTags
-	testAccInstanceConfigBlockDeviceTagsEBSTags
-	testAccInstanceConfigBlockDeviceTagsEBSTagsConflict
-	testAccInstanceConfigBlockDeviceTagsRootTagsConflict
-
-TestAccAWSInstance_blockDeviceTags_withAttachedVolume
-	testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags
-*/
-
 func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1175,30 +1183,30 @@ func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 				ExpectError: regexp.MustCompile(`"ebs_block_device\.0\.tags": conflicts with volume_tags`),
 			},
 			{
-				Config: testAccInstanceConfigBlockDeviceTagsEBSTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.Name", "terraform-test-ebs"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTags(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", "terraform-test-root"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Purpose", "test"),
 				),
 			},
 			{
-				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate(),
+				Config: testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", "terraform-test-root-new"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Env", "dev"),
 				),
 			},
@@ -4107,21 +4115,17 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTags(rName string) string {
+	// https://github.com/hashicorp/terraform-provider-aws/issues/17074
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.medium"
-
-  root_block_device {
-    delete_on_termination = true
-    volume_size           = "10"
-    volume_type           = "standard"
-  }
-
-  tags = {
-    Name = "test-terraform"
-  }
+  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_ebs_volume" "test" {
@@ -4130,7 +4134,8 @@ resource "aws_ebs_volume" "test" {
   type              = "gp2"
 
   tags = {
-    Name = "test-terraform"
+	Name   = %[1]q
+	Factum = "PerAsperaAdAstra"
   }
 }
 
@@ -4139,7 +4144,39 @@ resource "aws_volume_attachment" "test" {
   volume_id   = aws_ebs_volume.test.id
   instance_id = aws_instance.test.id
 }
-`)
+`, rName))
+}
+
+func testAccInstanceConfigBlockDeviceTagsAttachedVolumeWithTagsUpdate(rName string) string {
+	// https://github.com/hashicorp/terraform-provider-aws/issues/17074
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = aws_instance.test.availability_zone
+  size              = "10"
+  type              = "gp2"
+
+  tags = {
+	Name   = %[1]q
+	Factum = "VincitQuiSeVincit"
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name = "/dev/xvdg"
+  volume_id   = aws_ebs_volume.test.id
+  instance_id = aws_instance.test.id
+}
+`, rName))
 }
 
 func testAccInstanceConfigBlockDeviceTagsRootTagsConflict() string {
@@ -4236,8 +4273,8 @@ resource "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceConfigBlockDeviceTagsEBSTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccInstanceConfigBlockDeviceTagsEBSTags(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4252,7 +4289,7 @@ resource "aws_instance" "test" {
     volume_size = 1
 
     tags = {
-      Name = "terraform-test-ebs"
+      Name = %[1]q
     }
   }
 
@@ -4266,11 +4303,11 @@ resource "aws_instance" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceConfigBlockDeviceTagsEBSAndRootTags() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccInstanceConfigBlockDeviceTagsEBSAndRootTags(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4280,7 +4317,7 @@ resource "aws_instance" "test" {
     volume_type = "gp2"
 
     tags = {
-      Name    = "terraform-test-root"
+      Name    = %[1]q
       Purpose = "test"
     }
   }
@@ -4290,7 +4327,7 @@ resource "aws_instance" "test" {
     volume_size = 1
 
     tags = {
-      Name = "terraform-test-ebs"
+      Name = %[1]q
     }
   }
 
@@ -4304,11 +4341,11 @@ resource "aws_instance" "test" {
     virtual_name = "ephemeral0"
   }
 }
-`)
+`, rName))
 }
 
-func testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate() string {
-	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+func testAccInstanceConfigBlockDeviceTagsEBSAndRootTagsUpdate(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
@@ -4318,7 +4355,7 @@ resource "aws_instance" "test" {
     volume_type = "gp2"
 
     tags = {
-      Name = "terraform-test-root-new"
+      Name = %[1]q
       Env  = "dev"
     }
   }
@@ -4328,7 +4365,7 @@ resource "aws_instance" "test" {
     volume_size = 1
 
     tags = {
-      Name = "terraform-test-ebs"
+      Name = %[1]q
     }
   }
 
@@ -4337,13 +4374,12 @@ resource "aws_instance" "test" {
     volume_size = 1
   }
 
-
   ephemeral_block_device {
     device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
 }
-`)
+`, rName))
 }
 
 var testAccInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `

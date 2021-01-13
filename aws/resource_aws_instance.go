@@ -408,7 +408,8 @@ func resourceAwsInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					// "You can only modify the volume size, volume type, and Delete on
 					// Termination flag on the block device mapping entry for the root
-					// device volume." - bit.ly/ec2bdmap
+					// device volume."
+					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
@@ -705,14 +706,14 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// tags in root_block_device and ebs_block_device
-	volumeTagsToCreate := map[string]map[string]interface{}{}
+	blockDeviceTagsToCreate := map[string]map[string]interface{}{}
 	if v, ok := d.GetOk("root_block_device"); ok {
 		vL := v.([]interface{})
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+			if blockDeviceTags, ok := bd["tags"].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
 				if rootVolumeId := getRootVolumeId(instance); rootVolumeId != "" {
-					volumeTagsToCreate[rootVolumeId] = tagsm
+					blockDeviceTagsToCreate[rootVolumeId] = blockDeviceTags
 				}
 			}
 		}
@@ -722,17 +723,17 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+			if blockDeviceTags, ok := bd["tags"].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
 				devName := bd["device_name"].(string)
 				if volumeId := getVolumeIdByDeviceName(instance, devName); volumeId != "" {
-					volumeTagsToCreate[volumeId] = tagsm
+					blockDeviceTagsToCreate[volumeId] = blockDeviceTags
 				}
 			}
 		}
 	}
 
-	for vol, tagsm := range volumeTagsToCreate {
-		if err := keyvaluetags.Ec2CreateTags(conn, vol, tagsm); err != nil {
+	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
+		if err := keyvaluetags.Ec2CreateTags(conn, vol, blockDeviceTags); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -2542,7 +2543,7 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 		vL := v.([]interface{})
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+			if blockDeviceTags, ok := bd["tags"].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
 				return true
 			}
 		}
@@ -2552,7 +2553,7 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			if tagsm, ok := bd["tags"].(map[string]interface{}); ok && len(tagsm) > 0 {
+			if blockDeviceTags, ok := bd["tags"].(map[string]interface{}); ok && len(blockDeviceTags) > 0 {
 				return true
 			}
 		}
