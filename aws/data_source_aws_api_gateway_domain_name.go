@@ -2,14 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -85,20 +83,21 @@ func dataSourceAwsApiGatewayDomainName() *schema.Resource {
 
 func dataSourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
-	targetDomainName := d.Get("domain_name").(string)
-	log.Printf("[DEBUG] Reading API Gateway Domain Name %s", targetDomainName)
-	domainName, err := conn.GetDomainName(&apigateway.GetDomainNameInput{
-		DomainName: aws.String(targetDomainName),
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
-			return fmt.Errorf("API Gateway Domain Name (%s) not found", targetDomainName)
-		}
 
-		return err
+	input := &apigateway.GetDomainNameInput{}
+
+	if v, ok := d.GetOk("domain_name"); ok {
+		input.DomainName = aws.String(v.(string))
 	}
 
-	d.SetId(*domainName.DomainName)
+	domainName, err := conn.GetDomainName(input)
+
+	if err != nil {
+		return fmt.Errorf("error getting API Gateway Domain Name: %w", err)
+	}
+
+	d.SetId(aws.StringValue(domainName.DomainName))
+
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "apigateway",
@@ -108,13 +107,14 @@ func dataSourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interfac
 	d.Set("arn", arn)
 	d.Set("certificate_arn", domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
-	if err := d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting certificate_upload_date: %s", err)
+
+	if domainName.CertificateUploadDate != nil {
+		d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339))
 	}
+
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
 	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
 	d.Set("domain_name", domainName.DomainName)
-	d.Set("security_policy", domainName.SecurityPolicy)
 
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
@@ -124,6 +124,7 @@ func dataSourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interfac
 	d.Set("regional_certificate_name", domainName.RegionalCertificateName)
 	d.Set("regional_domain_name", domainName.RegionalDomainName)
 	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
+	d.Set("security_policy", domainName.SecurityPolicy)
 
 	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(domainName.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
