@@ -19,12 +19,12 @@ ENHANCEMENTS
 
 BUX FIXES
 
-* resource/aws_api_gateway_usage_plan_key: Automatically retry on retryable `ConflictException` errors during creation and deletion [GH-10092]
 * resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
 * resource/aws_dms_endpoint: Support `extra_connection_attributes` for all engine names during create and read [GH-16827]
 * resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
 * resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association [GH-17023]
 * resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks [GH-17055]
+* service/apigateway: All operations will now automatically retry on `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` errors.
 
 ## 3.23.0 (January 08, 2021)
 
