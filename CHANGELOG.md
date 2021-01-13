@@ -17,6 +17,8 @@ ENHANCEMENTS
 * resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
 * resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
 * resource/aws_instance: Add `tags` parameter to `root_block_device`, `ebs_block_device` blocks.[GH-15474]
+* resource/aws_workspaces_directory: Add access properties [GH-16688]
+* datasource/aws_workspaces_directory: Add access properties [GH-16688]
 
 BUX FIXES
 
