@@ -5,11 +5,16 @@ import (
 	"log"
 	"strings"
 
+	"sync"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var resourceAwsApiGatewayMethodSettingsUpdateMutex = &sync.Mutex{}
+var resourceAwsApiGatewayMethodSettingsDeleteMutex = &sync.Mutex{}
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 	return &schema.Resource{
@@ -251,7 +256,14 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 		PatchOperations: ops,
 	}
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
-	_, err := conn.UpdateStage(&input)
+
+	resourceAwsApiGatewayMethodSettingsUpdateMutex.Lock()
+	defer resourceAwsApiGatewayMethodSettingsUpdateMutex.Unlock()
+
+	_, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+		return conn.UpdateStage(&input)
+	})
+
 	if err != nil {
 		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
@@ -276,7 +288,14 @@ func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta inte
 		},
 	}
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
-	_, err := conn.UpdateStage(&input)
+
+	resourceAwsApiGatewayMethodSettingsDeleteMutex.Lock()
+	defer resourceAwsApiGatewayMethodSettingsDeleteMutex.Unlock()
+
+	_, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+		return conn.UpdateStage(&input)
+	})
+
 	if err != nil {
 		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
