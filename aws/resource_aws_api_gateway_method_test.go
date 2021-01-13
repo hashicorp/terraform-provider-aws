@@ -198,44 +198,34 @@ func TestAccAWSAPIGatewayMethod_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayMethod_customoperationname(t *testing.T) {
+func TestAccAWSAPIGatewayMethod_OperationName(t *testing.T) {
 	var conf apigateway.Method
 	rInt := acctest.RandInt()
+	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCustomOperationName(rInt),
+				Config: testAccAWSAPIGatewayMethodConfigOperationName(rInt, "getTest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
-					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "http_method", "GET"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "authorization", "NONE"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "operation_name", "getTest"),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "operation_name", "getTest"),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_method.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
-
 			{
-				Config: testAccAWSAPIGatewayMethodConfigWithCustomOperationNameUpdate(rInt),
+				Config: testAccAWSAPIGatewayMethodConfigOperationName(rInt, "describeTest"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
-					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_method.test", "operation_name", "describeTest"),
+					testAccCheckAWSAPIGatewayMethodExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "operation_name", "describeTest"),
 				),
 			},
 		},
@@ -770,23 +760,24 @@ resource "aws_api_gateway_method" "test" {
 `, rInt)
 }
 
-func testAccAWSAPIGatewayMethodConfigWithCustomOperationName(rInt int) string {
+func testAccAWSAPIGatewayMethodConfigOperationName(rInt int, operationName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "tf-acc-test-apig-method-custom-op-name-%d"
+  name = "tf-acc-test-apig-method-custom-op-name-%[1]d"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
   path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
-  http_method   = "GET"
-  authorization = "NONE"
+  authorization  = "NONE"
+  http_method    = "GET"
+  operation_name = %[2]q
+  resource_id    = aws_api_gateway_resource.test.id
+  rest_api_id    = aws_api_gateway_rest_api.test.id
 
   request_models = {
     "application/json" = "Error"
@@ -796,39 +787,6 @@ resource "aws_api_gateway_method" "test" {
     "method.request.header.Content-Type" = false
     "method.request.querystring.page"    = true
   }
-
-  operation_name = "getTest"
 }
-`, rInt)
-}
-
-func testAccAWSAPIGatewayMethodConfigWithCustomOperationNameUpdate(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = "tf-acc-test-apig-method-custom-op-name-%d"
-}
-
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part   = "test"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
-  http_method   = "GET"
-  authorization = "NONE"
-
-  request_models = {
-    "application/json" = "Error"
-  }
-
-  request_parameters = {
-    "method.request.querystring.page"    = false
-  }
-
-  operation_name = "describeTest"
-}
-`, rInt)
+`, rInt, operationName)
 }

@@ -141,12 +141,12 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 		input.AuthorizationScopes = expandStringList(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("request_validator_id"); ok {
-		input.RequestValidatorId = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("operation_name"); ok {
 		input.OperationName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("request_validator_id"); ok {
+		input.RequestValidatorId = aws.String(v.(string))
 	}
 
 	_, err := conn.PutMethod(&input)
@@ -187,6 +187,7 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("authorization", out.AuthorizationType)
 	d.Set("authorizer_id", out.AuthorizerId)
+	d.Set("operation_name", out.OperationName)
 
 	if err := d.Set("request_models", aws.StringValueMap(out.RequestModels)); err != nil {
 		return fmt.Errorf("error setting request_models: %s", err)
@@ -197,8 +198,6 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("request_validator_id", out.RequestValidatorId)
-
-	d.Set("operation_name", out.OperationName)
 
 	return nil
 }
