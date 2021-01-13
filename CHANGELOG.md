@@ -13,6 +13,7 @@ ENHANCEMENTS
 
 BUX FIXES
 
+* resource/aws_api_gateway_usage_plan_key: Automatically retry on retryable `ConflictException` errors during creation and deletion [GH-10092]
 * resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
 * resource/aws_dms_endpoint: Support `extra_connection_attributes` for all engine names during create and read [GH-16827]
 * resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
