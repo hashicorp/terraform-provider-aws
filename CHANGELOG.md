@@ -9,6 +9,7 @@ ENHANCEMENTS
 
 * resource/aws_api_gateway_base_path_mapping: Support in-place updates for `api_id`, `base_path`, and `stage_name` [GH-16147]
 * resource/aws_api_gateway_domain_name: Add `mutual_tls_authentication` configuration block [GH-15258]
+* resource/aws_api_gateway_integration: Add `tls_config` configuration block [GH-15499]
 * resource/aws_api_gateway_method: Add `operation_name` argument [GH-13282]
 * resource/aws_api_gateway_rest_api: Add `disable_execute_api_endpoint` argument [GH-16198]
 * resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
