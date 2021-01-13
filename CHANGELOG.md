@@ -22,6 +22,7 @@ ENHANCEMENTS
 
 BUX FIXES
 
+* resource/aws_appmesh_route: Allow an empty `match` attribute to specified for a `grpc_route`, indicating that any service should be matched [GH-16867]
 * resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
 * resource/aws_dms_endpoint: Support `extra_connection_attributes` for all engine names during create and read [GH-16827]
 * resource/aws_instance: Prevent `volume_tags` from improperly interfering with `tags` in `aws_ebs_volume` [GH-15474]
