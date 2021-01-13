@@ -4134,8 +4134,8 @@ resource "aws_ebs_volume" "test" {
   type              = "gp2"
 
   tags = {
-	Name   = %[1]q
-	Factum = "PerAsperaAdAstra"
+    Name   = %[1]q
+    Factum = "PerAsperaAdAstra"
   }
 }
 
@@ -4166,8 +4166,8 @@ resource "aws_ebs_volume" "test" {
   type              = "gp2"
 
   tags = {
-	Name   = %[1]q
-	Factum = "VincitQuiSeVincit"
+    Name   = %[1]q
+    Factum = "VincitQuiSeVincit"
   }
 }
 
