@@ -489,9 +489,7 @@ func resourceAwsApiGatewayIntegrationUpdate(d *schema.ResourceData, meta interfa
 		})
 	}
 
-	if d.HasChange("tls_config.0.insecure_skip_verification") {
-		// The domain name must have an endpoint type.
-		// If attempting to remove the configuration, do nothing.
+	if d.HasChange("tls_config") {
 		if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
 			m := v.([]interface{})[0].(map[string]interface{})
 
@@ -557,7 +555,7 @@ func expandApiGatewayTlsConfig(vConfig []interface{}) *apigateway.TlsConfig {
 
 func flattenApiGatewayTlsConfig(config *apigateway.TlsConfig) []interface{} {
 	if config == nil {
-		return []interface{}{}
+		return nil
 	}
 
 	return []interface{}{map[string]interface{}{
