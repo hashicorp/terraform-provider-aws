@@ -4,6 +4,7 @@ FEATURES
 
 * **New Data Source:** `aws_api_gateway_domain_name` [GH-12489]
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
+* **New Resource:** `aws_sagemaker_domain` [GH-16077]
 
 ENHANCEMENTS
 
@@ -28,6 +29,7 @@ BUX FIXES
 * resource/aws_instance: Prevent `volume_tags` from improperly interfering with `tags` in `aws_ebs_volume` [GH-15474]
 * resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
 * resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association [GH-17023]
+* resource/aws_sagemaker_image - fix error on wait for delete when image does not exist [GH-16077]
 * resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks [GH-17055]
 * service/apigateway: All operations will now automatically retry on `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` errors.
 
