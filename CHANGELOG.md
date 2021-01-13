@@ -7,6 +7,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* resource/aws_api_gateway_domain_name: Add `mutual_tls_authentication` configuration block [GH-15258]
 * resource/aws_api_gateway_method: Add `operation_name` argument [GH-13282]
 * resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
 * resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
