@@ -28,17 +28,14 @@ func resourceAwsApiGatewayBasePathMapping() *schema.Resource {
 			"api_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false,
 			},
 			"base_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"stage_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -133,9 +130,6 @@ func resourceAwsApiGatewayBasePathMappingUpdate(d *schema.ResourceData, meta int
 	_, err := conn.UpdateBasePathMapping(&input)
 
 	if err != nil {
-		if isResourceTimeoutError(err) {
-			_, err = conn.UpdateBasePathMapping(&input)
-		}
 		if err != nil {
 			return fmt.Errorf("Updating API Gateway base path mapping failed: %s", err)
 		}
