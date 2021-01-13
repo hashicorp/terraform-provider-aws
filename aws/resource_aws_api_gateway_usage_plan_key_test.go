@@ -33,7 +33,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "value", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "value"),
 				),
 			},
 			{
