@@ -44,23 +44,6 @@ func TestAccDataSourceAwsApiGatewayDomainName_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsApiGatewayDomainNameConfig_CertificateArn(domainName, certificateArn string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_domain_name" "test" {
- domain_name     = "%s"
- certificate_arn = "%s"
-
- endpoint_configuration {
-   types = ["EDGE"]
- }
-}
-
-data "aws_api_gateway_domain_name" "test" {
- domain_name = "${aws_api_gateway_domain_name.test.domain_name}"
-}
-`, domainName, certificateArn)
-}
-
 func testAccDataSourceAwsApiGatewayDomainNameConfig_RegionalCertificateArn(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
