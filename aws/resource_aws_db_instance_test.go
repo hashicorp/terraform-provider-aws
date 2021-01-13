@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -443,7 +442,7 @@ func TestAccAWSDBInstance_FinalSnapshotIdentifier(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// testAccCheckAWSDBInstanceSnapshot verifies a database snapshot is
-		// created, and subequently deletes it
+		// created, and subsequently deletes it
 		CheckDestroy: testAccCheckAWSDBInstanceSnapshot,
 		Steps: []resource.TestStep{
 			{
@@ -2295,8 +2294,8 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
 			{
@@ -2304,9 +2303,9 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
 				),
 			},
 			{
@@ -2314,9 +2313,9 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MySQL(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
 			},
 			{
@@ -3080,7 +3079,7 @@ func testAccAWSDBInstanceConfig_orderableClassSQLServerEx() string {
 }
 
 func testAccAWSDBInstanceConfig_basic() string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), `
 resource "aws_db_instance" "bar" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -3098,11 +3097,11 @@ resource "aws_db_instance" "bar" {
   # validation error).
   maintenance_window = "Fri:09:00-Fri:09:30"
 }
-`))
+`)
 }
 
 func testAccAWSDBInstanceConfig_namePrefix() string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), `
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -3113,11 +3112,11 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
   username            = "root"
 }
-`))
+`)
 }
 
 func testAccAWSDBInstanceConfig_generatedName() string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), `
 resource "aws_db_instance" "test" {
   allocated_storage   = 10
   engine              = data.aws_rds_orderable_db_instance.test.engine
@@ -3127,7 +3126,7 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
   username            = "root"
 }
-`))
+`)
 }
 
 func testAccAWSDBInstanceConfig_KmsKeyId(rInt int) string {
@@ -3191,7 +3190,7 @@ resource "aws_db_instance" "bar" {
 }
 
 func testAccAWSDBInstanceConfig_WithCACertificateIdentifier() string {
-	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), fmt.Sprintf(`
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMysql(), `
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
 }
@@ -3207,7 +3206,7 @@ resource "aws_db_instance" "bar" {
   skip_final_snapshot = true
   username            = "foo"
 }
-`))
+`)
 }
 
 func testAccAWSDBInstanceConfig_WithOptionGroup(rName string) string {

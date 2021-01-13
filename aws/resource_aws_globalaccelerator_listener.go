@@ -89,7 +89,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating Global Accelerator listener: %s", err)
 	}
 
-	d.SetId(*resp.Listener.ListenerArn)
+	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{

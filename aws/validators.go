@@ -23,9 +23,15 @@ import (
 )
 
 const (
-	awsAccountIDRegexpPattern = `^(aws|\d{12})$`
-	awsPartitionRegexpPattern = `^aws(-[a-z]+)*$`
-	awsRegionRegexpPattern    = `^[a-z]{2}(-[a-z]+)+-\d$`
+	awsAccountIDRegexpInternalPattern = `(aws|\d{12})`
+	awsPartitionRegexpInternalPattern = `aws(-[a-z]+)*`
+	awsRegionRegexpInternalPattern    = `[a-z]{2}(-[a-z]+)+-\d`
+)
+
+const (
+	awsAccountIDRegexpPattern = "^" + awsAccountIDRegexpInternalPattern + "$"
+	awsPartitionRegexpPattern = "^" + awsPartitionRegexpInternalPattern + "$"
+	awsRegionRegexpPattern    = "^" + awsRegionRegexpInternalPattern + "$"
 )
 
 var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)
@@ -91,8 +97,8 @@ func validateTransferServerID(v interface{}, k string) (ws []string, errors []er
 func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
-	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,99}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
 	return
 }
@@ -652,6 +658,25 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 	}
 
 	return
+}
+
+func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "IAM_ALLOWED_PRINCIPALS" {
+		return ws, errors
+	}
+
+	wsARN, errorsARN := validateArn(v, k)
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+
+	pattern := `\d{12}:(role|user)/`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role: %q", k, value))
+	}
+
+	return ws, errors
 }
 
 func validateArn(v interface{}, k string) (ws []string, errors []error) {
@@ -2135,6 +2160,15 @@ func validate4ByteAsn(v interface{}, k string) (ws []string, errors []error) {
 
 	if asn < 0 || asn > 4294967295 {
 		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 0 to 4294967295", k, v))
+	}
+	return
+}
+
+func validateLinuxFileMode(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-7]{4}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only valid linux mode is allowed in %q", k))
 	}
 	return
 }

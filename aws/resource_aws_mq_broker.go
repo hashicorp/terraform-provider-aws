@@ -298,7 +298,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(*out.BrokerId)
+	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
 	stateConf := resource.StateChangeConf{

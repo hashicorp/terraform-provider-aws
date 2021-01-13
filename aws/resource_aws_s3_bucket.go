@@ -655,7 +655,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
 	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
-	if awsRegion != "us-east-1" {
+	if awsRegion != endpoints.UsEast1RegionID {
 		req.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
 			LocationConstraint: aws.String(awsRegion),
 		}
@@ -1263,6 +1263,12 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
 			r.Config.S3ForcePathStyle = s3conn.Config.S3ForcePathStyle
+
+			// By default, GetBucketRegion uses anonymous credentials when doing
+			// a HEAD request to get the bucket region. This breaks in aws-cn regions
+			// when the account doesn't have an ICP license to host public content.
+			// Use the current credentials when getting the bucket region.
+			r.Config.Credentials = s3conn.Config.Credentials
 		})
 	})
 	if err != nil {
@@ -1723,15 +1729,15 @@ func WebsiteDomainUrl(client *AWSClient, region string) string {
 
 func isOldRegion(region string) bool {
 	oldRegions := []string{
-		"ap-northeast-1",
-		"ap-southeast-1",
-		"ap-southeast-2",
-		"eu-west-1",
-		"sa-east-1",
-		"us-east-1",
-		"us-gov-west-1",
-		"us-west-1",
-		"us-west-2",
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsGovWest1RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
 	}
 	for _, r := range oldRegions {
 		if region == r {
@@ -2425,7 +2431,7 @@ func normalizeRegion(region string) string {
 	// Default to us-east-1 if the bucket doesn't have a region:
 	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
 	if region == "" {
-		region = "us-east-1"
+		region = endpoints.UsEast1RegionID
 	}
 
 	return region
@@ -2435,7 +2441,7 @@ func normalizeRegion(region string) string {
 // Buckets outside of this region have to be DNS-compliant. After the same restrictions are
 // applied to buckets in the us-east-1 region, this function can be refactored as a SchemaValidateFunc
 func validateS3BucketName(value string, region string) error {
-	if region != "us-east-1" {
+	if region != endpoints.UsEast1RegionID {
 		if (len(value) < 3) || (len(value) > 63) {
 			return fmt.Errorf("%q must contain from 3 to 63 characters", value)
 		}

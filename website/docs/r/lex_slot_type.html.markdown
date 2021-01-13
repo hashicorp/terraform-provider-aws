@@ -72,7 +72,7 @@ pizza should have. The slot type could include the values: thick, thin, stuffed.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 1 min) Used when creating the slot type
 * `update` - (Defaults to 1 min) Used when updating the slot type
@@ -80,7 +80,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is
 not included as an argument because the resource will add it automatically when updating the slot type.

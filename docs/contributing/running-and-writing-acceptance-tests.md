@@ -116,6 +116,8 @@ ok  	github.com/hashicorp/terraform-provider-aws/aws	55.619s
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
 
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#environment-variables) for more information.
+
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
 ### Running Cross-Account Tests
@@ -639,6 +641,32 @@ if err != nil {
 }
 ```
 
+For children resources that are encapsulated by a parent resource, it is also preferable to verify that removing the parent resource will not generate an error either. These are typically named `TestAccAws{SERVICE}{THING}_disappears_{PARENT}`, e.g. `TestAccAwsRoute53ZoneAssociation_disappears_Vpc`
+
+```go
+func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  parentResourceName := "aws_example_parent_thing.test"
+  resourceName := "aws_example_child_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceDisappears(testAccProvider, resourceAwsExampleParentThing(), parentResourceName),
+        ),
+        ExpectNonEmptyPlan: true,
+      },
+    },
+  })
+}
+```
+
 #### Per Attribute Acceptance Tests
 
 These are typically named `TestAccAws{SERVICE}{THING}_{ATTRIBUTE}`, e.g. `TestAccAwsCloudWatchDashboard_Name`
@@ -1159,7 +1187,7 @@ The below are style-based items that _may_ be noted during review and are recomm
 - [ ] __Excludes Timeouts Configurations__: Test configurations should not include `timeouts {...}` configuration blocks except for explicit testing of customizable timeouts (typically very short timeouts with `ExpectError`).
 - [ ] __Implements Default and Zero Value Validation__: The basic test for a resource (typically named `TestAccAws{SERVICE}{RESOURCE}_basic`) should utilize available check functions, e.g. `resource.TestCheckResourceAttr()`, to verify default and zero values in the Terraform state for all attributes. Empty/missing configuration blocks can be verified with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.#", "0")` and empty maps with `resource.TestCheckResourceAttr(resourceName, "{ATTRIBUTE}.%", "0")`
 
-### Avoiding Hard Coding
+### Avoid Hard Coding
 
 Avoid hard coding values in acceptance test checks and configurations for consistency and testing flexibility. Resource testing is expected to pass across multiple AWS environments supported by the Terraform AWS Provider (e.g. AWS Standard and AWS GovCloud (US)). Contributors are not expected or required to perform testing outside of AWS Standard, e.g. running only in the `us-west-2` region is perfectly acceptable. However, contributors are expected to avoid hard coding with these guidelines.
 

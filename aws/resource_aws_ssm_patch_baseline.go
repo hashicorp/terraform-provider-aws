@@ -167,7 +167,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	d.SetId(*resp.BaselineId)
+	d.SetId(aws.StringValue(resp.BaselineId))
 	return resourceAwsSsmPatchBaselineRead(d, meta)
 }
 

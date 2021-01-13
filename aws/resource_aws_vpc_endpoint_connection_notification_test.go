@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandString(10))
 	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{

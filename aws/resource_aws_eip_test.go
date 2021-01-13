@@ -400,9 +400,9 @@ func TestAccAWSEIP_tags_Ec2Classic(t *testing.T) {
 	rName1 := fmt.Sprintf("%s-%d", t.Name(), acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEIPDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSEIPConfig_tags_Ec2Classic(rName1, t.Name()),
@@ -457,6 +457,35 @@ func TestAccAWSEIP_NetworkBorderGroup(t *testing.T) {
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
 					resource.TestCheckResourceAttr(resourceName, "network_border_group", testAccGetRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEIP_CarrierIP(t *testing.T) {
+	var conf ec2.Address
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigCarrierIP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "carrier_ip"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_border_group"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
 			{
@@ -762,18 +791,16 @@ resource "aws_eip" "test" {
 }
 
 func testAccAWSEIPConfig_tags_Ec2Classic(rName, testName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   tags = {
     RandomName = "%[1]s"
     TestName   = "%[2]s"
   }
 }
-`, rName, testName)
+`, rName, testName))
 }
 
 const testAccAWSEIPConfig_PublicIpv4Pool_default = `
@@ -1178,3 +1205,22 @@ resource "aws_eip" "test" {
   network_border_group = data.aws_region.current.name
 }
 `
+
+func testAccAWSEIPConfigCarrierIP(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsWavelengthZonesDefaultExcludeConfig(),
+		fmt.Sprintf(`
+data "aws_availability_zone" "available" {
+  name = data.aws_availability_zones.available.names[0]
+}
+
+resource "aws_eip" "test" {
+  vpc                  = true
+  network_border_group = data.aws_availability_zone.available.network_border_group
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}

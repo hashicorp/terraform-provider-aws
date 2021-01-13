@@ -89,7 +89,8 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
 			},
 			{
@@ -122,7 +123,7 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
 				),
 			},
@@ -136,7 +137,7 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "2"),
 				),
 			},
@@ -145,7 +146,7 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
 			},
 		},
@@ -401,19 +402,25 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 func testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
-		`
+		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -421,12 +428,18 @@ resource "aws_workspaces_workspace" "test" {
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
+
+  tags = {
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+  }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsA(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -436,15 +449,17 @@ resource "aws_workspaces_workspace" "test" {
   user_name = "Administrator"
 
   tags = {
-    TerraformProviderAwsTest = true
-    Alpha                    = 1
+    Name  = "tf-testacc-workspaces-workspace-%[1]s"
+    Alpha = 1
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsB(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -454,15 +469,17 @@ resource "aws_workspaces_workspace" "test" {
   user_name = "Administrator"
 
   tags = {
-    TerraformProviderAwsTest = true
-    Beta                     = 2
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+    Beta = 2
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_TagsC(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -472,14 +489,16 @@ resource "aws_workspaces_workspace" "test" {
   user_name = "Administrator"
 
   tags = {
-    TerraformProviderAwsTest = true
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -495,14 +514,16 @@ resource "aws_workspaces_workspace" "test" {
   }
 
   tags = {
-    TerraformProviderAwsTest = true
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -517,14 +538,16 @@ resource "aws_workspaces_workspace" "test" {
   }
 
   tags = {
-    TerraformProviderAwsTest = true
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -535,12 +558,18 @@ resource "aws_workspaces_workspace" "test" {
 
   workspace_properties {
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+  }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -555,14 +584,16 @@ resource "aws_workspaces_workspace" "test" {
   }
 
   tags = {
-    TerraformProviderAwsTest = true
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -577,14 +608,16 @@ resource "aws_workspaces_workspace" "test" {
   }
 
   tags = {
-    TerraformProviderAwsTest = true
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
   }
 }
-`
+`, rName))
 }
 
 func testAccWorkspacesWorkspaceConfig_timeout(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + `
+	return composeConfig(
+		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = data.aws_workspaces_bundle.test.id
   directory_id = aws_workspaces_directory.test.id
@@ -598,8 +631,12 @@ resource "aws_workspaces_workspace" "test" {
     update = "30m"
     delete = "30m"
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-workspace-%[1]s"
+  }
 }
-`
+`, rName))
 }
 
 func TestExpandWorkspaceProperties(t *testing.T) {

@@ -11,6 +11,8 @@ const (
 	NotebookInstanceInServiceTimeout = 10 * time.Minute
 	NotebookInstanceStoppedTimeout   = 10 * time.Minute
 	NotebookInstanceDeletedTimeout   = 10 * time.Minute
+	ImageCreatedTimeout              = 10 * time.Minute
+	ImageDeletedTimeout              = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -71,6 +73,45 @@ func NotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*s
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageCreated waits for a Image to return Created
+func ImageCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.ImageStatusCreating,
+			sagemaker.ImageStatusUpdating,
+		},
+		Target:  []string{sagemaker.ImageStatusCreated},
+		Refresh: ImageStatus(conn, name),
+		Timeout: ImageCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageDeleted waits for a Image to return Deleted
+func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ImageStatusDeleting},
+		Target:  []string{},
+		Refresh: ImageStatus(conn, name),
+		Timeout: ImageDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
 		return output, err
 	}
 

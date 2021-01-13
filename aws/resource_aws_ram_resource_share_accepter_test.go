@@ -18,7 +18,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
 
-	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	shareName := fmt.Sprintf("tf-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {

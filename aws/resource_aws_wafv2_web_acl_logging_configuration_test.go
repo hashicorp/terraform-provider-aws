@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
@@ -68,10 +67,10 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "referer",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
 					}),
 				),
@@ -83,7 +82,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"single_header.0.name": "user-agent",
 					}),
 				),
@@ -202,7 +201,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_webACLDisappears(t *testing.T) {
+func TestAccAwsWafv2WebACLLoggingConfiguration_disappears_WebAcl(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"

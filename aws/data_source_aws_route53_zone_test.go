@@ -9,13 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsRoute53Zone_id(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_id(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
@@ -32,13 +33,14 @@ func TestAccDataSourceAwsRoute53Zone_id(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRoute53Zone_name(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_name(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
@@ -55,13 +57,14 @@ func TestAccDataSourceAwsRoute53Zone_name(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRoute53Zone_tags(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_tags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
@@ -78,13 +81,14 @@ func TestAccDataSourceAwsRoute53Zone_tags(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRoute53Zone_vpc(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_vpc(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_route53_zone.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{
@@ -101,13 +105,14 @@ func TestAccDataSourceAwsRoute53Zone_vpc(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRoute53Zone_serviceDiscovery(t *testing.T) {
+func TestAccAWSRoute53ZoneDataSource_serviceDiscovery(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_service_discovery_private_dns_namespace.test"
 	dataSourceName := "data.aws_route53_zone.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
 		Steps: []resource.TestStep{

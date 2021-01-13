@@ -34,7 +34,7 @@ func WorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.St
 		}
 
 		if len(output.Workspaces) == 0 {
-			return nil, "", nil
+			return output, workspaces.WorkspaceStateTerminated, nil
 		}
 
 		workspace := output.Workspaces[0]

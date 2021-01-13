@@ -405,7 +405,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 
-		d.SetId(*resp.Cluster.ClusterIdentifier)
+		d.SetId(aws.StringValue(resp.Cluster.ClusterIdentifier))
 
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok {
@@ -489,7 +489,7 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		log.Printf("[DEBUG]: Cluster create response: %s", resp)
-		d.SetId(*resp.Cluster.ClusterIdentifier)
+		d.SetId(aws.StringValue(resp.Cluster.ClusterIdentifier))
 	}
 
 	stateConf := &resource.StateChangeConf{

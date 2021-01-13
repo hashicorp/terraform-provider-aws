@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -540,11 +539,11 @@ func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
 }
 
 func TestExpandStringList(t *testing.T) {
-	expanded := []interface{}{"us-east-1a", "us-east-1b"}
+	expanded := []interface{}{"us-east-1a", "us-east-1b"} //lintignore:AWSAT003
 	stringList := expandStringList(expanded)
 	expected := []*string{
-		aws.String("us-east-1a"),
-		aws.String("us-east-1b"),
+		aws.String("us-east-1a"), //lintignore:AWSAT003
+		aws.String("us-east-1b"), //lintignore:AWSAT003
 	}
 
 	if !reflect.DeepEqual(stringList, expected) {
@@ -608,29 +607,6 @@ func TestExpandRedshiftParameters(t *testing.T) {
 	expected := &redshift.Parameter{
 		ParameterName:  aws.String("character_set_client"),
 		ParameterValue: aws.String("utf8"),
-	}
-
-	if !reflect.DeepEqual(parameters[0], expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			parameters[0],
-			expected)
-	}
-}
-
-func TestExpandElasticacheParameters(t *testing.T) {
-	expanded := []interface{}{
-		map[string]interface{}{
-			"name":         "activerehashing",
-			"value":        "yes",
-			"apply_method": "immediate",
-		},
-	}
-	parameters := expandElastiCacheParameters(expanded)
-
-	expected := &elasticache.ParameterNameValue{
-		ParameterName:  aws.String("activerehashing"),
-		ParameterValue: aws.String("yes"),
 	}
 
 	if !reflect.DeepEqual(parameters[0], expected) {
@@ -720,35 +696,6 @@ func TestFlattenRedshiftParameters(t *testing.T) {
 
 	for _, tc := range cases {
 		output := flattenRedshiftParameters(tc.Input)
-		if !reflect.DeepEqual(output, tc.Output) {
-			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
-		}
-	}
-}
-
-func TestFlattenElasticacheParameters(t *testing.T) {
-	cases := []struct {
-		Input  []*elasticache.Parameter
-		Output []map[string]interface{}
-	}{
-		{
-			Input: []*elasticache.Parameter{
-				{
-					ParameterName:  aws.String("activerehashing"),
-					ParameterValue: aws.String("yes"),
-				},
-			},
-			Output: []map[string]interface{}{
-				{
-					"name":  "activerehashing",
-					"value": "yes",
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenElastiCacheParameters(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}

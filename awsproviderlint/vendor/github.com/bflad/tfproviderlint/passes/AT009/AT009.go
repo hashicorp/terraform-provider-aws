@@ -39,7 +39,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			continue
 		}
 
-		if !acctest.IsConst(callExpr.Args[1], pass.TypesInfo, acctest.ConstNameCharSetAlpha) {
+		if !acctest.IsConst(callExpr.Args[1], pass.TypesInfo, acctest.ConstNameCharSetAlphaNum) {
 			continue
 		}
 

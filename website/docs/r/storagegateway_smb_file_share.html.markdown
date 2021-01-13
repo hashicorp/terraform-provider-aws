@@ -61,6 +61,8 @@ The following arguments are supported:
 * `smb_acl_enabled` - (Optional) Set this value to `true` to enable ACL (access control list) on the SMB fileshare. Set it to `false` to map file and directory permissions to the POSIX permissions. This setting applies only to `ActiveDirectory` authentication type.
 * `case_sensitivity` - (Optional) The case of an object name in an Amazon S3 bucket. For `ClientSpecified`, the client determines the case sensitivity. For `CaseSensitive`, the gateway determines the case sensitivity. The default value is `ClientSpecified`.
 * `valid_user_list` - (Optional) A list of users in the Active Directory that are allowed to access the file share. Only valid if `authentication` is set to `ActiveDirectory`.
+* `access_based_enumeration` - (Optional) The files and folders on this share will only be visible to users with read access. Default value is `false`.
+* `notification_policy` - (Optional) The notification policy of the file share. For more information see the [AWS Documentation](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-NotificationPolicy). Default value is `{}`.
 * `tags` - (Optional) Key-value map of resource tags
 
 ### cache_attributes
@@ -81,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_storagegateway_smb_file_share` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_storagegateway_smb_file_share` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `10m`) How long to wait for file share creation.
 * `update` - (Default `10m`) How long to wait for file share updates.

@@ -776,7 +776,7 @@ resource "aws_apigatewayv2_integration" "test" {
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_httpProxy(rName string) string {
-	return testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSAPIGatewayV2IntegrationConfig_apiHttp(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
@@ -790,7 +790,7 @@ resource "aws_apigatewayv2_integration" "test" {
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttp(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
@@ -806,13 +806,13 @@ resource "aws_apigatewayv2_integration" "test" {
     server_name_to_verify = "www.example.com"
   }
 }
-`))
+`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpUpdated(rName string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkHttpBase(rName),
-		fmt.Sprintf(`
+		`
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP_PROXY"
@@ -827,7 +827,7 @@ resource "aws_apigatewayv2_integration" "test" {
     server_name_to_verify = "www.example.org"
   }
 }
-`))
+`)
 }
 
 func testAccAWSAPIGatewayV2IntegrationConfig_vpcLinkWebSocket(rName string) string {

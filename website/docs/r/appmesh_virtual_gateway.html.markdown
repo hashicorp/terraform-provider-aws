@@ -74,8 +74,8 @@ resource "aws_appmesh_virtual_gateway" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual gateway.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual gateway.
+* `name` - (Required) The name to use for the virtual gateway. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) The name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual gateway specification to apply.
 * `tags` - (Optional) A map of tags to assign to the resource.
@@ -115,11 +115,12 @@ The `acm` object supports the following:
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
+* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
+* `connection_pool` - (Optional) The connection pool information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
 * `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
 
@@ -133,12 +134,31 @@ The `access_log` object supports the following:
 
 The `file` object supports the following:
 
-* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out.
+* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
 The `port_mapping` object supports the following:
 
 * `port` - (Required) The port used for the port mapping.
 * `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
+
+The `connection_pool` object supports the following:
+
+* `grpc` - (Optional) Connection pool information for gRPC listeners.
+* `http` - (Optional) Connection pool information for HTTP listeners.
+* `http2` - (Optional) Connection pool information for HTTP2 listeners.
+
+The `grpc` connection pool object supports the following:
+
+* `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
+
+The `http` connection pool object supports the following:
+
+* `max_connections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
+* `max_pending_requests` - (Optional) Number of overflowing requests after `max_connections` Envoy will queue to upstream cluster. Minimum value of `1`.
+
+The `http2` connection pool object supports the following:
+
+* `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
 
 The `health_check` object supports the following:
 
@@ -166,8 +186,8 @@ The `acm` object supports the following:
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on.
+* `certificate_chain` - (Required) The certificate chain for the certificate. Must be between 1 and 255 characters in length.
+* `private_key` - (Required) The private key for a certificate stored on the file system of the mesh endpoint that the proxy is running on. Must be between 1 and 255 characters in length.
 
 ## Attributes Reference
 

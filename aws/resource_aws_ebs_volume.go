@@ -160,7 +160,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 			*result.VolumeId, err)
 	}
 
-	d.SetId(*result.VolumeId)
+	d.SetId(aws.StringValue(result.VolumeId))
 
 	return resourceAwsEbsVolumeRead(d, meta)
 }

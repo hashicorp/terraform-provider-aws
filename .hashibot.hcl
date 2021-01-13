@@ -214,6 +214,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/configservice" = [
       "aws_config_",
     ],
+    "service/connect" = [
+      "aws_connect_",
+    ],
     "service/databasemigrationservice" = [
       "aws_dms_",
     ],
@@ -272,6 +275,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/ecr" = [
       "aws_ecr_",
+    ],
+    "service/ecrpublic" = [
+      "aws_ecrpublic_",
     ],
     "service/ecs" = [
       "aws_ecs_",
@@ -381,6 +387,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kms" = [
       "aws_kms_",
     ],
+    "service/lakeformation" = [
+      "aws_lakeformation_",
+    ],
     "service/lambda" = [
       "aws_lambda_",
     ],
@@ -429,8 +438,14 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/mq" = [
       "aws_mq_",
     ],
+    "service/mwaa" = [
+      "aws_mwaa_",
+    ],
     "service/neptune" = [
       "aws_neptune_",
+    ],
+    "service/networkfirewall" = [
+      "aws_networkfirewall_",
     ],
     "service/networkmanager" = [
       "aws_networkmanager_",
@@ -511,6 +526,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/securityhub" = [
       "aws_securityhub_",
     ],
+    "service/serverlessapplicationrepository" = [
+      "aws_serverlessapplicationrepository_",
+    ],
     "service/servicecatalog" = [
       "aws_servicecatalog_",
     ],
@@ -528,6 +546,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/shield" = [
       "aws_shield_",
+    ],
+    "service/signer" = [
+      "aws_signer_",
     ],
     "service/simpledb" = [
       "aws_simpledb_",
@@ -627,6 +648,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "documentation" = [
       "docs/**/*",
+      "website/**/*",
       "*.md",
     ]
     "examples" = [
@@ -847,6 +869,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_config_*",
       "website/**/config_*"
     ]
+    "service/connect" = [
+      "aws/internal/service/connect/**/*",
+      "aws/*_aws_connect_*",
+      "website/**/connect_*"
+    ]
     "service/costandusagereportservice" = [
       "aws/internal/service/costandusagereportservice/**/*",
       "aws/*_aws_cur_*",
@@ -978,6 +1005,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/ecr/**/*",
       "**/*_ecr_*",
       "**/ecr_*"
+    ]
+    "service/ecrpublic" = [
+      "aws/internal/service/ecrpublic/**/*",
+      "**/*_ecrpublic_*",
+      "**/ecrpublic_*"
     ]
     "service/ecs" = [
       "aws/internal/service/ecs/**/*",
@@ -1157,6 +1189,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_kms_*",
       "**/kms_*"
     ]
+    "service/lakeformation" = [
+      "aws/internal/service/lakeformation/**/*",
+      "**/*_lakeformation_*",
+      "**/lakeformation_*"
+    ]
     "service/lambda" = [
       "aws/internal/service/lambda/**/*",
       "**/*_lambda_*",
@@ -1237,10 +1274,20 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_mq_*",
       "**/mq_*"
     ]
+    "service/mwaa" = [
+      "aws/internal/service/mwaa/**/*",
+      "**/*_mwaa_*",
+      "**/mwaa_*"
+    ]
     "service/neptune" = [
       "aws/internal/service/neptune/**/*",
       "**/*_neptune_*",
       "**/neptune_*"
+    ]
+    "service/networkfirewall" = [
+      "aws/internal/service/networkfirewall/**/*",
+      "**/*_networkfirewall_*",
+      "**/networkfirewall_*",
     ]
     "service/networkmanager" = [
       "aws/internal/service/networkmanager/**/*",
@@ -1378,6 +1425,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_securityhub_*",
       "**/securityhub_*"
     ]
+    "service/serverlessapplicationrepository" = [
+      "aws/internal/service/serverlessapplicationrepository/**/*",
+      "**/*_serverlessapplicationrepository_*",
+      "**/serverlessapplicationrepository_*"
+    ]
     "service/servicecatalog" = [
       "aws/internal/service/servicecatalog/**/*",
       "**/*_servicecatalog_*",
@@ -1408,6 +1460,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_shield_*",
       "**/shield_*",
     ],
+    "service/signer" = [
+      "**/*_signer_*",
+      "**/signer_*"
+    ]
     "service/simpledb" = [
       "aws/internal/service/simpledb/**/*",
       "**/*_simpledb_*",

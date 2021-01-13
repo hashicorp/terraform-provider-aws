@@ -45,7 +45,7 @@ func testSweepElasticacheClusters(region string) error {
 			id := aws.StringValue(cluster.CacheClusterId)
 
 			log.Printf("[INFO] Deleting Elasticache Cluster: %s", id)
-			err := deleteElasticacheCacheCluster(conn, id)
+			err := deleteElasticacheCacheCluster(conn, id, "")
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Elasticache Cache Cluster (%s): %s", id, err)
 			}
@@ -690,6 +690,43 @@ func TestAccAWSElasticacheCluster_ReplicationGroupID_MultipleReplica(t *testing.
 	})
 }
 
+func TestAccAWSElasticacheCluster_Memcached_FinalSnapshot(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheClusterConfig_Memcached_FinalSnapshot(rName),
+				ExpectError: regexp.MustCompile(`engine "memcached" does not support final_snapshot_identifier`),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheCluster_Redis_FinalSnapshot(t *testing.T) {
+	var cluster elasticache.CacheCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_Redis_FinalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheClusterAttributes(v *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.NotificationConfiguration == nil {
@@ -1296,4 +1333,30 @@ resource "aws_elasticache_cluster" "test" {
   replication_group_id = aws_elasticache_replication_group.test.id
 }
 `, rName, count)
+}
+
+func testAccAWSElasticacheClusterConfig_Memcached_FinalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "memcached"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  final_snapshot_identifier = %[1]q
+}
+`, rName)
+}
+
+func testAccAWSElasticacheClusterConfig_Redis_FinalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  cluster_id      = %[1]q
+  engine          = "redis"
+  node_type       = "cache.t3.small"
+  num_cache_nodes = 1
+
+  final_snapshot_identifier = %[1]q
+}
+`, rName)
 }
