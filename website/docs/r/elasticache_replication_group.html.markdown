@@ -108,7 +108,7 @@ The following arguments are supported:
 * `multi_az_enabled` - (Optional) Specifies whether to enable Multi-AZ Support for the replication group. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
 * `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
-* `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. e.g. `redis`
+* `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. The only valid value is `redis`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
 * `auth_token` - (Optional) The password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.

@@ -101,7 +101,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "redis",
-				ValidateFunc: validateAwsElastiCacheReplicationGroupEngine,
+				ValidateFunc: validation.StringInSlice([]string{"redis"}, true),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
