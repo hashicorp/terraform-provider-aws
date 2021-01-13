@@ -6,6 +6,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* resource/aws_api_gateway_method: Add `operation_name` argument [GH-13232]
 * resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
 * resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
 * resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
