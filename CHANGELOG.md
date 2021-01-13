@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Data Source:** `aws_api_gateway_domain_name` [GH-12489]
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
 
 ENHANCEMENTS
