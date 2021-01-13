@@ -16,7 +16,7 @@ Provides an ElastiCache Cluster resource, which manages either a
 For working with Redis (Cluster Mode Enabled) replication groups, see the
 [`aws_elasticache_replication_group` resource](/docs/providers/aws/r/elasticache_replication_group.html).
 
-~> **Note:** When you change an attribute, such as `node_type`, by default
+~> **Note:** When you change an attribute, such as `num_cache_nodes`, by default
 it is applied in the next maintenance window. Because of this, Terraform may report
 a difference in its planning phase because the actual modification has not yet taken
 place. You can use the `apply_immediately` flag to instruct the service to apply the
@@ -25,6 +25,8 @@ See the AWS Documentation on Modifying an ElastiCache Cache Cluster for
 [ElastiCache for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.Modify.html) or
 [ElastiCache for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.Modify.html)
 for more information.
+
+~> **Note:** Any attribute changes that re-create the resource will be applied immediately, regardless of the value of `apply_immediately`.
 
 ## Example Usage
 
@@ -71,12 +73,11 @@ resource "aws_elasticache_cluster" "replica" {
 The following arguments are supported:
 
 * `cluster_id` – (Required) Group identifier. ElastiCache converts
-  this name to lowercase
+  this name to lowercase. Changing this value will re-create the resource.
 
 * `replication_group_id` - (Optional) The ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
 
-* `engine` – (Required unless `replication_group_id` is provided) Name of the cache engine to be used for this cache cluster.
- Valid values for this parameter are `memcached` or `redis`
+* `engine` – (Required unless `replication_group_id` is provided) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`. 
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
 See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
@@ -98,11 +99,11 @@ the highest numbered nodes will be removed.
 * `parameter_group_name` – (Required unless `replication_group_id` is provided) Name of the parameter group to associate
 with this cache cluster
 
-* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcached the default is 11211, and for Redis the default port is 6379. Cannot be provided with `replication_group_id`.
+* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcached the default is 11211, and for Redis the default port is 6379. Cannot be provided with `replication_group_id`. Changing this value will re-create the resource.
 
-* `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster.
+* `subnet_group_name` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource.
 
-* `security_group_names` – (Optional, EC2 Classic only) List of security group names to associate with this cache cluster
+* `security_group_names` – (Optional, EC2 Classic only) List of security group names to associate with this cache cluster. Changing this value will re-create the resource.
 
 * `security_group_ids` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster
 
@@ -129,7 +130,7 @@ SNS topic to send ElastiCache notifications to. Example:
 
 * `az_mode` - (Optional, Memcached only) Specifies whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`
 
-* `availability_zone` - (Optional) The Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone.
+* `availability_zone` - (Optional) The Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone. Changing this value will re-create the resource.
 
 * `preferred_availability_zones` - (Optional, Memcached only) A list of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `num_cache_nodes`. If you want all the nodes in the same Availability Zone, use `availability_zone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
 
