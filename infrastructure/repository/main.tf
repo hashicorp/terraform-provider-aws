@@ -3,7 +3,7 @@ terraform {
     organization = "hashicorp-v2"
 
     workspaces {
-      name = "terraform-provider-aws-repository"
+      prefix = "terraform-provider-aws-"
     }
   }
 

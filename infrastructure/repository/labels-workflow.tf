@@ -10,6 +10,7 @@ variable "workflow_labels" {
     "terraform-0.12"                 = "cccccc",    
     "terraform-0.13"                 = "cccccc",
     "terraform-0.14"                 = "cccccc",
+    "terraform-0.15"                 = "cccccc",
   }
   description = "Name-color mapping of workflow issues"
   type        = map(string)
