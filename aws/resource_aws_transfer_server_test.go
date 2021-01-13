@@ -958,7 +958,7 @@ resource "aws_api_gateway_deployment" "test" {
   stage_description = "%[1]s"
 
   variables = {
-	"a" = "2"
+    "a" = "2"
   }
 }
 
@@ -1011,7 +1011,7 @@ resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-	cidr_block = "0.0.0.0/0"
+    cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
 
