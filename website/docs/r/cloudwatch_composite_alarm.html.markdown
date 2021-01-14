@@ -31,7 +31,7 @@ EOF
 
 ## Argument Reference
 
-* `actions_enabled` - (Optional) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
+* `actions_enabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
 * `alarm_actions` - (Optional) The set of actions to execute when this alarm transitions to the `ALARM` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `alarm_description` - (Optional) The description for the composite alarm.
 * `alarm_name` - (Required) The name for the composite alarm. This name must be unique within the region.
