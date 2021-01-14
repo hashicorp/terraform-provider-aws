@@ -798,6 +798,12 @@ func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
 	}
 }
 
+func testAccEnvironmentVariableSetPreCheck(variable string, t *testing.T) {
+	if os.Getenv(variable) == "" {
+		t.Skipf("skipping tests; environment variable %s must be set", variable)
+	}
+}
+
 func testAccAlternateAccountProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
