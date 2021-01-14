@@ -19,23 +19,6 @@ resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
 }
-
-resource "aws_iam_role" "example" {
-  name               = "example"
-  path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.example.json
-}
-
-data "aws_iam_policy_document" "example" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
-    }
-  }
-}
 ```
 
 ## Argument Reference
