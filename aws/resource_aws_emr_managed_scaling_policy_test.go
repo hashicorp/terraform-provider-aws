@@ -139,7 +139,7 @@ resource "aws_emr_managed_scaling_policy" "testpolicy" {
     unit_type                       = "Instances"
     minimum_capacity_units          = 1
     maximum_capacity_units          = 2
-    maximum_ondemand_capacity_units = %[2]d
+    maximum_ondemand_capacity_units = 0
   }
 }
 `, r, maximumOndemandCapacityUnits)
