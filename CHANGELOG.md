@@ -10,6 +10,7 @@ FEATURES
 
 ENHANCEMENTS
 
+* data-source/aws_workspaces_directory: Add access properties [GH-16688]
 * resource/aws_api_gateway_base_path_mapping: Support in-place updates for `api_id`, `base_path`, and `stage_name` [GH-16147]
 * resource/aws_api_gateway_domain_name: Add `mutual_tls_authentication` configuration block [GH-15258]
 * resource/aws_api_gateway_integration: Add `tls_config` configuration block [GH-15499]
@@ -17,6 +18,8 @@ ENHANCEMENTS
 * resource/aws_api_gateway_rest_api: Add `disable_execute_api_endpoint` argument [GH-16198]
 * resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
 * resource/aws_apigatewayv2_integration: Add `response_parameters` attribute [GH-17043]
+* resource/aws_codepipeline: Deprecates GitHub v1 (OAuth token) authentication and removes hashing of GitHub token [GH-16959]
+* resource/aws_codepipeline: Adds GitHub v2 (CodeStar Connetion) authentication [GH-16959]
 * resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
 * resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
 * resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
@@ -25,7 +28,6 @@ ENHANCEMENTS
 * resource/aws_globalaccelerator_endpoint_listener: Add custom timeouts [GH-17112]
 * resource/aws_instance: Add `tags` parameter to `root_block_device`, `ebs_block_device` blocks.[GH-15474]
 * resource/aws_workspaces_directory: Add access properties [GH-16688]
-* datasource/aws_workspaces_directory: Add access properties [GH-16688]
 
 BUX FIXES
 
