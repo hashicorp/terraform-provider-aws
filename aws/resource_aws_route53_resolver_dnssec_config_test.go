@@ -127,62 +127,38 @@ func TestAccAWSRoute53ResolverDnssecConfig_disappear(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53ResolverDnssecConfig_disappear_VPC(t *testing.T) {
-	var config route53resolver.ResolverDnssecConfig
-	resourceName := "aws_route53_resolver_dnssec_config.test"
-	vpcResourceName := "aws_vpc.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53ResolverDnssecConfigDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoute53ResolverDnssecConfigConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverDnssecConfigExists(resourceName, &config),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpc(), vpcResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
-	ec2Conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_dnssec_config" {
 			continue
 		}
 
-		vpc, err := vpcDescribe(ec2Conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		input := &route53resolver.ListResolverDnssecConfigsInput{}
 
-		// The VPC has been deleted
-		if vpc == nil {
-			continue
-		}
+		var config *route53resolver.ResolverDnssecConfig
+		err := conn.ListResolverDnssecConfigsPages(input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
 
-		// Try to find the resource
-		out, err := conn.GetResolverDnssecConfig(&route53resolver.GetResolverDnssecConfigInput{
-			ResourceId: aws.String(rs.Primary.ID),
+			for _, c := range page.ResolverDnssecConfigs {
+				if aws.StringValue(c.Id) == rs.Primary.ID {
+					config = c
+					return false
+				}
+			}
+
+			return !lastPage
 		})
-		// Verify the error is what we want
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
-			continue
-		}
+
 		if err != nil {
 			return err
 		}
-		if aws.StringValue(out.ResolverDNSSECConfig.ValidationStatus) == route53resolver.ResolverDNSSECValidationStatusDisabled {
-			continue
+
+		if config == nil || aws.StringValue(config.ValidationStatus) == route53resolver.ResolverDNSSECValidationStatusDisabled {
+			return nil
 		}
 
 		return fmt.Errorf("Route 53 Resolver Dnssec config still exists: %s", rs.Primary.ID)
@@ -191,7 +167,7 @@ func testAccCheckRoute53ResolverDnssecConfigDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckRoute53ResolverDnssecConfigExists(n string, c *route53resolver.ResolverDnssecConfig) resource.TestCheckFunc {
+func testAccCheckRoute53ResolverDnssecConfigExists(n string, config *route53resolver.ResolverDnssecConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -203,14 +179,34 @@ func testAccCheckRoute53ResolverDnssecConfigExists(n string, c *route53resolver.
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
-		resp, err := conn.GetResolverDnssecConfig(&route53resolver.GetResolverDnssecConfigInput{
-			ResourceId: aws.String(rs.Primary.ID),
+		input := &route53resolver.ListResolverDnssecConfigsInput{}
+
+		err := conn.ListResolverDnssecConfigsPages(input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, c := range page.ResolverDnssecConfigs {
+				if aws.StringValue(c.Id) == rs.Primary.ID {
+					config = c
+					return false
+				}
+			}
+
+			return !lastPage
 		})
+
 		if err != nil {
 			return err
 		}
 
-		*c = *resp.ResolverDNSSECConfig
+		if config == nil {
+			return fmt.Errorf("No Route 53 Resolver Dnssec config found")
+		}
+
+		if aws.StringValue(config.ValidationStatus) != route53resolver.ResolverDNSSECValidationStatusEnabled {
+			return fmt.Errorf("Route 53 Resolver Dnssec config (%s) is not enabled", aws.StringValue(config.Id))
+		}
 
 		return nil
 	}

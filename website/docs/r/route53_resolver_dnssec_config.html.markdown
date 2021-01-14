@@ -39,18 +39,10 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The owner account ID of the virtual private cloud (VPC) for a configuration for DNSSEC validation.
 * `validation_status` - The validation status for a DNSSEC configuration. The status can be one of the following: `ENABLING`, `ENABLED`, `DISABLING` and `DISABLED`.
 
-## Timeouts
-
-`aws_route53_resolver_dnssec_config` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating Route 53 Resolver DNSSEC config
-- `delete` - (Default `10 minutes`) Used for destroying Route 53 Resolver DNSSEC config
-
 ## Import
 
- Route 53 Resolver DNSSEC configs can be imported using the VPC ID, e.g.
+ Route 53 Resolver DNSSEC configs can be imported using the Route 53 Resolver DNSSEC config ID, e.g.
 
 ```
-$ terraform import aws_route53_resolver_dnssec_config.example vpc-7a190fdssf3
+$ terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95
 ```
