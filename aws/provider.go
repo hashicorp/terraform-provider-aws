@@ -874,7 +874,6 @@ func Provider() *schema.Provider {
 			"aws_route_table_association":                             resourceAwsRouteTableAssociation(),
 			"aws_sagemaker_code_repository":                           resourceAwsSagemakerCodeRepository(),
 			"aws_sagemaker_domain":                                    resourceAwsSagemakerDomain(),
-			"aws_sagemaker_feature_group":                             resourceAwsSagemakerFeatureGroup(),
 			"aws_sagemaker_endpoint":                                  resourceAwsSagemakerEndpoint(),
 			"aws_sagemaker_endpoint_configuration":                    resourceAwsSagemakerEndpointConfiguration(),
 			"aws_sagemaker_feature_group":                             resourceAwsSagemakerFeatureGroup(),
