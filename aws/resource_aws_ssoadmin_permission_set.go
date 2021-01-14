@@ -288,7 +288,7 @@ func provisionSsoAdminPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn st
 		return fmt.Errorf("error provisioning SSO Permission Set (%s): %w", arn, err)
 	}
 
-	if output == nil && output.PermissionSetProvisioningStatus == nil {
+	if output == nil || output.PermissionSetProvisioningStatus == nil {
 		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
