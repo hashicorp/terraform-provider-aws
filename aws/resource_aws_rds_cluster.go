@@ -115,7 +115,10 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
+			"db_instance_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1122,6 +1125,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
 		req.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+	}
+
+	if d.HasChange("db_instance_parameter_group_name") {
+		req.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		requestUpdate = true
 	}
 
 	if d.HasChange("backtrack_window") {
