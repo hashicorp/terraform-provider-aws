@@ -369,7 +369,7 @@ resource "aws_sagemaker_domain" "test" {
   auth_mode   = "IAM"
   vpc_id      = aws_vpc.test.id
   subnet_ids  = [aws_subnet.test.id]
-  
+
   default_user_settings {
     execution_role = aws_iam_role.test.arn
   }
@@ -482,7 +482,7 @@ resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
 
- user_settings {
+  user_settings {
     execution_role = aws_iam_role.test.arn
 
     kernel_gateway_app_settings {
