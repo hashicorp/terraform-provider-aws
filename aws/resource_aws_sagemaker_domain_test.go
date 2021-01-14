@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -93,7 +90,6 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -120,7 +116,6 @@ func TestAccAWSSagemakerDomain_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -170,7 +165,6 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -206,7 +200,6 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "2"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 		},
@@ -232,7 +225,6 @@ func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -262,7 +254,6 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -293,7 +284,6 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", "arn"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -323,7 +313,6 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -353,7 +342,6 @@ func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 				),
 			},
 			{
@@ -379,7 +367,6 @@ func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
 				Config: testAccAWSSagemakerDomainBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
-					testAccCheckAWSSagemakerDomainDeleteImplicitResources(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -433,114 +420,6 @@ func testAccCheckAWSSagemakerDomainExists(n string, codeRepo *sagemaker.Describe
 		}
 
 		*codeRepo = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSagemakerDomainDeleteImplicitResources(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Sagemaker domain not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Sagemaker domain name not set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		efsFsID := rs.Primary.Attributes["home_efs_file_system_id"]
-		vpcID := rs.Primary.Attributes["vpc_id"]
-
-		resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
-			FileSystemId: aws.String(efsFsID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Sagemaker domain EFS mount targets for EFS FS (%s) not found: %w", efsFsID, err)
-		}
-
-		//reusing EFS mount target delete for wait logic
-		mountTargets := resp.MountTargets
-		for _, mt := range mountTargets {
-			r := resourceAwsEfsMountTarget()
-			d := r.Data(nil)
-			mtID := aws.StringValue(mt.MountTargetId)
-			d.SetId(mtID)
-			err := r.Delete(d, testAccProvider.Meta())
-			if err != nil {
-				return fmt.Errorf("Sagemaker domain EFS mount target (%s) failed to delete: %w", mtID, err)
-			}
-		}
-
-		r := resourceAwsEfsFileSystem()
-		d := r.Data(nil)
-		d.SetId(efsFsID)
-		err = r.Delete(d, testAccProvider.Meta())
-		if err != nil {
-			return fmt.Errorf("Sagemaker domain EFS file system (%s) failed to delete: %w", efsFsID, err)
-		}
-
-		var filters []*ec2.Filter
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String("vpc-id"),
-			Values: aws.StringSlice([]string{vpcID}),
-		})
-
-		req := &ec2.DescribeSecurityGroupsInput{
-			Filters: filters,
-		}
-
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		sgResp, err := ec2conn.DescribeSecurityGroups(req)
-		if err != nil {
-			return fmt.Errorf("error reading security groups: %w", err)
-		}
-
-		//revoke permissions
-		for _, sg := range sgResp.SecurityGroups {
-			sgID := aws.StringValue(sg.GroupId)
-
-			if len(sg.IpPermissions) > 0 {
-				req := &ec2.RevokeSecurityGroupIngressInput{
-					GroupId:       sg.GroupId,
-					IpPermissions: sg.IpPermissions,
-				}
-				_, err = ec2conn.RevokeSecurityGroupIngress(req)
-
-				if err != nil {
-					return fmt.Errorf("Error revoking security group %s rules: %w", sgID, err)
-				}
-			}
-
-			if len(sg.IpPermissionsEgress) > 0 {
-				req := &ec2.RevokeSecurityGroupEgressInput{
-					GroupId:       sg.GroupId,
-					IpPermissions: sg.IpPermissionsEgress,
-				}
-				_, err = ec2conn.RevokeSecurityGroupEgress(req)
-
-				if err != nil {
-					return fmt.Errorf("Error revoking security group %s rules: %w", sgID, err)
-				}
-			}
-		}
-
-		for _, sg := range sgResp.SecurityGroups {
-			sgID := aws.StringValue(sg.GroupId)
-			sgName := aws.StringValue(sg.GroupName)
-			if sgName != "default" && !strings.HasPrefix(sgName, "tf-acc-test") {
-				r := resourceAwsSecurityGroup()
-				d := r.Data(nil)
-				d.SetId(sgID)
-				err = r.Delete(d, testAccProvider.Meta())
-				if err != nil {
-					return fmt.Errorf("Sagemaker domain EFS file system sg (%s) failed to delete: %w", sgID, err)
-				}
-			}
-		}
 
 		return nil
 	}

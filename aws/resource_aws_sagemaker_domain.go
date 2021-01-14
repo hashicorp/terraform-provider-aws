@@ -360,6 +360,9 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),
+		RetentionPolicy: &sagemaker.RetentionPolicy{
+			HomeEfsFileSystem: aws.String(sagemaker.RetentionTypeDelete),
+		},
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {
