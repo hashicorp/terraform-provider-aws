@@ -1372,8 +1372,8 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name                     = "%s"
-  policy                   = <<EOF
+  name   = %[1]q
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1400,8 +1400,8 @@ EOF
 func testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name                     = "%s"
-  policy                   = <<EOF
+  name   = %[1]q
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -1436,10 +1436,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name           = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1475,10 +1475,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1524,10 +1524,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name               = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1563,10 +1563,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1602,9 +1602,9 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title   = %[1]q,
+      title   = "test"
       version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
@@ -1650,10 +1650,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name        = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      description = %[3]q,
-      title       = %[1]q,
+      description = %[3]q
+      title       = "test"
       version     = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
@@ -1689,10 +1689,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      description = %[2]q,
-      title       = %[1]q,
+      description = %[2]q
+      title       = "test"
       version     = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
@@ -1738,10 +1738,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name                     = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1777,10 +1777,10 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title       = %[1]q,
-      version     = "2017-04-20T04:08:08Z"
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
     paths = {
@@ -1824,9 +1824,9 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title   = %[2]q,
+      title   = %[2]q
       version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
@@ -1862,9 +1862,9 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title   = %[1]q,
+      title   = "test"
       version = "2017-04-20T04:08:08Z"
     }
     schemes  = ["https"]
@@ -1905,9 +1905,9 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title   = %[1]q,
+      title   = "test"
       version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
@@ -1962,9 +1962,9 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 
   body = jsonencode({
-    swagger = "2.0",
+    swagger = "2.0"
     info = {
-      title   = %[1]q,
+      title   = "test"
       version = "2017-04-20T04:08:08Z"
     }
     schemes = ["https"]
