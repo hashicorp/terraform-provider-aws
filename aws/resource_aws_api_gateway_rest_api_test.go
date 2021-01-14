@@ -99,14 +99,6 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-
-			{
-				Config: testAccAWSAPIGatewayRestAPIConfigMinimumCompressionSize(rName, -1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
-				),
-			},
 		},
 	})
 }
