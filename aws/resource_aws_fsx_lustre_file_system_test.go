@@ -767,7 +767,7 @@ resource "aws_subnet" "test1" {
 }
 
 func testAccAwsFsxLustreFileSystemConfigExportPath(rName, exportPrefix string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
@@ -782,11 +782,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids       = [aws_subnet.test1.id]
   deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, rName, exportPrefix)
+`, rName, exportPrefix))
 }
 
 func testAccAwsFsxLustreFileSystemConfigImportPath(rName, importPrefix string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
@@ -800,11 +800,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids       = [aws_subnet.test1.id]
   deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, rName, importPrefix)
+`, rName, importPrefix))
 }
 
 func testAccAwsFsxLustreFileSystemConfigImportedFileChunkSize(rName string, importedFileChunkSize int) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
@@ -819,11 +819,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids               = [aws_subnet.test1.id]
   deployment_type          = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, rName, importedFileChunkSize)
+`, rName, importedFileChunkSize))
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -851,11 +851,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids         = [aws_subnet.test1.id]
   deployment_type    = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigSecurityGroupIds2() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
   vpc_id      = aws_vpc.test.id
@@ -902,11 +902,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids         = [aws_subnet.test1.id]
   deployment_type    = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -914,21 +914,21 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids       = [aws_subnet.test1.id]
   deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, storageCapacity)
+`, storageCapacity))
 }
 
 func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
   deployment_type  = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -940,11 +940,11 @@ resource "aws_fsx_lustre_file_system" "test" {
     %[1]q = %[2]q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccAwsFsxLustreFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -957,11 +957,11 @@ resource "aws_fsx_lustre_file_system" "test" {
     %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAwsFsxLustreFileSystemConfigWeeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -970,11 +970,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   weekly_maintenance_start_time = %[1]q
   deployment_type               = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, weeklyMaintenanceStartTime)
+`, weeklyMaintenanceStartTime))
 }
 
 func testAccAwsFsxLustreFileSystemConfigDailyAutomaticBackupStartTime(dailyAutomaticBackupStartTime string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity                  = 1200
   subnet_ids                        = [aws_subnet.test1.id]
@@ -983,11 +983,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   daily_automatic_backup_start_time = %[1]q
   automatic_backup_retention_days   = 1
 }
-`, dailyAutomaticBackupStartTime)
+`, dailyAutomaticBackupStartTime))
 }
 
 func testAccAwsFsxLustreFileSystemConfigAutomaticBackupRetentionDays(retention int) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity                = 1200
   subnet_ids                      = ["${aws_subnet.test1.id}"]
@@ -995,32 +995,32 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput     = 50
   automatic_backup_retention_days = %[1]d
 }
-`, retention)
+`, retention))
 }
 
 func testAccAwsFsxLustreFileSystemDeploymentType(deploymentType string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
   deployment_type  = %[1]q
 }
-`, deploymentType)
+`, deploymentType))
 }
 
 func testAccAwsFsxLustreFileSystemPersistentDeploymentType(perUnitStorageThroughput int) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
   subnet_ids                  = [aws_subnet.test1.id]
   deployment_type             = "PERSISTENT_1"
   per_unit_storage_throughput = %[1]d
 }
-`, perUnitStorageThroughput)
+`, perUnitStorageThroughput))
 }
 
 func testAccAwsFsxLustreFileSystemConfigKmsKeyId1() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -1033,11 +1033,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = 50
   kms_key_id                  = aws_kms_key.test1.arn
 }
-`
+`)
 }
 
 func testAccAwsFsxLustreFileSystemConfigKmsKeyId2() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
@@ -1050,11 +1050,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = 50
   kms_key_id                  = aws_kms_key.test2.arn
 }
-`
+`)
 }
 
 func testAccAwsFsxLustreFileSystemHddStorageType(drive_cache_type string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 6000
   subnet_ids                  = [aws_subnet.test1.id]
@@ -1063,11 +1063,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_type                = "HDD"
   drive_cache_type            = %[1]q
 }
-`, drive_cache_type)
+`, drive_cache_type))
 }
 
 func testAccAwsFsxLustreFileSystemAutoImportPolicyConfig(rName, exportPrefix, policy string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
@@ -1083,11 +1083,11 @@ resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids         = [aws_subnet.test1.id]
   deployment_type    = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
 }
-`, rName, exportPrefix, policy)
+`, rName, exportPrefix, policy))
 }
 
 func testAccAwsFsxLustreFileSystemCopyTagsToBackups() string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + `
+	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
   deployment_type             = "PERSISTENT_1"
@@ -1095,5 +1095,5 @@ resource "aws_fsx_lustre_file_system" "test" {
   per_unit_storage_throughput = 50
   copy_tags_to_backups        = true
 }
-`
+`)
 }
