@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -86,7 +87,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
-					resource.TestCheckResourceAttr(resourceName, "mount_name", "fsx"),
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
@@ -95,7 +96,7 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexp.MustCompile(`^\d:\d\d:\d\d$`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
@@ -106,10 +107,6 @@ func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
-			},
-			{
-				Config:   testAccAwsFsxLustreFileSystemDeploymentType(fsx.LustreDeploymentTypeScratch1),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -538,22 +535,26 @@ func TestAccAWSFsxLustreFileSystem_KmsKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch2(t *testing.T) {
+func TestAccAWSFsxLustreFileSystem_DeploymentTypeScratch1(t *testing.T) {
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(fsx.EndpointsID, t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionPreCheck(endpoints.AwsPartitionID, t) // SCRATCH_1 not supported in GovCloud
+			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFsxLustreFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxLustreFileSystemDeploymentType(fsx.LustreDeploymentTypeScratch2),
+				Config: testAccAwsFsxLustreFileSystemDeploymentType(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxLustreFileSystemExists(resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch2),
-					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
-					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypeScratch1),
+					// We know the mount_name ahead of time unlike for SCRATCH_2, PERSISTENT_1 deployment types.
+					resource.TestCheckResourceAttr(resourceName, "mount_name", "fsx"),
 				),
 			},
 			{
@@ -785,6 +786,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}"
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 }
 `, rName, exportPrefix)
 }
@@ -800,6 +802,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 }
 `, rName, importPrefix)
 }
@@ -816,6 +819,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   imported_file_chunk_size = %[2]d
   storage_capacity         = 1200
   subnet_ids               = [aws_subnet.test1.id]
+  deployment_type          = "SCRATCH_2"
 }
 `, rName, importedFileChunkSize)
 }
@@ -845,6 +849,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = [aws_security_group.test1.id]
   storage_capacity   = 1200
   subnet_ids         = [aws_subnet.test1.id]
+  deployment_type    = "SCRATCH_2"
 }
 `
 }
@@ -893,6 +898,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
   storage_capacity   = 1200
   subnet_ids         = [aws_subnet.test1.id]
+  deployment_type    = "SCRATCH_2"
 }
 `
 }
@@ -902,6 +908,7 @@ func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) str
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = %[1]d
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 }
 `, storageCapacity)
 }
@@ -911,6 +918,7 @@ func testAccAwsFsxLustreFileSystemConfigSubnetIds1() string {
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 }
 `
 }
@@ -920,6 +928,7 @@ func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string 
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 
   tags = {
     %[1]q = %[2]q
@@ -933,6 +942,7 @@ func testAccAwsFsxLustreFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagVa
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
+  deployment_type  = "SCRATCH_2"
 
   tags = {
     %[1]q = %[2]q
@@ -948,6 +958,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity              = 1200
   subnet_ids                    = [aws_subnet.test1.id]
   weekly_maintenance_start_time = %[1]q
+  deployment_type               = "SCRATCH_2"
 }
 `, weeklyMaintenanceStartTime)
 }
@@ -977,14 +988,14 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, retention)
 }
 
-func testAccAwsFsxLustreFileSystemDeploymentType(deploymentType string) string {
-	return testAccAwsFsxLustreFileSystemConfigBase() + fmt.Sprintf(`
+func testAccAwsFsxLustreFileSystemDeploymentType() string {
+	return testAccAwsFsxLustreFileSystemConfigBase() + `
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
-  deployment_type  = %[1]q
+  deployment_type  = "SCRATCH_1"
 }
-`, deploymentType)
+`
 }
 
 func testAccAwsFsxLustreFileSystemPersistentDeploymentType(perUnitStorageThroughput int) string {
@@ -1058,6 +1069,7 @@ resource "aws_fsx_lustre_file_system" "test" {
   auto_import_policy = %[3]q
   storage_capacity   = 1200
   subnet_ids         = [aws_subnet.test1.id]
+  deployment_type    = "SCRATCH_2"
 }
 `, rName, exportPrefix, policy)
 }
