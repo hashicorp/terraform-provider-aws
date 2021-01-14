@@ -1,47 +1,47 @@
-## 3.24.0 (Unreleased)
+## 3.24.0 (January 14, 2021)
 
 FEATURES
 
-* **New Data Source:** `aws_api_gateway_domain_name` [GH-12489]
-* **New Data Source:** `aws_identitystore_group` [GH-15322]
-* **New Data Source:** `aws_identitystore_user` [GH-15322]
-* **New Resource:** `aws_cloudwatch_composite_alarm` [GH-15023]
+* **New Data Source:** `aws_api_gateway_domain_name` ([#12489](https://github.com/hashicorp/terraform-provider-aws/issues/12489))
+* **New Data Source:** `aws_identitystore_group` ([#15322](https://github.com/hashicorp/terraform-provider-aws/issues/15322))
+* **New Data Source:** `aws_identitystore_user` ([#15322](https://github.com/hashicorp/terraform-provider-aws/issues/15322))
+* **New Resource:** `aws_cloudwatch_composite_alarm` ([#15023](https://github.com/hashicorp/terraform-provider-aws/issues/15023))
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
-* **New Resource:** `aws_route53_resolver_dnssec_config` [GH-17012]
-* **New Resource:** `aws_sagemaker_domain` [GH-16077]
-* **New Resource:** `aws_ssoadmin_account_assignment` [GH-15322]
+* **New Resource:** `aws_route53_resolver_dnssec_config` ([#17012](https://github.com/hashicorp/terraform-provider-aws/issues/17012))
+* **New Resource:** `aws_sagemaker_domain` ([#16077](https://github.com/hashicorp/terraform-provider-aws/issues/16077))
+* **New Resource:** `aws_ssoadmin_account_assignment` ([#15322](https://github.com/hashicorp/terraform-provider-aws/issues/15322))
 
 ENHANCEMENTS
 
-* data-source/aws_workspaces_directory: Add access properties [GH-16688]
-* resource/aws_api_gateway_base_path_mapping: Support in-place updates for `api_id`, `base_path`, and `stage_name` [GH-16147]
-* resource/aws_api_gateway_domain_name: Add `mutual_tls_authentication` configuration block [GH-15258]
-* resource/aws_api_gateway_integration: Add `tls_config` configuration block [GH-15499]
-* resource/aws_api_gateway_method: Add `operation_name` argument [GH-13282]
-* resource/aws_api_gateway_rest_api: Add `disable_execute_api_endpoint` argument [GH-16198]
-* resource/aws_api_gateway_rest_api: Add `parameters` argument [GH-7374]
-* resource/aws_apigatewayv2_integration: Add `response_parameters` attribute [GH-17043]
-* resource/aws_codepipeline: Deprecates GitHub v1 (OAuth token) authentication and removes hashing of GitHub token [GH-16959]
-* resource/aws_codepipeline: Adds GitHub v2 (CodeStar Connetion) authentication [GH-16959]
-* resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument [GH-16827]
-* resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine [GH-15592]
-* resource/aws_elasticache_replication_group: Add support for final snapshot [GH-15592]
-* resource/aws_globalaccelerator_accelerator: Add custom timeouts [GH-17112]
-* resource/aws_globalaccelerator_endpoint_group: Add custom timeouts [GH-17112]
-* resource/aws_globalaccelerator_endpoint_listener: Add custom timeouts [GH-17112]
-* resource/aws_instance: Add `tags` parameter to `root_block_device`, `ebs_block_device` blocks.[GH-15474]
-* resource/aws_workspaces_directory: Add access properties [GH-16688]
+* data-source/aws_workspaces_directory: Add access properties ([#16688](https://github.com/hashicorp/terraform-provider-aws/issues/16688))
+* resource/aws_api_gateway_base_path_mapping: Support in-place updates for `api_id`, `base_path`, and `stage_name` ([#16147](https://github.com/hashicorp/terraform-provider-aws/issues/16147))
+* resource/aws_api_gateway_domain_name: Add `mutual_tls_authentication` configuration block ([#15258](https://github.com/hashicorp/terraform-provider-aws/issues/15258))
+* resource/aws_api_gateway_integration: Add `tls_config` configuration block ([#15499](https://github.com/hashicorp/terraform-provider-aws/issues/15499))
+* resource/aws_api_gateway_method: Add `operation_name` argument ([#13282](https://github.com/hashicorp/terraform-provider-aws/issues/13282))
+* resource/aws_api_gateway_rest_api: Add `disable_execute_api_endpoint` argument ([#16198](https://github.com/hashicorp/terraform-provider-aws/issues/16198))
+* resource/aws_api_gateway_rest_api: Add `parameters` argument ([#7374](https://github.com/hashicorp/terraform-provider-aws/issues/7374))
+* resource/aws_apigatewayv2_integration: Add `response_parameters` attribute ([#17043](https://github.com/hashicorp/terraform-provider-aws/issues/17043))
+* resource/aws_codepipeline: Deprecates GitHub v1 (OAuth token) authentication and removes hashing of GitHub token ([#16959](https://github.com/hashicorp/terraform-provider-aws/issues/16959))
+* resource/aws_codepipeline: Adds GitHub v2 (CodeStar Connetion) authentication ([#16959](https://github.com/hashicorp/terraform-provider-aws/issues/16959))
+* resource/aws_dms_endpoint: Add `s3_settings` `date_partition_enabled` argument ([#16827](https://github.com/hashicorp/terraform-provider-aws/issues/16827))
+* resource/aws_elasticache_cluster: Add support for final snapshot with Redis engine ([#15592](https://github.com/hashicorp/terraform-provider-aws/issues/15592))
+* resource/aws_elasticache_replication_group: Add support for final snapshot ([#15592](https://github.com/hashicorp/terraform-provider-aws/issues/15592))
+* resource/aws_globalaccelerator_accelerator: Add custom timeouts ([#17112](https://github.com/hashicorp/terraform-provider-aws/issues/17112))
+* resource/aws_globalaccelerator_endpoint_group: Add custom timeouts ([#17112](https://github.com/hashicorp/terraform-provider-aws/issues/17112))
+* resource/aws_globalaccelerator_endpoint_listener: Add custom timeouts ([#17112](https://github.com/hashicorp/terraform-provider-aws/issues/17112))
+* resource/aws_instance: Add `tags` parameter to `root_block_device`, `ebs_block_device` blocks.([#15474](https://github.com/hashicorp/terraform-provider-aws/issues/15474))
+* resource/aws_workspaces_directory: Add access properties ([#16688](https://github.com/hashicorp/terraform-provider-aws/issues/16688))
 
 BUX FIXES
 
-* resource/aws_appmesh_route: Allow an empty `match` attribute to specified for a `grpc_route`, indicating that any service should be matched [GH-16867]
-* resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time [GH-16885]
-* resource/aws_dms_endpoint: Support `extra_connection_attributes` for all engine names during create and read [GH-16827]
-* resource/aws_instance: Prevent `volume_tags` from improperly interfering with `tags` in `aws_ebs_volume` [GH-15474]
-* resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation [GH-16884]
-* resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association [GH-17023]
-* resource/aws_sagemaker_image - fix error on wait for delete when image does not exist [GH-16077]
-* resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks [GH-17055]
+* resource/aws_appmesh_route: Allow an empty `match` attribute to specified for a `grpc_route`, indicating that any service should be matched ([#16867](https://github.com/hashicorp/terraform-provider-aws/issues/16867))
+* resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time ([#16885](https://github.com/hashicorp/terraform-provider-aws/issues/16885))
+* resource/aws_dms_endpoint: Support `extra_connection_attributes` for all engine names during create and read ([#16827](https://github.com/hashicorp/terraform-provider-aws/issues/16827))
+* resource/aws_instance: Prevent `volume_tags` from improperly interfering with `tags` in `aws_ebs_volume` ([#15474](https://github.com/hashicorp/terraform-provider-aws/issues/15474))
+* resource/aws_networkfirewall_rule_group: Prevent resource recreation due to `stateful_rule` changes after creation ([#16884](https://github.com/hashicorp/terraform-provider-aws/issues/16884))
+* resource/aws_route53_zone_association: Prevent deletion errors for missing Hosted Zone or VPC association ([#17023](https://github.com/hashicorp/terraform-provider-aws/issues/17023))
+* resource/aws_sagemaker_image - fix error on wait for delete when image does not exist ([#16077](https://github.com/hashicorp/terraform-provider-aws/issues/16077))
+* resource/aws_s3_bucket_inventory: Prevent crashes with empty `destination`, `filter`, and `schedule` configuration blocks ([#17055](https://github.com/hashicorp/terraform-provider-aws/issues/17055))
 * service/apigateway: All operations will now automatically retry on `ConflictException: Unable to complete operation due to concurrent modification. Please try again later.` errors.
 
 ## 3.23.0 (January 08, 2021)
