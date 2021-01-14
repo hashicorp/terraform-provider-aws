@@ -5,6 +5,7 @@ FEATURES
 * **New Data Source:** `aws_api_gateway_domain_name` [GH-12489]
 * **New Resource:** `aws_cloudwatch_composite_alarm` [GH-15023]
 * **New Resource:** `aws_fms_policy` ([#9594](https://github.com/hashicorp/terraform-provider-aws/issues/9594))
+* **New Resource:** `aws_route53_resolver_dnssec_config` [GH-17012]
 * **New Resource:** `aws_sagemaker_domain` [GH-16077]
 
 ENHANCEMENTS
