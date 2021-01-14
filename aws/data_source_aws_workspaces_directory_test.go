@@ -15,7 +15,12 @@ func TestAccDataSourceAwsWorkspacesDirectory_basic(t *testing.T) {
 	dataSourceName := "data.aws_workspaces_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
