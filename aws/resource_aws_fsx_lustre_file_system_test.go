@@ -754,6 +754,8 @@ func testAccCheckFsxLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.Tes
 
 func testAccAwsFsxLustreFileSystemConfigBase() string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
+data "aws_partition" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
@@ -773,8 +775,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   export_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   import_path      = "s3://${aws_s3_bucket.test.bucket}"
@@ -792,8 +792,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   storage_capacity = 1200
@@ -809,8 +807,6 @@ resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
 }
-
-data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
   import_path              = "s3://${aws_s3_bucket.test.bucket}"
@@ -842,8 +838,6 @@ resource "aws_security_group" "test1" {
     to_port     = 0
   }
 }
-
-data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = [aws_security_group.test1.id]
@@ -894,8 +888,6 @@ resource "aws_security_group" "test2" {
   }
 }
 
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
   storage_capacity   = 1200
@@ -907,8 +899,6 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 func testAccAwsFsxLustreFileSystemConfigStorageCapacity(storageCapacity int) string {
 	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = %[1]d
   subnet_ids       = [aws_subnet.test1.id]
@@ -929,8 +919,6 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 func testAccAwsFsxLustreFileSystemConfigTags1(tagKey1, tagValue1 string) string {
 	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
@@ -945,8 +933,6 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 func testAccAwsFsxLustreFileSystemConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity = 1200
   subnet_ids       = [aws_subnet.test1.id]
@@ -962,8 +948,6 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 func testAccAwsFsxLustreFileSystemConfigWeeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
 	return composeConfig(testAccAwsFsxLustreFileSystemConfigBase(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity              = 1200
   subnet_ids                    = [aws_subnet.test1.id]
@@ -1072,8 +1056,6 @@ resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
 }
-
-data "aws_partition" "current" {}
 
 resource "aws_fsx_lustre_file_system" "test" {
   export_path        = "s3://${aws_s3_bucket.test.bucket}%[2]s"
