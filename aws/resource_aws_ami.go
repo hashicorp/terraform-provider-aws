@@ -250,8 +250,37 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 		req.RamdiskId = aws.String(ramdiskId)
 	}
 
-	req.BlockDeviceMappings = expandAmiEbsBlockDeviceMappings(d.Get("ebs_block_device").(*schema.Set).List())
-	req.BlockDeviceMappings = append(req.BlockDeviceMappings, expandAmiEmphemeralBlockDeviceMappings(d.Get("ephemeral_block_device").(*schema.Set).List())...)
+	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
+		for _, tfMapRaw := range v.(*schema.Set).List() {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			var encrypted bool
+
+			if v, ok := tfMap["encrypted"].(bool); ok {
+				encrypted = v
+			}
+
+			var snapshot string
+
+			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+				snapshot = v
+			}
+
+			if snapshot != "" && encrypted {
+				return errors.New("can't set both 'snapshot_id' and 'encrypted'")
+			}
+		}
+
+		req.BlockDeviceMappings = expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
+		req.BlockDeviceMappings = append(req.BlockDeviceMappings, expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(v.(*schema.Set).List())...)
+	}
 
 	res, err := client.RegisterImage(req)
 	if err != nil {
@@ -363,11 +392,11 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", imageArn)
 
-	if err := d.Set("ebs_block_device", flattenAmiEbsBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
+	if err := d.Set("ebs_block_device", flattenEc2BlockDeviceMappingsForAmiEbsBlockDevice(image.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting ebs_block_device: %w", err)
 	}
 
-	if err := d.Set("ephemeral_block_device", flattenAmiEmphemeralBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
+	if err := d.Set("ephemeral_block_device", flattenEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(image.BlockDeviceMappings)); err != nil {
 		return fmt.Errorf("error setting ephemeral_block_device: %w", err)
 	}
 
@@ -514,112 +543,223 @@ func resourceAwsAmiWaitForAvailable(timeout time.Duration, id string, client *ec
 	return info.(*ec2.Image), nil
 }
 
-func expandAmiEbsBlockDeviceMappings(vEbsBlockDevices []interface{}) []*ec2.BlockDeviceMapping {
-	if len(vEbsBlockDevices) == 0 {
+func expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+	if tfMap == nil {
 		return nil
 	}
 
-	blockDeviceMappings := []*ec2.BlockDeviceMapping{}
-
-	for _, vEbsBlockDevice := range vEbsBlockDevices {
-		mEbsBlockDevice := vEbsBlockDevice.(map[string]interface{})
-
-		ebsBlockDevice := &ec2.EbsBlockDevice{
-			DeleteOnTermination: aws.Bool(mEbsBlockDevice["delete_on_termination"].(bool)),
-			VolumeType:          aws.String(mEbsBlockDevice["volume_type"].(string)),
-		}
-		blockDeviceMapping := &ec2.BlockDeviceMapping{
-			DeviceName: aws.String(mEbsBlockDevice["device_name"].(string)),
-			Ebs:        ebsBlockDevice,
-		}
-
-		if vEncrypted, ok := mEbsBlockDevice["encrypted"].(bool); ok && vEncrypted {
-			ebsBlockDevice.Encrypted = aws.Bool(vEncrypted)
-		}
-		if vIops, ok := mEbsBlockDevice["iops"].(int); ok && vIops > 0 {
-			ebsBlockDevice.Iops = aws.Int64(int64(vIops))
-		}
-		if vSnapshotID, ok := mEbsBlockDevice["snapshot_id"].(string); ok && vSnapshotID != "" {
-			ebsBlockDevice.SnapshotId = aws.String(vSnapshotID)
-		}
-		if vThroughput, ok := mEbsBlockDevice["throughput"].(int); ok && vThroughput > 0 {
-			ebsBlockDevice.Throughput = aws.Int64(int64(vThroughput))
-		}
-		if vVolumeSize, ok := mEbsBlockDevice["volume_size"].(int); ok && vVolumeSize > 0 {
-			ebsBlockDevice.VolumeSize = aws.Int64(int64(vVolumeSize))
-		}
-
-		blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
+	apiObject := &ec2.BlockDeviceMapping{
+		Ebs: &ec2.EbsBlockDevice{},
 	}
 
-	return blockDeviceMappings
+	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+		apiObject.DeviceName = aws.String(v)
+	}
+
+	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+		apiObject.Ebs.Iops = aws.Int64(int64(v))
+	}
+
+	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
+	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+		apiObject.Ebs.SnapshotId = aws.String(v)
+	} else if v, ok := tfMap["encrypted"].(bool); ok {
+		apiObject.Ebs.Encrypted = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+		apiObject.Ebs.VolumeType = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandAmiEmphemeralBlockDeviceMappings(vEphemeralBlockDevices []interface{}) []*ec2.BlockDeviceMapping {
-	if len(vEphemeralBlockDevices) == 0 {
+func expandEc2BlockDeviceMappingsForAmiEbsBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	blockDeviceMappings := []*ec2.BlockDeviceMapping{}
+	var apiObjects []*ec2.BlockDeviceMapping
 
-	for _, vEphemeralBlockDevice := range vEphemeralBlockDevices {
-		mEphemeralBlockDevice := vEphemeralBlockDevice.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 
-		blockDeviceMapping := &ec2.BlockDeviceMapping{
-			DeviceName:  aws.String(mEphemeralBlockDevice["device_name"].(string)),
-			VirtualName: aws.String(mEphemeralBlockDevice["virtual_name"].(string)),
-		}
-
-		blockDeviceMappings = append(blockDeviceMappings, blockDeviceMapping)
-	}
-
-	return blockDeviceMappings
-}
-
-func flattenAmiEbsBlockDeviceMappings(blockDeviceMappings []*ec2.BlockDeviceMapping) []interface{} {
-	vEbsBlockDevices := []interface{}{}
-
-	for _, blockDeviceMapping := range blockDeviceMappings {
-		if blockDeviceMapping == nil {
+		if !ok {
 			continue
 		}
 
-		if ebsBlockDevice := blockDeviceMapping.Ebs; ebsBlockDevice != nil {
-			mEbsBlockDevice := map[string]interface{}{
-				"delete_on_termination": aws.BoolValue(ebsBlockDevice.DeleteOnTermination),
-				"device_name":           aws.StringValue(blockDeviceMapping.DeviceName),
-				"encrypted":             aws.BoolValue(ebsBlockDevice.Encrypted),
-				"iops":                  int(aws.Int64Value(ebsBlockDevice.Iops)),
-				"snapshot_id":           aws.StringValue(ebsBlockDevice.SnapshotId),
-				"throughput":            int(aws.Int64Value(ebsBlockDevice.Throughput)),
-				"volume_size":           int(aws.Int64Value(ebsBlockDevice.VolumeSize)),
-				"volume_type":           aws.StringValue(ebsBlockDevice.VolumeType),
-			}
+		apiObject := expandEc2BlockDeviceMappingForAmiEbsBlockDevice(tfMap)
 
-			vEbsBlockDevices = append(vEbsBlockDevices, mEbsBlockDevice)
-		}
-	}
-
-	return vEbsBlockDevices
-}
-
-func flattenAmiEmphemeralBlockDeviceMappings(blockDeviceMappings []*ec2.BlockDeviceMapping) []interface{} {
-	vEphemeralBlockDevices := []interface{}{}
-
-	for _, blockDeviceMapping := range blockDeviceMappings {
-		if blockDeviceMapping == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		if blockDeviceMapping.Ebs == nil {
-			mEphemeralBlockDevice := map[string]interface{}{
-				"device_name":  aws.StringValue(blockDeviceMapping.DeviceName),
-				"virtual_name": aws.StringValue(blockDeviceMapping.VirtualName),
-			}
-
-			vEphemeralBlockDevices = append(vEphemeralBlockDevices, mEphemeralBlockDevice)
-		}
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return vEphemeralBlockDevices
+	return apiObjects
+}
+
+func flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	if apiObject.Ebs == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Ebs.DeleteOnTermination; v != nil {
+		tfMap["delete_on_termination"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.DeviceName; v != nil {
+		tfMap["device_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Ebs.Encrypted; v != nil {
+		tfMap["encrypted"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Ebs.Iops; v != nil {
+		tfMap["iops"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ebs.SnapshotId; v != nil {
+		tfMap["snapshot_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Ebs.Throughput; v != nil {
+		tfMap["throughput"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ebs.VolumeSize; v != nil {
+		tfMap["volume_size"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.Ebs.VolumeType; v != nil {
+		tfMap["volume_type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEc2BlockDeviceMappingsForAmiEbsBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if apiObject.Ebs == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEc2BlockDeviceMappingForAmiEbsBlockDevice(apiObject))
+	}
+
+	return tfList
+}
+
+func expandEc2BlockDeviceMappingForAmiEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.BlockDeviceMapping{}
+
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+		apiObject.DeviceName = aws.String(v)
+	}
+
+	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+		apiObject.VirtualName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.BlockDeviceMapping
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandEc2BlockDeviceMappingForAmiEphemeralBlockDevice(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenEc2BlockDeviceMappingForAmiEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DeviceName; v != nil {
+		tfMap["device_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.VirtualName; v != nil {
+		tfMap["virtual_name"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEc2BlockDeviceMappingsForAmiEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		if apiObject.Ebs != nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEc2BlockDeviceMappingForAmiEphemeralBlockDevice(apiObject))
+	}
+
+	return tfList
 }
