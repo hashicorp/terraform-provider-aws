@@ -2,17 +2,135 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ssoadmin_account_assignment", &resource.Sweeper{
+		Name: "aws_ssoadmin_account_assignment",
+		F:    testSweepSsoAdminAccountAssignments,
+	})
+}
+
+func testSweepSsoAdminAccountAssignments(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).ssoadminconn
+	var sweeperErrs *multierror.Error
+
+	// Need to Read the SSO Instance first; assumes the first instance returned
+	// is where the permission sets exist as AWS SSO currently supports only 1 instance
+	ds := dataSourceAwsSsoAdminInstances()
+	dsData := ds.Data(nil)
+
+	err = ds.Read(dsData, client)
+
+	if testSweepSkipResourceError(err) {
+		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+
+	// To sweep account assignments, we need to first determine which Permission Sets
+	// are available and then search for their respective assignments
+	input := &ssoadmin.ListPermissionSetsInput{
+		InstanceArn: aws.String(instanceArn),
+	}
+
+	err = conn.ListPermissionSetsPages(input, func(page *ssoadmin.ListPermissionSetsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, permissionSet := range page.PermissionSets {
+			if permissionSet == nil {
+				continue
+			}
+
+			permissionSetArn := aws.StringValue(permissionSet)
+
+			input := &ssoadmin.ListAccountAssignmentsInput{
+				AccountId:        aws.String(client.(*AWSClient).accountid),
+				InstanceArn:      aws.String(instanceArn),
+				PermissionSetArn: permissionSet,
+			}
+
+			err := conn.ListAccountAssignmentsPages(input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, a := range page.AccountAssignments {
+					if a == nil {
+						continue
+					}
+
+					principalID := aws.StringValue(a.PrincipalId)
+					principalType := aws.StringValue(a.PrincipalType)
+					targetID := aws.StringValue(a.AccountId)
+					targetType := ssoadmin.TargetTypeAwsAccount // only valid value currently accepted by API
+
+					r := resourceAwsSsoAdminAccountAssignment()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
+
+					err = r.Delete(d, client)
+
+					if err != nil {
+						log.Printf("[ERROR] %s", err)
+						sweeperErrs = multierror.Append(sweeperErrs, err)
+						continue
+					}
+				}
+
+				return !lastPage
+			})
+
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping SSO Account Assignment sweep (PermissionSet %s) for %s: %s", permissionSetArn, region, err)
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Account Assignments for Permission Set (%s): %w", permissionSetArn, err))
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets for Account Assignment sweep: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSSSOAdminAccountAssignment_Basic_Group(t *testing.T) {
 	resourceName := "aws_ssoadmin_account_assignment.test"

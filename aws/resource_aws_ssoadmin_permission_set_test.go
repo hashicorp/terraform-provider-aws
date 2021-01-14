@@ -19,6 +19,9 @@ func init() {
 	resource.AddTestSweepers("aws_ssoadmin_permission_set", &resource.Sweeper{
 		Name: "aws_ssoadmin_permission_set",
 		F:    testSweepSsoAdminPermissionSets,
+		Dependencies: []string{
+			"aws_ssoadmin_account_assignment",
+		},
 	})
 }
 

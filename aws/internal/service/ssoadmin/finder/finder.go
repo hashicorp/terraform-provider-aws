@@ -21,6 +21,10 @@ func AccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, acco
 		}
 
 		for _, a := range page.AccountAssignments {
+			if a == nil {
+				continue
+			}
+
 			if aws.StringValue(a.PrincipalType) != principalType {
 				continue
 			}
