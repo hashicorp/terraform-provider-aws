@@ -14,6 +14,8 @@ const (
 	SagemakerNotebookInstanceStatusNotFound = "NotFound"
 	SagemakerImageStatusNotFound            = "NotFound"
 	SagemakerImageStatusFailed              = "Failed"
+	SagemakerImageVersionStatusNotFound     = "NotFound"
+	SagemakerImageVersionStatusFailed       = "Failed"
 	SagemakerDomainStatusNotFound           = "NotFound"
 	SagemakerFeatureGroupStatusNotFound     = "NotFound"
 	SagemakerFeatureGroupStatusUnknown      = "Unknown"
@@ -70,6 +72,35 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 		}
 
 		return output, aws.StringValue(output.ImageStatus), nil
+	}
+}
+
+// ImageVersionStatus fetches the ImageVersion and its Status
+func ImageVersionStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &sagemaker.DescribeImageVersionInput{
+			ImageName: aws.String(name),
+		}
+
+		output, err := conn.DescribeImageVersion(input)
+
+		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "No ImageVersion with the name") {
+			return nil, SagemakerImageVersionStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, SagemakerImageVersionStatusFailed, err
+		}
+
+		if output == nil {
+			return nil, SagemakerImageVersionStatusNotFound, nil
+		}
+
+		if aws.StringValue(output.ImageVersionStatus) == sagemaker.ImageVersionStatusCreateFailed {
+			return output, sagemaker.ImageVersionStatusCreateFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
+		}
+
+		return output, aws.StringValue(output.ImageVersionStatus), nil
 	}
 }
 
