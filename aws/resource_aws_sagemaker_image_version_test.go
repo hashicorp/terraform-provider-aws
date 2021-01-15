@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,54 +13,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
-// func init() {
-// 	resource.AddTestSweepers("aws_sagemaker_image", &resource.Sweeper{
-// 		Name: "aws_sagemaker_image",
-// 		F:    testSweepSagemakerImages,
-// 	})
-// }
-
-// func testSweepSagemakerImages(region string) error {
-// 	client, err := sharedClientForRegion(region)
-// 	if err != nil {
-// 		return fmt.Errorf("error getting client: %s", err)
-// 	}
-// 	conn := client.(*AWSClient).sagemakerconn
-
-// 	err = conn.ListImagesPages(&sagemaker.ListImagesInput{}, func(page *sagemaker.ListImagesOutput, lastPage bool) bool {
-// 		for _, Image := range page.Images {
-// 			name := aws.StringValue(Image.ImageName)
-
-// 			input := &sagemaker.DeleteImageInput{
-// 				ImageName: Image.ImageName,
-// 			}
-
-// 			log.Printf("[INFO] Deleting SageMaker Image: %s", name)
-// 			if _, err := conn.DeleteImage(input); err != nil {
-// 				log.Printf("[ERROR] Error deleting SageMaker Image (%s): %s", name, err)
-// 				continue
-// 			}
-// 		}
-
-// 		return !lastPage
-// 	})
-
-// 	if testSweepSkipSweepError(err) {
-// 		log.Printf("[WARN] Skipping SageMaker Image sweep for %s: %s", region, err)
-// 		return nil
-// 	}
-
-// 	if err != nil {
-// 		return fmt.Errorf("Error retrieving SageMaker Images: %w", err)
-// 	}
-
-// 	return nil
-// }
-
 func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	}
+
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,11 +30,11 @@ func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, "544685987707.dkr.ecr.us-west-2.amazonaws.com/smstudio-custom:latest"),
+				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "base_image", "544685987707.dkr.ecr.us-west-2.amazonaws.com/smstudio-custom:latest"),
+					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
@@ -88,9 +51,15 @@ func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	}
+
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -98,7 +67,7 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, "544685987707.dkr.ecr.us-west-2.amazonaws.com/smstudio-custom:latest"),
+				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerImageVersion(), resourceName),
@@ -110,9 +79,15 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 }
 
 func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	}
+
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -120,7 +95,7 @@ func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, "544685987707.dkr.ecr.us-west-2.amazonaws.com/smstudio-custom:latest"),
+				Config: testAccAWSSagemakerImageVersionBasicConfig(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerImageVersionExists(resourceName, &image),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerImage(), "aws_sagemaker_image.test"),
