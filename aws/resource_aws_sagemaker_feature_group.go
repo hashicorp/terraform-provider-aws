@@ -229,6 +229,9 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 			if isAWSErr(err, "ValidationException", "The execution role ARN is invalid.") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "ValidationException", "Invalid S3Uri provided") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 

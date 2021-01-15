@@ -282,7 +282,6 @@ func TestAccAWSSagemakerFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", "AwsDataCatalog"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.database", "sagemaker_featurestore"),
 					resource.TestMatchResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", regexp.MustCompile(fmt.Sprintf("^%s-", rName))),
-					// testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
 			},
 			{
@@ -415,6 +414,16 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+`, rName)
+}
+
+func testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
@@ -422,18 +431,19 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_policy" "test" {
-  policy = <<EOT
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Resource": "*",
-    "Action": [
-      "s3:*"
-    ]
-  }]
-}
-EOT
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Resource" : [
+        "arn:aws:s3:::${aws_s3_bucket.test.bucket}",
+        "arn:aws:s3:::${aws_s3_bucket.test.bucket}/*"
+      ],
+      "Action" : [
+        "s3:*"
+      ]
+    }]
+  })
 }
 `, rName)
 }
@@ -534,13 +544,8 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineBasicConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  acl           = "private"
-  force_destroy = true
-}
-
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -566,13 +571,8 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfig(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  acl           = "private"
-  force_destroy = true
-}
-
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_feature_group" "test" {
   feature_group_name             = %[1]q
   record_identifier_feature_name = %[1]q
@@ -598,13 +598,8 @@ resource "aws_sagemaker_feature_group" "test" {
 }
 
 func testAccAWSSagemakerFeatureGroupOfflineCreateGlueCatalogConfigProvidedCatalog(rName string) string {
-	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) + fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  acl           = "private"
-  force_destroy = true
-}
-
+	return testAccAWSSagemakerFeatureGroupBaseConfig(rName) +
+		testAccAWSSagemakerFeatureGroupOfflineBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
