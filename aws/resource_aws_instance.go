@@ -1790,7 +1790,7 @@ func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance
 		if instanceBd.DeviceName != nil {
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
-		if _, ok := d.GetOk("volume_tags"); !ok && vol.Tags != nil {
+		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
 			bd["tags"] = keyvaluetags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
 		}
 
