@@ -558,8 +558,8 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_permissions" "test" {
-  permissions = ["SELECT"]
-  principal   = aws_iam_role.test.arn
+  permissions = ["ALTER", "SELECT"]
+  principal   = data.aws_caller_identity.current.arn
 
   table_with_columns {
     database_name = aws_glue_catalog_table.test.database_name

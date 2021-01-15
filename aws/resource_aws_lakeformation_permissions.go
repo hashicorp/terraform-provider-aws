@@ -300,7 +300,8 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if len(principalResourcePermissions) > 1 {
-		return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found")
+		//return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found")
+		return fmt.Errorf("error reading Lake Formation permissions: %v\nINPUT: %v", principalResourcePermissions, input)
 	}
 
 	for _, permissions := range principalResourcePermissions {
