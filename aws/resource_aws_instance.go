@@ -1913,12 +1913,10 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
 			ipv6Addresses := make([]*ec2.InstanceIpv6Address, len(v.([]interface{})))
-			for _, address := range v.([]interface{}) {
-				ipv6Address := &ec2.InstanceIpv6Address{
+			for i, address := range v.([]interface{}) {
+				ipv6Addresses[i] = &ec2.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
-
-				ipv6Addresses = append(ipv6Addresses, ipv6Address)
 			}
 
 			ni.Ipv6Addresses = ipv6Addresses
@@ -2379,12 +2377,10 @@ func buildAwsInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanc
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
 			ipv6Addresses := make([]*ec2.InstanceIpv6Address, len(v.([]interface{})))
-			for _, address := range v.([]interface{}) {
-				ipv6Address := &ec2.InstanceIpv6Address{
+			for i, address := range v.([]interface{}) {
+				ipv6Addresses[i] = &ec2.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
-
-				ipv6Addresses = append(ipv6Addresses, ipv6Address)
 			}
 
 			opts.Ipv6Addresses = ipv6Addresses
