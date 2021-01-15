@@ -34,6 +34,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -458,6 +462,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	}
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
+	d.Set("arn", rgp.ARN)
 
 	if rgp.NodeGroups != nil {
 		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {

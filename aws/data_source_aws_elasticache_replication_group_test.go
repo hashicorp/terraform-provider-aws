@@ -22,6 +22,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
 				Config: testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "member_clusters.#", resourceName, "member_clusters.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),

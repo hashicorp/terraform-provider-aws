@@ -71,6 +71,7 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
