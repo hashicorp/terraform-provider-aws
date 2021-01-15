@@ -17,7 +17,7 @@ Provides a Sagemaker Image Version resource.
 ```hcl
 resource "aws_sagemaker_image_version" "test" {
   image_name = aws_sagemaker_image.test.id
-  base_image = "012345678912.dkr.ecr.us-west-2.amazonaws.com/image:latest
+  base_image = "012345678912.dkr.ecr.us-west-2.amazonaws.com/image:latest"
 }
 ```
 
