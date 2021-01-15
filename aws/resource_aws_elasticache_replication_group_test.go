@@ -308,6 +308,53 @@ func TestAccAWSElasticacheReplicationGroup_vpc(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_multiAzNotInVpc(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_MultiAZNotInVPC_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.0", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zones.1", "data.aws_availability_zones.available", "names.1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -342,6 +389,42 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately", "availability_zones"},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_multiAz_NoAutomaticFailover(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName),
+				ExpectError: regexp.MustCompile("automatic_failover_enabled must be true if multi_az_enabled is true"),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_AutomaticFailover_OneCacheCluster(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_SingleNodeGroup(rName),
+				ExpectError: regexp.MustCompile(`if automatic_failover_enabled is true, number_cache_clusters must be greater than 1`),
+			},
+			{
+				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_ClusterMode(rName),
+				ExpectError: regexp.MustCompile(`if automatic_failover_enabled is true, cluster_mode\[0\].replicas_per_node_group must be greater than 0`),
 			},
 		},
 	})
@@ -404,6 +487,8 @@ func TestAccAWSElasticacheReplicationGroup_ClusterMode_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
 				),
 			},
 			{
@@ -1107,6 +1192,42 @@ resource "aws_elasticache_replication_group" "test" {
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
+func testAccAWSElasticacheReplicationGroupConfig_MultiAZNotInVPC_Basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  number_cache_clusters         = 2
+  node_type                     = "cache.t3.small"
+  automatic_failover_enabled    = true
+  multi_az_enabled              = true
+}
+`, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_MultiAZNotInVPC_AvailabilityZones(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  number_cache_clusters         = 2
+  node_type                     = "cache.t3.small"
+  automatic_failover_enabled    = true
+  multi_az_enabled              = true
+  availability_zones            = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+}
+`, rName)
+}
+
 func testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -1180,6 +1301,49 @@ resource "aws_elasticache_replication_group" "test" {
   multi_az_enabled              = true
   snapshot_window               = "02:00-03:00"
   snapshot_retention_limit      = 7
+}
+`, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  number_cache_clusters         = 1
+  node_type                     = "cache.t3.small"
+  automatic_failover_enabled    = false
+  multi_az_enabled              = true
+}
+`, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_SingleNodeGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  number_cache_clusters         = 1
+  node_type                     = "cache.t3.small"
+  automatic_failover_enabled    = true
+  multi_az_enabled              = true
+}
+`, rName)
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_ClusterMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  automatic_failover_enabled    = true
+  multi_az_enabled              = true
+
+  cluster_mode {
+    num_node_groups         = 1
+    replicas_per_node_group = 0
+  }
 }
 `, rName)
 }

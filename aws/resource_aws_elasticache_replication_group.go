@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -273,6 +276,39 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if v := diff.Get("multi_az_enabled").(bool); !v {
+					return nil
+				}
+				if v := diff.Get("automatic_failover_enabled").(bool); !v {
+					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
+				}
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if v := diff.Get("automatic_failover_enabled").(bool); !v {
+					return nil
+				}
+
+				if v, ok := diff.GetOkExists("number_cache_clusters"); ok {
+					if v.(int) > 1 {
+						return nil
+					}
+					return errors.New(`if automatic_failover_enabled is true, number_cache_clusters must be greater than 1`)
+				}
+
+				if v, ok := diff.GetOkExists("cluster_mode.0.replicas_per_node_group"); ok {
+					if v.(int) > 0 {
+						return nil
+					}
+					return errors.New(`if automatic_failover_enabled is true, cluster_mode[0].replicas_per_node_group must be greater than 0`)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
