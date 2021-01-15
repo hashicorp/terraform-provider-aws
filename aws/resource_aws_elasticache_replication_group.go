@@ -486,18 +486,18 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		case elasticache.AutomaticFailoverStatusEnabled, elasticache.AutomaticFailoverStatusEnabling:
 			d.Set("automatic_failover_enabled", true)
 		default:
-			log.Printf("Unknown AutomaticFailover state %s", aws.StringValue(rgp.AutomaticFailover))
+			log.Printf("Unknown AutomaticFailover state %q", aws.StringValue(rgp.AutomaticFailover))
 		}
 	}
 
 	if rgp.MultiAZ != nil {
-		switch strings.ToLower(*rgp.MultiAZ) {
-		case "enabled":
+		switch strings.ToLower(aws.StringValue(rgp.MultiAZ)) {
+		case elasticache.MultiAZStatusEnabled:
 			d.Set("multi_az_enabled", true)
-		case "disabled":
+		case elasticache.MultiAZStatusDisabled:
 			d.Set("multi_az_enabled", false)
 		default:
-			log.Printf("Unknown MultiAZ state %s", *rgp.MultiAZ)
+			log.Printf("Unknown MultiAZ state %q", aws.StringValue(rgp.MultiAZ))
 		}
 	}
 
@@ -883,10 +883,10 @@ func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta i
 	return nil
 }
 
-func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replicationGroupId string, pending []string) resource.StateRefreshFunc {
+func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replicationGroupID string, pending []string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeReplicationGroups(&elasticache.DescribeReplicationGroupsInput{
-			ReplicationGroupId: aws.String(replicationGroupId),
+			ReplicationGroupId: aws.String(replicationGroupID),
 		})
 		if err != nil {
 			if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
@@ -899,27 +899,27 @@ func cacheReplicationGroupStateRefreshFunc(conn *elasticache.ElastiCache, replic
 		}
 
 		if len(resp.ReplicationGroups) == 0 {
-			return nil, "", fmt.Errorf("Error: no Cache Replication Groups found for id (%s)", replicationGroupId)
+			return nil, "", fmt.Errorf("Error: no Cache Replication Groups found for id (%s)", replicationGroupID)
 		}
 
 		var rg *elasticache.ReplicationGroup
 		for _, replicationGroup := range resp.ReplicationGroups {
 			rgID := aws.StringValue(replicationGroup.ReplicationGroupId)
-			if rgID == replicationGroupId {
+			if rgID == replicationGroupID {
 				log.Printf("[DEBUG] Found matching ElastiCache Replication Group: %s", rgID)
 				rg = replicationGroup
 			}
 		}
 
 		if rg == nil {
-			return nil, "", fmt.Errorf("Error: no matching ElastiCache Replication Group for id (%s)", replicationGroupId)
+			return nil, "", fmt.Errorf("Error: no matching ElastiCache Replication Group for id (%s)", replicationGroupID)
 		}
 
-		log.Printf("[DEBUG] ElastiCache Replication Group (%s) status: %v", replicationGroupId, aws.StringValue(rg.Status))
+		log.Printf("[DEBUG] ElastiCache Replication Group (%s) status: %v", replicationGroupID, aws.StringValue(rg.Status))
 
 		// return the current state if it's in the pending array
 		for _, p := range pending {
-			log.Printf("[DEBUG] ElastiCache: checking pending state (%s) for Replication Group (%s), Replication Group status: %s", pending, replicationGroupId, aws.StringValue(rg.Status))
+			log.Printf("[DEBUG] ElastiCache: checking pending state (%s) for Replication Group (%s), Replication Group status: %s", pending, replicationGroupID, aws.StringValue(rg.Status))
 			s := aws.StringValue(rg.Status)
 			if p == s {
 				log.Printf("[DEBUG] Return with status: %v", aws.StringValue(rg.Status))
