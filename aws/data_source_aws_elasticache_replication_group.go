@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
@@ -54,6 +55,10 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"multi_az_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,7 +83,6 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 		ReplicationGroupId: aws.String(groupID),
 	}
 
-	log.Printf("[DEBUG] Reading ElastiCache Replication Group: %s", input)
 	resp, err := conn.DescribeReplicationGroups(input)
 	if err != nil {
 		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
@@ -96,6 +100,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("replication_group_description", rg.Description)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
+
 	if rg.AutomaticFailover != nil {
 		switch aws.StringValue(rg.AutomaticFailover) {
 		case elasticache.AutomaticFailoverStatusDisabled, elasticache.AutomaticFailoverStatusDisabling:
@@ -104,13 +109,25 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 			d.Set("automatic_failover_enabled", true)
 		}
 	}
+
+	if rg.MultiAZ != nil {
+		switch strings.ToLower(aws.StringValue(rg.MultiAZ)) {
+		case elasticache.MultiAZStatusEnabled:
+			d.Set("multi_az_enabled", true)
+		case elasticache.MultiAZStatusDisabled:
+			d.Set("multi_az_enabled", false)
+		default:
+			log.Printf("Unknown MultiAZ state %q", aws.StringValue(rg.MultiAZ))
+		}
+	}
+
 	if rg.ConfigurationEndpoint != nil {
 		d.Set("port", rg.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rg.ConfigurationEndpoint.Address)
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return fmt.Errorf("Elasticache Replication Group (%s) doesn't have node groups.", aws.StringValue(rg.ReplicationGroupId))
+			return fmt.Errorf("Elasticache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
 		}
 		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
