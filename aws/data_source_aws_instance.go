@@ -208,7 +208,7 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
-						"tags": tagsSchema(),
+						"tags": tagsSchemaComputed(),
 
 						"throughput": {
 							Type:     schema.TypeInt,
@@ -270,7 +270,7 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
-						"tags": tagsSchema(),
+						"tags": tagsSchemaComputed(),
 
 						"throughput": {
 							Type:     schema.TypeInt,
