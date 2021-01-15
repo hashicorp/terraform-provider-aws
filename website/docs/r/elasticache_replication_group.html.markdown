@@ -149,7 +149,7 @@ Cluster Mode (`cluster_mode`) supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the created ElastiCache Replication Group.
+* `arn` - The Amazon Resource Name (ARN) of the created ElastiCache Replication Group.
 * `id` - The ID of the ElastiCache Replication Group.
 * `cluster_enabled` - Indicates if cluster mode is enabled.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.

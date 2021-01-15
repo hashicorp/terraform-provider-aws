@@ -21,6 +21,10 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auth_token_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -95,6 +99,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("replication_group_description", rg.Description)
+	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 	if rg.AutomaticFailover != nil {
 		switch aws.StringValue(rg.AutomaticFailover) {

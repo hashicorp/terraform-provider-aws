@@ -462,6 +462,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 	}
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
+	d.Set("arn", rgp.ARN)
 
 	if rgp.NodeGroups != nil {
 		if len(rgp.NodeGroups[0].NodeGroupMembers) == 0 {
@@ -533,16 +534,6 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			return fmt.Errorf("error setting tags: %w", err)
 		}
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "elasticache",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("replicationgroup:%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }

@@ -28,8 +28,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `replication_group_id` - The identifier for the replication group.
 * `replication_group_description` - The description of the replication group.
+* `arn` - The Amazon Resource Name (ARN) of the created ElastiCache Replication Group.
 * `auth_token_enabled` - A flag that enables using an AuthToken (password) when issuing Redis commands.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
 * `node_type` – The cluster node type.
