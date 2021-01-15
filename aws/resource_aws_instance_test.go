@@ -1220,33 +1220,6 @@ func TestAccAWSInstance_blockDeviceTags_ebsAndRoot(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_blockDeviceTags_noDevices(t *testing.T) {
-	// https://github.com/hashicorp/terraform-provider-aws/issues/17125
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigBlockDeviceTagsNoTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
-			},
-		},
-	})
-}
-
 func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4232,23 +4205,6 @@ resource "aws_instance" "test" {
   }
 }
 `)
-}
-
-func testAccInstanceConfigBlockDeviceTagsNoTags(rName string) string {
-	// https://github.com/hashicorp/terraform-provider-aws/issues/17125
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small", "t3.micro", "t2.micro"),
-		fmt.Sprintf(`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
 }
 
 func testAccInstanceConfigBlockDeviceTagsEBSTagsConflict() string {
