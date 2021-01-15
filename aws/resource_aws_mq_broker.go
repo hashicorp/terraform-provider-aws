@@ -298,7 +298,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(*out.BrokerId)
+	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
 	stateConf := resource.StateChangeConf{
@@ -616,8 +616,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		// Create a mutable copy
 		newUser, err := copystructure.Copy(nu)
 		if err != nil {
-			e = err
-			return
+			return cr, di, ur, err
 		}
 
 		newUserMap := newUser.(map[string]interface{})
@@ -667,7 +666,7 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		})
 	}
 
-	return
+	return cr, di, ur, nil
 }
 
 func expandMqEncryptionOptions(l []interface{}) *mq.EncryptionOptions {

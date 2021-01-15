@@ -249,14 +249,14 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "0.9"),
+				Config: testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
-				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "1.0"),
+				Config: testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
@@ -266,6 +266,13 @@ func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion_NumberOfWorkers(rName, "2.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "2.0"),
+				),
 			},
 		},
 	})
@@ -723,8 +730,10 @@ func testAccCheckAWSGlueJobDestroy(s *terraform.State) error {
 
 func testAccAWSGlueJobConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role" "test" {
@@ -737,7 +746,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "glue.amazonaws.com"
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -837,7 +846,7 @@ resource "aws_glue_job" "test" {
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
 }
 
-func testAccAWSGlueJobConfig_GlueVersion(rName, glueVersion string) string {
+func testAccAWSGlueJobConfig_GlueVersion_MaxCapacity(rName, glueVersion string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -846,6 +855,26 @@ resource "aws_glue_job" "test" {
   max_capacity = 10
   name         = "%s"
   role_arn     = aws_iam_role.test.arn
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
+}
+
+func testAccAWSGlueJobConfig_GlueVersion_NumberOfWorkers(rName, glueVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  glue_version      = "%s"
+  name              = "%s"
+  number_of_workers = 2
+  role_arn          = aws_iam_role.test.arn
+  worker_type       = "Standard"
 
   command {
     script_location = "testscriptlocation"

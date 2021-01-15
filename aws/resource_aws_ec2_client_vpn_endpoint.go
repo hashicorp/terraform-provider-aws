@@ -191,7 +191,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating Client VPN endpoint: %w", err)
 	}
 
-	d.SetId(*resp.ClientVpnEndpointId)
+	d.SetId(aws.StringValue(resp.ClientVpnEndpointId))
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }

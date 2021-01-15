@@ -66,7 +66,7 @@ resource "aws_api_gateway_integration" "test" {
 
 API Gateway provides the ability to [enable CloudWatch API logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html). To manage the CloudWatch Log Group when this feature is enabled, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used where the name matches the API Gateway naming convention. If the CloudWatch Log Group previously exists, the [`aws_cloudwatch_log_group` resource can be imported into Terraform](/docs/providers/aws/r/cloudwatch_log_group.html#import) as a one time operation and recreation of the environment can occur without import.
 
--> The below configuration uses [`depends_on`](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
+-> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
 ```hcl
 variable "stage_name" {
@@ -101,8 +101,7 @@ The following arguments are supported:
 * `deployment_id` - (Required) The ID of the deployment that the stage points to
 * `access_log_settings` - (Optional) Enables access logs for the API stage. Detailed below.
 * `cache_cluster_enabled` - (Optional) Specifies whether a cache cluster is enabled for the stage
-* `cache_cluster_size` - (Optional) The size of the cache cluster for the stage, if enabled.
-	Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
+* `cache_cluster_size` - (Optional) The size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
 * `client_certificate_id` - (Optional) The identifier of a client certificate for the stage.
 * `description` - (Optional) The description of the stage
 * `documentation_version` - (Optional) The version of the associated API documentation
@@ -118,7 +117,7 @@ The following arguments are supported:
 * `format` - (Required) The formatting and values recorded in the logs.
 For more information on configuring the log format rules visit the AWS [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html)
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
