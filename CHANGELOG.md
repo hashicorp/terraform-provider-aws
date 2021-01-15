@@ -1,4 +1,4 @@
-## 3.24.1 (Unreleased)
+## 3.24.1 (January 15, 2021)
 
 BUX FIXES
 
