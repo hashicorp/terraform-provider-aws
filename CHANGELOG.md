@@ -1,6 +1,8 @@
+## 3.25.0 (Unreleased)
+
 ## 3.24.1 (January 15, 2021)
 
-BUX FIXES
+BUG FIXES
 
 * data-source/instance: Fix EBS and root block device tags issue with "Invalid address to set" ([#17136](https://github.com/hashicorp/terraform-provider-aws/issues/17136))
 
@@ -38,7 +40,7 @@ ENHANCEMENTS
 * resource/aws_instance: Add `tags` parameter to `root_block_device`, `ebs_block_device` blocks.([#15474](https://github.com/hashicorp/terraform-provider-aws/issues/15474))
 * resource/aws_workspaces_directory: Add access properties ([#16688](https://github.com/hashicorp/terraform-provider-aws/issues/16688))
 
-BUX FIXES
+BUG FIXES
 
 * resource/aws_appmesh_route: Allow an empty `match` attribute to specified for a `grpc_route`, indicating that any service should be matched ([#16867](https://github.com/hashicorp/terraform-provider-aws/issues/16867))
 * resource/aws_db_instance: Correctly validate `final_snapshot_identifier` argument at plan-time ([#16885](https://github.com/hashicorp/terraform-provider-aws/issues/16885))
