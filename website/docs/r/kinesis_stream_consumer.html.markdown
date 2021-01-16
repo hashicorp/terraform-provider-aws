@@ -8,8 +8,8 @@ description: |-
 
 # aws_kinesis_stream_consumer
 
-Provides a Kinesis Stream Consumer resource. A consumer is an application that processes all data from a Kinesis data stream. 
-When a consumer uses enhanced fan-out, it gets its own 2 MiB/sec allotment of read throughput, allowing multiple consumers to 
+Provides a Kinesis Stream Consumer resource. A consumer is an application that processes all data from a Kinesis data stream.
+When a consumer uses enhanced fan-out, it gets its own 2 MiB/sec allotment of read throughput, allowing multiple consumers to
 read data from the same stream in parallel, without contending for read throughput with other consumers. [Reading Data from Kinesis][1]
 
 You can register up to 20 consumers per stream. However, you can request a limit increase using the [Kinesis Data Streams limits form][2]. A given consumer can only be registered with one stream at a time.
@@ -20,19 +20,19 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation][3].
 
 ```hcl
 resource "aws_kinesis_stream" "test_stream" {
-  name             = "terraform-kinesis-test"
-  shard_count      = 1
+  name        = "terraform-kinesis-test"
+  shard_count = 1
 }
 
 resource "aws_lambda_event_source_mapping" "example" {
-  event_source_arn  = "${aws_kinesis_stream_consumer.test_stream_consumer.arn}"
-  function_name     = "${aws_lambda_function.example.arn}"
+  event_source_arn  = aws_kinesis_stream_consumer.test_stream_consumer.arn
+  function_name     = aws_lambda_function.example.arn
   starting_position = "LATEST"
 }
 
 resource "aws_kinesis_stream_consumer" "test_stream_consumer" {
-  name             = "terraform-kinesis-stream-consumer-test"
-  stream_arn       = "${aws_kinesis_stream.test_stream.arn}"
+  name       = "terraform-kinesis-stream-consumer-test"
+  stream_arn = aws_kinesis_stream.test_stream.arn
 }
 ```
 

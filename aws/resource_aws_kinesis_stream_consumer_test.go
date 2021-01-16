@@ -43,7 +43,7 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 
 func testAccKinesisStreamConsumerImportStateIdFunc(config *accKinesisStreamConsumerConfig) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		return fmt.Sprintf("%s@arn:aws:kinesis:%s:%s:stream/%s", config.getConsumerName(), testAccGetRegion(), testAccGetAccountID(), config.stream.getStreamName()), nil
+		return fmt.Sprintf("%s@arn:aws:kinesis:%s:%s:stream/%s", config.getConsumerName(), testAccGetRegion(), testAccGetAccountID(), config.stream.getStreamName()), nil //lintignore:AWSAT005
 	}
 }
 

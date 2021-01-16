@@ -17,8 +17,8 @@ For more details, see the [Amazon Kinesis Stream Consumer Documentation][1].
 
 ```hcl
 data "aws_kinesis_stream_consumer" "stream_consumer" {
-  name = "stream-consumer-name"
-  stream_arn = "${aws_kinesis_stream.stream.arn}"
+  name       = "stream-consumer-name"
+  stream_arn = aws_kinesis_stream.stream.arn
 }
 ```
 
