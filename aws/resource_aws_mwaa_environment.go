@@ -204,10 +204,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  mwaa.WebserverAccessModePrivateOnly,
-				ValidateFunc: validation.StringInSlice([]string{
-					mwaa.WebserverAccessModePrivateOnly,
-					mwaa.WebserverAccessModePublicOnly,
-				}, false),
+				ValidateFunc: validation.StringInSlice(mwaa.WebserverAccessMode_Values(), false),
 			},
 			"webserver_url": {
 				Type:     schema.TypeString,
@@ -502,12 +499,7 @@ func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schem
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  mwaa.LoggingLevelInfo,
-				ValidateFunc: validation.StringInSlice([]string{
-					mwaa.LoggingLevelCritical,
-					mwaa.LoggingLevelError,
-					mwaa.LoggingLevelWarning,
-					mwaa.LoggingLevelInfo,
-				}, false),
+				ValidateFunc: validation.StringInSlice(mwaa.LoggingLevel_Values(), false),
 			},
 		},
 	}
