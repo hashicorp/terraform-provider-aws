@@ -200,6 +200,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 			"webserver_access_mode": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -215,7 +216,6 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
