@@ -62,11 +62,11 @@ func EnvironmentUpdated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 	return nil, err
 }
 
-// EnvironmentDeleted waits for a Environment to return AVAILABLE
+// EnvironmentDeleted waits for a Environment to be deleted
 func EnvironmentDeleted(conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{mwaa.EnvironmentStatusDeleting},
-		Target:  []string{environmentStatusNotFound},
+		Target:  []string{},
 		Refresh: EnvironmentStatus(conn, name),
 		Timeout: EnvironmentDeletedTimeout,
 		Delay:   EnvironmentDeletedDelay,
