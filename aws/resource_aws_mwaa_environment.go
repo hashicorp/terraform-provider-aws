@@ -284,13 +284,12 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Creating MWAA Environment: %s", input)
-	out, err := conn.CreateEnvironment(&input)
+	_, err := conn.CreateEnvironment(&input)
 	if err != nil {
 		return err
 	}
 
 	d.SetId(aws.StringValue(input.Name))
-	d.Set("arn", out.Arn)
 
 	if err := waitForMwaaEnvironmentCreation(conn, d.Id()); err != nil {
 		return err
