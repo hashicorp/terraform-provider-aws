@@ -115,11 +115,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 								validation.IntAtLeast(960),
 							),
 						},
-						"environment_variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -543,10 +538,6 @@ func expandAwsSyntheticsCanaryRunConfig(l []interface{}) *synthetics.CanaryRunCo
 
 	if v, ok := m["memory_in_mb"].(int); ok && v > 0 {
 		codeConfig.MemoryInMB = aws.Int64(int64(v))
-	}
-
-	if v, ok := m["environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
-		codeConfig.EnvironmentVariables = stringMapToPointers(v)
 	}
 
 	if v, ok := m["active_tracing"].(bool); ok {
