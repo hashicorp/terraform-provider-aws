@@ -286,13 +286,13 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[INFO] Creating MWAA Environment: %s", input)
 	_, err := conn.CreateEnvironment(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating MWAA Environment: %w", err)
 	}
 
 	d.SetId(aws.StringValue(input.Name))
 
 	if err := waitForMwaaEnvironmentCreation(conn, d.Id()); err != nil {
-		return err
+		return fmt.Errorf("error creating MWAA Environment (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsMwaaEnvironmentRead(d, meta)
@@ -315,7 +315,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 
 	d.Set("airflow_configuration_options", aws.StringValueMap(out.Environment.AirflowConfigurationOptions))
@@ -327,15 +327,15 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("execution_role_arn", out.Environment.ExecutionRoleArn)
 	d.Set("kms_key", out.Environment.KmsKey)
 	if err := d.Set("last_updated", flattenMwaaLastUpdate(out.Environment.LastUpdate)); err != nil {
-		return err
+		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("logging_configuration", flattenMwaaLoggingConfiguration(out.Environment.LoggingConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	d.Set("max_workers", out.Environment.MaxWorkers)
 	d.Set("name", out.Environment.Name)
 	if err := d.Set("network_configuration", flattenMwaaNetworkConfiguration(out.Environment.NetworkConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	d.Set("plugins_s3_object_version", out.Environment.PluginsS3ObjectVersion)
 	d.Set("plugins_s3_path", out.Environment.PluginsS3Path)
@@ -445,11 +445,11 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		_, err := conn.UpdateEnvironment(&input)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 
 		if err := waitForMwaaEnvironmentUpdate(conn, d.Id()); err != nil {
-			return err
+			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -476,7 +476,7 @@ func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("error deleting MWAA Environment (%s): %w", d.Id(), err)
 	}
 
 	return waitForMwaaEnvironmentDeletion(conn, d.Id())
