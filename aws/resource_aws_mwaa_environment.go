@@ -2,15 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/finder"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mwaa/waiter"
 )
 
 func resourceAwsMwaaEnvironment() *schema.Resource {
@@ -202,9 +202,9 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"webserver_access_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  mwaa.WebserverAccessModePrivateOnly,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      mwaa.WebserverAccessModePrivateOnly,
 				ValidateFunc: validation.StringInSlice(mwaa.WebserverAccessMode_Values(), false),
 			},
 			"webserver_url": {
@@ -291,7 +291,7 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(aws.StringValue(input.Name))
 
-	if err := waitForMwaaEnvironmentCreation(conn, d.Id()); err != nil {
+	if _, err := waiter.EnvironmentCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error creating MWAA Environment (%s): %w", d.Id(), err)
 	}
 
@@ -304,9 +304,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
-	out, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-		Name: aws.String(d.Id()),
-	})
+	environment, err := finder.EnvironmentByName(conn, d.Id())
 
 	if err != nil {
 		if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") && !d.IsNewResource() {
@@ -318,37 +316,37 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 
-	d.Set("airflow_configuration_options", aws.StringValueMap(out.Environment.AirflowConfigurationOptions))
-	d.Set("airflow_version", out.Environment.AirflowVersion)
-	d.Set("arn", out.Environment.Arn)
-	d.Set("created_at", aws.TimeValue(out.Environment.CreatedAt).String())
-	d.Set("dag_s3_path", out.Environment.DagS3Path)
-	d.Set("environment_class", out.Environment.EnvironmentClass)
-	d.Set("execution_role_arn", out.Environment.ExecutionRoleArn)
-	d.Set("kms_key", out.Environment.KmsKey)
-	if err := d.Set("last_updated", flattenMwaaLastUpdate(out.Environment.LastUpdate)); err != nil {
+	d.Set("airflow_configuration_options", aws.StringValueMap(environment.AirflowConfigurationOptions))
+	d.Set("airflow_version", environment.AirflowVersion)
+	d.Set("arn", environment.Arn)
+	d.Set("created_at", aws.TimeValue(environment.CreatedAt).String())
+	d.Set("dag_s3_path", environment.DagS3Path)
+	d.Set("environment_class", environment.EnvironmentClass)
+	d.Set("execution_role_arn", environment.ExecutionRoleArn)
+	d.Set("kms_key", environment.KmsKey)
+	if err := d.Set("last_updated", flattenMwaaLastUpdate(environment.LastUpdate)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
-	if err := d.Set("logging_configuration", flattenMwaaLoggingConfiguration(out.Environment.LoggingConfiguration)); err != nil {
+	if err := d.Set("logging_configuration", flattenMwaaLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
-	d.Set("max_workers", out.Environment.MaxWorkers)
-	d.Set("name", out.Environment.Name)
-	if err := d.Set("network_configuration", flattenMwaaNetworkConfiguration(out.Environment.NetworkConfiguration)); err != nil {
+	d.Set("max_workers", environment.MaxWorkers)
+	d.Set("name", environment.Name)
+	if err := d.Set("network_configuration", flattenMwaaNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
-	d.Set("plugins_s3_object_version", out.Environment.PluginsS3ObjectVersion)
-	d.Set("plugins_s3_path", out.Environment.PluginsS3Path)
-	d.Set("requirements_s3_object_version", out.Environment.RequirementsS3ObjectVersion)
-	d.Set("requirements_s3_path", out.Environment.RequirementsS3Path)
-	d.Set("service_role_arn", out.Environment.ServiceRoleArn)
-	d.Set("source_bucket_arn", out.Environment.SourceBucketArn)
-	d.Set("status", out.Environment.Status)
-	d.Set("webserver_access_mode", out.Environment.WebserverAccessMode)
-	d.Set("webserver_url", out.Environment.WebserverUrl)
-	d.Set("weekly_maintenance_window_start", out.Environment.WeeklyMaintenanceWindowStart)
+	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
+	d.Set("plugins_s3_path", environment.PluginsS3Path)
+	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
+	d.Set("requirements_s3_path", environment.RequirementsS3Path)
+	d.Set("service_role_arn", environment.ServiceRoleArn)
+	d.Set("source_bucket_arn", environment.SourceBucketArn)
+	d.Set("status", environment.Status)
+	d.Set("webserver_access_mode", environment.WebserverAccessMode)
+	d.Set("webserver_url", environment.WebserverUrl)
+	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
-	if err := d.Set("tags", keyvaluetags.MwaaKeyValueTags(out.Environment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MwaaKeyValueTags(environment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -391,7 +389,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForMwaaEnvironmentUpdate(conn, d.Id()); err != nil {
+		if _, err := waiter.EnvironmentUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
 		}
 	}
@@ -422,7 +420,9 @@ func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error deleting MWAA Environment (%s): %w", d.Id(), err)
 	}
 
-	return waitForMwaaEnvironmentDeletion(conn, d.Id())
+	_, err = waiter.EnvironmentDeleted(conn, d.Id())
+
+	return err
 }
 
 func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schema.Resource {
@@ -438,9 +438,9 @@ func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schem
 				Default:  defaultEnabled,
 			},
 			"log_level": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  mwaa.LoggingLevelInfo,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      mwaa.LoggingLevelInfo,
 				ValidateFunc: validation.StringInSlice(mwaa.LoggingLevel_Values(), false),
 			},
 		},
@@ -508,85 +508,6 @@ func expandMwaaEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.Upda
 	return &mwaa.UpdateNetworkConfigurationInput{
 		SecurityGroupIds: expandStringSet(m["security_group_ids"].(*schema.Set)),
 	}
-}
-
-func waitForMwaaEnvironmentCreation(conn *mwaa.MWAA, id string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mwaa.EnvironmentStatusCreating,
-		},
-		Target: []string{
-			mwaa.EnvironmentStatusAvailable,
-		},
-		Timeout: 90 * time.Minute,
-		Delay:   1 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-				Name: aws.String(id),
-			})
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			return out, *out.Environment.Status, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForMwaaEnvironmentUpdate(conn *mwaa.MWAA, id string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mwaa.EnvironmentStatusUpdating,
-		},
-		Target: []string{
-			mwaa.EnvironmentStatusAvailable,
-		},
-		Timeout: 90 * time.Minute,
-		Delay:   1 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-				Name: aws.String(id),
-			})
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			return out, *out.Environment.Status, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForMwaaEnvironmentDeletion(conn *mwaa.MWAA, id string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mwaa.EnvironmentStatusDeleting,
-		},
-		Target:  []string{},
-		Timeout: 90 * time.Minute,
-		Delay:   1 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-				Name: aws.String(id),
-			})
-			if err != nil {
-
-				if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") {
-					return nil, "", nil
-				}
-				return nil, "", err
-			}
-
-			return out, *out.Environment.Status, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
 }
 
 func flattenMwaaLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
