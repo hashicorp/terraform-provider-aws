@@ -52,8 +52,6 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	// The bucket name should start with "airflow-"
-	bucketName := acctest.RandomWithPrefix("airflow-tf-acc-test")
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,7 +60,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMwssEnvironmentBasicConfig(rName, bucketName),
+				Config: testAccAWSMwssEnvironmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
@@ -94,7 +92,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", bucketName),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", mwaa.WebserverAccessModePrivateOnly),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
@@ -114,8 +112,6 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	// The bucket name should start with "airflow-"
-	bucketName := acctest.RandomWithPrefix("airflow-tf-acc-test")
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +120,7 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMwssEnvironmentBasicConfig(rName, bucketName),
+				Config: testAccAWSMwssEnvironmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMwaaEnvironment(), resourceName),
@@ -139,8 +135,6 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	// The bucket name should start with "airflow-"
-	bucketName := acctest.RandomWithPrefix("airflow-tf-acc-test")
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -149,7 +143,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, bucketName, "1", "16"),
+				Config: testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, "1", "16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -163,7 +157,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, bucketName, "2", "32"),
+				Config: testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, "2", "32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -172,7 +166,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSMwssEnvironmentBasicConfig(rName, bucketName),
+				Config: testAccAWSMwssEnvironmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "0"),
@@ -186,8 +180,6 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	// The bucket name should start with "airflow-"
-	bucketName := acctest.RandomWithPrefix("airflow-tf-acc-test")
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,7 +188,7 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, bucketName, "true", mwaa.LoggingLevelCritical),
+				Config: testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -233,7 +225,7 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, bucketName, "false", mwaa.LoggingLevelInfo),
+				Config: testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -272,8 +264,6 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 	var environment mwaa.GetEnvironmentOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	// The bucket name should start with "airflow-"
-	bucketName := acctest.RandomWithPrefix("airflow-tf-acc-test")
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -282,7 +272,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSMwssEnvironmentFullConfig(rName, bucketName),
+				Config: testAccAWSMwssEnvironmentFullConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSMwaaEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -326,7 +316,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", bucketName),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", mwaa.WebserverAccessModePublicOnly),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
@@ -395,7 +385,7 @@ func testAccCheckAWSMwaaEnvironmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSMwaaEnvironmentBase(rName, bucketName string) string {
+func testAccAWSMwaaEnvironmentBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -512,7 +502,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[2]q
+  bucket = %[1]q
   acl    = "private"
 
   versioning {
@@ -569,11 +559,11 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 
-`, rName, bucketName)
+`, rName)
 }
 
-func testAccAWSMwssEnvironmentBasicConfig(rName, bucketName string) string {
-	return testAccAWSMwaaEnvironmentBase(rName, bucketName) + fmt.Sprintf(`
+func testAccAWSMwssEnvironmentBasicConfig(rName string) string {
+	return testAccAWSMwaaEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_bucket_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -591,8 +581,8 @@ resource "aws_mwaa_environment" "test" {
 `, rName)
 }
 
-func testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, bucketName, retries, parallelism string) string {
-	return testAccAWSMwaaEnvironmentBase(rName, bucketName) + fmt.Sprintf(`
+func testAccAWSMwssEnvironmentAirflowConfigurationOptionsConfig(rName, retries, parallelism string) string {
+	return testAccAWSMwaaEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = %[2]q
@@ -615,8 +605,8 @@ resource "aws_mwaa_environment" "test" {
 `, rName, retries, parallelism)
 }
 
-func testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, bucketName, logEnabled, logLevel string) string {
-	return testAccAWSMwaaEnvironmentBase(rName, bucketName) + fmt.Sprintf(`
+func testAccAWSMwssEnvironmentLoggingConfigurationConfig(rName, logEnabled, logLevel string) string {
+	return testAccAWSMwaaEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_bucket_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -662,8 +652,8 @@ resource "aws_mwaa_environment" "test" {
 `, rName, logEnabled, logLevel)
 }
 
-func testAccAWSMwssEnvironmentFullConfig(rName, bucketName string) string {
-	return testAccAWSMwaaEnvironmentBase(rName, bucketName) + fmt.Sprintf(`
+func testAccAWSMwssEnvironmentFullConfig(rName string) string {
+	return testAccAWSMwaaEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = 1
