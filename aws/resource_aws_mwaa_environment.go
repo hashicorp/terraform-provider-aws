@@ -358,89 +358,32 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mwaaconn
 
-	needsUpdate := false
-
 	input := mwaa.UpdateEnvironmentInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChange("airflow_configuration_options") {
-		needsUpdate = true
-
+	if d.HasChangesExcept("tags") {
 		options, ok := d.GetOk("airflow_configuration_options")
 		if !ok {
 			options = map[string]interface{}{}
 		}
 
 		input.AirflowConfigurationOptions = stringMapToPointers(options.(map[string]interface{}))
-	}
 
-	if d.HasChange("airflow_version") {
-		needsUpdate = true
 		input.AirflowVersion = aws.String(d.Get("airflow_version").(string))
-	}
-
-	if d.HasChange("dag_s3_path") {
-		needsUpdate = true
 		input.DagS3Path = aws.String(d.Get("dag_s3_path").(string))
-	}
-
-	if d.HasChange("environment_class") {
-		needsUpdate = true
 		input.EnvironmentClass = aws.String(d.Get("environment_class").(string))
-	}
-
-	if d.HasChange("execution_role_arn") {
-		needsUpdate = true
 		input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
-	}
-
-	if d.HasChange("logging_configuration") {
-		needsUpdate = true
 		input.LoggingConfiguration = expandMwaaEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
-	}
-
-	if d.HasChange("max_workers") {
-		needsUpdate = true
 		input.MaxWorkers = aws.Int64(int64(d.Get("max_workers").(int)))
-	}
-
-	if d.HasChange("network_configuration") {
-		needsUpdate = true
 		input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
-	}
-
-	if d.HasChange("plugins_s3_path") {
-		needsUpdate = true
 		input.PluginsS3Path = aws.String(d.Get("plugins_s3_path").(string))
-	}
-
-	if d.HasChange("requirements_s3_object_version") {
-		needsUpdate = true
 		input.RequirementsS3ObjectVersion = aws.String(d.Get("requirements_s3_object_version").(string))
-	}
-
-	if d.HasChange("requirements_s3_path") {
-		needsUpdate = true
 		input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
-	}
-
-	if d.HasChange("source_bucket_arn") {
-		needsUpdate = true
 		input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
-	}
-
-	if d.HasChange("webserver_access_mode") {
-		needsUpdate = true
 		input.WebserverAccessMode = aws.String(d.Get("webserver_access_mode").(string))
-	}
-
-	if d.HasChange("weekly_maintenance_window_start") {
-		needsUpdate = true
 		input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
-	}
 
-	if needsUpdate {
 		log.Printf("[INFO] Updating MWAA Environment: %s", input)
 		_, err := conn.UpdateEnvironment(&input)
 
