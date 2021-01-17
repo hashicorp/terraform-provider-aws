@@ -292,7 +292,7 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	d.SetId(aws.StringValue(input.Name))
 
 	if _, err := waiter.EnvironmentCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error creating MWAA Environment (%s): %w", d.Id(), err)
+		return fmt.Errorf("error waiting for MWAA Environment (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsMwaaEnvironmentRead(d, meta)
@@ -390,7 +390,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := waiter.EnvironmentUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error updating MWAA Environment (%s): %w", d.Id(), err)
+			return fmt.Errorf("error waiting for MWAA Environment (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -422,7 +422,11 @@ func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err = waiter.EnvironmentDeleted(conn, d.Id())
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error waiting for MWAA Environment (%s) deletion: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schema.Resource {
