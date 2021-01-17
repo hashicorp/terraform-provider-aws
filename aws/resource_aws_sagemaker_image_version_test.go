@@ -15,14 +15,14 @@ import (
 
 func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 
-	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
-		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
 
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
-	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -52,14 +52,14 @@ func TestAccAWSSagemakerImageVersion_basic(t *testing.T) {
 
 func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 
-	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
-		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
 
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
-	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -80,14 +80,14 @@ func TestAccAWSSagemakerImageVersion_disappears(t *testing.T) {
 
 func TestAccAWSSagemakerImageVersion_disappears_image(t *testing.T) {
 
-	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE") == "" {
-		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BAES_IMAGE is not set")
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
 
 	var image sagemaker.DescribeImageVersionOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_image_version.test"
-	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BAES_IMAGE")
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
