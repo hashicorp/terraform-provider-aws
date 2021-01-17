@@ -26,22 +26,22 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"image_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"base_image": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"container_image": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"image_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"container_image": {
+			"image_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"version": {
 				Type:     schema.TypeInt,
