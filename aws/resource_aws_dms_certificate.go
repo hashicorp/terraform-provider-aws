@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDmsCertificate() *schema.Resource {
@@ -52,6 +53,7 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(d.Get("certificate_id").(string)),
+		Tags:                  keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatabasemigrationserviceTags(),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
