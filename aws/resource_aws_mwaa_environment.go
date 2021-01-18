@@ -361,26 +361,66 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChangesExcept("tags") {
-		options, ok := d.GetOk("airflow_configuration_options")
-		if !ok {
-			options = map[string]interface{}{}
+		if d.HasChange("airflow_configuration_options") {
+			options, ok := d.GetOk("airflow_configuration_options")
+			if !ok {
+				options = map[string]interface{}{}
+			}
+
+			input.AirflowConfigurationOptions = stringMapToPointers(options.(map[string]interface{}))
 		}
 
-		input.AirflowConfigurationOptions = stringMapToPointers(options.(map[string]interface{}))
+		if d.HasChange("airflow_version") {
+			input.AirflowVersion = aws.String(d.Get("airflow_version").(string))
+		}
 
-		input.AirflowVersion = aws.String(d.Get("airflow_version").(string))
-		input.DagS3Path = aws.String(d.Get("dag_s3_path").(string))
-		input.EnvironmentClass = aws.String(d.Get("environment_class").(string))
-		input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
-		input.LoggingConfiguration = expandMwaaEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
-		input.MaxWorkers = aws.Int64(int64(d.Get("max_workers").(int)))
-		input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
-		input.PluginsS3Path = aws.String(d.Get("plugins_s3_path").(string))
-		input.RequirementsS3ObjectVersion = aws.String(d.Get("requirements_s3_object_version").(string))
-		input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
-		input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
-		input.WebserverAccessMode = aws.String(d.Get("webserver_access_mode").(string))
-		input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
+		if d.HasChange("dag_s3_path") {
+			input.DagS3Path = aws.String(d.Get("dag_s3_path").(string))
+		}
+
+		if d.HasChange("environment_class") {
+			input.EnvironmentClass = aws.String(d.Get("environment_class").(string))
+		}
+
+		if d.HasChange("execution_role_arn") {
+			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		}
+
+		if d.HasChange("logging_configuration") {
+			input.LoggingConfiguration = expandMwaaEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
+		}
+
+		if d.HasChange("max_workers") {
+			input.MaxWorkers = aws.Int64(int64(d.Get("max_workers").(int)))
+		}
+
+		if d.HasChange("network_configuration") {
+			input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
+		}
+
+		if d.HasChange("plugins_s3_path") {
+			input.PluginsS3Path = aws.String(d.Get("plugins_s3_path").(string))
+		}
+
+		if d.HasChange("requirements_s3_object_version") {
+			input.RequirementsS3ObjectVersion = aws.String(d.Get("requirements_s3_object_version").(string))
+		}
+
+		if d.HasChange("requirements_s3_path") {
+			input.RequirementsS3Path = aws.String(d.Get("requirements_s3_path").(string))
+		}
+
+		if d.HasChange("source_bucket_arn") {
+			input.SourceBucketArn = aws.String(d.Get("source_bucket_arn").(string))
+		}
+
+		if d.HasChange("webserver_access_mode") {
+			input.WebserverAccessMode = aws.String(d.Get("webserver_access_mode").(string))
+		}
+
+		if d.HasChange("weekly_maintenance_window_start") {
+			input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
+		}
 
 		log.Printf("[INFO] Updating MWAA Environment: %s", input)
 		_, err := conn.UpdateEnvironment(&input)
