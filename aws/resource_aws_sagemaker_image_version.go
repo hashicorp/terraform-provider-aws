@@ -15,7 +15,6 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSagemakerImageVersionCreate,
 		Read:   resourceAwsSagemakerImageVersionRead,
-		Update: resourceAwsSagemakerImageVersionCreate,
 		Delete: resourceAwsSagemakerImageVersionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -29,6 +28,7 @@ func resourceAwsSagemakerImageVersion() *schema.Resource {
 			"base_image": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"container_image": {
 				Type:     schema.TypeString,
