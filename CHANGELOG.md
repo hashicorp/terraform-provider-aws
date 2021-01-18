@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **New Resource:** `aws_backup_global_settings` [GH-16475]
 * **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
 
 ## 3.24.1 (January 15, 2021)
