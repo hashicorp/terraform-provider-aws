@@ -1,5 +1,9 @@
 ## 3.25.0 (Unreleased)
 
+FEATURES
+
+* **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
+
 ## 3.24.1 (January 15, 2021)
 
 BUG FIXES
