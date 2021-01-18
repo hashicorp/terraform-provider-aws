@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
 const (
@@ -14,6 +15,8 @@ const (
 	SagemakerImageStatusNotFound            = "NotFound"
 	SagemakerImageStatusFailed              = "Failed"
 	SagemakerDomainStatusNotFound           = "NotFound"
+	SagemakerFeatureGroupStatusNotFound     = "NotFound"
+	SagemakerFeatureGroupStatusUnknown      = "Unknown"
 )
 
 // NotebookInstanceStatus fetches the NotebookInstance and its Status
@@ -92,5 +95,25 @@ func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefr
 		}
 
 		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// FeatureGroupStatus fetches the Feature Group and its Status
+func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.FeatureGroupByName(conn, name)
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return nil, SagemakerFeatureGroupStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, SagemakerFeatureGroupStatusUnknown, err
+		}
+
+		if output == nil {
+			return nil, SagemakerFeatureGroupStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.FeatureGroupStatus), nil
 	}
 }
