@@ -898,10 +898,19 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
 			switch strings.ToLower(d.Get("engine").(string)) {
 			case "mysql", "postgres", "mariadb":
-				// skip
+				// Throw an error if name attribute is provided when engine is mysql, postgres or mariadb when restoring from snapshot
+				// https://github.com/hashicorp/terraform-provider-aws/issues/17037
+				return fmt.Errorf("Error restoring database from AWS DB Snapshot: %s, name attribute is not supported when engine is %s", d.Get("snapshot_identifier").(string), d.Get("engine").(string))
 			default:
 				opts.DBName = aws.String(attr.(string))
 			}
+		}
+
+		if _, ok := d.GetOk("username"); ok {
+			// "Note: This parameter [username] doesn't apply when restoring from snapshot"
+			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
+			// https://github.com/hashicorp/terraform-provider-aws/issues/17037
+			return fmt.Errorf("Error restoring database from AWS DB Snapshot: %s, username attribute is not supported when restoring from snapshot", d.Get("snapshot_identifier").(string))
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {
