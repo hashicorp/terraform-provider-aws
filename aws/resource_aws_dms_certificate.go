@@ -44,6 +44,7 @@ func resourceAwsDmsCertificate() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"tags": tagsSchemaForceNew(),
 		},
 	}
 }
