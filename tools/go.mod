@@ -10,6 +10,10 @@ require (
 	github.com/katbyte/terrafmt v0.3.0
 	github.com/pavius/impi v0.0.3 // indirect
 	github.com/terraform-linters/tflint v0.24.1
+	github.com/golangci/golangci-lint v1.33.0
+	github.com/katbyte/terrafmt v0.2.1-0.20200913185704-5ff4421407b4
+	github.com/pavius/impi v0.0.3 // indirect
+	github.com/terraform-linters/tflint v0.20.3
 )
 
 replace github.com/katbyte/terrafmt => github.com/gdavison/terrafmt v0.3.1-0.20210204054728-84242796be99
