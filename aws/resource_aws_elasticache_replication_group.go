@@ -596,7 +596,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Wait for all Cache Cluster creations
 			for _, cacheClusterID := range addClusterIDs {
-				err := waitForCreateElasticacheCacheCluster(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
+				_, err := waiter.CacheClusterAvailable(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created (adding replica): %w", cacheClusterID, err)
 				}
@@ -705,7 +705,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 			// Wait for all Cache Cluster deletions
 			for _, cacheClusterID := range removeClusterIDs {
-				err := waitForDeleteElasticacheCacheCluster(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
+				_, err := waiter.CacheClusterDeleted(conn, cacheClusterID, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
 					return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be deleted (removing replica): %w", cacheClusterID, err)
 				}

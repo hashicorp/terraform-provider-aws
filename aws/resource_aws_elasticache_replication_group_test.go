@@ -292,10 +292,8 @@ func TestAccAWSElasticacheReplicationGroup_vpc(t *testing.T) {
 				Config: testAccAWSElasticacheReplicationGroupInVPCConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(
-						resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -922,9 +920,13 @@ func testAccCheckAWSElasticacheReplicationDestroy(s *terraform.State) error {
 			continue
 		}
 		_, err := finder.ReplicationGroupByID(conn, rs.Primary.ID)
-		if !tfresource.NotFound(err) {
+		if tfresource.NotFound(err) {
+			continue
+		}
+		if err != nil {
 			return err
 		}
+		return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
 	}
 	return nil
 }
