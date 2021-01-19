@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 )
 
 func init() {
@@ -32,27 +33,27 @@ func testSweepElasticacheReplicationGroups(region string) error {
 
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
-			log.Print("[DEBUG] No Elasticache Replicaton Groups to sweep")
+			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
 			return false
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
 			id := aws.StringValue(replicationGroup.ReplicationGroupId)
 
-			log.Printf("[INFO] Deleting Elasticache Replication Group: %s", id)
-			err := deleteElasticacheReplicationGroup(id, conn, "")
+			log.Printf("[INFO] Deleting ElastiCache Replication Group: %s", id)
+			err := deleteElasticacheReplicationGroup(id, conn, "", 40*time.Minute)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Elasticache Replication Group (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete ElastiCache Replication Group (%s): %s", id, err)
 			}
 		}
 		return !isLast
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping ElastiCache Replication Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Elasticache Replication Groups: %w", err)
+		return fmt.Errorf("Error retrieving ElastiCache Replication Groups: %w", err)
 	}
 	return nil
 }
@@ -707,7 +708,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error setting new primary cache cluster: %s", err)
 					}
-					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for new primary cache cluster: %s", err)
 					}
 				},
@@ -754,7 +755,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error disabling automatic failover: %s", err)
 					}
-					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for disabling automatic failover: %s", err)
 					}
 
@@ -767,7 +768,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error setting new primary cache cluster: %s", err)
 					}
-					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for new primary cache cluster: %s", err)
 					}
 
@@ -780,7 +781,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
 						t.Fatalf("error enabled automatic failover: %s", err)
 					}
-					if err := waitForModifyElasticacheReplicationGroup(conn, rName, 40*time.Minute); err != nil {
+					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
 						t.Fatalf("error waiting for enabled automatic failover: %s", err)
 					}
 				},
@@ -905,7 +906,7 @@ func testAccCheckAWSElasticacheReplicationGroupExists(n string, v *elasticache.R
 			ReplicationGroupId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			return fmt.Errorf("Elasticache error: %v", err)
+			return fmt.Errorf("ElastiCache error: %v", err)
 		}
 
 		for _, rg := range res.ReplicationGroups {
@@ -1027,7 +1028,7 @@ func testAccAWSElasticacheReplicationGroupConfigParameterGroupName(rName string,
 resource "aws_elasticache_parameter_group" "test" {
   count = 2
 
-  # We do not have a data source for "latest" Elasticache family
+  # We do not have a data source for "latest" ElastiCache family
   # so unfortunately we must hardcode this for now
   family = "redis6.x"
 
