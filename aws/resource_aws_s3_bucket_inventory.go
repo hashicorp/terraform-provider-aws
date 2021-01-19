@@ -197,7 +197,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("optional_fields"); ok {
-		inventoryConfiguration.OptionalFields = expandStringList(v.(*schema.Set).List())
+		inventoryConfiguration.OptionalFields = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
