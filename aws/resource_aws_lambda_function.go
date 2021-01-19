@@ -1153,7 +1153,24 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			FunctionName: aws.String(d.Id()),
 		}
 
-		_, err := conn.PublishVersion(versionReq)
+		// updating function code using an image can take 1 minute to update
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.PublishVersion(versionReq)
+			if err != nil {
+				log.Printf("[DEBUG] Received error publishing Lambda Function (%s) version: %s", d.Id(), err)
+
+				if isAWSErr(err, "ResourceConflictException", "An update is in progress for resource") {
+					log.Printf("[DEBUG] Received %s, retrying PublishVersion", err)
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.PublishVersion(versionReq)
+		}
 		if err != nil {
 			return fmt.Errorf("Error publishing Lambda Function (%s) version: %w", d.Id(), err)
 		}
