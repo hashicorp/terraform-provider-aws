@@ -136,6 +136,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
 	var name string
+	appendFifoSuffix := false
 
 	fq := d.Get("fifo_queue").(bool)
 
@@ -143,11 +144,14 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		name = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		name = resource.PrefixedUniqueId(v.(string))
-		if fq {
-			name += ".fifo"
-		}
+		appendFifoSuffix = true
 	} else {
 		name = resource.UniqueId()
+		appendFifoSuffix = true
+	}
+
+	if fq && appendFifoSuffix {
+		name += ".fifo"
 	}
 
 	cbd := d.Get("content_based_deduplication").(bool)
