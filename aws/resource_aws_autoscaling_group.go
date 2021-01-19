@@ -1231,9 +1231,9 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 					strs[i] = a.(string)
 				}
 				if attrsSet.Contains("tag") && !attrsSet.Contains("tags") {
-					strs = append(strs, "tags")
+					strs = append(strs, "tags") // nozero
 				} else if !attrsSet.Contains("tag") && attrsSet.Contains("tags") {
-					strs = append(strs, "tag")
+					strs = append(strs, "tag") // nozero
 				}
 				shouldRefreshInstances = d.HasChanges(strs...)
 			}
@@ -1595,8 +1595,8 @@ func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[s
 
 func expandVpcZoneIdentifiers(list []interface{}) *string {
 	strs := make([]string, len(list))
-	for _, s := range list {
-		strs = append(strs, s.(string))
+	for i, s := range list {
+		strs[i] = s.(string)
 	}
 	return aws.String(strings.Join(strs, ","))
 }
