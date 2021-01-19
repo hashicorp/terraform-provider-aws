@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -902,18 +903,12 @@ func testAccCheckAWSElasticacheReplicationGroupExists(n string, v *elasticache.R
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
-		res, err := conn.DescribeReplicationGroups(&elasticache.DescribeReplicationGroupsInput{
-			ReplicationGroupId: aws.String(rs.Primary.ID),
-		})
+		rg, err := finder.ReplicationGroupByID(conn, rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("ElastiCache error: %v", err)
+			return fmt.Errorf("ElastiCache error: %w", err)
 		}
 
-		for _, rg := range res.ReplicationGroups {
-			if *rg.ReplicationGroupId == rs.Primary.ID {
-				*v = *rg
-			}
-		}
+		*v = *rg
 
 		return nil
 	}
@@ -926,18 +921,9 @@ func testAccCheckAWSElasticacheReplicationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_elasticache_replication_group" {
 			continue
 		}
-		res, err := conn.DescribeReplicationGroups(&elasticache.DescribeReplicationGroupsInput{
-			ReplicationGroupId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			// Verify the error is what we want
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ReplicationGroupNotFoundFault" {
-				continue
-			}
+		_, err := finder.ReplicationGroupByID(conn, rs.Primary.ID)
+		if !tfresource.NotFound(err) {
 			return err
-		}
-		if len(res.ReplicationGroups) > 0 {
-			return fmt.Errorf("still exist.")
 		}
 	}
 	return nil
