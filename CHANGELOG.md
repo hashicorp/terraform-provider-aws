@@ -5,6 +5,13 @@ FEATURES
 * **New Resource:** `aws_backup_global_settings` [GH-16475]
 * **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
 
+ENHANCEMENTS
+
+* data-source/aws_ami: Add `throughput` attribute to `block_device_mappings` `ebs` attribute [GH-16631]
+* resource/aws_ami: Support `volume_type` value of `gp3` and add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+* resource/aws_ami_copy: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+* resource/aws_ami_from_instance: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+
 ## 3.24.1 (January 15, 2021)
 
 BUG FIXES
