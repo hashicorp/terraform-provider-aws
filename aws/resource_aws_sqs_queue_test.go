@@ -465,6 +465,33 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueue_FIFO_MinusName(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithFIFOMinusName(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sqsconn
 
@@ -800,4 +827,12 @@ resource "aws_sqs_queue" "queue" {
   }
 }
 `, r)
+}
+
+func testAccAWSSQSConfigWithFIFOMinusName() string {
+	return `
+resource "aws_sqs_queue" "queue" {
+  fifo_queue = true
+}
+`
 }
