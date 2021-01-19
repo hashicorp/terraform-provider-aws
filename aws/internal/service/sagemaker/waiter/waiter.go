@@ -15,6 +15,8 @@ const (
 	ImageDeletedTimeout              = 10 * time.Minute
 	DomainInServiceTimeout           = 10 * time.Minute
 	DomainDeletedTimeout             = 10 * time.Minute
+	FeatureGroupCreatedTimeout       = 10 * time.Minute
+	FeatureGroupDeletedTimeout       = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -155,6 +157,42 @@ func DomainDeleted(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Descr
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FeatureGroupCreated waits for a Feature Group to return Created
+func FeatureGroupCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.FeatureGroupStatusCreating},
+		Target:  []string{sagemaker.FeatureGroupStatusCreated},
+		Refresh: FeatureGroupStatus(conn, name),
+		Timeout: FeatureGroupCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FeatureGroupDeleted waits for a Feature Group to return Deleted
+func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.FeatureGroupStatusDeleting},
+		Target:  []string{},
+		Refresh: FeatureGroupStatus(conn, name),
+		Timeout: FeatureGroupDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		return output, err
 	}
 
