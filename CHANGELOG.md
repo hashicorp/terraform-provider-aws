@@ -19,6 +19,10 @@ ENHANCEMENTS
 * resource/aws_ebs_volume: Add `throughput` argument [GH-16517]
 * resource/aws_lightsail_instance: Add `ipv6_addresses` attribute [GH-17155]
 
+BUG FIXES 
+
+* resource/aws_lambda_function: Prevent panic with missing `FunctionConfiguration` `PackageType` attribute in API response [GH-16544]
+
 ## 3.24.1 (January 15, 2021)
 
 BUG FIXES
