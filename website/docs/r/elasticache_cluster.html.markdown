@@ -77,7 +77,7 @@ The following arguments are supported:
 
 * `replication_group_id` - (Optional) The ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
 
-* `engine` – (Required unless `replication_group_id` is provided) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`. 
+* `engine` – (Required unless `replication_group_id` is provided) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
 
 * `engine_version` – (Optional) Version number of the cache engine to be used.
 See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html)
