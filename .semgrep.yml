@@ -128,3 +128,23 @@ rules:
           ...
           return ...
     severity: WARNING
+
+  - id: is-not-found-error
+    languages: [go]
+    message: Check for resource.NotFoundError errors with tfresource.NotFound()
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - patterns:
+          - pattern: |
+              var $CAST *resource.NotFoundError
+              ...
+              errors.As($ERR, &$CAST)
+          - pattern-not-inside: func NotFound(err error) bool { ... }
+        - patterns:
+          - pattern: |
+              $X, $Y := $ERR.(*resource.NotFoundError)
+          - pattern-not-inside: func isResourceNotFoundError(err error) bool { ... }
+    severity: WARNING
