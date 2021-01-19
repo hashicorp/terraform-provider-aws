@@ -37,6 +37,9 @@ func RuleCreateID(eventBusName, ruleName string) string {
 	return eventBusName + ruleIDSeparator + ruleName
 }
 
+const arnPrefix = "arn:"
+const resourceSeparator = "/"
+
 func RuleParseID(id string) (string, string, error) {
 	parts := strings.Split(id, ruleIDSeparator)
 	if len(parts) == 1 && parts[0] != "" {
@@ -44,6 +47,9 @@ func RuleParseID(id string) (string, string, error) {
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
+	}
+	if len(parts) == 3 && strings.HasPrefix(parts[0], arnPrefix) {
+		return parts[0] + resourceSeparator + parts[1], parts[2], nil
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%q), expected <event-bus-name>"+ruleIDSeparator+"<rule-name> or <rule-name>", id)
