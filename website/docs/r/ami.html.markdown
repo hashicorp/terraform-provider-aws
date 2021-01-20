@@ -110,6 +110,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the AMI.
 * `id` - The ID of the created AMI.
+* `owner_id` - The AWS account ID of the image owner.
 * `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
 
 ## Import
