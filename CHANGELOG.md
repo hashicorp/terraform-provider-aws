@@ -13,6 +13,7 @@ ENHANCEMENTS
 
 * data-source/aws_ami: Add `throughput` attribute to `block_device_mappings` `ebs` attribute [GH-16631]
 * data-source/aws_ebs_volume: Add `throughput` attribute [GH-16517]
+* data-source/aws_iam_user: Add `tags` attribute [GH-13287]
 * resource/aws_ami: Support `volume_type` value of `gp3` and add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
 * resource/aws_ami_copy: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
 * resource/aws_ami_from_instance: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
