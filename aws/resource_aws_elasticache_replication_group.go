@@ -881,14 +881,13 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 	if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("error deleting ElastiCache Replication Group: %w", err)
+		return err
 	}
 
 	_, err = waiter.ReplicationGroupDeleted(conn, replicationGroupID, timeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) to delete: %w", err)
+		return err
 	}
 
 	return nil
