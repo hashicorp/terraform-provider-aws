@@ -24,6 +24,7 @@ BUG FIXES
 
 * resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
 * resource/aws_lambda_function: Prevent panic with missing `FunctionConfiguration` `PackageType` attribute in API response [GH-16544]
+* resource/aws_lambda_function: Prevent panic with missing environment variable value [GH-17056]
 
 ## 3.24.1 (January 15, 2021)
 
