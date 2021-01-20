@@ -469,7 +469,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 	d.Set("availability_zone", c.PreferredAvailabilityZone)
-	if *c.PreferredAvailabilityZone == "Multiple" {
+	if aws.StringValue(c.PreferredAvailabilityZone) == "Multiple" {
 		d.Set("az_mode", "cross-az")
 	} else {
 		d.Set("az_mode", "single-az")
