@@ -251,6 +251,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	input.Resource = expandLakeFormationResource(d, true)
+	resourceType := expandLakeFormationResourceType(d)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
@@ -258,11 +259,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
-					continue
-				}
-
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				principalResourcePermissions = resourceAwsLakeFormationPermissionsAppend(resourceType, principalResourcePermissions, permission)
 			}
 			return !lastPage
 		})
@@ -279,11 +276,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	if isResourceTimeoutError(err) {
 		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
-					continue
-				}
-
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				principalResourcePermissions = resourceAwsLakeFormationPermissionsAppend(resourceType, principalResourcePermissions, permission)
 			}
 			return !lastPage
 		})
@@ -386,34 +379,80 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
-	res := &lakeformation.Resource{}
+func resourceAwsLakeFormationPermissionsAppend(resourceType string, perms []*lakeformation.PrincipalResourcePermissions, newPerm *lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
+	if newPerm == nil {
+		return perms
+	}
 
-	if v, ok := d.GetOk("catalog_resource"); ok {
-		if v.(bool) {
-			res.Catalog = &lakeformation.CatalogResource{}
+	switch resourceType {
+	case lakeformation.DataLakeResourceTypeCatalog:
+		if newPerm.Resource.Catalog != nil {
+			perms = append(perms, newPerm)
+		}
+	case lakeformation.DataLakeResourceTypeDataLocation:
+		if newPerm.Resource.DataLocation != nil {
+			perms = append(perms, newPerm)
+		}
+	case lakeformation.DataLakeResourceTypeDatabase:
+		if newPerm.Resource.Database != nil {
+			perms = append(perms, newPerm)
+		}
+	case lakeformation.DataLakeResourceTypeTable:
+		if newPerm.Resource.Table != nil {
+			perms = append(perms, newPerm)
+		}
+	case DataLakeResourceTypeTableWithColumns:
+		if newPerm.Resource.TableWithColumns != nil {
+			perms = append(perms, newPerm)
 		}
 	}
 
+	return perms
+}
+
+// expandLakeFormationResourceType returns the Lake Formation resource type represented by the resource.
+// This is helpful in distinguishing between TABLE and TABLE_WITH_COLUMNS types when filtering ListPermission results.
+func expandLakeFormationResourceType(d *schema.ResourceData) string {
+	if v, ok := d.GetOk("catalog_resource"); ok && v.(bool) {
+		return lakeformation.DataLakeResourceTypeCatalog
+	}
+
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeDataLocation
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeDatabase
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeTable
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	return DataLakeResourceTypeTableWithColumns
+}
+
+const DataLakeResourceTypeTableWithColumns = "TABLE_WITH_COLUMNS" // no lakeformation package enum value for this type
+
+func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
+	res := &lakeformation.Resource{}
+
+	switch expandLakeFormationResourceType(d) {
+	case lakeformation.DataLakeResourceTypeCatalog:
+		res.Catalog = &lakeformation.CatalogResource{}
+	case lakeformation.DataLakeResourceTypeDataLocation:
+		res.DataLocation = expandLakeFormationDataLocationResource(d.Get("data_location").([]interface{})[0].(map[string]interface{}))
+	case lakeformation.DataLakeResourceTypeDatabase:
+		res.Database = expandLakeFormationDatabaseResource(d.Get("database").([]interface{})[0].(map[string]interface{}))
+	case lakeformation.DataLakeResourceTypeTable:
+		res.Table = expandLakeFormationTableResource(d.Get("table").([]interface{})[0].(map[string]interface{}))
+	case DataLakeResourceTypeTableWithColumns:
 		if squashTableWithColumns {
 			// ListPermissions does not support getting privileges by tables with columns. Instead,
 			// use the table which will return both table and table with columns.
-			res.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+			res.Table = expandLakeFormationTableResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
 		} else {
-			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
 		}
 	}
 

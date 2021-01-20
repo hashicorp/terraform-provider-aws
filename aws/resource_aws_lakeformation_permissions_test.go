@@ -661,5 +661,15 @@ resource "aws_lakeformation_permissions" "test" {
     column_names  = ["event", "timestamp"]
   }
 }
+
+resource "aws_lakeformation_permissions" "table" {
+  permissions = ["ALL"]
+  principal   = aws_lakeformation_permissions.test.principal
+
+  table {
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
 `, rName)
 }
