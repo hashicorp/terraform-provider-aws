@@ -8,6 +8,7 @@ FEATURES
 
 * **New Resource:** `aws_backup_global_settings` [GH-16475]
 * **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
+* **New Resource:** `aws_sagemaker_image_version` [GH-17141]
 * **New Resource:** `aws_sagemaker_user_profile` [GH-17123]
 
 ENHANCEMENTS
@@ -27,6 +28,8 @@ BUG FIXES
 * resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
 * resource/aws_lambda_function: Prevent panic with missing `FunctionConfiguration` `PackageType` attribute in API response [GH-16544]
 * resource/aws_lambda_function: Prevent panic with missing environment variable value [GH-17056]
+* resource/aws_sagemaker_image: Fix catching image not found on read error [GH-17141]
+
 
 ## 3.24.1 (January 15, 2021)
 
