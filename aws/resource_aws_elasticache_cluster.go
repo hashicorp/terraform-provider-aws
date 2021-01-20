@@ -428,7 +428,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	c, err := finder.CacheClusterWithNodeInfoByID(conn, d.Id())
-	if tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
