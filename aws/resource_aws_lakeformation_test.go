@@ -18,6 +18,7 @@ func TestAccAWSLakeFormation_serial(t *testing.T) {
 			"database":                   testAccAWSLakeFormationPermissions_database,
 			"table":                      testAccAWSLakeFormationPermissions_table,
 			"tableWithColumns":           testAccAWSLakeFormationPermissions_tableWithColumns,
+			"tableWithColumnsAndTable":   testAccAWSLakeFormationPermissions_tableWithColumnsAndTable,
 			"basicDataSource":            testAccAWSLakeFormationPermissionsDataSource_basic,
 			"dataLocationDataSource":     testAccAWSLakeFormationPermissionsDataSource_dataLocation,
 			"databaseDataSource":         testAccAWSLakeFormationPermissionsDataSource_database,
