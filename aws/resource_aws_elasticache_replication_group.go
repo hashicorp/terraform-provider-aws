@@ -270,9 +270,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(60 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute),
+			Create: schema.DefaultTimeout(waiter.ReplicationGroupDefaultCreatedTimeout),
+			Delete: schema.DefaultTimeout(waiter.ReplicationGroupDefaultDeletedTimeout),
+			Update: schema.DefaultTimeout(waiter.ReplicationGroupDefaultUpdatedTimeout),
 		},
 	}
 }

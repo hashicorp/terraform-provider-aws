@@ -8,6 +8,10 @@ import (
 )
 
 const (
+	ReplicationGroupDefaultCreatedTimeout = 60 * time.Minute
+	ReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
+	ReplicationGroupDefaultDeletedTimeout = 40 * time.Minute
+
 	replicationGroupAvailableMinTimeout = 10 * time.Second
 	replicationGroupAvailableDelay      = 30 * time.Second
 
