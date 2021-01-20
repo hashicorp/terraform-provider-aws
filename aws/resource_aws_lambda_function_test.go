@@ -2528,6 +2528,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
+  publish       = true
 }
 `, imageID, funcName)
 }
