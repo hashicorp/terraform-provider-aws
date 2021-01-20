@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -24,6 +26,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		CustomizeDiff: resourceAwsSnsTopicCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -154,21 +157,6 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	fifoTopic := d.Get("fifo_topic").(bool)
-	cbd := d.Get("content_based_deduplication").(bool)
-
-	if fifoTopic {
-		if errors := validateSNSFifoTopicName(name); len(errors) > 0 {
-			return fmt.Errorf("Error validating the SNS FIFO topic name: %v", errors)
-		}
-	} else {
-		if errors := validateSNSNonFifoTopicName(name); len(errors) > 0 {
-			return fmt.Errorf("Error validating SNS topic name: %v", errors)
-		}
-	}
-
-	if !fifoTopic && cbd {
-		return fmt.Errorf("Content based deduplication can only be set with FIFO topics")
-	}
 
 	attributes := make(map[string]*string)
 	// If FifoTopic is true, then the attribute must be passed into the call to CreateTopic
@@ -550,6 +538,33 @@ func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	return err
+}
+
+func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	fifoTopic := diff.Get("fifo_topic").(bool)
+	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
+
+	if diff.Id() == "" {
+		// Create.
+
+		name := naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
+
+		if fifoTopic {
+			if errors := validateSNSFifoTopicName(name); len(errors) > 0 {
+				return fmt.Errorf("Error validating the SNS FIFO topic name: %v", errors)
+			}
+		} else {
+			if errors := validateSNSNonFifoTopicName(name); len(errors) > 0 {
+				return fmt.Errorf("Error validating SNS topic name: %v", errors)
+			}
+		}
+	}
+
+	if !fifoTopic && contentBasedDeduplication {
+		return fmt.Errorf("Content based deduplication can only be set with FIFO topics")
+	}
+
+	return nil
 }
 
 func updateAwsSnsTopicAttribute(topicArn, name string, value interface{}, conn *sns.SNS) error {
