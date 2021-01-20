@@ -8,6 +8,7 @@ FEATURES
 
 * **New Resource:** `aws_backup_global_settings` [GH-16475]
 * **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
+* **New Resource:** `aws_sagemaker_user_profile` [GH-17123]
 
 ENHANCEMENTS
 
@@ -19,6 +20,7 @@ ENHANCEMENTS
 * resource/aws_ami_from_instance: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
 * resource/aws_ebs_volume: Add `throughput` argument [GH-16517]
 * resource/aws_lightsail_instance: Add `ipv6_addresses` attribute [GH-17155]
+* resource/aws_sagemaker_domain: Delete implicit EFS file system [GH-17123]
 
 BUG FIXES 
 
