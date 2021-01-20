@@ -13,6 +13,8 @@ const (
 	NotebookInstanceDeletedTimeout   = 10 * time.Minute
 	ImageCreatedTimeout              = 10 * time.Minute
 	ImageDeletedTimeout              = 10 * time.Minute
+	ImageVersionCreatedTimeout       = 10 * time.Minute
+	ImageVersionDeletedTimeout       = 10 * time.Minute
 	DomainInServiceTimeout           = 10 * time.Minute
 	DomainDeletedTimeout             = 10 * time.Minute
 	FeatureGroupCreatedTimeout       = 10 * time.Minute
@@ -118,6 +120,44 @@ func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageVersionCreated waits for a ImageVersion to return Created
+func ImageVersionCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.ImageVersionStatusCreating,
+		},
+		Target:  []string{sagemaker.ImageVersionStatusCreated},
+		Refresh: ImageVersionStatus(conn, name),
+		Timeout: ImageVersionCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageVersionDeleted waits for a ImageVersion to return Deleted
+func ImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ImageVersionStatusDeleting},
+		Target:  []string{},
+		Refresh: ImageVersionStatus(conn, name),
+		Timeout: ImageVersionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
 		return output, err
 	}
 
