@@ -17,6 +17,8 @@ const (
 	DomainDeletedTimeout             = 10 * time.Minute
 	FeatureGroupCreatedTimeout       = 10 * time.Minute
 	FeatureGroupDeletedTimeout       = 10 * time.Minute
+	UserProfileInServiceTimeout      = 10 * time.Minute
+	UserProfileDeletedTimeout        = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -193,6 +195,48 @@ func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// UserProfileInService waits for a UserProfile to return InService
+func UserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			SagemakerUserProfileStatusNotFound,
+			sagemaker.UserProfileStatusPending,
+			sagemaker.UserProfileStatusUpdating,
+		},
+		Target:  []string{sagemaker.UserProfileStatusInService},
+		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Timeout: UserProfileInServiceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// UserProfileDeleted waits for a UserProfile to return Deleted
+func UserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.UserProfileStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Timeout: UserProfileDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
 		return output, err
 	}
 

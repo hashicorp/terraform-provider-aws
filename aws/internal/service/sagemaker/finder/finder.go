@@ -80,3 +80,23 @@ func FeatureGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 
 	return output, nil
 }
+
+// UserProfileByName returns the domain corresponding to the specified domain id.
+// Returns nil if no domain is found.
+func UserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+	input := &sagemaker.DescribeUserProfileInput{
+		DomainId:        aws.String(domainID),
+		UserProfileName: aws.String(userProfileName),
+	}
+
+	output, err := conn.DescribeUserProfile(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}
