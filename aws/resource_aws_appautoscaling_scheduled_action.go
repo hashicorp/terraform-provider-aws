@@ -37,7 +37,7 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 			},
 			"scalable_dimension": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"scalable_target_action": {
@@ -90,9 +90,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		ScheduledActionName: aws.String(d.Get("name").(string)),
 		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
-	}
-	if v, ok := d.GetOk("scalable_dimension"); ok {
-		input.ScalableDimension = aws.String(v.(string))
+		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
 	}
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
@@ -183,6 +181,23 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", scheduledAction.ScheduledActionARN)
+	d.Set("scalable_dimension", scheduledAction.ScalableDimension)
+
+	if err := d.Set("scalable_target_action", flattenAppautoscalingScheduledActionScalableTargetAction(scheduledAction.ScalableTargetAction)); err != nil {
+		return fmt.Errorf("error setting scalable_target: %s", err)
+	}
+
+	if scheduledAction.Schedule != nil {
+		d.Set("schedule", scheduledAction.Schedule)
+	}
+
+	if scheduledAction.StartTime != nil {
+		d.Set("start_time", scheduledAction.StartTime.Format(awsAppautoscalingScheduleTimeLayout))
+	}
+
+	if scheduledAction.EndTime != nil {
+		d.Set("end_time", scheduledAction.EndTime.Format(awsAppautoscalingScheduleTimeLayout))
+	}
 
 	return nil
 }
@@ -208,4 +223,22 @@ func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func flattenAppautoscalingScheduledActionScalableTargetAction(scalableTargetAction *applicationautoscaling.ScalableTargetAction) []interface{} {
+	if scalableTargetAction == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if scalableTargetAction.MinCapacity != nil {
+		m["min_capacity"] = aws.Int64Value(scalableTargetAction.MinCapacity)
+	}
+
+	if scalableTargetAction.MaxCapacity != nil {
+		m["max_capacity"] = aws.Int64Value(scalableTargetAction.MaxCapacity)
+	}
+
+	return []interface{}{m}
 }

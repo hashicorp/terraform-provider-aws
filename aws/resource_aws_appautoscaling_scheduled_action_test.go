@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
+	rName := acctest.RandString(5)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,9 +21,15 @@ func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(acctest.RandString(5), ts),
+				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, ts),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "service_namespace", "dynamodb"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "resource_id", fmt.Sprintf("table/tf-ddb-%s", rName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "schedule", fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.max_capacity", "10"),
 				),
 			},
 		},
@@ -30,6 +37,7 @@ func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 }
 
 func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
+	rName := acctest.RandString(5)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -37,9 +45,15 @@ func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_ECS(acctest.RandString(5), ts),
+				Config: testAccAppautoscalingScheduledActionConfig_ECS(rName, ts),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "service_namespace", "ecs"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "resource_id", fmt.Sprintf("service/tf-ecs-cluster-%s/tf-ecs-service-%s", rName, rName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_dimension", "ecs:service:DesiredCount"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "schedule", fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.max_capacity", "5"),
 				),
 			},
 		},
@@ -47,6 +61,7 @@ func TestAccAWSAppautoscalingScheduledAction_ECS(t *testing.T) {
 }
 
 func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
+	rName := acctest.RandString(5)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,9 +69,14 @@ func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_EMR(acctest.RandString(5), ts),
+				Config: testAccAppautoscalingScheduledActionConfig_EMR(rName, ts),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "service_namespace", "elasticmapreduce"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_dimension", "elasticmapreduce:instancegroup:InstanceCount"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "schedule", fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.max_capacity", "5"),
 				),
 			},
 		},
@@ -85,18 +105,23 @@ func TestAccAWSAppautoscalingScheduledAction_Name_Duplicate(t *testing.T) {
 }
 
 func TestAccAWSAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
+	rName := acctest.RandString(5)
 	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_SpotFleet(acctest.RandString(5), ts, validUntil),
+				Config: testAccAppautoscalingScheduledActionConfig_SpotFleet(rName, ts, validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "service_namespace", "ec2"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_dimension", "ec2:spot-fleet-request:TargetCapacity"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "schedule", fmt.Sprintf("at(%s)", ts)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.hoge", "scalable_target_action.0.max_capacity", "3"),
 				),
 			},
 		},
