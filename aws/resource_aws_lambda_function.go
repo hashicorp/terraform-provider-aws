@@ -1274,6 +1274,20 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	return err
 }
 
+func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Variables; v != nil {
+		tfMap["variables"] = aws.StringValueMap(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
