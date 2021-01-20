@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsIAMUser() *schema.Resource {
@@ -44,6 +43,7 @@ func dataSourceAwsIAMUser() *schema.Resource {
 func dataSourceAwsIAMUserRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	userName := d.Get("user_name").(string)
 	req := &iam.GetUserInput{
 		UserName: aws.String(userName),
@@ -64,7 +64,9 @@ func dataSourceAwsIAMUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("user_id", user.UserId)
-	d.Set("tags", keyvaluetags.IamKeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(user.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }
