@@ -790,7 +790,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes["subnet_ids"]; ok {
-			instanceConfig.Ec2SubnetIds = expandStringList(v.(*schema.Set).List())
+			instanceConfig.Ec2SubnetIds = expandStringSet(v.(*schema.Set)
 		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
