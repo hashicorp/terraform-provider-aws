@@ -1447,7 +1447,8 @@ func (m schemaMap) validate(
 		if schema.Required {
 			return append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
-				Summary:       "Required attribute is not set",
+				Summary:       "Missing required argument",
+				Detail:        fmt.Sprintf("The argument %q is required, but no definition was found.", k),
 				AttributePath: path,
 			})
 		}
@@ -1458,7 +1459,8 @@ func (m schemaMap) validate(
 		// This is a computed-only field
 		return append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Computed attribute cannot be set",
+			Summary:       "Computed attributes cannot be set",
+			Detail:        fmt.Sprintf("Computed attributes cannot be set, but a value was set for %q.", k),
 			AttributePath: path,
 		})
 	}
