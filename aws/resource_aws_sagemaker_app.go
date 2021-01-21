@@ -46,7 +46,7 @@ func resourceAwsSagemakerApp() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.AppType_Values(), false),
 			},
-			"app_id": {
+			"domain_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -92,7 +92,7 @@ func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) err
 	input := &sagemaker.CreateAppInput{
 		AppName:         aws.String(d.Get("app_name").(string)),
 		AppType:         aws.String(d.Get("app_type").(string)),
-		DomainId:        aws.String(d.Get("app_id").(string)),
+		DomainId:        aws.String(d.Get("domain_id").(string)),
 		UserProfileName: aws.String(d.Get("user_profile_name").(string)),
 	}
 
