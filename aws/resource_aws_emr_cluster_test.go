@@ -1907,6 +1907,63 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 	)
 }
 
+func testAccAWSEmrClusterConfigMultipleSubnets(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigCurrentPartition(),
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
+		fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "%[1]s"
+  release_label = "emr-4.6.0"
+  applications  = ["Spark"]
+
+  ec2_attributes {
+    subnet_ids                        = [aws_subnet.test.id]
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
+
+  tags = {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection            = false
+
+  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
+
+  configurations = "test-fixtures/emr_configurations.json"
+
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+    aws_iam_role_policy_attachment.emr_autoscaling_role,
+  ]
+
+  service_role         = aws_iam_role.emr_service.arn
+  autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
+  ebs_root_volume_size = 21
+}
+`, r),
+	)
+}
+
 func testAccAWSEmrClusterConfigAdditionalInfo(r string) string {
 	return testAccAWSEmrComposeConfig(false,
 		testAccAWSEmrClusterConfigCurrentPartition(),
