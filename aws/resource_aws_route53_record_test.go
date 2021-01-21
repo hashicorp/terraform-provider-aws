@@ -361,6 +361,33 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheckSkipRoute53(t),
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"zone_id"}, // just for this test
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigDS,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight", "zone_id"},
+			},
+		},
+	})
+}
 func TestAccAWSRoute53Record_generatesSuffix(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
@@ -1434,6 +1461,20 @@ resource "aws_route53_record" "default" {
   ttl     = "30"
 
   records = ["0 issue \"exampleca.com;\""]
+}
+`
+
+const testAccRoute53RecordConfigDS = `
+resource "aws_route53_zone" "main" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+  zone_id = "/hostedzone/${aws_route53_zone.main.zone_id}"
+  name    = "test"
+  type    = "DS"
+  ttl     = "30"
+  records = ["123 4 5 1234567890ABCDEF1234567890ABCDEF"]
 }
 `
 
