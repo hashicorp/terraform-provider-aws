@@ -25,13 +25,15 @@ ENHANCEMENTS
 
 BUG FIXES 
 
-* provider: Prevent panic when sending Ctrl-C (SIGINT) to Terraform [GH-17211]
-* provider: Fix error messages for missing required blocks not including the block name [GH-17211]
-* resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
 * data-source/aws_lambda_function: Prevent error when getting Code Signing Config for container image based lambdas during read [GH-17180]
-* resource/aws_api_gateway_rest_api: Ensure `api_key_source`, `binary_media_types`, `description`, `minimum_compression_size`, `name`, and `policy` configuration values are correctly applied as an override after OpenAPI specification import (`body` argument) [GH-17099]
+* provider: Fix error messages for missing required blocks not including the block name [GH-17211]
+* provider: Prevent panic when sending Ctrl-C (SIGINT) to Terraform [GH-17211]
+* resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
 * resource/aws_api_gateway_rest_api: Allow `api_key_source`, `binary_media_types`, and `description` arguments to be omitted from configuration with OpenAPI specification import (`body` argument) [GH-17099]
+* resource/aws_api_gateway_rest_api: Ensure `api_key_source`, `binary_media_types`, `description`, `minimum_compression_size`, `name`, and `policy` configuration values are correctly applied as an override after OpenAPI specification import (`body` argument) [GH-17099]
 * resource/aws_api_gateway_rest_api: Fix `disable_execute_api_endpoint` and `endpoint_configuration` `vpc_endpoint_ids` handling with OpenAPI specification import (`body` argument) [GH-17209]
+* resource/aws_lakeformation_data_lake_settings: Avoid unnecessary resource cycling [GH-17189]
+* resource/aws_lakeformation_permissions: Handle resources with multiple permissions [GH-17189]
 * resource/aws_lambda_function: Prevent panic with missing `FunctionConfiguration` `PackageType` attribute in API response [GH-16544]
 * resource/aws_lambda_function: Prevent panic with missing environment variable value [GH-17056]
 * resource/aws_sagemaker_image: Fix catching image not found on read error [GH-17141]
