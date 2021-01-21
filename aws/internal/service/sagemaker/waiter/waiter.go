@@ -355,7 +355,9 @@ func AppDeleted(conn *sagemaker.SageMaker, domainID, userProfileName, appType, a
 		Pending: []string{
 			sagemaker.AppStatusDeleting,
 		},
-		Target:  []string{},
+		Target: []string{
+			sagemaker.AppStatusDeleted,
+		},
 		Refresh: AppStatus(conn, domainID, userProfileName, appType, appName),
 		Timeout: AppDeletedTimeout,
 	}

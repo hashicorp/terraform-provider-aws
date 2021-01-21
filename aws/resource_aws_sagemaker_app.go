@@ -111,7 +111,7 @@ func resourceAwsSagemakerAppCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	appArn := aws.StringValue(output.AppArn)
-	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(d.Id())
+	domainID, userProfileName, appType, appName, err := decodeSagemakerAppID(appArn)
 	if err != nil {
 		return err
 	}
@@ -228,6 +228,15 @@ func decodeSagemakerAppID(id string) (string, string, string, string, error) {
 	domainID := parts[0]
 	userProfileName := parts[1]
 	appType := parts[2]
+
+	if appType == "jupyterserver" {
+		appType = sagemaker.AppTypeJupyterServer
+	} else if appType == "kernelgateway" {
+		appType = sagemaker.AppTypeKernelGateway
+	} else if appType == "tensorboard" {
+		appType = sagemaker.AppTypeTensorBoard
+	}
+
 	appName := parts[3]
 
 	return domainID, userProfileName, appType, appName, nil
