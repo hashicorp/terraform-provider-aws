@@ -271,7 +271,7 @@ resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
-  app_type          = "AppTypeJupyterServer"
+  app_type          = "JupyterServer"
 }
 `, rName)
 }
@@ -282,7 +282,7 @@ resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
-  app_type          = "AppTypeJupyterServer"
+  app_type          = "JupyterServer"
 
   tags = {
     %[2]q = %[3]q
@@ -297,7 +297,7 @@ resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
-  app_type          = "AppTypeJupyterServer"
+  app_type          = "JupyterServer"
 
   tags = {
     %[2]q = %[3]q
