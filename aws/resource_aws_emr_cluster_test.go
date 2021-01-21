@@ -99,6 +99,17 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSEmrClusterConfigMultipleSubnets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
