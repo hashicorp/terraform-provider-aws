@@ -758,18 +758,17 @@ func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiC
 
 	var err error
 	if newNumberCacheClusters > oldNumberCacheClusters {
-		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), oldNumberCacheClusters, newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
+		currentClusterIDs := d.Get("member_clusters").(*schema.Set)
+		countToAdd := newNumberCacheClusters - oldNumberCacheClusters
+		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), countToAdd, currentClusterIDs, d.Timeout(schema.TimeoutUpdate))
 	} else {
 		err = elasticacheReplicationGroupReduceNumCacheClusters(conn, d.Id(), oldNumberCacheClusters, newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate), d)
 	}
 	return err
 }
 
-func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, o, n int, timeout time.Duration) error {
-	var addClusterIDs []string
-	for clusterID := o + 1; clusterID <= n; clusterID++ {
-		addClusterIDs = append(addClusterIDs, formatReplicationGroupClusterID(replicationGroupID, clusterID))
-	}
+func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, countToAdd int, currentClusterIDs *schema.Set, timeout time.Duration) error {
+	addClusterIDs := elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID, countToAdd, currentClusterIDs)
 
 	// Kick off all the Cache Cluster creations
 	for _, cacheClusterID := range addClusterIDs {
@@ -794,6 +793,22 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 	}
 
 	return nil
+}
+
+func elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID string, countToAdd int, currentClusterIDs *schema.Set) []string {
+	var addClusterIDs []string
+	ci := 1
+	for c := 1; c <= countToAdd; c++ {
+		for {
+			clusterID := formatReplicationGroupClusterID(replicationGroupID, ci)
+			ci++
+			if !currentClusterIDs.Contains(clusterID) {
+				addClusterIDs = append(addClusterIDs, clusterID)
+				break
+			}
+		}
+	}
+	return addClusterIDs
 }
 
 func elasticacheReplicationGroupReduceNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, o, n int, timeout time.Duration, d *schema.ResourceData) error {
