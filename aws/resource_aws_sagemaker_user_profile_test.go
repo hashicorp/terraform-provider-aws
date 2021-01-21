@@ -280,7 +280,7 @@ func testAccCheckAWSSagemakerUserProfileDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_user_settings" {
+		if rs.Type != "aws_sagemaker_user_profile" {
 			continue
 		}
 
