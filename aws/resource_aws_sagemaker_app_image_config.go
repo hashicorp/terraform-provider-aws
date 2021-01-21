@@ -132,7 +132,7 @@ func resourceAwsSagemakerAppImageConfigRead(d *schema.ResourceData, meta interfa
 
 	image, err := finder.AppImageConfigByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
 			return nil
@@ -202,7 +202,7 @@ func resourceAwsSagemakerAppImageConfigDelete(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := conn.DeleteAppImageConfig(input); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", d.Id(), err)
@@ -218,8 +218,10 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sag
 
 	m := l[0].(map[string]interface{})
 
-	config := &sagemaker.KernelGatewayImageConfig{
-		KernelSpecs: expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(m["kernel_spec"].([]interface{})),
+	config := &sagemaker.KernelGatewayImageConfig{}
+
+	if v, ok := m["kernal_spec"].([]interface{}); ok && len(v) > 0 {
+		config.KernelSpecs = expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
 	}
 
 	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
@@ -245,22 +247,36 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []i
 	return config
 }
 
-func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(l []interface{}) []*sagemaker.KernelSpec {
-	if len(l) == 0 || l[0] == nil {
+func expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	var kernelSpecs []*sagemaker.KernelSpec
 
-	config := &sagemaker.KernelSpec{
-		Name: aws.String(m["name"].(string)),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		kernelSpec := &sagemaker.KernelSpec{
+			Name: aws.String(tfMap["name"].(string)),
+		}
+
+		if v, ok := tfMap["display_name"].(string); ok && v != "" {
+			kernelSpec.DisplayName = aws.String(v)
+		}
+
+		if kernelSpec == nil {
+			continue
+		}
+
+		kernelSpecs = append(kernelSpecs, kernelSpec)
 	}
 
-	if v, ok := m["display_name"].(string); ok && v != "" {
-		config.DisplayName = aws.String(v)
-	}
-
-	return []*sagemaker.KernelSpec{config}
+	return kernelSpecs
 }
 
 func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
@@ -268,8 +284,10 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfig(config *sagemaker.Ke
 		return []map[string]interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"kernel_spec": flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs),
+	m := map[string]interface{}{}
+
+	if config.KernelSpecs != nil {
+		m["kernel_spec"] = flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
 	}
 
 	if config.FileSystemConfig != nil {
@@ -293,23 +311,46 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(conf
 	return []map[string]interface{}{m}
 }
 
-func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(config []*sagemaker.KernelSpec) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
+	res := make([]map[string]interface{}, 0, len(kernelSpecs))
+
+	for _, raw := range kernelSpecs {
+		kernelSpec := make(map[string]interface{})
+
+		kernelSpec["name"] = aws.StringValue(raw.Name)
+
+		if raw.DisplayName != nil {
+			kernelSpec["display_name"] = aws.StringValue(raw.DisplayName)
+		}
+
+		res = append(res, kernelSpec)
 	}
 
-	kernel := config[0]
-	if kernel == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"name": aws.StringValue(kernel.Name),
-	}
-
-	if kernel.DisplayName != nil {
-		m["display_name"] = aws.StringValue(kernel.DisplayName)
-	}
-
-	return []map[string]interface{}{m}
+	return res
 }
+
+// func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []interface{} {
+// 	if len(kernelSpecs) == 0 {
+// 		return nil
+// 	}
+
+// 	var tfList []interface{}
+
+// 	for _, kernelSpec := range kernelSpecs {
+// 		if kernelSpec == nil {
+// 			continue
+// 		}
+
+// 		m := map[string]interface{}{
+// 			"name": aws.StringValue(kernelSpec.Name),
+// 		}
+
+// 		if kernelSpec.DisplayName != nil {
+// 			m["display_name"] = aws.StringValue(kernelSpec.DisplayName)
+// 		}
+
+// 		tfList = append(tfList, m)
+// 	}
+
+// 	return tfList
+// }

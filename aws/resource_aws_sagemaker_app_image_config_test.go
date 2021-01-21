@@ -70,6 +70,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -82,7 +83,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerAppImageConfig_gitConfig_branch(t *testing.T) {
+func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *testing.T) {
 	var notebook sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
@@ -93,20 +94,32 @@ func TestAccAWSSagemakerAppImageConfig_gitConfig_branch(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSagemakerAppImageConfigGitConfigBranchConfig(rName),
+				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
-					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_sepcs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_sepcs.0.name", rName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_sepcs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_sepcs.0.name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_sepcs.0.display_name", rName),
+				),
 			},
 		},
 	})
@@ -186,63 +199,31 @@ resource "aws_sagemaker_app_image_config" "test" {
 `, rName)
 }
 
-func testAccAWSSagemakerAppImageConfigGitConfigBranchConfig(rName string) string {
+func testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
 
-  git_config {
-    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
-    branch         = "master"
+  kernel_gateway_image_config {
+    kernal_spec {
+      name = %[1]q
+	}
   }
 }
 `, rName)
 }
 
-func testAccAWSSagemakerAppImageConfigGitConfigSecretConfig(rName string) string {
+func testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs2(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode({ username = "example", password = "example" })
-}
-
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
 
-  git_config {
-    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
-    secret_arn     = aws_secretsmanager_secret.test.arn
+  kernel_gateway_image_config {
+    kernal_spec {
+	  name         = "%[1]s-2"
+	  display_name = %[1]q 
+	}
   }
-
-  depends_on = [aws_secretsmanager_secret_version.test]
-}
-`, rName)
-}
-
-func testAccAWSSagemakerAppImageConfigGitConfigSecretUpdatedConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test2" {
-  name = "%[1]s-2"
-}
-
-resource "aws_secretsmanager_secret_version" "test2" {
-  secret_id     = aws_secretsmanager_secret.test2.id
-  secret_string = jsonencode({ username = "example", password = "example" })
-}
-
-resource "aws_sagemaker_app_image_config" "test" {
-  app_image_config_name = %[1]q
-
-  git_config {
-    repository_url = "https://github.com/hashicorp/terraform-provider-aws.git"
-    secret_arn     = aws_secretsmanager_secret.test2.arn
-  }
-
-  depends_on = [aws_secretsmanager_secret_version.test2]
 }
 `, rName)
 }
