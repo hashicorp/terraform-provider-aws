@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -697,18 +696,12 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 			},
 			{
 				PreConfig: func() {
-					// Simulate failover so primary is on node we are trying to delete
+					// Ensure that primary is on the node we are trying to delete
 					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
-					input := &elasticache.ModifyReplicationGroupInput{
-						ApplyImmediately:   aws.Bool(true),
-						PrimaryClusterId:   aws.String(fmt.Sprintf("%s-003", rName)),
-						ReplicationGroupId: aws.String(rName),
-					}
-					if _, err := conn.ModifyReplicationGroup(input); err != nil {
-						t.Fatalf("error setting new primary cache cluster: %s", err)
-					}
-					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
-						t.Fatalf("error waiting for new primary cache cluster: %s", err)
+					timeout := 40 * time.Minute
+
+					if err := resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn, rName, formatReplicationGroupClusterID(rName, 3), timeout); err != nil {
+						t.Fatalf("error changing primary cache cluster: %s", err)
 					}
 				},
 				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, false),
@@ -742,46 +735,23 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 			},
 			{
 				PreConfig: func() {
-					// Simulate failover so primary is on node we are trying to delete
+					// Ensure that primary is on the node we are trying to delete
 					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+					timeout := 40 * time.Minute
 
 					// Must disable automatic failover first
-					var input *elasticache.ModifyReplicationGroupInput = &elasticache.ModifyReplicationGroupInput{
-						ApplyImmediately:         aws.Bool(true),
-						AutomaticFailoverEnabled: aws.Bool(false),
-						ReplicationGroupId:       aws.String(rName),
-					}
-					if _, err := conn.ModifyReplicationGroup(input); err != nil {
+					if err := resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn, rName, timeout); err != nil {
 						t.Fatalf("error disabling automatic failover: %s", err)
 					}
-					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
-						t.Fatalf("error waiting for disabling automatic failover: %s", err)
-					}
 
-					// Failover
-					input = &elasticache.ModifyReplicationGroupInput{
-						ApplyImmediately:   aws.Bool(true),
-						PrimaryClusterId:   aws.String(fmt.Sprintf("%s-003", rName)),
-						ReplicationGroupId: aws.String(rName),
-					}
-					if _, err := conn.ModifyReplicationGroup(input); err != nil {
-						t.Fatalf("error setting new primary cache cluster: %s", err)
-					}
-					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
-						t.Fatalf("error waiting for new primary cache cluster: %s", err)
+					// Set primary
+					if err := resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn, rName, formatReplicationGroupClusterID(rName, 3), timeout); err != nil {
+						t.Fatalf("error changing primary cache cluster: %s", err)
 					}
 
 					// Re-enable automatic failover like nothing ever happened
-					input = &elasticache.ModifyReplicationGroupInput{
-						ApplyImmediately:         aws.Bool(true),
-						AutomaticFailoverEnabled: aws.Bool(true),
-						ReplicationGroupId:       aws.String(rName),
-					}
-					if _, err := conn.ModifyReplicationGroup(input); err != nil {
-						t.Fatalf("error enabled automatic failover: %s", err)
-					}
-					if _, err := waiter.ReplicationGroupAvailable(conn, rName, 40*time.Minute); err != nil {
-						t.Fatalf("error waiting for enabled automatic failover: %s", err)
+					if err := resourceAwsElasticacheReplicationGroupEnableAutomaticFailover(conn, rName, timeout); err != nil {
+						t.Fatalf("error re-enabling automatic failover: %s", err)
 					}
 				},
 				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 2, true),
