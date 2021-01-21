@@ -114,10 +114,9 @@ func resourceAwsEMRCluster() *schema.Resource {
 							ForceNew: true,
 						},
 						"subnet_ids": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
