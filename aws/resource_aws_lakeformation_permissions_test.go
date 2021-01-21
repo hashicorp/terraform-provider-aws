@@ -648,7 +648,8 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  admins = [data.aws_caller_identity.current.arn, aws_iam_role.test.arn]
+  // this will result in multiple permissions for iam role
+  admins = [aws_iam_role.test.arn, data.aws_caller_identity.current.arn]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -659,16 +660,6 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     column_names  = ["event", "timestamp"]
-  }
-}
-
-resource "aws_lakeformation_permissions" "table" {
-  permissions = ["ALL"]
-  principal   = aws_lakeformation_permissions.test.principal
-
-  table {
-    database_name = aws_glue_catalog_table.test.database_name
-    name          = aws_glue_catalog_table.test.name
   }
 }
 `, rName)

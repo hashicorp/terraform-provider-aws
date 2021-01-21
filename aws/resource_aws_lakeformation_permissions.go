@@ -3,10 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -192,7 +194,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 		input.PermissionsWithGrantOption = expandStringList(v.([]interface{}))
 	}
 
-	input.Resource = expandLakeFormationResource(d, false)
+	input.Resource = expandLakeFormationResource(d, meta, false)
 
 	var output *lakeformation.GrantPermissionsOutput
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -250,8 +252,8 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	input.Resource = expandLakeFormationResource(d, true)
-	resourceType := expandLakeFormationResourceType(d)
+	input.Resource = expandLakeFormationResource(d, meta, true)
+	matchResource := expandLakeFormationResource(d, meta, false)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
@@ -259,7 +261,13 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
-				principalResourcePermissions = resourceAwsLakeFormationPermissionsAppend(resourceType, principalResourcePermissions, permission)
+				if permission == nil {
+					continue
+				}
+
+				if reflect.DeepEqual(matchResource, permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -276,7 +284,13 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	if isResourceTimeoutError(err) {
 		err = conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
-				principalResourcePermissions = resourceAwsLakeFormationPermissionsAppend(resourceType, principalResourcePermissions, permission)
+				if permission == nil {
+					continue
+				}
+
+				if reflect.DeepEqual(matchResource, permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -293,8 +307,7 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if len(principalResourcePermissions) > 1 {
-		//return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found")
-		return fmt.Errorf("error reading Lake Formation permissions: %v\nINPUT: %v", principalResourcePermissions, input)
+		return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found for same resource")
 	}
 
 	for _, permissions := range principalResourcePermissions {
@@ -350,7 +363,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 		input.PermissionsWithGrantOption = expandStringList(v.([]interface{}))
 	}
 
-	input.Resource = expandLakeFormationResource(d, false)
+	input.Resource = expandLakeFormationResource(d, meta, false)
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
@@ -379,6 +392,7 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
+/*
 func resourceAwsLakeFormationPermissionsAppend(resourceType string, perms []*lakeformation.PrincipalResourcePermissions, newPerm *lakeformation.PrincipalResourcePermissions) []*lakeformation.PrincipalResourcePermissions {
 	if newPerm == nil {
 		return perms
@@ -409,6 +423,7 @@ func resourceAwsLakeFormationPermissionsAppend(resourceType string, perms []*lak
 
 	return perms
 }
+*/
 
 // expandLakeFormationResourceType returns the Lake Formation resource type represented by the resource.
 // This is helpful in distinguishing between TABLE and TABLE_WITH_COLUMNS types when filtering ListPermission results.
@@ -434,7 +449,7 @@ func expandLakeFormationResourceType(d *schema.ResourceData) string {
 
 const DataLakeResourceTypeTableWithColumns = "TABLE_WITH_COLUMNS" // no lakeformation package enum value for this type
 
-func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
+func expandLakeFormationResource(d *schema.ResourceData, meta interface{}, squashTableWithColumns bool) *lakeformation.Resource {
 	res := &lakeformation.Resource{}
 
 	switch expandLakeFormationResourceType(d) {
@@ -442,21 +457,47 @@ func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns 
 		res.Catalog = &lakeformation.CatalogResource{}
 	case lakeformation.DataLakeResourceTypeDataLocation:
 		res.DataLocation = expandLakeFormationDataLocationResource(d.Get("data_location").([]interface{})[0].(map[string]interface{}))
+		if res.DataLocation.CatalogId == nil {
+			res.DataLocation.SetCatalogId(resourceAwsLakeFormationPermissionsDefaultCatalogID(meta))
+		}
 	case lakeformation.DataLakeResourceTypeDatabase:
 		res.Database = expandLakeFormationDatabaseResource(d.Get("database").([]interface{})[0].(map[string]interface{}))
+		if res.Database.CatalogId == nil {
+			res.Database.SetCatalogId(resourceAwsLakeFormationPermissionsDefaultCatalogID(meta))
+		}
 	case lakeformation.DataLakeResourceTypeTable:
 		res.Table = expandLakeFormationTableResource(d.Get("table").([]interface{})[0].(map[string]interface{}))
+		if res.Table.CatalogId == nil {
+			res.Table.SetCatalogId(resourceAwsLakeFormationPermissionsDefaultCatalogID(meta))
+		}
 	case DataLakeResourceTypeTableWithColumns:
 		if squashTableWithColumns {
 			// ListPermissions does not support getting privileges by tables with columns. Instead,
 			// use the table which will return both table and table with columns.
 			res.Table = expandLakeFormationTableResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
+			if res.Table.CatalogId == nil {
+				res.Table.SetCatalogId(resourceAwsLakeFormationPermissionsDefaultCatalogID(meta))
+			}
 		} else {
 			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
+			if res.TableWithColumns.CatalogId == nil {
+				res.TableWithColumns.SetCatalogId(resourceAwsLakeFormationPermissionsDefaultCatalogID(meta))
+			}
 		}
 	}
 
 	return res
+}
+
+func resourceAwsLakeFormationPermissionsDefaultCatalogID(meta interface{}) string {
+	stsClient := meta.(*AWSClient).stsconn
+
+	res, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return ""
+	}
+
+	return aws.StringValue(res.Account)
 }
 
 func expandLakeFormationDataLocationResource(tfMap map[string]interface{}) *lakeformation.DataLocationResource {

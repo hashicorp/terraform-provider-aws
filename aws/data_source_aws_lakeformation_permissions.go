@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -176,7 +177,8 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	input.Resource = expandLakeFormationResource(d, true)
+	input.Resource = expandLakeFormationResource(d, meta, true)
+	matchResource := expandLakeFormationResource(d, meta, false)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
@@ -188,7 +190,9 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if reflect.DeepEqual(matchResource, permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -209,7 +213,9 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if reflect.DeepEqual(matchResource, permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
