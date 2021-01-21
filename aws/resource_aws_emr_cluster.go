@@ -1454,9 +1454,6 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	if ia.Ec2SubnetId != nil {
 		attrs["subnet_id"] = *ia.Ec2SubnetId
 	}
-	if ia.Ec2SubnetIds != nil {
-		attrs["subnet_ids"] = *ia.Ec2SubnetIds
-	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile
 	}
