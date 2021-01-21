@@ -298,16 +298,16 @@ func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePr
 	return apiObjects
 }
 
-func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) *schema.Set {
+func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfSlice := make([]*string, 0, len(apiObjects))
+	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, apiObject.DataLakePrincipalIdentifier)
+		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
 	}
 
-	return flattenStringSet(tfSlice)
+	return tfSlice
 }
