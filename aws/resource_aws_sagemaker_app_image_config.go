@@ -73,7 +73,7 @@ func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 								},
 							},
 						},
-						"kernal_spec": {
+						"kernel_spec": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -220,7 +220,7 @@ func expandSagemakerAppImageConfigKernelGatewayImageConfig(l []interface{}) *sag
 
 	config := &sagemaker.KernelGatewayImageConfig{}
 
-	if v, ok := m["kernal_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_spec"].([]interface{}); ok && len(v) > 0 {
 		config.KernelSpecs = expandSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
 	}
 
@@ -328,29 +328,3 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpe
 
 	return res
 }
-
-// func flattenSagemakerAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []interface{} {
-// 	if len(kernelSpecs) == 0 {
-// 		return nil
-// 	}
-
-// 	var tfList []interface{}
-
-// 	for _, kernelSpec := range kernelSpecs {
-// 		if kernelSpec == nil {
-// 			continue
-// 		}
-
-// 		m := map[string]interface{}{
-// 			"name": aws.StringValue(kernelSpec.Name),
-// 		}
-
-// 		if kernelSpec.DisplayName != nil {
-// 			m["display_name"] = aws.StringValue(kernelSpec.DisplayName)
-// 		}
-
-// 		tfList = append(tfList, m)
-// 	}
-
-// 	return tfList
-// }
