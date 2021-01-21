@@ -793,7 +793,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			for i, s := range strSlice {
 				strSlice[i] = strings.TrimSpace(s)
 			}
-			instanceConfig.Ec2SubnetIds = aws.StringSlice(v.(string))
+			instanceConfig.Ec2SubnetIds = aws.StringSlice(strSlice)
 		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
