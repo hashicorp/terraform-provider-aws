@@ -187,7 +187,7 @@ func resourceAwsSagemakerAppImageConfigUpdate(d *schema.ResourceData, meta inter
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker App Image Config (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker App Image Config (%s) tags: %w", d.Id(), err)
 		}
 	}
 

@@ -143,6 +143,50 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 	})
 }
 
+func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
+	var notebook sagemaker.DescribeAppImageConfigOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_app_image_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppImageConfigConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerAppImageConfigConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerAppImageConfigConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 	var notebook sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -244,4 +288,29 @@ resource "aws_sagemaker_app_image_config" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSagemakerAppImageConfigConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSagemakerAppImageConfigConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
