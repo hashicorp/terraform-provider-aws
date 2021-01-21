@@ -758,8 +758,8 @@ func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiC
 
 	var err error
 	if newNumberCacheClusters > oldNumberCacheClusters {
-		currentClusterIDs := d.Get("member_clusters").(*schema.Set)
 		countToAdd := newNumberCacheClusters - oldNumberCacheClusters
+		currentClusterIDs := d.Get("member_clusters").(*schema.Set)
 		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), countToAdd, currentClusterIDs, d.Timeout(schema.TimeoutUpdate))
 	} else {
 		err = elasticacheReplicationGroupReduceNumCacheClusters(conn, d.Id(), oldNumberCacheClusters, newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate), d)

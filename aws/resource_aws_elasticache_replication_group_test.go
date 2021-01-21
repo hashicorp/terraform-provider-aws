@@ -923,6 +923,58 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisa
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_MemberClusterDisappears_AddMemberCluster(t *testing.T) {
+	var replicationGroup elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 3, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 2)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 3)),
+				),
+			},
+			{
+				PreConfig: func() {
+					// Remove one of the Cache Clusters
+					conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+					timeout := 40 * time.Minute
+
+					cacheClusterID := formatReplicationGroupClusterID(rName, 2)
+
+					if err := deleteElasticacheCacheCluster(conn, cacheClusterID, ""); err != nil {
+						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
+					}
+
+					if _, err := waiter.CacheClusterDeleted(conn, cacheClusterID, timeout); err != nil {
+						t.Fatalf("error deleting Cache Cluster (%s): %s", cacheClusterID, err)
+					}
+				},
+				Config: testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName, 4, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 1)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 2)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 3)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_clusters.*", formatReplicationGroupClusterID(rName, 4)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheReplicationGroup_tags(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
