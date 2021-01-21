@@ -757,10 +757,6 @@ func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiC
 	return err
 }
 
-func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
-	return fmt.Sprintf("%s-%03d", replicationGroupID, clusterID)
-}
-
 func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, o, n int, timeout time.Duration) error {
 	var addClusterIDs []string
 	for clusterID := o + 1; clusterID <= n; clusterID++ {
@@ -920,4 +916,8 @@ func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache,
 	}
 	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
 	return err
+}
+
+func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
+	return fmt.Sprintf("%s-%03d", replicationGroupID, clusterID)
 }
