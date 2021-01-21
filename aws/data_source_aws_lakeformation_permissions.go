@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -190,7 +189,7 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				if reflect.DeepEqual(matchResource, permission.Resource) {
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
 				}
 			}
@@ -213,7 +212,7 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				if reflect.DeepEqual(matchResource, permission.Resource) {
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
 				}
 			}

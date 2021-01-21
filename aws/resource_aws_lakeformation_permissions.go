@@ -397,19 +397,19 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 
 func resourceAwsLakeFormationPermissionsCompareResource(in, out lakeformation.Resource) bool {
 	if in.DataLocation != nil && out.DataLocation != nil && in.DataLocation.CatalogId == nil {
-		out.DataLocation.CatalogId = nil
+		in.DataLocation.CatalogId = out.DataLocation.CatalogId
 	}
 
 	if in.Database != nil && out.Database != nil && in.Database.CatalogId == nil {
-		out.Database.CatalogId = nil
+		in.Database.CatalogId = out.Database.CatalogId
 	}
 
 	if in.Table != nil && out.Table != nil && in.Table.CatalogId == nil {
-		out.Table.CatalogId = nil
+		in.Table.CatalogId = out.Table.CatalogId
 	}
 
 	if in.TableWithColumns != nil && out.TableWithColumns != nil && in.TableWithColumns.CatalogId == nil {
-		out.TableWithColumns.CatalogId = nil
+		in.TableWithColumns.CatalogId = out.TableWithColumns.CatalogId
 	}
 
 	return reflect.DeepEqual(in, out)
