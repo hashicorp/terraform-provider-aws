@@ -25,6 +25,8 @@ ENHANCEMENTS
 
 BUG FIXES 
 
+* provider: Prevent panic when sending Ctrl-C (SIGINT) to Terraform [GH-17211]
+* provider: Fix error messages for missing required blocks not including the block name [GH-17211]
 * resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
 * resource/aws_api_gateway_rest_api: Ensure `api_key_source`, `binary_media_types`, `description`, `minimum_compression_size`, `name`, and `policy` configuration values are correctly applied as an override after OpenAPI specification import (`body` argument) [GH-17099]
 * resource/aws_api_gateway_rest_api: Allow `api_key_source`, `binary_media_types`, and `description` arguments to be omitted from configuration with OpenAPI specification import (`body` argument) [GH-17099]
