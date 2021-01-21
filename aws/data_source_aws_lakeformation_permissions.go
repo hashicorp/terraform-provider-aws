@@ -177,8 +177,8 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	input.Resource = expandLakeFormationResource(d, meta, true)
-	matchResource := expandLakeFormationResource(d, meta, false)
+	input.Resource = expandLakeFormationResource(d, true)
+	matchResource := expandLakeFormationResource(d, false)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
