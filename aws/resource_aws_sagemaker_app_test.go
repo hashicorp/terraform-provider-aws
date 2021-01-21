@@ -1,0 +1,308 @@
+package aws
+
+import (
+	"fmt"
+	"log"
+	"regexp"
+	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
+)
+
+func init() {
+	resource.AddTestSweepers("aws_sagemaker_app", &resource.Sweeper{
+		Name: "aws_sagemaker_app",
+		F:    testSweepSagemakerApps,
+	})
+}
+
+func testSweepSagemakerApps(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).sagemakerconn
+
+	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
+		for _, app := range page.Apps {
+			input := &sagemaker.DeleteAppInput{
+				AppName:         app.AppName,
+				DomainId:        app.DomainId,
+				AppType:         app.AppType,
+				UserProfileName: app.UserProfileName,
+			}
+
+			app := aws.StringValue(app.AppName)
+			log.Printf("[INFO] Deleting SageMaker App: %s", app)
+			if _, err := conn.DeleteApp(input); err != nil {
+				log.Printf("[ERROR] Error deleting SageMaker App (%s): %s", app, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving SageMaker domains: %w", err)
+	}
+
+	return nil
+}
+
+func TestAccAWSSagemakerApp_basic(t *testing.T) {
+	var domain sagemaker.DescribeAppOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerApp_tags(t *testing.T) {
+	var domain sagemaker.DescribeAppOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerAppConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerAppConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerApp_disappears(t *testing.T) {
+	var domain sagemaker.DescribeAppOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_user_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerApp(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_sagemaker_app" {
+			continue
+		}
+
+		domainID := rs.Primary.Attributes["domain_id"]
+		userProfileName := rs.Primary.Attributes["user_profile_name"]
+		appType := rs.Primary.Attributes["app_type"]
+		appName := rs.Primary.Attributes["app_name"]
+
+		app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		if err != nil {
+			return nil
+		}
+
+		appArn := aws.StringValue(app.AppArn)
+		if appArn == rs.Primary.ID {
+			return fmt.Errorf("SageMaker App %q still exists", rs.Primary.ID)
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No sagmaker domain ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
+		domainID := rs.Primary.Attributes["domain_id"]
+		userProfileName := rs.Primary.Attributes["user_profile_name"]
+		appType := rs.Primary.Attributes["app_type"]
+		appName := rs.Primary.Attributes["app_name"]
+
+		resp, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
+		if err != nil {
+			return err
+		}
+
+		*app = *resp
+
+		return nil
+	}
+}
+
+func testAccAWSSagemakerAppConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+}
+
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = %[1]q
+}
+`, rName)
+}
+
+func testAccAWSSagemakerAppBasicConfig(rName string) string {
+	return testAccAWSSagemakerAppConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_app" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  app_name          = %[1]q
+  app_type          = "AppTypeJupyterServer"
+}
+`, rName)
+}
+
+func testAccAWSSagemakerAppConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSSagemakerAppConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_app" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  app_name          = %[1]q
+  app_type          = "AppTypeJupyterServer"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSagemakerAppConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSSagemakerAppConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_app" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  app_name          = %[1]q
+  app_type          = "AppTypeJupyterServer"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
