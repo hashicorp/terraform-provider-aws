@@ -327,8 +327,8 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	} else {
 		securityNameSet := d.Get("security_group_names").(*schema.Set)
 		securityIdSet := d.Get("security_group_ids").(*schema.Set)
-		securityNames := expandStringList(securityNameSet.List())
-		securityIds := expandStringList(securityIdSet.List())
+		securityNames := expandStringSet(securityNameSet)
+		securityIds := expandStringSet(securityIdSet)
 		tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
 
 		req.CacheSecurityGroupNames = securityNames
@@ -385,9 +385,9 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	snaps := d.Get("snapshot_arns").(*schema.Set).List()
-	if len(snaps) > 0 {
-		s := expandStringList(snaps)
+	snaps := d.Get("snapshot_arns").(*schema.Set)
+	if snaps.Len() > 0 {
+		s := expandStringSet(snaps)
 		req.SnapshotArns = s
 		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", s)
 	}
@@ -513,7 +513,7 @@ func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{
 	requestUpdate := false
 	if d.HasChange("security_group_ids") {
 		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.SecurityGroupIds = expandStringList(attr.List())
+			req.SecurityGroupIds = expandStringSet(attr)
 			requestUpdate = true
 		}
 	}

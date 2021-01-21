@@ -222,7 +222,7 @@ func resourceAwsApiGatewayIntegrationCreate(d *schema.ResourceData, meta interfa
 
 	var cacheKeyParameters []*string
 	if v, ok := d.GetOk("cache_key_parameters"); ok {
-		cacheKeyParameters = expandStringList(v.(*schema.Set).List())
+		cacheKeyParameters = expandStringSet(v.(*schema.Set))
 	}
 
 	var cacheNamespace *string

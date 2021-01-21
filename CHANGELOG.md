@@ -1,9 +1,28 @@
 ## 3.25.0 (Unreleased)
 
+NOTES
+
+* resource/aws_lightsail_instance: The `ipv6_address` attribute has been deprecated. Use the `ipv6_addresses` attribute instead. This is due to a backwards incompatible change in the Lightsail API. [GH-17155]
+
 FEATURES
 
 * **New Resource:** `aws_backup_global_settings` [GH-16475]
 * **New Resource:** `aws_sagemaker_feature_group` [GH-16728]
+
+ENHANCEMENTS
+
+* data-source/aws_ami: Add `throughput` attribute to `block_device_mappings` `ebs` attribute [GH-16631]
+* data-source/aws_ebs_volume: Add `throughput` attribute [GH-16517]
+* resource/aws_ami: Support `volume_type` value of `gp3` and add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+* resource/aws_ami_copy: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+* resource/aws_ami_from_instance: Add `throughput` argument to `ebs_block_device` configuration block [GH-16631]
+* resource/aws_ebs_volume: Add `throughput` argument [GH-16517]
+* resource/aws_lightsail_instance: Add `ipv6_addresses` attribute [GH-17155]
+
+BUG FIXES 
+
+* resource/aws_api_gateway_authorizer: Ensure `authorizer_credentials` are configured when `type` is `COGNITO_USER_POOLS` [GH-16614]
+* resource/aws_lambda_function: Prevent panic with missing `FunctionConfiguration` `PackageType` attribute in API response [GH-16544]
 
 ## 3.24.1 (January 15, 2021)
 
