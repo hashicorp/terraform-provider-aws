@@ -26,7 +26,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -122,7 +122,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("admins"); ok {
-		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
@@ -282,7 +282,8 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject *lakeformation.Pri
 	return tfMap
 }
 
-func expandDataLakeSettingsAdmins(tfSlice []interface{}) []*lakeformation.DataLakePrincipal {
+func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+	tfSlice := tfSet.List()
 	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
 
 	for _, tfItem := range tfSlice {
