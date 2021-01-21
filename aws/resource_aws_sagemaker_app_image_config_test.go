@@ -2,57 +2,75 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
-// func init() {
-// 	resource.AddTestSweepers("aws_sagemaker_app_image_config", &resource.Sweeper{
-// 		Name: "aws_sagemaker_app_image_config",
-// 		F:    testSweepSagemakerAppImageConfigs,
-// 	})
-// }
+func init() {
+	resource.AddTestSweepers("aws_sagemaker_app_image_config", &resource.Sweeper{
+		Name: "aws_sagemaker_app_image_config",
+		F:    testSweepSagemakerAppImageConfigs,
+	})
+}
 
-// func testSweepSagemakerAppImageConfigs(region string) error {
-// 	client, err := sharedClientForRegion(region)
-// 	if err != nil {
-// 		return fmt.Errorf("error getting client: %s", err)
-// 	}
-// 	conn := client.(*AWSClient).sagemakerconn
+func testSweepSagemakerAppImageConfigs(region string) error {
+	client, err := sharedClientForRegion(region)
 
-// 	err = conn.ListAppImageConfigs(&sagemaker.ListAppImageConfigsInput{}, func(page *sagemaker.ListAppImageConfigsOutput) bool {
-// 		for _, instance := range page.AppImageConfigs {
-// 			name := aws.StringValue(instance.AppImageConfigName)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
 
-// 			input := &sagemaker.DeleteAppImageConfigInput{
-// 				AppImageConfigName: instance.AppImageConfigName,
-// 			}
+	conn := client.(*AWSClient).sagemakerconn
+	input := &sagemaker.ListAppImageConfigsInput{}
+	var sweeperErrs *multierror.Error
 
-// 			log.Printf("[INFO] Deleting SageMaker App Image Config: %s", name)
-// 			if _, err := conn.DeleteAppImageConfig(input); err != nil {
-// 				log.Printf("[ERROR] Error deleting SageMaker App Image Config (%s): %s", name, err)
-// 				continue
-// 			}
-// 		}
-// 	})
+	for {
+		output, err := conn.ListAppImageConfigs(input)
 
-// 	if testSweepSkipSweepError(err) {
-// 		log.Printf("[WARN] Skipping SageMaker App Image Config sweep for %s: %s", region, err)
-// 		return nil
-// 	}
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping SageMaker App Image Config for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
 
-// 	if err != nil {
-// 		return fmt.Errorf("Error retrieving SageMaker App Image Configs: %w", err)
-// 	}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
+			return sweeperErrs
+		}
 
-// 	return nil
-// }
+		for _, config := range output.AppImageConfigs {
+			name := aws.StringValue(config.AppImageConfigName)
+			input := &sagemaker.DeleteAppImageConfigInput{
+				AppImageConfigName: aws.String(name),
+			}
+
+			log.Printf("[INFO] Deleting SageMaker App Image Config: %s", name)
+			_, err := conn.DeleteAppImageConfig(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 	var notebook sagemaker.DescribeAppImageConfigOutput
@@ -205,7 +223,7 @@ resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
 
   kernel_gateway_image_config {
-    kernal_spec {
+    kernel_spec {
       name = %[1]q
 	}
   }
@@ -219,7 +237,7 @@ resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = %[1]q
 
   kernel_gateway_image_config {
-    kernal_spec {
+    kernel_spec {
 	  name         = "%[1]s-2"
 	  display_name = %[1]q 
 	}
