@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/waiter"
 )
 
 func init() {
@@ -26,7 +27,7 @@ func init() {
 func testSweepEksAddons(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).eksconn
 	ctx := context.TODO()
@@ -55,7 +56,7 @@ func testSweepEksAddons(region string) error {
 						continue
 					}
 
-					if err := waitForDeleteEksAddonDeleteContext(ctx, conn, clusterName, addonName, 5*time.Minute); err != nil {
+					if _, err := waiter.EksAddonDeleted(ctx, conn, clusterName, addonName, 40*time.Minute); err != nil {
 						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting for EKS Addon %s deletion: %w", addonName, err))
 						continue
 					}
@@ -70,7 +71,7 @@ func testSweepEksAddons(region string) error {
 		return true
 	})
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Addon sweep for %s: %s", region, err)
+		log.Print(fmt.Errorf("[WARN] Skipping EKS Addon sweep for %s: %w", region, err))
 		return sweeperErrs // In case we have completed some pages, but had errors
 	}
 	if err != nil {
@@ -130,7 +131,7 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 				Config: testAccAWSEksAddon_Required(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
-					testAccCheckAWSEksAddonDisappears(ctx, &addon),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksAddon(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -361,13 +362,18 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 			continue
 		}
 
+		clusterName, addonName, err := resourceAwsEksAddonParseId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		conn := testAccProvider.Meta().(*AWSClient).eksconn
 
 		// Handle eventual consistency
-		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
 			output, err := conn.DescribeAddonWithContext(ctx, &eks.DescribeAddonInput{
-				AddonName:   aws.String(rs.Primary.ID),
-				ClusterName: aws.String(rs.Primary.Attributes["cluster_name"]),
+				AddonName:   aws.String(addonName),
+				ClusterName: aws.String(clusterName),
 			})
 
 			if err != nil {
@@ -377,8 +383,8 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 				return resource.NonRetryableError(err)
 			}
 
-			if output != nil && output.Addon != nil && aws.StringValue(output.Addon.AddonName) == rs.Primary.ID {
-				return resource.RetryableError(fmt.Errorf("EKS Addon %s still exists", rs.Primary.ID))
+			if output != nil && output.Addon != nil && aws.StringValue(output.Addon.AddonName) == addonName {
+				return resource.RetryableError(fmt.Errorf("EKS Addon (%s) still exists", rs.Primary.ID))
 			}
 
 			return nil
@@ -388,29 +394,6 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSEksAddonDisappears(ctx context.Context, addon *eks.Addon) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
-
-		input := &eks.DeleteAddonInput{
-			ClusterName: addon.ClusterName,
-			AddonName:   addon.AddonName,
-		}
-
-		_, err := conn.DeleteAddonWithContext(ctx, input)
-
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return waitForDeleteEksAddonDeleteContext(ctx, conn, aws.StringValue(addon.ClusterName), aws.StringValue(addon.AddonName), 5*time.Minute)
-	}
 }
 
 func testAccCheckAWSEksClusterDisappears(ctx context.Context, addon *eks.Addon) resource.TestCheckFunc {

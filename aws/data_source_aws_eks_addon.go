@@ -72,12 +72,12 @@ func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta
 
 	output, err := conn.DescribeAddonWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error reading EKS Addon (%s): %s", addonName, err)
+		return diag.FromErr(fmt.Errorf("error reading EKS Addon (%s): %w", addonName, err))
 	}
 
 	addon := output.Addon
 	if addon == nil {
-		return diag.Errorf("EKS Addon (%s) not found", addonName)
+		return diag.FromErr(fmt.Errorf("EKS Addon (%s) not found", addonName))
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", clusterName, addonName))
@@ -89,7 +89,7 @@ func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 
 	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(addon.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags attribute: %s", err)
+		return diag.FromErr(fmt.Errorf("error setting tags attribute: %w", err))
 	}
 
 	return nil
