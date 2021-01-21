@@ -418,7 +418,7 @@ func resourceAwsLakeFormationPermissionsCompareResource(in, out lakeformation.Re
 // expandLakeFormationResourceType returns the Lake Formation resource type represented by the resource.
 // This is helpful in distinguishing between TABLE and TABLE_WITH_COLUMNS types when filtering ListPermission results.
 func expandLakeFormationResourceType(d *schema.ResourceData) string {
-	if v, ok := d.GetOk("catalog_resource"); ok && v.(bool) == true {
+	if d.Get("catalog_resource").(bool) {
 		return lakeformation.DataLakeResourceTypeCatalog
 	}
 
