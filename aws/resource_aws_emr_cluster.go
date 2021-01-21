@@ -789,7 +789,11 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
 		if v, ok := attributes["subnet_ids"]; ok {
-			instanceConfig.Ec2SubnetIds = aws.String(v.(string))
+			strSlice := strings.Split(v.(string), ",")
+			for i, s := range strSlice {
+				strSlice[i] = strings.TrimSpace(s)
+			}
+			instanceConfig.Ec2SubnetIds = aws.StringSlice(v.(string))
 		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
@@ -1453,8 +1457,9 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	if ia.Ec2SubnetId != nil {
 		attrs["subnet_id"] = *ia.Ec2SubnetId
 	}
-	if ia.Ec2SubnetIds != nil {
-		attrs["subnet_ids"] = *ia.Ec2SubnetIds
+	if len(ia.Ec2SubnetIds) > 0 {
+		strs := aws.StringValueSlice(ia.Ec2SubnetIds)
+		attrs["subnet_ids"] = strings.Join(strs, ",")
 	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile
