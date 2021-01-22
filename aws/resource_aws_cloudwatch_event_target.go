@@ -530,12 +530,12 @@ func expandAwsCloudWatchEventRetryPolicyParameters(rp []interface{}) *events.Ret
 	for _, v := range rp {
 		params := v.(map[string]interface{})
 
-		if val, ok := params["maximum_event_age_in_seconds"]; ok {
-			retryPolicy.MaximumEventAgeInSeconds = aws.Int64(int64(params["maximum_event_age_in_seconds"].(int)))
+		if val, ok := params["maximum_event_age_in_seconds"].(int); ok {
+			retryPolicy.MaximumEventAgeInSeconds = aws.Int64(int64(val))
 		}
 
-		if val, ok := params["maximum_retry_attempts"]; ok {
-			retryPolicy.MaximumRetryAttempts = aws.Int64(int64(params["maximum_retry_attempts"].(int)))
+		if val, ok := params["maximum_retry_attempts"].(int); ok {
+			retryPolicy.MaximumRetryAttempts = aws.Int64(int64(val))
 		}
 	}
 
