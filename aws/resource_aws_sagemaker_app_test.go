@@ -368,7 +368,7 @@ resource "aws_sagemaker_app" "test" {
   app_type          = "JupyterServer"
 
   resource_spec {
-	instance_type = "system"
+    instance_type = "system"
   }
 }
 `, rName)
