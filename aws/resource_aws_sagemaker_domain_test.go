@@ -20,6 +20,8 @@ func init() {
 		Name: "aws_sagemaker_domain",
 		F:    testSweepSagemakerDomains,
 		Dependencies: []string{
+			"aws_efs_mount_target",
+			"aws_efs_file_system",
 			"aws_sagemaker_user_profile",
 		},
 	})

@@ -317,6 +317,17 @@ func testAccCheckAWSSagemakerAppExists(n string, app *sagemaker.DescribeAppOutpu
 
 func testAccAWSSagemakerAppConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # Sagemaker compute resources are not available at usw2-az4.
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -326,8 +337,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
 
   tags = {
     Name = %[1]q
