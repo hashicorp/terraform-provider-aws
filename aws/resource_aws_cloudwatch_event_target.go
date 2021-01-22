@@ -264,16 +264,16 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 						},
 					},
 				},
+			},
 
-				"dead_letter_config": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"arn": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -464,6 +464,14 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 		e.InputTransformer = expandAwsCloudWatchEventTransformerParameters(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("retry_policy"); ok {
+		e.RetryPolicy = expandAwsCloudWatchEventRetryPolicyParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("dead_letter_config"); ok {
+		e.DeadLetterConfig = expandAwsCloudWatchEventDeadLetterConfigParameters(v.([]interface{}))
+	}
+
 	input := events.PutTargetsInput{
 		Rule:    aws.String(d.Get("rule").(string)),
 		Targets: []*events.Target{e},
@@ -515,6 +523,39 @@ func expandAwsCloudWatchEventTargetEcsParameters(config []interface{}) *events.E
 
 	return ecsParameters
 }
+
+func expandAwsCloudWatchEventRetryPolicyParameters(rp []interface{}) *events.RetryPolicy {
+	retryPolicy := &events.RetryPolicy{}
+
+	for _, v := range rp {
+		params := v.(map[string]interface{})
+
+		if val, ok := params["maximum_event_age_in_seconds"]; ok {
+			retryPolicy.MaximumEventAgeInSeconds = aws.Int64(int64(params["maximum_event_age_in_seconds"].(int)))
+		}
+
+		if val, ok := params["maximum_retry_attempts"]; ok {
+			retryPolicy.MaximumRetryAttempts = aws.Int64(int64(params["maximum_retry_attempts"].(int)))
+		}
+	}
+
+	return retryPolicy
+}
+
+func expandAwsCloudWatchEventDeadLetterConfigParameters(dlp []interface{}) *events.DeadLetterConfig {
+	deadLetterConfig := &events.DeadLetterConfig{}
+
+	for _, v := range dlp {
+		params := v.(map[string]interface{})
+
+		if val, ok := params["arn"].(string); ok && val != "" {
+			deadLetterConfig.Arn = aws.String(val)
+		}
+	}
+
+	return deadLetterConfig
+}
+
 func expandAwsCloudWatchEventTargetEcsParametersNetworkConfiguration(nc []interface{}) *events.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
