@@ -1462,6 +1462,26 @@ resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
   policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
   role       = aws_iam_role.test.name
 }
+
+resource "aws_iam_role_policy" "LakeFormationDataAccess" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
 `, rName)
 }
 
@@ -2081,6 +2101,18 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  count = %[2]d
+
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test[count.index].name
+  }
+}
+
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -2124,6 +2156,18 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     location = "s3://${aws_s3_bucket.default.bucket}"
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  count = 2
+
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test[count.index].name
+    name          = aws_glue_catalog_table.test[count.index].name
   }
 }
 
