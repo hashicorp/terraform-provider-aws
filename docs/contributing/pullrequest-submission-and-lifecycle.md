@@ -240,7 +240,7 @@ If a pull request should contain multiple changelog entries, then multiple block
 
 ``````markdown
 ```release-notes:notes
-* resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
+resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
 ```
 
 ```release-notes:enhancement
