@@ -138,14 +138,18 @@ func resourceAwsSagemakerAppRead(d *schema.ResourceData, meta interface{}) error
 
 	app, err := finder.AppByName(conn, domainID, userProfileName, appType, appName)
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") ||
-			isAWSErr(err, "ValidationException", "has already been deleted") ||
-			isAWSErr(err, "ValidationException", "previously failed and was automatically deleted") {
+		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("error reading SageMaker App (%s): %w", d.Id(), err)
+	}
+
+	if aws.StringValue(app.Status) == sagemaker.AppStatusDeleted {
+		d.SetId("")
+		log.Printf("[WARN] Unable to find SageMaker App (%s), removing from state", d.Id())
+		return nil
 	}
 
 	arn := aws.StringValue(app.AppArn)
@@ -203,11 +207,8 @@ func resourceAwsSagemakerAppDelete(d *schema.ResourceData, meta interface{}) err
 
 	if _, err := conn.DeleteApp(input); err != nil {
 
-		if isAWSErr(err, "ValidationException", "has already been deleted") {
-			return nil
-		}
-
-		if isAWSErr(err, "ValidationException", "previously failed and was automatically deleted") {
+		if isAWSErr(err, "ValidationException", "has already been deleted") ||
+			isAWSErr(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil
 		}
 
