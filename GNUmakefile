@@ -91,7 +91,6 @@ golangci-lint:
 awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
-		-AWSAT003=false \
 		-AWSAT006=false \
 		-AWSV001=false \
 		-R001=false \

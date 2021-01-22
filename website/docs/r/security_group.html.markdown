@@ -66,10 +66,10 @@ assign a random, unique name
   to classify your security groups in a way that can be updated, use `tags`.
 * `ingress` - (Optional) Can be specified multiple times for each
    ingress rule. Each ingress block supports fields documented below.
-   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
+   This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `egress` - (Optional, VPC only) Can be specified multiple times for each
       egress rule. Each egress block supports fields documented below.
-      This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
+      This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `revoke_rules_on_delete` - (Optional) Instruct Terraform to revoke all of the
 Security Groups attached ingress and egress rules before deleting the rule
 itself. This is normally not needed, however certain AWS services such as
@@ -86,8 +86,7 @@ The `ingress` block supports:
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp" or "icmpv6")
-* `protocol` - (Required) The protocol. If you select a protocol of
-"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, icmpv6, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+* `protocol` - (Required) The protocol. If you select a protocol of "-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0.  The supported values are defined in the "IpProtocol" argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
 * `security_groups` - (Optional) List of security group Group Names if using
     EC2-Classic, or Group IDs if using a VPC.
 * `self` - (Optional) If true, the security group itself will be added as
@@ -102,7 +101,7 @@ The `egress` block supports:
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
 * `from_port` - (Required) The start port (or ICMP type number if protocol is "icmp")
 * `protocol` - (Required) The protocol. If you select a protocol of
-"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0. If not icmp, tcp, udp, or "-1" use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+"-1" (semantically equivalent to `"all"`, which is not a valid value here), you must specify a "from_port" and "to_port" equal to 0.  The supported values are defined in the "IpProtocol" argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
 * `security_groups` - (Optional) List of security group Group Names if using
     EC2-Classic, or Group IDs if using a VPC.
 * `self` - (Optional) If true, the security group itself will be added as
@@ -171,7 +170,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_security_group` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_security_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 - `create` - (Default `10m`) How long to wait for a security group to be created.
