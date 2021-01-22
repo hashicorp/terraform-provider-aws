@@ -248,6 +248,36 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 					},
 				},
 			},
+
+			"retry_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maximum_event_age_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"maximum_retry_attempts": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+
+				"dead_letter_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"arn": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
