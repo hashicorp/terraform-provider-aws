@@ -255,8 +255,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"maximum_event_age_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(60),
 						},
 						"maximum_retry_attempts": {
 							Type:     schema.TypeInt,
@@ -272,8 +273,9 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
