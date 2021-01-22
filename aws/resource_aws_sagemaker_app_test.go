@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"testing"
 
@@ -118,71 +117,8 @@ func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "ml.t3.micro"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSSagemakerApp_resourceSpecImage(t *testing.T) {
-	var domain sagemaker.DescribeAppOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSagemakerAppResourceSpecImageConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSSagemakerApp_resourceSpecImageVersion(t *testing.T) {
-
-	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
-		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
-	}
-
-	var domain sagemaker.DescribeAppOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_app.test"
-	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSagemakerAppResourceSpecImageVersionConfig(rName, baseImage),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 				),
 			},
 			{
@@ -432,62 +368,8 @@ resource "aws_sagemaker_app" "test" {
   app_type          = "JupyterServer"
 
   resource_spec {
-	instance_type = "ml.t3.micro"
+	instance_type = "system"
   }
 }
 `, rName)
-}
-
-func testAccAWSSagemakerAppResourceSpecImageConfig(rName string) string {
-	return testAccAWSSagemakerAppConfigBase(rName) + fmt.Sprintf(`
-resource "aws_sagemaker_image" "test" {
-  image_name = %[1]q
-  role_arn   = aws_iam_role.test.arn
-}
-
-resource "aws_sagemaker_app" "test" {
-  domain_id         = aws_sagemaker_domain.test.id
-  user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
-  app_name          = %[1]q
-  app_type          = "JupyterServer"
-
-  resource_spec {
-	instance_type       = "ml.t3.micro"
-	sagemaker_image_arn = aws_sagemaker_image.test.arn
-  }
-}
-`, rName)
-}
-
-func testAccAWSSagemakerAppResourceSpecImageVersionConfig(rName, baseImage string) string {
-	return testAccAWSSagemakerAppConfigBase(rName) + fmt.Sprintf(`
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
-}
-
-resource "aws_sagemaker_image" "test" {
-  image_name = %[1]q
-  role_arn   = aws_iam_role.test.arn
-
-  depends_on = [aws_iam_role_policy_attachment.test]
-}
-
-resource "aws_sagemaker_image_version" "test" {
-  image_name = aws_sagemaker_image.test.id
-  base_image = %[2]q
-}
-
-resource "aws_sagemaker_app" "test" {
-  domain_id         = aws_sagemaker_domain.test.id
-  user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
-  app_name          = %[1]q
-  app_type          = "JupyterServer"
-
-  resource_spec {
-	instance_type               = "ml.t3.micro"
-	sagemaker_image_version_arn = aws_sagemaker_image_version.test.arn
-  }
-}
-`, rName, baseImage)
 }
