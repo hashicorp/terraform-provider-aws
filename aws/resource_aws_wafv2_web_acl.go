@@ -75,7 +75,6 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
@@ -110,7 +109,6 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"override_action": {
@@ -253,11 +251,11 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			Scope:            aws.String(d.Get("scope").(string)),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+		if v, ok := d.GetOk("description"); ok {
 			u.Description = aws.String(v.(string))
 		}
 
@@ -402,15 +400,14 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required field but currently only supports "IP"
+				// Required field
 				"aggregate_key_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.RateBasedStatementAggregateKeyTypeIp,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -628,6 +625,10 @@ func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 		Limit:            aws.Int64(int64(m["limit"].(int))),
 	}
 
+	if v, ok := m["forwarded_ip_config"]; ok {
+		r.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
+	}
+
 	s := m["scope_down_statement"].([]interface{})
 	if len(s) > 0 && s[0] != nil {
 		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
@@ -820,6 +821,7 @@ func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
 	m := map[string]interface{}{
 		"limit":                int(aws.Int64Value(r.Limit)),
 		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"forwarded_ip_config":  flattenWafv2ForwardedIPConfig(r.ForwardedIPConfig),
 		"scope_down_statement": nil,
 	}
 

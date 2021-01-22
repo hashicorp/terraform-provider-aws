@@ -1,11 +1,12 @@
 module github.com/terraform-providers/terraform-provider-aws
 
 require (
-	github.com/aws/aws-sdk-go v1.32.12
+	github.com/aws/aws-sdk-go v1.36.9
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderdocs v0.6.0
 	github.com/bflad/tfproviderlint v0.14.0
 	github.com/client9/misspell v0.3.4
+	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/golangci/golangci-lint v1.26.0
 	github.com/hashicorp/aws-sdk-go-base v0.4.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
