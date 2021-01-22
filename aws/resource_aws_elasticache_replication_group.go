@@ -756,13 +756,15 @@ func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiC
 	oldNumberCacheClusters := o.(int)
 	newNumberCacheClusters := n.(int)
 
+	currentClusterIDs := d.Get("member_clusters").(*schema.Set)
+
 	var err error
 	if newNumberCacheClusters > oldNumberCacheClusters {
 		countToAdd := newNumberCacheClusters - oldNumberCacheClusters
-		currentClusterIDs := d.Get("member_clusters").(*schema.Set)
 		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), countToAdd, currentClusterIDs, d.Timeout(schema.TimeoutUpdate))
-	} else {
-		err = elasticacheReplicationGroupReduceNumCacheClusters(conn, d.Id(), oldNumberCacheClusters, newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate), d)
+	} else if newNumberCacheClusters < oldNumberCacheClusters {
+		countToRemove := oldNumberCacheClusters - newNumberCacheClusters
+		err = elasticacheReplicationGroupDecreaseNumCacheClusters(conn, d.Id(), countToRemove, currentClusterIDs, d.Timeout(schema.TimeoutUpdate), d)
 	}
 	return err
 }
@@ -798,7 +800,7 @@ func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.Elast
 func elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID string, countToAdd int, currentClusterIDs *schema.Set) []string {
 	var addClusterIDs []string
 	ci := 1
-	for c := 1; c <= countToAdd; c++ {
+	for c := 0; c < countToAdd; c++ {
 		for {
 			clusterID := formatReplicationGroupClusterID(replicationGroupID, ci)
 			ci++
@@ -811,11 +813,8 @@ func elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID strin
 	return addClusterIDs
 }
 
-func elasticacheReplicationGroupReduceNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, o, n int, timeout time.Duration, d *schema.ResourceData) error {
-	var removeClusterIDs []string
-	for clusterID := o; clusterID >= (n + 1); clusterID-- {
-		removeClusterIDs = append(removeClusterIDs, formatReplicationGroupClusterID(replicationGroupID, clusterID))
-	}
+func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, countToRemove int, currentClusterIDs *schema.Set, timeout time.Duration, d *schema.ResourceData) error {
+	removeClusterIDs := elasticacheReplicationGroupDecreaseCacheClusterIDs(countToRemove, currentClusterIDs)
 
 	// Cannot reassign primary cluster ID while automatic failover is enabled
 	// If we temporarily disable automatic failover, ensure we re-enable it
@@ -906,6 +905,15 @@ func elasticacheReplicationGroupReduceNumCacheClusters(conn *elasticache.ElastiC
 	}
 
 	return nil
+}
+
+func elasticacheReplicationGroupDecreaseCacheClusterIDs(countToRemove int, currentClusterIDs *schema.Set) []string {
+	candidates := currentClusterIDs.List()[currentClusterIDs.Len()-countToRemove : currentClusterIDs.Len()]
+	removeClusterIDs := make([]string, countToRemove)
+	for i, v := range candidates {
+		removeClusterIDs[i] = v.(string)
+	}
+	return removeClusterIDs
 }
 
 func resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
