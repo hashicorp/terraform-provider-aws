@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -25,23 +26,30 @@ func init() {
 func testSweepSagemakerApps(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).sagemakerconn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListAppsPages(&sagemaker.ListAppsInput{}, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
 		for _, app := range page.Apps {
-			input := &sagemaker.DeleteAppInput{
-				AppName:         app.AppName,
-				DomainId:        app.DomainId,
-				AppType:         app.AppType,
-				UserProfileName: app.UserProfileName,
+
+			if aws.StringValue(app.Status) == sagemaker.AppStatusDeleted {
+				continue
 			}
 
-			app := aws.StringValue(app.AppName)
-			log.Printf("[INFO] Deleting SageMaker App: %s", app)
-			if _, err := conn.DeleteApp(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker App (%s): %s", app, err)
+			r := resourceAwsSagemakerApp()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(app.AppName))
+			d.Set("app_name", app.AppName)
+			d.Set("app_type", app.AppType)
+			d.Set("domain_id", app.DomainId)
+			d.Set("user_profile_name", app.UserProfileName)
+			err := r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -51,14 +59,14 @@ func testSweepSagemakerApps(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker domains: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Apps: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSagemakerApp_basic(t *testing.T) {
@@ -79,7 +87,9 @@ func TestAccAWSSagemakerApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -269,7 +279,7 @@ func testAccCheckAWSSagemakerAppDestroy(s *terraform.State) error {
 		}
 
 		appArn := aws.StringValue(app.AppArn)
-		if appArn == rs.Primary.ID {
+		if appArn == rs.Primary.ID && aws.StringValue(app.Status) != sagemaker.AppStatusDeleted {
 			return fmt.Errorf("SageMaker App %q still exists", rs.Primary.ID)
 		}
 	}

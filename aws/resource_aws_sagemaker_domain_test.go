@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,8 +20,7 @@ func init() {
 		Name: "aws_sagemaker_domain",
 		F:    testSweepSagemakerDomains,
 		Dependencies: []string{
-			"aws_efs_mount_target",
-			"aws_efs_file_system",
+			"aws_sagemaker_user_profile",
 		},
 	})
 }
@@ -31,21 +31,19 @@ func testSweepSagemakerDomains(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).sagemakerconn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
-		for _, instance := range page.Domains {
-			domainArn := aws.StringValue(instance.DomainArn)
-			domainID, err := decodeSagemakerDomainID(domainArn)
-			if err != nil {
-				log.Printf("[ERROR] Error parsing sagemaker domain arn (%s): %s", domainArn, err)
-			}
-			input := &sagemaker.DeleteDomainInput{
-				DomainId: aws.String(domainID),
-			}
+		for _, domain := range page.Domains {
 
-			log.Printf("[INFO] Deleting SageMaker domain: %s", domainArn)
-			if _, err := conn.DeleteDomain(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker domain (%s): %s", domainArn, err)
+			r := resourceAwsSagemakerUserProfile()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(domain.DomainId))
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -55,14 +53,14 @@ func testSweepSagemakerDomains(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker domain sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker domains: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Sagemaker Domains: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSagemakerDomain_basic(t *testing.T) {
