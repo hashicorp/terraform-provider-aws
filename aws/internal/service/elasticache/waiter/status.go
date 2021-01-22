@@ -32,6 +32,30 @@ func ReplicationGroupStatus(conn *elasticache.ElastiCache, replicationGroupID st
 	}
 }
 
+// ReplicationGroupMemberClustersStatus fetches the ReplicationGroup's Member Clusters and either "available" or the first non-"available" status.
+// NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
+func ReplicationGroupMemberClustersStatus(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		clusters, err := finder.ReplicationGroupMemberClustersByID(conn, replicationGroupID)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		status := CacheClusterStatusAvailable
+		for _, v := range clusters {
+			clusterStatus := aws.StringValue(v.CacheClusterStatus)
+			if clusterStatus != CacheClusterStatusAvailable {
+				status = clusterStatus
+				break
+			}
+		}
+		return clusters, status, nil
+	}
+}
+
 const (
 	CacheClusterStatusAvailable             = "available"
 	CacheClusterStatusCreating              = "creating"

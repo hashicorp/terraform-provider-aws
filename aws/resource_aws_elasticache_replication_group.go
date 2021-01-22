@@ -756,164 +756,51 @@ func elasticacheReplicationGroupModifyNumCacheClusters(conn *elasticache.ElastiC
 	oldNumberCacheClusters := o.(int)
 	newNumberCacheClusters := n.(int)
 
-	currentClusterIDs := d.Get("member_clusters").(*schema.Set)
-
 	var err error
 	if newNumberCacheClusters > oldNumberCacheClusters {
-		countToAdd := newNumberCacheClusters - oldNumberCacheClusters
-		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), countToAdd, currentClusterIDs, d.Timeout(schema.TimeoutUpdate))
+		err = elasticacheReplicationGroupIncreaseNumCacheClusters(conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
 	} else if newNumberCacheClusters < oldNumberCacheClusters {
-		countToRemove := oldNumberCacheClusters - newNumberCacheClusters
-		err = elasticacheReplicationGroupDecreaseNumCacheClusters(conn, d.Id(), countToRemove, currentClusterIDs, d.Timeout(schema.TimeoutUpdate), d)
+		err = elasticacheReplicationGroupDecreaseNumCacheClusters(conn, d.Id(), newNumberCacheClusters, d.Timeout(schema.TimeoutUpdate))
 	}
 	return err
 }
 
-func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, countToAdd int, currentClusterIDs *schema.Set, timeout time.Duration) error {
-	addClusterIDs := elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID, countToAdd, currentClusterIDs)
-
-	// Kick off all the Cache Cluster creations
-	for _, cacheClusterID := range addClusterIDs {
-		input := &elasticache.CreateCacheClusterInput{
-			CacheClusterId:     aws.String(cacheClusterID),
-			ReplicationGroupId: aws.String(replicationGroupID),
-		}
-		_, err := createElasticacheCacheCluster(conn, input)
-		if err != nil {
-			// Future enhancement: we could retry creation with random ID on naming collision
-			// if isAWSErr(err, elasticache.ErrCodeCacheClusterAlreadyExistsFault, "") { ... }
-			return fmt.Errorf("error creating ElastiCache Cache Cluster (adding replica): %w", err)
-		}
+func elasticacheReplicationGroupIncreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
+	input := &elasticache.IncreaseReplicaCountInput{
+		ApplyImmediately:   aws.Bool(true),
+		NewReplicaCount:    aws.Int64(int64(newNumberCacheClusters - 1)),
+		ReplicationGroupId: aws.String(replicationGroupID),
+	}
+	_, err := conn.IncreaseReplicaCount(input)
+	if err != nil {
+		return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	// Wait for all Cache Cluster creations
-	for _, cacheClusterID := range addClusterIDs {
-		_, err := waiter.CacheClusterAvailable(conn, cacheClusterID, timeout)
-		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created (adding replica): %w", cacheClusterID, err)
-		}
+	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	if err != nil {
+		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", replicationGroupID, err)
 	}
 
 	return nil
 }
 
-func elasticacheReplicationGroupIncreaseCacheClusterIDs(replicationGroupID string, countToAdd int, currentClusterIDs *schema.Set) []string {
-	var addClusterIDs []string
-	ci := 1
-	for c := 0; c < countToAdd; c++ {
-		for {
-			clusterID := formatReplicationGroupClusterID(replicationGroupID, ci)
-			ci++
-			if !currentClusterIDs.Contains(clusterID) {
-				addClusterIDs = append(addClusterIDs, clusterID)
-				break
-			}
-		}
+func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, newNumberCacheClusters int, timeout time.Duration) error {
+	input := &elasticache.DecreaseReplicaCountInput{
+		ApplyImmediately:   aws.Bool(true),
+		NewReplicaCount:    aws.Int64(int64(newNumberCacheClusters - 1)),
+		ReplicationGroupId: aws.String(replicationGroupID),
 	}
-	return addClusterIDs
-}
-
-func elasticacheReplicationGroupDecreaseNumCacheClusters(conn *elasticache.ElastiCache, replicationGroupID string, countToRemove int, currentClusterIDs *schema.Set, timeout time.Duration, d *schema.ResourceData) error {
-	removeClusterIDs := elasticacheReplicationGroupDecreaseCacheClusterIDs(countToRemove, currentClusterIDs)
-
-	// Cannot reassign primary cluster ID while automatic failover is enabled
-	// If we temporarily disable automatic failover, ensure we re-enable it
-	reEnableAutomaticFailover := false
-
-	// Kick off all the Cache Cluster deletions
-	for _, cacheClusterID := range removeClusterIDs {
-		var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-		err := deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
-		if err != nil {
-			// Future enhancement: we could retry deletion with random existing ID on missing name
-			// if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") { ... }
-			if !isAWSErr(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
-				return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s) (removing replica): %w", cacheClusterID, err)
-			}
-
-			// Use Replication Group MemberClusters to find a new primary cache cluster ID
-			// that is not in removeClusterIDs
-			newPrimaryClusterID := ""
-
-			rg, err := finder.ReplicationGroupByID(conn, replicationGroupID)
-			if err != nil {
-				return fmt.Errorf("error reading ElastiCache Replication Group (%s) to determine new primary: %w", replicationGroupID, err)
-			}
-
-			for _, memberClusterPtr := range rg.MemberClusters {
-				memberCluster := aws.StringValue(memberClusterPtr)
-				memberClusterInRemoveClusterIDs := false
-				for _, removeClusterID := range removeClusterIDs {
-					if memberCluster == removeClusterID {
-						memberClusterInRemoveClusterIDs = true
-						break
-					}
-				}
-				if !memberClusterInRemoveClusterIDs {
-					newPrimaryClusterID = memberCluster
-					break
-				}
-			}
-			if newPrimaryClusterID == "" {
-				return fmt.Errorf("error reading ElastiCache Replication Group (%s) to determine new primary: unable to assign new primary", replicationGroupID)
-			}
-
-			// Disable automatic failover if enabled
-			// Must be applied previous to trying to set new primary
-			// InvalidReplicationGroupState: Cannot manually promote a new master cache cluster while autofailover is enabled
-			if aws.StringValue(rg.AutomaticFailover) == elasticache.AutomaticFailoverStatusEnabled {
-				// Be kind and rewind
-				if d.Get("automatic_failover_enabled").(bool) {
-					reEnableAutomaticFailover = true
-				}
-
-				err = resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn, replicationGroupID, timeout)
-				if err != nil {
-					return fmt.Errorf("error disabling Elasticache Replication Group (%s) automatic failover: %w", replicationGroupID, err)
-				}
-			}
-
-			// Set new primary
-			err = resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn, replicationGroupID, newPrimaryClusterID, timeout)
-			if err != nil {
-				return fmt.Errorf("error changing Elasticache Replication Group (%s) primary cluster: %w", replicationGroupID, err)
-			}
-
-			// Finally retry deleting the cache cluster
-			var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-			err = deleteElasticacheCacheCluster(conn, cacheClusterID, finalSnapshotID)
-			if err != nil {
-				return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s) (removing replica after setting new primary): %w", cacheClusterID, err)
-			}
-		}
+	_, err := conn.DecreaseReplicaCount(input)
+	if err != nil {
+		return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", replicationGroupID, err)
 	}
 
-	// Wait for all Cache Cluster deletions
-	for _, cacheClusterID := range removeClusterIDs {
-		_, err := waiter.CacheClusterDeleted(conn, cacheClusterID, timeout)
-		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be deleted (removing replica): %w", cacheClusterID, err)
-		}
-	}
-
-	// Re-enable automatic failover if we needed to temporarily disable it
-	if reEnableAutomaticFailover {
-		err := resourceAwsElasticacheReplicationGroupEnableAutomaticFailover(conn, replicationGroupID, timeout)
-		if err != nil {
-			return fmt.Errorf("error re-enabling Elasticache Replication Group (%s) automatic failover: %w", replicationGroupID, err)
-		}
+	_, err = waiter.ReplicationGroupMemberClustersAvailable(conn, replicationGroupID, timeout)
+	if err != nil {
+		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", replicationGroupID, err)
 	}
 
 	return nil
-}
-
-func elasticacheReplicationGroupDecreaseCacheClusterIDs(countToRemove int, currentClusterIDs *schema.Set) []string {
-	candidates := currentClusterIDs.List()[currentClusterIDs.Len()-countToRemove : currentClusterIDs.Len()]
-	removeClusterIDs := make([]string, countToRemove)
-	for i, v := range candidates {
-		removeClusterIDs[i] = v.(string)
-	}
-	return removeClusterIDs
 }
 
 func resourceAwsElasticacheReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
