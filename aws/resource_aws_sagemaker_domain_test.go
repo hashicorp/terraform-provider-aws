@@ -36,7 +36,7 @@ func testSweepSagemakerDomains(region string) error {
 	err = conn.ListDomainsPages(&sagemaker.ListDomainsInput{}, func(page *sagemaker.ListDomainsOutput, lastPage bool) bool {
 		for _, domain := range page.Domains {
 
-			r := resourceAwsSagemakerUserProfile()
+			r := resourceAwsSagemakerDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			err = r.Delete(d, client)
