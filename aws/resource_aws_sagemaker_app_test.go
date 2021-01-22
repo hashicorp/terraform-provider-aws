@@ -69,7 +69,7 @@ func testSweepSagemakerApps(region string) error {
 }
 
 func TestAccAWSSagemakerApp_basic(t *testing.T) {
-	var domain sagemaker.DescribeAppOutput
+	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
 
@@ -81,7 +81,7 @@ func TestAccAWSSagemakerApp_basic(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
@@ -102,7 +102,7 @@ func TestAccAWSSagemakerApp_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
-	var domain sagemaker.DescribeAppOutput
+	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
 
@@ -114,7 +114,7 @@ func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppResourceSpecConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
@@ -131,7 +131,7 @@ func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 }
 
 func TestAccAWSSagemakerApp_tags(t *testing.T) {
-	var domain sagemaker.DescribeAppOutput
+	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
 
@@ -143,7 +143,7 @@ func TestAccAWSSagemakerApp_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -156,7 +156,7 @@ func TestAccAWSSagemakerApp_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -165,7 +165,7 @@ func TestAccAWSSagemakerApp_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -175,9 +175,9 @@ func TestAccAWSSagemakerApp_tags(t *testing.T) {
 }
 
 func TestAccAWSSagemakerApp_disappears(t *testing.T) {
-	var domain sagemaker.DescribeAppOutput
+	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_sagemaker_user_profile.test"
+	resourceName := "aws_sagemaker_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -187,7 +187,7 @@ func TestAccAWSSagemakerApp_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppExists(resourceName, &domain),
+					testAccCheckAWSSagemakerAppExists(resourceName, &app),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
