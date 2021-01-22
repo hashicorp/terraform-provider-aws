@@ -5,6 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
@@ -97,31 +99,46 @@ func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 }
 
 // RouteTableByID returns the route table corresponding to the specified identifier.
-// Returns nil if no route table is found.
+// Returns NotFoundError if no route table is found.
 func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		RouteTableIds: aws.StringSlice([]string{routeTableID}),
 	}
 
+	return RouteTable(conn, input)
+}
+
+func RouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
 	output, err := conn.DescribeRouteTables(input)
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.RouteTables) == 0 {
-		return nil, nil
+	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:      "Empty result",
+			LastRequest:  input,
+			LastResponse: output,
+		}
 	}
 
 	return output.RouteTables[0], nil
 }
 
 // RouteFinder returns the route corresponding to the specified destination.
-// Returns nil if no route is found.
+// Returns NotFoundError if no route is found.
 type RouteFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
 
 // RouteByIPv4Destination returns the route corresponding to the specified IPv4 destination.
-// Returns nil if no route is found.
+// Returns NotFoundError if no route is found.
 func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
 	if err != nil {
@@ -134,11 +151,11 @@ func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 		}
 	}
 
-	return nil, nil
+	return nil, &resource.NotFoundError{}
 }
 
 // RouteByIPv6Destination returns the route corresponding to the specified IPv6 destination.
-// Returns nil if no route is found.
+// Returns NotFoundError if no route is found.
 func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
 	if err != nil {
@@ -151,7 +168,7 @@ func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr str
 		}
 	}
 
-	return nil, nil
+	return nil, &resource.NotFoundError{}
 }
 
 // SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.

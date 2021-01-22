@@ -252,16 +252,14 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	var route *ec2.Route
-
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		route, err = routeFinder(conn, routeTableID, destination)
+		_, err = routeFinder(conn, routeTableID, destination)
 
 		if err != nil {
 			return resource.RetryableError(err)
 		}
 
-		if route == nil {
+		if tfresource.NotFound(err) {
 			return resource.RetryableError(fmt.Errorf("route not found"))
 		}
 
@@ -269,14 +267,14 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		route, err = routeFinder(conn, routeTableID, destination)
+		_, err = routeFinder(conn, routeTableID, destination)
 	}
 
 	if err != nil {
 		return fmt.Errorf("error reading Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	if route == nil {
+	if tfresource.NotFound(err) {
 		return fmt.Errorf("Route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
 	}
 
@@ -309,20 +307,14 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	route, err := routeFinder(conn, routeTableID, destination)
 
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
-		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
 		return fmt.Errorf("error reading Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
-	}
-
-	if route == nil {
-		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
-		d.SetId("")
-		return nil
 	}
 
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
