@@ -112,7 +112,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ForceNew:      true,
-							ConflictsWith: []string{"subnet_ids"},
+							ConflictsWith: []string{"ec2_attributes.0.subnet_ids"},
 						},
 						"subnet_ids": {
 							Type:          schema.TypeSet,
@@ -120,7 +120,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 							ForceNew:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							Set:           schema.HashString,
-							ConflictsWith: []string{"subnet_id"},
+							ConflictsWith: []string{"ec2_attributes.0.subnet_id"},
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
