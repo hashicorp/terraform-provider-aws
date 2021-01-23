@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 )
 
 func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -19,6 +20,10 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Required: true,
 			},
 			"replication_group_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,26 +84,15 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).elasticacheconn
 
 	groupID := d.Get("replication_group_id").(string)
-	input := &elasticache.DescribeReplicationGroupsInput{
-		ReplicationGroupId: aws.String(groupID),
-	}
 
-	resp, err := conn.DescribeReplicationGroups(input)
+	rg, err := finder.ReplicationGroupByID(conn, groupID)
 	if err != nil {
-		if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
-			return fmt.Errorf("ElastiCache Replication Group (%s) not found", groupID)
-		}
-		return fmt.Errorf("error reading replication group (%s): %w", groupID, err)
+		return fmt.Errorf("error reading ElastiCache Replication Group (%s): %w", groupID, err)
 	}
-
-	if resp == nil || len(resp.ReplicationGroups) == 0 {
-		return fmt.Errorf("error reading replication group (%s): empty output", groupID)
-	}
-
-	rg := resp.ReplicationGroups[0]
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("replication_group_description", rg.Description)
+	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
 	if rg.AutomaticFailover != nil {
@@ -127,7 +121,7 @@ func dataSourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta i
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return fmt.Errorf("Elasticache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
+			return fmt.Errorf("ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
 		}
 		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)

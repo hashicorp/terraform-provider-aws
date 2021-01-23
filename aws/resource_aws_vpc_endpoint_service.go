@@ -420,12 +420,12 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		add := expandStringList(ns.Difference(os).List())
+		add := expandStringSet(ns.Difference(os))
 		if len(add) > 0 {
 			*a = add
 		}
 
-		remove := expandStringList(os.Difference(ns).List())
+		remove := expandStringSet(os.Difference(ns))
 		if len(remove) > 0 {
 			*r = remove
 		}

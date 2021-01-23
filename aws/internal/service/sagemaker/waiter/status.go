@@ -7,12 +7,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
 const (
 	SagemakerNotebookInstanceStatusNotFound = "NotFound"
 	SagemakerImageStatusNotFound            = "NotFound"
 	SagemakerImageStatusFailed              = "Failed"
+	SagemakerDomainStatusNotFound           = "NotFound"
+	SagemakerFeatureGroupStatusNotFound     = "NotFound"
+	SagemakerFeatureGroupStatusUnknown      = "Unknown"
 )
 
 // NotebookInstanceStatus fetches the NotebookInstance and its Status
@@ -66,5 +70,50 @@ func ImageStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFu
 		}
 
 		return output, aws.StringValue(output.ImageStatus), nil
+	}
+}
+
+// DomainStatus fetches the Domain and its Status
+func DomainStatus(conn *sagemaker.SageMaker, domainID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &sagemaker.DescribeDomainInput{
+			DomainId: aws.String(domainID),
+		}
+
+		output, err := conn.DescribeDomain(input)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+			return nil, SagemakerDomainStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, sagemaker.DomainStatusFailed, err
+		}
+
+		if output == nil {
+			return nil, SagemakerDomainStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+// FeatureGroupStatus fetches the Feature Group and its Status
+func FeatureGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.FeatureGroupByName(conn, name)
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return nil, SagemakerFeatureGroupStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, SagemakerFeatureGroupStatusUnknown, err
+		}
+
+		if output == nil {
+			return nil, SagemakerFeatureGroupStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.FeatureGroupStatus), nil
 	}
 }

@@ -65,6 +65,18 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Optional: true,
 			},
 
+			"disable_execute_api_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"minimum_compression_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -150,6 +162,10 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 		params.ApiKeySource = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
+		params.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("policy"); ok {
 		params.Policy = aws.String(v.(string))
 	}
@@ -177,11 +193,19 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 
 	if body, ok := d.GetOk("body"); ok {
 		log.Printf("[DEBUG] Initializing API Gateway from OpenAPI spec %s", d.Id())
-		_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+
+		input := &apigateway.PutRestApiInput{
 			RestApiId: gateway.Id,
 			Mode:      aws.String(apigateway.PutModeOverwrite),
 			Body:      []byte(body.(string)),
-		})
+		}
+
+		if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+			input.Parameters = stringMapToPointers(v.(map[string]interface{}))
+		}
+
+		_, err := conn.PutRestApi(input)
+
 		if err != nil {
 			return fmt.Errorf("error creating API Gateway specification: %s", err)
 		}
@@ -227,6 +251,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("name", api.Name)
 	d.Set("description", api.Description)
 	d.Set("api_key_source", api.ApiKeySource)
+	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
@@ -307,6 +332,15 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/apiKeySource"),
 			Value: aws.String(d.Get("api_key_source").(string)),
+		})
+	}
+
+	if d.HasChange("disable_execute_api_endpoint") {
+		value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/disableExecuteApiEndpoint"),
+			Value: aws.String(value),
 		})
 	}
 
@@ -410,14 +444,22 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if d.HasChange("body") {
+	if d.HasChanges("body", "parameters") {
 		if body, ok := d.GetOk("body"); ok {
 			log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec: %s", d.Id())
-			_, err := conn.PutRestApi(&apigateway.PutRestApiInput{
+
+			input := &apigateway.PutRestApiInput{
 				RestApiId: aws.String(d.Id()),
 				Mode:      aws.String(apigateway.PutModeOverwrite),
 				Body:      []byte(body.(string)),
-			})
+			}
+
+			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+				input.Parameters = stringMapToPointers(v.(map[string]interface{}))
+			}
+
+			_, err := conn.PutRestApi(input)
+
 			if err != nil {
 				return fmt.Errorf("error updating API Gateway specification: %s", err)
 			}

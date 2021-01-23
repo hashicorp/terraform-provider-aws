@@ -201,11 +201,10 @@ func resourceAwsSagemakerImageDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if _, err := waiter.ImageDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for SageMaker Image (%s) to delete: %w", d.Id(), err)
-
 	}
 
 	return nil
