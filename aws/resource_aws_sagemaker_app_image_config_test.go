@@ -73,7 +73,7 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 }
 
 func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
-	var notebook sagemaker.DescribeAppImageConfigOutput
+	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
 
@@ -85,7 +85,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppImageConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("app-image-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "0"),
@@ -102,7 +102,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 }
 
 func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *testing.T) {
-	var notebook sagemaker.DescribeAppImageConfigOutput
+	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
 
@@ -114,7 +114,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 			{
 				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -128,9 +128,9 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs1(rName),
+				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigKernalSpecs2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
@@ -144,7 +144,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 }
 
 func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
-	var notebook sagemaker.DescribeAppImageConfigOutput
+	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
 
@@ -156,7 +156,7 @@ func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppImageConfigConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -169,7 +169,7 @@ func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppImageConfigConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -178,7 +178,7 @@ func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppImageConfigConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -188,7 +188,7 @@ func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
 }
 
 func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
-	var notebook sagemaker.DescribeAppImageConfigOutput
+	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
 
@@ -200,7 +200,7 @@ func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSagemakerAppImageConfigBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSagemakerAppImageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
