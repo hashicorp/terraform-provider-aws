@@ -74,6 +74,10 @@ func dataSourceAwsLb() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ipv6_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
