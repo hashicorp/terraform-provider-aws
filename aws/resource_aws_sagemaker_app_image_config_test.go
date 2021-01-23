@@ -118,7 +118,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.file_system_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.name", rName),
 				),
 			},
@@ -137,6 +137,51 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.0.display_name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig(t *testing.T) {
+	var config sagemaker.DescribeAppImageConfigOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_app_image_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_gid", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_uid", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.mount_path", "/home/sagemaker-user"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerAppImageConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "app_image_config_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.kernel_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_gid", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.default_uid", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kernel_gateway_image_config.0.file_system_config.0.mount_path", "/test"),
 				),
 			},
 		},
@@ -284,6 +329,42 @@ resource "aws_sagemaker_app_image_config" "test" {
     kernel_spec {
       name         = "%[1]s-2"
       display_name = %[1]q
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+	}
+
+	file_system_config {}
+  }
+}
+`, rName)
+}
+
+func testAccAWSSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+	}
+
+    file_system_config {
+      default_gid = 0
+      default_uid = 0
+      mount_path  = "/test"
     }
   }
 }

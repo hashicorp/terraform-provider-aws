@@ -53,13 +53,13 @@ func resourceAwsSagemakerAppImageConfig() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      100,
-										ValidateFunc: validation.IntBetween(0, 65535),
+										ValidateFunc: validation.IntInSlice([]int{0, 100}),
 									},
 									"default_uid": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      1000,
-										ValidateFunc: validation.IntBetween(0, 65535),
+										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
 									},
 									"mount_path": {
 										Type:     schema.TypeString,
@@ -303,7 +303,7 @@ func flattenSagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(conf
 	}
 
 	m := map[string]interface{}{
-		"mountPath":   aws.StringValue(config.MountPath),
+		"mount_path":  aws.StringValue(config.MountPath),
 		"default_gid": aws.Int64Value(config.DefaultGid),
 		"default_uid": aws.Int64Value(config.DefaultUid),
 	}
