@@ -40,6 +40,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
