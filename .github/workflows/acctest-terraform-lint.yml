@@ -2,7 +2,7 @@ name: Acceptance Test Linting
 on:
   push:
     branches:
-      - master
+      - main
       - "release/**"
   pull_request:
     paths:
