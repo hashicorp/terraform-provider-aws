@@ -21,7 +21,7 @@ resource "aws_sagemaker_app_image_config" "test" {
   kernel_gateway_image_config {
     kernel_spec {
       name = "example"
-	  }
+    }
   }
 }
 ```
