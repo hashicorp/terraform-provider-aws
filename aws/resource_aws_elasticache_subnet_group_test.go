@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,53 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_elasticache_subnet_group", &resource.Sweeper{
+		Name: "aws_elasticache_subnet_group",
+		F:    testSweepElasticacheSubnetGroups,
+		Dependencies: []string{
+			"aws_elasticache_cluster",
+			"aws_elasticache_replication_group",
+		},
+	})
+}
+
+func testSweepElasticacheSubnetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).elasticacheconn
+
+	err = conn.DescribeCacheSubnetGroupsPages(&elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, isLast bool) bool {
+		if len(page.CacheSubnetGroups) == 0 {
+			log.Print("[DEBUG] No Elasticache Subnet Groups to sweep")
+			return false
+		}
+
+		for _, subnetGroup := range page.CacheSubnetGroups {
+			name := aws.StringValue(subnetGroup.CacheSubnetGroupName)
+
+			log.Printf("[INFO] Deleting Elasticache Subnet Group: %s", name)
+			_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
+				CacheSubnetGroupName: aws.String(name),
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete Elasticache Subnet Group (%s): %s", name, err)
+			}
+		}
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Elasticache Subnet Group sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving Elasticache Subnet Groups: %s", err)
+	}
+	return nil
+}
 
 func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
