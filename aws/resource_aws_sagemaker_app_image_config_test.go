@@ -189,6 +189,9 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 }
 
 func TestAccAWSSagemakerAppImageConfig_tags(t *testing.T) {
+
+	t.Skip("Flaky Test, possibly related to https://github.com/hashicorp/terraform-provider-aws/issues/15572")
+
 	var config sagemaker.DescribeAppImageConfigOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app_image_config.test"
