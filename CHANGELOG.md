@@ -1,5 +1,9 @@
 ## 3.26.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_elasticache_replication_group: Correctly update computed `member_clusters` values (https://github.com/hashicorp/terraform-provider-aws/issues/17201)
+
 ## 3.25.0 (January 22, 2021)
 
 NOTES
