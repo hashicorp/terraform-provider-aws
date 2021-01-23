@@ -262,12 +262,12 @@ func testAccCheckAWSSagemakerAppImageConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		codeRepository, err := finder.AppImageConfigByName(conn, rs.Primary.ID)
+		config, err := finder.AppImageConfigByName(conn, rs.Primary.ID)
 		if err != nil {
 			return nil
 		}
 
-		if aws.StringValue(codeRepository.AppImageConfigName) == rs.Primary.ID {
+		if aws.StringValue(config.AppImageConfigName) == rs.Primary.ID {
 			return fmt.Errorf("Sagemaker App Image Config %q still exists", rs.Primary.ID)
 		}
 	}
@@ -275,7 +275,7 @@ func testAccCheckAWSSagemakerAppImageConfigDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSSagemakerAppImageConfigExists(n string, codeRepo *sagemaker.DescribeAppImageConfigOutput) resource.TestCheckFunc {
+func testAccCheckAWSSagemakerAppImageConfigExists(n string, config *sagemaker.DescribeAppImageConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -292,7 +292,7 @@ func testAccCheckAWSSagemakerAppImageConfigExists(n string, codeRepo *sagemaker.
 			return err
 		}
 
-		*codeRepo = *resp
+		*config = *resp
 
 		return nil
 	}
