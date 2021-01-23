@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -112,6 +113,7 @@ func TestAccAWSCodeArtifactDomain_defaultencryptionkey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
@@ -180,7 +182,7 @@ func TestAccAWSCodeArtifactDomain_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeArtifactDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeArtifactDomainBasicConfig(rName),
+				Config: testAccAWSCodeArtifactDomainDefaultEncryptionKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeArtifactDomainExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeArtifactDomain(), resourceName),
@@ -268,14 +270,8 @@ resource "aws_codeartifact_domain" "test" {
 
 func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
 resource "aws_codeartifact_domain" "test" {
   domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -286,14 +282,8 @@ resource "aws_codeartifact_domain" "test" {
 
 func testAccAWSCodeArtifactDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
 resource "aws_codeartifact_domain" "test" {
   domain         = %[1]q
-  encryption_key = aws_kms_key.test.arn
 
   tags = {
     %[2]q = %[3]q
