@@ -271,7 +271,7 @@ resource "aws_codeartifact_domain" "test" {
 func testAccAWSCodeArtifactDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
+  domain = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -283,7 +283,7 @@ resource "aws_codeartifact_domain" "test" {
 func testAccAWSCodeArtifactDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codeartifact_domain" "test" {
-  domain         = %[1]q
+  domain = %[1]q
 
   tags = {
     %[2]q = %[3]q
