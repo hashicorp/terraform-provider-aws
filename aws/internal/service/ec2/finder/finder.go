@@ -105,18 +105,10 @@ func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error)
 		RouteTableIds: aws.StringSlice([]string{routeTableID}),
 	}
 
-	routeTables, err := RouteTables(conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return routeTables[0], nil
+	return RouteTable(conn, input)
 }
 
-// RouteTables returns the route tables corresponding to the specified input.
-// Returns NotFoundError if no route tables are found.
-func RouteTables(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) ([]*ec2.RouteTable, error) {
+func RouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
 	output, err := conn.DescribeRouteTables(input)
 
 	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
@@ -138,7 +130,7 @@ func RouteTables(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) ([]*ec2.Rou
 		}
 	}
 
-	return output.RouteTables, nil
+	return output.RouteTables[0], nil
 }
 
 // RouteFinder returns the route corresponding to the specified destination.
