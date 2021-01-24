@@ -15,6 +15,7 @@ func resourceAwsDmsCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDmsCertificateCreate,
 		Read:   resourceAwsDmsCertificateRead,
+		Update: resourceAwsDmsCertificateUpdate,
 		Delete: resourceAwsDmsCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -44,7 +45,7 @@ func resourceAwsDmsCertificate() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"tags": tagsSchemaForceNew(),
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -87,6 +88,7 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 		Filters: []*dms.Filter{
@@ -104,7 +106,37 @@ func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	return resourceAwsDmsCertificateSetState(d, response.Certificates[0])
+	err = resourceAwsDmsCertificateSetState(d, response.Certificates[0])
+	if err != nil {
+		return err
+	}
+
+	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DMS Certificate (%s): %s", d.Get("certificate_arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
+}
+
+func resourceAwsDmsCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).dmsconn
+
+	if d.HasChange("tags") {
+		arn := d.Get("certificate_arn").(string)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DMS Certificate (%s) tags: %s", arn, err)
+		}
+	}
+
+	return resourceAwsDmsCertificateRead(d, meta)
 }
 
 func resourceAwsDmsCertificateDelete(d *schema.ResourceData, meta interface{}) error {
