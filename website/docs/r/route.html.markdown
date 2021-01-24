@@ -58,6 +58,7 @@ One of the following destination arguments must be supplied:
 
 * `destination_cidr_block` - (Optional) The destination CIDR block.
 * `destination_ipv6_cidr_block` - (Optional) The destination IPv6 CIDR block.
+* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination.
 
 One of the following target arguments must be supplied:
 
@@ -82,7 +83,10 @@ In addition to all arguments above, the following attributes are exported:
 ~> **NOTE:** Only the arguments that are configured (one of the above)
 will be exported as an attribute once the resource is created.
 
-* `id` - Route Table identifier and destination
+* `id` - Route identifier computed from the routing table identifier and route destination.
+* `instance_owner_id` - The AWS account ID of the owner of the EC2 instance.
+* `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.
+* `state` - The state of the route - `active` or `blackhole`.
 
 ## Timeouts
 
@@ -106,4 +110,10 @@ Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR
 
 ```console
 $ terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+```
+
+Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be` similarly:
+
+```console
+$ terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```

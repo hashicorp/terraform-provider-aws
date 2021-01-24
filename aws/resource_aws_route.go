@@ -20,6 +20,7 @@ import (
 var routeValidDestinations = []string{
 	"destination_cidr_block",
 	"destination_ipv6_cidr_block",
+	"destination_prefix_list_id",
 }
 
 var routeValidTargets = []string{
@@ -81,10 +82,10 @@ func resourceAwsRoute() *schema.Resource {
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},
 
-			// TODO This is a target once we have Managed Prefix List support.
 			"destination_prefix_list_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			//
@@ -206,6 +207,9 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
 		routeFinder = finder.RouteByIPv6Destination
+	case "destination_prefix_list_id":
+		input.DestinationPrefixListId = destination
+		routeFinder = finder.RouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -309,6 +313,8 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 		routeFinder = finder.RouteByIPv4Destination
 	case "destination_ipv6_cidr_block":
 		routeFinder = finder.RouteByIPv6Destination
+	case "destination_prefix_list_id":
+		routeFinder = finder.RouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("error reading Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -378,6 +384,8 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.DestinationCidrBlock = destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
+	case "destination_prefix_list_id":
+		input.DestinationPrefixListId = destination
 	default:
 		return fmt.Errorf("error updating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -436,6 +444,8 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		input.DestinationCidrBlock = destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
+	case "destination_prefix_list_id":
+		input.DestinationPrefixListId = destination
 	default:
 		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -490,9 +500,22 @@ func resourceAwsRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema
 	d.Set("route_table_id", routeTableID)
 	if strings.Contains(destination, ":") {
 		d.Set("destination_ipv6_cidr_block", destination)
-	} else {
+	} else if strings.Contains(destination, ".") {
 		d.Set("destination_cidr_block", destination)
+	} else {
+		managedPrefixList, err := finder.ManagedPrefixListByID(meta.(*AWSClient).ec2conn, destination)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if managedPrefixList != nil && aws.StringValue(managedPrefixList.OwnerId) == tfec2.ManagedPrefixListOwnerIdAWS {
+			return nil, fmt.Errorf("Managed prefix list (%s) is owned by AWS", destination)
+		}
+
+		d.Set("destination_prefix_list_id", destination)
 	}
+
 	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 
 	return []*schema.ResourceData{d}, nil
