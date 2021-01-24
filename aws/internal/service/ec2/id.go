@@ -7,6 +7,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
+const (
+	ManagedPrefixListOwnerIdAWS = "AWS"
+)
+
 const clientVpnAuthorizationRuleIDSeparator = ","
 
 func ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID string) string {
