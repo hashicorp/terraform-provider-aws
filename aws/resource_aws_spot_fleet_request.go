@@ -457,6 +457,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"terminate_instances": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"valid_from": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -1631,7 +1636,7 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
 	conn := meta.(*AWSClient).ec2conn
-	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
+	terminateInstances := d.Get("terminate_instances").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
 	err := deleteSpotFleetRequest(d.Id(), terminateInstances, d.Timeout(schema.TimeoutDelete), conn)
