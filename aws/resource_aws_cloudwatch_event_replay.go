@@ -103,7 +103,6 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 	d.Set("retention_days", out.RetentionDays)
 	d.Set("event_count", out.EventCount)
 	d.Set("state", out.State)
-	d.Set("creation_time", out.CreationTime)
 
 	return nil
 }
