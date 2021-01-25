@@ -25,13 +25,16 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateCloudWatchEventArchiveName,
 			},
-
+			"event_source_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-
 			"event_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -41,16 +44,13 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 					return json
 				},
 			},
-
-			"event_source_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateArn,
-			},
-
 			"retention_days": {
 				Type:     schema.TypeInt,
 				Optional: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -101,8 +101,6 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 	d.Set("event_source_arn", out.EventSourceArn)
 	d.Set("arn", out.ArchiveArn)
 	d.Set("retention_days", out.RetentionDays)
-	d.Set("event_count", out.EventCount)
-	d.Set("state", out.State)
 
 	return nil
 }
