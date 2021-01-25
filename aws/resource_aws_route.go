@@ -145,10 +145,13 @@ func resourceAwsRoute() *schema.Resource {
 			},
 
 			"vpc_endpoint_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ExactlyOneOf:  routeValidTargets,
-				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: routeValidTargets,
+				ConflictsWith: []string{
+					"destination_ipv6_cidr_block", // IPv4 destinations only.
+					"destination_prefix_list_id",  // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
+				},
 			},
 
 			"vpc_peering_connection_id": {
