@@ -85,8 +85,11 @@ resource "aws_instance" "foo" {
   }
 }
 ```
+
 ### Host Resource group or Licence Manager Registered AMI Example
- > Note: Dedicated host will automatically associated with AWS Licenese Manager host resource group if **Allocate hosts automatically** is enabled. Otherwise explicitly specify host_resource_group_arn attribute.
+
+ -> **NOTE:** Dedicated host will automatically associated with AWS Licenese Manager host resource group if **Allocate hosts automatically** is enabled. Otherwise explicitly specify host_resource_group_arn attribute.
+
 ```
 resource "aws_instance" "this" {
   ami                       = "ami-0dcc1e21636832c5d"  # Private AWS Licence manager registered AMI with Host Resource group
@@ -95,6 +98,7 @@ resource "aws_instance" "this" {
   tenancy                   = "host"
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
