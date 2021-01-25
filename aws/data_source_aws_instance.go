@@ -50,6 +50,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"host_resource_group_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -449,6 +453,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	if instance.Placement.HostId != nil {
 		d.Set("host_id", instance.Placement.HostId)
+	}
+	if instance.Placement.HostResourceGroupArn != nil {
+		d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 	}
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
