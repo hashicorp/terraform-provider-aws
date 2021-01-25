@@ -142,7 +142,7 @@ Please note that setting a `snapshot_retention_limit` is not supported on cache.
 
 Cluster Mode (`cluster_mode`) supports the following:
 
-* `replicas_per_node_group` - (Required) Specify the number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will force a new resource.
+* `replicas_per_node_group` - (Required) Specify the number of replica nodes in each node group. Valid values are 0 to 5. Changing this number will trigger an online resizing operation before other settings modifications.
 * `num_node_groups` - (Required) Specify the number of node groups (shards) for this Redis replication group. Changing this number will trigger an online resizing operation before other settings modifications.
 
 ## Attributes Reference

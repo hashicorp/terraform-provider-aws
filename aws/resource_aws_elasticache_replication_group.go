@@ -78,12 +78,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				// We allow Computed: true here since using number_cache_clusters
-				// and a cluster mode enabled parameter_group_name will create
-				// a single shard replication group with number_cache_clusters - 1
-				// read replicas. Otherwise, the resource is marked ForceNew.
+				Type:         schema.TypeList,
+				Optional:     true,
 				Computed:     true,
 				MaxItems:     1,
 				ExactlyOneOf: []string{"cluster_mode", "number_cache_clusters"},
@@ -92,7 +88,6 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 						"replicas_per_node_group": {
 							Type:     schema.TypeInt,
 							Required: true,
-							ForceNew: true,
 						},
 						"num_node_groups": {
 							Type:     schema.TypeInt,
@@ -281,7 +276,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("number_cache_clusters") || diff.HasChange("cluster_mode.0.num_node_groups")
+				return diff.HasChange("number_cache_clusters") ||
+					diff.HasChange("cluster_mode.0.num_node_groups") ||
+					diff.HasChange("cluster_mode.0.replicas_per_node_group")
 			}),
 		),
 	}
@@ -523,7 +520,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	if d.HasChange("cluster_mode.0.num_node_groups") {
+	if d.HasChanges("cluster_mode.0.num_node_groups", "cluster_mode.0.replicas_per_node_group") {
 		err := elasticacheReplicationGroupModifyShardConfiguration(conn, d)
 		if err != nil {
 			return fmt.Errorf("error modifying ElastiCache Replication Group (%s) shard configuration: %w", d.Id(), err)
@@ -716,6 +713,24 @@ func validateAwsElastiCacheReplicationGroupEngine(v interface{}, k string) (ws [
 }
 
 func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
+	if d.HasChange("cluster_mode.0.num_node_groups") {
+		err := elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn, d)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("cluster_mode.0.replicas_per_node_group") {
+		err := elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn, d)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func elasticacheReplicationGroupModifyShardConfigurationNumNodeGroups(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
 	o, n := d.GetChange("cluster_mode.0.num_node_groups")
 	oldNumNodeGroups := o.(int)
 	newNumNodeGroups := n.(int)
@@ -746,6 +761,44 @@ func elasticacheReplicationGroupModifyShardConfiguration(conn *elasticache.Elast
 	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func elasticacheReplicationGroupModifyShardConfigurationReplicasPerNodeGroup(conn *elasticache.ElastiCache, d *schema.ResourceData) error {
+	o, n := d.GetChange("cluster_mode.0.replicas_per_node_group")
+	oldReplicas := o.(int)
+	newReplicas := n.(int)
+
+	if newReplicas > oldReplicas {
+		input := &elasticache.IncreaseReplicaCountInput{
+			ApplyImmediately:   aws.Bool(true),
+			NewReplicaCount:    aws.Int64(int64(newReplicas)),
+			ReplicationGroupId: aws.String(d.Id()),
+		}
+		_, err := conn.IncreaseReplicaCount(input)
+		if err != nil {
+			return fmt.Errorf("error adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+		}
+		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
+		}
+	} else {
+		input := &elasticache.DecreaseReplicaCountInput{
+			ApplyImmediately:   aws.Bool(true),
+			NewReplicaCount:    aws.Int64(int64(newReplicas)),
+			ReplicationGroupId: aws.String(d.Id()),
+		}
+		_, err := conn.DecreaseReplicaCount(input)
+		if err != nil {
+			return fmt.Errorf("error removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
+		}
+		_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
+		}
 	}
 
 	return nil
