@@ -79,12 +79,12 @@ All of the argument attributes except `filter` are also exported as result attri
 * `accepter` - A configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 
+* `cidr_block_set` - List of objects with CIDR blocks of the requester VPC.
+
+* `peer_cidr_block_set` - List of objects with CIDR blocks of the accepter VPC.
+
 * `requester` - A configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
-
-* `cidr_block_set` - (Optional) The list of all CIDR blocks of the requester VPC of the specific VPC Peering Connection to retrieve. 
-
-* `peer_cidr_block_set` - (Optional) The list of all CIDR blocks of the accepter VPC of the specific VPC Peering Connection to retrieve.
 
 #### Accepter and Requester Attributes Reference
 
