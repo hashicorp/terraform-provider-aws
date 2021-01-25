@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-func resourceAwsCloudWatchEventReplay() *schema.Resource {
+func resourceAwsCloudWatchEventArchive() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudWatchEventArchiveCreate,
 		Read:   resourceAwsCloudWatchEventArchiveRead,
