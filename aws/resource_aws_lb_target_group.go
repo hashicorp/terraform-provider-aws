@@ -406,7 +406,25 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n); err != nil {
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+
+			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			err = keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+		}
+
+		if err != nil {
 			return fmt.Errorf("error updating LB Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
