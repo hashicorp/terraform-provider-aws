@@ -1,0 +1,38 @@
+---
+subcategory: "EventBridge (CloudWatch Events)"
+layout: "aws"
+page_title: "AWS: aws_cloudwatch_event_archive"
+description: |-
+  Provides an EventBridge event archive resource.
+---
+
+# Resource: aws_cloudwatch_event_archive
+
+Provides an EventBridge event archive resource.
+
+~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
+
+
+## Example Usage
+
+```hcl
+resource "aws_cloudwatch_event_archive" "order" {
+  archive_name = "order-archive"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `archive_name` - (Required) The name of the new event archive. The archive name cannot exceed 48 chars.
+* `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.
+* `description` - (Optional) The description of the new event archive.
+* `event_pattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
+* `retention_days` - (Optional) The maximum number of days to retain events in the new event archive. By default, it archives indefinitely.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - The Amazon Resource Name (ARN) of the event archive.
