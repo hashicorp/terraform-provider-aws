@@ -198,7 +198,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 }
 
 resource "aws_cloudwatch_event_archive" "test" {
-  archive_name = %[1]q
+  archive_name     = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
 }
 `, name)
@@ -211,9 +211,9 @@ resource "aws_cloudwatch_event_bus" "test" {
 }
 
 resource "aws_cloudwatch_event_archive" "test" {
-  archive_name = %[1]q
+  archive_name     = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
-  retention_days = 7
+  retention_days   = 7
 }
 `, name)
 }
