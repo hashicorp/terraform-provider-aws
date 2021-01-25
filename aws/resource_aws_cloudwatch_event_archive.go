@@ -187,7 +187,8 @@ func buildUpdateArchiveInputStruct(d *schema.ResourceData) (*events.UpdateArchiv
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
-		input.RetentionDays = aws.Int64(v.(int64))
+		retentionInDays := int64(v.(int))
+		input.RetentionDays = aws.Int64(retentionInDays)
 	}
 
 	return &input, nil
