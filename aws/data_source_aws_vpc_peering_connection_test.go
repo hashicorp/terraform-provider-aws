@@ -41,6 +41,25 @@ func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsVpcPeeringConnection_cidrBlockSets(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcPeeringConnectionCidrBlockSetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.0.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.1.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "peer_cidr_block_set.0.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "peer_cidr_block_set.1.cidr_block"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsVpcPeeringConnectionCheck(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -132,5 +151,49 @@ data "aws_vpc_peering_connection" "test_by_owner_ids" {
   status        = "active"
 
   depends_on = [aws_vpc_peering_connection.test]
+}
+`
+
+const testAccDataSourceAwsVpcPeeringConnectionCidrBlockSetConfig = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.4.0.0/16"
+
+  tags = {
+	  Name = "terraform-testacc-vpc-peering-connection-data-source-foo-cidr-block-set"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "foo_secondary_cidr" {
+  vpc_id     = aws_vpc.foo.id
+  cidr_block = "10.5.0.0/16"
+}
+
+resource "aws_vpc" "bar" {
+  cidr_block = "10.6.0.0/16"
+
+  tags = {
+	  Name = "terraform-testacc-vpc-peering-connection-data-source-bar-cidr-block-set"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "bar_secondary_cidr" {
+  vpc_id     = aws_vpc.bar.id
+  cidr_block = "10.7.0.0/16"
+}
+
+resource "aws_vpc_peering_connection" "test" {
+	vpc_id = aws_vpc.foo.id
+	peer_vpc_id = aws_vpc.bar.id
+	auto_accept = true
+
+  tags = {
+      Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar-cidr-block-set"
+  }
+
+    depends_on = ["aws_vpc_ipv4_cidr_block_association.foo_secondary_cidr", "aws_vpc_ipv4_cidr_block_association.bar_secondary_cidr"]
+}
+
+data "aws_vpc_peering_connection" "test_by_id" {
+	id = aws_vpc_peering_connection.test.id
 }
 `
