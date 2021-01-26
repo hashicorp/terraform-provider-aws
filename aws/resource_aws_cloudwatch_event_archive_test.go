@@ -89,6 +89,11 @@ func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

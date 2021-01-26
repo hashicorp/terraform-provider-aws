@@ -18,6 +18,9 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 		Read:   resourceAwsCloudWatchEventArchiveRead,
 		Update: resourceAwsCloudWatchEventArchiveUpdate,
 		Delete: resourceAwsCloudWatchEventArchiveDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"archive_name": {
@@ -82,9 +85,8 @@ func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-	archiveName := d.Get("archive_name").(string)
 	input := &events.DescribeArchiveInput{
-		ArchiveName: aws.String(archiveName),
+		ArchiveName: aws.String(d.Id()),
 	}
 
 	out, err := conn.DescribeArchive(input)
