@@ -21,7 +21,7 @@ resource "aws_cloudwatch_event_bus" "order" {
 }
 
 resource "aws_cloudwatch_event_archive" "order" {
-  archive_name     = "order-archive"
+  name             = "order-archive"
   event_source_arn = aws_cloudwatch_event_bus.order.arn
 }
 ```
@@ -34,7 +34,7 @@ resource "aws_cloudwatch_event_bus" "order" {
 }
 
 resource "aws_cloudwatch_event_archive" "order" {
-  archive_name     = "order-archive"
+  name             = "order-archive"
   description      = "Archived events from order service"
   event_source_arn = aws_cloudwatch_event_bus.order.arn
   retention_days   = 7
@@ -50,7 +50,7 @@ PATTERN
 
 The following arguments are supported:
 
-* `archive_name` - (Required) The name of the new event archive. The archive name cannot exceed 48 chars.
+* `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 chars.
 * `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.
 * `description` - (Optional) The description of the new event archive.
 * `event_pattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
@@ -67,5 +67,5 @@ In addition to all arguments above, the following attributes are exported:
 Event Archive can be imported using their name, for example
 
 ```bash
-terraform import aws_cloudwatch_event_archive.imported_event_archive order_archive
+terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```

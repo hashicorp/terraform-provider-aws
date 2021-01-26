@@ -84,7 +84,7 @@ func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "archive_name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
 				),
@@ -204,7 +204,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 }
 
 resource "aws_cloudwatch_event_archive" "test" {
-  archive_name     = %[1]q
+  name             = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
 }
 `, name)
@@ -217,7 +217,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 }
 
 resource "aws_cloudwatch_event_archive" "test" {
-  archive_name     = %[1]q
+  name             = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
   retention_days   = 7
   event_pattern    = <<PATTERN

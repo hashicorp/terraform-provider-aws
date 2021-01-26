@@ -23,7 +23,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"archive_name": {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -76,7 +76,7 @@ func resourceAwsCloudWatchEventArchiveCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Creating CloudWatch Events Archive failed: %w", err)
 	}
 
-	d.SetId(d.Get("archive_name").(string))
+	d.SetId(d.Get("name").(string))
 
 	log.Printf("[INFO] CloudWatch Events Archive (%s) created", d.Id())
 
@@ -98,7 +98,7 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Found Archive: #{*out}")
 
 	// Review Question - Is there a problem in setting more than should name and Arn?
-	d.Set("archive_name", out.ArchiveName)
+	d.Set("name", out.ArchiveName)
 	d.Set("description", out.Description)
 	d.Set("event_pattern", out.EventPattern)
 	d.Set("event_source_arn", out.EventSourceArn)
@@ -130,7 +130,7 @@ func resourceAwsCloudWatchEventArchiveDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
 	input := &events.DeleteArchiveInput{
-		ArchiveName: aws.String(d.Get("archive_name").(string)),
+		ArchiveName: aws.String(d.Get("name").(string)),
 	}
 
 	_, err := conn.DeleteArchive(input)
@@ -146,7 +146,7 @@ func resourceAwsCloudWatchEventArchiveDelete(d *schema.ResourceData, meta interf
 
 func buildCreateArchiveInputStruct(d *schema.ResourceData) (*events.CreateArchiveInput, error) {
 	input := events.CreateArchiveInput{
-		ArchiveName: aws.String(d.Get("archive_name").(string)),
+		ArchiveName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("event_pattern"); ok {
@@ -174,7 +174,7 @@ func buildCreateArchiveInputStruct(d *schema.ResourceData) (*events.CreateArchiv
 
 func buildUpdateArchiveInputStruct(d *schema.ResourceData) (*events.UpdateArchiveInput, error) {
 	input := events.UpdateArchiveInput{
-		ArchiveName: aws.String(d.Get("archive_name").(string)),
+		ArchiveName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("event_pattern"); ok {
@@ -196,3 +196,5 @@ func buildUpdateArchiveInputStruct(d *schema.ResourceData) (*events.UpdateArchiv
 
 	return &input, nil
 }
+
+// create a datasource
