@@ -830,8 +830,12 @@ func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache,
 	if err != nil {
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
+
 	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
-	return fmt.Errorf("error waiting for modification: %w", err)
+	if err != nil {
+		return fmt.Errorf("error waiting for modification: %w", err)
+	}
+	return nil
 }
 
 func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
