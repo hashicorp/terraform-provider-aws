@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -29,6 +30,12 @@ func dataSourceAwsRoute() *schema.Resource {
 				Computed: true,
 			},
 			"destination_ipv6_cidr_block": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
+			"destination_prefix_list_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -77,6 +84,11 @@ func dataSourceAwsRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"vpc_endpoint_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -104,7 +116,7 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		if r.DestinationPrefixListId != nil {
+		if r.DestinationPrefixListId != nil && strings.HasPrefix(aws.StringValue(r.GatewayId), "vpce-") {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
@@ -115,6 +127,10 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok && aws.StringValue(r.DestinationIpv6CidrBlock) != v.(string) {
+			continue
+		}
+
+		if v, ok := d.GetOk("destination_prefix_list_id"); ok && aws.StringValue(r.DestinationPrefixListId) != v.(string) {
 			continue
 		}
 
@@ -150,6 +166,11 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
+		// VPC Endpoint ID for a Gateway Load Balancer target is returned in the Gateway ID field.
+		if v, ok := d.GetOk("vpc_endpoint_id"); ok && aws.StringValue(r.GatewayId) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk("vpc_peering_connection_id"); ok && aws.StringValue(r.VpcPeeringConnectionId) != v.(string) {
 			continue
 		}
@@ -171,13 +192,23 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 	} else if destination := aws.StringValue(route.DestinationIpv6CidrBlock); destination != "" {
 		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
+	} else if destination := aws.StringValue(route.DestinationPrefixListId); destination != "" {
+		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
+	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
-	d.Set("gateway_id", route.GatewayId)
+	// VPC Endpoint ID is returned in Gateway ID field
+	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
+		d.Set("gateway_id", "")
+		d.Set("vpc_endpoint_id", route.GatewayId)
+	} else {
+		d.Set("gateway_id", route.GatewayId)
+		d.Set("vpc_endpoint_id", "")
+	}
 	d.Set("instance_id", route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
