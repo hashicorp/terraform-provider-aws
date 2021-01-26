@@ -1206,6 +1206,7 @@ func init() {
 		"elastictranscoder",
 		"elb",
 		"emr",
+		"emrcontainers",
 		"es",
 		"firehose",
 		"fms",
