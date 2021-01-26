@@ -9,8 +9,10 @@ description: |-
 # Resource: aws_elasticache_replication_group
 
 Provides an ElastiCache Replication Group resource.
-For working with Memcached or single primary Redis instances (Cluster Mode Disabled), see the
-[`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html).
+
+For working with a [Memcached cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/WhatIs.html) or a
+[single-node Redis instance (Cluster Mode Disabled)](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/WhatIs.html),
+see the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html).
 
 ~> **Note:** When you change an attribute, such as `engine_version`, by
 default the ElastiCache API applies it in the next maintenance window. Because
@@ -19,6 +21,11 @@ actual modification has not yet taken place. You can use the
 `apply_immediately` flag to instruct the service to apply the change
 immediately. Using `apply_immediately` can result in a brief downtime as
 servers reboots.
+See the AWS Documentation on
+[Modifying an ElastiCache Cache Cluster](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.Modify.html)
+for more information.
+
+~> **Note:** Any attribute changes that re-create the resource will be applied immediately, regardless of the value of `apply_immediately`.
 
 ~> **Note:** Be aware of the terminology collision around "cluster" for `aws_elasticache_replication_group`. For example, it is possible to create a ["Cluster Mode Disabled [Redis] Cluster"](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Clusters.Create.CON.Redis.html). With "Cluster Mode Enabled", the data will be stored in shards (called "node groups"). See [Redis Cluster Configuration](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/cluster-create-determine-requirements.html#redis-cluster-configuration) for a diagram of the differences. To enable cluster mode, use a parameter group that has cluster mode enabled. The default parameter groups provided by AWS end with ".cluster.on", for example `default.redis6.x.cluster.on`.
 
@@ -118,9 +125,8 @@ The following arguments are supported:
 * `subnet_group_name` - (Optional) The name of the cache subnet group to be used for the replication group.
 * `security_group_names` - (Optional) A list of cache security group names to associate with this replication group.
 * `security_group_ids` - (Optional) One or more Amazon VPC security groups associated with this replication group. Use this parameter only when you are creating a replication group in an Amazon Virtual Private Cloud
-* `snapshot_arns` – (Optional) A single-element string list containing an
-Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3.
-Example: `arn:aws:s3:::my_bucket/snapshot1.rdb`
+* `snapshot_arns` – (Optional) A list of
+Amazon Resource Names (ARNs) that identify Redis RDB snapshot files stored in Amazon S3. The names object names cannot contain any commas.
 * `snapshot_name` - (Optional) The name of a snapshot from which to restore data into the new node group. Changing the `snapshot_name` forces a new resource.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).

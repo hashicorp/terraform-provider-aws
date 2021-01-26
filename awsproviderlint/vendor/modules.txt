@@ -263,14 +263,14 @@ github.com/hashicorp/terraform-exec/tfexec
 github.com/hashicorp/terraform-exec/tfinstall
 # github.com/hashicorp/terraform-json v0.8.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-go v0.1.0
+# github.com/hashicorp/terraform-plugin-go v0.2.1
 github.com/hashicorp/terraform-plugin-go/tfprotov5
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/fromproto
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/toproto
 github.com/hashicorp/terraform-plugin-go/tfprotov5/server
 github.com/hashicorp/terraform-plugin-go/tfprotov5/tftypes
-# github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.0
+# github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.1
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging

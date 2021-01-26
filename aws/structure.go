@@ -1587,24 +1587,6 @@ func flattenDSVpcSettings(
 	return []map[string]interface{}{settings}
 }
 
-func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface{} {
-	envs := make(map[string]interface{})
-	en := make(map[string]string)
-
-	if lambdaEnv == nil {
-		return nil
-	}
-
-	for k, v := range lambdaEnv.Variables {
-		en[k] = *v
-	}
-	if len(en) > 0 {
-		envs["variables"] = en
-	}
-
-	return []interface{}{envs}
-}
-
 func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
 	if len(vDest) == 0 {
 		return nil

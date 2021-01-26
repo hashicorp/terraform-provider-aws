@@ -44,7 +44,7 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 
 The following arguments are optional:
 
-* `admins` – (Optional) List of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `admins` – (Optional) Set of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 * `create_database_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - (Optional) Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
