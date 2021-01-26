@@ -1,0 +1,7 @@
+```release-notes:enhancement
+data-source/aws_route: Add `destination_prefix_list_id` attribute
+```
+
+```release-notes:enhancement
+data-source/aws_route: Add `vpc_endpoint_id` attribute
+```
