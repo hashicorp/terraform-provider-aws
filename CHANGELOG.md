@@ -1,5 +1,9 @@
 ## 3.26.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_vpc_peering_connection: Add `cidr_block_set` and `peer_cidr_block_set` attributes (https://github.com/hashicorp/terraform-provider-aws/issues/13420)
+
 BUG FIXES:
 
 * resource/aws_elasticache_replication_group: Correctly update computed `member_clusters` values (https://github.com/hashicorp/terraform-provider-aws/issues/17201)
