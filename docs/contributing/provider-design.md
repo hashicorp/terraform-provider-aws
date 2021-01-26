@@ -32,13 +32,15 @@ The provider maintainers' design goal is to cover as much of the AWS API as prag
 
 ## Resource Type Considerations
 
-The general heuristic of whether or not to create a separate Terraform resource is if the AWS service API implements create, read, and delete operations for a component. Terraform resources work best as the smallest blocks of infrastructure, where configurations can build abstractions on top of these such as [Terraform Modules](https://www.terraform.io/docs/modules/). However, not all AWS service API functionality falls cleanly into components to be managed with those types of operations. It may be necessary to consider other patterns of mapping API operations to Terraform resources and operations. This section highlights these design recommendations, such as when to consider implemantations within the same Terraform resource or as a separate Terraform resource.
+Terraform resources work best as the smallest infrastructure blocks on which practitioners can build more complex configurations and abstractions, such as [Terraform Modules](https://www.terraform.io/docs/modules/). The general heuristic guiding when to implement a new Terraform resource for an aspect of AWS is whether the AWS service API provides create, read, update, and delete (CRUD) operations. However, not all AWS service API functionality falls cleanly into CRUD lifecycle management. In these situations, there is extra consideration necessary for properly mapping API operations to Terraform resources.
 
-Please note: the overall design and implementation across all AWS functionality is federated. This means that individual services may implement concepts and use terminology differently. As such, this guide may not be fully exhaustive in all situations. The goal is to provide enough hints about these concepts and towards specific terminology to point contributors in the correct direction, especially when researching prior implementations.
+This section highlights design patterns when to consider an implementation within a singular Terraform resource or as separate Terraform resources.
+
+Please note: the overall design and implementation across all AWS functionality is federated: individual services may implement concepts and use terminology differently. As such, this guide is not exhaustive. The aim is to provide general concepts and basic terminology that points contributors in the right direction, especially in understanding previous implementations.
 
 ### Authorization and Acceptance Resources
 
-Certain AWS services use an authorization-acceptance model for cross-account associations or access. Some examples of these can be found with:
+Some AWS services use an authorization-acceptance model for cross-account associations or access. Examples include:
 
 * Direct Connect Association Proposals
 * GuardDuty Member Invitations
@@ -46,7 +48,7 @@ Certain AWS services use an authorization-acceptance model for cross-account ass
 * Route 53 VPC Associations
 * Security Hub Member Invitations
 
-This type of API model either implements a form of an invitation/proposal identifier that can be used to accept the authorization, otherwise it may just be a matter of providing the desired AWS Account identifier as the target of an authorization. In the latter case, the acceptance is implicit when creating the other half of the association.
+Depending on the API and components, AWS uses two basic ways of creating cross-region and cross-account associations. One way is to generate an invitation (or proposal) identifier from one AWS account to another. Then in the other AWS account, that identifier is used to accept the invitation. The second way is configuring a reference to another AWS account identifier. These may not require explicit acceptance on the receiving account to finish creating the association or begin working.
 
 To model creating an association using an invitation or proposal, follow these guidelines.
 
@@ -67,33 +69,32 @@ Many AWS service APIs build on top of other AWS services. Some examples of these
 * Lambda Functions managing EC2 ENIs
 * Transfer Servers managing EC2 VPC Endpoints
 
-In certain of these cross-service API implementations, there can be lacking management or description capabilities of the other service functionality, which can make the Terraform resource implementation seem incomplete or unsuccessful in end-to-end configurations. Given the overall “resources should represent a single API object” goal from the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html), it is expected that a single resource in this provider will only communicate with a single AWS service API in a self-contained manner. As such, cross-service resources will not be implementated.
+Some cross-service API implementations lack the management or description capabilities of the other service. The lack can make the Terraform resource implementation seem incomplete or unsuccessful in end-to-end configurations. Given the overall “resources should represent a single API object” goal from the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html), a resource must only communicate with a single AWS service API. As such, maintainers will not approve cross-service resources.
 
-In particular, some of the rationale behind this design decision is:
+The rationale behind this design decision includes the following:
 
-* Unexpected IAM permissions being necessary for the resource. In restrictive environments, these permissions may not be available or acceptable for security purposes.
-* Unexpected CloudTrail logs being generated for the resource.
-* Unexpected API endpoints configuration being necessary for those using custom endpoints, such as VPC endpoints.
-* Unexpected changes to the AWS service internals. Given that these cross-service implementations require being based on internal details the current AWS service implementation, these details can change over time and may not be considered as a breaking change by the AWS service API during an API upgrade.
+* Unexpected IAM permissions being necessary for the resource. In high-security environments, all the service permissions may not be available or acceptable.
+* Unexpected services generating CloudTrail logs for the resource.
+* Needing extra and unexpected API endpoints configuration for organizations using custom endpoints, such as VPC endpoints.
+* Unexpected changes to the AWS service internals for the cross-service implementations. Given that this functionality is not part of the primary service API, these details can change over time and may not be considered as a breaking change by the service team for an API upgrade.
 
-As a poignant real world example of the last point, the provider was relying on the description of Lambda Function created EC2 ENIs for the purposes of trying to delete lingering ENIs due to a common misconfiguration. This functionality was helpful for operators as the issue was hard to diagnose due to a generic EC2 API error message. Years after the implementation, the Lambda API was updated and immediately many operators started reporting Terraform executions were failing. Downgrading the provider could not help, many configurations depended on resources and behaviors in recent versions. For other environments that were running many versions behind, forcing an immediate provider upgrade with the fix could also have other unrelated or unexpected changes. In the end, both HashiCorp and AWS needed to perform a large scale outreach about upgrading or fixing the misconfiguration, causing lost time for many operators and the provider maintainers.
+A poignant real-world example of the last point involved a Lambda resource. The resource helped clean up extra resources (ENIs) due to a common misconfiguration. Practitioners found the functionality helpful since the issue was hard to diagnose. Years later, AWS updated the Lambda API. Immediately, practitioners reported that Terraform executions were failing. Downgrading the provider was not possible since many configurations depended on recent releases. For environments running many versions behind, forcing an upgrade with the fix would likely cause unrelated and unexpected changes. In the end, HashiCorp and AWS performed a large-scale outreach to help upgrade and fixing the misconfigurations. Provider maintainers and practitioners lost considerable time.
 
 ### IAM Resource-Based Policy Resources
 
-Many AWS resources support the concept of an [IAM resource-based policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html) for specifying IAM permissions associated the resource. Some examples of these include:
+For some AWS components, the AWS API allows specifying an [IAM resource-based policy](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html), the IAM policy to associate with a component. Some examples include:
 
 * ECR Repository Policies
 * EFS File System Policies
 * SNS Topic Policies
 
-When implementing this support in the Terraform AWS Provider, it is preferred to create a separate resource for a few reasons:
+Provider developers should implement this capability in a new resource rather than adding it to the associated resource. Reasons for this include:
 
-* Many of these policies require the Amazon Resource Name (ARN) of the resource in the policy itself. It is difficult to workaround this requirement with custom difference handling within a self-contained resource.
-* Sometimes policies between two resources need to be written where they cross-reference each other resource's ARN within each policy. Without a separate resource, this introduces a configuration cycle.
-* Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
-* Splitting the resources prevents any separate policy API calls from needing to be permitted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
+* Many of the policies must include the Amazon Resource Name (ARN) of the resource. Working around this requirement with custom difference handling within a self-contained resource is unnecessarily cumbersome.
+* Some policies involving multiple resources need to cross-reference each other's ARNs. Without a separate resource, this introduces a configuration cycle.
+* Splitting the resources allows operators to logically split their configurations into purely operational and security boundaries. This allows environments to have distinct practitioners roles and permissions for IAM versus infrastructure changes.
 
-In rare cases, it may be necessary to implement the policy handling within the associated resource itself. This should only be reserved for cases where the policy is _required_ during resource creation.
+One rare exception to this guideline is where the policy is _required_ during resource creation.
 
 ### Managing Resource Running State
 
@@ -121,8 +122,8 @@ For a related consideration, see the [Managing Resource Running State section](#
 
 ### AWS Credential Exfiltration
 
-In the security-minded interest of the community, the provider will not implement data sources that will give operators the ability to reference or export the AWS credentials of the running provider. While there are valid use cases of this information, such as using those AWS credentials to execute AWS CLI calls as part of the same Terraform configuration, it also becomes possible for those credentials to be discovered and used completely outside of the current Terraform execution. Some of the concerns around this topic include:
+In the interest of security, the maintainers will not approve data sources that provide the ability to reference or export the AWS credentials of the running provider. There are valid use cases for this information, such as to execute AWS CLI calls as part of the same Terraform configuration. However, this mechanism may allow credentials to be discovered and used outside of Terraform. Some specific concerns include:
 
-* The values can potentially be visible in Terraform user interface output or logging where anyone with access to those can see and use them.
-* The values must be stored in the Terraform state in plaintext, due to how Terraform operates. Anyone with access or another Terraform configuration that references the state can see and use them.
-* Any new functionality related to this, while opt-in to implement, is also opt-in to prevent via security controls or policies. Since this introduces a weak by default security posture, organizations wishing to implement those controls may require advance notice before the release or may never be able to update.
+* The values may be visible in Terraform user interface output or logging, allowing anyone with user interface or log access to see the credentials.
+* The values are currently stored in plaintext in the Terraform state, allowing anyone with access to the state file or another Terraform configuration that references the state access to the credentials.
+* Any new related functionality, while opt-in to implement, is also opt-in to prevent via security controls or policies. Adopting a weaker default security posture requires advance notice and prevents organizations that implement those controls from updating to a version with any such functionality.
