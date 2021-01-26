@@ -912,10 +912,10 @@ func resourceAwsElasticacheReplicationGroupSetPrimaryClusterID(conn *elasticache
 func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache, timeout time.Duration, input *elasticache.ModifyReplicationGroupInput) error {
 	_, err := conn.ModifyReplicationGroup(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error requesting modification: %w", err)
 	}
 	_, err = waiter.ReplicationGroupAvailable(conn, aws.StringValue(input.ReplicationGroupId), timeout)
-	return err
+	return fmt.Errorf("error waiting for modification: %w", err)
 }
 
 func formatReplicationGroupClusterID(replicationGroupID string, clusterID int) string {
