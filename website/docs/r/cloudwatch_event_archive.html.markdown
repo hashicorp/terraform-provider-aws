@@ -61,3 +61,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the event archive.
+
+## Import
+
+Event Archive can be imported using their name, for example
+
+```bash
+terraform import aws_cloudwatch_event_archive.imported_event_archive order_archive
+```
