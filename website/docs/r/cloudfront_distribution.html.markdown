@@ -271,6 +271,9 @@ of several sub-resources - these resources are laid out below.
 * `cached_methods` (Required) - Controls whether CloudFront caches the
     response to requests using the specified HTTP methods.
 
+* `cache_policy_id` (Optional) - The unique identifier of the cache policy that
+    is attached to the cache behavior.
+
 * `compress` (Optional) - Whether you want CloudFront to automatically
     compress content for web requests that include `Accept-Encoding: gzip` in
     the request header (default: `false`).
