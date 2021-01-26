@@ -16,8 +16,33 @@ Provides an EventBridge event archive resource.
 ## Example Usage
 
 ```hcl
+resource "aws_cloudwatch_event_bus" "order" {
+  name = "orders"
+}
+
 resource "aws_cloudwatch_event_archive" "order" {
-  archive_name = "order-archive"
+  archive_name 		= "order-archive"
+  event_source_arn 	= aws_cloudwatch_event_bus.order.arn
+}
+```
+
+## Example all optional arguments
+
+```hcl
+resource "aws_cloudwatch_event_bus" "order" {
+  name = "orders"
+}
+
+resource "aws_cloudwatch_event_archive" "order" {
+  archive_name 		= "order-archive"
+  description  		= "Archived events from order service"
+  event_source_arn 	= aws_cloudwatch_event_bus.order.arn
+  retention_days	= 7
+  event_pattern		= <<PATTERN
+{
+  "source": ["company.team.order"]
+}
+PATTERN
 }
 ```
 
