@@ -2,7 +2,7 @@
 
 _Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
 
-The Terraform AWS Provider follows the guidelines established in the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html). That general documentation provides many high level design points after years of experience with Terraform's overall design and implementation of infrastructure as code concepts. Certain sections below will expand on specific design details between that documentation and this provider, while others will capture other pertinent information which may not be covered there. Other pages of the contributing guide cover implementation details such as code, testing, and documentation specifics.
+The Terraform AWS Provider follows the guidelines established in the [HashiCorp Provider Design Principles](https://www.terraform.io/docs/extend/hashicorp-provider-design-principles.html). That general documentation provides many high-level design points gleaned from years of experience with Terraform's design and implementation concepts. Sections below will expand on specific design details between that documentation and this provider, while others will capture other pertinent information that may not be covered there. Other pages of the contributing guide cover implementation details such as code, testing, and documentation specifics.
 
 - [API and SDK Boundary](#api-and-sdk-boundary)
 - [Infrastructure as Code Suitability](#infrastructure-as-code-suitability)
@@ -17,7 +17,7 @@ The Terraform AWS Provider follows the guidelines established in the [HashiCorp 
 
 ## API and SDK Boundary
 
-The provider implements support for the [AWS](https://aws.amazon.com/) service APIs using the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/) and its available functionality. Overall these operations are for the lifecycle management of AWS components (such as creating, describing, updating, and deleting a database) and not for handling functionality within those components (such as executing a query on that database). It is expected that other Terraform Providers will be implemented with the appropriate API/SDK for those other systems and protocols, which are maintained with separate domain expertise in that area.
+The AWS provider implements support for the [AWS](https://aws.amazon.com/) service APIs using the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/). The API and SDK limits extend to the provider. In general, SDK operations manage the lifecycle of AWS components, such as creating, describing, updating, and deleting a database. Operations do not usually handle functionality within those components, such as executing a query on a database. If you are interested in other APIs/SDKs, we invite you to view the many Terraform Providers available, as each has a community of domain expertise.
 
 Some examples of functionality that is not expected in this provider:
 
@@ -28,7 +28,7 @@ Some examples of functionality that is not expected in this provider:
 
 ## Infrastructure as Code Suitability
 
-While a goal of the provider is to gain as much resource coverage as possible, from a design perspective, it is necessary to be pragmatic that there are APIs or portions of APIs that may not be wholly compatible with infrastructure as code concepts and managing them with that methodology. In these cases, it is recommended to open an AWS Support case (potentially encouraging others to do the same) to either fix or enhance the AWS service API so components are more self-contained and compatible with these concepts. Sometimes these types of AWS Support cases can also provide some good insight into the AWS service expectations or API behaviors that may not be well documented.
+The provider maintainers' design goal is to cover as much of the AWS API as pragmatically possible. However, not every aspect of the API is compatible with an infrastructure-as-code (IaC) conception. If such limits affect you, we recommend that you open an AWS Support case and encourage others to do the same. Request that AWS components be made more self-contained and compatible with IaC. These AWS Support cases can also yield insights into the AWS service and API that are not well documented.
 
 ## Resource Type Considerations
 
@@ -48,15 +48,16 @@ Certain AWS services use an authorization-acceptance model for cross-account ass
 
 This type of API model either implements a form of an invitation/proposal identifier that can be used to accept the authorization, otherwise it may just be a matter of providing the desired AWS Account identifier as the target of an authorization. In the latter case, the acceptance is implicit when creating the other half of the association.
 
-To model the separate invitation/proposal in Terraform resources:
+To model creating an association using an invitation or proposal, follow these guidelines.
 
-* Typically the authorization side has separate and sufficient creation and read API functionality to create an "invitation" or "proposal" resource.
-* If the acceptance side has separate and sufficient accept, read, and reject API functionality, then an "accepter" resource may be created, where the operations are mapped as:
-    * Create: Accepts the invitation/proposal.
-    * Read: Reads the invitation/proposal to determine status. If not found, then it should fallback to reading the API resource associated with the invitation/proposal. As evidenced in some previous API implementations, the invitation/proposal may be temporary and removed from the API after an indeterminate amount of time which may not be documented or easily discoverable from testing.
-    * Delete: Rejects or otherwise deletes the invitation/proposal.
+* Follow the naming in the AWS service API to determine whether to use the term "invitation" or "proposal."
+* For the originating account, create an "invitation" or "proposal" resource. Make sure that the AWS service API has operations for creating and reading invitations. 
+* For the responding account, create an "accepter" resource. Ensure that the API has operations for accepting, reading, and rejecting invitations in the responding account. Map the operations as follows:
+	* Create: Accepts the invitation.
+	* Read: Reads the invitation to determine its status. Note that in some APIs, invitations expire and disappear, complicating associations. If a resource does not find an invitation, the developer should implement a fall back to read the API resource associated with the invitation/proposal.
+	* Delete: Rejects or otherwise deletes the invitation.
 
-Otherwise to model an implicit acceptance in Terraform resources, usually there is an "association" resource with an optional "authorization" resource, each mapped to the create/read/delete functionality of the API for the associated part of the relationship.
+To model the second type of association, implicit associations, create an "association" resource and, optionally, an "authorization" resource. Map create, read, and delete to the corresponding operations in the AWS service API.
 
 ### Cross-Service Functionality
 
@@ -96,25 +97,25 @@ In rare cases, it may be necessary to implement the policy handling within the a
 
 ### Managing Resource Running State
 
-Certain AWS components allow the ability to start/stop or enable/disable the resource within the API. Some examples of these include:
+The AWS API provides the ability to start, stop, enable, or disable some AWS components. Some examples include:
 
 * Batch Job Queues
 * CloudFront Distributions
 * RDS DB Event Subscriptions
 
-It is recommended that this ability be implemented within the parent Terraform resource instead of creating a separate resource.  Trying to manage updates that require the resource to be in a specific running state becomes impractical for operators to manage within a Terraform configuration. This is generally a consistency and future-proofing design decision, even if there is no problematic resource update use case within the current API.
+In this situation, provider developers should implement this ability within the resource instead of creating a separate resource. Since a practitioner cannot practically manage interaction with a resource's states in Terraform's declarative configuration, developers should implement the state management in the resource. This design provides consistency and future-proofing even where updating a resource in the current API is not problematic.
 
 ### Task Execution and Waiter Resources
 
-Certain AWS functionality operates with the execution of individual tasks or external validation processes that have a completion status. Some examples of these include:
+Some AWS operations are asynchronous. Terraform requests that AWS perform a task. Initially, AWS only notifies Terraform that it received the request. Terraform then requests the status while awaiting completion. Examples of this include:
 
 * ACM Certificate validation
 * EC2 AMI copying
 * RDS DB Cluster Snapshot management
 
-The general expectation in these cases is that the AWS service APIs provide sufficient lifecycle management to start the execution/validation and read the status of that operation. At the end of the operation, the result may be something that can be fully managed on its own with update and delete support (e.g. with EC2 AMI copying, a copy of the AMI is a manageable AMI). In these cases, the preference is to create a separate Terraform resource, rather than implement the functionality within the parent Terraform resource. This recommendation is even at the expense of duplicated resource and schema handling.
+In this situation, provider developers should create a separate resource representing the task, assuming that the AWS service API provides operations to start the task and read its status. Adding the task functionality to the parent resource muddies its infrastructure-management purpose. The maintainers prefer this approach even though there is some duplication of an existing resource. For example, the provider has a resource for copying an EC2 AMI in addition to the EC2 AMI resource itself. This modularity allows practitioners to manage the result of the task resource with another resource. 
 
-One related consideration is the ability to manage the running state of a resource (e.g. start/stop it). See the [Managing Resource Running State section](#managing-resource-running-state) for specific details.
+For a related consideration, see the [Managing Resource Running State section](#managing-resource-running-state).
 
 ## Other Considerations
 
