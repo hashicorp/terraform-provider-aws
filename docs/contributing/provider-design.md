@@ -53,11 +53,11 @@ Depending on the API and components, AWS uses two basic ways of creating cross-r
 To model creating an association using an invitation or proposal, follow these guidelines.
 
 * Follow the naming in the AWS service API to determine whether to use the term "invitation" or "proposal."
-* For the originating account, create an "invitation" or "proposal" resource. Make sure that the AWS service API has operations for creating and reading invitations. 
+* For the originating account, create an "invitation" or "proposal" resource. Make sure that the AWS service API has operations for creating and reading invitations.
 * For the responding account, create an "accepter" resource. Ensure that the API has operations for accepting, reading, and rejecting invitations in the responding account. Map the operations as follows:
-	* Create: Accepts the invitation.
-	* Read: Reads the invitation to determine its status. Note that in some APIs, invitations expire and disappear, complicating associations. If a resource does not find an invitation, the developer should implement a fall back to read the API resource associated with the invitation/proposal.
-	* Delete: Rejects or otherwise deletes the invitation.
+    * Create: Accepts the invitation.
+    * Read: Reads the invitation to determine its status. Note that in some APIs, invitations expire and disappear, complicating associations. If a resource does not find an invitation, the developer should implement a fall back to read the API resource associated with the invitation/proposal.
+    * Delete: Rejects or otherwise deletes the invitation.
 
 To model the second type of association, implicit associations, create an "association" resource and, optionally, an "authorization" resource. Map create, read, and delete to the corresponding operations in the AWS service API.
 
@@ -114,7 +114,7 @@ Some AWS operations are asynchronous. Terraform requests that AWS perform a task
 * EC2 AMI copying
 * RDS DB Cluster Snapshot management
 
-In this situation, provider developers should create a separate resource representing the task, assuming that the AWS service API provides operations to start the task and read its status. Adding the task functionality to the parent resource muddies its infrastructure-management purpose. The maintainers prefer this approach even though there is some duplication of an existing resource. For example, the provider has a resource for copying an EC2 AMI in addition to the EC2 AMI resource itself. This modularity allows practitioners to manage the result of the task resource with another resource. 
+In this situation, provider developers should create a separate resource representing the task, assuming that the AWS service API provides operations to start the task and read its status. Adding the task functionality to the parent resource muddies its infrastructure-management purpose. The maintainers prefer this approach even though there is some duplication of an existing resource. For example, the provider has a resource for copying an EC2 AMI in addition to the EC2 AMI resource itself. This modularity allows practitioners to manage the result of the task resource with another resource.
 
 For a related consideration, see the [Managing Resource Running State section](#managing-resource-running-state).
 
