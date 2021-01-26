@@ -310,6 +310,35 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehavior(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.main"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehaviorCachePolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.path_pattern", "images2/*.jpg"),
+					resource.TestMatchResourceAttr(resourceName, "ordered_cache_behavior.0.cache_policy_id", regexp.MustCompile(`^[a-z0-9]+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontDistribution_Origin_EmptyDomainName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -2051,6 +2080,90 @@ resource "aws_cloudfront_distribution" "main" {
 
   %s
 }
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionOrderedCacheBehaviorCachePolicy = fmt.Sprintf(`
+variable rand_id {
+  default = %d
+}
+
+resource "aws_cloudfront_distribution" "main" {
+  origin {
+    domain_name = "www.hashicorp.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = true
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  ordered_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+
+    cache_policy_id = aws_cloudfront_cache_policy.cache_policy.id
+
+    viewer_protocol_policy = "allow-all"
+    path_pattern           = "images2/*.jpg"
+  }
+
+  price_class = "PriceClass_All"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %s
+}
+
+resource "aws_cloudfront_cache_policy" "cache_policy" {
+	name        = "test-policy%[1]d"
+	comment     = "test comment"
+	default_ttl = 50
+	max_ttl     = 100
+	parameters_in_cache_key_and_forwarded_to_origin {
+	  cookies_config {
+		  cookie_behavior = "none"
+		}
+		headers_config {
+		  header_behavior = "none"
+		}
+		query_strings_config {
+		  query_string_behavior = "none"
+		}
+	}
+}
+
 `, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionOriginGroupsConfig = `
