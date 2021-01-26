@@ -177,6 +177,7 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 	}
 
 	input.Resource = expandLakeFormationResource(d, true)
+	matchResource := expandLakeFormationResource(d, false)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
@@ -188,7 +189,9 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -209,7 +212,9 @@ func dataSourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta inte
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})

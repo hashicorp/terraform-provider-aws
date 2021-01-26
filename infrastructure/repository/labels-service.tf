@@ -85,6 +85,7 @@ variable "service_labels" {
     "elb",
     "elbv2",
     "emr",
+    "emrcontainers",
     "eventbridge",
     "firehose",
     "fms",

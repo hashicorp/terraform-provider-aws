@@ -228,6 +228,8 @@ resource "aws_lakeformation_permissions" "test" {
   data_location {
     arn = aws_s3_bucket.test.arn
   }
+
+  depends_on = ["aws_lakeformation_data_lake_settings.test"]
 }
 
 data "aws_lakeformation_permissions" "test" {

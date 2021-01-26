@@ -13,10 +13,14 @@ const (
 	NotebookInstanceDeletedTimeout   = 10 * time.Minute
 	ImageCreatedTimeout              = 10 * time.Minute
 	ImageDeletedTimeout              = 10 * time.Minute
+	ImageVersionCreatedTimeout       = 10 * time.Minute
+	ImageVersionDeletedTimeout       = 10 * time.Minute
 	DomainInServiceTimeout           = 10 * time.Minute
 	DomainDeletedTimeout             = 10 * time.Minute
 	FeatureGroupCreatedTimeout       = 10 * time.Minute
 	FeatureGroupDeletedTimeout       = 10 * time.Minute
+	UserProfileInServiceTimeout      = 10 * time.Minute
+	UserProfileDeletedTimeout        = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -122,6 +126,44 @@ func ImageDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeIm
 	return nil, err
 }
 
+// ImageVersionCreated waits for a ImageVersion to return Created
+func ImageVersionCreated(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.ImageVersionStatusCreating,
+		},
+		Target:  []string{sagemaker.ImageVersionStatusCreated},
+		Refresh: ImageVersionStatus(conn, name),
+		Timeout: ImageVersionCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ImageVersionDeleted waits for a ImageVersion to return Deleted
+func ImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageVersionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.ImageVersionStatusDeleting},
+		Target:  []string{},
+		Refresh: ImageVersionStatus(conn, name),
+		Timeout: ImageVersionDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 // DomainInService waits for a Domain to return InService
 func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
@@ -193,6 +235,48 @@ func FeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Des
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// UserProfileInService waits for a UserProfile to return InService
+func UserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			SagemakerUserProfileStatusNotFound,
+			sagemaker.UserProfileStatusPending,
+			sagemaker.UserProfileStatusUpdating,
+		},
+		Target:  []string{sagemaker.UserProfileStatusInService},
+		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Timeout: UserProfileInServiceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// UserProfileDeleted waits for a UserProfile to return Deleted
+func UserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.UserProfileStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: UserProfileStatus(conn, domainID, userProfileName),
+		Timeout: UserProfileDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
 		return output, err
 	}
 

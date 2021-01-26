@@ -113,6 +113,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>elastictranscoder</code></li>
   <li><code>elb</code></li>
   <li><code>emr</code></li>
+  <li><code>emrcontainers</code></li>
   <li><code>es</code></li>
   <li><code>firehose</code></li>
   <li><code>fms</code></li>

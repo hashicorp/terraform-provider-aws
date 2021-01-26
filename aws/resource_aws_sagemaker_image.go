@@ -104,7 +104,7 @@ func resourceAwsSagemakerImageRead(d *schema.ResourceData, meta interface{}) err
 
 	image, err := finder.ImageByName(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "No Image with the name") {
+		if isAWSErr(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker Image (%s); removing from state", d.Id())
 			return nil
