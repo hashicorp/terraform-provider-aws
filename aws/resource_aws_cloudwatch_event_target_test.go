@@ -768,9 +768,9 @@ resource "aws_sns_topic" "test" {
 func testAccAWSCloudWatchEventTargetConfig_retrypolicy_dlc(ruleName, targetName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-	name                = %[1]q
-	schedule_expression = "rate(1 hour)"
-	role_arn            = aws_iam_role.test.arn
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+  role_arn            = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -831,12 +831,12 @@ INPUT
 
   retry_policy {
     maximum_event_age_in_seconds = 60
-		maximum_retry_attempts = 5
+    maximum_retry_attempts       = 5
   }
 
-	dead_letter_config {
-		arn = aws_sqs_queue.test.arn
-	}
+  dead_letter_config {
+    arn = aws_sqs_queue.test.arn
+  }
 }
 
 resource "aws_kinesis_stream" "test" {
