@@ -177,3 +177,59 @@ func configWaitForOrganizationRuleStatusUpdateSuccessful(conn *configservice.Con
 
 	return err
 }
+
+func configDescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
+	input := &configservice.DescribeConformancePacksInput{
+		ConformancePackNames: []*string{aws.String(name)},
+	}
+
+	for {
+		output, err := conn.DescribeConformancePacks(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, pack := range output.ConformancePackDetails {
+			if aws.StringValue(pack.ConformancePackName) == name {
+				return pack, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
+
+func configDescribeConformancePackStatus(conn *configservice.ConfigService, name string) (*configservice.ConformancePackStatusDetail, error) {
+	input := &configservice.DescribeConformancePackStatusInput{
+		ConformancePackNames: []*string{aws.String(name)},
+	}
+
+	for {
+		output, err := conn.DescribeConformancePackStatus(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, status := range output.ConformancePackStatusDetails {
+			if aws.StringValue(status.ConformancePackName) == name {
+				return status, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
