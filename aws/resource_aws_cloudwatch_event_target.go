@@ -252,6 +252,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"retry_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"maximum_event_age_in_seconds": {
@@ -270,6 +271,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 			"dead_letter_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
