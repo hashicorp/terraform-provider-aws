@@ -363,11 +363,11 @@ EOT
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
 	return fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  name             = %[1]q
+  name = %[1]q
   input_parameters = {
     %[3]s = %[4]q
   }
-  template_body    = <<EOT
+  template_body = <<EOT
 Parameters:
   %[3]s:
     Type: String
@@ -394,7 +394,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_config_organization_conformance_pack" "test" {
-  name = %[1]q
+  name                   = %[1]q
   delivery_s3_bucket     = aws_s3_bucket.test.id
   delivery_s3_key_prefix = %[2]q
   template_body          = <<EOT
