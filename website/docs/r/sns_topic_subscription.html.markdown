@@ -231,14 +231,18 @@ resource "aws_sns_topic_subscription" "sns-topic" {
 The following arguments are supported:
 
 * `topic_arn` - (Required) The ARN of the SNS topic to subscribe to
-* `protocol` - (Required) The protocol to use. The possible values for this are: `sqs`, `sms`, `lambda`, `application`. (`http` or `https` are partially supported, see below) (`email` is an option but is unsupported, see below).
+* `protocol` - (Required) The protocol to use. The possible values for this are: `sqs`, `sms`, `lambda`, `application`, `firehose`. (`http` or `https` are partially supported, see below) (`email` is an option but is unsupported, see below).
 * `endpoint` - (Required) The endpoint to send data to, the contents will vary with the protocol. (see below for more information)
 * `endpoint_auto_confirms` - (Optional) Boolean indicating whether the end point is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) e.g., PagerDuty (default is false)
 * `confirmation_timeout_in_minutes` - (Optional) Integer indicating number of minutes to wait in retying mode for fetching subscription arn before marking it as failure. Only applicable for http and https protocols (default is 1 minute).
 * `raw_message_delivery` - (Optional) Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false).
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
+<<<<<<< HEAD
 * `redrive_policy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
+=======
+* `subscription_role_arn` - (Optional) Required ARN of the IAM role to publish to Kinesis Data Firehose delivery stream. Require for `firehose` protocol. Refer to [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-firehose-as-subscriber.html)
+>>>>>>> a95bbe357 (docs update)
 
 ### Protocols supported
 
@@ -248,6 +252,7 @@ Supported SNS protocols include:
 * `sqs` -- delivery of JSON-encoded message to an Amazon SQS queue
 * `application` -- delivery of JSON-encoded message to an EndpointArn for a mobile app and device
 * `sms` -- delivery text message
+* `firehose` -- delivery of JSON-encoded message to an Amazon Kinesis Data Firehose delivery stream
 
 Partially supported SNS protocols include:
 
@@ -269,6 +274,8 @@ Endpoints have different format requirements according to the protocol that is c
 
 * SQS endpoints come in the form of the SQS queue's ARN (not the URL of the queue) e.g: `arn:aws:sqs:us-west-2:432981146916:terraform-queue-too`
 * Application endpoints are also the endpoint ARN for the mobile app and device.
+* Firehose endpoints are in the form of Firehose ARN e.g:
+`arn:aws:firehose:us-east-1:123456789012:deliverystream/ticketUploadStream`
 
 ## Attributes Reference
 

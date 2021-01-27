@@ -196,7 +196,6 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	d.Set("endpoint", attributeOutput.Attributes["Endpoint"])
 	d.Set("filter_policy", attributeOutput.Attributes["FilterPolicy"])
 	d.Set("protocol", attributeOutput.Attributes["Protocol"])
-	d.Set("subscription_role_arn", attributeOutput.Attributes["SubscriptionRoleArn"])
 
 	d.Set("raw_message_delivery", false)
 	if v, ok := attributeOutput.Attributes["RawMessageDelivery"]; ok && aws.StringValue(v) == "true" {
@@ -204,6 +203,11 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("redrive_policy", attributeOutput.Attributes["RedrivePolicy"])
+	d.Set("subscription_role_arn", "")
+	if v, ok := attributeOutput.Attributes["SubscriptionRoleArn"]; ok {
+		d.Set("subscription_role_arn", aws.StringValue(v))
+	}
+
 	d.Set("topic_arn", attributeOutput.Attributes["TopicArn"])
 
 	return nil
