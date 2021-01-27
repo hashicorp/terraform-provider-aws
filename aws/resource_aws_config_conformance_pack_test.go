@@ -309,8 +309,8 @@ func testAccConfigConformancePackConfigRuleIdentifierParameter(rName, ruleIdenti
 %[5]s
 
 resource "aws_config_conformance_pack" "test" {
-  depends_on       = [aws_config_configuration_recorder.test]
-  name             = %[1]q
+  depends_on = [aws_config_configuration_recorder.test]
+  name       = %[1]q
   input_parameters = {
     %[3]s = %[4]q
   }
