@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -524,8 +523,9 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 			return fmt.Errorf("expected private ip to be 172.16.10.100, but was %s", *conf.PrivateIpAddress)
 		}
 
-		if !strings.HasPrefix(*conf.PrivateDnsName, "ip-172-16-10-100.") || !strings.HasSuffix(*conf.PrivateDnsName, ".compute.internal") {
-			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.<region>.compute.internal, but was %s", *conf.PrivateDnsName)
+		expectedPrivateDnsName := fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(*conf.PrivateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(testAccGetRegion()))
+		if *conf.PrivateDnsName != expectedPrivateDnsName {
+			return fmt.Errorf("expected private dns name to be %s, but was %s", expectedPrivateDnsName, *conf.PrivateDnsName)
 		}
 
 		if len(*conf.MacAddress) == 0 {
@@ -573,8 +573,9 @@ func testAccCheckAWSENIAttributesWithAttachment(conf *ec2.NetworkInterface) reso
 			return fmt.Errorf("expected private ip to be 172.16.10.100, but was %s", *conf.PrivateIpAddress)
 		}
 
-		if !strings.HasPrefix(*conf.PrivateDnsName, "ip-172-16-10-100.") || !strings.HasSuffix(*conf.PrivateDnsName, ".compute.internal") {
-			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.<region>.compute.internal, but was %s", *conf.PrivateDnsName)
+		expectedPrivateDnsName := fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(*conf.PrivateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(testAccGetRegion()))
+		if *conf.PrivateDnsName != expectedPrivateDnsName {
+			return fmt.Errorf("expected private dns name to be %s, but was %s", expectedPrivateDnsName, *conf.PrivateDnsName)
 		}
 
 		return nil

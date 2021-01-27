@@ -31,7 +31,7 @@ testacc: fmtcheck
 		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
 		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
 	fi
 	TF_ACC=1 go test ./$(PKG_NAME) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -49,6 +49,10 @@ gencheck:
 	@$(MAKE) gen
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
+
+generate-changelog:
+	@echo "==> Generating changelog..."
+	@sh -c "'$(CURDIR)/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -87,7 +91,6 @@ golangci-lint:
 awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
-		-AWSAT003=false \
 		-AWSAT006=false \
 		-AWSV001=false \
 		-R001=false \
@@ -116,6 +119,7 @@ tools:
 	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
 	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
 	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
+	cd tools && GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -150,4 +154,4 @@ website-lint-fix:
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck

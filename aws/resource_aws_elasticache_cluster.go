@@ -23,6 +23,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+const (
+	elasticacheDefaultRedisPort     = "6379"
+	elasticacheDefaultMemcachedPort = "11211"
+)
+
 func resourceAwsElasticacheCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsElasticacheClusterCreate,
@@ -156,7 +161,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Suppress default memcached/redis ports when not defined
-					if !d.IsNewResource() && new == "0" && (old == "6379" || old == "11211") {
+					if !d.IsNewResource() && new == "0" && (old == elasticacheDefaultRedisPort || old == elasticacheDefaultMemcachedPort) {
 						return true
 					}
 					return false
@@ -206,18 +211,18 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			// A single-element string list containing an Amazon Resource Name (ARN) that
-			// uniquely identifies a Redis RDB snapshot file stored in Amazon S3. The snapshot
-			// file will be used to populate the node group.
-			//
-			// See also:
-			// https://github.com/aws/aws-sdk-go/blob/4862a174f7fc92fb523fc39e68f00b87d91d2c3d/service/elasticache/api.go#L2079
 			"snapshot_arns": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validateArn,
+						validation.StringDoesNotContainAny(","),
+					),
+				},
 			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
@@ -295,7 +300,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Engine memcached does not currently support vertical scaling
 				// InvalidParameterCombination: Scaling is not supported for engine memcached
-				// https://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/Scaling.Memcached.html#Scaling.Memcached.Vertically
+				// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
 				if diff.Id() == "" || !diff.HasChange("node_type") {
 					return nil
 				}
@@ -325,15 +330,9 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		req.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		securityNameSet := d.Get("security_group_names").(*schema.Set)
-		securityIdSet := d.Get("security_group_ids").(*schema.Set)
-		securityNames := expandStringSet(securityNameSet)
-		securityIds := expandStringSet(securityIdSet)
-		tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
-
-		req.CacheSecurityGroupNames = securityNames
-		req.SecurityGroupIds = securityIds
-		req.Tags = tags
+		req.CacheSecurityGroupNames = expandStringSet(d.Get("security_group_names").(*schema.Set))
+		req.SecurityGroupIds = expandStringSet(d.Get("security_group_ids").(*schema.Set))
+		req.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
@@ -385,11 +384,10 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 		req.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	snaps := d.Get("snapshot_arns").(*schema.Set)
-	if snaps.Len() > 0 {
-		s := expandStringSet(snaps)
-		req.SnapshotArns = s
-		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", s)
+	snaps := d.Get("snapshot_arns").([]interface{})
+	if len(snaps) > 0 {
+		req.SnapshotArns = expandStringList(snaps)
+		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
 	}
 
 	if v, ok := d.GetOk("snapshot_name"); ok {

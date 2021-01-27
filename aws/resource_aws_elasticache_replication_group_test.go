@@ -539,7 +539,46 @@ func TestAccAWSElasticacheReplicationGroup_ClusterMode_NonClusteredParameterGrou
 	})
 }
 
-func TestAccAWSElasticacheReplicationGroup_ClusterMode_NumNodeGroups(t *testing.T) {
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_UpdateNumNodeGroups_ScaleUp(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 3, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "6"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_UpdateNumNodeGroups_ScaleDown(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_replication_group.test"
@@ -560,25 +599,6 @@ func TestAccAWSElasticacheReplicationGroup_ClusterMode_NumNodeGroups(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-			{
-				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName, 1, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "1"),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
 				),
 			},
 			{
