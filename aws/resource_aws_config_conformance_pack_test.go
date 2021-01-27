@@ -252,9 +252,8 @@ data "aws_partition" "current" {
 
 resource "aws_config_configuration_recorder" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
-
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -289,7 +288,7 @@ func testAccConfigConformancePackConfigRuleIdentifier(rName, ruleIdentifier stri
 %[3]s
 
 resource "aws_config_conformance_pack" "test" {
-  depends_on = [aws_config_configuration_recorder.test]
+  depends_on    = [aws_config_configuration_recorder.test]
   name          = %[1]q
   template_body = <<EOT
 Resources:
@@ -310,8 +309,8 @@ func testAccConfigConformancePackConfigRuleIdentifierParameter(rName, ruleIdenti
 %[5]s
 
 resource "aws_config_conformance_pack" "test" {
-  depends_on = [aws_config_configuration_recorder.test]
-  name = %[1]q
+  depends_on       = [aws_config_configuration_recorder.test]
+  name             = %[1]q
   input_parameters = {
     %[3]s = %[4]q
   }
@@ -342,7 +341,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 resource "aws_config_conformance_pack" "test" {
-  depends_on = [aws_config_configuration_recorder.test]
+  depends_on             = [aws_config_configuration_recorder.test]
   name                   = %[1]q
   delivery_s3_bucket     = aws_s3_bucket.test.id
   delivery_s3_key_prefix = %[2]q
@@ -384,7 +383,7 @@ Resources:
 EOT
 }
 resource "aws_config_conformance_pack" "test" {
-  depends_on = [aws_config_configuration_recorder.test]
+  depends_on      = [aws_config_configuration_recorder.test]
   name            = "%[1]s"
   template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
 }
