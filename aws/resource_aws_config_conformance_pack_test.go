@@ -17,7 +17,7 @@ func testAccConfigConformancePack_basic(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
@@ -49,7 +49,7 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
@@ -74,7 +74,7 @@ func testAccConfigConformancePack_InputParameters(t *testing.T) {
 	pValue := "ParamValue"
 	resourceName := "aws_config_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
@@ -108,7 +108,7 @@ func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
@@ -143,7 +143,7 @@ func testAccConfigConformancePack_S3Template(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
@@ -244,9 +244,52 @@ func testAccCheckConfigConformancePackSuccessful(resourceName string) resource.T
 		return nil
 	}
 }
+
+func testAccConfigConformancePackConfigBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {
+}
+
+resource "aws_config_configuration_recorder" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "config.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
+  role       = aws_iam_role.test.name
+}
+`, rName)
+}
+
 func testAccConfigConformancePackConfigRuleIdentifier(rName, ruleIdentifier string) string {
 	return fmt.Sprintf(`
+%[3]s
+
 resource "aws_config_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test]
   name          = %[1]q
   template_body = <<EOT
 Resources:
@@ -259,12 +302,15 @@ Resources:
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier)
+`, rName, ruleIdentifier, testAccConfigConformancePackConfigBase(rName))
 }
 
 func testAccConfigConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
 	return fmt.Sprintf(`
+%[5]s
+
 resource "aws_config_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test]
   name = %[1]q
   input_parameters = {
     %[3]s = %[4]q
@@ -283,17 +329,20 @@ Resources:
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier, pKey, pValue)
+`, rName, ruleIdentifier, pKey, pValue, testAccConfigConformancePackConfigBase(rName))
 }
 
 func testAccConfigConformancePackConfigRuleIdentifierS3Delivery(rName, ruleIdentifier, bName string) string {
 	return fmt.Sprintf(`
+%[4]s
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[3]q
   acl           = "private"
   force_destroy = true
 }
 resource "aws_config_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test]
   name                   = %[1]q
   delivery_s3_bucket     = aws_s3_bucket.test.id
   delivery_s3_key_prefix = %[2]q
@@ -308,11 +357,13 @@ Resources:
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier, bName)
+`, rName, ruleIdentifier, bName, testAccConfigConformancePackConfigBase(rName))
 }
 
 func testAccConfigConformancePackConfigRuleIdentifierS3Template(rName, ruleIdentifier, bName, kName string) string {
 	return fmt.Sprintf(`
+%[5]s
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[3]q
   acl           = "private"
@@ -333,8 +384,9 @@ Resources:
 EOT
 }
 resource "aws_config_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test]
   name            = "%[1]s"
   template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
 }
-`, rName, ruleIdentifier, bName, kName)
+`, rName, ruleIdentifier, bName, kName, testAccConfigConformancePackConfigBase(rName))
 }
