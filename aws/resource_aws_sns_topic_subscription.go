@@ -270,7 +270,8 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
 		return nil, fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
 	}
-	if !string.Contains(protocol, "firehose") && subscription_role_arn != "" {
+
+	if !strings.Contains(protocol, "firehose") && subscription_role_arn != "" {
 		return nil, fmt.Errorf("Only protocol firehose supports subscription_role_arn!")
 	}
 
