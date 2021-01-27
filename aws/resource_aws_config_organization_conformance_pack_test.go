@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccConfigOrganizationConformancePack_basic(t *testing.T) {
+func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rId := "IAM_PASSWORD_POLICY"
@@ -45,7 +45,7 @@ func TestAccConfigOrganizationConformancePack_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigOrganizationConformancePack_disappears(t *testing.T) {
+func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_organization_conformance_pack.test"
@@ -67,7 +67,7 @@ func TestAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	})
 }
 
-func TestAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
+func testAccConfigOrganizationConformancePack_InputParameters(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rId := "IAM_PASSWORD_POLICY"
@@ -103,7 +103,7 @@ func TestAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
 	})
 }
 
-func TestAccConfigOrganizationConformancePack_s3Delivery(t *testing.T) {
+func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	bName := "awsconfigconforms" + rName
@@ -138,7 +138,7 @@ func TestAccConfigOrganizationConformancePack_s3Delivery(t *testing.T) {
 	})
 }
 
-func TestAccConfigOrganizationConformancePack_s3Template(t *testing.T) {
+func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	bName := rName
@@ -174,7 +174,7 @@ func TestAccConfigOrganizationConformancePack_s3Template(t *testing.T) {
 	})
 }
 
-func TestAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
+func testAccConfigOrganizationConformancePack_ExcludedAccounts(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rId := "IAM_PASSWORD_POLICY"
