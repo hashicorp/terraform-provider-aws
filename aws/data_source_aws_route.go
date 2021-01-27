@@ -166,11 +166,6 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		// VPC Endpoint ID for a Gateway Load Balancer target is returned in the Gateway ID field.
-		if v, ok := d.GetOk("vpc_endpoint_id"); ok && aws.StringValue(r.GatewayId) != v.(string) {
-			continue
-		}
-
 		if v, ok := d.GetOk("vpc_peering_connection_id"); ok && aws.StringValue(r.VpcPeeringConnectionId) != v.(string) {
 			continue
 		}
@@ -201,14 +196,7 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
-	// VPC Endpoint ID is returned in Gateway ID field
-	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
-		d.Set("gateway_id", "")
-		d.Set("vpc_endpoint_id", route.GatewayId)
-	} else {
-		d.Set("gateway_id", route.GatewayId)
-		d.Set("vpc_endpoint_id", "")
-	}
+	d.Set("gateway_id", route.GatewayId)
 	d.Set("instance_id", route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)

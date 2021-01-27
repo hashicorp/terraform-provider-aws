@@ -572,9 +572,13 @@ resource "aws_route_table" "test" {
 
 func testAccAWSRouteDataSourceConfigGatewayVpcEndpointWithDataSource(rName string) string {
 	return composeConfig(testAccAWSRouteDataSourceConfigGatewayVpcEndpointNoDataSource(rName), `
+data "aws_prefix_list" "test" {
+  name = aws_vpc_endpoint.test.service_name
+}
+
 data "aws_route" "test" {
-  route_table_id  = aws_route_table.test.id
-  vpc_endpoint_id = aws_vpc_endpoint.test.id
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = data.aws_prefix_list.test.id
 }
   `)
 }
