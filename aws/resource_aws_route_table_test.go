@@ -1054,7 +1054,7 @@ func TestAccAWSRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckRouteTableDestroy,
@@ -2202,9 +2202,8 @@ resource "aws_route_table" "test" {
     for_each = local.routes
     content {
       # Destination.
-      cidr_block                 = (route.value["destination_attr"] == "cidr_block") ? route.value["destination_value"] : null
-      ipv6_cidr_block            = (route.value["destination_attr"] == "ipv6_cidr_block") ? route.value["destination_value"] : null
-      destination_prefix_list_id = (route.value["destination_attr"] == "destination_prefix_list_id") ? route.value["destination_value"] : null
+      cidr_block      = (route.value["destination_attr"] == "cidr_block") ? route.value["destination_value"] : null
+      ipv6_cidr_block = (route.value["destination_attr"] == "ipv6_cidr_block") ? route.value["destination_value"] : null
 
       # Target.
       carrier_gateway_id        = (route.value["target_attr"] == "carrier_gateway_id") ? route.value["target_value"] : null
