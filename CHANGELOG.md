@@ -1,5 +1,9 @@
 ## 3.26.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_imagebuilder_image` (https://github.com/hashicorp/terraform-provider-aws/issues/16710)
+
 ENHANCEMENTS:
 
 * data-source/aws_vpc_peering_connection: Add `cidr_block_set` and `peer_cidr_block_set` attributes (https://github.com/hashicorp/terraform-provider-aws/issues/13420)
