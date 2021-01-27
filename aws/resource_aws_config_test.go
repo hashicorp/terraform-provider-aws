@@ -74,6 +74,14 @@ func TestAccAWSConfig_serial(t *testing.T) {
 			"TagKeyScope":               testAccConfigOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
 		},
+		"OrganizationConformancePack": {
+			"basic":            testAccConfigOrganizationConformancePack_basic,
+			"disappears":       testAccConfigOrganizationConformancePack_disappears,
+			"InputParameters":  testAccConfigOrganizationConformancePack_InputParameters,
+			"S3Delivery":       testAccConfigOrganizationConformancePack_S3Delivery,
+			"S3Template":       testAccConfigOrganizationConformancePack_S3Template,
+			"ExcludedAccounts": testAccConfigOrganizationConformancePack_ExcludedAccounts,
+		},
 		"RemediationConfiguration": {
 			"basic":      testAccConfigRemediationConfiguration_basic,
 			"disappears": testAccConfigRemediationConfiguration_disappears,
