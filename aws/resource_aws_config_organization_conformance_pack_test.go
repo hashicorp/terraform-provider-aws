@@ -310,14 +310,12 @@ data "aws_partition" "current" {
 
 resource "aws_config_configuration_recorder" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
-
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name       = %[1]q
+  role_arn   = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
-
+  name               = %[1]q
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -346,7 +344,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 func testAccConfigOrganizationConformancePackConfigRuleIdentifier(rName, ruleIdentifier string) string {
 	return fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  name = %[1]q
+  name          = %[1]q
   template_body = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -365,11 +363,11 @@ EOT
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
 	return fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  name = %[1]q
+  name             = %[1]q
   input_parameters = {
     %[3]s = %[4]q
   }
-  template_body = <<EOT
+  template_body    = <<EOT
 Parameters:
   %[3]s:
     Type: String
@@ -390,16 +388,16 @@ EOT
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Delivery(rName, ruleIdentifier, bName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[3]q
-  acl = "private"
+  bucket        = %[3]q
+  acl           = "private"
   force_destroy = true
 }
 
 resource "aws_config_organization_conformance_pack" "test" {
   name = %[1]q
-  delivery_s3_bucket = aws_s3_bucket.test.id
+  delivery_s3_bucket     = aws_s3_bucket.test.id
   delivery_s3_key_prefix = %[2]q
-  template_body = <<EOT
+  template_body          = <<EOT
 Resources:
   IAMPasswordPolicy:
     Properties:
@@ -417,14 +415,14 @@ EOT
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Template(rName, ruleIdentifier, bName, kName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[3]q
-  acl = "private"
+  bucket        = %[3]q
+  acl           = "private"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key = %[4]q
+  bucket  = aws_s3_bucket.test.id
+  key     = %[4]q
   content = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -438,7 +436,7 @@ EOT
 }
 
 resource "aws_config_organization_conformance_pack" "test" {
-  name = "%[1]s"
+  name            = "%[1]s"
   template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
 }
 
@@ -451,9 +449,9 @@ func testAccConfigOrganizationConformancePackConfigRuleIdentifierExcludedAccount
 data "aws_caller_identity" "current" {}
 
 resource "aws_config_organization_conformance_pack" "test" {
-  name = %[1]q
+  name              = %[1]q
   excluded_accounts = [data.aws_caller_identity.current.account_id]
-  template_body = <<EOT
+  template_body     = <<EOT
 Resources:
   IAMPasswordPolicy:
     Properties:
