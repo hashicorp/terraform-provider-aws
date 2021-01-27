@@ -6,6 +6,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_elb_hosted_zone_id: Correct values for `cn-north-1` and `cn-northwest-1` regions (https://github.com/hashicorp/terraform-provider-aws/issues/17226)
+* data-source/aws_lb_listener: Prevent error when retrieving a listener whose default action contains weighted target groups (https://github.com/hashicorp/terraform-provider-aws/issues/17238)
+* resource/aws_ebs_volume: Allow both `size` and `snapshot_id` attributes to be specified (https://github.com/hashicorp/terraform-provider-aws/issues/17243)
 * resource/aws_elasticache_replication_group: Correctly update computed `member_clusters` values (https://github.com/hashicorp/terraform-provider-aws/issues/17201)
 
 ## 3.25.0 (January 22, 2021)
