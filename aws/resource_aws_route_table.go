@@ -20,6 +20,7 @@ import (
 var routeTableValidDestinations = []string{
 	"cidr_block",
 	"ipv6_cidr_block",
+	"destination_prefix_list_id",
 }
 
 var routeTableValidTargets = []string{
@@ -88,6 +89,11 @@ func resourceAwsRouteTable() *schema.Resource {
 								validation.StringIsEmpty,
 								validateIpv6CIDRNetworkAddress,
 							),
+						},
+
+						"destination_prefix_list_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 
 						//
@@ -235,7 +241,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		if r.DestinationPrefixListId != nil {
+		if r.DestinationPrefixListId != nil && strings.HasPrefix(aws.StringValue(r.GatewayId), "vpce-") {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
@@ -248,6 +254,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		if r.DestinationIpv6CidrBlock != nil {
 			m["ipv6_cidr_block"] = aws.StringValue(r.DestinationIpv6CidrBlock)
+		}
+		if r.DestinationPrefixListId != nil {
+			m["destination_prefix_list_id"] = aws.StringValue(r.DestinationPrefixListId)
 		}
 		if r.CarrierGatewayId != nil {
 			m["carrier_gateway_id"] = aws.StringValue(r.CarrierGatewayId)
@@ -395,6 +404,12 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				log.Printf("[INFO] Deleting route from %s: %s", d.Id(), m["cidr_block"].(string))
 			}
 
+			if s, ok := m["destination_prefix_list_id"].(string); ok && s != "" {
+				deleteOpts.DestinationPrefixListId = aws.String(s)
+
+				log.Printf("[INFO] Deleting route from %s: %s", d.Id(), m["destination_prefix_list_id"].(string))
+			}
+
 			_, err := conn.DeleteRoute(deleteOpts)
 			if err != nil {
 				return err
@@ -446,6 +461,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 
 			if s, ok := m["cidr_block"].(string); ok && s != "" {
 				opts.DestinationCidrBlock = aws.String(s)
+			}
+
+			if s, ok := m["destination_prefix_list_id"].(string); ok && s != "" {
+				opts.DestinationPrefixListId = aws.String(s)
 			}
 
 			if s, ok := m["gateway_id"].(string); ok && s != "" {
@@ -586,6 +605,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["cidr_block"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["destination_prefix_list_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 

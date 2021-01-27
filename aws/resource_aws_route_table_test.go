@@ -1046,6 +1046,42 @@ func TestAccAWSRouteTable_MultipleRoutes(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigPrefixListInternetGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckAWSRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1128,6 +1164,35 @@ func testAccCheckAWSRouteTableRoute(resourceName, destinationAttr, destination, 
 		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 			destinationAttr: destination,
 			targetAttr:      target,
+		})(s)
+	}
+}
+
+func testAccCheckAWSRouteTablePrefixListRoute(resourceName, prefixListResourceName, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rsPrefixList, ok := s.RootModule().Resources[prefixListResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", prefixListResourceName)
+		}
+
+		destination := rsPrefixList.Primary.Attributes["id"]
+		if destination == "" {
+			return fmt.Errorf("Not found: %s.id", prefixListResourceName)
+		}
+
+		rsTarget, ok := s.RootModule().Resources[targetResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", targetResourceName)
+		}
+
+		target := rsTarget.Primary.Attributes[targetResourceAttr]
+		if target == "" {
+			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
+		}
+
+		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+			"destination_prefix_list_id": destination,
+			targetAttr:                   target,
 		})(s)
 	}
 }
@@ -2137,8 +2202,9 @@ resource "aws_route_table" "test" {
     for_each = local.routes
     content {
       # Destination.
-      cidr_block      = (route.value["destination_attr"] == "cidr_block") ? route.value["destination_value"] : null
-      ipv6_cidr_block = (route.value["destination_attr"] == "ipv6_cidr_block") ? route.value["destination_value"] : null
+      cidr_block                 = (route.value["destination_attr"] == "cidr_block") ? route.value["destination_value"] : null
+      ipv6_cidr_block            = (route.value["destination_attr"] == "ipv6_cidr_block") ? route.value["destination_value"] : null
+      destination_prefix_list_id = (route.value["destination_attr"] == "destination_prefix_list_id") ? route.value["destination_value"] : null
 
       # Target.
       carrier_gateway_id        = (route.value["target_attr"] == "carrier_gateway_id") ? route.value["target_value"] : null
@@ -2177,4 +2243,43 @@ data "aws_ami" "amzn-ami-nat-instance" {
   }
 }
 `
+}
+
+func testAccAWSRouteTableConfigPrefixListInternetGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+    gateway_id                 = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
