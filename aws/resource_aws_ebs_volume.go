@@ -65,14 +65,14 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"size", "snapshot_id"},
+				AtLeastOneOf: []string{"size", "snapshot_id"},
 			},
 			"snapshot_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"size", "snapshot_id"},
+				AtLeastOneOf: []string{"size", "snapshot_id"},
 			},
 			"outpost_arn": {
 				Type:         schema.TypeString,

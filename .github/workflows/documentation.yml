@@ -2,7 +2,7 @@ name: Documentation Checks
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     paths:
       - .markdownlinkcheck.json
