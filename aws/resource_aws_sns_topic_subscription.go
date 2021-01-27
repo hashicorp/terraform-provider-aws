@@ -45,6 +45,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 					"lambda",
 					"sms",
 					"sqs",
+					"firehose",
 				}, true),
 			},
 			"endpoint": {
@@ -97,6 +98,11 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+			},
+			"subscription_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -190,6 +196,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	d.Set("endpoint", attributeOutput.Attributes["Endpoint"])
 	d.Set("filter_policy", attributeOutput.Attributes["FilterPolicy"])
 	d.Set("protocol", attributeOutput.Attributes["Protocol"])
+	d.Set("subscription_role_arn", attributeOutput.Attributes["SubscriptionRoleArn"])
 
 	d.Set("raw_message_delivery", false)
 	if v, ok := attributeOutput.Attributes["RawMessageDelivery"]; ok && aws.StringValue(v) == "true" {
@@ -219,6 +226,7 @@ func getResourceAttributes(d *schema.ResourceData) (output map[string]*string) {
 	filter_policy := d.Get("filter_policy").(string)
 	raw_message_delivery := d.Get("raw_message_delivery").(bool)
 	redrive_policy := d.Get("redrive_policy").(string)
+	subscription_role_arn := d.Get("subscription_role_arn").(string)
 
 	// Collect attributes if available
 	attributes := map[string]*string{}
@@ -235,6 +243,10 @@ func getResourceAttributes(d *schema.ResourceData) (output map[string]*string) {
 		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", raw_message_delivery))
 	}
 
+	if subscription_role_arn != "" {
+		attributes["SubscriptionRoleArn"] = aws.String(subscription_role_arn)
+	}
+
 	if redrive_policy != "" {
 		attributes["RedrivePolicy"] = aws.String(redrive_policy)
 	}
@@ -248,10 +260,15 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 	topic_arn := d.Get("topic_arn").(string)
 	endpoint_auto_confirms := d.Get("endpoint_auto_confirms").(bool)
 	confirmation_timeout_in_minutes := d.Get("confirmation_timeout_in_minutes").(int)
+	subscription_role_arn := d.Get("subscription_role_arn").(string)
 	attributes := getResourceAttributes(d)
 
 	if strings.Contains(protocol, "http") && !endpoint_auto_confirms {
 		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
+	}
+
+	if strings.Contains(protocol, "firehose") && !subscription_role_arn {
+		return nil, fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
 	}
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
