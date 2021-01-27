@@ -3,14 +3,19 @@ subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_conformance_pack"
 description: |-
-Manages a Config Conformance Pack
+  Manages a Config Conformance Pack
 ---
 
 # Resource: aws_config_conformance_pack
 
-Manages a Config Conformance Pack. More information about these rules can be found in the [Managing Conformance Packs Across all Accounts in Your Organization](https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html) and [AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html) documentation. Example conformance pack templates may be found in the [AWS Config Rules Repository](https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs).
+Manages a Config Conformance Pack. More information about these rules can be found in the
+[Conformance Packs](https://docs.aws.amazon.com/config/latest/developerguide/conformance-packs.html) documentation.
+Example conformance pack templates may be found in the
+[AWS Config Rules Repository](https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs).
 
-~> **NOTE:** The account must have a Configuration Recorder with proper IAM permissions before the conformance pack will successfully create or update. See also the [`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
+~> **NOTE:** The account must have a Configuration Recorder with proper IAM permissions before the conformance pack will
+successfully create or update. See also the
+[`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
 
 ## Example Usage
 
