@@ -17,7 +17,7 @@ func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
@@ -50,7 +50,7 @@ func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
@@ -75,7 +75,7 @@ func testAccConfigOrganizationConformancePack_InputParameters(t *testing.T) {
 	pValue := "ParamValue"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
@@ -110,7 +110,7 @@ func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
@@ -146,7 +146,7 @@ func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
@@ -180,7 +180,7 @@ func testAccConfigOrganizationConformancePack_ExcludedAccounts(t *testing.T) {
 	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccOrganizationsMasterPreCheck(t)
@@ -303,7 +303,7 @@ func testAccCheckConfigOrganizationConformancePackSuccessful(resourceName string
 	}
 }
 
-/*func testAccConfigOrganizationConformancePackBase(rName string) string {
+func testAccConfigOrganizationConformancePackBase(rName string) string {
 	return fmt.Sprintf(`
 
 data "aws_partition" "current" {
@@ -341,10 +341,13 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 `, rName)
 }
-*/
+
 func testAccConfigOrganizationConformancePackConfigRuleIdentifier(rName, ruleIdentifier string) string {
 	return fmt.Sprintf(`
+%[3]s
+
 resource "aws_config_organization_conformance_pack" "test" {
+  depends_on    = [aws_config_configuration_recorder.test]
   name          = %[1]q
   template_body = <<EOT
 Resources:
@@ -358,13 +361,16 @@ Resources:
 EOT
 }
 
-`, rName, ruleIdentifier)
+`, rName, ruleIdentifier, testAccConfigOrganizationConformancePackBase(rName))
 }
 
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
 	return fmt.Sprintf(`
+%[5]s
+
 resource "aws_config_organization_conformance_pack" "test" {
-  name = %[1]q
+  depends_on       = [aws_config_configuration_recorder.test]
+  name             = %[1]q
   input_parameters = {
     %[3]s = %[4]q
   }
@@ -383,11 +389,13 @@ Resources:
 EOT
 }
 
-`, rName, ruleIdentifier, pKey, pValue)
+`, rName, ruleIdentifier, pKey, pValue, testAccConfigOrganizationConformancePackBase(rName))
 }
 
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Delivery(rName, ruleIdentifier, bName string) string {
 	return fmt.Sprintf(`
+%[4]s
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[3]q
   acl           = "private"
@@ -395,6 +403,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_config_organization_conformance_pack" "test" {
+  depends_on             = [aws_config_configuration_recorder.test]
   name                   = %[1]q
   delivery_s3_bucket     = aws_s3_bucket.test.id
   delivery_s3_key_prefix = %[2]q
@@ -410,11 +419,13 @@ Resources:
 EOT
 }
 
-`, rName, ruleIdentifier, bName)
+`, rName, ruleIdentifier, bName, testAccConfigOrganizationConformancePackBase(rName))
 }
 
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Template(rName, ruleIdentifier, bName, kName string) string {
 	return fmt.Sprintf(`
+%[5]s
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[3]q
   acl           = "private"
@@ -437,19 +448,22 @@ EOT
 }
 
 resource "aws_config_organization_conformance_pack" "test" {
+  depends_on      = [aws_config_configuration_recorder.test]
   name            = "%[1]s"
   template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
 }
 
-`, rName, ruleIdentifier, bName, kName)
+`, rName, ruleIdentifier, bName, kName, testAccConfigOrganizationConformancePackBase(rName))
 }
 
 func testAccConfigOrganizationConformancePackConfigRuleIdentifierExcludedAccounts(rName, ruleIdentifier string) string {
 	return fmt.Sprintf(`
+%[3]s
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_config_organization_conformance_pack" "test" {
+  depends_on        = [aws_config_configuration_recorder.test]
   name              = %[1]q
   excluded_accounts = [data.aws_caller_identity.current.account_id]
   template_body     = <<EOT
@@ -464,5 +478,5 @@ Resources:
 EOT
 }
 
-`, rName, ruleIdentifier)
+`, rName, ruleIdentifier, testAccConfigOrganizationConformancePackBase(rName))
 }
