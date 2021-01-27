@@ -78,6 +78,7 @@ Valid values are `Active` and `Inactive`.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
 * `id` - The access key ID.
 * `user` - The IAM user associated with this access key.
 * `key_fingerprint` - The fingerprint of the PGP key used to encrypt
