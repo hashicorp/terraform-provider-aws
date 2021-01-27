@@ -267,8 +267,11 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		return nil, fmt.Errorf("Protocol http/https is only supported for endpoints which auto confirms!")
 	}
 
-	if strings.Contains(protocol, "firehose") && !subscription_role_arn {
+	if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
 		return nil, fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
+	}
+	if !string.Contains(protocol, "firehose") && subscription_role_arn != "" {
+		return nil, fmt.Errorf("Only protocol firehose supports subscription_role_arn!")
 	}
 
 	log.Printf("[DEBUG] SNS create topic subscription: %s (%s) @ '%s'", endpoint, protocol, topic_arn)
