@@ -67,7 +67,6 @@ func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", ws.Arn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
-
 	return nil
 }
 
