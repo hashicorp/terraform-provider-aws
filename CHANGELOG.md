@@ -1,4 +1,4 @@
-## 3.26.0 (Unreleased)
+## 3.26.0 (January 28, 2021)
 
 NOTES:
 
