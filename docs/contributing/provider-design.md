@@ -12,6 +12,7 @@ The Terraform AWS Provider follows the guidelines established in the [HashiCorp 
     - [IAM Resource-Based Policy Resources](#iam-resource-based-policy-resources)
     - [Managing Resource Running State](#managing-resource-running-state)
     - [Task Execution and Waiter Resources](#task-execution-and-waiter-resources)
+    - [Versioned Resources](#versioned-resources)
 - [Other Considerations](#other-considerations)
     - [AWS Credential Exfiltration](#aws-credential-exfiltration)
 
@@ -117,6 +118,22 @@ Some AWS operations are asynchronous. Terraform requests that AWS perform a task
 In this situation, provider developers should create a separate resource representing the task, assuming that the AWS service API provides operations to start the task and read its status. Adding the task functionality to the parent resource muddies its infrastructure-management purpose. The maintainers prefer this approach even though there is some duplication of an existing resource. For example, the provider has a resource for copying an EC2 AMI in addition to the EC2 AMI resource itself. This modularity allows practitioners to manage the result of the task resource with another resource.
 
 For a related consideration, see the [Managing Resource Running State section](#managing-resource-running-state).
+
+### Versioned Resources
+
+AWS supports having multiple versions of some components. Examples of this include:
+
+* ECS Task Definitions
+* Lambda Functions
+* Secrets Manager Secrets
+
+In general, provider developers should create a separate resource to represent a single version. For example, the provider has both the `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version` resources. However, in some cases, developers should handle versioning in the main resource.
+
+In deciding when to create a separate resource, follow these guidelines:
+
+* If AWS necessarily creates a version when you make a new AWS component, include version handling in the same Terraform resource. Creating an AWS component with one Terraform resource and later using a different resource for updates is confusing.
+* If the AWS service API allows deleting versions and practitioners will want to delete versions, provider developers should implement a separate version resource.
+* If the API only supports publishing new versions, either method is acceptable, however most current implementations are self-contained. Terraform's current configuration language does not natively support triggering resource updates or recreation across resources without a state value change. This can make the implementation more difficult for practitioners without special resource and configuration workarounds, such as a `triggers` attribute. If this changes in the future, then this guidance may be updated towards separate resources, following the [Task Execution and Waiter Resources](#task-execution-and-waiter-resources) guidance.
 
 ## Other Considerations
 
