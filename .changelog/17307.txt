@@ -1,0 +1,3 @@
+```release-notes:enhancement
+resource/sns_topic_subscription: Add `firehose` protocol option with `subscription_role_arn`attribute
+```
