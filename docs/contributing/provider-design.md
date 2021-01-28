@@ -121,16 +121,18 @@ For a related consideration, see the [Managing Resource Running State section](#
 
 ### Versioned Resources
 
-Some AWS components are versioned, where the API supports multiple configurations of a component. Examples of this include:
+AWS supports having multiple versions of some components. Examples of this include:
 
 * ECS Task Definitions
 * Lambda Functions
 * Secrets Manager Secrets
 
-In this situation, provider developers should prefer creating a separate resource to represent a single version of the component. General guidelines for deciding when to create a separate resource or not:
+In general, provider developers should create a separate resource to represent a single version. For example, the provider has both the `aws_secretsmanager_secret` and `aws_secretsmanager_secret_version` resources. However, in some cases, developers should handle versioning in the main resource.
 
-* If resource creation must create a version of that resource, then typically the Terraform resource should be self-contained with versioning. Semantically it would be confusing to have one resource to manage something at the beginning then a separate resource for later updates.
-* If version deletion is possible or necessary, then typically there should be separate resources.
+In deciding when to create a separate resource, follow these guidelines:
+
+* If AWS necessarily creates a version when you make a new AWS component, include version handling in the same Terraform resource. Creating an AWS component with one Terraform resource and later using a different resource for updates is confusing.
+* If the AWS service API allows deleting versions and practitioners will want to delete versions, provider developers should implement a separate version resource.
 * If the API only supports publishing new versions, either method is acceptable, however most current implementations are self-contained. Terraform's current configuration language does not natively support triggering resource updates or recreation across resources without a state value change. This can make the implementation more difficult for practitioners without special resource and configuration workarounds, such as a `triggers` attribute. If this changes in the future, then this guidance may be updated towards separate resources, following the [Task Execution and Waiter Resources](#task-execution-and-waiter-resources) guidance.
 
 ## Other Considerations
