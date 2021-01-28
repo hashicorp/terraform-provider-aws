@@ -43,7 +43,6 @@ func testSweepSagemakerDomains(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			err = r.Delete(d, client)
-
 			if err != nil {
 				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
