@@ -313,7 +313,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_forceDetachPolicies(t *testing.T) {
+func TestAccAWSIAMRole_force_detach_policies(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -340,7 +340,7 @@ func TestAccAWSIAMRole_forceDetachPolicies(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_maxSessionDuration(t *testing.T) {
+func TestAccAWSIAMRole_MaxSessionDuration(t *testing.T) {
 	var conf iam.GetRoleOutput
 	rName := acctest.RandString(10)
 	resourceName := "aws_iam_role.test"
@@ -386,7 +386,7 @@ func TestAccAWSIAMRole_maxSessionDuration(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMRole_permissionsBoundary(t *testing.T) {
+func TestAccAWSIAMRole_PermissionsBoundary(t *testing.T) {
 	var role iam.GetRoleOutput
 
 	rName := acctest.RandString(10)
@@ -1355,7 +1355,6 @@ func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
 	return nil
 }
 
-<<<<<<< HEAD
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
 			PolicyDocument: aws.String(`{
@@ -1367,7 +1366,6 @@ func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
   }
 }`),
 			PolicyName: aws.String(resource.UniqueId()),
-=======
 func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
 	managedPolicies := make([]*string, 0)
 	input := &iam.ListAttachedRolePoliciesInput{
@@ -1387,7 +1385,6 @@ func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
 		input := &iam.DetachRolePolicyInput{
 			PolicyArn: parn,
 			RoleName:  aws.String(rolename),
->>>>>>> 558baf839 (resource/aws_iam_role: Add new acceptance tests)
 		}
 
 		_, err = conn.DetachRolePolicy(input)

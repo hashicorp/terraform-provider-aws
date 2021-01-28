@@ -213,7 +213,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		createResp, err = iamconn.CreateRole(request)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to create IAM role %s, error: %s", name, err)
+		return fmt.Errorf("Error creating IAM Role %s: %s", name, err)
 	}
 
 	if policyData, ok := d.GetOk("inline_policy"); ok {
@@ -245,15 +245,15 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 	getResp, err := iamconn.GetRole(request)
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			log.Printf("[WARN] IAM role %q not found, removing from state", d.Id())
+			log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("failed to read IAM role %s, error: %s", d.Id(), err)
+		return fmt.Errorf("Error reading IAM Role %s: %s", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.Role == nil {
-		log.Printf("[WARN] IAM role %q not found, removing from state", d.Id())
+		log.Printf("[WARN] IAM Role %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -262,7 +262,7 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", role.Arn)
 	if err := d.Set("create_date", role.CreateDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("failed to set create date (RFC3339) for IAM role %s, error: %s", d.Id(), err)
+		return err
 	}
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
@@ -279,10 +279,10 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	assumRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 	if err != nil {
-		return fmt.Errorf("failed to unescape assume role policy for IAM role %s, error: %s", d.Id(), err)
+		return err
 	}
 	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
-		return fmt.Errorf("failed to set assume role policy for IAM role %s, error: %s", d.Id(), err)
+		return err
 	}
 
 	inlinePolicies, err := readInlinePoliciesForRole(iamconn, *role.RoleName)
@@ -318,7 +318,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("failed to update assume role policy for IAM role %s, error: %s", d.Id(), err)
+			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
 		}
 	}
 
@@ -333,7 +333,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("failed to update role description for IAM role %s, error: %s", d.Id(), err)
+			return fmt.Errorf("Error Updating IAM Role (%s) Assume Role Policy: %s", d.Id(), err)
 		}
 	}
 
@@ -348,7 +348,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("failed to update max session duration for IAM role %s, error: %s", d.Id(), err)
+			return fmt.Errorf("Error Updating IAM Role (%s) Max Session Duration: %s", d.Id(), err)
 		}
 	}
 
@@ -361,7 +361,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := iamconn.PutRolePermissionsBoundary(input)
 			if err != nil {
-				return fmt.Errorf("failed to update permission boundary for IAM role %s, error: %s", d.Id(), err)
+				return fmt.Errorf("error updating IAM Role permissions boundary: %s", err)
 			}
 		} else {
 			input := &iam.DeleteRolePermissionsBoundaryInput{
@@ -369,7 +369,7 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			_, err := iamconn.DeleteRolePermissionsBoundary(input)
 			if err != nil {
-				return fmt.Errorf("failed to delete permission boundary for IAM role %s, error: %s", d.Id(), err)
+				return fmt.Errorf("error deleting IAM Role permissions boundary: %s", err)
 			}
 		}
 	}
