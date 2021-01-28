@@ -190,6 +190,7 @@ func Provider() *schema.Provider {
 			"aws_canonical_user_id":                          dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_export":                      dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":                       dataSourceAwsCloudFormationStack(),
+			"aws_cloudfront_cache_policy":                    dataSourceAwsCloudFrontCachePolicy(),
 			"aws_cloudfront_distribution":                    dataSourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_request_policy":           dataSourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudhsm_v2_cluster":                        dataSourceCloudHsmV2Cluster(),
