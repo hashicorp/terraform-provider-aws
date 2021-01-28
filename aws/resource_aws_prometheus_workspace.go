@@ -57,18 +57,16 @@ func resourceAwsPrometheusWorkspaceRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error reading Prometheus Workspace (%s): %w", d.Id(), err))
 	}
 
-	if details.Workspace != nil {
-		ws := details.Workspace
-		if ws.Arn != nil {
-			d.Set("arn", ws.Arn)
-		}
-		if ws.PrometheusEndpoint != nil {
-			d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
-		}
-		if ws.Alias != nil {
-			d.Set("alias", ws.Alias)
-		}
+	if details == nil || details.Workspace == nil {
+		return diag.FromErr(fmt.Errorf("error reading Prometheus Workspace (%s): empty response", d.Id()))
 	}
+
+	ws := details.Workspace
+
+	d.Set("alias", ws.Alias)
+	d.Set("arn", ws.Arn)
+	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
+
 
 	return nil
 }
@@ -120,9 +118,17 @@ func resourceAwsPrometheusWorkspaceDelete(ctx context.Context, d *schema.Resourc
 		WorkspaceId: aws.String(d.Id()),
 	})
 
-	if _, err := waiter.WorkspaceDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be deleted: %w", d.Id(), err))
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	return diag.FromErr(err)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Prometheus Workspace (%s): %w", d.Id(), err))
+	}
+
+	if _, err := waiter.WorkspaceDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Prometheus Workspace (%s) to be deleted: %w", d.Id(), err))
+	}
+
+	return nil
 }

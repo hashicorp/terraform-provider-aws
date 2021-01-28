@@ -28,12 +28,11 @@ The following argument is supported:
 
 ## Attributes Reference
 
-The following attribute is exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the workspace.
-* `alias` - An alias that you assign to this workspace to help you identify it. It does not need to be unique.
-* `prometheus_endpoint` - The Prometheus endpoint available for this workspace.
-
+* `arn` - Amazon Resource Name (ARN) of the workspace.
+* `id` - Identifier of the workspace
+* `prometheus_endpoint` - Prometheus endpoint available for this workspace.
 
 ## Import
 

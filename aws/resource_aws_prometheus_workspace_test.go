@@ -107,18 +107,13 @@ func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
 		res, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
 		})
-		if err == nil {
-			if aws.StringValue(res.Workspace.Status.StatusCode) != "DELETING" {
-				return fmt.Errorf("AMP workspace still exists")
-			}
-		}
-
-		// Verify the error is what we want
 		if isAWSErr(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
-			return nil
+			continue
 		}
 
-		return err
+		if err != nil {
+			return fmt.Errorf("error reading Prometheus WorkSpace (%s): %w", rs.Primary.ID, err)
+		}
 	}
 
 	return nil
