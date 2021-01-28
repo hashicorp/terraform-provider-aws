@@ -104,7 +104,7 @@ func testAccCheckAWSAMPWorkspaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		res, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
+		_, err := conn.DescribeWorkspace(&prometheusservice.DescribeWorkspaceInput{
 			WorkspaceId: aws.String(rs.Primary.ID),
 		})
 		if isAWSErr(err, prometheusservice.ErrCodeResourceNotFoundException, "") {
