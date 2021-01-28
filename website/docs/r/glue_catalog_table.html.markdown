@@ -160,6 +160,7 @@ The following arguments are supported:
 * `schema_arn` - (Optional) The Amazon Resource Name (ARN) of the schema. One of `schema_arn` or `schema_name` has to be provided.
 * `schema_name` - (Optional) The name of the schema. One of `schema_arn` or `schema_name` has to be provided.
 * `registry_name` - (Optional) The name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
