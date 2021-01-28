@@ -125,18 +125,10 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).codebuildconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := finder.ReportGroupByArn(conn, d.Id())
+	reportGroup, err := finder.ReportGroupByArn(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
 	}
-
-	if len(resp.ReportGroups) == 0 {
-		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	reportGroup := resp.ReportGroups[0]
 
 	if reportGroup == nil {
 		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())

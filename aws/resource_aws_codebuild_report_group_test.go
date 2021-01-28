@@ -201,17 +201,17 @@ func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupDeleteReportsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"delete_reports"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 		},
 	})
@@ -268,15 +268,11 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if len(resp.ReportGroups) == 0 {
-			return nil
+		if resp != nil {
+			return fmt.Errorf("Found Report Groups %s", rs.Primary.ID)
 		}
 
-		for _, reportGroup := range resp.ReportGroups {
-			if rs.Primary.ID == aws.StringValue(reportGroup.Arn) {
-				return fmt.Errorf("Found Report Groups %s", rs.Primary.ID)
-			}
-		}
+		return nil
 	}
 	return nil
 }
@@ -295,12 +291,11 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 			return err
 		}
 
-		if len(resp.ReportGroups) != 1 ||
-			aws.StringValue(resp.ReportGroups[0].Arn) != rs.Primary.ID {
+		if resp != nil {
 			return fmt.Errorf("Report Group %s not found", rs.Primary.ID)
 		}
 
-		*reportGroup = *resp.ReportGroups[0]
+		*reportGroup = *resp
 
 		return nil
 	}

@@ -24,15 +24,6 @@ func ReportGroupStatus(conn *codebuild.CodeBuild, arn string) resource.StateRefr
 			return nil, ReportGroupStatusNotFound, nil
 		}
 
-		if len(output.ReportGroups) == 0 {
-			return nil, ReportGroupStatusNotFound, nil
-		}
-
-		reportGroup := output.ReportGroups[0]
-		if reportGroup == nil {
-			return nil, ReportGroupStatusUnknown, nil
-		}
-
-		return output, aws.StringValue(reportGroup.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 // ReportGroupByArn returns the Report Group corresponding to the specified Arn.
-func ReportGroupByArn(conn *codebuild.CodeBuild, arn string) (*codebuild.BatchGetReportGroupsOutput, error) {
+func ReportGroupByArn(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
 
 	output, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
 		ReportGroupArns: aws.StringSlice([]string{arn}),
@@ -15,5 +15,18 @@ func ReportGroupByArn(conn *codebuild.CodeBuild, arn string) (*codebuild.BatchGe
 		return nil, err
 	}
 
-	return output, nil
+	if output == nil {
+		return nil, nil
+	}
+
+	if len(output.ReportGroups) == 0 {
+		return nil, nil
+	}
+
+	reportGroup := output.ReportGroups[0]
+	if reportGroup == nil {
+		return nil, nil
+	}
+
+	return reportGroup, nil
 }
