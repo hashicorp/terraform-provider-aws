@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 * data-source/aws_elasticache_replication_group: Add `multi_az_enabled` argument (https://github.com/hashicorp/terraform-provider-aws/issues/17320)
 * data-source/aws_vpc_peering_connection: Add `cidr_block_set` and `peer_cidr_block_set` attributes (https://github.com/hashicorp/terraform-provider-aws/issues/13420)
+* resource/aws_codeartifact_domain: Make `encryption_key` optional (https://github.com/hashicorp/terraform-provider-aws/issues/17262)
 * resource/aws_elasticache_replication_group: Add `multi_az_enabled` argument (https://github.com/hashicorp/terraform-provider-aws/issues/17320)
 
 BUG FIXES:
