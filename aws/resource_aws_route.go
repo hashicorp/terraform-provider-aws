@@ -506,16 +506,6 @@ func resourceAwsRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema
 	} else if strings.Contains(destination, ".") {
 		d.Set("destination_cidr_block", destination)
 	} else {
-		managedPrefixList, err := finder.ManagedPrefixListByID(meta.(*AWSClient).ec2conn, destination)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if managedPrefixList != nil && aws.StringValue(managedPrefixList.OwnerId) == tfec2.ManagedPrefixListOwnerIdAWS {
-			return nil, fmt.Errorf("Managed prefix list (%s) is owned by AWS", destination)
-		}
-
 		d.Set("destination_prefix_list_id", destination)
 	}
 
