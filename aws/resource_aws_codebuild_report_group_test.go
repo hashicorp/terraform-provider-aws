@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/finder"
 )
 
 func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
@@ -179,9 +180,7 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
-			ReportGroupArns: aws.StringSlice([]string{rs.Primary.ID}),
-		})
+		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -208,9 +207,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 
 		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
 
-		resp, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
-			ReportGroupArns: aws.StringSlice([]string{rs.Primary.ID}),
-		})
+		resp, err := finder.ReportGroupByArn(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

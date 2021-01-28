@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/waiter"
 )
 
 func resourceAwsCodeBuildReportGroup() *schema.Resource {
@@ -106,7 +108,7 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.CreateReportGroup(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating CodeBuild Report Groups: %w", err)
+		return fmt.Errorf("error creating CodeBuild Report Group: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
@@ -118,15 +120,13 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).codebuildconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
-		ReportGroupArns: aws.StringSlice([]string{d.Id()}),
-	})
+	resp, err := finder.ReportGroupByArn(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
 	}
 
 	if len(resp.ReportGroups) == 0 {
-		log.Printf("[WARN] CodeBuild Report Groups (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -134,7 +134,7 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	reportGroup := resp.ReportGroups[0]
 
 	if reportGroup == nil {
-		log.Printf("[WARN] CodeBuild Report Groups (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -175,7 +175,7 @@ func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interfac
 
 	_, err := conn.UpdateReportGroup(input)
 	if err != nil {
-		return fmt.Errorf("error updating CodeBuild Report Groups: %w", err)
+		return fmt.Errorf("error updating CodeBuild Report Group: %w", err)
 	}
 
 	return resourceAwsCodeBuildReportGroupRead(d, meta)
@@ -189,7 +189,11 @@ func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteReportGroup(deleteOpts); err != nil {
-		return fmt.Errorf("error deleting CodeBuild Report Groups(%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CodeBuild Report Group (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.ReportGroupDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become terminated: %s", d.Id(), err)
 	}
 
 	return nil
