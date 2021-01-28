@@ -20,9 +20,7 @@ func expandCloudFrontCachePolicyCookieNames(cookieNamesFlat map[string]interface
 }
 
 func expandCloudFrontCachePolicyCookiesConfig(cookiesConfigFlat map[string]interface{}) *cloudfront.CachePolicyCookiesConfig {
-	cookies := &cloudfront.CookieNames{
-		Quantity: aws.Int64(int64(0)),
-	}
+	var cookies *cloudfront.CookieNames
 
 	if cookiesFlat, ok := cookiesConfigFlat["cookies"].([]interface{}); ok && len(cookiesFlat) == 1 {
 		cookies = expandCloudFrontCachePolicyCookieNames(cookiesFlat[0].(map[string]interface{}))
@@ -52,7 +50,7 @@ func expandCloudFrontCachePolicyHeaders(headerNamesFlat map[string]interface{}) 
 }
 
 func expandCloudFrontCachePolicyHeadersConfig(headersConfigFlat map[string]interface{}) *cloudfront.CachePolicyHeadersConfig {
-	headers := &cloudfront.Headers{}
+	var headers *cloudfront.Headers
 
 	if headersFlat, ok := headersConfigFlat["headers"].([]interface{}); ok && len(headersFlat) == 1 && headersConfigFlat["header_behavior"] != "none" {
 		headers = expandCloudFrontCachePolicyHeaders(headersFlat[0].(map[string]interface{}))
@@ -82,9 +80,7 @@ func expandCloudFrontCachePolicyQueryStringNames(queryStringNamesFlat map[string
 }
 
 func expandCloudFrontCachePolicyQueryStringConfig(queryStringConfigFlat map[string]interface{}) *cloudfront.CachePolicyQueryStringsConfig {
-	queryStrings := &cloudfront.QueryStringNames{
-		Quantity: aws.Int64(int64(0)),
-	}
+	var queryStrings *cloudfront.QueryStringNames
 
 	if queryStringFlat, ok := queryStringConfigFlat["query_strings"].([]interface{}); ok && len(queryStringFlat) == 1 {
 		queryStrings = expandCloudFrontCachePolicyQueryStringNames(queryStringFlat[0].(map[string]interface{}))
