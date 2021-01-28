@@ -1,11 +1,27 @@
 ## 3.26.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_route53_zone: The Route 53 `ListResourceRecordSets` API call has been implemented to support the `name_servers` attribute for private Hosted Zones similar to the resource implementation. Environments using restrictive IAM permissions may require updates. (https://github.com/hashicorp/terraform-provider-aws/issues/17002)
+
+FEATURES:
+
+* **New Data Source:** `aws_imagebuilder_image` (https://github.com/hashicorp/terraform-provider-aws/issues/16710)
+* **New Resource:** `aws_imagebuilder_image` (https://github.com/hashicorp/terraform-provider-aws/issues/16710)
+* **New Resource:** `aws_prometheus_workspace` (https://github.com/hashicorp/terraform-provider-aws/issues/16882)
+
 ENHANCEMENTS:
 
+* data-source/aws_elasticache_replication_group: Add `multi_az_enabled` argument (https://github.com/hashicorp/terraform-provider-aws/issues/17320)
 * data-source/aws_vpc_peering_connection: Add `cidr_block_set` and `peer_cidr_block_set` attributes (https://github.com/hashicorp/terraform-provider-aws/issues/13420)
+* resource/aws_elasticache_replication_group: Add `multi_az_enabled` argument (https://github.com/hashicorp/terraform-provider-aws/issues/17320)
 
 BUG FIXES:
 
+* data-source/aws_elb_hosted_zone_id: Correct values for `cn-north-1` and `cn-northwest-1` regions (https://github.com/hashicorp/terraform-provider-aws/issues/17226)
+* data-source/aws_lb_listener: Prevent error when retrieving a listener whose default action contains weighted target groups (https://github.com/hashicorp/terraform-provider-aws/issues/17238)
+* data-source/aws_route53_zone: Ensure `name_servers` is populated for private Hosted Zones (https://github.com/hashicorp/terraform-provider-aws/issues/17002)
+* resource/aws_ebs_volume: Allow both `size` and `snapshot_id` attributes to be specified (https://github.com/hashicorp/terraform-provider-aws/issues/17243)
 * resource/aws_elasticache_replication_group: Correctly update computed `member_clusters` values (https://github.com/hashicorp/terraform-provider-aws/issues/17201)
 
 ## 3.25.0 (January 22, 2021)

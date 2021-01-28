@@ -474,6 +474,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/pricing" = [
       "aws_pricing_",
     ],
+    "service/prometheusservice" = [
+      "aws_prometheus_",
+    ],
     "service/qldb" = [
       "aws_qldb_",
     ],
@@ -1331,6 +1334,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/pricing/**/*",
       "**/*_pricing_*",
       "**/pricing_*"
+    ]
+    "service/prometheusservice" = [
+      "aws/internal/service/prometheus/**/*",
+      "**/*_prometheus_*",
+      "**/prometheus_*",
     ]
     "service/qldb" = [
       "aws/internal/service/qldb/**/*",

@@ -61,6 +61,8 @@ For most use cases in this codebase, this means if code is receiving an error an
 return fmt.Errorf("adding some additional message: %w", err)
 ```
 
+This type of error wrapping should be applied to all Terraform resource logic. It should also be applied to any nested functions that contains two or more error conditions (e.g. a function that calls an update API and waits for the update to finish) so practitioners and code maintainers have a clear idea which generated the error. When returning errors in those situations, it is important to only include necessary additional context. Resource logic will typically include the information such as the type of operation and resource identifier (e.g. `error updating Service Thing (%s): %w`), so these messages can be more terse such as `error waiting for completion: %w`.
+
 ### AWS Go SDK Errors
 
 The [AWS Go SDK documentation](https://docs.aws.amazon.com/sdk-for-go/) includes a [section on handling errors](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/handling-errors.html), which is recommended reading.
