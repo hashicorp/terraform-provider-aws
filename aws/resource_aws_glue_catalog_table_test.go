@@ -334,8 +334,6 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
 				),
-				// Expect non-empty instead of panic
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
