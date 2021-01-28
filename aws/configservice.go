@@ -381,3 +381,21 @@ func configDescribeOrganizationConformancePackDetailedStatus(conn *configservice
 
 	return ret, nil
 }
+
+func expandConfigConformancePackParameters(m map[string]interface{}) (params []*configservice.ConformancePackInputParameter) {
+	for k, v := range m {
+		params = append(params, &configservice.ConformancePackInputParameter{
+			ParameterName:  aws.String(k),
+			ParameterValue: aws.String(v.(string)),
+		})
+	}
+	return
+}
+
+func flattenConformancePackInputParameters(parameters []*configservice.ConformancePackInputParameter) (m map[string]string) {
+	m = make(map[string]string)
+	for _, p := range parameters {
+		m[*p.ParameterName] = *p.ParameterValue
+	}
+	return
+}
