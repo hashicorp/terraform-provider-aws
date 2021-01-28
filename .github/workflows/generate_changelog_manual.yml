@@ -1,4 +1,4 @@
-name: Generate CHANGELOG
+name: Generate CHANGELOG (Manual)
 on:
   workflow_dispatch:
 jobs:
