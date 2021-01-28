@@ -90,9 +90,10 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 		},
 	})
@@ -124,9 +125,10 @@ func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 			{
 				Config: testAccAWSCodeBuildReportGroupS3ExportUpdatedConfig(rName),
@@ -165,9 +167,10 @@ func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 			{
 				Config: testAccAWSCodeBuildReportGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -208,10 +211,10 @@ func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{"delete_reports"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 		},
 	})
@@ -269,7 +272,7 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 		}
 
 		if resp != nil {
-			return fmt.Errorf("Found Report Groups %s", rs.Primary.ID)
+			return fmt.Errorf("Found Report Group %s", rs.Primary.ID)
 		}
 
 		return nil
@@ -291,7 +294,7 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 			return err
 		}
 
-		if resp != nil {
+		if resp == nil {
 			return fmt.Errorf("Report Group %s not found", rs.Primary.ID)
 		}
 

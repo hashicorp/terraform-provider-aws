@@ -13,7 +13,7 @@ const (
 )
 
 // ReportGroupDeleted waits for an ReportGroup to return Deleted
-func ReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.BatchGetReportGroupsOutput, error) {
+func ReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{codebuild.ReportGroupStatusTypeDeleting},
 		Target:  []string{},
@@ -23,7 +23,7 @@ func ReportGroupDeleted(conn *codebuild.CodeBuild, arn string) (*codebuild.Batch
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*codebuild.BatchGetReportGroupsOutput); ok {
+	if output, ok := outputRaw.(*codebuild.ReportGroup); ok {
 		return output, err
 	}
 
