@@ -27,6 +27,13 @@ func TestAccAWSConfig_serial(t *testing.T) {
 			"allParams":   testAccConfigConfigurationRecorder_allParams,
 			"importBasic": testAccConfigConfigurationRecorder_importBasic,
 		},
+		"ConformancePack": {
+			"basic":           testAccConfigConformancePack_basic,
+			"disappears":      testAccConfigConformancePack_disappears,
+			"InputParameters": testAccConfigConformancePack_InputParameters,
+			"S3Delivery":      testAccConfigConformancePack_S3Delivery,
+			"S3Template":      testAccConfigConformancePack_S3Template,
+		},
 		"DeliveryChannel": {
 			"basic":       testAccConfigDeliveryChannel_basic,
 			"allParams":   testAccConfigDeliveryChannel_allParams,
