@@ -897,13 +897,13 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     schema_reference {
-	  schema_id {
+      schema_id {
         schema_name   = aws_glue_schema.test.schema_name
-        registry_name = aws_glue_schema.test.registry_name		  
-	  }
-	  
-	  schema_version_number = aws_glue_schema.test.latest_schema_version
-	}
+        registry_name = aws_glue_schema.test.registry_name
+      }
+
+      schema_version_number = aws_glue_schema.test.latest_schema_version
+    }
   }
 }
 `, rName)
@@ -933,12 +933,12 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     schema_reference {
-	  schema_id {
+      schema_id {
         schema_arn = aws_glue_schema.test.arn
-	  }
-	  
-	  schema_version_number = aws_glue_schema.test.latest_schema_version
-	}
+      }
+
+      schema_version_number = aws_glue_schema.test.latest_schema_version
+    }
   }
 }
 `, rName)
