@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 )
 
 func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
@@ -895,12 +896,7 @@ func testAccCheckGlueTableDestroy(s *terraform.State) error {
 			return err
 		}
 
-		input := &glue.GetTableInput{
-			DatabaseName: aws.String(dbName),
-			CatalogId:    aws.String(catalogId),
-			Name:         aws.String(resourceName),
-		}
-		if _, err := conn.GetTable(input); err != nil {
+		if _, err := finder.TableByName(conn, catalogId, dbName, resourceName); err != nil {
 			//Verify the error is what we want
 			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
 				continue
@@ -930,12 +926,7 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		out, err := conn.GetTable(&glue.GetTableInput{
-			CatalogId:    aws.String(catalogId),
-			DatabaseName: aws.String(dbName),
-			Name:         aws.String(resourceName),
-		})
-
+		out, err := finder.TableByName(conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err
 		}
