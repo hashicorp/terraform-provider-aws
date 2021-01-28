@@ -1,0 +1,3 @@
+```release-note:bug
+resource/codebuild_report_group: Wait for report group to be deleted
+```
