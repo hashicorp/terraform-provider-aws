@@ -122,7 +122,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -156,7 +156,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -190,7 +190,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{

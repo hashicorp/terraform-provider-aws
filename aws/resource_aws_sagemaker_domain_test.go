@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 
@@ -324,6 +325,43 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
+
+	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
+		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
+	}
+
+	var domain sagemaker.DescribeDomainOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_sagemaker_domain.test"
+	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerDomainConfigKernelGatewayAppSettingsCustomImage(rName, baseImage),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -461,6 +499,11 @@ data "aws_iam_policy_document" "test" {
       identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 `, rName)
 }
@@ -704,4 +747,48 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSSagemakerDomainConfigKernelGatewayAppSettingsCustomImage(rName, baseImage string) string {
+	return testAccAWSSagemakerDomainConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_image" "test" {
+  image_name = %[1]q
+  role_arn   = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = %[1]q
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = %[1]q
+    }
+  }
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = %[2]q
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    kernel_gateway_app_settings {
+	  custom_image {
+		app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+        image_name            = aws_sagemaker_image_version.test.image_name
+	  }
+    }
+  }
+}
+`, rName, baseImage)
 }

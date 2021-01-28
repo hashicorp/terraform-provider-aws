@@ -9,3 +9,7 @@ resource/aws_sagemaker_user_profile: Fix destory check in acceptance tests
 ```release-note:enhancement
 resource/aws_sagemaker_domain: Add support `sagemaker_image_version_arn` for `default_resource_spec` config block for the `tensor_board_app_settings`, `jupyter_server_app_settings` and `kernel_gateway_app_settings` config blocks.
 ```
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Make `default_resource_spec` optional for the `tensor_board_app_settings`, `jupyter_server_app_settings` and `kernel_gateway_app_settings` config blocks. 
+```
