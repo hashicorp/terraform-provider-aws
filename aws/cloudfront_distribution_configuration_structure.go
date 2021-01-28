@@ -195,6 +195,7 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
 		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
 		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}

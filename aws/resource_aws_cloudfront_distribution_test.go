@@ -1393,6 +1393,37 @@ variable rand_id {
   default = %[1]d
 }
 
+# log bucket
+%[2]s
+
+resource "aws_cloudfront_cache_policy" "example" {
+  name        = "test-policy%[1]d"
+  comment     = "test comment"
+  default_ttl = 50
+  max_ttl     = 100
+  min_ttl     = 1
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "whitelist"
+      cookies {
+        items = ["test"]
+      }
+    }
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["test"]
+      }
+    }
+    query_strings_config {
+      query_string_behavior = "whitelist"
+      query_strings {
+        items = ["test"]
+      }
+    }
+  }
+}
+
 resource "aws_cloudfront_origin_request_policy" "test_policy" {
   name    = "test-policy%[1]d"
   comment = "test comment"
@@ -1417,9 +1448,29 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "http-only"
+      origin_ssl_protocols     = ["SSLv3", "TLSv1"]
+      origin_read_timeout      = 30
+      origin_keepalive_timeout = 5
+    }
+  }
+
   enabled             = true
   comment             = "Some comment"
   default_root_object = "index.html"
+
+  logging_config {
+    include_cookies = false
+    bucket          = "${aws_s3_bucket.s3_bucket_logs.id}.s3.amazonaws.com"
+    prefix          = "myprefix"
+  }
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -1428,6 +1479,7 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     smooth_streaming = false
 
 		origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
+		cache_policy_id          = aws_cloudfront_cache_policy.example.id
 
     forwarded_values {
       query_string = false
@@ -1438,9 +1490,6 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     }
 
     viewer_protocol_policy = "allow-all"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
   }
 
   price_class = "PriceClass_200"
@@ -1455,10 +1504,8 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-
-  %[2]s
 }
-`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
+`, acctest.RandInt(), logBucket, testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionMultiOriginConfig = fmt.Sprintf(`
 variable rand_id {
