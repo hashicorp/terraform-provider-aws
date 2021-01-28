@@ -1,10 +1,8 @@
 name: Generate CHANGELOG
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch:
 jobs:
   GenerateChangelog:
-    if: github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,5 +14,5 @@ jobs:
           git config --local user.email "changelogbot@hashicorp.com"
           git config --local user.name "changelogbot"
           git add CHANGELOG.md
-          git commit -m "Update CHANGELOG.md for #${{ github.event.pull_request.number }}" 
+          git commit -m "Update CHANGELOG.md (Manual Trigger)" 
           git push
