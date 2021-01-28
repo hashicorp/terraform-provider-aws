@@ -92,6 +92,11 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"delete_reports": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -185,7 +190,8 @@ func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).codebuildconn
 
 	deleteOpts := &codebuild.DeleteReportGroupInput{
-		Arn: aws.String(d.Id()),
+		Arn:           aws.String(d.Id()),
+		DeleteReports: aws.Bool(d.Get("delete_reports").(bool)),
 	}
 
 	if _, err := conn.DeleteReportGroup(deleteOpts); err != nil {
@@ -193,7 +199,7 @@ func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := waiter.ReportGroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become terminated: %s", d.Id(), err)
+		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become deleted: %s", d.Id(), err)
 	}
 
 	return nil

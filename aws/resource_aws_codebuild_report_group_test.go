@@ -42,6 +42,8 @@ func testSweepCodeBuildReportGroups(region string) error {
 			r := resourceAwsCodeBuildReportGroup()
 			d := r.Data(nil)
 			d.SetId(id)
+			d.Set("delete_reports", true)
+
 			err := r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting CodeBuild Report Group (%s): %w", id, err)
@@ -183,6 +185,33 @@ func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildReportGroup_deleteReports(t *testing.T) {
+	var reportGroup codebuild.ReportGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_report_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuildReportGroup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_reports"},
 			},
 		},
 	})
@@ -398,4 +427,18 @@ resource "aws_codebuild_report_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSCodeBuildReportGroupDeleteReportsConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_report_group" "test" {
+  name           = %[1]q
+  type           = "TEST"
+  delete_reports = true
+
+  export_config {
+    type = "NO_EXPORT"
+  }
+}
+`, rName)
 }
