@@ -2,15 +2,69 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codebuild/finder"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_codebuild_report_group", &resource.Sweeper{
+		Name: "aws_codebuild_report_group",
+		F:    testSweepCodeBuildReportGroups,
+	})
+}
+
+func testSweepCodeBuildReportGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).codebuildconn
+	input := &codebuild.ListReportGroupsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListReportGroupsPages(input, func(page *codebuild.ListReportGroupsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, arn := range page.ReportGroups {
+			id := aws.StringValue(arn)
+			r := resourceAwsCodeBuildReportGroup()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CodeBuild Report Group (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CodeBuild Report Group sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild ReportGroups: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
