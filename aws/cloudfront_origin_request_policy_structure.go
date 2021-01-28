@@ -20,9 +20,7 @@ func expandCloudFrontOriginRequestPolicyCookieNames(cookieNamesFlat map[string]i
 }
 
 func expandCloudFrontOriginRequestPolicyCookiesConfig(cookiesConfigFlat map[string]interface{}) *cloudfront.OriginRequestPolicyCookiesConfig {
-	cookies := &cloudfront.CookieNames{
-		Quantity: aws.Int64(int64(0)),
-	}
+	var cookies *cloudfront.CookieNames
 
 	if cookiesFlat, ok := cookiesConfigFlat["cookies"].([]interface{}); ok && len(cookiesFlat) == 1 {
 		cookies = expandCloudFrontOriginRequestPolicyCookieNames(cookiesFlat[0].(map[string]interface{}))
@@ -52,7 +50,7 @@ func expandCloudFrontOriginRequestPolicyHeaders(headerNamesFlat map[string]inter
 }
 
 func expandCloudFrontOriginRequestPolicyHeadersConfig(headersConfigFlat map[string]interface{}) *cloudfront.OriginRequestPolicyHeadersConfig {
-	headers := &cloudfront.Headers{}
+	var headers *cloudfront.Headers
 
 	if headersFlat, ok := headersConfigFlat["headers"].([]interface{}); ok && len(headersFlat) == 1 && headersConfigFlat["header_behavior"] != "none" {
 		headers = expandCloudFrontOriginRequestPolicyHeaders(headersFlat[0].(map[string]interface{}))
@@ -82,9 +80,7 @@ func expandCloudFrontOriginRequestPolicyQueryStringNames(queryStringNamesFlat ma
 }
 
 func expandCloudFrontOriginRequestPolicyQueryStringsConfig(queryStringConfigFlat map[string]interface{}) *cloudfront.OriginRequestPolicyQueryStringsConfig {
-	queryStrings := &cloudfront.QueryStringNames{
-		Quantity: aws.Int64(int64(0)),
-	}
+	var queryStrings *cloudfront.QueryStringNames
 
 	if queryStringFlat, ok := queryStringConfigFlat["query_strings"].([]interface{}); ok && len(queryStringFlat) == 1 {
 		queryStrings = expandCloudFrontOriginRequestPolicyQueryStringNames(queryStringFlat[0].(map[string]interface{}))

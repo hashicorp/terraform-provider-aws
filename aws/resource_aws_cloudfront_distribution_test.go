@@ -1478,8 +1478,8 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
     target_origin_id = "myCustomOrigin"
     smooth_streaming = false
 
-		origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
-		cache_policy_id          = aws_cloudfront_cache_policy.example.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
+    cache_policy_id          = aws_cloudfront_cache_policy.example.id
 
     forwarded_values {
       query_string = false
