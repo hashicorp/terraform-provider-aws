@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -50,6 +51,9 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						///
+						// Destinations.
+						///
 						"cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -68,6 +72,14 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 							),
 						},
 
+						"destination_prefix_list_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
+						//
+						// Targets.
+						//
 						"egress_only_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -88,6 +100,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"network_interface_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -99,11 +116,6 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 						},
 
 						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -240,7 +252,8 @@ func revokeAllRouteTableRules(defaultRouteTableId string, meta interface{}) erro
 		if r.GatewayId != nil && *r.GatewayId == "local" {
 			continue
 		}
-		if r.DestinationPrefixListId != nil {
+
+		if r.DestinationPrefixListId != nil && strings.HasPrefix(aws.StringValue(r.GatewayId), "vpce-") {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
@@ -272,6 +285,18 @@ func revokeAllRouteTableRules(defaultRouteTableId string, meta interface{}) erro
 			}
 		}
 
+		if r.DestinationPrefixListId != nil {
+			log.Printf(
+				"[INFO] Deleting route from %s: %s",
+				defaultRouteTableId, *r.DestinationPrefixListId)
+			_, err := conn.DeleteRoute(&ec2.DeleteRouteInput{
+				RouteTableId:            aws.String(defaultRouteTableId),
+				DestinationPrefixListId: r.DestinationPrefixListId,
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

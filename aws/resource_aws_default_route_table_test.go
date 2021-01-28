@@ -404,6 +404,46 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 	})
 }
 
+func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_default_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultRouteTableConfigPrefixListInternetGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckDefaultRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			// Default route tables do not currently have a method to remove routes during deletion.
+			// Managed prefix lists will not delete unless the route is removed prior, otherwise will error:
+			// "unexpected state 'delete-failed', wanted target 'delete-complete'"
+			{
+				Config: testAccDefaultRouteTableConfigPrefixListInternetGatewayNoRoute(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -449,6 +489,46 @@ func testAccCheckDefaultRouteTableRoute(resourceName, destinationAttr, destinati
 			destinationAttr: destination,
 			targetAttr:      target,
 		})(s)
+	}
+}
+
+func testAccCheckDefaultRouteTablePrefixListRoute(resourceName, prefixListResourceName, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rsPrefixList, ok := s.RootModule().Resources[prefixListResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", prefixListResourceName)
+		}
+
+		destination := rsPrefixList.Primary.Attributes["id"]
+		if destination == "" {
+			return fmt.Errorf("Not found: %s.id", prefixListResourceName)
+		}
+
+		rsTarget, ok := s.RootModule().Resources[targetResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", targetResourceName)
+		}
+
+		target := rsTarget.Primary.Attributes[targetResourceAttr]
+		if target == "" {
+			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
+		}
+
+		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+			"destination_prefix_list_id": destination,
+			targetAttr:                   target,
+		})(s)
+	}
+}
+
+func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["vpc_id"], nil
 	}
 }
 
@@ -955,13 +1035,80 @@ resource "aws_default_route_table" "test" {
 `, rName, destinationCidr, destinationIpv6Cidr, ipv6Route)
 }
 
-func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
+func testAccDefaultRouteTableConfigPrefixListInternetGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
 
-		return rs.Primary.Attributes["vpc_id"], nil
-	}
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+    gateway_id                 = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccDefaultRouteTableConfigPrefixListInternetGatewayNoRoute(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
