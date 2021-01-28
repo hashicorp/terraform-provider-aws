@@ -50,3 +50,30 @@ func SchemaVersionByID(conn *glue.Glue, id string) (*glue.GetSchemaVersionOutput
 
 	return output, nil
 }
+
+// PartitionByValues returns the Partition corresponding to the specified Partition Values.
+func PartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) {
+
+	catalogID, dbName, tableName, values, err := tfglue.ReadAwsGluePartitionID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &glue.GetPartitionInput{
+		CatalogId:       aws.String(catalogID),
+		DatabaseName:    aws.String(dbName),
+		TableName:       aws.String(tableName),
+		PartitionValues: aws.StringSlice(values),
+	}
+
+	output, err := conn.GetPartition(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil && output.Partition == nil {
+		return nil, nil
+	}
+
+	return output.Partition, nil
+}
