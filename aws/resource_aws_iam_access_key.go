@@ -110,6 +110,22 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 
+	if v, ok := d.GetOk("status"); ok && v.(string) == iam.StatusTypeInactive {
+		input := &iam.UpdateAccessKeyInput{
+			AccessKeyId: aws.String(d.Id()),
+			Status:      aws.String(iam.StatusTypeInactive),
+			UserName:    aws.String(d.Get("user").(string)),
+		}
+
+		_, err := iamconn.UpdateAccessKey(input)
+
+		if err != nil {
+			return fmt.Errorf("error deactivating IAM Access Key (%s): %w", d.Id(), err)
+		}
+
+		createResp.AccessKey.Status = aws.String(iam.StatusTypeInactive)
+	}
+
 	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
 		CreateDate:  createResp.AccessKey.CreateDate,
