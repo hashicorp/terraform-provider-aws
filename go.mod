@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-aws
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.36.28
+	github.com/aws/aws-sdk-go v1.37.0
 	github.com/beevik/etree v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.7.0
