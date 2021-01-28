@@ -445,6 +445,11 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -468,6 +473,11 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.
 					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
