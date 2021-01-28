@@ -142,16 +142,6 @@ func expandConfigConformancePackExcludedAccounts(i []interface{}) (ret []*string
 	return
 }
 
-func expandConfigConformancePackParameters(m map[string]interface{}) (params []*configservice.ConformancePackInputParameter) {
-	for k, v := range m {
-		params = append(params, &configservice.ConformancePackInputParameter{
-			ParameterName:  aws.String(k),
-			ParameterValue: aws.String(v.(string)),
-		})
-	}
-	return
-}
-
 func refreshOrganizationConformancePackStatus(d *schema.ResourceData, conn *configservice.ConfigService) func() (interface{}, string, error) {
 	return func() (interface{}, string, error) {
 		out, err := conn.DescribeOrganizationConformancePackStatuses(&configservice.DescribeOrganizationConformancePackStatusesInput{
@@ -224,14 +214,6 @@ func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, me
 	}
 
 	return nil
-}
-
-func flattenConformancePackInputParameters(parameters []*configservice.ConformancePackInputParameter) (m map[string]string) {
-	m = make(map[string]string)
-	for _, p := range parameters {
-		m[*p.ParameterName] = *p.ParameterValue
-	}
-	return
 }
 
 func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
