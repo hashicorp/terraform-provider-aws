@@ -24,7 +24,7 @@ data "aws_cloudfront_origin_request_policy" "example" {
 The following arguments are supported:
 
 * `name` - A unique name to identify the origin request policy.
-* `id` - The identifier for the origin request policy. 
+* `id` - The identifier for the origin request policy.
 
 ## Attributes Reference
 

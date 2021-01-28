@@ -72,4 +72,4 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The current version of the origin request policy.
-* `id` - The identifier for the origin request policy. 
+* `id` - The identifier for the origin request policy.
