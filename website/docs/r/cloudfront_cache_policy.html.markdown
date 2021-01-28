@@ -15,7 +15,7 @@ description: |-
 
 ## Example Usage
 
-The following example below creates a CloudFront public key.
+The following example below creates a CloudFront cache policy.
 
 ```hcl
 resource "aws_cloudfront_cache_policy" "example" {                                  
