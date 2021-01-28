@@ -108,6 +108,7 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 						"columns": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"comment": {
@@ -206,8 +207,9 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 													ExactlyOneOf: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name"},
 												},
 												"registry_name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:          schema.TypeString,
+													Optional:      true,
+													ConflictsWith: []string{"storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn"},
 												},
 											},
 										},
@@ -219,7 +221,7 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 									},
 									"schema_version_number": {
 										Type:         schema.TypeInt,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.IntBetween(1, 100000),
 									},
 								},

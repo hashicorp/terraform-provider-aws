@@ -424,6 +424,55 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationB
 	})
 }
 
+func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTableConfigStorageDescriptorSchemaReference(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_name", "aws_glue_schema.test", "schema_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.registry_name", "aws_glue_schema.test", "registry_name"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTableConfigStorageDescriptorSchemaReferenceArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
@@ -482,6 +531,28 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_catalog_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueCatalogTable_basic(rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), "aws_glue_catalog_database.test"),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -797,6 +868,77 @@ resource "aws_glue_catalog_table" "test" {
       skewed_column_value_location_maps = {}
       skewed_column_values              = []
     }
+  }
+}
+`, rName)
+}
+
+func testAccGlueCatalogTableConfigStorageDescriptorSchemaReference(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_registry" "test" {
+  registry_name = %[1]q
+}
+
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    schema_reference {
+	  schema_id {
+        schema_name   = aws_glue_schema.test.schema_name
+        registry_name = aws_glue_schema.test.registry_name		  
+	  }
+	  
+	  schema_version_number = aws_glue_schema.test.latest_schema_version
+	}
+  }
+}
+`, rName)
+}
+
+func testAccGlueCatalogTableConfigStorageDescriptorSchemaReferenceArn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_registry" "test" {
+  registry_name = %[1]q
+}
+
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = "NONE"
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+
+  storage_descriptor {
+    schema_reference {
+	  schema_id {
+        schema_arn = aws_glue_schema.test.arn
+	  }
+	  
+	  schema_version_number = aws_glue_schema.test.latest_schema_version
+	}
   }
 }
 `, rName)
