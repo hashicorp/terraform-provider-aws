@@ -14,7 +14,7 @@ custom domain name.
 
 ## Example Usage
 
-An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/master/examples/api-gateway-rest-api-openapi).
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
 ```hcl
 resource "aws_api_gateway_stage" "example" {

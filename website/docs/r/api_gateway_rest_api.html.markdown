@@ -16,7 +16,7 @@ Manages an API Gateway REST API. The REST API can be configured via [importing a
 
 ### OpenAPI Specification
 
-An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/master/examples/api-gateway-rest-api-openapi).
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
 ```hcl
 resource "aws_api_gateway_rest_api" "example" {
