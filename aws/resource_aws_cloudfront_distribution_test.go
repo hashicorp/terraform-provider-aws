@@ -212,6 +212,31 @@ func TestAccAWSCloudFrontDistribution_customOrigin(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_originPolicy(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionOriginRequestPolicyConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_cloudfront_distribution.custom_distribution", "default_cache_behavior.0.origin_request_policy_id", regexp.MustCompile("[A-z0-9]+")),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudfront_distribution.custom_distribution",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 // TestAccAWSCloudFrontDistribution_multiOrigin runs an
 // aws_cloudfront_distribution acceptance test with multiple origins.
 //
@@ -1362,6 +1387,78 @@ resource "aws_cloudfront_distribution" "custom_distribution" {
   %s
 }
 `, acctest.RandInt(), logBucket, testAccAWSCloudFrontDistributionRetainConfig())
+
+var testAccAWSCloudFrontDistributionOriginRequestPolicyConfig = fmt.Sprintf(`
+variable rand_id {
+  default = %[1]d
+}
+
+resource "aws_cloudfront_origin_request_policy" "test_policy" {
+  name    = "test-policy%[1]d"
+  comment = "test comment"
+  cookies_config {
+    cookie_behavior = "whitelist"
+    cookies {
+      items = ["test"]
+    }
+  }
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = ["test"]
+    }
+  }
+  query_strings_config {
+    query_string_behavior = "whitelist"
+    query_strings {
+      items = ["test"]
+    }
+  }
+}
+
+resource "aws_cloudfront_distribution" "custom_distribution" {
+  enabled             = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+		origin_request_policy_id = aws_cloudfront_origin_request_policy.test_policy.id
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  price_class = "PriceClass_200"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
 
 var testAccAWSCloudFrontDistributionMultiOriginConfig = fmt.Sprintf(`
 variable rand_id {
