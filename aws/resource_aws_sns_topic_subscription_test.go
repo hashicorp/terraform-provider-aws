@@ -372,7 +372,7 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(ri),
+				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(ri, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("terraform-test-topic-%d:.+", ri))),
@@ -393,6 +393,14 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 					"confirmation_timeout_in_minutes",
 					"endpoint_auto_confirms",
 				},
+			},
+			// Test attribute update
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(ri, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttrPair(resourceName, "subscription_role_arn", "aws_iam_role.firehose_role", "arn"),
+				),
 			},
 		},
 	})
@@ -941,7 +949,7 @@ resource "aws_sns_topic_subscription" "test_subscription" {
 `, i, i, i, i, i, i, i, i, i, username, password, username, password)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_firehose(i int) string {
+func testAccAWSSNSTopicSubscriptionConfig_firehose(i, n int) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "terraform-test-topic-%d"
@@ -959,7 +967,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_iam_role" "firehose_role" {
-  name = "tf-test-firehose-role-%d"
+  name = "tf-test-firehose-role-%d-%d"
 
   assume_role_policy = <<EOF
 {
@@ -987,5 +995,5 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     bucket_arn = aws_s3_bucket.bucket.arn
   }
 }
-`, i, i, i, i)
+`, i, i, n, i, i)
 }

@@ -102,7 +102,6 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 			"subscription_role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -161,6 +160,21 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("redrive_policy") {
 		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("subscription_role_arn") {
+		protocol := d.Get("protocol").(string)
+		subscription_role_arn := d.Get("subscription_role_arn").(string)
+		if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
+			return fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
+		}
+		if !strings.Contains(protocol, "firehose") && subscription_role_arn != "" {
+			return fmt.Errorf("Only protocol firehose supports subscription_role_arn!")
+		}
+
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "SubscriptionRoleArn", subscription_role_arn); err != nil {
 			return err
 		}
 	}
