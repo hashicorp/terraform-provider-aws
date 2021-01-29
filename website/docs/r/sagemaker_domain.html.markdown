@@ -77,10 +77,10 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     kernel_gateway_app_settings {
-	    custom_image {
-		    app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+      custom_image {
+        app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
         image_name            = aws_sagemaker_image_version.test.image_name
-	    }
+      }
     }
   }
 }
