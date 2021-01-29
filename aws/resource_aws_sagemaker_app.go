@@ -70,11 +70,6 @@ func resourceAwsSagemakerApp() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validateArn,
 						},
-						"sagemaker_image_version_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
 					},
 				},
 			},

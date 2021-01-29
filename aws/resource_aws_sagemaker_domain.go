@@ -136,11 +136,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validateArn,
 												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateArn,
-												},
 											},
 										},
 									},
@@ -170,11 +165,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validateArn,
 												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateArn,
-												},
 											},
 										},
 									},
@@ -200,11 +190,6 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
 												"sagemaker_image_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validateArn,
-												},
-												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validateArn,
@@ -500,10 +485,6 @@ func expandSagemakerDomainDefaultResourceSpec(l []interface{}) *sagemaker.Resour
 		config.SageMakerImageArn = aws.String(v)
 	}
 
-	if v, ok := m["sagemaker_image_version_arn"].(string); ok && v != "" {
-		config.SageMakerImageVersionArn = aws.String(v)
-	}
-
 	return config
 }
 
@@ -597,10 +578,6 @@ func flattenSagemakerDomainDefaultResourceSpec(config *sagemaker.ResourceSpec) [
 
 	if config.SageMakerImageArn != nil {
 		m["sagemaker_image_arn"] = aws.StringValue(config.SageMakerImageArn)
-	}
-
-	if config.SageMakerImageVersionArn != nil {
-		m["sagemaker_image_version_arn"] = aws.StringValue(config.SageMakerImageVersionArn)
 	}
 
 	return []map[string]interface{}{m}
