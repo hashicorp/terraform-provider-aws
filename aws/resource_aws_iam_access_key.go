@@ -22,6 +22,33 @@ func resourceAwsIamAccessKey() *schema.Resource {
 		Update: resourceAwsIamAccessKeyUpdate,
 		Delete: resourceAwsIamAccessKeyDelete,
 
+		Importer: &schema.ResourceImporter{
+			// ListAccessKeys requires UserName field in certain scenarios:
+			//   ValidationError: Must specify userName when calling with non-User credentials
+			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				conn := meta.(*AWSClient).iamconn
+
+				input := &iam.GetAccessKeyLastUsedInput{
+					AccessKeyId: aws.String(d.Id()),
+				}
+
+				output, err := conn.GetAccessKeyLastUsed(input)
+
+				if err != nil {
+					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: %w", d.Id(), err)
+				}
+
+				if output == nil || output.UserName == nil {
+					return nil, fmt.Errorf("error fetching IAM Access Key (%s) username via GetAccessKeyLastUsed: empty response", d.Id())
+				}
+
+				d.Set("user", output.UserName)
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"user": {
 				Type:     schema.TypeString,
