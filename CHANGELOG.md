@@ -1,5 +1,16 @@
 # 3.27.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_subnet: Add `customer_owned_ipv4_pool` and `map_customer_owned_ip_on_launch` attributes ([#16676](https://github.com/hashicorp/terraform-provider-aws/issues/16676))
+* resource/aws_glacier_vault: Add plan-time validation for `notification` configuration block `events` and `sns_topic_arn` arguments ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
+* resource/aws_subnet: Add `customer_owned_ipv4_pool` and `map_customer_owned_ip_on_launch` attributes ([#16676](https://github.com/hashicorp/terraform-provider-aws/issues/16676))
+
+BUG FIXES:
+
+* resource/aws_glacier_vault: Prevent crash with `GetVaultAccessPolicy` API errors ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
+* resource/aws_glacier_vault: Properly remove from state when resource does not exist ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
+
 # 3.26.0 (January 28, 2021)
 
 NOTES:
