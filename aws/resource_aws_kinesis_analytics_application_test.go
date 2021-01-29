@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -42,7 +43,7 @@ func testSweepKinesisAnalyticsApplications(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.ApplicationByName(conn, name)
+			application, err := finder.ApplicationDetailByName(conn, name)
 
 			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
@@ -1489,8 +1490,8 @@ func testAccCheckKinesisAnalyticsApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
-		if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+		if tfresource.NotFound(err) {
 			continue
 		}
 		if err != nil {
@@ -1515,7 +1516,7 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, v *kinesisanalytics
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
 
-		application, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
+		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
 		if err != nil {
 			return err
 		}

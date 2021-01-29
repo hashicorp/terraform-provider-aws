@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalytics/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
@@ -657,9 +659,9 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).kinesisanalyticsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	application, err := finder.ApplicationByName(conn, d.Get("name").(string))
+	application, err := finder.ApplicationDetailByName(conn, d.Get("name").(string))
 
-	if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1041,7 +1043,7 @@ func resourceAwsKinesisAnalyticsApplicationDelete(d *schema.ResourceData, meta i
 		CreateTimestamp: aws.Time(createTimestamp),
 	})
 
-	if isAWSErr(err, kinesisanalytics.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, kinesisanalytics.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 

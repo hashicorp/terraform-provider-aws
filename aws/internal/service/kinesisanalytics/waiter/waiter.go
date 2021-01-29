@@ -11,9 +11,12 @@ import (
 )
 
 // ApplicationDeleted waits for an Application to return Deleted
-func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, timeout time.Duration) (*kinesisanalytics.ApplicationSummary, error) {
+func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, timeout time.Duration) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalytics.ApplicationStatusRunning, kinesisanalytics.ApplicationStatusDeleting},
+		Pending: []string{
+			kinesisanalytics.ApplicationStatusRunning,
+			kinesisanalytics.ApplicationStatusDeleting,
+		},
 		Target:  []string{},
 		Refresh: ApplicationStatus(conn, name),
 		Timeout: timeout,
@@ -21,7 +24,7 @@ func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, ti
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*kinesisanalytics.ApplicationSummary); ok {
+	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
 		return v, err
 	}
 
