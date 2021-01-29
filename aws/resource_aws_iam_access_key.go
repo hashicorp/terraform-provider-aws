@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -51,11 +52,15 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"key_fingerprint": {
+			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"encrypted_secret": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,12 +153,16 @@ func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
 	d.SetId(aws.StringValue(key.AccessKeyId))
-	if err := d.Set("user", key.UserName); err != nil {
-		return err
+
+	if key.CreateDate != nil {
+		d.Set("create_date", aws.TimeValue(key.CreateDate).Format(time.RFC3339))
+	} else {
+		d.Set("create_date", nil)
 	}
-	if err := d.Set("status", key.Status); err != nil {
-		return err
-	}
+
+	d.Set("status", key.Status)
+	d.Set("user", key.UserName)
+
 	return nil
 }
 
