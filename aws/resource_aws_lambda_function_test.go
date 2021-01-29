@@ -3140,3 +3140,9 @@ resource "aws_lambda_function" "test" {
 }
 `, rName, runtime))
 }
+
+func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
+	t.Parallel()
+	response := lambda.ImageConfigResponse{}
+	flattenLambdaImageConfig(&response)
+}
