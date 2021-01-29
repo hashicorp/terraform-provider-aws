@@ -1,4 +1,4 @@
-# 3.27.0 (Unreleased)
+## 3.27.0 (Unreleased)
 
 ENHANCEMENTS:
 
@@ -11,7 +11,7 @@ BUG FIXES:
 * resource/aws_glacier_vault: Prevent crash with `GetVaultAccessPolicy` API errors ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
 * resource/aws_glacier_vault: Properly remove from state when resource does not exist ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
 
-# 3.26.0 (January 28, 2021)
+## 3.26.0 (January 28, 2021)
 
 NOTES:
 
