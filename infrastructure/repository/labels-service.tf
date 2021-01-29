@@ -152,6 +152,7 @@ variable "service_labels" {
     "pinpointsmsvoice",
     "polly",
     "pricing",
+    "prometheusservice",
     "qldb",
     "quicksight",
     "ram",

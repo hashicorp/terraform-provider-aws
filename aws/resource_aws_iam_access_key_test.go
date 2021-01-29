@@ -30,8 +30,15 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
+					testAccCheckResourceAttrRfc3339("aws_iam_access_key.a_key", "create_date"),
 					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "secret"),
 				),
+			},
+			{
+				ResourceName:            "aws_iam_access_key.a_key",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
 			},
 		},
 	})
@@ -60,6 +67,12 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 						"aws_iam_access_key.a_key", "key_fingerprint"),
 				),
 			},
+			{
+				ResourceName:            "aws_iam_access_key.a_key",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
+			},
 		},
 	})
 }
@@ -79,6 +92,12 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 					testAccCheckAWSAccessKeyExists("aws_iam_access_key.a_key", &conf),
 					resource.TestCheckResourceAttr("aws_iam_access_key.a_key", "status", iam.StatusTypeInactive),
 				),
+			},
+			{
+				ResourceName:            "aws_iam_access_key.a_key",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
 			},
 			{
 				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeActive),

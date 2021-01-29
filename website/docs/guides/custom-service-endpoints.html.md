@@ -164,6 +164,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>personalize</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pricing</code></li>
+  <li><code>prometheusservice</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
