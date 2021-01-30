@@ -888,6 +888,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_image":                                     resourceAwsSagemakerImage(),
 			"aws_sagemaker_image_version":                             resourceAwsSagemakerImageVersion(),
 			"aws_sagemaker_model":                                     resourceAwsSagemakerModel(),
+			"aws_sagemaker_model_package_group":                       resourceAwsSagemakerModelPackageGroup(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_sagemaker_user_profile":                              resourceAwsSagemakerUserProfile(),
