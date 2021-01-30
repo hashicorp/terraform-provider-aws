@@ -42,6 +42,7 @@ func resourceAwsSagemakerModelPackageGroup() *schema.Resource {
 			"model_package_group_description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"tags": tagsSchema(),
