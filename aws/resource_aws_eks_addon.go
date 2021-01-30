@@ -245,7 +245,7 @@ func resourceAwsEksAddonUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.ServiceAccountRoleArn = aws.String(d.Get("service_account_role_arn").(string))
 	}
 
-	if d.HasChange("addon_version") || d.HasChange("service_account_role_arn") {
+	if d.HasChanges("addon_version", "service_account_role_arn") {
 		log.Printf("[DEBUG] Updating EKS Addon (%s) version: %s", d.Id(), input)
 		output, err := conn.UpdateAddonWithContext(ctx, input)
 		if err != nil {
