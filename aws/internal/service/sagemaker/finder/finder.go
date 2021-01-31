@@ -24,8 +24,8 @@ func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	return output, nil
 }
 
-// ModelPackageGroupByName returns the code repository corresponding to the specified name.
-// Returns nil if no code repository is found.
+// ModelPackageGroupByName returns the Model Package Group corresponding to the specified name.
+// Returns nil if no Model Package Group is found.
 func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
 	input := &sagemaker.DescribeModelPackageGroupInput{
 		ModelPackageGroupName: aws.String(name),
