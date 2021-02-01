@@ -8,7 +8,7 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-From [August through October](docs/roadmaps/2020_August_to_October.md), we committed to adding support for EventBridge, ImageBuilder , LakeFormation and Serverless Application Repository as new service offerings. We were able to deliver EventBridge within that time frame. Unfortunately for a number of reasons we weren’t able to release ImageBuilder, LakeFormation and Serverless Application Repository. That said, they are in progress and on track for release in early November.
+From [August through October](2020_August_to_October.md), we committed to adding support for EventBridge, ImageBuilder , LakeFormation and Serverless Application Repository as new service offerings. We were able to deliver EventBridge within that time frame. Unfortunately for a number of reasons we weren’t able to release ImageBuilder, LakeFormation and Serverless Application Repository. That said, they are in progress and on track for release in early November.
 
 From October-January ‘21, we will be prioritizing the following areas of work:
 
