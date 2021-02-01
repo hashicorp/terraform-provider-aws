@@ -54,7 +54,7 @@ The Elasticache work will begin with a research spike to ensure that the we can 
 
 ### Workflow Improvements
 
-We’ll also be tackling some of the top reported issues in the provider that are causing disruptions to high priority workflows: 
+We’ll also be tackling some of the top reported issues in the provider that are causing disruptions to high priority workflows:
 
 - [#14373](https://github.com/hashicorp/terraform-provider-aws/issues/14373): cloudfront: support for cache and origin request policies
 - [#11584](https://github.com/hashicorp/terraform-provider-aws/issues/11584): Add ability to manage VPN tunnel options
