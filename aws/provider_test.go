@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -177,6 +176,49 @@ func TestProvider(t *testing.T) {
 
 func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
+}
+
+func TestReverseDns(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "amazonaws.com",
+			input:    "amazonaws.com",
+			expected: "com.amazonaws",
+		},
+		{
+			name:     "amazonaws.com.cn",
+			input:    "amazonaws.com.cn",
+			expected: "cn.com.amazonaws",
+		},
+		{
+			name:     "sc2s.sgov.gov",
+			input:    "sc2s.sgov.gov",
+			expected: "gov.sgov.sc2s",
+		},
+		{
+			name:     "c2s.ic.gov",
+			input:    "c2s.ic.gov",
+			expected: "gov.ic.c2s",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			if got, want := ReverseDns(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
 }
 
 // testAccPreCheck verifies and sets required provider testing configuration
@@ -649,9 +691,7 @@ func testAccGetPartitionDNSSuffix() string {
 
 func testAccGetPartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		dnsParts := strings.Split(partition.DNSSuffix(), ".")
-		sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
-		return strings.Join(dnsParts, ".")
+		return ReverseDns(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -1249,6 +1289,27 @@ func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSProvider_Region_AwsC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-iso-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "c2s.ic.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.ic.c2s"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 	var providers []*schema.Provider
 
@@ -1262,6 +1323,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1282,6 +1344,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1302,6 +1365,28 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Region_AwsSC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-isob-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "sc2s.sgov.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso-b"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
 			},
@@ -1563,6 +1648,28 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 
 			if providerPartition != expectedPartition {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSProviderReverseDnsPrefix(providers *[]*schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerReverseDnsPrefix := provider.Meta().(*AWSClient).reverseDnsPrefix
+
+			if providerReverseDnsPrefix != expectedReverseDnsPrefix {
+				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)
 			}
 		}
 
