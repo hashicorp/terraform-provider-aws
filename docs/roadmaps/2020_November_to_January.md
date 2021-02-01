@@ -85,7 +85,7 @@ We are interested in your thoughts and feedback about the proposals below and en
 #### Default Tags Implementation Design
 Issue: [#7926](https://github.com/hashicorp/terraform-provider-aws/issues/7926)
 
-After completing user research and an internal review of our research conclusions, we will begin conducting engineering research and publish an RFC to address the implementation of this feature. Once the RFC has been approved, we will update the community with our plans for Default Tags. 
+After completing user research and an internal review of our research conclusions, we will begin conducting engineering research and publish an RFC to address the implementation of this feature. Once the RFC has been approved, we will update the community with our plans for Default Tags.
 
 #### API Calls/IAM Actions Per Terraform Resource (Minimum IAM)
 Issue: [#9154](https://github.com/hashicorp/terraform-provider-aws/issues/9154)
