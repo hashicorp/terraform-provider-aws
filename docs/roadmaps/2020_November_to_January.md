@@ -22,6 +22,7 @@ _[AWS SSO](https://docs.aws.amazon.com/singlesignon/latest/APIReference/welcome.
 Support for AWS SSO Permission Sets will include:
 
 New Resource(s):
+
 - aws_sso_permission_set
 - aws_sso_permission_set_policy
 - aws_sso_permission_set_policy_attachment
