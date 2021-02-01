@@ -1,8 +1,6 @@
 package ec2
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -46,9 +44,6 @@ func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{
 	resp, err := conn.DescribeVpcPeeringConnections(req)
 	if err != nil {
 		return err
-	}
-	if resp == nil || len(resp.VpcPeeringConnections) == 0 {
-		return fmt.Errorf("no matching VPC peering connections found")
 	}
 
 	var ids []string
