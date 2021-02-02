@@ -719,7 +719,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  // this will result in multiple permissions for iam role
+  # this will result in multiple permissions for iam role
   admins = [aws_iam_role.test.arn, data.aws_caller_identity.current.arn]
 }
 
