@@ -3807,6 +3807,71 @@ resource "aws_instance" "test" {
 `, size, delete, volumeType, throughput))
 }
 
+func TestAccAWSInstance_GP3RootBlockDevice(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	testCheck := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			// Map out the block devices by name, which should be unique.
+			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			for _, blockDevice := range v.BlockDeviceMappings {
+				blockDevices[*blockDevice.DeviceName] = blockDevice
+			}
+
+			// Check if the root block device exists.
+			if _, ok := blockDevices["/dev/xvda"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/xvda")
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigGP3RootBlockDevice(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", "300"),
+					testCheck(),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccInstanceConfigGP3RootBlockDevice() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_size = 10
+    volume_type = "gp3"
+    throughput  = 300
+    iops        = 4000
+  }
+}
+`)
+}
+
 const testAccAwsEc2InstanceAmiWithEbsRootVolume = `
 data "aws_ami" "ami" {
   owners      = ["amazon"]
