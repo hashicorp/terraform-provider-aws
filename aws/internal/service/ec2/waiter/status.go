@@ -259,6 +259,27 @@ func SubnetMapCustomerOwnedIpOnLaunch(conn *ec2.EC2, id string) resource.StateRe
 	}
 }
 
+// SubnetMapPublicIpOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
+func SubnetMapPublicIpOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		subnet, err := finder.SubnetByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+			return nil, "false", nil
+		}
+
+		if err != nil {
+			return nil, "false", err
+		}
+
+		if subnet == nil {
+			return nil, "false", nil
+		}
+
+		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapPublicIpOnLaunch)), nil
+	}
+}
+
 const (
 	vpcPeeringConnectionStatusNotFound = "NotFound"
 	vpcPeeringConnectionStatusUnknown  = "Unknown"
