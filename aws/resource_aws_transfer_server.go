@@ -66,6 +66,14 @@ func resourceAwsTransferServer() *schema.Resource {
 							Set:           schema.HashString,
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
+						"security_group_ids": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							Computed:      true,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							Set:           schema.HashString,
+							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
+						},
 						"subnet_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
@@ -76,7 +84,7 @@ func resourceAwsTransferServer() *schema.Resource {
 						"vpc_endpoint_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
-							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
+							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 							Computed:      true,
 						},
 						"vpc_id": {
