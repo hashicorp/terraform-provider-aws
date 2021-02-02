@@ -34,16 +34,16 @@ var testAccProviderRoute53KeySigningKeyConfigure sync.Once
 func testAccPreCheckRoute53KeySigningKey(t *testing.T) {
 	testAccPartitionHasServicePreCheck(route53.EndpointsID, t)
 
+	region := testAccGetRoute53KeySigningKeyRegion()
+
+	if region == "" {
+		t.Skip("Route 53 Key Signing Key not available in this AWS Partition")
+	}
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
 		testAccProviderRoute53KeySigningKey = Provider()
-
-		region := testAccGetRoute53KeySigningKeyRegion()
-
-		if region == "" {
-			t.Skip("Route 53 Key Signing Key not available in this AWS Partition")
-		}
 
 		config := map[string]interface{}{
 			"region": region,
