@@ -127,6 +127,7 @@ In addition to all arguments above, the following attributes are exported:
 * `instance` - Contains the ID of the attached instance.
 * `network_interface` - Contains the ID of the attached network interface.
 * `public_ipv4_pool` - EC2 IPv4 address pool identifier (if in VPC).
+* `carrier_ip` - The carrier IP address.
 * `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `customer_owned_ip` - Customer owned IP.
 * `domain` - Indicates if this EIP is for use in VPC (`vpc`) or EC2 Classic (`standard`).
@@ -134,7 +135,7 @@ In addition to all arguments above, the following attributes are exported:
 ~> **Note:** The resource computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
 
 ## Timeouts
-`aws_eip` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_eip` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `read` - (Default `15 minutes`) How long to wait querying for information about EIPs.
 - `update` - (Default `5 minutes`) How long to wait for an EIP to be updated.

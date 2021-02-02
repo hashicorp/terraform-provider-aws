@@ -229,10 +229,13 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"source_cluster_identifier": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateRdsIdentifier,
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.Any(
+								validateArn,
+								validateRdsIdentifier,
+							),
 						},
 
 						"restore_type": {
@@ -502,7 +505,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			opts.AvailabilityZones = expandStringList(attr.List())
+			opts.AvailabilityZones = expandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backtrack_window"); ok {
@@ -562,7 +565,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			opts.VpcSecurityGroupIds = expandStringList(attr.List())
+			opts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		log.Printf("[DEBUG] RDS Cluster restore from snapshot configuration: %s", opts)
@@ -630,11 +633,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
+			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringList(attr.List())
+			createOpts.AvailabilityZones = expandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
@@ -740,15 +743,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
+			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			createOpts.KmsKeyId = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringSet(attr.(*schema.Set))
 		}
 
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -851,11 +854,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			createOpts.VpcSecurityGroupIds = expandStringList(attr.List())
+			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-			createOpts.AvailabilityZones = expandStringList(attr.List())
+			createOpts.AvailabilityZones = expandStringSet(attr)
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
@@ -1143,7 +1146,7 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringList(attr.List())
+			req.VpcSecurityGroupIds = expandStringSet(attr)
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}

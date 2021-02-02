@@ -22,14 +22,14 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 
     This pull request appears to include the Go import path `${var.import_path}`, which was from the older SDK. The newer SDK uses import paths beginning with `github.com/hashicorp/terraform-plugin-sdk/`.
 
-    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
+    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current default (main) branch (example below); replacing any remaining old import paths with the newer ones.
 
     ```console
     $ git fetch --all
-    $ git rebase origin/master
+    $ git rebase origin/main
     ```
 
-    Another option is to create a new branch from the current master with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
+    Another option is to create a new branch from the current default (main) with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
 
     We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
   EOF
@@ -46,14 +46,14 @@ behavior "deprecated_import_commenter" "sdkv1" {
 
     This pull request appears to include at least one V1 import path of the SDK (`${var.import_path}`). Please import the V2 path `github.com/hashicorp/terraform-plugin-sdk/v2/helper/PACKAGE`
 
-    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
+    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current default (main) branch (example below); replacing any remaining old import paths with the newer ones.
 
     ```console
     $ git fetch --all
-    $ git rebase origin/master
+    $ git rebase origin/main
     ```
 
-    Another option is to create a new branch from the current master with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
+    Another option is to create a new branch from the current default (main) with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
 
     We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
   EOF
@@ -214,6 +214,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/configservice" = [
       "aws_config_",
     ],
+    "service/connect" = [
+      "aws_connect_",
+    ],
     "service/databasemigrationservice" = [
       "aws_dms_",
     ],
@@ -273,6 +276,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/ecr" = [
       "aws_ecr_",
     ],
+    "service/ecrpublic" = [
+      "aws_ecrpublic_",
+    ],
     "service/ecs" = [
       "aws_ecs_",
     ],
@@ -309,6 +315,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/emr" = [
       "aws_emr_",
+    ],
+    "service/emrcontainers" = [
+      "aws_emrcontainers_",
     ],
     "service/eventbridge" = [
       # EventBridge is rebranded CloudWatch Events
@@ -381,6 +390,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kms" = [
       "aws_kms_",
     ],
+    "service/lakeformation" = [
+      "aws_lakeformation_",
+    ],
     "service/lambda" = [
       "aws_lambda_",
     ],
@@ -429,6 +441,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/mq" = [
       "aws_mq_",
     ],
+    "service/mwaa" = [
+      "aws_mwaa_",
+    ],
     "service/neptune" = [
       "aws_neptune_",
     ],
@@ -458,6 +473,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/pricing" = [
       "aws_pricing_",
+    ],
+    "service/prometheusservice" = [
+      "aws_prometheus_",
     ],
     "service/qldb" = [
       "aws_qldb_",
@@ -513,6 +531,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/securityhub" = [
       "aws_securityhub_",
+    ],
+    "service/serverlessapplicationrepository" = [
+      "aws_serverlessapplicationrepository_",
     ],
     "service/servicecatalog" = [
       "aws_servicecatalog_",
@@ -633,6 +654,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "documentation" = [
       "docs/**/*",
+      "website/**/*",
       "*.md",
     ]
     "examples" = [
@@ -853,6 +875,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_config_*",
       "website/**/config_*"
     ]
+    "service/connect" = [
+      "aws/internal/service/connect/**/*",
+      "aws/*_aws_connect_*",
+      "website/**/connect_*"
+    ]
     "service/costandusagereportservice" = [
       "aws/internal/service/costandusagereportservice/**/*",
       "aws/*_aws_cur_*",
@@ -985,6 +1012,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_ecr_*",
       "**/ecr_*"
     ]
+    "service/ecrpublic" = [
+      "aws/internal/service/ecrpublic/**/*",
+      "**/*_ecrpublic_*",
+      "**/ecrpublic_*"
+    ]
     "service/ecs" = [
       "aws/internal/service/ecs/**/*",
       "**/*_ecs_*",
@@ -1051,6 +1083,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/emr/**/*",
       "**/*_emr_*",
       "**/emr_*"
+    ]
+    "service/emrcontainers" = [
+      "aws/internal/service/emrcontainers/**/*",
+      "**/*_emrcontainers_*",
+      "**/emrcontainers_*"
     ]
     "service/eventbridge" = [
       # EventBridge is rebranded CloudWatch Events
@@ -1163,6 +1200,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_kms_*",
       "**/kms_*"
     ]
+    "service/lakeformation" = [
+      "aws/internal/service/lakeformation/**/*",
+      "**/*_lakeformation_*",
+      "**/lakeformation_*"
+    ]
     "service/lambda" = [
       "aws/internal/service/lambda/**/*",
       "**/*_lambda_*",
@@ -1243,6 +1285,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_mq_*",
       "**/mq_*"
     ]
+    "service/mwaa" = [
+      "aws/internal/service/mwaa/**/*",
+      "**/*_mwaa_*",
+      "**/mwaa_*"
+    ]
     "service/neptune" = [
       "aws/internal/service/neptune/**/*",
       "**/*_neptune_*",
@@ -1287,6 +1334,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/pricing/**/*",
       "**/*_pricing_*",
       "**/pricing_*"
+    ]
+    "service/prometheusservice" = [
+      "aws/internal/service/prometheus/**/*",
+      "**/*_prometheus_*",
+      "**/prometheus_*",
     ]
     "service/qldb" = [
       "aws/internal/service/qldb/**/*",
@@ -1388,6 +1440,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/securityhub/**/*",
       "**/*_securityhub_*",
       "**/securityhub_*"
+    ]
+    "service/serverlessapplicationrepository" = [
+      "aws/internal/service/serverlessapplicationrepository/**/*",
+      "**/*_serverlessapplicationrepository_*",
+      "**/serverlessapplicationrepository_*"
     ]
     "service/servicecatalog" = [
       "aws/internal/service/servicecatalog/**/*",

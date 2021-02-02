@@ -89,7 +89,7 @@ func testSweepEc2VpcPeeringConnections(region string) error {
 
 func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,7 +121,7 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	// reach out and DELETE the VPC Peering connection outside of Terraform
@@ -160,7 +160,7 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -210,7 +210,7 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
@@ -385,7 +385,7 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 }
 
 func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
@@ -521,7 +521,7 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 
 func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 	var providers []*schema.Provider
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -543,7 +543,7 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
 	var providers []*schema.Provider
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -578,7 +578,7 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 // Tests the peering connection acceptance functionality for same region, same account.
 func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -646,7 +646,7 @@ func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 
 // Tests that VPC peering connection options can't be set on non-active connection.
 func TestAccAWSVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

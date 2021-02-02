@@ -1,6 +1,18 @@
 package ec2
 
 const (
+	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+)
+
+const (
+	ErrCodeInvalidCarrierGatewayIDNotFound = "InvalidCarrierGatewayID.NotFound"
+)
+
+const (
+	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
+)
+
+const (
 	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
@@ -10,6 +22,10 @@ const (
 const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
+)
+
+const (
+	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
 )
 
 const (

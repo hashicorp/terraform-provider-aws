@@ -11,41 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
-	resourceName := "aws_glue_catalog_table.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGlueTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlueCatalogTable_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueCatalogTableExists(resourceName),
-				),
-			},
-			{
-				PreConfig: func() {
-					conn := testAccProvider.Meta().(*AWSClient).glueconn
-					input := &glue.DeleteTableInput{
-						Name:         aws.String(rName),
-						DatabaseName: aws.String(rName),
-					}
-					_, err := conn.DeleteTable(input)
-					if err != nil {
-						t.Fatalf("error deleting Glue Catalog Table: %s", err)
-					}
-				},
-				Config:             testAccGlueCatalogTable_basic(rName),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
-			},
-		},
-	})
-}
-
 func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
@@ -63,6 +28,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "partition_keys.#", "0"),
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
 			},

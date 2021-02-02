@@ -564,7 +564,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
 	}
 
-	d.SetId(*resp.Listeners[0].ListenerArn)
+	d.SetId(aws.StringValue(resp.Listeners[0].ListenerArn))
 
 	return resourceAwsLbListenerRead(d, meta)
 }
