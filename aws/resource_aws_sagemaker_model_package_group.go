@@ -68,7 +68,7 @@ func resourceAwsSagemakerModelPackageGroupCreate(d *schema.ResourceData, meta in
 
 	_, err := conn.CreateModelPackageGroup(input)
 	if err != nil {
-		return fmt.Errorf("error creating Sagemaker Model Package Group %s: %w", name, err)
+		return fmt.Errorf("error creating SageMaker Model Package Group %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -91,7 +91,7 @@ func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta inte
 			log.Printf("[WARN] Unable to find Sagemaker Model Package Group (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading Sagemaker Model Package Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading SageMaker Model Package Group (%s): %w", d.Id(), err)
 
 	}
 
@@ -103,7 +103,7 @@ func resourceAwsSagemakerModelPackageGroupRead(d *schema.ResourceData, meta inte
 	tags, err := keyvaluetags.SagemakerListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Sagemaker Model Package Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -120,7 +120,7 @@ func resourceAwsSagemakerModelPackageGroupUpdate(d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SagemakerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Sagemaker Model Package Group (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -138,14 +138,14 @@ func resourceAwsSagemakerModelPackageGroupDelete(d *schema.ResourceData, meta in
 		if isAWSErr(err, "ValidationException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Sagemaker Model Package Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.ModelPackageGroupDeleted(conn, d.Id()); err != nil {
 		if isAWSErr(err, "ValidationException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Sagemaker Model Package Group (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
