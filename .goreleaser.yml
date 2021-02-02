@@ -34,7 +34,7 @@ checksum:
 env:
   - CGO_ENABLED=0
 release:
-  disable: true
+  # disable: true
 signs:
   - artifacts: checksum
     args:
