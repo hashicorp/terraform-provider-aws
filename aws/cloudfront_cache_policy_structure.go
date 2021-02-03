@@ -20,17 +20,12 @@ func expandCloudFrontCachePolicyCookieNames(cookieNamesFlat map[string]interface
 }
 
 func expandCloudFrontCachePolicyCookiesConfig(cookiesConfigFlat map[string]interface{}) *cloudfront.CachePolicyCookiesConfig {
-	var cookies *cloudfront.CookieNames
-
-	if cookiesFlat, ok := cookiesConfigFlat["cookies"].([]interface{}); ok && len(cookiesFlat) == 1 {
-		cookies = expandCloudFrontCachePolicyCookieNames(cookiesFlat[0].(map[string]interface{}))
-	} else {
-		cookies = nil
-	}
-
 	cookiesConfig := &cloudfront.CachePolicyCookiesConfig{
 		CookieBehavior: aws.String(cookiesConfigFlat["cookie_behavior"].(string)),
-		Cookies:        cookies,
+	}
+
+	if cookiesFlat, ok := cookiesConfigFlat["cookies"].([]interface{}); ok && len(cookiesFlat) == 1 {
+		cookiesConfig.Cookies = expandCloudFrontCachePolicyCookieNames(cookiesFlat[0].(map[string]interface{}))
 	}
 
 	return cookiesConfig
@@ -50,17 +45,12 @@ func expandCloudFrontCachePolicyHeaders(headerNamesFlat map[string]interface{}) 
 }
 
 func expandCloudFrontCachePolicyHeadersConfig(headersConfigFlat map[string]interface{}) *cloudfront.CachePolicyHeadersConfig {
-	var headers *cloudfront.Headers
-
-	if headersFlat, ok := headersConfigFlat["headers"].([]interface{}); ok && len(headersFlat) == 1 && headersConfigFlat["header_behavior"] != "none" {
-		headers = expandCloudFrontCachePolicyHeaders(headersFlat[0].(map[string]interface{}))
-	} else {
-		headers = nil
-	}
-
 	headersConfig := &cloudfront.CachePolicyHeadersConfig{
 		HeaderBehavior: aws.String(headersConfigFlat["header_behavior"].(string)),
-		Headers:        headers,
+	}
+
+	if headersFlat, ok := headersConfigFlat["headers"].([]interface{}); ok && len(headersFlat) == 1 && headersConfigFlat["header_behavior"] != "none" {
+		headersConfig.Headers = expandCloudFrontCachePolicyHeaders(headersFlat[0].(map[string]interface{}))
 	}
 
 	return headersConfig
@@ -80,17 +70,12 @@ func expandCloudFrontCachePolicyQueryStringNames(queryStringNamesFlat map[string
 }
 
 func expandCloudFrontCachePolicyQueryStringConfig(queryStringConfigFlat map[string]interface{}) *cloudfront.CachePolicyQueryStringsConfig {
-	var queryStrings *cloudfront.QueryStringNames
-
-	if queryStringFlat, ok := queryStringConfigFlat["query_strings"].([]interface{}); ok && len(queryStringFlat) == 1 {
-		queryStrings = expandCloudFrontCachePolicyQueryStringNames(queryStringFlat[0].(map[string]interface{}))
-	} else {
-		queryStrings = nil
-	}
-
 	queryStringConfig := &cloudfront.CachePolicyQueryStringsConfig{
 		QueryStringBehavior: aws.String(queryStringConfigFlat["query_string_behavior"].(string)),
-		QueryStrings:        queryStrings,
+	}
+
+	if queryStringFlat, ok := queryStringConfigFlat["query_strings"].([]interface{}); ok && len(queryStringFlat) == 1 {
+		queryStringConfig.QueryStrings = expandCloudFrontCachePolicyQueryStringNames(queryStringFlat[0].(map[string]interface{}))
 	}
 
 	return queryStringConfig
@@ -202,7 +187,7 @@ func flattenCloudFrontCachePolicyQueryStringsConfig(queryStringsConfig *cloudfro
 	}
 }
 
-func flattenParametersConfig(parametersConfig *cloudfront.ParametersInCacheKeyAndForwardedToOrigin) []map[string]interface{} {
+func setParametersConfig(parametersConfig *cloudfront.ParametersInCacheKeyAndForwardedToOrigin) []map[string]interface{} {
 	parametersConfigFlat := map[string]interface{}{
 		"enable_accept_encoding_brotli": aws.BoolValue(parametersConfig.EnableAcceptEncodingBrotli),
 		"enable_accept_encoding_gzip":   aws.BoolValue(parametersConfig.EnableAcceptEncodingGzip),
@@ -216,11 +201,11 @@ func flattenParametersConfig(parametersConfig *cloudfront.ParametersInCacheKeyAn
 	}
 }
 
-func flattenCloudFrontCachePolicy(d *schema.ResourceData, cachePolicy *cloudfront.CachePolicyConfig) {
+func setCloudFrontCachePolicy(d *schema.ResourceData, cachePolicy *cloudfront.CachePolicyConfig) {
 	d.Set("comment", aws.StringValue(cachePolicy.Comment))
 	d.Set("default_ttl", aws.Int64Value(cachePolicy.DefaultTTL))
 	d.Set("max_ttl", aws.Int64Value(cachePolicy.MaxTTL))
 	d.Set("min_ttl", aws.Int64Value(cachePolicy.MinTTL))
 	d.Set("name", aws.StringValue(cachePolicy.Name))
-	d.Set("parameters_in_cache_key_and_forwarded_to_origin", flattenParametersConfig(cachePolicy.ParametersInCacheKeyAndForwardedToOrigin))
+	d.Set("parameters_in_cache_key_and_forwarded_to_origin", setParametersConfig(cachePolicy.ParametersInCacheKeyAndForwardedToOrigin))
 }

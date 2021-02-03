@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -162,7 +164,7 @@ func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interfa
 
 	if d.Id() == "" {
 		if err := dataSourceAwsCloudFrontCachePolicyFindByName(d, conn); err != nil {
-			return err
+			return fmt.Errorf("Unable to locate cache policy by name: %s", err.Error())
 		}
 	}
 
@@ -174,11 +176,11 @@ func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interfa
 
 		resp, err := conn.GetCachePolicy(request)
 		if err != nil {
-			return err
+			return fmt.Errorf("Unable to retrieve cache policy with ID %s: %s", d.Id(), err.Error())
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 
-		flattenCloudFrontCachePolicy(d, resp.CachePolicy.CachePolicyConfig)
+		setCloudFrontCachePolicy(d, resp.CachePolicy.CachePolicyConfig)
 	}
 
 	return nil
