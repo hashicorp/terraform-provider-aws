@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
@@ -586,9 +587,9 @@ resource "aws_cloudwatch_event_rule" "test" {
   description    = %[2]q
   event_pattern  = <<PATTERN
 {
-	"source": [
-		"aws.ec2"
-	]
+    "source": [
+        "aws.ec2"
+    ]
 }
 PATTERN
 }
@@ -604,7 +605,7 @@ func testAccAWSCloudWatchEventRuleConfigPattern(name, pattern string) string {
 resource "aws_cloudwatch_event_rule" "test" {
   name          = "%s"
   event_pattern = <<PATTERN
-	%s
+    %s
 PATTERN
 }
 `, name, pattern)
@@ -616,7 +617,7 @@ resource "aws_cloudwatch_event_rule" "test" {
   name                = "%s"
   schedule_expression = "rate(1 hour)"
   event_pattern       = <<PATTERN
-	%s
+    %s
 PATTERN
 }
 `, name, pattern)
@@ -721,4 +722,84 @@ resource "aws_cloudwatch_event_rule" "test" {
   role_arn            = aws_iam_role.test.arn
 }
 `, name)
+}
+
+func TestAccAWSCloudWatchEventRuleCrossAccount_basic(t *testing.T) {
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAWSCloudWatchEventRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:       testAccAWSCloudWatchEventRuleCrossAccountConfig(rName),
+				ResourceName: resourceName,
+			},
+		},
+	})
+}
+
+func testAccAWSCloudWatchEventRuleCrossAccountConfig(rName string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "test" {}
+data "aws_region" "test" {}
+data "aws_partition" "test" {}
+
+data "aws_caller_identity" "test_alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  provider = awsalternate
+  name     = %[1]q
+}
+
+data "aws_iam_policy_document" "test" {
+  provider = awsalternate
+
+  statement {
+    sid = "test"
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.test.account_id]
+    }
+
+    actions = [
+      "events:DescribeRule",
+      "events:ListTagsForResource",
+      "events:PutRule",
+      "events:DeleteRule",
+      "events:DisableRule",
+      "events:EnableRule",
+    ]
+
+    resources = ["arn:${data.aws_partition.test.partition}:events:${data.aws_region.test.name}:${data.aws_caller_identity.test_alternate.account_id}:rule/${aws_cloudwatch_event_bus.test.name}/*"]
+  }
+}
+
+resource "aws_cloudwatch_event_bus_policy" "test" {
+  provider       = awsalternate
+  policy         = data.aws_iam_policy_document.test.json
+  event_bus_name = aws_cloudwatch_event_bus.test.name
+}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  depends_on     = [aws_cloudwatch_event_bus_policy.test]
+  event_bus_name = aws_cloudwatch_event_bus.test.arn
+  event_pattern  = <<PATTERN
+{
+    "detail-type": [
+        "test"
+    ]
+}
+PATTERN
+
+}
+`, rName)
 }

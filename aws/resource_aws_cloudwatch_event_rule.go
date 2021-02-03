@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -169,11 +170,29 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 		}
 		d.Set("event_pattern", pattern)
 	}
+
 	d.Set("name", out.Name)
 	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(out.Name))))
 	d.Set("role_arn", out.RoleArn)
 	d.Set("schedule_expression", out.ScheduleExpression)
-	d.Set("event_bus_name", out.EventBusName)
+
+	parsedARN, err := awsarn.Parse(arn)
+	if err != nil {
+		return fmt.Errorf("error parsing CloudWatch Events Rule ARN (%s): %w", arn, err)
+	}
+	if meta.(*AWSClient).accountid != parsedARN.AccountID {
+		eventBusARN := awsarn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "events",
+			Region:    meta.(*AWSClient).region,
+			AccountID: parsedARN.AccountID,
+			Resource:  "event-bus/" + *out.EventBusName,
+		}.String()
+		log.Printf("[INFO] Built EventBus ARN: (%s)", eventBusARN)
+		d.Set("event_bus_name", eventBusARN)
+	} else {
+		d.Set("event_bus_name", out.EventBusName)
+	}
 
 	boolState, err := getBooleanStateFromString(*out.State)
 	if err != nil {
