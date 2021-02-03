@@ -57,7 +57,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnStateMachine_express_createUpdate(t *testing.T) {
+func TestAccAWSSfnStateMachine_expressUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	name := acctest.RandString(10)
 
@@ -76,8 +76,7 @@ func TestAccAWSSfnStateMachine_express_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "definition"),
 					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.0.level", sfn.LogLevelOff),
+					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "type", "EXPRESS"),
 				),
 			},
 			{
@@ -89,15 +88,14 @@ func TestAccAWSSfnStateMachine_express_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
 					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.0.level", sfn.LogLevelOff),
+					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "type", "EXPRESS"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSSfnStateMachine_standard_createUpdate(t *testing.T) {
+func TestAccAWSSfnStateMachine_standardUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	name := acctest.RandString(10)
 
@@ -116,6 +114,7 @@ func TestAccAWSSfnStateMachine_standard_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "definition"),
 					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
+					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "type", "STANDARD"),
 				),
 			},
 			{
@@ -127,6 +126,7 @@ func TestAccAWSSfnStateMachine_standard_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
 					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
+					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "type", "STANDARD"),
 				),
 			},
 		},
@@ -199,7 +199,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnStateMachine_express_LoggingConfiguration(t *testing.T) {
+func TestAccAWSSfnStateMachine_expressLoggingConfiguration(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	name := acctest.RandString(10)
 
@@ -209,7 +209,7 @@ func TestAccAWSSfnStateMachine_express_LoggingConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration1(sfn.StateMachineTypeExpress, name, sfn.LogLevelError),
+				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration(sfn.StateMachineTypeExpress, name, sfn.LogLevelError),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo", &sm),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
@@ -223,7 +223,7 @@ func TestAccAWSSfnStateMachine_express_LoggingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration1(sfn.StateMachineTypeExpress, name, sfn.LogLevelAll),
+				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration(sfn.StateMachineTypeExpress, name, sfn.LogLevelAll),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo", &sm),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
@@ -475,7 +475,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "iam_policy_for_lambda_%s"
+  name = "iam_policy_for_lambda_%[1]s"
   role = "${aws_iam_role.iam_for_lambda.id}"
 
   policy = <<EOF
@@ -495,7 +495,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda_%s"
+  name = "iam_for_lambda_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -515,7 +515,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
-  name = "iam_policy_for_sfn_%s"
+  name = "iam_policy_for_sfn_%[1]s"
   role = "${aws_iam_role.iam_for_sfn.id}"
 
   policy = <<EOF
@@ -535,7 +535,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_sfn" {
-  name = "iam_for_sfn_%s"
+  name = "iam_for_sfn_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -555,20 +555,20 @@ EOF
 
 resource "aws_lambda_function" "lambda_function_test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "sfn-%s"
+  function_name = "sfn-%[1]s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_sfn_state_machine" "foo" {
-  name     = "test_sfn_%s"
+  name     = "test_sfn_%[1]s"
   role_arn = "${aws_iam_role.iam_for_sfn.arn}"
-  type	   = "%s"
+  type     = %[2]q
 
   definition = <<EOF
 {
-  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function with %s State Machine",
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function with %[2]s State Machine",
   "StartAt": "HelloWorld",
   "States": {
     "HelloWorld": {
@@ -578,7 +578,7 @@ resource "aws_sfn_state_machine" "foo" {
         {
           "ErrorEquals": ["States.ALL"],
           "IntervalSeconds": 5,
-          "MaxAttempts": %d,
+          "MaxAttempts": %[3]d,
           "BackoffRate": 8.0
         }
       ],
@@ -588,17 +588,17 @@ resource "aws_sfn_state_machine" "foo" {
 }
 EOF
 }
-`, rName, rName, rName, rName, rName, rName, rType, rType, rMaxAttempts)
+`, rName, rType, rMaxAttempts)
 }
 
-func testAccAWSSfnStateMachineExpressConfigLogConfiguration1(rType string, rName string, rLevel string) string {
+func testAccAWSSfnStateMachineExpressConfigLogConfiguration(rType string, rName string, rLevel string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "iam_policy_for_lambda_%s"
+  name = "iam_policy_for_lambda_%[1]s"
   role = "${aws_iam_role.iam_for_lambda.id}"
 
   policy = <<EOF
@@ -618,7 +618,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda_%s"
+  name = "iam_for_lambda_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -638,7 +638,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
-  name = "iam_policy_for_sfn_%s"
+  name = "iam_policy_for_sfn_%[1]s"
   role = "${aws_iam_role.iam_for_sfn.id}"
 
   policy = <<EOF
@@ -666,7 +666,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_sfn" {
-  name = "iam_for_sfn_%s"
+  name = "iam_for_sfn_%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -686,24 +686,24 @@ EOF
 
 resource "aws_lambda_function" "lambda_function_test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "sfn-%s"
+  function_name = "sfn-%[1]s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_cloudwatch_log_group" "log_group_for_sfn" {
-  name = "log_group_sfn_%s"
+  name = "log_group_sfn_%[1]s"
 }
 
 resource "aws_sfn_state_machine" "foo" {
-  name     = "test_sfn_%s"
+  name     = "test_sfn_%[1]s"
   role_arn = "${aws_iam_role.iam_for_sfn.arn}"
-  type	   = "%s"
+  type     = %[2]q
 
   definition = <<EOF
 {
-  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function with %s State Machine",
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function with %[2]s State Machine",
   "StartAt": "HelloWorld",
   "States": {
     "HelloWorld": {
@@ -724,14 +724,14 @@ resource "aws_sfn_state_machine" "foo" {
 EOF
 
   logging_configuration {
-    log_destination = "${aws_cloudwatch_log_group.log_group_for_sfn.arn}"
+    log_destination        = "${aws_cloudwatch_log_group.log_group_for_sfn.arn}"
     include_execution_data = false
-    level = "%s"
+    level                  = %[3]q
   }
 
   tags = {
-	"key1" = "value1"
+    "key1" = "value1"
   }
 }
-`, rName, rName, rName, rName, rName, rName, rName, rType, rType, rLevel)
+`, rName, rType, rLevel)
 }

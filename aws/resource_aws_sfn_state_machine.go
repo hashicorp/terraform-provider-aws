@@ -45,12 +45,10 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 						"include_execution_data": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							// Default:  false,
 						},
 						"level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// Default:  sfn.LogLevelOff,
 							ValidateFunc: validation.StringInSlice([]string{
 								sfn.LogLevelAll,
 								sfn.LogLevelError,
@@ -179,11 +177,8 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 
 	loggingConfiguration := flattenAwsSfnLoggingConfiguration(sm.LoggingConfiguration)
 
-	if loggingConfiguration != nil {
-		err := d.Set("logging_configuration", loggingConfiguration)
-		if err != nil {
-			log.Printf("[DEBUG] Error setting logging_configuration %s \n", err)
-		}
+	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
+		log.Printf("[DEBUG] Error setting logging_configuration %s", err)
 	}
 
 	if err := d.Set("creation_date", sm.CreationDate.Format(time.RFC3339)); err != nil {
@@ -205,18 +200,6 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sfnconn
-
-	params := &sfn.UpdateStateMachineInput{
-		StateMachineArn: aws.String(d.Id()),
-		Definition:      aws.String(d.Get("definition").(string)),
-		RoleArn:         aws.String(d.Get("role_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
-
-	if d.HasChange("logging_configuration") {
-		params.LoggingConfiguration = expandAwsSfnLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
-	}
 
 	if d.HasChanges("definition", "role_arn", "logging_configuration") {
 		params := &sfn.UpdateStateMachineInput{
@@ -248,7 +231,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return nil
+	return resourceAwsSfnStateMachineRead(d, meta)
 }
 
 func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
