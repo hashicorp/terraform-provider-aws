@@ -11,6 +11,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_partition: Correct `reverse_dns_prefix` value in AWS China, C2S, and SC2S ([#17142](https://github.com/hashicorp/terraform-provider-aws/issues/17142))
+* resource/aws_api_gateway_method_settings: Ignore non-existent resource errors during deletion ([#17234](https://github.com/hashicorp/terraform-provider-aws/issues/17234))
+* resource/aws_api_gateway_method_settings: Prevent confusing Terraform error on resource disappearance during creation ([#17234](https://github.com/hashicorp/terraform-provider-aws/issues/17234))
 * resource/aws_cloudwatch_event_rule: Prevent perpetual differences with `name_prefix` argument values beginning with `terraform-` ([#17030](https://github.com/hashicorp/terraform-provider-aws/issues/17030))
 * resource/aws_glacier_vault: Prevent crash with `GetVaultAccessPolicy` API errors ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
 * resource/aws_glacier_vault: Properly remove from state when resource does not exist ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
