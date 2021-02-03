@@ -194,8 +194,11 @@ func resourceAwsSsoAdminPermissionSetUpdate(d *schema.ResourceData, meta interfa
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		if d.HasChange("relay_state") {
-			input.RelayState = aws.String(d.Get("relay_state").(string))
+		// The AWS SSO API requires we send the RelayState value regardless if it's unchanged
+		// else the existing Permission Set's RelayState value will be cleared
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17411
+		if v, ok := d.GetOk("relay_state"); ok {
+			input.RelayState = aws.String(v.(string))
 		}
 
 		if d.HasChange("session_duration") {
