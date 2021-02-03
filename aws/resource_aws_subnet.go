@@ -212,6 +212,10 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 		if _, err := conn.ModifySubnetAttribute(input); err != nil {
 			return fmt.Errorf("error enabling EC2 Subnet (%s) map public IP on launch: %w", d.Id(), err)
 		}
+
+		if _, err := waiter.SubnetMapPublicIpOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) map public IP on launch update: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsSubnetRead(d, meta)
@@ -316,12 +320,14 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		log.Printf("[DEBUG] Subnet modify attributes: %#v", modifyOpts)
-
 		_, err := conn.ModifySubnetAttribute(modifyOpts)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating EC2 Subnet (%s) map public IP on launch: %w", d.Id(), err)
+		}
+
+		if _, err := waiter.SubnetMapPublicIpOnLaunchUpdated(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
+			return fmt.Errorf("error waiting for EC2 Subnet (%s) map public IP on launch update: %w", d.Id(), err)
 		}
 	}
 

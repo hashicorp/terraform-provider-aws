@@ -127,18 +127,6 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
 
-	testCheck := func(*terraform.State) error {
-		if aws.StringValue(v.CidrBlock) != "10.1.1.0/24" {
-			return fmt.Errorf("bad cidr: %s", aws.StringValue(v.CidrBlock))
-		}
-
-		if !aws.BoolValue(v.MapPublicIpOnLaunch) {
-			return fmt.Errorf("bad MapPublicIpOnLaunch: %t", aws.BoolValue(v.MapPublicIpOnLaunch))
-		}
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
@@ -149,16 +137,16 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &v),
-					testCheck,
-					// ipv6 should be empty if disabled so we can still use the property in conditionals
-					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -427,6 +415,45 @@ func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
 	})
 }
 
+func TestAccAWSSubnet_MapPublicIpOnLaunch(t *testing.T) {
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigMapPublicIpOnLaunch(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetConfigMapPublicIpOnLaunch(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
+				),
+			},
+			{
+				Config: testAccSubnetConfigMapPublicIpOnLaunch(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSubnet_outpost(t *testing.T) {
 	var v ec2.Subnet
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
@@ -567,9 +594,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block              = "10.1.1.0/24"
-  vpc_id                  = aws_vpc.test.id
-  map_public_ip_on_launch = true
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
 }
 `
 
@@ -627,9 +653,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block              = "10.10.1.0/24"
-  vpc_id                  = aws_vpc.test.id
-  map_public_ip_on_launch = true
+  cidr_block = "10.10.1.0/24"
+  vpc_id     = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-subnet-ipv6"
@@ -651,7 +676,6 @@ resource "aws_subnet" "test" {
   cidr_block                      = "10.10.1.0/24"
   vpc_id                          = aws_vpc.test.id
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  map_public_ip_on_launch         = true
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -674,7 +698,6 @@ resource "aws_subnet" "test" {
   cidr_block                      = "10.10.1.0/24"
   vpc_id                          = aws_vpc.test.id
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  map_public_ip_on_launch         = true
   assign_ipv6_address_on_creation = false
 
   tags = {
@@ -697,7 +720,6 @@ resource "aws_subnet" "test" {
   cidr_block                      = "10.10.1.0/24"
   vpc_id                          = aws_vpc.test.id
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 3)
-  map_public_ip_on_launch         = true
   assign_ipv6_address_on_creation = false
 
   tags = {
@@ -832,6 +854,28 @@ resource "aws_subnet" "test" {
   }
 }
 `, mapCustomerOwnedIpOnLaunch)
+}
+
+func testAccSubnetConfigMapPublicIpOnLaunch(mapPublicIpOnLaunch bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-subnet-map-public-ip-on-launch"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  map_public_ip_on_launch = %[1]t
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-subnet-map-public-ip-on-launch"
+  }
+}
+`, mapPublicIpOnLaunch)
 }
 
 func testAccSubnetConfigOutpost() string {
