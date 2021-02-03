@@ -11,19 +11,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 		Read: dataSourceAwsCloudFrontOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"comment": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,6 +40,10 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"headers_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -76,6 +68,14 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 						},
 					},
 				},
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"query_strings_config": {
 				Type:     schema.TypeList,
@@ -106,27 +106,6 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
-	var originRequestPolicy *cloudfront.OriginRequestPolicy
-	request := &cloudfront.ListOriginRequestPoliciesInput{}
-	resp, err := conn.ListOriginRequestPolicies(request)
-	if err != nil {
-		return err
-	}
-
-	for _, policySummary := range resp.OriginRequestPolicyList.Items {
-		if *policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name == d.Get("name").(string) {
-			originRequestPolicy = policySummary.OriginRequestPolicy
-			break
-		}
-	}
-
-	if originRequestPolicy != nil {
-		d.SetId(aws.StringValue(originRequestPolicy.Id))
-	}
-	return nil
-}
-
 func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
@@ -147,8 +126,34 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 
-		flattenCloudFrontOriginRequestPolicy(d, resp.OriginRequestPolicy.OriginRequestPolicyConfig)
+		originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
+		d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
+		d.Set("name", aws.StringValue(originRequestPolicy.Name))
+		d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
+		d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
+		d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))
 	}
 
+	return nil
+}
+
+func dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
+	var originRequestPolicy *cloudfront.OriginRequestPolicy
+	request := &cloudfront.ListOriginRequestPoliciesInput{}
+	resp, err := conn.ListOriginRequestPolicies(request)
+	if err != nil {
+		return err
+	}
+
+	for _, policySummary := range resp.OriginRequestPolicyList.Items {
+		if *policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name == d.Get("name").(string) {
+			originRequestPolicy = policySummary.OriginRequestPolicy
+			break
+		}
+	}
+
+	if originRequestPolicy != nil {
+		d.SetId(aws.StringValue(originRequestPolicy.Id))
+	}
 	return nil
 }

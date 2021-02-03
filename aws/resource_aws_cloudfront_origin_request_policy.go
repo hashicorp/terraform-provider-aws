@@ -22,15 +22,6 @@ func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"cookies_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -59,6 +50,11 @@ func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 					},
 				},
 			},
+			"etag": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"headers_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -86,6 +82,10 @@ func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"query_strings_config": {
 				Type:     schema.TypeList,
@@ -149,7 +149,12 @@ func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta i
 	}
 	d.Set("etag", aws.StringValue(resp.ETag))
 
-	flattenCloudFrontOriginRequestPolicy(d, resp.OriginRequestPolicy.OriginRequestPolicyConfig)
+	originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
+	d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
+	d.Set("name", aws.StringValue(originRequestPolicy.Name))
+	d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
+	d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
+	d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))
 
 	return nil
 }
