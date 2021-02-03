@@ -202,7 +202,7 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 }
 
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
-func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
+func TestAccAWSEMRInstanceGroup_disappears_EmrCluster(t *testing.T) {
 	var cluster emr.Cluster
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()

@@ -13,6 +13,14 @@ const (
 )
 
 const (
+	ErrCodeInvalidCarrierGatewayIDNotFound = "InvalidCarrierGatewayID.NotFound"
+)
+
+const (
+	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
+)
+
+const (
 	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
 	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
@@ -25,10 +33,11 @@ const (
 )
 
 const (
-	ErrCodeInvalidVpcEndpointIdNotFound = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
 )
 
 const (
+	ErrCodeInvalidVpcEndpointIdNotFound = "InvalidVpcEndpointId.NotFound"
 	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
 )
 

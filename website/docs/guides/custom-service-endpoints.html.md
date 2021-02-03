@@ -89,6 +89,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
   <li><code>configservice</code></li>
+  <li><code>connect</code></li>
   <li><code>cur</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
@@ -112,6 +113,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>elastictranscoder</code></li>
   <li><code>elb</code></li>
   <li><code>emr</code></li>
+  <li><code>emrcontainers</code></li>
   <li><code>es</code></li>
   <li><code>firehose</code></li>
   <li><code>fms</code></li>
@@ -162,6 +164,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>personalize</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pricing</code></li>
+  <li><code>prometheusservice</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>

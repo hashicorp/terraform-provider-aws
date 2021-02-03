@@ -15,7 +15,7 @@ import (
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -113,7 +113,7 @@ func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +169,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -228,7 +228,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,7 +278,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -112,7 +112,7 @@ func resourceAwsRDSClusterParameterGroupCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error creating DB Cluster Parameter Group: %s", err)
 	}
 
-	d.SetId(*createOpts.DBClusterParameterGroupName)
+	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 	log.Printf("[INFO] DB Cluster Parameter Group ID: %s", d.Id())
 
 	// Set for update

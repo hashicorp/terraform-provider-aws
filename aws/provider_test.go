@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -18,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -178,6 +178,49 @@ func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
 }
 
+func TestReverseDns(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "amazonaws.com",
+			input:    "amazonaws.com",
+			expected: "com.amazonaws",
+		},
+		{
+			name:     "amazonaws.com.cn",
+			input:    "amazonaws.com.cn",
+			expected: "cn.com.amazonaws",
+		},
+		{
+			name:     "sc2s.sgov.gov",
+			input:    "sc2s.sgov.gov",
+			expected: "gov.sgov.sc2s",
+		},
+		{
+			name:     "c2s.ic.gov",
+			input:    "c2s.ic.gov",
+			expected: "gov.ic.c2s",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			if got, want := ReverseDns(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
 // testAccPreCheck verifies and sets required provider testing configuration
 //
 // This PreCheck function should be present in every acceptance test. It allows
@@ -190,8 +233,8 @@ func testAccPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") == "" {
+			t.Fatal("AWS_ACCESS_KEY_ID, AWS_PROFILE, or AWS_CONTAINER_CREDENTIALS_FULL_URI must be set for acceptance tests")
 		}
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
@@ -485,6 +528,25 @@ func testAccCheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, att
 	}
 }
 
+// testAccMatchResourceAttrGlobalARNNoAccount ensures the Terraform state regexp matches a formatted ARN without region or account ID
+func testAccMatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			Partition: testAccGetPartition(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
 // testAccCheckResourceAttrRfc3339 ensures the Terraform state matches a RFC3339 value
 // This TestCheckFunc will likely be moved to the Terraform Plugin SDK in the future.
 func testAccCheckResourceAttrRfc3339(resourceName, attributeName string) resource.TestCheckFunc {
@@ -629,9 +691,7 @@ func testAccGetPartitionDNSSuffix() string {
 
 func testAccGetPartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		dnsParts := strings.Split(partition.DNSSuffix(), ".")
-		sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
-		return strings.Join(dnsParts, ".")
+		return ReverseDns(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -775,6 +835,12 @@ func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
 
 	if role == nil {
 		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
+	}
+}
+
+func testAccEnvironmentVariableSetPreCheck(variable string, t *testing.T) {
+	if os.Getenv(variable) == "" {
+		t.Skipf("skipping tests; environment variable %s must be set", variable)
 	}
 }
 
@@ -1013,6 +1079,9 @@ func testAccPreCheckSkipError(err error) bool {
 	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
+	if isAWSErr(err, "InvalidAction", "is not valid") {
+		return true
+	}
 	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
@@ -1059,6 +1128,14 @@ func testSweepSkipSweepError(err error) bool {
 		return true
 	}
 	return false
+}
+
+// Check sweeper API call error for reasons to skip a specific resource
+// These include AccessDenied or AccessDeniedException for individual resources, e.g. managed by central IT
+func testSweepSkipResourceError(err error) bool {
+	// Since acceptance test sweepers are best effort, we allow bypassing this error globally
+	// instead of individual test sweeper fixes.
+	return tfawserr.ErrCodeContains(err, "AccessDenied")
 }
 
 func TestAccAWSProvider_Endpoints(t *testing.T) {
@@ -1212,6 +1289,27 @@ func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSProvider_Region_AwsC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-iso-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "c2s.ic.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.ic.c2s"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 	var providers []*schema.Provider
 
@@ -1225,6 +1323,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1245,6 +1344,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1265,6 +1365,28 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Region_AwsSC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-isob-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "sc2s.sgov.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso-b"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
 			},
@@ -1526,6 +1648,28 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 
 			if providerPartition != expectedPartition {
 				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSProviderReverseDnsPrefix(providers *[]*schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerReverseDnsPrefix := provider.Meta().(*AWSClient).reverseDnsPrefix
+
+			if providerReverseDnsPrefix != expectedReverseDnsPrefix {
+				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)
 			}
 		}
 

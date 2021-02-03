@@ -15,8 +15,8 @@ import (
 )
 
 func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	updatedName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
+	updatedName := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,7 +50,7 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,7 +92,7 @@ func TestAccAWSCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +133,7 @@ func TestAccAWSCognitoIdentityPool_openidConnectProviderArns(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,7 +175,7 @@ func TestAccAWSCognitoIdentityPool_samlProviderArns(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -229,7 +229,7 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.Test(t, resource.TestCase{
@@ -273,7 +273,7 @@ func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.
 }
 
 func TestAccAWSCognitoIdentityPool_tags(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.main"
 
 	resource.ParallelTest(t, resource.TestCase{

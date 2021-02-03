@@ -945,6 +945,71 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 	})
 }
 
+func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDeviceGp3(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceGp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
+						"device_name": "/dev/xvdcz",
+						"iops":        "4000",
+						"throughput":  "500",
+						"volume_size": "15",
+						"volume_type": "gp3",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDeviceGp3(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceGp3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
+						"iops":        "4000",
+						"throughput":  "500",
+						"volume_size": "15",
+						"volume_type": "gp3",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2356,6 +2421,69 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil, rName)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceGp3(rName string) string {
+	return composeConfig(
+		testAccAWSSpotFleetRequestConfigBase(rName),
+		`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    instance_type = "t2.micro"
+
+    ebs_block_device {
+      device_name = "/dev/xvda"
+      volume_type = "gp2"
+      volume_size = 8
+    }
+
+    ebs_block_device {
+      device_name = "/dev/xvdcz"
+      iops        = 4000
+      throughput  = 500
+      volume_size = 15
+      volume_type = "gp3"
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceGp3(rName string) string {
+	return composeConfig(
+		testAccAWSSpotFleetRequestConfigBase(rName),
+		`
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    instance_type = "t2.micro"
+
+    root_block_device {
+      iops        = 4000
+      throughput  = 500
+      volume_size = 15
+      volume_type = "gp3"
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`)
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, validUntil string) string {

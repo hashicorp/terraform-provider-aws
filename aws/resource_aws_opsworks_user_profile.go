@@ -91,7 +91,7 @@ func resourceAwsOpsworksUserProfileCreate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.SetId(*resp.IamUserArn)
+	d.SetId(aws.StringValue(resp.IamUserArn))
 
 	return resourceAwsOpsworksUserProfileUpdate(d, meta)
 }
