@@ -9173,6 +9173,12 @@ var awsusgovPartition = partition{
 
 			Endpoints: endpoints{
 				"us-gov-west-1": endpoint{},
+				"us-gov-west-1-fips": endpoint{
+					Hostname: "runtime.sagemaker.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 			},
 		},
 		"s3": service{
@@ -9892,7 +9898,25 @@ var awsisoPartition = partition{
 				"us-iso-east-1": endpoint{},
 			},
 		},
+		"medialive": service{
+
+			Endpoints: endpoints{
+				"us-iso-east-1": endpoint{},
+			},
+		},
+		"mediapackage": service{
+
+			Endpoints: endpoints{
+				"us-iso-east-1": endpoint{},
+			},
+		},
 		"monitoring": service{
+
+			Endpoints: endpoints{
+				"us-iso-east-1": endpoint{},
+			},
+		},
+		"outposts": service{
 
 			Endpoints: endpoints{
 				"us-iso-east-1": endpoint{},
