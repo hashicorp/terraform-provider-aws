@@ -72,7 +72,7 @@ func resourceAwsTransferServer() *schema.Resource {
 							Set:           schema.HashString,
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"security_group_Ids": {
+						"security_group_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
@@ -176,7 +176,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr, ok := d.GetOk("endpoint_details"); ok {
-		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
+		createOpts.EndpointDetails = expandTransferServerEndpointDetailsWithSG(attr.([]interface{}))
 
 		// Prevent the following error: InvalidRequestException: AddressAllocationIds cannot be set in CreateServer
 		// Reference: https://docs.aws.amazon.com/transfer/latest/userguide/API_EndpointDetails.html#TransferFamily-Type-EndpointDetails-AddressAllocationIds
@@ -215,11 +215,20 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		if err := stopAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
+		updateEndPoint := d.Get("endpoint_details")
+		// delete(updateEndPoint, "SecurityGroupIds")
+		// updateEndPoint.SecurityGroupIds = {}
 
+		// updateEndPoint.SecurityGroupIds(nil
 		updateOpts := &transfer.UpdateServerInput{
 			ServerId:        aws.String(d.Id()),
-			EndpointDetails: expandTransferServerEndpointDetails(d.Get("endpoint_details").([]interface{})),
+			EndpointDetails: expandTransferServerEndpointDetails(updateEndPoint.([]interface{})),
 		}
+
+		// updateOpts := &transfer.UpdateServerInput{
+		// 	ServerId:        aws.String(d.Id()),
+		// 	EndpointDetails: expandTransferServerEndpointDetails(d.Get("endpoint_details").([]interface{})),
+		// }
 
 		// EIPs cannot be assigned directly on server creation, so the server must
 		// be created, stopped, and updated. The Transfer API will return a state
@@ -249,7 +258,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating Transfer Server (%s): ----- %w", d.Id(), err)
 		}
 
 		if err := startAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -498,6 +507,41 @@ func expandTransferServerEndpointDetails(l []interface{}) *transfer.EndpointDeta
 
 	if v, ok := e["address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
 		out.AddressAllocationIds = expandStringSet(v)
+	}
+
+	// if v, ok := e["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	// 	out.SecurityGroupIds = expandStringSet(v)
+	// }
+
+	if v, ok := e["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SubnetIds = expandStringSet(v)
+	}
+
+	if v, ok := e["vpc_id"].(string); ok && v != "" {
+		out.VpcId = aws.String(v)
+	}
+
+	return out
+}
+
+func expandTransferServerEndpointDetailsWithSG(l []interface{}) *transfer.EndpointDetails {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	e := l[0].(map[string]interface{})
+
+	out := &transfer.EndpointDetails{}
+
+	if v, ok := e["vpc_endpoint_id"].(string); ok && v != "" {
+		out.VpcEndpointId = aws.String(v)
+	}
+
+	if v, ok := e["address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.AddressAllocationIds = expandStringSet(v)
+	}
+
+	if v, ok := e["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		out.SecurityGroupIds = expandStringSet(v)
 	}
 
 	if v, ok := e["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
