@@ -142,7 +142,7 @@ func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interfa
 
 	if d.Id() == "" {
 		if err := dataSourceAwsCloudFrontCachePolicyFindByName(d, conn); err != nil {
-			return fmt.Errorf("Unable to locate cache policy by name: %s", err.Error())
+			return fmt.Errorf("unable to locate cache policy by name: %s", err.Error())
 		}
 	}
 
@@ -154,7 +154,7 @@ func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interfa
 
 		resp, err := conn.GetCachePolicy(request)
 		if err != nil {
-			return fmt.Errorf("Unable to retrieve cache policy with ID %s: %s", d.Id(), err.Error())
+			return fmt.Errorf("unable to retrieve cache policy with ID %s: %s", d.Id(), err.Error())
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 
