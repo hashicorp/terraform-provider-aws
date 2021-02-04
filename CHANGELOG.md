@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_ec2_transit_gateway_prefix_list_reference` ([#16823](https://github.com/hashicorp/terraform-provider-aws/issues/16823))
 * **New Resource:** `aws_route53_key_signing_key` ([#16840](https://github.com/hashicorp/terraform-provider-aws/issues/16840))
 
 ENHANCEMENTS:
