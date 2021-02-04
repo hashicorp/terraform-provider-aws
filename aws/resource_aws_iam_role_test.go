@@ -1022,13 +1022,13 @@ func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
 			PolicyDocument: aws.String(`{
-			  "Version": "2012-10-17",
-			  "Statement": {
-			    "Effect": "Allow",
-			    "Action": "*",
-			    "Resource": "*"
-			  }
-			}`),
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}`),
 			PolicyName: aws.String(resource.UniqueId()),
 		}
 
@@ -1328,112 +1328,6 @@ func testAccCheckAWSRolePolicyCheckInlinePrefix(role *iam.GetRoleOutput, roleNam
 
 		return nil
 	}
-}
-
-func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
-	resp, err := conn.ListInstanceProfilesForRole(&iam.ListInstanceProfilesForRoleInput{
-		RoleName: aws.String(rolename),
-	})
-	if err != nil {
-		return fmt.Errorf("Error listing Profiles for IAM Role (%s) when trying to delete: %s", rolename, err)
-	}
-
-	// Loop and remove this Role from any Profiles
-	for _, i := range resp.InstanceProfiles {
-		input := &iam.RemoveRoleFromInstanceProfileInput{
-			InstanceProfileName: i.InstanceProfileName,
-			RoleName:            aws.String(rolename),
-		}
-
-		_, err := conn.RemoveRoleFromInstanceProfile(input)
-
-		if err != nil {
-			return fmt.Errorf("Error deleting IAM Role %s: %s", rolename, err)
-		}
-	}
-
-	return nil
-}
-
-		input := &iam.PutRolePolicyInput{
-			RoleName: aws.String(rs.Primary.ID),
-			PolicyDocument: aws.String(`{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}`),
-			PolicyName: aws.String(resource.UniqueId()),
-func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
-	managedPolicies := make([]*string, 0)
-	input := &iam.ListAttachedRolePoliciesInput{
-		RoleName: aws.String(rolename),
-	}
-
-	err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
-		for _, v := range page.AttachedPolicies {
-			managedPolicies = append(managedPolicies, v.PolicyArn)
-		}
-		return !lastPage
-	})
-	if err != nil {
-		return fmt.Errorf("Error listing Policies for IAM Role (%s) when trying to delete: %s", rolename, err)
-	}
-	for _, parn := range managedPolicies {
-		input := &iam.DetachRolePolicyInput{
-			PolicyArn: parn,
-			RoleName:  aws.String(rolename),
-		}
-
-		_, err = conn.DetachRolePolicy(input)
-
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error deleting IAM Role %s: %s", rolename, err)
-		}
-	}
-
-	return nil
-}
-
-func deleteAwsIamRolePolicies(conn *iam.IAM, rolename string) error {
-	inlinePolicies := make([]*string, 0)
-	input := &iam.ListRolePoliciesInput{
-		RoleName: aws.String(rolename),
-	}
-
-	err := conn.ListRolePoliciesPages(input, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
-		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("Error listing inline Policies for IAM Role (%s) when trying to delete: %s", rolename, err)
-	}
-
-	for _, pname := range inlinePolicies {
-		input := &iam.DeleteRolePolicyInput{
-			PolicyName: pname,
-			RoleName:   aws.String(rolename),
-		}
-
-		_, err := conn.DeleteRolePolicy(input)
-
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("Error deleting inline policy of IAM Role %s: %s", rolename, err)
-		}
-	}
-
-	return nil
 }
 
 func compareStringSlices(a []string, b []string) bool {
@@ -1881,285 +1775,517 @@ EOF
 `, rName)
 }
 
-func testAccAWSRoleAssumeRolePolicy() string {
-	return `
-data "aws_iam_policy_document" "assume-role" {
-	statement {
-		actions = ["sts:AssumeRole"]
-
-		principals {
-			type        = "Service"
-			identifiers = ["ec2.amazonaws.com"]
-		}
-	}
-}
-	`
-}
-
 func testAccAWSRolePolicyInlineConfig(roleName, ilPolicyName1 string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
-	inline_policy {
-		name = "%s"
-		policy = <<EOF
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
+
+  inline_policy {
+    name = %[2]q
+
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
 }
-
-%s
-
-`, roleName, ilPolicyName1, testAccAWSRoleAssumeRolePolicy())
+EOF
+  }
+}
+`, roleName, ilPolicyName1)
 }
 
 func testAccAWSRolePolicyInlinePrefix(roleName, prefix string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
-	inline_policy {
-		name_prefix = "%s"
-		policy = <<EOF
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
-}
 
-%s
-`, roleName, prefix, testAccAWSRoleAssumeRolePolicy())
+  inline_policy {
+    name_prefix = %[2]q
+
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName, prefix)
 }
 
 func testAccAWSRolePolicyInlineNoName(roleName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
-	inline_policy {
-		policy = <<EOF
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
-}
 
-%s
-`, roleName, testAccAWSRoleAssumeRolePolicy())
+  inline_policy {
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName)
 }
 
 func testAccAWSRolePolicyInlineConfigUpdate(roleName, ilPolicyName2, ilPolicyName3 string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
-	inline_policy {
-		name = "%s"
-		policy = <<EOF
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
 
-	inline_policy {
-		name = "%s"
-		policy = <<EOF
+  inline_policy {
+    name = %[2]q
+    policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
 }
 EOF
-	}
+  }
 
+  inline_policy {
+    name = %[3]q
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
 }
-
-%s
-`, roleName, ilPolicyName2, ilPolicyName3, testAccAWSRoleAssumeRolePolicy())
+EOF
+  }
+}
+`, roleName, ilPolicyName2, ilPolicyName3)
 }
 
 func testAccAWSRolePolicyInlineConfigUpdateDown(roleName, ilPolicyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+  name = %[1]q
 
-	inline_policy {
-		name = "%s"
-		policy = <<EOF
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": {
-		"Effect": "Allow",
-		"Action": "ec2:Describe*",
-		"Resource": "*",
-		"Condition": {
-			"DateGreaterThan": {"aws:CurrentTime": "2017-07-01T00:00:00Z"},
-			"DateLessThan": {"aws:CurrentTime": "2017-12-31T23:59:59Z"}
-		}
-	}
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
-}
 
-%s
-`, roleName, ilPolicyName3, testAccAWSRoleAssumeRolePolicy())
-}
+  inline_policy {
+    name = %[2]q
 
-func testAccAWSRolePolicyManaged(resourceAddr, mgPolicyName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "%s" {
-	name   = "%s"
-	path   = "/tf-testing/"
-	policy = <<EOF
+    policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "ec2:Describe*",
+    "Resource": "*",
+    "Condition": {
+      "DateGreaterThan": {"aws:CurrentTime": "2017-07-01T00:00:00Z"},
+      "DateLessThan": {"aws:CurrentTime": "2017-12-31T23:59:59Z"}
+    }
+  }
 }
 EOF
+  }
 }
-	`, resourceAddr, mgPolicyName)
-}
-
-func testAccAWSRolePolicyManagedConfigUpdateTemplate(roleName, managedARNs, mgPolicy1, mgPolicy2, mgPolicy3 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
-	name                = "%s"
-	assume_role_policy  = "${data.aws_iam_policy_document.assume-role.json}"
-%s
-}
-
-%s
-
-%s
-
-%s
-
-%s
-`,
-		roleName,
-		managedARNs,
-		mgPolicy1,
-		mgPolicy2,
-		mgPolicy3,
-		testAccAWSRoleAssumeRolePolicy(),
-	)
+`, roleName, ilPolicyName3)
 }
 
 func testAccAWSRolePolicyManagedConfig(roleName, mgPolicyName1 string) string {
-	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
-		roleName,
-		`
-	managed_policy_arns = ["${aws_iam_policy.managed-policy1.arn}"]
-		`,
-		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
-		"",
-		"",
-	)
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "acc_role" {
+  name                = %[2]q
+  managed_policy_arns = [aws_iam_policy.test.arn]
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, mgPolicyName1, roleName)
 }
 
 func testAccAWSRolePolicyManagedConfigUpdate(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3 string) string {
-	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
-		roleName,
-		`
-	managed_policy_arns = [
-		"${aws_iam_policy.managed-policy2.arn}",
-		"${aws_iam_policy.managed-policy3.arn}",
-	]
-		`,
-		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
-		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
-		testAccAWSRolePolicyManaged("managed-policy3", mgPolicyName3),
-	)
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test2" {
+  name = %[2]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test3" {
+  name = %[3]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "acc_role" {
+  name                = %[4]q
+  managed_policy_arns = [aws_iam_policy.test.arn, aws_iam_policy.test2.arn]
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, mgPolicyName1, mgPolicyName2, mgPolicyName3, roleName)
 }
 
 func testAccAWSRolePolicyManagedConfigUpdateDown(roleName, mgPolicyName1, mgPolicyName2, mgPolicyName3 string) string {
-	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
-		roleName,
-		`
-	managed_policy_arns = [
-		"${aws_iam_policy.managed-policy3.arn}",
-	]
-		`,
-		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
-		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
-		testAccAWSRolePolicyManaged("managed-policy3", mgPolicyName3),
-	)
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test2" {
+  name = %[2]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test3" {
+  name = %[3]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "acc_role" {
+  name                = %[4]q
+  managed_policy_arns = [aws_iam_policy.test3.arn]
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, mgPolicyName1, mgPolicyName2, mgPolicyName3, roleName)
 }
 
 func testAccAWSRolePolicyExtraManagedConfig(roleName, mgPolicyName1, mgPolicyName2 string) string {
-	return testAccAWSRolePolicyManagedConfigUpdateTemplate(
-		roleName,
-		`
-	managed_policy_arns = ["${aws_iam_policy.managed-policy1.arn}"]
-		`,
-		testAccAWSRolePolicyManaged("managed-policy1", mgPolicyName1),
-		testAccAWSRolePolicyManaged("managed-policy2", mgPolicyName2),
-		"",
-	)
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+  path = "/tf-testing/"
 
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 
-func testAccAWSRolePolicyExtraInlineConfig() string {
+resource "aws_iam_policy" "test2" {
+  name = %[2]q
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "acc_role" {
+  name                = %[3]q
+  managed_policy_arns = [aws_iam_policy.test.arn]
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+`, mgPolicyName1, mgPolicyName2, roleName)
+}
+
+func testAccAWSRolePolicyExtraInlineConfig() string { //TODO
 	return fmt.Sprint(`{
 	"Version": "2012-10-17",
 	"Statement": [
@@ -2177,85 +2303,139 @@ func testAccAWSRolePolicyExtraInlineConfig() string {
 func testAccAWSRolePolicyNoInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
+  name = %[1]q
+  
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
-
-%s
-`, roleName, testAccAWSRoleAssumeRolePolicy())
+EOF
+}
+`, roleName)
 }
 
 func testAccAWSRolePolicyNoManagedConfig(roleName, mgPolicyName1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "acc_role" {
-	name               = "%s"
-	assume_role_policy = "${data.aws_iam_policy_document.assume-role.json}"
-}
+  name = %[1]q
 
-resource "aws_iam_policy" "managed-policy1" {
-	name = "%s"
-	path = "/tf-testing/"
-
-	policy = <<EOF
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
 }
 
-%s
-`, roleName, mgPolicyName1, testAccAWSRoleAssumeRolePolicy())
+resource "aws_iam_policy" "managed-policy1" {
+  name = "%s"
+  path = "/tf-testing/"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, roleName, mgPolicyName1)
 }
 
 func testAccAWSRolePolicyEmptyInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "acc_role" {
-	name                      = "%s"
-	assume_role_policy        = "${data.aws_iam_policy_document.assume-role.json}"
-	inline_policy {}
+  name = %[1]q
+  
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
+EOF
 
-%s
-`, roleName, testAccAWSRoleAssumeRolePolicy())
+  inline_policy = []
+}
+`, roleName)
 }
 
 func testAccAWSRolePolicyEmptyManagedConfig(roleName, mgPolicyName1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "acc_role" {
-	name                = "%s"
-	assume_role_policy  = "${data.aws_iam_policy_document.assume-role.json}"
-	managed_policy_arns = []
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  managed_policy_arns = []
 }
 
 resource "aws_iam_policy" "managed-policy1" {
-	name = "%s"
-	path = "/tf-testing/"
+  name = %[2]q
+  path = "/tf-testing/"
 
-	policy = <<EOF
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Action": [
-			"ec2:Describe*"
-		],
-		"Effect": "Allow",
-		"Resource": "*"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+    "Action": [
+      "ec2:Describe*"
+    ],
+    "Effect": "Allow",
+    "Resource": "*"
+    }
+  ]
 }
 EOF
 }
-
-%s
-`, roleName, mgPolicyName1, testAccAWSRoleAssumeRolePolicy())
+`, roleName, mgPolicyName1)
 }
