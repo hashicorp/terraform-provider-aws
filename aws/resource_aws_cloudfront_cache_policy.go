@@ -176,6 +176,13 @@ func resourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface
 	}
 
 	resp, err := conn.GetCachePolicy(request)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
