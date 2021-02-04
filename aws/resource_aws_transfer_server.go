@@ -268,6 +268,9 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
+		updateEndPoint := d.Get("endpoint_details")
+		// delete(updateEndPoint, "SecurityGroupIds")
+		// updateEndPoint.SecurityGroupIds = {}
 
 		input := &transfer.UpdateServerInput{
 			ServerId:        aws.String(d.Id()),
