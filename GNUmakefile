@@ -81,7 +81,7 @@ docscheck:
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
 		-require-resource-subcategory
-	@misspell -error -source text CHANGELOG.md
+	@misspell -error -source text CHANGELOG.md .changelog
 
 lint: golangci-lint awsproviderlint importlint
 
