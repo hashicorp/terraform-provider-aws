@@ -16,7 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
-func testAccAWSSagemakerDomain_serial(t *testing.T) {
+func TestAccAWSSagemakerDomain_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Domain": {
 			"basic":                                testAccAWSSagemakerDomain_basic,
