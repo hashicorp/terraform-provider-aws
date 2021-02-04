@@ -6,6 +6,7 @@ on:
       - 'release/**'
   pull_request:
     paths:
+      - .changelog/*
       - .go-version
       - CHANGELOG.md
   pull_request_target:
@@ -70,4 +71,4 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd tools && go install github.com/client9/misspell/cmd/misspell
-      - run: misspell -error -source text CHANGELOG.md
+      - run: misspell -error -source text CHANGELOG.md .changelog
