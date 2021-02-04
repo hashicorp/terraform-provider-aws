@@ -16,7 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
-// Tests are serialized as SagmMaker Domain resource are limited to 1 per account by default.
+// Tests are serialized as SagmMaker Domain resources are limited to 1 per account by default.
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 func TestAccAWSSagemakerDomain_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
