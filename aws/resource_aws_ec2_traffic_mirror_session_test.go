@@ -18,7 +18,7 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	description := "test session"
 	session := acctest.RandIntRange(1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
 	pLen := acctest.RandIntRange(1, 255)
 	vni := acctest.RandIntRange(1, 16777216)
 
@@ -79,7 +79,7 @@ func TestAccAWSEc2TrafficMirrorSession_tags(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := acctest.RandIntRange(1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -127,7 +127,7 @@ func TestAccAWSEc2TrafficMirrorSession_disappears(t *testing.T) {
 	var v ec2.TrafficMirrorSession
 	resourceName := "aws_ec2_traffic_mirror_session.test"
 	session := acctest.RandIntRange(1, 32766)
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {

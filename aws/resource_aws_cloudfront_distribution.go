@@ -151,6 +151,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 							Default:  0,
 						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"path_pattern": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -312,6 +316,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,
+						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,

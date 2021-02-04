@@ -16,7 +16,7 @@ import (
 func TestAccAwsBackupPlan_basic(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
@@ -52,7 +52,7 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 func TestAccAwsBackupPlan_withTags(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
@@ -104,7 +104,7 @@ func TestAccAwsBackupPlan_withTags(t *testing.T) {
 func TestAccAwsBackupPlan_withRules(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 	rule1Name := fmt.Sprintf("%s_1", rName)
 	rule2Name := fmt.Sprintf("%s_2", rName)
 	rule3Name := fmt.Sprintf("%s_3", rName)
@@ -189,7 +189,7 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
@@ -260,7 +260,7 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
@@ -560,7 +560,7 @@ func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
 func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },

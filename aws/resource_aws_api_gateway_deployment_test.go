@@ -403,9 +403,7 @@ resource "aws_api_gateway_deployment" "test" {
   stage_name        = "tf-acc-test"
 
   triggers = {
-    redeployment = sha1(join(",", list(
-      jsonencode(aws_api_gateway_integration.test),
-    )))
+    redeployment = sha1(jsonencode(aws_api_gateway_integration.test))
   }
 
   lifecycle {

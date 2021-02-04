@@ -72,6 +72,20 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"HTTP1",
+					"HTTP2",
+					"GRPC",
+				}, true),
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -294,6 +308,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
+		switch d.Get("protocol").(string) {
+		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
+		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
@@ -632,6 +650,10 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
 	}
+	switch d.Get("protocol").(string) {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
 		return fmt.Errorf("error setting health_check: %s", err)
@@ -727,7 +749,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 
-	// Network Load Balancers have many special qwirks to them.
+	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})

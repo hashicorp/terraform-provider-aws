@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,35 +25,90 @@ func init() {
 
 func testSweepRouteTables(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).ec2conn
 
+	var sweeperErrs *multierror.Error
+
 	input := &ec2.DescribeRouteTablesInput{}
+
 	err = conn.DescribeRouteTablesPages(input, func(page *ec2.DescribeRouteTablesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
 		for _, routeTable := range page.RouteTables {
+			if routeTable == nil {
+				continue
+			}
+
+			id := aws.StringValue(routeTable.RouteTableId)
 			isMainRouteTableAssociation := false
 
 			for _, routeTableAssociation := range routeTable.Associations {
+				if routeTableAssociation == nil {
+					continue
+				}
+
 				if aws.BoolValue(routeTableAssociation.Main) {
 					isMainRouteTableAssociation = true
 					break
 				}
 
+				associationID := aws.StringValue(routeTableAssociation.RouteTableAssociationId)
+
 				input := &ec2.DisassociateRouteTableInput{
 					AssociationId: routeTableAssociation.RouteTableAssociationId,
 				}
 
-				log.Printf("[DEBUG] Deleting Route Table Association: %s", input)
+				log.Printf("[DEBUG] Deleting EC2 Route Table Association: %s", associationID)
 				_, err := conn.DisassociateRouteTable(input)
+
 				if err != nil {
-					log.Printf("[ERROR] Error deleting Route Table Association (%s): %s", aws.StringValue(routeTableAssociation.RouteTableAssociationId), err)
+					sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s) Association (%s): %w", id, associationID, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
 				}
 			}
 
 			if isMainRouteTableAssociation {
-				log.Printf("[DEBUG] Skipping Main Route Table: %s", aws.StringValue(routeTable.RouteTableId))
+				for _, route := range routeTable.Routes {
+					if route == nil {
+						continue
+					}
+
+					if aws.StringValue(route.GatewayId) == "local" {
+						continue
+					}
+
+					// Prevent deleting default VPC route for Internet Gateway
+					// which some testing is still reliant on operating correctly
+					if strings.HasPrefix(aws.StringValue(route.GatewayId), "igw-") && aws.StringValue(route.DestinationCidrBlock) == "0.0.0.0/0" {
+						continue
+					}
+
+					input := &ec2.DeleteRouteInput{
+						DestinationCidrBlock:     route.DestinationCidrBlock,
+						DestinationIpv6CidrBlock: route.DestinationIpv6CidrBlock,
+						RouteTableId:             routeTable.RouteTableId,
+					}
+
+					log.Printf("[DEBUG] Deleting EC2 Route Table (%s) Route", id)
+					_, err := conn.DeleteRoute(input)
+
+					if err != nil {
+						sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s) Route: %w", id, err)
+						log.Printf("[ERROR] %s", sweeperErr)
+						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+						continue
+					}
+				}
+
 				continue
 			}
 
@@ -59,10 +116,14 @@ func testSweepRouteTables(region string) error {
 				RouteTableId: routeTable.RouteTableId,
 			}
 
-			log.Printf("[DEBUG] Deleting Route Table: %s", input)
+			log.Printf("[DEBUG] Deleting EC2 Route Table: %s", id)
 			_, err := conn.DeleteRouteTable(input)
+
 			if err != nil {
-				log.Printf("[ERROR] Error deleting Route Table (%s): %s", aws.StringValue(routeTable.RouteTableId), err)
+				sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -71,14 +132,14 @@ func testSweepRouteTables(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Route Table sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing Route Tables: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Route Tables: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSRouteTable_basic(t *testing.T) {
@@ -1933,58 +1994,50 @@ resource "aws_vpc_peering_connection" "test" {
   }
 }
 
+locals {
+  routes = [
+    {
+      destination_attr  = %[2]q
+      destination_value = %[3]q
+      target_attr       = %[4]q
+      target_value      = %[5]s.id
+    },
+    {
+      destination_attr  = %[6]q
+      destination_value = %[7]q
+      target_attr       = %[8]q
+      target_value      = %[9]s.id
+    },
+    {
+      destination_attr  = %[10]q
+      destination_value = %[11]q
+      target_attr       = %[12]q
+      target_value      = %[13]s.id
+    }
+  ]
+}
+
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
-  route {
-    # Destination.
-    cidr_block      = (%[2]q == "cidr_block") ? %[3]q : null
-    ipv6_cidr_block = (%[2]q == "ipv6_cidr_block") ? %[3]q : null
+  dynamic "route" {
+    for_each = local.routes
+    content {
+      # Destination.
+      cidr_block      = (route.value["destination_attr"] == "cidr_block") ? route.value["destination_value"] : null
+      ipv6_cidr_block = (route.value["destination_attr"] == "ipv6_cidr_block") ? route.value["destination_value"] : null
 
-    # Target
-    egress_only_gateway_id    = (%[4]q == "egress_only_gateway_id") ? %[5]s.id : null
-    gateway_id                = (%[4]q == "gateway_id") ? %[5]s.id : null
-    instance_id               = (%[4]q == "instance_id") ? %[5]s.id : null
-    local_gateway_id          = (%[4]q == "local_gateway_id") ? %[5]s.id : null
-    nat_gateway_id            = (%[4]q == "nat_gateway_id") ? %[5]s.id : null
-    network_interface_id      = (%[4]q == "network_interface_id") ? %[5]s.id : null
-    transit_gateway_id        = (%[4]q == "transit_gateway_id") ? %[5]s.id : null
-    vpc_endpoint_id           = (%[4]q == "vpc_endpoint_id") ? %[5]s.id : null
-    vpc_peering_connection_id = (%[4]q == "vpc_peering_connection_id") ? %[5]s.id : null
-  }
-
-  route {
-    # Destination.
-    cidr_block      = (%[6]q == "cidr_block") ? %[7]q : null
-    ipv6_cidr_block = (%[6]q == "ipv6_cidr_block") ? %[7]q : null
-
-    # Target
-    egress_only_gateway_id    = (%[8]q == "egress_only_gateway_id") ? %[9]s.id : null
-    gateway_id                = (%[8]q == "gateway_id") ? %[9]s.id : null
-    instance_id               = (%[8]q == "instance_id") ? %[9]s.id : null
-    local_gateway_id          = (%[8]q == "local_gateway_id") ? %[9]s.id : null
-    nat_gateway_id            = (%[8]q == "nat_gateway_id") ? %[9]s.id : null
-    network_interface_id      = (%[8]q == "network_interface_id") ? %[9]s.id : null
-    transit_gateway_id        = (%[8]q == "transit_gateway_id") ? %[9]s.id : null
-    vpc_endpoint_id           = (%[8]q == "vpc_endpoint_id") ? %[9]s.id : null
-    vpc_peering_connection_id = (%[8]q == "vpc_peering_connection_id") ? %[9]s.id : null
-  }
-
-  route {
-    # Destination.
-    cidr_block      = (%[10]q == "cidr_block") ? %[11]q : null
-    ipv6_cidr_block = (%[10]q == "ipv6_cidr_block") ? %[11]q : null
-
-    # Target
-    egress_only_gateway_id    = (%[12]q == "egress_only_gateway_id") ? %[13]s.id : null
-    gateway_id                = (%[12]q == "gateway_id") ? %[13]s.id : null
-    instance_id               = (%[12]q == "instance_id") ? %[13]s.id : null
-    local_gateway_id          = (%[12]q == "local_gateway_id") ? %[13]s.id : null
-    nat_gateway_id            = (%[12]q == "nat_gateway_id") ? %[13]s.id : null
-    network_interface_id      = (%[12]q == "network_interface_id") ? %[13]s.id : null
-    transit_gateway_id        = (%[12]q == "transit_gateway_id") ? %[13]s.id : null
-    vpc_endpoint_id           = (%[12]q == "vpc_endpoint_id") ? %[13]s.id : null
-    vpc_peering_connection_id = (%[12]q == "vpc_peering_connection_id") ? %[13]s.id : null
+      # Target.
+      egress_only_gateway_id    = (route.value["target_attr"] == "egress_only_gateway_id") ? route.value["target_value"] : null
+      gateway_id                = (route.value["target_attr"] == "gateway_id") ? route.value["target_value"] : null
+      instance_id               = (route.value["target_attr"] == "instance_id") ? route.value["target_value"] : null
+      local_gateway_id          = (route.value["target_attr"] == "local_gateway_id") ? route.value["target_value"] : null
+      nat_gateway_id            = (route.value["target_attr"] == "nat_gateway_id") ? route.value["target_value"] : null
+      network_interface_id      = (route.value["target_attr"] == "network_interface_id") ? route.value["target_value"] : null
+      transit_gateway_id        = (route.value["target_attr"] == "transit_gateway_id") ? route.value["target_value"] : null
+      vpc_endpoint_id           = (route.value["target_attr"] == "vpc_endpoint_id") ? route.value["target_value"] : null
+      vpc_peering_connection_id = (route.value["target_attr"] == "vpc_peering_connection_id") ? route.value["target_value"] : null
+    }
   }
 
   tags = {
@@ -1999,7 +2052,7 @@ resource "aws_route_table" "test" {
 // See https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html#nat-instance-ami.
 // The data source is named 'amzn-ami-nat-instance'.
 func testAccLatestAmazonNatInstanceAmiConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_ami" "amzn-ami-nat-instance" {
   most_recent = true
   owners      = ["amazon"]
@@ -2009,5 +2062,5 @@ data "aws_ami" "amzn-ami-nat-instance" {
     values = ["amzn-ami-vpc-nat-*"]
   }
 }
-`)
+`
 }

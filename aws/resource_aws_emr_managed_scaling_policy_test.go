@@ -191,11 +191,11 @@ func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading EMR Managed Scaling Policy (%s): %w", rs.Primary.ID, err)
 		}
 
-		if resp != nil {
-			return fmt.Errorf("Error: EMR Managed Scaling Policy still exists")
+		if resp != nil && resp.ManagedScalingPolicy != nil {
+			return fmt.Errorf("EMR Managed Scaling Policy (%s) still exists", rs.Primary.ID)
 		}
 	}
 

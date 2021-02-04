@@ -3,6 +3,7 @@ package waiter
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -237,6 +238,64 @@ func SecurityGroupStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	}
 }
 
+// SubnetMapCustomerOwnedIpOnLaunch fetches the Subnet and its MapCustomerOwnedIpOnLaunch
+func SubnetMapCustomerOwnedIpOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		subnet, err := finder.SubnetByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+			return nil, "false", nil
+		}
+
+		if err != nil {
+			return nil, "false", err
+		}
+
+		if subnet == nil {
+			return nil, "false", nil
+		}
+
+		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapCustomerOwnedIpOnLaunch)), nil
+	}
+}
+
+// SubnetMapPublicIpOnLaunch fetches the Subnet and its MapPublicIpOnLaunch
+func SubnetMapPublicIpOnLaunch(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		subnet, err := finder.SubnetByID(conn, id)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidSubnetIDNotFound) {
+			return nil, "false", nil
+		}
+
+		if err != nil {
+			return nil, "false", err
+		}
+
+		if subnet == nil {
+			return nil, "false", nil
+		}
+
+		return subnet, strconv.FormatBool(aws.BoolValue(subnet.MapPublicIpOnLaunch)), nil
+	}
+}
+
+func TransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		transitGatewayPrefixListReference, err := finder.TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if transitGatewayPrefixListReference == nil {
+			return nil, "", nil
+		}
+
+		return transitGatewayPrefixListReference, aws.StringValue(transitGatewayPrefixListReference.State), nil
+	}
+}
+
 const (
 	vpcPeeringConnectionStatusNotFound = "NotFound"
 	vpcPeeringConnectionStatusUnknown  = "Unknown"
@@ -295,5 +354,24 @@ func VpnGatewayVpcAttachmentState(conn *ec2.EC2, vpnGatewayID, vpcID string) res
 		}
 
 		return vpcAttachment, aws.StringValue(vpcAttachment.State), nil
+	}
+}
+
+const (
+	managedPrefixListStateNotFound = "NotFound"
+	managedPrefixListStateUnknown  = "Unknown"
+)
+
+func ManagedPrefixListState(conn *ec2.EC2, prefixListId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		managedPrefixList, err := finder.ManagedPrefixListByID(conn, prefixListId)
+		if err != nil {
+			return nil, managedPrefixListStateUnknown, err
+		}
+		if managedPrefixList == nil {
+			return nil, managedPrefixListStateNotFound, nil
+		}
+
+		return managedPrefixList, aws.StringValue(managedPrefixList.State), nil
 	}
 }

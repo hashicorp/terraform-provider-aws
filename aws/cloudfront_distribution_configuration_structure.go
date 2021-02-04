@@ -195,6 +195,7 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
 		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
 		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
@@ -230,6 +231,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
 		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
 		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
@@ -266,6 +268,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
 		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
+		"origin_request_policy_id":  aws.StringValue(dcb.OriginRequestPolicyId),
 	}
 
 	if dcb.ForwardedValues != nil {
@@ -304,6 +307,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
 	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
+	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
@@ -508,7 +512,7 @@ func flattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
 func expandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
 	return &cloudfront.AllowedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringList(s.List()),
+		Items:    expandStringSet(s),
 	}
 }
 
@@ -522,7 +526,7 @@ func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 func expandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
 	return &cloudfront.CachedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringList(s.List()),
+		Items:    expandStringSet(s),
 	}
 }
 
@@ -1000,14 +1004,12 @@ func flattenLoggingConfig(lc *cloudfront.LoggingConfig) []interface{} {
 	return []interface{}{m}
 }
 
-func expandAliases(as *schema.Set) *cloudfront.Aliases {
-	s := as.List()
-	var aliases cloudfront.Aliases
-	if len(s) > 0 {
-		aliases.Quantity = aws.Int64(int64(len(s)))
-		aliases.Items = expandStringList(s)
-	} else {
-		aliases.Quantity = aws.Int64(0)
+func expandAliases(s *schema.Set) *cloudfront.Aliases {
+	aliases := cloudfront.Aliases{
+		Quantity: aws.Int64(int64(s.Len())),
+	}
+	if s.Len() > 0 {
+		aliases.Items = expandStringSet(s)
 	}
 	return &aliases
 }

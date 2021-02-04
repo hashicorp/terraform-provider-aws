@@ -3,10 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -61,6 +59,10 @@ func dataSourceAwsEip() *schema.Resource {
 				Computed: true,
 			},
 			"public_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"carrier_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,26 +140,15 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("private_ip", eip.PrivateIpAddress)
 	if eip.PrivateIpAddress != nil {
-		dashIP := strings.Replace(*eip.PrivateIpAddress, ".", "-", -1)
-
-		if region == endpoints.UsEast1RegionID {
-			d.Set("private_dns", fmt.Sprintf("ip-%s.ec2.internal", dashIP))
-		} else {
-			d.Set("private_dns", fmt.Sprintf("ip-%s.%s.compute.internal", dashIP, region))
-		}
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(*eip.PrivateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(region)))
 	}
 
 	d.Set("public_ip", eip.PublicIp)
 	if eip.PublicIp != nil {
-		dashIP := strings.Replace(*eip.PublicIp, ".", "-", -1)
-
-		if region == endpoints.UsEast1RegionID {
-			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.compute-1", dashIP)))
-		} else {
-			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
-		}
+		d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", resourceAwsEc2DashIP(*eip.PublicIp), resourceAwsEc2RegionalPublicDnsSuffix(region))))
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
+	d.Set("carrier_ip", eip.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
