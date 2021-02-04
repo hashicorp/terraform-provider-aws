@@ -111,7 +111,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	if d.Id() == "" {
+	if d.Get("id").(string) == "" {
 		if err := dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d, conn); err != nil {
 			return fmt.Errorf("Unable to find origin request policy by name: %s", err.Error())
 		}
