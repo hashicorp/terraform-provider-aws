@@ -6,7 +6,7 @@ on:
       - 'release/**'
   pull_request:
     paths:
-      - .changelog/
+      - .changelog/*
       - .go-version
       - CHANGELOG.md
   pull_request_target:
