@@ -11,6 +11,7 @@ import (
 
 func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	dataSourceName := "data.aws_cloudfront_origin_request_policy.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -20,13 +21,13 @@ func TestAccAWSCloudFrontDataSourceOriginRequestPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontDataSourceOriginRequestPolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "comment", "test comment"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookie_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookies.0.items.0", "test"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "headers_config.0.header_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "headers_config.0.headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_string_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("data.aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_strings.0.items.0", "test"),
+					resource.TestCheckResourceAttr(dataSourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(dataSourceName, "cookies_config.0.cookie_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(dataSourceName, "cookies_config.0.cookies.0.items.0", "test"),
+					resource.TestCheckResourceAttr(dataSourceName, "headers_config.0.header_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(dataSourceName, "headers_config.0.headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr(dataSourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(dataSourceName, "query_strings_config.0.query_strings.0.items.0", "test"),
 				),
 			},
 		},

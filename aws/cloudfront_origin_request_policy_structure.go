@@ -28,17 +28,12 @@ func expandCloudFrontOriginRequestPolicyCookiesConfig(tfMap map[string]interface
 		return nil
 	}
 
-	var itemsAPIObject *cloudfront.CookieNames
-
-	if itemsFlat, ok := tfMap["cookies"].([]interface{}); ok && len(itemsFlat) == 1 {
-		itemsAPIObject = expandCloudFrontOriginRequestPolicyCookieNames(itemsFlat[0].(map[string]interface{}))
-	} else {
-		itemsAPIObject = nil
-	}
-
 	apiObject := &cloudfront.OriginRequestPolicyCookiesConfig{
 		CookieBehavior: aws.String(tfMap["cookie_behavior"].(string)),
-		Cookies:        itemsAPIObject,
+	}
+
+	if items, ok := tfMap["cookies"].([]interface{}); ok && len(items) == 1 {
+		apiObject.Cookies = expandCloudFrontOriginRequestPolicyCookieNames(items[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -48,14 +43,16 @@ func expandCloudFrontOriginRequestPolicyHeaders(tfMap map[string]interface{}) *c
 	if tfMap == nil {
 		return nil
 	}
-	apiObject := &cloudfront.Headers{}
 
 	var items []*string
 	for _, item := range tfMap["items"].(*schema.Set).List() {
 		items = append(items, aws.String(item.(string)))
 	}
-	apiObject.Items = items
-	apiObject.Quantity = aws.Int64(int64(len(items)))
+
+	apiObject := &cloudfront.Headers{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
 
 	return apiObject
 }
@@ -64,17 +61,13 @@ func expandCloudFrontOriginRequestPolicyHeadersConfig(tfMap map[string]interface
 	if tfMap == nil {
 		return nil
 	}
-	var itemsAPIObject *cloudfront.Headers
-
-	if itemsFlat, ok := tfMap["headers"].([]interface{}); ok && len(itemsFlat) == 1 && tfMap["header_behavior"] != "none" {
-		itemsAPIObject = expandCloudFrontOriginRequestPolicyHeaders(itemsFlat[0].(map[string]interface{}))
-	} else {
-		itemsAPIObject = nil
-	}
 
 	apiObject := &cloudfront.OriginRequestPolicyHeadersConfig{
 		HeaderBehavior: aws.String(tfMap["header_behavior"].(string)),
-		Headers:        itemsAPIObject,
+	}
+
+	if items, ok := tfMap["headers"].([]interface{}); ok && len(items) == 1 && tfMap["header_behavior"] != "none" {
+		apiObject.Headers = expandCloudFrontOriginRequestPolicyHeaders(items[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -84,14 +77,16 @@ func expandCloudFrontOriginRequestPolicyQueryStringNames(tfMap map[string]interf
 	if tfMap == nil {
 		return nil
 	}
-	apiObject := &cloudfront.QueryStringNames{}
 
 	var items []*string
 	for _, item := range tfMap["items"].(*schema.Set).List() {
 		items = append(items, aws.String(item.(string)))
 	}
-	apiObject.Items = items
-	apiObject.Quantity = aws.Int64(int64(len(items)))
+
+	apiObject := &cloudfront.QueryStringNames{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
 
 	return apiObject
 }
@@ -100,17 +95,13 @@ func expandCloudFrontOriginRequestPolicyQueryStringsConfig(tfMap map[string]inte
 	if tfMap == nil {
 		return nil
 	}
-	var itemsAPIObject *cloudfront.QueryStringNames
-
-	if itemsFlat, ok := tfMap["query_strings"].([]interface{}); ok && len(itemsFlat) == 1 {
-		itemsAPIObject = expandCloudFrontOriginRequestPolicyQueryStringNames(itemsFlat[0].(map[string]interface{}))
-	} else {
-		itemsAPIObject = nil
-	}
 
 	apiObject := &cloudfront.OriginRequestPolicyQueryStringsConfig{
 		QueryStringBehavior: aws.String(tfMap["query_string_behavior"].(string)),
-		QueryStrings:        itemsAPIObject,
+	}
+
+	if items, ok := tfMap["query_strings"].([]interface{}); ok && len(items) == 1 {
+		apiObject.QueryStrings = expandCloudFrontOriginRequestPolicyQueryStringNames(items[0].(map[string]interface{}))
 	}
 
 	return apiObject

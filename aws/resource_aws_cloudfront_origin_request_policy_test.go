@@ -11,6 +11,7 @@ import (
 
 func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_origin_request_policy.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -20,13 +21,13 @@ func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontOriginRequestPolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "comment", "test comment"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookie_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookies.0.items.0", "test"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.header_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_string_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_strings.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.0", "test"),
 				),
 			},
 			{
@@ -41,6 +42,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 
 func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_origin_request_policy.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -50,23 +52,23 @@ func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontOriginRequestPolicyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "comment", "test comment"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookie_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookies.0.items.0", "test"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.header_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_string_behavior", "whitelist"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_strings.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.0", "test"),
 				),
 			},
 			{
 				Config: testAccAWSCloudFrontOriginRequestPolicyConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "comment", "test comment updated"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookies.0.items.0", "test2"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.header_behavior", "none"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.headers.#", "0"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_strings.0.items.0", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.0", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.0", "test2"),
 				),
 			},
 			{
@@ -81,6 +83,7 @@ func TestAccAWSCloudFrontOriginRequestPolicy_update(t *testing.T) {
 
 func TestAccAWSCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_origin_request_policy.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -90,13 +93,13 @@ func TestAccAWSCloudFrontOriginRequestPolicy_noneBehavior(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontOriginRequestPolicyConfigNoneBehavior(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "comment", "test comment"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookie_behavior", "none"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "cookies_config.0.cookies.#", "0"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.header_behavior", "none"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "headers_config.0.headers.#", "0"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_string_behavior", "none"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_request_policy.example", "query_strings_config.0.query_strings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "none"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "0"),
 				),
 			},
 			{

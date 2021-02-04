@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,7 +113,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 
 	if d.Id() == "" {
 		if err := dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d, conn); err != nil {
-			return err
+			return fmt.Errorf("Unable to find origin request policy by name: %s", err.Error())
 		}
 	}
 
@@ -122,7 +124,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 
 		resp, err := conn.GetOriginRequestPolicy(request)
 		if err != nil {
-			return err
+			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %s", d.Id(), err.Error())
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 
