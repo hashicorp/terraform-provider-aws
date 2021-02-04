@@ -195,6 +195,7 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
 		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
 		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
@@ -230,6 +231,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
 		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
 		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
@@ -266,6 +268,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
 		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
+		"origin_request_policy_id":  aws.StringValue(dcb.OriginRequestPolicyId),
 	}
 
 	if dcb.ForwardedValues != nil {
@@ -304,6 +307,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
 	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
+	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
