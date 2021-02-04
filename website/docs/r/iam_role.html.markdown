@@ -14,6 +14,8 @@ Provides an IAM role.
 
 ## Example Usage
 
+### Basic Example
+
 ```hcl
 resource "aws_iam_role" "test_role" {
   name = "test_role"
@@ -40,6 +42,148 @@ resource "aws_iam_role" "test_role" {
 }
 ```
 
+### Example of Using Data Source for Assume Role Policy
+
+```hcl
+data "aws_iam_policy_document" "instance-assume-role-policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "instance" {
+  name               = "instance_role"
+  path               = "/system/"
+  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
+}
+```
+
+### Example of Using Exclusive Inline Policies
+
+This example will create an IAM role with two inline IAM policies. If a third policy were added out of band, on the next apply, that policy would be removed. If one of the two original policies were removed, out of band, on the next apply, the policy would be recreated.
+
+```hcl
+resource "aws_iam_role" "example" {
+  name               = "yak_role"
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
+
+  inline_policy {
+    name = "my_inline_policy"
+
+    policy = <<EOF
+{
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+  }
+
+  inline_policy {
+    name_prefix = "inline_"
+    policy      = data.aws_iam_policy_document.inline_policy.json
+  }
+}
+
+data "aws_iam_policy_document" "inline_policy" {
+  statement {
+    actions   = ["ec2:DescribeAccountAttributes"]
+    resources = ["*"]
+  }
+}
+```
+
+### Example of Not Allowing Inline Policies
+
+This example will create an IAM role resource, which, on the next apply, will remove any out-of-band inline policies.
+
+```hcl
+resource "aws_iam_role" "example" {
+  name               = "yak_role"
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
+
+  inline_policy = []
+}
+```
+
+### Example of Using Exclusive Managed Policies
+
+This example will create an IAM role resource with two attached managed IAM policies. If a third policy were attached out of band, on the next apply, that policy would be detached. If one of the two original policies were detached out of band, on the next apply, the policy would be recreated and re-attached.
+
+```hcl
+resource "aws_iam_role" "example" {
+  name               = "yak_role"
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
+
+  managed_policy_arns = [aws_iam_policy.policy_one.arn, aws_iam_policy.policy_two.arn]
+}
+
+resource "aws_iam_policy" "policy_one" {
+  name = "managed_policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy_two" {
+  name = "managed_policy2"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListAllMyBuckets",
+        "s3:ListBucket",
+        "s3:HeadBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+```
+
+### Example of Not Allowing Managed Policies
+
+This example will create an IAM role resource, which, on the next apply, will detached all managed policies that were attached out of band.
+
+```hcl
+resource "aws_iam_role" "example" {
+  name               = "yak_role"
+  assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
+
+  managed_policy_arns = []
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -59,7 +203,7 @@ The following arguments are supported:
 * `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the role.
 * `tags` - Key-value map of tags for the IAM role
 * `tags` - Key-value mapping of tags for the IAM role
-* `managed_policy_arns` - (Optional) An exclusive set of IAM managed policy ARNs to attach to the IAM role. If the attribute is not used, the resource will not attach or detach the role's managed policies on the next `apply`. If the set is empty, all managed policies that are attached out of band, will be detached on the next `apply`. 
+* `managed_policy_arns` - (Optional) An exclusive set of IAM managed policy ARNs to attach to the IAM role. If the attribute is not used, the resource will not attach or detach the role's managed policies on the next `apply`. If the set is empty, all managed policies that are attached out of band, will be detached on the next `apply`.
 
 ~> **NOTE:** The `managed_policy_arns` attribute, which provides an _exclusive_ set of managed policies for an IAM role, will conflict with using the `iam_role_policy_attachment` resource, which provides non-exclusive, managed policy-role attachment. See [`iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html).
 
@@ -85,149 +229,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the role.
 * `name` - The name of the role.
 * `unique_id` - The stable and unique string identifying the role.
-
-## Example of Using Data Source for Assume Role Policy
-
-```hcl
-data "aws_iam_policy_document" "instance-assume-role-policy" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "instance" {
-  name               = "instance_role"
-  path               = "/system/"
-  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
-}
-```
-
-## Example of Using Exclusive Inline Policies
-
-This example will create an IAM role with two inline IAM policies. If a third policy were added out of band, on the next apply, that policy would be removed. If one of the two original policies were removed, out of band, on the next apply, the policy would be recreated.
-
-```hcl
-resource "aws_iam_role" "example" {
-  name               = "yak_role"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_assume_role_policy.json}" # (not shown)
-
-  inline_policy {
-    name = "my_inline_policy"
-    policy = <<EOF
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ],
-  "Version": "2012-10-17"
-}
-EOF
-
-  inline_policy {
-    name_prefix = "inline_"
-    policy = "${data.aws_iam_policy_document.inline_policy.json}"
-  }
-}
-
-data "aws_iam_policy_document" "inline_policy" {
-  statement {
-    actions   = ["ec2:DescribeAccountAttributes"]
-    resources = ["*"]
-  }
-}
-```
-
-## Example of Not Allowing Inline Policies
-
-This example will create an IAM role resource, which, on the next apply, will remove any out-of-band inline policies.
-
-```hcl
-resource "aws_iam_role" "example" {
-  name               = "yak_role"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_assume_role_policy.json}" # (not shown)
-
-  inline_policy {}
-}
-```
-
-## Example of Using Exclusive Managed Policies
-
-This example will create an IAM role resource with two attached managed IAM policies. If a third policy were attached out of band, on the next apply, that policy would be detached. If one of the two original policies were detached out of band, on the next apply, the policy would be recreated and re-attached.
-
-```hcl
-resource "aws_iam_role" "example" {
-  name               = "yak_role"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_assume_role_policy.json}" # (not shown)
-
-  managed_policy_arns = [
-    "${aws_iam_policy.policy_one.arn}",
-    "${aws_iam_policy.policy_two.arn}",
-  ]
-}
-
-resource "aws_iam_policy" "policy_one" {
-  name        = "managed_policy"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "policy_two" {
-  name        = "managed_policy2"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListAllMyBuckets",
-        "s3:ListBucket",
-        "s3:HeadBucket"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-```
-
-## Example of Not Allowing Managed Policies
-
-This example will create an IAM role resource, which, on the next apply, will detached all managed policies that were attached out of band.
-
-```hcl
-resource "aws_iam_role" "example" {
-  name               = "yak_role"
-  assume_role_policy = "${data.aws_iam_policy_document.instance_assume_role_policy.json}" # (not shown)
-
-  managed_policy_arns = []
-}
-```
 
 ## Import
 

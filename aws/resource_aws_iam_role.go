@@ -425,8 +425,8 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringSet(os.Difference(ns))
+		add := expandStringSet(ns.Difference(os))
 
 		if err := deleteAwsIamRolePolicyAttachments(iamconn, roleName, remove); err != nil {
 			return fmt.Errorf("unable to detach policies: %w", err)

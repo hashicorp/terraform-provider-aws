@@ -502,7 +502,7 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 	ilPolicyName1 := fmt.Sprintf("tf-acc-ipolicy-basic-1-%s", rString)
 	ilPolicyName2 := fmt.Sprintf("tf-acc-ipolicy-basic-2-%s", rString)
 	ilPolicyName3 := fmt.Sprintf("tf-acc-ipolicy-basic-3-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -555,7 +555,7 @@ func TestAccAWSIAMRole_policyInlinePrefix(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-prefix-%s", rString)
 	ilPolicyPrefix := fmt.Sprintf("tf-acc-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -579,7 +579,7 @@ func TestAccAWSIAMRole_policyInlineNoName(t *testing.T) {
 
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-prefix-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -605,7 +605,7 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 	mgPolicyName1 := fmt.Sprintf("tf-acc-mpolicy-basic-1-%s", rString)
 	mgPolicyName2 := fmt.Sprintf("tf-acc-mpolicy-basic-2-%s", rString)
 	mgPolicyName3 := fmt.Sprintf("tf-acc-mpolicy-basic-3-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -658,7 +658,7 @@ func TestAccAWSIAMRole_policyManagedReattached(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-reattach-%s", rString)
 	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-detach-1-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -697,7 +697,7 @@ func TestAccAWSIAMRole_policyExtraManagedAdded(t *testing.T) {
 	roleName := fmt.Sprintf("tf-acc-role-policy-extra-%s", rString)
 	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-good-%s", rString)
 	mgPolicyName2 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-bad-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -736,7 +736,7 @@ func TestAccAWSIAMRole_policyExtraInlineAdded(t *testing.T) {
 	roleName := fmt.Sprintf("tf-acc-role-policy-extra-%s", rString)
 	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-good-%s", rString)
 	ilPolicyName2 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-bad-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -776,7 +776,7 @@ func TestAccAWSIAMRole_policyNoInlineListExtraInlineAdded(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-no-ilist-%s", rString)
 	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-good-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -813,7 +813,7 @@ func TestAccAWSIAMRole_policyNoManagedListExtraManagedAdded(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-no-mlist-%s", rString)
 	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-good-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -851,7 +851,7 @@ func TestAccAWSIAMRole_policyEmptyInlineListExtraInlineAdded(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-empty-%s", rString)
 	ilPolicyName1 := fmt.Sprintf("tf-acc-rpl-ipolicy-extra-bad-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -888,7 +888,7 @@ func TestAccAWSIAMRole_policyEmptyManagedListExtraManagedAdded(t *testing.T) {
 	rString := acctest.RandString(5)
 	roleName := fmt.Sprintf("tf-acc-role-policy-empty-%s", rString)
 	mgPolicyName1 := fmt.Sprintf("tf-acc-rpl-mpolicy-extra-bad-%s", rString)
-	resourceAddr := "aws_iam_role.acc_role"
+	resourceAddr := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1925,6 +1925,7 @@ EOF
 
   inline_policy {
     name = %[2]q
+
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1943,6 +1944,7 @@ EOF
 
   inline_policy {
     name = %[3]q
+
     policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1964,7 +1966,7 @@ EOF
 
 func testAccAWSRolePolicyInlineConfigUpdateDown(roleName, ilPolicyName3 string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -2027,7 +2029,7 @@ resource "aws_iam_policy" "test" {
 EOF
 }
 
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name                = %[2]q
   managed_policy_arns = [aws_iam_policy.test.arn]
 
@@ -2112,7 +2114,7 @@ resource "aws_iam_policy" "test3" {
 EOF
 }
 
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name                = %[4]q
   managed_policy_arns = [aws_iam_policy.test.arn, aws_iam_policy.test2.arn]
 
@@ -2197,7 +2199,7 @@ resource "aws_iam_policy" "test3" {
 EOF
 }
 
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name                = %[4]q
   managed_policy_arns = [aws_iam_policy.test3.arn]
 
@@ -2262,7 +2264,7 @@ resource "aws_iam_policy" "test2" {
 EOF
 }
 
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name                = %[3]q
   managed_policy_arns = [aws_iam_policy.test.arn]
 
@@ -2285,8 +2287,8 @@ EOF
 `, mgPolicyName1, mgPolicyName2, roleName)
 }
 
-func testAccAWSRolePolicyExtraInlineConfig() string { //TODO
-	return fmt.Sprint(`{
+func testAccAWSRolePolicyExtraInlineConfig() string {
+	return `{
 	"Version": "2012-10-17",
 	"Statement": [
 		{
@@ -2297,14 +2299,14 @@ func testAccAWSRolePolicyExtraInlineConfig() string { //TODO
 		"Resource": "*"
 		}
 	]
-}`)
+}`
 }
 
 func testAccAWSRolePolicyNoInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
-  
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2326,7 +2328,7 @@ EOF
 
 func testAccAWSRolePolicyNoManagedConfig(roleName, mgPolicyName1 string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -2370,9 +2372,9 @@ EOF
 
 func testAccAWSRolePolicyEmptyInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
-  
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2396,7 +2398,7 @@ EOF
 
 func testAccAWSRolePolicyEmptyManagedConfig(roleName, mgPolicyName1 string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "acc_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
