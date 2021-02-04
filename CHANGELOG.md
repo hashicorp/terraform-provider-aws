@@ -1,9 +1,14 @@
 ## 3.27.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_route53_key_signing_key` ([#16840](https://github.com/hashicorp/terraform-provider-aws/issues/16840))
+
 ENHANCEMENTS:
 
 * data-source/aws_subnet: Add `customer_owned_ipv4_pool` and `map_customer_owned_ip_on_launch` attributes ([#16676](https://github.com/hashicorp/terraform-provider-aws/issues/16676))
 * resource/aws_glacier_vault: Add plan-time validation for `notification` configuration block `events` and `sns_topic_arn` arguments ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
+* resource/aws_glue_catalog_table: Adds support for specifying schema from schema registry. ([#17335](https://github.com/hashicorp/terraform-provider-aws/issues/17335))
 * resource/aws_iam_access_key: Add `create_date` attribute ([#17318](https://github.com/hashicorp/terraform-provider-aws/issues/17318))
 * resource/aws_iam_access_key: Support resource import ([#17321](https://github.com/hashicorp/terraform-provider-aws/issues/17321))
 * resource/aws_subnet: Add `customer_owned_ipv4_pool` and `map_customer_owned_ip_on_launch` attributes ([#16676](https://github.com/hashicorp/terraform-provider-aws/issues/16676))
@@ -17,6 +22,7 @@ BUG FIXES:
 * resource/aws_glacier_vault: Prevent crash with `GetVaultAccessPolicy` API errors ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
 * resource/aws_glacier_vault: Properly remove from state when resource does not exist ([#12645](https://github.com/hashicorp/terraform-provider-aws/issues/12645))
 * resource/aws_glue_crawler: Use standard retry timeout for IAM eventual consistency and retry on LakeFormation permissions errors ([#17256](https://github.com/hashicorp/terraform-provider-aws/issues/17256))
+* resource/aws_glue_partition - Fix `partition_values` to perserve order. ([#17344](https://github.com/hashicorp/terraform-provider-aws/issues/17344))
 * resource/aws_iam_access_key: Ensure `Inactive` `status` is properly configured during resource creation ([#17322](https://github.com/hashicorp/terraform-provider-aws/issues/17322))
 * resource/aws_kinesis_firehose_delivery_stream: Use standard retry timeout for IAM eventual consistency and retry on LakeFormation access errors ([#17254](https://github.com/hashicorp/terraform-provider-aws/issues/17254))
 * resource/aws_security_group: Prevent perpetual differences with `name_prefix` argument values beginning with `terraform-` ([#17030](https://github.com/hashicorp/terraform-provider-aws/issues/17030))
