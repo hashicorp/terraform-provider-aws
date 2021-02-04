@@ -224,18 +224,22 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 }
 
 func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
+	var forwardedValues *cloudfront.ForwardedValues
+	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
+		forwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	}
+
 	cb := &cloudfront.CacheBehavior{
 		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             defaultTTL,
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
+		ForwardedValues:        forwardedValues,
 		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
 	}
 
-	if m["cache_policy_id"].(string) != "" {
+	if m["cache_policy_id"].(string) == "" {
 		cb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
 		cb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
 		cb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
