@@ -19,7 +19,11 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +52,11 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -70,7 +78,11 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_disappears_TransitGateway(t 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
@@ -93,7 +105,11 @@ func TestAccAwsEc2TransitGatewayPrefixListReference_TransitGatewayAttachmentId(t
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2TransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
