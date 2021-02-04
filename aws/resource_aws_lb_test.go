@@ -200,7 +200,7 @@ func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSLBDestroy,
 		Steps: []resource.TestStep{
