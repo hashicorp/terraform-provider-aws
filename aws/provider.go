@@ -623,6 +623,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway":                                 resourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_peering_attachment":              resourceAwsEc2TransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":     resourceAwsEc2TransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_prefix_list_reference":           resourceAwsEc2TransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                           resourceAwsEc2TransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                     resourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_route_table_association":         resourceAwsEc2TransitGatewayRouteTableAssociation(),

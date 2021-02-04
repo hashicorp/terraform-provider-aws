@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 const (
@@ -284,6 +285,65 @@ func SubnetMapPublicIpOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedVa
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.Subnet); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
+)
+
+func TransitGatewayPrefixListReferenceStateCreated(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPrefixListReferenceStatePending},
+		Target:  []string{ec2.TransitGatewayPrefixListReferenceStateAvailable},
+		Timeout: TransitGatewayPrefixListReferenceTimeout,
+		Refresh: TransitGatewayPrefixListReferenceState(conn, transitGatewayRouteTableID, prefixListID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPrefixListReference); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func TransitGatewayPrefixListReferenceStateDeleted(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPrefixListReferenceStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayPrefixListReferenceTimeout,
+		Refresh: TransitGatewayPrefixListReferenceState(conn, transitGatewayRouteTableID, prefixListID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, nil
+	}
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPrefixListReference); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGatewayRouteTableID string, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPrefixListReferenceStateModifying},
+		Target:  []string{ec2.TransitGatewayPrefixListReferenceStateAvailable},
+		Timeout: TransitGatewayPrefixListReferenceTimeout,
+		Refresh: TransitGatewayPrefixListReferenceState(conn, transitGatewayRouteTableID, prefixListID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPrefixListReference); ok {
 		return output, err
 	}
 
