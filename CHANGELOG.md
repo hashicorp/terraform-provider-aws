@@ -17,6 +17,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_partition: Correct `reverse_dns_prefix` value in AWS China, C2S, and SC2S ([#17142](https://github.com/hashicorp/terraform-provider-aws/issues/17142))
+* provider: Only validate AWS shared configuration profile SSO configuration when attempting to use SSO cached credentials ([#17469](https://github.com/hashicorp/terraform-provider-aws/issues/17469))
 * resource/aws_api_gateway_method_settings: Ignore non-existent resource errors during deletion ([#17234](https://github.com/hashicorp/terraform-provider-aws/issues/17234))
 * resource/aws_api_gateway_method_settings: Prevent confusing Terraform error on resource disappearance during creation ([#17234](https://github.com/hashicorp/terraform-provider-aws/issues/17234))
 * resource/aws_cloudwatch_event_rule: Prevent perpetual differences with `name_prefix` argument values beginning with `terraform-` ([#17030](https://github.com/hashicorp/terraform-provider-aws/issues/17030))
