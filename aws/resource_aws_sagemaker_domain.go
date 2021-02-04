@@ -342,6 +342,10 @@ func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("error updating SageMaker domain: %w", err)
 		}
+
+		if _, err := waiter.DomainInService(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {

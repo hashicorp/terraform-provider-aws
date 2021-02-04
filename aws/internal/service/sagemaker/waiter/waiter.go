@@ -215,6 +215,7 @@ func DomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.Des
 		Pending: []string{
 			SagemakerDomainStatusNotFound,
 			sagemaker.DomainStatusPending,
+			sagemaker.DomainStatusUpdating,
 		},
 		Target:  []string{sagemaker.DomainStatusInService},
 		Refresh: DomainStatus(conn, domainID),
