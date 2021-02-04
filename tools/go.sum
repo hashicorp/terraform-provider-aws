@@ -82,6 +82,7 @@ github.com/aliyun/aliyun-tablestore-go-sdk v4.1.2+incompatible/go.mod h1:LDQHRZy
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883 h1:bvNMNQO63//z+xNgfBlViaCIJKLlCJ6/fmUseuG0wVQ=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
+github.com/andybalholm/crlf v0.0.0-20171020200849-670099aa064f/go.mod h1:k8feO4+kXDxro6ErPXBRTJ/ro2mf0SsFG8s7doP9kJE=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239 h1:kFOfPq6dUM1hTo4JG6LR5AXSUEsOjtdm0kw0FtQtMJA=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/antchfx/xpath v0.0.0-20190129040759-c8489ed3251e/go.mod h1:Yee4kTMuNiPYJ7nSNorELQMr1J33uOpXDMByNYhvtNk=
@@ -193,8 +194,8 @@ github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
-github.com/gdavison/terrafmt v0.2.1-0.20201026181004-a896893cd6af h1:hW6361l2aa2oIkHvcY6EZOvdyh6UL6hx744QfEifVX8=
-github.com/gdavison/terrafmt v0.2.1-0.20201026181004-a896893cd6af/go.mod h1:dV20mUxak+6H6va7sittpWdtEzs11ff4l7BMtY46MMk=
+github.com/gdavison/terrafmt v0.3.1-0.20210204054728-84242796be99 h1:6Plt7xsU0Z1l7hu37EshJXFFi0VxGsmRG+i3lr6X/NA=
+github.com/gdavison/terrafmt v0.3.1-0.20210204054728-84242796be99/go.mod h1:B3IJj041fZWEirIxp4l2YGNYXH1PdptEu8we8YzQm/8=
 github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gliderlabs/ssh v0.2.2 h1:6zsha5zo/TWhRhwqCD3+EarCAgZ2yN28ipRnGPnwkI0=
@@ -398,6 +399,7 @@ github.com/hashicorp/consul/sdk v0.1.1/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyN
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-azure-helpers v0.12.0/go.mod h1:Zc3v4DNeX6PDdy7NljlYpnrdac1++qNW0I4U+ofGwpg=
+github.com/hashicorp/go-checkpoint v0.5.0 h1:MFYpPZCnQqQTE18jFwSII6eUQrD/oxMFp3mlgcqk5mU=
 github.com/hashicorp/go-checkpoint v0.5.0/go.mod h1:7nfLNL10NsxqO4iWuW6tWW0HjZuDrwkBuEQsVcpCOgg=
 github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
 github.com/hashicorp/go-cleanhttp v0.5.1 h1:dH3aiDG9Jvb5r5+bYHsikaOUIpcM0xvgMXVoDkXMzJM=
@@ -467,8 +469,12 @@ github.com/hashicorp/terraform v0.13.4/go.mod h1:1H1qcnppNc/bBGc7poOfnmmBeQMlF0s
 github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7 h1:Pc5TCv9mbxFN6UVX0LH6CpQrdTM5YjbVI2w15237Pjk=
 github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7/go.mod h1:p+ivJws3dpqbp1iP84+npOyAmTTOLMgCzrXd3GSdn/A=
 github.com/hashicorp/terraform-exec v0.10.0/go.mod h1:tOT8j1J8rP05bZBGWXfMyU3HkLi1LWyqL3Bzsc3CJjo=
+github.com/hashicorp/terraform-exec v0.12.0 h1:Tb1VC2gqArl9EJziJjoazep2MyxMk00tnNKV/rgMba0=
+github.com/hashicorp/terraform-exec v0.12.0/go.mod h1:SGhto91bVRlgXQWcJ5znSz+29UZIa8kpBbkGwQ+g9E8=
 github.com/hashicorp/terraform-json v0.5.0 h1:7TV3/F3y7QVSuN4r9BEXqnWqrAyeOtON8f0wvREtyzs=
 github.com/hashicorp/terraform-json v0.5.0/go.mod h1:eAbqb4w0pSlRmdvl8fOyHAi/+8jnkVYN28gJkSJrLhU=
+github.com/hashicorp/terraform-json v0.8.0 h1:XObQ3PgqU52YLQKEaJ08QtUshAfN3yu4u8ebSW0vztc=
+github.com/hashicorp/terraform-json v0.8.0/go.mod h1:3defM4kkMfttwiE7VakJDwCd4R+umhSQnvJwORXbprE=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.4/go.mod h1:GP0lmw4Y+XV1OfTmi/hK75t5KWGGzoOzEgUBPGZ6Wq4=
 github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596/go.mod h1:kNDNcF7sN4DocDLBkQYz73HGKwN1ANB1blq4lIYLYvg=
 github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 h1:HKLsbzeOsfXmKNpr3GiT18XAblV0BjCbzL8KQAMZGa0=
@@ -767,7 +773,6 @@ github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasO
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/afero v1.2.2 h1:5jhuqJyZCZf2JRofRvN/nIFgIWNzPa3/Vz8mYylgbWc=
 github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTdifk=
-github.com/spf13/afero v1.3.2/go.mod h1:5KUK8ByomD5Ti5Artl0RtHeI5pTF7MIDuXL3yY520V4=
 github.com/spf13/afero v1.4.1 h1:asw9sl74539yqavKaglDM5hFpdJVK0Y5Dr/JOgQ89nQ=
 github.com/spf13/afero v1.4.1/go.mod h1:Ai8FlHk4v/PARR026UzYexafAt9roJ7LcLMAmO6Z93I=
 github.com/spf13/cast v1.3.0 h1:oget//CVOEoFewqQxwr0Ej5yjygnqGkvggSE/gB35Q8=
@@ -873,6 +878,7 @@ github.com/zclconf/go-cty v1.2.1/go.mod h1:hOPWgoHbaTUnI5k4D2ld+GRpFJSCe6bCM7m1q
 github.com/zclconf/go-cty v1.5.1/go.mod h1:nHzOclRkoj++EU9ZjSrZvRG0BXIWt8c7loYc0qXAFGQ=
 github.com/zclconf/go-cty v1.6.1 h1:wHtZ+LSSQVwUSb+XIJ5E9hgAQxyWATZsAWT+ESJ9dQ0=
 github.com/zclconf/go-cty v1.6.1/go.mod h1:VDR4+I79ubFBGm1uJac1226K5yANQFHeauxPBoP54+o=
+github.com/zclconf/go-cty-debug v0.0.0-20191215020915-b22d67c1ba0b/go.mod h1:ZRKQfBXbGkpdV6QMzT3rU1kSTAnfu1dO8dPKjYprgj8=
 github.com/zclconf/go-cty-yaml v1.0.2 h1:dNyg4QLTrv2IfJpm7Wtxi55ed5gLGOlPrZ6kMd51hY0=
 github.com/zclconf/go-cty-yaml v1.0.2/go.mod h1:IP3Ylp0wQpYm50IHK8OZWKMu6sPJIUgKa8XhiVHura0=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
@@ -1129,7 +1135,6 @@ golang.org/x/tools v0.0.0-20200713011307-fd294ab11aed/go.mod h1:njjCfa9FT2d7l9Bc
 golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
 golang.org/x/tools v0.0.0-20200812195022-5ae4c3c160a0 h1:SQvH+DjrwqD1hyyQU+K7JegHz1KEZgEwt17p9d6R2eg=
 golang.org/x/tools v0.0.0-20200812195022-5ae4c3c160a0/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
-golang.org/x/tools v0.0.0-20200817023811-d00afeaade8f h1:33yHANSyO/TeglgY9rBhUpX43wtonTXoFOsMRtNB6qE=
 golang.org/x/tools v0.0.0-20200817023811-d00afeaade8f/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
 golang.org/x/tools v0.0.0-20200820010801-b793a1359eac/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
 golang.org/x/tools v0.0.0-20200831203904-5a2aa26beb65/go.mod h1:Cj7w3i3Rnn0Xh82ur9kSqwfTHTeVxaDqrfMjpcNT6bE=
