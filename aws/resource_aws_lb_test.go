@@ -2035,7 +2035,7 @@ resource "aws_lb" "test" {
     Name = "TestAccAWSALB_ipv6address"
   }
 
-	depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.gw]
 }
 `, rName))
 }
