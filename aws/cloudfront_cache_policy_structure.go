@@ -6,102 +6,133 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func expandCloudFrontCachePolicyCookieNames(cookieNamesFlat map[string]interface{}) *cloudfront.CookieNames {
-	cookieNames := &cloudfront.CookieNames{}
-
-	var newCookieItems []*string
-	for _, cookie := range cookieNamesFlat["items"].(*schema.Set).List() {
-		newCookieItems = append(newCookieItems, aws.String(cookie.(string)))
+func expandCloudFrontCachePolicyCookieNames(tfMap map[string]interface{}) *cloudfront.CookieNames {
+	if tfMap == nil {
+		return nil
 	}
-	cookieNames.Items = newCookieItems
-	cookieNames.Quantity = aws.Int64(int64(len(newCookieItems)))
 
-	return cookieNames
+	var items []*string
+	for _, item := range tfMap["items"].(*schema.Set).List() {
+		items = append(items, aws.String(item.(string)))
+	}
+
+	apiObject := &cloudfront.CookieNames{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyCookiesConfig(cookiesConfigFlat map[string]interface{}) *cloudfront.CachePolicyCookiesConfig {
-	cookiesConfig := &cloudfront.CachePolicyCookiesConfig{
-		CookieBehavior: aws.String(cookiesConfigFlat["cookie_behavior"].(string)),
+func expandCloudFrontCachePolicyCookiesConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyCookiesConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	if cookiesFlat, ok := cookiesConfigFlat["cookies"].([]interface{}); ok && len(cookiesFlat) == 1 {
-		cookiesConfig.Cookies = expandCloudFrontCachePolicyCookieNames(cookiesFlat[0].(map[string]interface{}))
+	apiObject := &cloudfront.CachePolicyCookiesConfig{
+		CookieBehavior: aws.String(tfMap["cookie_behavior"].(string)),
 	}
 
-	return cookiesConfig
+	if items, ok := tfMap["cookies"].([]interface{}); ok && len(items) == 1 {
+		apiObject.Cookies = expandCloudFrontCachePolicyCookieNames(items[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyHeaders(headerNamesFlat map[string]interface{}) *cloudfront.Headers {
-	headers := &cloudfront.Headers{}
-
-	var newHeaderItems []*string
-	for _, header := range headerNamesFlat["items"].(*schema.Set).List() {
-		newHeaderItems = append(newHeaderItems, aws.String(header.(string)))
+func expandCloudFrontCachePolicyHeaders(tfMap map[string]interface{}) *cloudfront.Headers {
+	if tfMap == nil {
+		return nil
 	}
-	headers.Items = newHeaderItems
-	headers.Quantity = aws.Int64(int64(len(newHeaderItems)))
 
-	return headers
+	var items []*string
+	for _, item := range tfMap["items"].(*schema.Set).List() {
+		items = append(items, aws.String(item.(string)))
+	}
+
+	apiObject := &cloudfront.Headers{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyHeadersConfig(headersConfigFlat map[string]interface{}) *cloudfront.CachePolicyHeadersConfig {
-	headersConfig := &cloudfront.CachePolicyHeadersConfig{
-		HeaderBehavior: aws.String(headersConfigFlat["header_behavior"].(string)),
+func expandCloudFrontCachePolicyHeadersConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyHeadersConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	if headersFlat, ok := headersConfigFlat["headers"].([]interface{}); ok && len(headersFlat) == 1 && headersConfigFlat["header_behavior"] != "none" {
-		headersConfig.Headers = expandCloudFrontCachePolicyHeaders(headersFlat[0].(map[string]interface{}))
+	apiObject := &cloudfront.CachePolicyHeadersConfig{
+		HeaderBehavior: aws.String(tfMap["header_behavior"].(string)),
 	}
 
-	return headersConfig
+	if items, ok := tfMap["headers"].([]interface{}); ok && len(items) == 1 && tfMap["header_behavior"] != "none" {
+		apiObject.Headers = expandCloudFrontCachePolicyHeaders(items[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyQueryStringNames(queryStringNamesFlat map[string]interface{}) *cloudfront.QueryStringNames {
-	queryStringNames := &cloudfront.QueryStringNames{}
-
-	var newQueryStringItems []*string
-	for _, queryString := range queryStringNamesFlat["items"].(*schema.Set).List() {
-		newQueryStringItems = append(newQueryStringItems, aws.String(queryString.(string)))
+func expandCloudFrontCachePolicyQueryStringNames(tfMap map[string]interface{}) *cloudfront.QueryStringNames {
+	if tfMap == nil {
+		return nil
 	}
-	queryStringNames.Items = newQueryStringItems
-	queryStringNames.Quantity = aws.Int64(int64(len(newQueryStringItems)))
 
-	return queryStringNames
+	var items []*string
+	for _, queryStringitesm := range tfMap["items"].(*schema.Set).List() {
+		items = append(items, aws.String(queryStringitesm.(string)))
+	}
+
+	apiObject := &cloudfront.QueryStringNames{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyQueryStringConfig(queryStringConfigFlat map[string]interface{}) *cloudfront.CachePolicyQueryStringsConfig {
-	queryStringConfig := &cloudfront.CachePolicyQueryStringsConfig{
-		QueryStringBehavior: aws.String(queryStringConfigFlat["query_string_behavior"].(string)),
+func expandCloudFrontCachePolicyQueryStringConfig(tfMap map[string]interface{}) *cloudfront.CachePolicyQueryStringsConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	if queryStringFlat, ok := queryStringConfigFlat["query_strings"].([]interface{}); ok && len(queryStringFlat) == 1 {
-		queryStringConfig.QueryStrings = expandCloudFrontCachePolicyQueryStringNames(queryStringFlat[0].(map[string]interface{}))
+	apiObject := &cloudfront.CachePolicyQueryStringsConfig{
+		QueryStringBehavior: aws.String(tfMap["query_string_behavior"].(string)),
 	}
 
-	return queryStringConfig
+	if items, ok := tfMap["query_strings"].([]interface{}); ok && len(items) == 1 {
+		apiObject.QueryStrings = expandCloudFrontCachePolicyQueryStringNames(items[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
-func expandCloudFrontCachePolicyParametersConfig(parameters map[string]interface{}) *cloudfront.ParametersInCacheKeyAndForwardedToOrigin {
+func expandCloudFrontCachePolicyParametersConfig(tfMap map[string]interface{}) *cloudfront.ParametersInCacheKeyAndForwardedToOrigin {
+	if tfMap == nil {
+		return nil
+	}
+
 	var cookiesConfig *cloudfront.CachePolicyCookiesConfig
 	var headersConfig *cloudfront.CachePolicyHeadersConfig
 	var queryStringsConfig *cloudfront.CachePolicyQueryStringsConfig
 
-	if cookiesFlat, ok := parameters["cookies_config"].([]interface{}); ok && len(cookiesFlat) == 1 {
+	if cookiesFlat, ok := tfMap["cookies_config"].([]interface{}); ok && len(cookiesFlat) == 1 {
 		cookiesConfig = expandCloudFrontCachePolicyCookiesConfig(cookiesFlat[0].(map[string]interface{}))
 	}
 
-	if headersFlat, ok := parameters["headers_config"].([]interface{}); ok && len(headersFlat) == 1 {
+	if headersFlat, ok := tfMap["headers_config"].([]interface{}); ok && len(headersFlat) == 1 {
 		headersConfig = expandCloudFrontCachePolicyHeadersConfig(headersFlat[0].(map[string]interface{}))
 	}
 
-	if queryStringsFlat, ok := parameters["query_strings_config"].([]interface{}); ok && len(queryStringsFlat) == 1 {
+	if queryStringsFlat, ok := tfMap["query_strings_config"].([]interface{}); ok && len(queryStringsFlat) == 1 {
 		queryStringsConfig = expandCloudFrontCachePolicyQueryStringConfig(queryStringsFlat[0].(map[string]interface{}))
 	}
 
 	parametersConfig := &cloudfront.ParametersInCacheKeyAndForwardedToOrigin{
 		CookiesConfig:              cookiesConfig,
-		EnableAcceptEncodingBrotli: aws.Bool(parameters["enable_accept_encoding_brotli"].(bool)),
-		EnableAcceptEncodingGzip:   aws.Bool(parameters["enable_accept_encoding_gzip"].(bool)),
+		EnableAcceptEncodingBrotli: aws.Bool(tfMap["enable_accept_encoding_brotli"].(bool)),
+		EnableAcceptEncodingGzip:   aws.Bool(tfMap["enable_accept_encoding_gzip"].(bool)),
 		HeadersConfig:              headersConfig,
 		QueryStringsConfig:         queryStringsConfig,
 	}

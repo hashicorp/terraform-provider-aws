@@ -13,20 +13,6 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 		Read: dataSourceAwsCloudFrontCachePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"id"},
-				Optional:      true,
-			},
-			"id": {
-				Type:          schema.TypeString,
-				ConflictsWith: []string{"name"},
-				Optional:      true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"comment": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -35,6 +21,15 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"id": {
+				Type:          schema.TypeString,
+				ConflictsWith: []string{"name"},
+				Optional:      true,
+			},
 			"max_ttl": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -42,6 +37,11 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 			"min_ttl": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"name": {
+				Type:          schema.TypeString,
+				ConflictsWith: []string{"id"},
+				Optional:      true,
 			},
 			"parameters_in_cache_key_and_forwarded_to_origin": {
 				Type:     schema.TypeList,
@@ -137,28 +137,6 @@ func dataSourceAwsCloudFrontCachePolicy() *schema.Resource {
 		},
 	}
 }
-
-func dataSourceAwsCloudFrontCachePolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
-	var cachePolicy *cloudfront.CachePolicy
-	request := &cloudfront.ListCachePoliciesInput{}
-	resp, err := conn.ListCachePolicies(request)
-	if err != nil {
-		return err
-	}
-
-	for _, policySummary := range resp.CachePolicyList.Items {
-		if *policySummary.CachePolicy.CachePolicyConfig.Name == d.Get("name").(string) {
-			cachePolicy = policySummary.CachePolicy
-			break
-		}
-	}
-
-	if cachePolicy != nil {
-		d.SetId(aws.StringValue(cachePolicy.Id))
-	}
-	return nil
-}
-
 func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
@@ -183,5 +161,26 @@ func dataSourceAwsCloudFrontCachePolicyRead(d *schema.ResourceData, meta interfa
 		setCloudFrontCachePolicy(d, resp.CachePolicy.CachePolicyConfig)
 	}
 
+	return nil
+}
+
+func dataSourceAwsCloudFrontCachePolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
+	var cachePolicy *cloudfront.CachePolicy
+	request := &cloudfront.ListCachePoliciesInput{}
+	resp, err := conn.ListCachePolicies(request)
+	if err != nil {
+		return err
+	}
+
+	for _, policySummary := range resp.CachePolicyList.Items {
+		if *policySummary.CachePolicy.CachePolicyConfig.Name == d.Get("name").(string) {
+			cachePolicy = policySummary.CachePolicy
+			break
+		}
+	}
+
+	if cachePolicy != nil {
+		d.SetId(aws.StringValue(cachePolicy.Id))
+	}
 	return nil
 }

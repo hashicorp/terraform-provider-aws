@@ -27,6 +27,11 @@ func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 				Optional: true,
 				Default:  86400,
 			},
+			"etag": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"max_ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -40,11 +45,6 @@ func resourceAwsCloudFrontCachePolicy() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"parameters_in_cache_key_and_forwarded_to_origin": {
 				Type:     schema.TypeList,
