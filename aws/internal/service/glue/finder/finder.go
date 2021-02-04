@@ -6,6 +6,22 @@ import (
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 )
 
+// TableByName returns the Table corresponding to the specified name.
+func TableByName(conn *glue.Glue, catalogID, dbName, name string) (*glue.GetTableOutput, error) {
+	input := &glue.GetTableInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		Name:         aws.String(name),
+	}
+
+	output, err := conn.GetTable(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // RegistryByID returns the Registry corresponding to the specified ID.
 func RegistryByID(conn *glue.Glue, id string) (*glue.GetRegistryOutput, error) {
 	input := &glue.GetRegistryInput{
