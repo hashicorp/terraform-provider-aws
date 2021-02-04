@@ -17,7 +17,7 @@ import (
 )
 
 // Tests are serialized as SagmMaker Domain resouce are limited to 1 per account by default.
-// SageMaker UserProfile and App depend on the Domain resourse and as such are also part of the serialized test suite.
+// SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 func TestAccAWSSagemakerDomain_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Domain": {
