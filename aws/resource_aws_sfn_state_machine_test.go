@@ -484,7 +484,7 @@ data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%[1]s"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
@@ -524,7 +524,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
   name = "iam_policy_for_sfn_%[1]s"
-  role = "${aws_iam_role.iam_for_sfn.id}"
+  role = aws_iam_role.iam_for_sfn.id
 
   policy = <<EOF
 {
@@ -564,14 +564,14 @@ EOF
 resource "aws_lambda_function" "lambda_function_test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "sfn-%[1]s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
 
 resource "aws_sfn_state_machine" "foo" {
   name     = "test_sfn_%[1]s"
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
   type     = %[2]q
 
   definition = <<EOF
@@ -607,7 +607,7 @@ data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%[1]s"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
@@ -647,7 +647,7 @@ EOF
 
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
   name = "iam_policy_for_sfn_%[1]s"
-  role = "${aws_iam_role.iam_for_sfn.id}"
+  role = aws_iam_role.iam_for_sfn.id
 
   policy = <<EOF
 {
@@ -695,7 +695,7 @@ EOF
 resource "aws_lambda_function" "lambda_function_test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "sfn-%[1]s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
@@ -706,7 +706,7 @@ resource "aws_cloudwatch_log_group" "log_group_for_sfn" {
 
 resource "aws_sfn_state_machine" "foo" {
   name     = "test_sfn_%[1]s"
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  role_arn = aws_iam_role.iam_for_sfn.arn
   type     = %[2]q
 
   definition = <<EOF
@@ -732,7 +732,7 @@ resource "aws_sfn_state_machine" "foo" {
 EOF
 
   logging_configuration {
-    log_destination        = "${aws_cloudwatch_log_group.log_group_for_sfn.arn}"
+    log_destination        = aws_cloudwatch_log_group.log_group_for_sfn.arn
     include_execution_data = false
     level                  = %[3]q
   }
