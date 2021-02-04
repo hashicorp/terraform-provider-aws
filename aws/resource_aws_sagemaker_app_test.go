@@ -15,6 +15,29 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
+func TestAccAWSSagemakerApp_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"App": {
+			"basic":        testAccAWSSagemakerApp_basic,
+			"disappears":   testAccAWSSagemakerApp_tags,
+			"tags":         testAccAWSSagemakerApp_disappears,
+			"resourceSpec": testAccAWSSagemakerApp_resourceSpec,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_app", &resource.Sweeper{
 		Name: "aws_sagemaker_app",
@@ -68,7 +91,7 @@ func testSweepSagemakerApps(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerApp_basic(t *testing.T) {
+func testAccAWSSagemakerApp_basic(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
@@ -101,7 +124,7 @@ func TestAccAWSSagemakerApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
+func testAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
@@ -130,7 +153,7 @@ func TestAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerApp_tags(t *testing.T) {
+func testAccAWSSagemakerApp_tags(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
@@ -174,7 +197,7 @@ func TestAccAWSSagemakerApp_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerApp_disappears(t *testing.T) {
+func testAccAWSSagemakerApp_disappears(t *testing.T) {
 	var app sagemaker.DescribeAppOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_app.test"
