@@ -65,7 +65,7 @@ func testSweepSagemakerUserProfiles(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerUserProfile_basic(t *testing.T) {
+func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -96,7 +96,7 @@ func TestAccAWSSagemakerUserProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_tags(t *testing.T) {
+func testAccAWSSagemakerUserProfile_tags(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -140,7 +140,7 @@ func TestAccAWSSagemakerUserProfile_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
+func testAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -169,7 +169,7 @@ func TestAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
+func testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -199,7 +199,7 @@ func TestAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
+func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -228,7 +228,7 @@ func TestAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
+func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"
@@ -257,7 +257,7 @@ func TestAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerUserProfile_disappears(t *testing.T) {
+func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 	var domain sagemaker.DescribeUserProfileOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_user_profile.test"

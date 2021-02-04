@@ -16,6 +16,51 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
+func testAccAWSSagemakerDomain_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Domain": {
+			"basic":                                testAccAWSSagemakerDomain_basic,
+			"disappears":                           testAccAWSSagemakerDomain_tags,
+			"tags":                                 testAccAWSSagemakerDomain_disappears,
+			"tensorboardAppSettings":               testAccAWSSagemakerDomain_tensorboardAppSettings,
+			"tensorboardAppSettingsWithImage":      testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage,
+			"kernelGatewayAppSettings":             testAccAWSSagemakerDomain_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_customImage": testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage,
+			"jupyterServerAppSettings":             testAccAWSSagemakerDomain_jupyterServerAppSettings,
+			"kms":                                  testAccAWSSagemakerDomain_kms,
+			"securityGroup":                        testAccAWSSagemakerDomain_securityGroup,
+			"sharingSettings":                      testAccAWSSagemakerDomain_sharingSettings,
+		},
+		"UserProfile": {
+			"basic":                           testAccAWSSagemakerUserProfile_basic,
+			"disappears":                      testAccAWSSagemakerUserProfile_tags,
+			"tags":                            testAccAWSSagemakerUserProfile_disappears,
+			"tensorboardAppSettings":          testAccAWSSagemakerUserProfile_tensorboardAppSettings,
+			"tensorboardAppSettingsWithImage": testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage,
+			"kernelGatewayAppSettings":        testAccAWSSagemakerUserProfile_kernelGatewayAppSettings,
+			"jupyterServerAppSettings":        testAccAWSSagemakerUserProfile_jupyterServerAppSettings,
+		},
+		"App": {
+			"basic":        testAccAWSSagemakerApp_basic,
+			"disappears":   testAccAWSSagemakerApp_tags,
+			"tags":         testAccAWSSagemakerApp_disappears,
+			"resourceSpec": testAccAWSSagemakerApp_resourceSpec,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_domain", &resource.Sweeper{
 		Name: "aws_sagemaker_domain",
@@ -65,7 +110,7 @@ func testSweepSagemakerDomains(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSSagemakerDomain_basic(t *testing.T) {
+func testAccAWSSagemakerDomain_basic(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -101,7 +146,7 @@ func TestAccAWSSagemakerDomain_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_kms(t *testing.T) {
+func testAccAWSSagemakerDomain_kms(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -127,7 +172,7 @@ func TestAccAWSSagemakerDomain_kms(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_tags(t *testing.T) {
+func testAccAWSSagemakerDomain_tags(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -171,7 +216,7 @@ func TestAccAWSSagemakerDomain_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
+func testAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -206,7 +251,7 @@ func TestAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
+func testAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -236,7 +281,7 @@ func TestAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
+func testAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -265,7 +310,7 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
+func testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -295,7 +340,7 @@ func TestAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
+func testAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -324,7 +369,7 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
+func testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
@@ -361,7 +406,7 @@ func TestAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T
 	})
 }
 
-func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
+func testAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"
@@ -390,7 +435,7 @@ func TestAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSSagemakerDomain_disappears(t *testing.T) {
+func testAccAWSSagemakerDomain_disappears(t *testing.T) {
 	var domain sagemaker.DescribeDomainOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_sagemaker_domain.test"

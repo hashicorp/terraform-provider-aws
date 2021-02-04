@@ -15,29 +15,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 )
 
-func TestAccAWSSagemakerApp_serial(t *testing.T) {
-	testCases := map[string]map[string]func(t *testing.T){
-		"App": {
-			"basic":        testAccAWSSagemakerApp_basic,
-			"disappears":   testAccAWSSagemakerApp_tags,
-			"tags":         testAccAWSSagemakerApp_disappears,
-			"resourceSpec": testAccAWSSagemakerApp_resourceSpec,
-		},
-	}
-
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
-}
-
 func init() {
 	resource.AddTestSweepers("aws_sagemaker_app", &resource.Sweeper{
 		Name: "aws_sagemaker_app",
