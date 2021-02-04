@@ -351,6 +351,28 @@ func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGateway
 }
 
 const (
+	VpcAttributePropagationTimeout = 5 * time.Minute
+)
+
+func VpcAttributeUpdated(conn *ec2.EC2, vpcID string, attribute string, expectedValue bool) (*ec2.Vpc, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{strconv.FormatBool(expectedValue)},
+		Refresh:    VpcAttribute(conn, vpcID, attribute),
+		Timeout:    VpcAttributePropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Vpc); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	VpnGatewayVpcAttachmentAttachedTimeout = 15 * time.Minute
 
 	VpnGatewayVpcAttachmentDetachedTimeout = 30 * time.Minute

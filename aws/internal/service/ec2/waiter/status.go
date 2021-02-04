@@ -296,6 +296,27 @@ func TransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTa
 	}
 }
 
+// VpcAttribute fetches the Vpc and its attribute value
+func VpcAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		attributeValue, err := finder.VpcAttribute(conn, id, attribute)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if attributeValue == nil {
+			return nil, "", nil
+		}
+
+		return attributeValue, strconv.FormatBool(aws.BoolValue(attributeValue)), nil
+	}
+}
+
 const (
 	vpcPeeringConnectionStatusNotFound = "NotFound"
 	vpcPeeringConnectionStatusUnknown  = "Unknown"

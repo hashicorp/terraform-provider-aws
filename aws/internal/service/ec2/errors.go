@@ -41,6 +41,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidVpcIDNotFound = "InvalidVpcID.NotFound"
+)
+
+const (
 	ErrCodeInvalidVpcEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
 	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
 )
