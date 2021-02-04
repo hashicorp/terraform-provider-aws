@@ -208,7 +208,9 @@ func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
 				Config: testAccAWSLBConfig_IPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBExists(resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "subnet_mapping.0.ipv6_address", regexp.MustCompile("[a-f0-6]+:[a-f0-6:]+")),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
+						"ipv6_address": regexp.MustCompile("[a-f0-6]+:[a-f0-6:]+"),
+					}),
 				),
 			},
 			{
@@ -2032,6 +2034,8 @@ resource "aws_lb" "test" {
   tags = {
     Name = "TestAccAWSALB_ipv6address"
   }
+
+	depends_on = [aws_internet_gateway.gw]
 }
 `, rName))
 }
