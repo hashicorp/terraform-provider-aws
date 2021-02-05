@@ -219,7 +219,7 @@ large files efficiently.
 * `function_name` - (Required) A unique name for your Lambda Function.
 * `dead_letter_config` - (Optional) Nested block to configure the function's *dead letter queue*. See details below.
 * `handler` - (Required) The function [entrypoint][3] in your code.
-* `role` - (Required) IAM role attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See [Lambda Permission Model][4] for more details.
+* `role` - (Required) ARN of the IAM role attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See [Lambda Permission Model][4] for more details.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
