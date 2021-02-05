@@ -1,4 +1,4 @@
-## 3.27.0 (Unreleased)
+## 3.27.0 (February 05, 2021)
 
 FEATURES:
 
