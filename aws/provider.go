@@ -867,6 +867,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_event_subscription":                         resourceAwsRedshiftEventSubscription(),
 			"aws_resourcegroups_group":                                resourceAwsResourceGroupsGroup(),
 			"aws_route53_delegation_set":                              resourceAwsRoute53DelegationSet(),
+			"aws_route53_hosted_zone_dnssec":                          resourceAwsRoute53HostedZoneDnssec(),
 			"aws_route53_key_signing_key":                             resourceAwsRoute53KeySigningKey(),
 			"aws_route53_query_log":                                   resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                                      resourceAwsRoute53Record(),

@@ -8,6 +8,20 @@ import (
 	tfroute53 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53"
 )
 
+func HostedZoneDnssec(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
+	input := &route53.GetDNSSECInput{
+		HostedZoneId: aws.String(hostedZoneID),
+	}
+
+	output, err := conn.GetDNSSEC(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func KeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
