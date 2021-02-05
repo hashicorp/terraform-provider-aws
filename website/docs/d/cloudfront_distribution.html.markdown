@@ -16,7 +16,6 @@ Use this data source to retrieve information about a CloudFront distribution.
 data "aws_cloudfront_distribution" "test" {
   id = "EDFDVBD632BHDS5"
 }
-
 ```
 
 ## Argument Reference

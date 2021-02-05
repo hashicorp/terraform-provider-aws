@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
@@ -73,7 +73,14 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.ClientVpnAuthenticationTypeCertificateAuthentication,
 								ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication,
+								ec2.ClientVpnAuthenticationTypeFederatedAuthentication,
 							}, false),
+						},
+						"saml_provider_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 						"active_directory_id": {
 							Type:     schema.TypeString,
@@ -143,7 +150,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("dns_servers"); ok {
-		req.DnsServers = expandStringList(v.(*schema.Set).List())
+		req.DnsServers = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok {
@@ -184,7 +191,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating Client VPN endpoint: %w", err)
 	}
 
-	d.SetId(*resp.ClientVpnEndpointId)
+	d.SetId(aws.StringValue(resp.ClientVpnEndpointId))
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
@@ -281,7 +288,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("dns_servers") {
-		dnsValue := expandStringList(d.Get("dns_servers").(*schema.Set).List())
+		dnsValue := expandStringSet(d.Get("dns_servers").(*schema.Set))
 		var enabledValue *bool
 
 		if len(dnsValue) > 0 {
@@ -361,6 +368,9 @@ func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]in
 		if aopt.MutualAuthentication != nil {
 			r["root_certificate_chain_arn"] = aws.StringValue(aopt.MutualAuthentication.ClientRootCertificateChain)
 		}
+		if aopt.FederatedAuthentication != nil {
+			r["saml_provider_arn"] = aws.StringValue(aopt.FederatedAuthentication.SamlProviderArn)
+		}
 		if aopt.ActiveDirectory != nil {
 			r["active_directory_id"] = aws.StringValue(aopt.ActiveDirectory.DirectoryId)
 		}
@@ -383,6 +393,12 @@ func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.C
 	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication {
 		req.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
 			DirectoryId: aws.String(data["active_directory_id"].(string)),
+		}
+	}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeFederatedAuthentication {
+		req.FederatedAuthentication = &ec2.FederatedAuthenticationRequest{
+			SAMLProviderArn: aws.String(data["saml_provider_arn"].(string)),
 		}
 	}
 

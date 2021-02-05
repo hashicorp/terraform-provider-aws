@@ -24,6 +24,7 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
 
 	/* Failing cases */
 
-	fmt.Sprintf(`policy_arn = "arn:aws:iam::aws:%v"`, "policy/AmazonEKSClusterPolicy") // want "avoid hardcoding an AWS partition in an ARN"
+	fmt.Sprintf(`policy_arn = "arn:aws:iam::aws:%v"`, "policy/AmazonEKSClusterPolicy")        // want "avoid hardcoded ARN AWS partitions"
+	fmt.Sprintf(`policy_arn = "arn:aws-us-gov:iam::aws:%v"`, "policy/AmazonEKSClusterPolicy") // want "avoid hardcoded ARN AWS partitions"
 
 }

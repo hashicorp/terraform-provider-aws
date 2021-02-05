@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -272,7 +272,7 @@ resource "aws_db_instance" "test" {
 func testAccAwsDbSnapshotConfig(rName string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 }
 `, rName)
@@ -281,11 +281,11 @@ resource "aws_db_snapshot" "test" {
 func testAccAwsDbSnapshotConfigTags1(rName, tag1Key, tag1Value string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -294,12 +294,12 @@ resource "aws_db_snapshot" "test" {
 func testAccAwsDbSnapshotConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.test.id}"
+  db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
-  	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

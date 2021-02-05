@@ -2,15 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
@@ -59,22 +58,6 @@ func TestAccAWSIoTPolicy_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsIotPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSIoTPolicy_invalidJson(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSIoTPolicyInvalidJsonConfig(rName),
-				ExpectError: regexp.MustCompile("MalformedPolicyException.*"),
 			},
 		},
 	})
@@ -147,32 +130,20 @@ resource "aws_iot_policy" "test" {
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["iot:*"],
-    "Resource": ["*"]
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
 }
 EOF
-}
-`, rName)
-}
 
-func testAccAWSIoTPolicyInvalidJsonConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_policy" "test" {
-  name = "%s"
-
-  policy = <<EOF
-	{
-	  "Version": "2012-10-17",
-	  "Statement": [{
-		"Effect": "Allow",
-		"Action": ["iot:*"],
-		"Resource": ["*"]
-	  }]
-	}
-EOF
 }
 `, rName)
 }

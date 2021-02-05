@@ -7,10 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
@@ -58,15 +57,15 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 						resourceName, "family", "redshift-1.0"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Managed by Terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "require_ssl",
 						"value": "true",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "query_group",
 						"value": "example",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "enable_user_activity_logging",
 						"value": "true",
 					}),
@@ -270,9 +269,9 @@ resource "aws_redshift_parameter_group" "test" {
   description = "Test parameter group for terraform"
 
   tags = {
-		environment = "Production"
-		name     		= "test-terraform-%[1]d"
-		description = "Test parameter group for terraform %[2]s"
+    environment = "Production"
+    name        = "test-terraform-%[1]d"
+    description = "Test parameter group for terraform %[2]s"
   }
 }
 `, rInt, rString)
@@ -286,7 +285,7 @@ resource "aws_redshift_parameter_group" "test" {
   description = "Test parameter group for terraform"
 
   tags = {
-		name     	= "test-terraform-%[1]d"
+    name = "test-terraform-%[1]d"
   }
 }
 `, rInt)

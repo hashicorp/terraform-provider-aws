@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccCheckLambdaInvocationResult(name, expectedResult string) resource.TestCheckFunc {
@@ -104,12 +104,14 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 
 resource "aws_iam_role" "lambda_role" {
   name               = "%s"
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.lambda_role.name}"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = aws_iam_role.lambda_role.name
 }
 `, roleName)
 }
@@ -117,11 +119,11 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 func testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
 
@@ -133,7 +135,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 data "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
+  function_name = aws_lambda_function.lambda.function_name
 
   input = <<JSON
 {
@@ -148,11 +150,11 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
   publish       = true
@@ -165,8 +167,8 @@ resource "aws_lambda_function" "lambda" {
 }
 
 data "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
-  qualifier     = "${aws_lambda_function.lambda.version}"
+  function_name = aws_lambda_function.lambda.function_name
+  qualifier     = aws_lambda_function.lambda.version
 
   input = <<JSON
 {
@@ -181,11 +183,11 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
   publish       = true
@@ -198,12 +200,19 @@ resource "aws_lambda_function" "lambda" {
 }
 
 data "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
+  function_name = aws_lambda_function.lambda.function_name
 
   input = <<JSON
 {
-  "key1": {"subkey1": "subvalue1"},
-  "key2": {"subkey2": "subvalue2", "subkey3": {"a": "b"}}
+  "key1": {
+    "subkey1": "subvalue1"
+  },
+  "key2": {
+    "subkey2": "subvalue2",
+    "subkey3": {
+      "a": "b"
+    }
+  }
 }
 JSON
 }

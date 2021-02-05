@@ -23,7 +23,7 @@ phase because a modification has not yet taken place. You can use the
 brief downtime as the broker reboots.
 
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
@@ -32,14 +32,14 @@ resource "aws_mq_broker" "example" {
   broker_name = "example"
 
   configuration {
-    id       = "${aws_mq_configuration.test.id}"
-    revision = "${aws_mq_configuration.test.latest_revision}"
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
   }
 
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = [aws_security_group.test.id]
 
   user {
     username = "ExampleUser"
@@ -67,7 +67,7 @@ The following arguments are supported:
 * `subnet_ids` - (Optional) The list of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires two subnets.
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
-* `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
+* `user` - (Required) The list of all ActiveMQ usernames for the specified broker. See below.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Nested Fields

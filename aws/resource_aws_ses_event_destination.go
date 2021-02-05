@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsSesEventDestination() *schema.Resource {
@@ -136,14 +136,14 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get("name").(string)
 	enabled := d.Get("enabled").(bool)
-	matchingEventTypes := d.Get("matching_types").(*schema.Set).List()
+	matchingEventTypes := d.Get("matching_types").(*schema.Set)
 
 	createOpts := &ses.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(configurationSetName),
 		EventDestination: &ses.EventDestination{
 			Name:               aws.String(eventDestinationName),
 			Enabled:            aws.Bool(enabled),
-			MatchingEventTypes: expandStringList(matchingEventTypes),
+			MatchingEventTypes: expandStringSet(matchingEventTypes),
 		},
 	}
 

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -158,7 +158,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error creating EC2 Capacity Reservation: %s", err)
 	}
-	d.SetId(*out.CapacityReservation.CapacityReservationId)
+	d.SetId(aws.StringValue(out.CapacityReservation.CapacityReservationId))
 	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
 

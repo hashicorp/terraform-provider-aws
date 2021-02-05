@@ -18,7 +18,7 @@ resource "aws_efs_file_system" "fs" {
 }
 
 resource "aws_efs_file_system_policy" "policy" {
-  file_system_id = "${aws_efs_file_system.fs.id}"
+  file_system_id = aws_efs_file_system.fs.id
 
   policy = <<POLICY
 {
@@ -26,7 +26,7 @@ resource "aws_efs_file_system_policy" "policy" {
     "Id": "ExamplePolicy01",
     "Statement": [
         {
-            "Sid": "ExampleSatement01",
+            "Sid": "ExampleStatement01",
             "Effect": "Allow",
             "Principal": {
                 "AWS": "*"

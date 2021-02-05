@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsElb() *schema.Resource {
@@ -212,7 +212,7 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	if len(resp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
 	}
-	d.SetId(*resp.LoadBalancerDescriptions[0].LoadBalancerName)
+	d.SetId(aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName))
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,

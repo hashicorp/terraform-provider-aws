@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -118,7 +118,11 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +168,11 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t)
+			testAccPreCheckAWSServiceDiscovery(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -217,7 +225,7 @@ func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -244,7 +252,7 @@ func TestAccAWSServiceDiscoveryService_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -265,7 +273,7 @@ func TestAccAWSServiceDiscoveryService_Tags(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -356,14 +364,14 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
-  vpc  = "${aws_vpc.test.id}"
+  vpc  = aws_vpc.test.id
 }
 
 resource "aws_service_discovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -389,8 +397,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name        = "%[1]s.tf"
-  vpc         = "${aws_vpc.test.id}"
+  name = "%[1]s.tf"
+  vpc  = aws_vpc.test.id
 }
 
 resource "aws_service_discovery_service" "test" {
@@ -399,7 +407,7 @@ resource "aws_service_discovery_service" "test" {
   description = "test"
 
   dns_config {
-    namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+    namespace_id = aws_service_discovery_private_dns_namespace.test.id
 
     dns_records {
       ttl  = 10
@@ -433,7 +441,7 @@ resource "aws_service_discovery_service" "test" {
   description = "test"
 
   dns_config {
-    namespace_id = "${aws_service_discovery_public_dns_namespace.test.id}"
+    namespace_id = aws_service_discovery_public_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -462,7 +470,7 @@ resource "aws_service_discovery_service" "test" {
   name = %[1]q
 
   dns_config {
-    namespace_id = "${aws_service_discovery_public_dns_namespace.test.id}"
+    namespace_id = aws_service_discovery_public_dns_namespace.test.id
 
     dns_records {
       ttl  = 5
@@ -483,7 +491,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 resource "aws_service_discovery_service" "test" {
   name         = %[1]q
-  namespace_id = "${aws_service_discovery_http_namespace.test.id}"
+  namespace_id = aws_service_discovery_http_namespace.test.id
 }
 `, rName)
 }
@@ -496,7 +504,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 resource "aws_service_discovery_service" "test" {
   name         = %[1]q
-  namespace_id = "${aws_service_discovery_http_namespace.test.id}"
+  namespace_id = aws_service_discovery_http_namespace.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -513,7 +521,7 @@ resource "aws_service_discovery_http_namespace" "test" {
 
 resource "aws_service_discovery_service" "test" {
   name         = %[1]q
-  namespace_id = "${aws_service_discovery_http_namespace.test.id}"
+  namespace_id = aws_service_discovery_http_namespace.test.id
 
   tags = {
     %[2]q = %[3]q

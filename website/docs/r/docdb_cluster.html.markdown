@@ -19,7 +19,7 @@ phase because a modification has not yet taken place. You can use the
 
 ~> **Note:** using `apply_immediately` can result in a brief downtime as the server reboots.
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `storage_encrypted` needs to be set to true.
 * `master_password` - (Required unless a `snapshot_identifier` is provided) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file. Please refer to the DocDB Naming Constraints.
-* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user. 
+* `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
 * `port` - (Optional) The port on which the DB accepts connections
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
@@ -90,7 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 ## Timeouts
 
 `aws_docdb_cluster` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `120 minutes`) Used for Cluster creation
 - `update` - (Default `120 minutes`) Used for Cluster modifications

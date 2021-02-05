@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -113,7 +113,7 @@ func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
 
-	d.SetId(*ap.AccessPointId)
+	d.SetId(aws.StringValue(ap.AccessPointId))
 
 	fsARN := arn.ARN{
 		AccountID: meta.(*AWSClient).accountid,

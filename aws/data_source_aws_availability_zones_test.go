@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAvailabilityZonesSort(t *testing.T) {
@@ -296,50 +296,50 @@ func testAccCheckAwsAvailabilityZonesBuildAvailable(attrs map[string]string) ([]
 }
 
 const testAccCheckAwsAvailabilityZonesConfig = `
-data "aws_availability_zones" "availability_zones" { }
+data "aws_availability_zones" "availability_zones" {}
 `
 
 func testAccCheckAwsAvailabilityZonesConfigAllAvailabilityZones() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   all_availability_zones = true
 }
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigFilter() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "test" {
   filter {
     name   = "state"
     values = ["available"]
   }
 }
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigExcludeNames() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_names = ["${data.aws_availability_zones.all.names[0]}"]
+  exclude_names = [data.aws_availability_zones.all.names[0]]
 }
-`)
+`
 }
 
 func testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  exclude_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
+  exclude_zone_ids = [data.aws_availability_zones.all.zone_ids[0]]
 }
-`)
+`
 }
 
 const testAccCheckAwsAvailabilityZonesStateConfig = `
 data "aws_availability_zones" "state_filter" {
-	state = "available"
+  state = "available"
 }
 `

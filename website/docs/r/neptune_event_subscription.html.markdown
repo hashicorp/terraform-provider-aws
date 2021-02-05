@@ -22,8 +22,7 @@ resource "aws_neptune_cluster" "default" {
 }
 
 resource "aws_neptune_cluster_instance" "example" {
-  count              = 1
-  cluster_identifier = "${aws_neptune_cluster.default.id}"
+  cluster_identifier = aws_neptune_cluster.default.id
   engine             = "neptune"
   instance_class     = "db.r4.large"
   apply_immediately  = "true"
@@ -35,10 +34,10 @@ resource "aws_sns_topic" "default" {
 
 resource "aws_neptune_event_subscription" "default" {
   name          = "neptune-event-sub"
-  sns_topic_arn = "${aws_sns_topic.default.arn}"
+  sns_topic_arn = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = ["${aws_neptune_cluster_instance.example.id}"]
+  source_ids  = [aws_neptune_cluster_instance.example.id]
 
   event_categories = [
     "maintenance",
@@ -84,7 +83,7 @@ The following additional atttributes are provided:
 
 ## Timeouts
 
-`aws_neptune_event_subscription` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_neptune_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 - `create` - (Default `40m`) How long to wait for creating event subscription to become available.

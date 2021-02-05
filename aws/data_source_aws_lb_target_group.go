@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLbTargetGroup() *schema.Resource {
@@ -36,6 +36,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 			},
 
 			"protocol": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"protocol_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
