@@ -332,7 +332,7 @@ Additional branch naming recommendations can be found in the [Pull Request Submi
 
 ## Environment Variable Dictionary
 
-Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing.
+Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `aws/internal/envvar` package.
 
 | Variable | Description |
 |----------|-------------|
