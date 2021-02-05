@@ -121,19 +121,19 @@ func testSweepIamRoles(region string) error {
 	var sweeperErrs *multierror.Error
 
 	for _, role := range roles {
-		rolename := aws.StringValue(role.RoleName)
-		log.Printf("[DEBUG] Deleting IAM Role (%s)", rolename)
+		roleName := aws.StringValue(role.RoleName)
+		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
-		err := deleteAwsIamRole(conn, rolename, true, true, true)
+		err := deleteIamRole(conn, roleName, true, true, true)
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
 		}
 		if testSweepSkipResourceError(err) {
-			log.Printf("[WARN] Skipping IAM Role (%s): %s", rolename, err)
+			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)
 			continue
 		}
 		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting IAM Role (%s): %w", rolename, err)
+			sweeperErr := fmt.Errorf("error deleting IAM Role (%s): %w", roleName, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
@@ -502,7 +502,7 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 	policyName3 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -552,7 +552,7 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 	policyName3 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -599,7 +599,7 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testin
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -633,7 +633,7 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -668,7 +668,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -703,7 +703,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -738,7 +738,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -771,7 +771,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *test
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -804,7 +804,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) 
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -837,7 +837,7 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T)
 	policyName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRoleDestroy,
@@ -951,7 +951,7 @@ func testAccCheckAWSRoleGeneratedNamePrefix(resource, prefix string) resource.Te
 	}
 }
 
-// Attach inline policy outside of terraform CRUD.
+// Attach inline policy out of band (outside of terraform)
 func testAccAddAwsIAMRolePolicy(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1006,35 +1006,14 @@ func testAccCheckAWSRolePolicyCheckInline(role *iam.GetRoleOutput, roleName stri
 
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		//inline policies
+		policyNames, err := readIamRolePolicyNames(conn, roleName)
+		if err != nil {
+			return fmt.Errorf("reading role (%s): %w", roleName, err)
+		}
+
 		var inlinePolicyList []string
-		var marker *string
-		for {
-			//inline is ListRolePolicies
-			resp, err := conn.ListRolePolicies(&iam.ListRolePoliciesInput{
-				RoleName: aws.String(roleName),
-				Marker:   marker,
-			})
-
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					// aws specific error
-					if awsErr.Code() == "NoSuchEntity" {
-						// policies not found
-						break
-					}
-				}
-				return err
-			}
-
-			for _, policyName := range resp.PolicyNames {
-				inlinePolicyList = append(inlinePolicyList, *policyName)
-			}
-
-			if !*resp.IsTruncated {
-				break
-			}
-			marker = resp.Marker
+		for _, name := range policyNames {
+			inlinePolicyList = append(inlinePolicyList, aws.StringValue(name))
 		}
 
 		if !compareStringSlices(inlinePolicyList, inlinePolicies) {
@@ -1053,34 +1032,19 @@ func testAccCheckAWSRolePolicyCheckManaged(role *iam.GetRoleOutput, roleName str
 
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		// managed policies
 		var managedPolicyList []string
-		var marker *string
-		for {
-			resp, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
-				RoleName: aws.String(roleName),
-				Marker:   marker,
-			})
+		input := &iam.ListAttachedRolePoliciesInput{
+			RoleName: aws.String(roleName),
+		}
 
-			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok {
-					// aws specific error
-					if awsErr.Code() == "NoSuchEntity" {
-						// role not found
-						break
-					}
-				}
-				return err
+		err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+			for _, v := range page.AttachedPolicies {
+				managedPolicyList = append(managedPolicyList, aws.StringValue(v.PolicyName))
 			}
-
-			for _, ap := range resp.AttachedPolicies {
-				managedPolicyList = append(managedPolicyList, *ap.PolicyName) //PolicyName also available
-			}
-
-			if !*resp.IsTruncated {
-				break
-			}
-			marker = resp.Marker
+			return !lastPage
+		})
+		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return err
 		}
 
 		if !compareStringSlices(managedPolicyList, managedPolicies) {
@@ -1091,43 +1055,34 @@ func testAccCheckAWSRolePolicyCheckManaged(role *iam.GetRoleOutput, roleName str
 	}
 }
 
-func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, managedPolicy string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		// find in managed policies
-		var policyARN string
-		var marker *string
-		for {
-			resp, err := conn.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
-				RoleName: aws.String(*role.Role.RoleName),
-				Marker:   marker,
-			})
+		var managedARN string
+		input := &iam.ListAttachedRolePoliciesInput{
+			RoleName: role.Role.RoleName,
+		}
 
-			if err != nil {
-				return err
-			}
-
-			for _, ap := range resp.AttachedPolicies {
-				if *ap.PolicyName == managedPolicy {
-					policyARN = *ap.PolicyArn
+		err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+			for _, v := range page.AttachedPolicies {
+				if *v.PolicyName == policyName {
+					managedARN = *v.PolicyArn
 					break
 				}
 			}
-
-			if !*resp.IsTruncated {
-				break
-			}
-			marker = resp.Marker
+			return !lastPage
+		})
+		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
+		}
+		if managedARN == "" {
+			return fmt.Errorf("managed policy (%s) not found", policyName)
 		}
 
-		if policyARN == "" {
-			return fmt.Errorf("managed policy %s not found", managedPolicy)
-		}
-
-		_, err := conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
-			PolicyArn: aws.String(policyARN),
-			RoleName:  aws.String(*role.Role.RoleName),
+		_, err = conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
+			PolicyArn: aws.String(managedARN),
+			RoleName:  role.Role.RoleName,
 		})
 
 		if err != nil {
@@ -1138,50 +1093,37 @@ func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, manag
 	}
 }
 
-func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, managedPolicy string) resource.TestCheckFunc {
+func testAccCheckAWSRolePolicyAttachManagedPolicy(role *iam.GetRoleOutput, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		// find in managed policies
-		var policyARN string
-		var marker *string
-		for {
-			pathPrefix := "/tf-testing/"
-			policyUsageFilter := "PermissionsPolicy"
-			scope := "Local"
-			resp, err := conn.ListPolicies(&iam.ListPoliciesInput{
-				PathPrefix:        &pathPrefix,
-				PolicyUsageFilter: &policyUsageFilter,
-				Scope:             &scope,
-				Marker:            marker,
-			})
+		var managedARN string
+		input := &iam.ListPoliciesInput{
+			PathPrefix:        aws.String("/tf-testing/"),
+			PolicyUsageFilter: aws.String("PermissionsPolicy"),
+			Scope:             aws.String("Local"),
+		}
 
-			if err != nil {
-				return err
-			}
-
-			for _, ap := range resp.Policies {
-				if *ap.PolicyName == managedPolicy {
-					policyARN = *ap.Arn
+		err := conn.ListPoliciesPages(input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
+			for _, v := range page.Policies {
+				if *v.PolicyName == policyName {
+					managedARN = *v.Arn
 					break
 				}
 			}
-
-			if !*resp.IsTruncated {
-				break
-			}
-			marker = resp.Marker
-		}
-
-		if policyARN == "" {
-			return fmt.Errorf("managed policy %s not found", managedPolicy)
-		}
-
-		_, err := conn.AttachRolePolicy(&iam.AttachRolePolicyInput{
-			PolicyArn: aws.String(policyARN),
-			RoleName:  aws.String(*role.Role.RoleName),
+			return !lastPage
 		})
+		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
+		}
+		if managedARN == "" {
+			return fmt.Errorf("managed policy (%s) not found", policyName)
+		}
 
+		_, err = conn.AttachRolePolicy(&iam.AttachRolePolicyInput{
+			PolicyArn: aws.String(managedARN),
+			RoleName:  role.Role.RoleName,
+		})
 		if err != nil {
 			return err
 		}
@@ -1219,58 +1161,6 @@ func testAccCheckAWSRolePolicyRemoveInlinePolicy(role *iam.GetRoleOutput, inline
 		if err != nil {
 			return err
 		}
-		return nil
-	}
-}
-
-func testAccCheckAWSRolePolicyCheckInlinePrefix(role *iam.GetRoleOutput, roleName string, prefix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *role.Role.RoleName != roleName {
-			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
-
-		//inline policies
-		var inlinePolicyList []string
-		var marker *string
-		for {
-			//inline is ListRolePolicies
-			resp, err := conn.ListRolePolicies(&iam.ListRolePoliciesInput{
-				RoleName: aws.String(roleName),
-				Marker:   marker,
-			})
-
-			if err != nil {
-				return err
-			}
-
-			for _, policyName := range resp.PolicyNames {
-				inlinePolicyList = append(inlinePolicyList, *policyName)
-			}
-
-			if !*resp.IsTruncated {
-				break
-			}
-			marker = resp.Marker
-		}
-
-		match := false
-		r := regexp.MustCompile(fmt.Sprintf("^%s(.*)$", prefix))
-
-		for _, policyName := range inlinePolicyList {
-			if r.MatchString(policyName) {
-				match = true
-				break
-			}
-		}
-
-		if !match {
-			return fmt.Errorf(
-				"%s didn't match any inline policies",
-				prefix)
-		}
-
 		return nil
 	}
 }
