@@ -27,7 +27,6 @@ func resourceAwsIamRole() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIamRoleImport,
 		},
-		//CustomizeDiff: resourceAwsIamRoleInlineCustDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -113,21 +112,16 @@ func resourceAwsIamRole() *schema.Resource {
 			"tags": tagsSchema(),
 
 			"inline_policy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
+							Required:     true,
 							ValidateFunc: validateIamRolePolicyName,
-						},
-						"name_prefix": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateIamRolePolicyNamePrefix,
 						},
 						"policy": {
 							Type:             schema.TypeString,
@@ -443,7 +437,17 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	err := deleteAwsIamRole(conn, d.Id(), d.Get("force_detach_policies").(bool))
+	hasInline := false
+	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
+		hasInline = true
+	}
+
+	hasManaged := false
+	if v, ok := d.GetOk("managed_policy_arns"); ok && v.(*schema.Set).Len() > 0 {
+		hasManaged = true
+	}
+
+	err := deleteAwsIamRole(conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
@@ -454,12 +458,12 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func deleteAwsIamRole(conn *iam.IAM, rolename string, forceDetach bool) error {
+func deleteAwsIamRole(conn *iam.IAM, rolename string, forceDetach, hasInline, hasManaged bool) error {
 	if err := deleteAwsIamRoleInstanceProfiles(conn, rolename); err != nil {
 		return fmt.Errorf("unable to detach instance profiles: %w", err)
 	}
 
-	if forceDetach {
+	if forceDetach || hasManaged {
 		managedPolicies, err := readAwsIamRolePolicyAttachments(conn, rolename)
 		if err != nil {
 			return err
@@ -468,7 +472,9 @@ func deleteAwsIamRole(conn *iam.IAM, rolename string, forceDetach bool) error {
 		if err := deleteAwsIamRolePolicyAttachments(conn, rolename, managedPolicies); err != nil {
 			return fmt.Errorf("unable to detach policies: %w", err)
 		}
+	}
 
+	if forceDetach || hasInline {
 		inlinePolicies, err := readAwsIamRolePolicyNames(conn, rolename)
 		if err != nil {
 			return err
@@ -643,18 +649,9 @@ func expandIamInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.P
 
 	apiObject := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(roleName),
+		PolicyName:     aws.String(tfMap["name"].(string)),
 		PolicyDocument: aws.String(tfMap["policy"].(string)),
 	}
-
-	var policyName string
-	if v, ok := tfMap["name"]; ok {
-		policyName = v.(string)
-	} else if v, ok := tfMap["name_prefix"]; ok {
-		policyName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		policyName = resource.UniqueId()
-	}
-	apiObject.PolicyName = aws.String(policyName)
 
 	return apiObject
 }
@@ -741,6 +738,7 @@ func resourceAwsIamRoleListInlinePolicies(roleName string, meta interface{}) ([]
 		apiObject := &iam.PutRolePolicyInput{
 			RoleName:       aws.String(roleName),
 			PolicyDocument: aws.String(policy),
+			PolicyName:     policyName,
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -748,111 +746,3 @@ func resourceAwsIamRoleListInlinePolicies(roleName string, meta interface{}) ([]
 
 	return apiObjects, nil
 }
-
-/*
-func resourceAwsIamRoleInlineCustDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	// Avoids diffs resulting when inline policies are configured without either
-	// name or name prefix, or with a name prefix. In these cases, Terraform
-	// generates some or all of the name. Without a customized diff function,
-	// comparing the config to the state will always generate a diff since the
-	// config has no information about the policy's generated name.
-	if diff.HasChange("inline_policy") {
-
-		o, n := diff.GetChange("inline_policy")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-
-		// a single empty inline_policy in the config produces a diff with
-		// inline_policy.# = 0 and subattributes all blank
-		if len(os.List()) == 0 && len(ns.List()) == 1 {
-			data := (ns.List())[0].(map[string]interface{})
-			if data["name"].(string) == "" && data["name_prefix"].(string) == "" && data["policy"].(string) == "" {
-				if err := diff.Clear("inline_policy"); err != nil {
-					return fmt.Errorf("failed to clear diff for IAM role %s, error: %s", diff.Id(), err)
-				}
-			}
-		}
-
-		// if there's no old or new set, nothing to do - can't match up
-		// equivalents between the lists
-		if len(os.List()) > 0 && len(ns.List()) > 0 {
-
-			// fast O(n) comparison in case of thousands of policies
-
-			// current state lookup map:
-			// key: inline policy doc hash
-			// value: string slice with policy names (slice in case of dupes)
-			statePolicies := make(map[int]interface{})
-			for _, policy := range os.List() {
-				data := policy.(map[string]interface{})
-				name := data["name"].(string)
-
-				// condition probably not needed, will have been assigned name
-				if name != "" {
-					docHash := hashcode.String(data["policy"].(string))
-					if _, ok := statePolicies[docHash]; !ok {
-						statePolicies[docHash] = []string{name}
-					} else {
-						statePolicies[docHash] = append(statePolicies[docHash].([]string), name)
-					}
-				}
-			}
-
-			// construct actual changes by going through incoming config changes
-			configSet := make([]interface{}, 0)
-			for _, policy := range ns.List() {
-				appended := false
-				data := policy.(map[string]interface{})
-				namePrefix := data["name_prefix"].(string)
-				name := data["name"].(string)
-
-				if namePrefix != "" || (namePrefix == "" && name == "") {
-					docHash := hashcode.String(data["policy"].(string))
-					if namesFromState, ok := statePolicies[docHash]; ok {
-						for i, nameFromState := range namesFromState.([]string) {
-							if (namePrefix == "" && name == "") || strings.HasPrefix(nameFromState, namePrefix) {
-								// match - we want the state value
-								pair := make(map[string]interface{})
-								pair["name"] = nameFromState
-								pair["policy"] = data["policy"]
-								configSet = append(configSet, pair)
-								appended = true
-
-								// remove - in case of duplicate policies
-								stateSlice := namesFromState.([]string)
-								stateSlice = append(stateSlice[:i], stateSlice[i+1:]...)
-								if len(stateSlice) == 0 {
-									delete(statePolicies, docHash)
-								} else {
-									statePolicies[docHash] = stateSlice
-								}
-								break
-							}
-						}
-					}
-				}
-
-				if !appended {
-					pair := make(map[string]interface{})
-					pair["name"] = name
-					pair["name_prefix"] = namePrefix
-					pair["policy"] = data["policy"]
-					configSet = append(configSet, pair)
-				}
-			}
-			if err := diff.SetNew("inline_policy", configSet); err != nil {
-				return fmt.Errorf("failed to set new inline policies for IAM role %s, error: %s", diff.Id(), err)
-			}
-		}
-	}
-
-	return nil
-}
-*/
