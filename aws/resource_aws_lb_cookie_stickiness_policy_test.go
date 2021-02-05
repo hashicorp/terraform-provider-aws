@@ -14,6 +14,7 @@ import (
 
 func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
+	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -22,6 +23,7 @@ func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 			{
 				Config: testAccLBCookieStickinessPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "300"),
 					testAccCheckLBCookieStickinessPolicy(
 						"aws_elb.lb",
 						"aws_lb_cookie_stickiness_policy.foo",
@@ -31,6 +33,7 @@ func TestAccAWSLBCookieStickinessPolicy_basic(t *testing.T) {
 			{
 				Config: testAccLBCookieStickinessPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "0"),
 					testAccCheckLBCookieStickinessPolicy(
 						"aws_elb.lb",
 						"aws_lb_cookie_stickiness_policy.foo",
@@ -164,7 +167,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 `, rName))
 }
 
-// Sets the cookie_expiration_period to 300s.
+// Sets the cookie_expiration_period to 0s.
 func testAccLBCookieStickinessPolicyConfigUpdate(rName string) string {
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
