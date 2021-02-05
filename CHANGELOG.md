@@ -6,6 +6,8 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_transit_gateway_prefix_list_reference` ([#16823](https://github.com/hashicorp/terraform-provider-aws/issues/16823))
 * **New Resource:** `aws_route53_key_signing_key` ([#16840](https://github.com/hashicorp/terraform-provider-aws/issues/16840))
+* **New Resource:** `aws_cloudfront_origin_request_policy` ([#17342](https://github.com/hashicorp/terraform-provider-aws/issues/17342))
+* **New Data Source:** `aws_cloudfront_origin_request_policy` ([#17342](https://github.com/hashicorp/terraform-provider-aws/issues/17342))
 
 ENHANCEMENTS:
 
@@ -15,6 +17,10 @@ ENHANCEMENTS:
 * resource/aws_iam_access_key: Add `create_date` attribute ([#17318](https://github.com/hashicorp/terraform-provider-aws/issues/17318))
 * resource/aws_iam_access_key: Support resource import ([#17321](https://github.com/hashicorp/terraform-provider-aws/issues/17321))
 * resource/aws_subnet: Add `customer_owned_ipv4_pool` and `map_customer_owned_ip_on_launch` attributes ([#16676](https://github.com/hashicorp/terraform-provider-aws/issues/16676))
+* resource/aws_lb: Add `ipv6_address` attribute ([#17229](https://github.com/hashicorp/terraform-provider-aws/issues/17229))
+* resource/aws_sfn_state_machine: Add support for `EXPRESS` state machine type ([#12249](https://github.com/hashicorp/terraform-provider-aws/issues/12249))
+* resource/aws_lb_target_group: Add `protocol_version` to `lb_target_group` ([#17260](https://github.com/hashicorp/terraform-provider-aws/issues/17260))
+* resource/aws_cloudfront_distribution: Add support for `cloudfront_origin_request_policy_id` ([#17342](https://github.com/hashicorp/terraform-provider-aws/issues/17342))
 
 BUG FIXES:
 

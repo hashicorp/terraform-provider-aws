@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_cloudfront_origin_request_policy
+```
+
+```release-note:new-data-source
+aws_cloudfront_origin_request_policy
+```
+
+```release-note:enhancement
+resource/aws_cloudfront_distribution: Add support for `cloudfront_origin_request_policy_id`
+```
