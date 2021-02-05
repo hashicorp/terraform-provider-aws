@@ -1583,6 +1583,12 @@ var awsPartition = partition{
 						Region: "us-east-2",
 					},
 				},
+				"fips-us-west-1": endpoint{
+					Hostname: "cognito-idp-fips.us-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-1",
+					},
+				},
 				"fips-us-west-2": endpoint{
 					Hostname: "cognito-idp-fips.us-west-2.amazonaws.com",
 					CredentialScope: credentialScope{
