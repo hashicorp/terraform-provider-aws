@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -203,8 +204,8 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test_subscription"
 	ri := acctest.RandInt()
-	dlqQueueName := fmt.Sprintf("queue-dlq-%d", ri)
-	updatedDlqQueueName := fmt.Sprintf("updated-queue-dlq-%d", ri)
+	dlqName := fmt.Sprintf("tf-acc-test-queue-dlq-%d", ri)
+	updatedDlqName := fmt.Sprintf("tf-acc-test-queue-dlq-update-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -212,13 +213,10 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(
-					ri,
-					dlqQueueName,
-				),
+				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(ri, dlqName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, dlqQueueName),
+					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, dlqName),
 				),
 			},
 			{
@@ -232,14 +230,20 @@ func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(
-					ri,
-					updatedDlqQueueName,
-				),
+				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(ri, updatedDlqName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, updatedDlqQueueName),
+					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, updatedDlqName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
 			},
 			// Test attribute removal
 			{
@@ -433,7 +437,7 @@ func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[s
 	}
 }
 
-func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[string]string, expectedDlqName string) resource.TestCheckFunc {
+func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		apiRedrivePolicyJSONString, ok := attributes["RedrivePolicy"]
 
@@ -446,21 +450,21 @@ func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[st
 			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %s", apiRedrivePolicyJSONString, err)
 		}
 
-		accountID := testAccProvider.Meta().(*AWSClient).accountid
-		expectedDlqArn := fmt.Sprintf(
-			"arn:aws:sqs:us-west-2:%s:%s",
-			accountID,
-			expectedDlqName,
-		)
-		expectedRedrivePolicy := &snsTopicSubscriptionRedrivePolicy{
-			DeadLetterTargetArn: expectedDlqArn,
+		expectedRedrivePolicy := snsTopicSubscriptionRedrivePolicy{
+			DeadLetterTargetArn: arn.ARN{
+				AccountID: testAccGetAccountID(),
+				Partition: testAccGetPartition(),
+				Region:    testAccGetRegion(),
+				Resource:  expectedRedrivePolicyResource,
+				Service:   "sqs",
+			}.String(),
 		}
 
-		if reflect.DeepEqual(apiRedrivePolicy, *expectedRedrivePolicy) {
+		if reflect.DeepEqual(apiRedrivePolicy, expectedRedrivePolicy) {
 			return nil
 		}
 
-		return fmt.Errorf("SNS Topic Subscription redrive policy did not match:\n\nReceived\n\n%s\n\nExpected\n\n%s\n\n", apiRedrivePolicy, *expectedRedrivePolicy)
+		return fmt.Errorf("SNS Topic Subscription redrive policy did not match:\n\nReceived\n\n%s\n\nExpected\n\n%s\n\n", apiRedrivePolicy, expectedRedrivePolicy)
 	}
 }
 
@@ -538,11 +542,11 @@ resource "aws_sns_topic_subscription" "test_subscription" {
 func testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(i int, dlqName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-  name = "terraform-test-topic-%d"
+  name = "terraform-test-topic-%[1]d"
 }
 
 resource "aws_sqs_queue" "test_queue" {
-  name = "terraform-subscription-test-queue-%d"
+  name = "terraform-subscription-test-queue-%[1]d"
 }
 
 resource "aws_sqs_queue" "test_queue_dlq" {
@@ -550,12 +554,12 @@ resource "aws_sqs_queue" "test_queue_dlq" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  redrive_policy  = %s
-  endpoint        = "${aws_sqs_queue.test_queue.arn}"
-  protocol        = "sqs"
-  topic_arn       = "${aws_sns_topic.test_topic.arn}"
+  redrive_policy = jsonencode({ deadLetterTargetArn : aws_sqs_queue.test_queue_dlq.arn })
+  endpoint       = aws_sqs_queue.test_queue.arn
+  protocol       = "sqs"
+  topic_arn      = aws_sns_topic.test_topic.arn
 }
-`, i, i, dlqName, strconv.Quote(`{"deadLetterTargetArn": "${aws_sqs_queue.test_queue_dlq.arn}"}`))
+`, i, dlqName)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(i int, rawMessageDelivery bool) string {

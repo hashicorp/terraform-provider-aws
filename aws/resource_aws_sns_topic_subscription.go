@@ -74,9 +74,10 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentSnsTopicSubscriptionDeliveryPolicy,
 			},
 			"redrive_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"raw_message_delivery": {
 				Type:     schema.TypeBool,
@@ -186,7 +187,6 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 
 	d.Set("arn", attributeOutput.Attributes["SubscriptionArn"])
 	d.Set("delivery_policy", attributeOutput.Attributes["DeliveryPolicy"])
-	d.Set("redrive_policy", attributeOutput.Attributes["RedrivePolicy"])
 	d.Set("endpoint", attributeOutput.Attributes["Endpoint"])
 	d.Set("filter_policy", attributeOutput.Attributes["FilterPolicy"])
 	d.Set("protocol", attributeOutput.Attributes["Protocol"])
@@ -196,6 +196,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 		d.Set("raw_message_delivery", true)
 	}
 
+	d.Set("redrive_policy", attributeOutput.Attributes["RedrivePolicy"])
 	d.Set("topic_arn", attributeOutput.Attributes["TopicArn"])
 
 	return nil
@@ -217,6 +218,7 @@ func getResourceAttributes(d *schema.ResourceData) (output map[string]*string) {
 	delivery_policy := d.Get("delivery_policy").(string)
 	filter_policy := d.Get("filter_policy").(string)
 	raw_message_delivery := d.Get("raw_message_delivery").(bool)
+	redrive_policy := d.Get("redrive_policy").(string)
 
 	// Collect attributes if available
 	attributes := map[string]*string{}
@@ -231,6 +233,10 @@ func getResourceAttributes(d *schema.ResourceData) (output map[string]*string) {
 
 	if raw_message_delivery {
 		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", raw_message_delivery))
+	}
+
+	if redrive_policy != "" {
+		attributes["RedrivePolicy"] = aws.String(redrive_policy)
 	}
 
 	return attributes
@@ -386,6 +392,8 @@ func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, subscriptionArn, attribute
 		AttributeValue:  aws.String(attributeValue),
 	}
 
+	// The AWS API requires a non-empty string value or nil for the RedrivePolicy attribute,
+	// else throws an InvalidParameter error
 	if attributeName == "RedrivePolicy" && attributeValue == "" {
 		req.AttributeValue = nil
 	}
@@ -396,10 +404,6 @@ func snsSubscriptionAttributeUpdate(snsconn *sns.SNS, subscriptionArn, attribute
 		return fmt.Errorf("error setting subscription (%s) attribute (%s): %s", subscriptionArn, attributeName, err)
 	}
 	return nil
-}
-
-type snsTopicSubscriptionRedrivePolicy struct {
-	DeadLetterTargetArn string `json:"deadLetterTargetArn,omitempty"`
 }
 
 type snsTopicSubscriptionDeliveryPolicy struct {
@@ -463,6 +467,10 @@ func (s snsTopicSubscriptionDeliveryPolicyThrottlePolicy) String() string {
 
 func (s snsTopicSubscriptionDeliveryPolicyThrottlePolicy) GoString() string {
 	return s.String()
+}
+
+type snsTopicSubscriptionRedrivePolicy struct {
+	DeadLetterTargetArn string `json:"deadLetterTargetArn,omitempty"`
 }
 
 func suppressEquivalentSnsTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
