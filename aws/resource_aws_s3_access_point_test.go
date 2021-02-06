@@ -141,7 +141,7 @@ func TestAccAWSS3AccessPoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3AccessPoint_bucketDisappears(t *testing.T) {
+func TestAccAWSS3AccessPoint_disappears_Bucket(t *testing.T) {
 	var v s3control.GetAccessPointOutput
 	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	accessPointName := acctest.RandomWithPrefix("tf-acc-test")

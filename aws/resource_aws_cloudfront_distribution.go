@@ -151,6 +151,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 							Default:  0,
 						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"path_pattern": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -312,6 +316,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  0,
+						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
@@ -694,7 +702,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
 	}
 
-	d.SetId(*resp.Distribution.Id)
+	d.SetId(aws.StringValue(resp.Distribution.Id))
 
 	if d.Get("wait_for_deployment").(bool) {
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())

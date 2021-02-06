@@ -379,6 +379,149 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_mongoDBTarget(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/%"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/table-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table-name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_mongoDBTarget_scan_all(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table-name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table-name"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTargetScanAll(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table-name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_mongoDBTarget_multiple(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, "database-name/table1", "database-name/table2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.path", "database-name/table2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerConfigMongoDBTarget(rName, "database-name/%"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/%"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfigMongoDBMultiple(rName, "database-name/table1", "database-name/table2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.0.path", "database-name/table1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.scan_all", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_target.1.path", "database-name/table2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1128,6 +1271,90 @@ func TestAccAWSGlueCrawler_SecurityConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_lineageConfig(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "ENABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "DISABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "DISABLE")),
+			},
+			{
+				Config: testAccGlueCrawlerLineageConfig(rName, "ENABLE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lineage_configuration.0.crawler_lineage_settings", "ENABLE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_recrawlPolicy(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerRecrawlPolicyConfig(rName, "CRAWL_EVERYTHING"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVERYTHING"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlueCrawlerRecrawlPolicyConfig(rName, "CRAWL_NEW_FOLDERS_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_NEW_FOLDERS_ONLY")),
+			},
+			{
+				Config: testAccGlueCrawlerRecrawlPolicyConfig(rName, "CRAWL_EVERYTHING"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recrawl_policy.0.recrawl_behavior", "CRAWL_EVERYTHING"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueCrawlerExists(resourceName string, crawler *glue.Crawler) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1234,6 +1461,26 @@ data "aws_iam_policy" "AWSGlueServiceRole" {
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
   policy_arn = data.aws_iam_policy.AWSGlueServiceRole.arn
   role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy" "LakeFormationDataAccess" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
 }
 `, rName)
 }
@@ -1854,6 +2101,18 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  count = %[2]d
+
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test[count.index].name
+  }
+}
+
 resource "aws_glue_crawler" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
@@ -1897,6 +2156,18 @@ resource "aws_glue_catalog_table" "test" {
 
   storage_descriptor {
     location = "s3://${aws_s3_bucket.default.bucket}"
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  count = 2
+
+  permissions = ["ALL"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test[count.index].name
+    name          = aws_glue_catalog_table.test[count.index].name
   }
 }
 
@@ -2093,4 +2364,159 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, securityConfiguration, rName)
+}
+
+func testAccGlueCrawlerConfigMongoDBTarget(rName, path string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "MONGODB"
+
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  mongodb_target {
+    connection_name = aws_glue_connection.test.name
+    path            = %[2]q
+  }
+}
+`, rName, path)
+}
+
+func testAccGlueCrawlerConfigMongoDBTargetScanAll(rName string, scan bool) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "MONGODB"
+
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  mongodb_target {
+    connection_name = aws_glue_connection.test.name
+    path            = "database-name/table-name"
+    scan_all        = %[2]t
+  }
+}
+`, rName, scan)
+}
+
+func testAccGlueCrawlerConfigMongoDBMultiple(rName, path1, path2 string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name            = %[1]q
+  connection_type = "MONGODB"
+
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  mongodb_target {
+    connection_name = aws_glue_connection.test.name
+    path            = %[2]q
+  }
+
+  mongodb_target {
+    connection_name = aws_glue_connection.test.name
+    path            = %[3]q
+  }
+}
+`, rName, path1, path2)
+}
+
+func testAccGlueCrawlerLineageConfig(rName, lineageConfig string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  lineage_configuration {
+    crawler_lineage_settings = %[2]q
+  }
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, lineageConfig)
+}
+
+func testAccGlueCrawlerRecrawlPolicyConfig(rName, policy string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  schema_change_policy {
+    delete_behavior = "LOG"
+    update_behavior = "LOG"
+  }
+
+  recrawl_policy {
+    recrawl_behavior = %[2]q
+  }
+
+  s3_target {
+    path = "s3://bucket-name"
+  }
+}
+`, rName, policy)
 }

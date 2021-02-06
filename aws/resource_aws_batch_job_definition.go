@@ -1,9 +1,8 @@
 package aws
 
 import (
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -145,7 +144,7 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("%s %q", err, name)
 	}
-	d.SetId(*out.JobDefinitionArn)
+	d.SetId(aws.StringValue(out.JobDefinitionArn))
 	d.Set("arn", out.JobDefinitionArn)
 	return resourceAwsBatchJobDefinitionRead(d, meta)
 }

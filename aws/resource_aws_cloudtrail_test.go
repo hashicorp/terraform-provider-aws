@@ -3,9 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"testing"
-
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"

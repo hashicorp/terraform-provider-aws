@@ -66,7 +66,7 @@ func TestAccAWSS3ControlBucket_disappears(t *testing.T) {
 }
 
 func TestAccAWSS3ControlBucket_Tags(t *testing.T) {
-	TestAccSkip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/terraform-providers/terraform-provider-aws/issues/15572")
+	TestAccSkip(t, "S3 Control Bucket resource tagging requires additional eventual consistency handling, see also: https://github.com/hashicorp/terraform-provider-aws/issues/15572")
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_s3control_bucket.test"

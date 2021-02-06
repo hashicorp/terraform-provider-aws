@@ -428,14 +428,14 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 		}
 
 		if raw, ok := data["db_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.DBSecurityGroupMemberships = memberships
 			}
 		}
 
 		if raw, ok := data["vpc_security_group_memberships"]; ok {
-			memberships := expandStringList(raw.(*schema.Set).List())
+			memberships := expandStringSet(raw.(*schema.Set))
 			if len(memberships) > 0 {
 				o.VpcSecurityGroupMemberships = memberships
 			}
@@ -470,27 +470,6 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 	}
 
 	return options
-}
-
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
-	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for _, pRaw := range configured {
-		data := pRaw.(map[string]interface{})
-
-		p := &elasticache.ParameterNameValue{
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
-		}
-
-		parameters = append(parameters, p)
-	}
-
-	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
@@ -962,20 +941,6 @@ func flattenRedshiftParameters(list []*redshift.Parameter) []map[string]interfac
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenElastiCacheParameters(list []*elasticache.Parameter) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
-	for _, i := range list {
-		if i.ParameterValue != nil {
-			result = append(result, map[string]interface{}{
-				"name":  strings.ToLower(*i.ParameterName),
-				"value": *i.ParameterValue,
-			})
-		}
-	}
-	return result
-}
-
-// Flattens an array of Parameters into a []map[string]interface{}
 func flattenNeptuneParameters(list []*neptune.Parameter) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
@@ -1140,8 +1105,12 @@ func flattenAttachment(a *ec2.NetworkInterfaceAttachment) map[string]interface{}
 	if a.InstanceId != nil {
 		att["instance"] = *a.InstanceId
 	}
-	att["device_index"] = *a.DeviceIndex
-	att["attachment_id"] = *a.AttachmentId
+	if a.DeviceIndex != nil {
+		att["device_index"] = *a.DeviceIndex
+	}
+	if a.AttachmentId != nil {
+		att["attachment_id"] = *a.AttachmentId
+	}
 	return att
 }
 
@@ -1154,23 +1123,31 @@ func flattenEc2AttributeValues(l []*ec2.AttributeValue) []string {
 }
 
 func flattenEc2NetworkInterfaceAssociation(a *ec2.NetworkInterfaceAssociation) []interface{} {
-	att := make(map[string]interface{})
+	tfMap := map[string]interface{}{}
+
 	if a.AllocationId != nil {
-		att["allocation_id"] = *a.AllocationId
+		tfMap["allocation_id"] = aws.StringValue(a.AllocationId)
 	}
 	if a.AssociationId != nil {
-		att["association_id"] = *a.AssociationId
+		tfMap["association_id"] = aws.StringValue(a.AssociationId)
+	}
+	if a.CarrierIp != nil {
+		tfMap["carrier_ip"] = aws.StringValue(a.CarrierIp)
+	}
+	if a.CustomerOwnedIp != nil {
+		tfMap["customer_owned_ip"] = aws.StringValue(a.CustomerOwnedIp)
 	}
 	if a.IpOwnerId != nil {
-		att["ip_owner_id"] = *a.IpOwnerId
+		tfMap["ip_owner_id"] = aws.StringValue(a.IpOwnerId)
 	}
 	if a.PublicDnsName != nil {
-		att["public_dns_name"] = *a.PublicDnsName
+		tfMap["public_dns_name"] = aws.StringValue(a.PublicDnsName)
 	}
 	if a.PublicIp != nil {
-		att["public_ip"] = *a.PublicIp
+		tfMap["public_ip"] = aws.StringValue(a.PublicIp)
 	}
-	return []interface{}{att}
+
+	return []interface{}{tfMap}
 }
 
 func flattenEc2NetworkInterfaceIpv6Address(niia []*ec2.NetworkInterfaceIpv6Address) []string {
@@ -1478,13 +1455,13 @@ func flattenESVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]inter
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m["availability_zones"] = schema.NewSet(schema.HashString, flattenStringList(o.AvailabilityZones))
+		m["availability_zones"] = flattenStringSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SecurityGroupIds))
+		m["security_group_ids"] = flattenStringSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(o.SubnetIds))
+		m["subnet_ids"] = flattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
 		m["vpc_id"] = *o.VPCId
@@ -1497,10 +1474,10 @@ func expandESVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 	options := elasticsearch.VPCOptions{}
 
 	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
+		options.SecurityGroupIds = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = expandStringList(v.(*schema.Set).List())
+		options.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
 	return &options
@@ -1519,7 +1496,7 @@ func expandConfigRecordingGroup(configured []interface{}) *configservice.Recordi
 	}
 
 	if v, ok := group["resource_types"]; ok {
-		recordingGroup.ResourceTypes = expandStringList(v.(*schema.Set).List())
+		recordingGroup.ResourceTypes = expandStringSet(v.(*schema.Set))
 	}
 	return &recordingGroup
 }
@@ -1536,7 +1513,7 @@ func flattenConfigRecordingGroup(g *configservice.RecordingGroup) []map[string]i
 	}
 
 	if g.ResourceTypes != nil && len(g.ResourceTypes) > 0 {
-		m["resource_types"] = schema.NewSet(schema.HashString, flattenStringList(g.ResourceTypes))
+		m["resource_types"] = flattenStringSet(g.ResourceTypes)
 	}
 
 	return []map[string]interface{}{m}
@@ -1568,30 +1545,31 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 	return list
 }
 
-// diffStringMaps returns the set of keys and values that must be created,
-// and the set of keys and values that must be destroyed.
-// Equivalent to 'diffTagsGeneric'.
-func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+// diffStringMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
 	// First, we're creating everything we have
 	create := map[string]*string{}
 	for k, v := range newMap {
 		create[k] = aws.String(v.(string))
 	}
 
-	// Build the map of what to remove
+	// Build the maps of what to remove and what is unchanged
 	remove := map[string]*string{}
+	unchanged := map[string]*string{}
 	for k, v := range oldMap {
 		old, ok := create[k]
 		if !ok || aws.StringValue(old) != v.(string) {
 			// Delete it!
 			remove[k] = aws.String(v.(string))
 		} else if ok {
+			unchanged[k] = aws.String(v.(string))
 			// already present so remove from new
 			delete(create, k)
 		}
 	}
 
-	return create, remove
+	return create, remove, unchanged
 }
 
 func flattenDSVpcSettings(
@@ -1607,24 +1585,6 @@ func flattenDSVpcSettings(
 	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
-}
-
-func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface{} {
-	envs := make(map[string]interface{})
-	en := make(map[string]string)
-
-	if lambdaEnv == nil {
-		return nil
-	}
-
-	for k, v := range lambdaEnv.Variables {
-		en[k] = *v
-	}
-	if len(en) > 0 {
-		envs["variables"] = en
-	}
-
-	return []interface{}{envs}
 }
 
 func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
@@ -1689,8 +1649,8 @@ func flattenLambdaVpcConfigResponse(s *lambda.VpcConfigResponse) []map[string]in
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SecurityGroupIds))
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["security_group_ids"] = flattenStringSet(s.SecurityGroupIds)
 	if s.VpcId != nil {
 		settings["vpc_id"] = *s.VpcId
 	}
@@ -2238,7 +2198,7 @@ func flattenConfigRuleScope(scope *configservice.Scope) []interface{} {
 		m["compliance_resource_id"] = *scope.ComplianceResourceId
 	}
 	if scope.ComplianceResourceTypes != nil {
-		m["compliance_resource_types"] = schema.NewSet(schema.HashString, flattenStringList(scope.ComplianceResourceTypes))
+		m["compliance_resource_types"] = flattenStringSet(scope.ComplianceResourceTypes)
 	}
 	if scope.TagKey != nil {
 		m["tag_key"] = *scope.TagKey
@@ -2264,7 +2224,7 @@ func expandConfigRuleScope(l []interface{}) *configservice.Scope {
 	if v, ok := configured["compliance_resource_types"]; ok {
 		l := v.(*schema.Set)
 		if l.Len() > 0 {
-			scope.ComplianceResourceTypes = expandStringList(l.List())
+			scope.ComplianceResourceTypes = expandStringSet(l)
 		}
 	}
 	if v, ok := configured["tag_key"].(string); ok && v != "" {
@@ -2300,66 +2260,6 @@ func normalizeJsonOrYamlString(templateString interface{}) (string, error) {
 	}
 
 	return checkYamlString(templateString)
-}
-
-func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]interface{} {
-	stages := make([]map[string]interface{}, 0)
-
-	for _, bd := range s {
-		if bd.ApiId != nil && bd.Stage != nil {
-			stage := make(map[string]interface{})
-			stage["api_id"] = *bd.ApiId
-			stage["stage"] = *bd.Stage
-
-			stages = append(stages, stage)
-		}
-	}
-
-	if len(stages) > 0 {
-		return stages
-	}
-
-	return nil
-}
-
-func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
-	settings := make(map[string]interface{})
-
-	if s == nil {
-		return nil
-	}
-
-	if s.BurstLimit != nil {
-		settings["burst_limit"] = *s.BurstLimit
-	}
-
-	if s.RateLimit != nil {
-		settings["rate_limit"] = *s.RateLimit
-	}
-
-	return []map[string]interface{}{settings}
-}
-
-func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]interface{} {
-	settings := make(map[string]interface{})
-
-	if s == nil {
-		return nil
-	}
-
-	if s.Limit != nil {
-		settings["limit"] = *s.Limit
-	}
-
-	if s.Offset != nil {
-		settings["offset"] = *s.Offset
-	}
-
-	if s.Period != nil {
-		settings["period"] = *s.Period
-	}
-
-	return []map[string]interface{}{settings}
 }
 
 func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
@@ -3458,8 +3358,8 @@ func flattenWorkLinkNetworkConfigResponse(c *worklink.DescribeCompanyNetworkConf
 		return nil
 	}
 
-	config["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SubnetIds))
-	config["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(c.SecurityGroupIds))
+	config["subnet_ids"] = flattenStringSet(c.SubnetIds)
+	config["security_group_ids"] = flattenStringSet(c.SecurityGroupIds)
 	config["vpc_id"] = aws.StringValue(c.VpcId)
 
 	return []map[string]interface{}{config}
@@ -3678,7 +3578,7 @@ func expandMqUsers(cfg []interface{}) []*mq.User {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
 		if v, ok := u["groups"]; ok {
-			user.Groups = expandStringList(v.(*schema.Set).List())
+			user.Groups = expandStringSet(v.(*schema.Set))
 		}
 		users[i] = &user
 	}
@@ -3710,7 +3610,7 @@ func flattenMqUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 			m["console_access"] = *u.ConsoleAccess
 		}
 		if len(u.Groups) > 0 {
-			m["groups"] = schema.NewSet(schema.HashString, flattenStringList(u.Groups))
+			m["groups"] = flattenStringSet(u.Groups)
 		}
 		out = append(out, m)
 	}
@@ -4069,24 +3969,23 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
 
-	attributes := []interface{}{}
-	for _, attrdef := range table.AttributeDefinitions {
-		attribute := map[string]string{
-			"name": *attrdef.AttributeName,
-			"type": *attrdef.AttributeType,
+	attributes := make([]interface{}, len(table.AttributeDefinitions))
+	for i, attrdef := range table.AttributeDefinitions {
+		attributes[i] = map[string]string{
+			"name": aws.StringValue(attrdef.AttributeName),
+			"type": aws.StringValue(attrdef.AttributeType),
 		}
-		attributes = append(attributes, attribute)
 	}
 
 	d.Set("attribute", attributes)
 	d.Set("name", table.TableName)
 
 	for _, attribute := range table.KeySchema {
-		if *attribute.KeyType == dynamodb.KeyTypeHash {
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
 			d.Set("hash_key", attribute.AttributeName)
 		}
 
-		if *attribute.KeyType == dynamodb.KeyTypeRange {
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
 			d.Set("range_key", attribute.AttributeName)
 		}
 	}
@@ -4094,19 +3993,18 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	lsiList := make([]map[string]interface{}, 0, len(table.LocalSecondaryIndexes))
 	for _, lsiObject := range table.LocalSecondaryIndexes {
 		lsi := map[string]interface{}{
-			"name":            *lsiObject.IndexName,
-			"projection_type": *lsiObject.Projection.ProjectionType,
+			"name":            aws.StringValue(lsiObject.IndexName),
+			"projection_type": aws.StringValue(lsiObject.Projection.ProjectionType),
 		}
 
 		for _, attribute := range lsiObject.KeySchema {
-
-			if *attribute.KeyType == dynamodb.KeyTypeRange {
-				lsi["range_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				lsi["range_key"] = aws.StringValue(attribute.AttributeName)
 			}
 		}
 		nkaList := make([]string, len(lsiObject.Projection.NonKeyAttributes))
-		for _, nka := range lsiObject.Projection.NonKeyAttributes {
-			nkaList = append(nkaList, *nka)
+		for i, nka := range lsiObject.Projection.NonKeyAttributes {
+			nkaList[i] = aws.StringValue(nka)
 		}
 		lsi["non_key_attributes"] = nkaList
 
@@ -4118,33 +4016,33 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
-	gsiList := make([]map[string]interface{}, 0, len(table.GlobalSecondaryIndexes))
-	for _, gsiObject := range table.GlobalSecondaryIndexes {
+	gsiList := make([]map[string]interface{}, len(table.GlobalSecondaryIndexes))
+	for i, gsiObject := range table.GlobalSecondaryIndexes {
 		gsi := map[string]interface{}{
-			"write_capacity": *gsiObject.ProvisionedThroughput.WriteCapacityUnits,
-			"read_capacity":  *gsiObject.ProvisionedThroughput.ReadCapacityUnits,
-			"name":           *gsiObject.IndexName,
+			"write_capacity": aws.Int64Value(gsiObject.ProvisionedThroughput.WriteCapacityUnits),
+			"read_capacity":  aws.Int64Value(gsiObject.ProvisionedThroughput.ReadCapacityUnits),
+			"name":           aws.StringValue(gsiObject.IndexName),
 		}
 
 		for _, attribute := range gsiObject.KeySchema {
-			if *attribute.KeyType == dynamodb.KeyTypeHash {
-				gsi["hash_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
+				gsi["hash_key"] = aws.StringValue(attribute.AttributeName)
 			}
 
-			if *attribute.KeyType == dynamodb.KeyTypeRange {
-				gsi["range_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				gsi["range_key"] = aws.StringValue(attribute.AttributeName)
 			}
 		}
 
-		gsi["projection_type"] = *(gsiObject.Projection.ProjectionType)
+		gsi["projection_type"] = aws.StringValue(gsiObject.Projection.ProjectionType)
 
-		nonKeyAttrs := make([]string, 0, len(gsiObject.Projection.NonKeyAttributes))
-		for _, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
-			nonKeyAttrs = append(nonKeyAttrs, *nonKeyAttr)
+		nonKeyAttrs := make([]string, len(gsiObject.Projection.NonKeyAttributes))
+		for i, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
+			nonKeyAttrs[i] = aws.StringValue(nonKeyAttr)
 		}
 		gsi["non_key_attributes"] = nonKeyAttrs
 
-		gsiList = append(gsiList, gsi)
+		gsiList[i] = gsi
 	}
 
 	if table.StreamSpecification != nil {
@@ -4206,7 +4104,7 @@ func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[strin
 		m := lsi.(map[string]interface{})
 		idxName := m["name"].(string)
 
-		// TODO: See https://github.com/terraform-providers/terraform-provider-aws/issues/3176
+		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
 		if _, ok := m["hash_key"]; !ok {
 			m["hash_key"] = keySchemaM["hash_key"]
 		}
@@ -4275,7 +4173,7 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 	}
 
 	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
-		projection.NonKeyAttributes = expandStringList(v.List())
+		projection.NonKeyAttributes = expandStringSet(v)
 	}
 
 	return projection
@@ -4370,7 +4268,7 @@ func flattenDynamoDbTableItemAttributes(attrs map[string]*dynamodb.AttributeValu
 
 func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
 	properties := &iot.ThingTypeProperties{
-		SearchableAttributes: expandStringList(config["searchable_attributes"].(*schema.Set).List()),
+		SearchableAttributes: expandStringSet(config["searchable_attributes"].(*schema.Set)),
 	}
 
 	if v, ok := config["description"]; ok && v.(string) != "" {
@@ -4803,6 +4701,65 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 
 			mListener := vListener.(map[string]interface{})
 
+			if vConnectionPool, ok := mListener["connection_pool"].([]interface{}); ok && len(vConnectionPool) > 0 && vConnectionPool[0] != nil {
+				mConnectionPool := vConnectionPool[0].(map[string]interface{})
+
+				connectionPool := &appmesh.VirtualNodeConnectionPool{}
+
+				if vGrpcConnectionPool, ok := mConnectionPool["grpc"].([]interface{}); ok && len(vGrpcConnectionPool) > 0 && vGrpcConnectionPool[0] != nil {
+					mGrpcConnectionPool := vGrpcConnectionPool[0].(map[string]interface{})
+
+					grpcConnectionPool := &appmesh.VirtualNodeGrpcConnectionPool{}
+
+					if vMaxRequests, ok := mGrpcConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						grpcConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Grpc = grpcConnectionPool
+				}
+
+				if vHttpConnectionPool, ok := mConnectionPool["http"].([]interface{}); ok && len(vHttpConnectionPool) > 0 && vHttpConnectionPool[0] != nil {
+					mHttpConnectionPool := vHttpConnectionPool[0].(map[string]interface{})
+
+					httpConnectionPool := &appmesh.VirtualNodeHttpConnectionPool{}
+
+					if vMaxConnections, ok := mHttpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+						httpConnectionPool.MaxConnections = aws.Int64(int64(vMaxConnections))
+					}
+					if vMaxPendingRequests, ok := mHttpConnectionPool["max_pending_requests"].(int); ok && vMaxPendingRequests > 0 {
+						httpConnectionPool.MaxPendingRequests = aws.Int64(int64(vMaxPendingRequests))
+					}
+
+					connectionPool.Http = httpConnectionPool
+				}
+
+				if vHttp2ConnectionPool, ok := mConnectionPool["http2"].([]interface{}); ok && len(vHttp2ConnectionPool) > 0 && vHttp2ConnectionPool[0] != nil {
+					mHttp2ConnectionPool := vHttp2ConnectionPool[0].(map[string]interface{})
+
+					http2ConnectionPool := &appmesh.VirtualNodeHttp2ConnectionPool{}
+
+					if vMaxRequests, ok := mHttp2ConnectionPool["max_requests"].(int); ok && vMaxRequests > 0 {
+						http2ConnectionPool.MaxRequests = aws.Int64(int64(vMaxRequests))
+					}
+
+					connectionPool.Http2 = http2ConnectionPool
+				}
+
+				if vTcpConnectionPool, ok := mConnectionPool["tcp"].([]interface{}); ok && len(vTcpConnectionPool) > 0 && vTcpConnectionPool[0] != nil {
+					mTcpConnectionPool := vTcpConnectionPool[0].(map[string]interface{})
+
+					tcpConnectionPool := &appmesh.VirtualNodeTcpConnectionPool{}
+
+					if vMaxConnections, ok := mTcpConnectionPool["max_connections"].(int); ok && vMaxConnections > 0 {
+						tcpConnectionPool.MaxConnections = aws.Int64(int64(vMaxConnections))
+					}
+
+					connectionPool.Tcp = tcpConnectionPool
+				}
+
+				listener.ConnectionPool = connectionPool
+			}
+
 			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &appmesh.HealthCheckPolicy{}
 
@@ -4833,6 +4790,29 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				listener.HealthCheck = healthCheck
 			}
 
+			if vOutlierDetection, ok := mListener["outlier_detection"].([]interface{}); ok && len(vOutlierDetection) > 0 && vOutlierDetection[0] != nil {
+				outlierDetection := &appmesh.OutlierDetection{}
+
+				mOutlierDetection := vOutlierDetection[0].(map[string]interface{})
+
+				if vMaxEjectionPercent, ok := mOutlierDetection["max_ejection_percent"].(int); ok && vMaxEjectionPercent > 0 {
+					outlierDetection.MaxEjectionPercent = aws.Int64(int64(vMaxEjectionPercent))
+				}
+				if vMaxServerErrors, ok := mOutlierDetection["max_server_errors"].(int); ok && vMaxServerErrors > 0 {
+					outlierDetection.MaxServerErrors = aws.Int64(int64(vMaxServerErrors))
+				}
+
+				if vBaseEjectionDuration, ok := mOutlierDetection["base_ejection_duration"].([]interface{}); ok {
+					outlierDetection.BaseEjectionDuration = expandAppmeshDuration(vBaseEjectionDuration)
+				}
+
+				if vInterval, ok := mOutlierDetection["interval"].([]interface{}); ok {
+					outlierDetection.Interval = expandAppmeshDuration(vInterval)
+				}
+
+				listener.OutlierDetection = outlierDetection
+			}
+
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				portMapping := &appmesh.PortMapping{}
 
@@ -4846,6 +4826,30 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				}
 
 				listener.PortMapping = portMapping
+			}
+
+			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+				mTimeout := vTimeout[0].(map[string]interface{})
+
+				listenerTimeout := &appmesh.ListenerTimeout{}
+
+				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
+					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
+				}
+
+				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
+					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
+				}
+
+				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
+					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
+				}
+
+				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
+					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
+				}
+
+				listener.Timeout = listenerTimeout
 			}
 
 			if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
@@ -4893,30 +4897,6 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 				}
 
 				listener.Tls = tls
-			}
-
-			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
-				mTimeout := vTimeout[0].(map[string]interface{})
-
-				listenerTimeout := &appmesh.ListenerTimeout{}
-
-				if vGrpcTimeout, ok := mTimeout["grpc"].([]interface{}); ok {
-					listenerTimeout.Grpc = expandAppmeshGrpcTimeout(vGrpcTimeout)
-				}
-
-				if vHttpTimeout, ok := mTimeout["http"].([]interface{}); ok {
-					listenerTimeout.Http = expandAppmeshHttpTimeout(vHttpTimeout)
-				}
-
-				if vHttp2Timeout, ok := mTimeout["http2"].([]interface{}); ok {
-					listenerTimeout.Http2 = expandAppmeshHttpTimeout(vHttp2Timeout)
-				}
-
-				if vTcpTimeout, ok := mTimeout["tcp"].([]interface{}); ok {
-					listenerTimeout.Tcp = expandAppmeshTcpTimeout(vTcpTimeout)
-				}
-
-				listener.Timeout = listenerTimeout
 			}
 
 			listeners = append(listeners, listener)
@@ -5044,6 +5024,41 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		listener := spec.Listeners[0]
 		mListener := map[string]interface{}{}
 
+		if connectionPool := listener.ConnectionPool; connectionPool != nil {
+			mConnectionPool := map[string]interface{}{}
+
+			if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
+				mGrpcConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
+			}
+
+			if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
+				mHttpConnectionPool := map[string]interface{}{
+					"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
+					"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
+				}
+				mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
+			}
+
+			if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
+				mHttp2ConnectionPool := map[string]interface{}{
+					"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
+				}
+				mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
+			}
+
+			if tcpConnectionPool := connectionPool.Tcp; tcpConnectionPool != nil {
+				mTcpConnectionPool := map[string]interface{}{
+					"max_connections": int(aws.Int64Value(tcpConnectionPool.MaxConnections)),
+				}
+				mConnectionPool["tcp"] = []interface{}{mTcpConnectionPool}
+			}
+
+			mListener["connection_pool"] = []interface{}{mConnectionPool}
+		}
+
 		if healthCheck := listener.HealthCheck; healthCheck != nil {
 			mHealthCheck := map[string]interface{}{
 				"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
@@ -5055,6 +5070,16 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 				"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
 			}
 			mListener["health_check"] = []interface{}{mHealthCheck}
+		}
+
+		if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
+			mOutlierDetection := map[string]interface{}{
+				"base_ejection_duration": flattenAppmeshDuration(outlierDetection.BaseEjectionDuration),
+				"interval":               flattenAppmeshDuration(outlierDetection.Interval),
+				"max_ejection_percent":   int(aws.Int64Value(outlierDetection.MaxEjectionPercent)),
+				"max_server_errors":      int(aws.Int64Value(outlierDetection.MaxServerErrors)),
+			}
+			mListener["outlier_detection"] = []interface{}{mOutlierDetection}
 		}
 
 		if portMapping := listener.PortMapping; portMapping != nil {
@@ -5467,69 +5492,74 @@ func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		}
 	}
 
-	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]interface{}); ok && len(vGrpcRouteMatch) > 0 && vGrpcRouteMatch[0] != nil {
+	if vGrpcRouteMatch, ok := mGrpcRoute["match"].([]interface{}); ok {
 		grpcRouteMatch := &appmesh.GrpcRouteMatch{}
 
-		mGrpcRouteMatch := vGrpcRouteMatch[0].(map[string]interface{})
+		// Empty match is allowed.
+		// https://github.com/hashicorp/terraform-provider-aws/issues/16816.
 
-		if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
-			grpcRouteMatch.MethodName = aws.String(vMethodName)
-		}
-		if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
-			grpcRouteMatch.ServiceName = aws.String(vServiceName)
-		}
+		if len(vGrpcRouteMatch) > 0 && vGrpcRouteMatch[0] != nil {
+			mGrpcRouteMatch := vGrpcRouteMatch[0].(map[string]interface{})
 
-		if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
-			grpcRouteMetadatas := []*appmesh.GrpcRouteMetadata{}
-
-			for _, vGrpcRouteMetadata := range vGrpcRouteMetadatas.List() {
-				grpcRouteMetadata := &appmesh.GrpcRouteMetadata{}
-
-				mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]interface{})
-
-				if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
-					grpcRouteMetadata.Invert = aws.Bool(vInvert)
-				}
-				if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
-					grpcRouteMetadata.Name = aws.String(vName)
-				}
-
-				if vMatch, ok := mGrpcRouteMetadata["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
-					grpcRouteMetadata.Match = &appmesh.GrpcRouteMetadataMatchMethod{}
-
-					mMatch := vMatch[0].(map[string]interface{})
-
-					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
-						grpcRouteMetadata.Match.Exact = aws.String(vExact)
-					}
-					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
-						grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
-					}
-					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
-						grpcRouteMetadata.Match.Regex = aws.String(vRegex)
-					}
-					if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
-						grpcRouteMetadata.Match.Suffix = aws.String(vSuffix)
-					}
-
-					if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
-						grpcRouteMetadata.Match.Range = &appmesh.MatchRange{}
-
-						mRange := vRange[0].(map[string]interface{})
-
-						if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
-							grpcRouteMetadata.Match.Range.End = aws.Int64(int64(vEnd))
-						}
-						if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
-							grpcRouteMetadata.Match.Range.Start = aws.Int64(int64(vStart))
-						}
-					}
-				}
-
-				grpcRouteMetadatas = append(grpcRouteMetadatas, grpcRouteMetadata)
+			if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
+				grpcRouteMatch.MethodName = aws.String(vMethodName)
+			}
+			if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
+				grpcRouteMatch.ServiceName = aws.String(vServiceName)
 			}
 
-			grpcRouteMatch.Metadata = grpcRouteMetadatas
+			if vGrpcRouteMetadatas, ok := mGrpcRouteMatch["metadata"].(*schema.Set); ok && vGrpcRouteMetadatas.Len() > 0 {
+				grpcRouteMetadatas := []*appmesh.GrpcRouteMetadata{}
+
+				for _, vGrpcRouteMetadata := range vGrpcRouteMetadatas.List() {
+					grpcRouteMetadata := &appmesh.GrpcRouteMetadata{}
+
+					mGrpcRouteMetadata := vGrpcRouteMetadata.(map[string]interface{})
+
+					if vInvert, ok := mGrpcRouteMetadata["invert"].(bool); ok {
+						grpcRouteMetadata.Invert = aws.Bool(vInvert)
+					}
+					if vName, ok := mGrpcRouteMetadata["name"].(string); ok && vName != "" {
+						grpcRouteMetadata.Name = aws.String(vName)
+					}
+
+					if vMatch, ok := mGrpcRouteMetadata["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						grpcRouteMetadata.Match = &appmesh.GrpcRouteMetadataMatchMethod{}
+
+						mMatch := vMatch[0].(map[string]interface{})
+
+						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+							grpcRouteMetadata.Match.Exact = aws.String(vExact)
+						}
+						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+							grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
+						}
+						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+							grpcRouteMetadata.Match.Regex = aws.String(vRegex)
+						}
+						if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+							grpcRouteMetadata.Match.Suffix = aws.String(vSuffix)
+						}
+
+						if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+							grpcRouteMetadata.Match.Range = &appmesh.MatchRange{}
+
+							mRange := vRange[0].(map[string]interface{})
+
+							if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+								grpcRouteMetadata.Match.Range.End = aws.Int64(int64(vEnd))
+							}
+							if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+								grpcRouteMetadata.Match.Range.Start = aws.Int64(int64(vStart))
+							}
+						}
+					}
+
+					grpcRouteMetadatas = append(grpcRouteMetadatas, grpcRouteMetadata)
+				}
+
+				grpcRouteMatch.Metadata = grpcRouteMetadatas
+			}
 		}
 
 		grpcRoute.Match = grpcRouteMatch
@@ -5552,19 +5582,8 @@ func expandAppmeshGrpcRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 			grpcRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
 		}
 
-		if vPerRetryTimeout, ok := mGrpcRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
-			perRetryTimeout := &appmesh.Duration{}
-
-			mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
-
-			if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
-				perRetryTimeout.Unit = aws.String(vUnit)
-			}
-			if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
-				perRetryTimeout.Value = aws.Int64(int64(vValue))
-			}
-
-			grpcRetryPolicy.PerRetryTimeout = perRetryTimeout
+		if vPerRetryTimeout, ok := mGrpcRetryPolicy["per_retry_timeout"].([]interface{}); ok {
+			grpcRetryPolicy.PerRetryTimeout = expandAppmeshDuration(vPerRetryTimeout)
 		}
 
 		if vTcpRetryEvents, ok := mGrpcRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
@@ -5590,34 +5609,12 @@ func expandAppmeshGrpcTimeout(vGrpcTimeout []interface{}) *appmesh.GrpcTimeout {
 
 	mGrpcTimeout := vGrpcTimeout[0].(map[string]interface{})
 
-	if vIdleTimeout, ok := mGrpcTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
-		idleTimeout := &appmesh.Duration{}
-
-		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
-
-		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
-			idleTimeout.Unit = aws.String(vUnit)
-		}
-		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
-			idleTimeout.Value = aws.Int64(int64(vValue))
-		}
-
-		grpcTimeout.Idle = idleTimeout
+	if vIdleTimeout, ok := mGrpcTimeout["idle"].([]interface{}); ok {
+		grpcTimeout.Idle = expandAppmeshDuration(vIdleTimeout)
 	}
 
-	if vPerRequestTimeout, ok := mGrpcTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
-		perRequestTimeout := &appmesh.Duration{}
-
-		mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
-
-		if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
-			perRequestTimeout.Unit = aws.String(vUnit)
-		}
-		if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
-			perRequestTimeout.Value = aws.Int64(int64(vValue))
-		}
-
-		grpcTimeout.PerRequest = perRequestTimeout
+	if vPerRequestTimeout, ok := mGrpcTimeout["per_request"].([]interface{}); ok {
+		grpcTimeout.PerRequest = expandAppmeshDuration(vPerRequestTimeout)
 	}
 
 	return grpcTimeout
@@ -5743,19 +5740,8 @@ func expandAppmeshHttpRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			httpRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
 		}
 
-		if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
-			perRetryTimeout := &appmesh.Duration{}
-
-			mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
-
-			if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
-				perRetryTimeout.Unit = aws.String(vUnit)
-			}
-			if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
-				perRetryTimeout.Value = aws.Int64(int64(vValue))
-			}
-
-			httpRetryPolicy.PerRetryTimeout = perRetryTimeout
+		if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok {
+			httpRetryPolicy.PerRetryTimeout = expandAppmeshDuration(vPerRetryTimeout)
 		}
 
 		if vTcpRetryEvents, ok := mHttpRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
@@ -5781,34 +5767,12 @@ func expandAppmeshHttpTimeout(vHttpTimeout []interface{}) *appmesh.HttpTimeout {
 
 	mHttpTimeout := vHttpTimeout[0].(map[string]interface{})
 
-	if vIdleTimeout, ok := mHttpTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
-		idleTimeout := &appmesh.Duration{}
-
-		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
-
-		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
-			idleTimeout.Unit = aws.String(vUnit)
-		}
-		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
-			idleTimeout.Value = aws.Int64(int64(vValue))
-		}
-
-		httpTimeout.Idle = idleTimeout
+	if vIdleTimeout, ok := mHttpTimeout["idle"].([]interface{}); ok {
+		httpTimeout.Idle = expandAppmeshDuration(vIdleTimeout)
 	}
 
-	if vPerRequestTimeout, ok := mHttpTimeout["per_request"].([]interface{}); ok && len(vPerRequestTimeout) > 0 && vPerRequestTimeout[0] != nil {
-		perRequestTimeout := &appmesh.Duration{}
-
-		mPerRequestTimeout := vPerRequestTimeout[0].(map[string]interface{})
-
-		if vUnit, ok := mPerRequestTimeout["unit"].(string); ok && vUnit != "" {
-			perRequestTimeout.Unit = aws.String(vUnit)
-		}
-		if vValue, ok := mPerRequestTimeout["value"].(int); ok && vValue > 0 {
-			perRequestTimeout.Value = aws.Int64(int64(vValue))
-		}
-
-		httpTimeout.PerRequest = perRequestTimeout
+	if vPerRequestTimeout, ok := mHttpTimeout["per_request"].([]interface{}); ok {
+		httpTimeout.PerRequest = expandAppmeshDuration(vPerRequestTimeout)
 	}
 
 	return httpTimeout
@@ -5866,22 +5830,30 @@ func expandAppmeshTcpTimeout(vTcpTimeout []interface{}) *appmesh.TcpTimeout {
 
 	mTcpTimeout := vTcpTimeout[0].(map[string]interface{})
 
-	if vIdleTimeout, ok := mTcpTimeout["idle"].([]interface{}); ok && len(vIdleTimeout) > 0 && vIdleTimeout[0] != nil {
-		idleTimeout := &appmesh.Duration{}
-
-		mIdleTimeout := vIdleTimeout[0].(map[string]interface{})
-
-		if vUnit, ok := mIdleTimeout["unit"].(string); ok && vUnit != "" {
-			idleTimeout.Unit = aws.String(vUnit)
-		}
-		if vValue, ok := mIdleTimeout["value"].(int); ok && vValue > 0 {
-			idleTimeout.Value = aws.Int64(int64(vValue))
-		}
-
-		tcpTimeout.Idle = idleTimeout
+	if vIdleTimeout, ok := mTcpTimeout["idle"].([]interface{}); ok {
+		tcpTimeout.Idle = expandAppmeshDuration(vIdleTimeout)
 	}
 
 	return tcpTimeout
+}
+
+func expandAppmeshDuration(vDuration []interface{}) *appmesh.Duration {
+	if len(vDuration) == 0 || vDuration[0] == nil {
+		return nil
+	}
+
+	duration := &appmesh.Duration{}
+
+	mDuration := vDuration[0].(map[string]interface{})
+
+	if vUnit, ok := mDuration["unit"].(string); ok && vUnit != "" {
+		duration.Unit = aws.String(vUnit)
+	}
+	if vValue, ok := mDuration["value"].(int); ok && vValue > 0 {
+		duration.Value = aws.Int64(int64(vValue))
+	}
+
+	return duration
 }
 
 func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
@@ -5974,16 +5946,8 @@ func flattenAppmeshGrpcRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 			"grpc_retry_events": flattenStringSet(grpcRetryPolicy.GrpcRetryEvents),
 			"http_retry_events": flattenStringSet(grpcRetryPolicy.HttpRetryEvents),
 			"max_retries":       int(aws.Int64Value(grpcRetryPolicy.MaxRetries)),
+			"per_retry_timeout": flattenAppmeshDuration(grpcRetryPolicy.PerRetryTimeout),
 			"tcp_retry_events":  flattenStringSet(grpcRetryPolicy.TcpRetryEvents),
-		}
-
-		if perRetryTimeout := grpcRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
-			mPerRetryTimeout := map[string]interface{}{
-				"unit":  aws.StringValue(perRetryTimeout.Unit),
-				"value": int(aws.Int64Value(perRetryTimeout.Value)),
-			}
-
-			mGrpcRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
 		}
 
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
@@ -5999,24 +5963,9 @@ func flattenAppmeshGrpcTimeout(grpcTimeout *appmesh.GrpcTimeout) []interface{} {
 		return []interface{}{}
 	}
 
-	mGrpcTimeout := map[string]interface{}{}
-
-	if idleTimeout := grpcTimeout.Idle; idleTimeout != nil {
-		mIdleTimeout := map[string]interface{}{
-			"unit":  aws.StringValue(idleTimeout.Unit),
-			"value": int(aws.Int64Value(idleTimeout.Value)),
-		}
-
-		mGrpcTimeout["idle"] = []interface{}{mIdleTimeout}
-	}
-
-	if perRequestTimeout := grpcTimeout.PerRequest; perRequestTimeout != nil {
-		mPerRequestTimeout := map[string]interface{}{
-			"unit":  aws.StringValue(perRequestTimeout.Unit),
-			"value": int(aws.Int64Value(perRequestTimeout.Value)),
-		}
-
-		mGrpcTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+	mGrpcTimeout := map[string]interface{}{
+		"idle":        flattenAppmeshDuration(grpcTimeout.Idle),
+		"per_request": flattenAppmeshDuration(grpcTimeout.PerRequest),
 	}
 
 	return []interface{}{mGrpcTimeout}
@@ -6096,16 +6045,8 @@ func flattenAppmeshHttpRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		mHttpRetryPolicy := map[string]interface{}{
 			"http_retry_events": flattenStringSet(httpRetryPolicy.HttpRetryEvents),
 			"max_retries":       int(aws.Int64Value(httpRetryPolicy.MaxRetries)),
+			"per_retry_timeout": flattenAppmeshDuration(httpRetryPolicy.PerRetryTimeout),
 			"tcp_retry_events":  flattenStringSet(httpRetryPolicy.TcpRetryEvents),
-		}
-
-		if perRetryTimeout := httpRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
-			mPerRetryTimeout := map[string]interface{}{
-				"unit":  aws.StringValue(perRetryTimeout.Unit),
-				"value": int(aws.Int64Value(perRetryTimeout.Value)),
-			}
-
-			mHttpRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
 		}
 
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
@@ -6121,24 +6062,9 @@ func flattenAppmeshHttpTimeout(httpTimeout *appmesh.HttpTimeout) []interface{} {
 		return []interface{}{}
 	}
 
-	mHttpTimeout := map[string]interface{}{}
-
-	if idleTimeout := httpTimeout.Idle; idleTimeout != nil {
-		mIdleTimeout := map[string]interface{}{
-			"unit":  aws.StringValue(idleTimeout.Unit),
-			"value": int(aws.Int64Value(idleTimeout.Value)),
-		}
-
-		mHttpTimeout["idle"] = []interface{}{mIdleTimeout}
-	}
-
-	if perRequestTimeout := httpTimeout.PerRequest; perRequestTimeout != nil {
-		mPerRequestTimeout := map[string]interface{}{
-			"unit":  aws.StringValue(perRequestTimeout.Unit),
-			"value": int(aws.Int64Value(perRequestTimeout.Value)),
-		}
-
-		mHttpTimeout["per_request"] = []interface{}{mPerRequestTimeout}
+	mHttpTimeout := map[string]interface{}{
+		"idle":        flattenAppmeshDuration(httpTimeout.Idle),
+		"per_request": flattenAppmeshDuration(httpTimeout.PerRequest),
 	}
 
 	return []interface{}{mHttpTimeout}
@@ -6182,18 +6108,24 @@ func flattenAppmeshTcpTimeout(tcpTimeout *appmesh.TcpTimeout) []interface{} {
 		return []interface{}{}
 	}
 
-	mTcpTimeout := map[string]interface{}{}
-
-	if idleTimeout := tcpTimeout.Idle; idleTimeout != nil {
-		mIdleTimeout := map[string]interface{}{
-			"unit":  aws.StringValue(idleTimeout.Unit),
-			"value": int(aws.Int64Value(idleTimeout.Value)),
-		}
-
-		mTcpTimeout["idle"] = []interface{}{mIdleTimeout}
+	mTcpTimeout := map[string]interface{}{
+		"idle": flattenAppmeshDuration(tcpTimeout.Idle),
 	}
 
 	return []interface{}{mTcpTimeout}
+}
+
+func flattenAppmeshDuration(duration *appmesh.Duration) []interface{} {
+	if duration == nil {
+		return []interface{}{}
+	}
+
+	mDuration := map[string]interface{}{
+		"unit":  aws.StringValue(duration.Unit),
+		"value": int(aws.Int64Value(duration.Value)),
+	}
+
+	return []interface{}{mDuration}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {

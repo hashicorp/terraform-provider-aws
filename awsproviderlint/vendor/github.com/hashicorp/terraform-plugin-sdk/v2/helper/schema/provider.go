@@ -11,9 +11,9 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
-	grpcpluginctx "github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin/context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -33,7 +33,7 @@ var ReservedProviderFields = []string{
 // Deprecated: The use of a global context is discouraged. Please use the new
 // context aware CRUD methods.
 func StopContext(ctx context.Context) (context.Context, bool) {
-	stopContext, ok := ctx.Value(grpcpluginctx.StopContextKey).(context.Context)
+	stopContext, ok := ctx.Value(StopContextKey).(context.Context)
 	return stopContext, ok
 }
 
@@ -466,4 +466,9 @@ func (p *Provider) UserAgent(name, version string) string {
 	}
 
 	return ua
+}
+
+// GRPCProvider returns a gRPC server, for use with terraform-plugin-mux.
+func (p *Provider) GRPCProvider() tfprotov5.ProviderServer {
+	return NewGRPCProviderServer(p)
 }

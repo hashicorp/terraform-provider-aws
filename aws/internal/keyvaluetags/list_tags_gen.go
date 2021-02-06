@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -78,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -92,9 +94,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
@@ -432,6 +436,23 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 	}
 
 	return CloudwatchlogsKeyValueTags(output.Tags), nil
+}
+
+// CodeartifactListTags lists codeartifact service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodeartifactListTags(conn *codeartifact.CodeArtifact, identifier string) (KeyValueTags, error) {
+	input := &codeartifact.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodeartifactKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
@@ -1374,6 +1395,23 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	return NeptuneKeyValueTags(output.TagList), nil
 }
 
+// NetworkfirewallListTags lists networkfirewall service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkfirewallListTags(conn *networkfirewall.NetworkFirewall, identifier string) (KeyValueTags, error) {
+	input := &networkfirewall.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkfirewallKeyValueTags(output.Tags), nil
+}
+
 // NetworkmanagerListTags lists networkmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1613,6 +1651,23 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 	return SfnKeyValueTags(output.Tags), nil
 }
 
+// SignerListTags lists signer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SignerListTags(conn *signer.Signer, identifier string) (KeyValueTags, error) {
+	input := &signer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SignerKeyValueTags(output.Tags), nil
+}
+
 // SnsListTags lists sns service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1663,6 +1718,24 @@ func SsmListTags(conn *ssm.SSM, identifier string, resourceType string) (KeyValu
 	}
 
 	return SsmKeyValueTags(output.TagList), nil
+}
+
+// SsoadminListTags lists ssoadmin service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SsoadminListTags(conn *ssoadmin.SSOAdmin, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &ssoadmin.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+		InstanceArn: aws.String(resourceType),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SsoadminKeyValueTags(output.Tags), nil
 }
 
 // StoragegatewayListTags lists storagegateway service tags.

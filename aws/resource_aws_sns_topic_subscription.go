@@ -9,14 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
-	"github.com/aws/aws-sdk-go/service/sns"
 )
 
 const awsSNSPendingConfirmationMessage = "pending confirmation"
@@ -112,7 +111,7 @@ func resourceAwsSnsTopicSubscriptionCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("New subscription ARN: %s", *output.SubscriptionArn)
-	d.SetId(*output.SubscriptionArn)
+	d.SetId(aws.StringValue(output.SubscriptionArn))
 
 	// Write the ARN to the 'arn' field for export
 	d.Set("arn", output.SubscriptionArn)

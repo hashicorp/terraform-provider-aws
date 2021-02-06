@@ -84,10 +84,12 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>codecommit</code></li>
   <li><code>codedeploy</code></li>
   <li><code>codepipeline</code></li>
+  <li><code>codestarconnections</code></li>
   <li><code>codestarnotifications</code></li>
   <li><code>cognitoidentity</code></li>
   <li><code>cognitoidp</code></li>
   <li><code>configservice</code></li>
+  <li><code>connect</code></li>
   <li><code>cur</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
@@ -102,6 +104,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
   <li><code>ecr</code></li>
+  <li><code>ecrpublic</code></li>
   <li><code>ecs</code></li>
   <li><code>efs</code></li>
   <li><code>eks</code></li>
@@ -110,6 +113,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>elastictranscoder</code></li>
   <li><code>elb</code></li>
   <li><code>emr</code></li>
+  <li><code>emrcontainers</code></li>
   <li><code>es</code></li>
   <li><code>firehose</code></li>
   <li><code>fms</code></li>
@@ -150,7 +154,9 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediastore</code></li>
   <li><code>mediastoredata</code></li>
   <li><code>mq</code></li>
+  <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
@@ -158,6 +164,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>personalize</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pricing</code></li>
+  <li><code>prometheusservice</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
@@ -181,6 +188,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
   <li><code>shield</code></li>
+  <li><code>signer</code></li>
   <li><code>sns</code></li>
   <li><code>sqs</code></li>
   <li><code>ssm</code></li>
