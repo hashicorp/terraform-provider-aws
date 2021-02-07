@@ -15,9 +15,9 @@ func TestAccDataSourceAwsRoute53Zones_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsVpcsConfig(),
+				Config: testAccDataSourceAwsRoute53ZonesConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsVpcsDataSourceExists("data.aws_vpcs.all"),
+					testAccCheckAwsRoute53ZonesDataSourceExists("data.aws_route53_zones.all"),
 				),
 			},
 		},
@@ -92,11 +92,11 @@ func testAccCheckAwsRoute53ZonesDataSourceExists(n string) resource.TestCheckFun
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Can't find aws_vpcs data source: %s", n)
+			return fmt.Errorf("Can't find aws_routet53_zones data source: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("aws_vpcs data source ID not set")
+			return fmt.Errorf("aws_routet53_zones data source ID not set")
 		}
 		return nil
 	}
@@ -104,11 +104,11 @@ func testAccCheckAwsRoute53ZonesDataSourceExists(n string) resource.TestCheckFun
 
 func testAccDataSourceAwsRoute53ZonesConfig() string {
 	return `
-resource "aws_vpc" "test-vpc" {
-  cidr_block = "10.0.0.0/24"
+resource "aws_route53_zone" "test-zone" {
+  name = "terraform-test.com."
 }
 
-data "aws_vpcs" "all" {}
+data "aws_route53_zones" "all" {}
 `
 }
 
