@@ -55,18 +55,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `ami_distribution_configuration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
+* `ami_distribution_configuration` - (Required) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
 * `license_configuration_arns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 
 ### ami_distribution_configuration
 
 The following arguments are optional:
 
+* `name` - (Required) Name to apply to the distributed AMI. The EC2 AMI name must contain '{{ imagebuilder:buildDate }}' to ensure that the name will be unique.
 * `ami_tags` - (Optional) Key-value map of tags to apply to the distributed AMI.
 * `description` - (Optional) Description to apply to the distributed AMI.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key to encrypt the distributed AMI.
 * `launch_permission` - (Optional) Configuration block of EC2 launch permissions to apply to the distributed AMI. Detailed below.
-* `name` - (Optional) Name to apply to the distributed AMI.
 * `target_account_ids` - (Optional) Set of AWS Account identifiers to distribute the AMI.
 
 ### launch_permission
