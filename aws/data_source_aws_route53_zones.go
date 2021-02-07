@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -35,7 +36,7 @@ func dataSourceAwsRoute53ZonesRead(d *schema.ResourceData, meta interface{}) err
 
 	zoneIds := make([]string, 0)
 	for _, zone := range res.HostedZones {
-		zoneIds = append(zoneIds, aws.StringValue(zone.Id)) // TODO There is a unexpected "/hostedzone/" prefix
+		zoneIds = append(zoneIds, aws.StringValue(zone.Id))
 	}
 
 	d.SetId(meta.(*AWSClient).region)
