@@ -81,7 +81,7 @@ The AWS Go SDK middleware provides hooks for injecting custom logic in the servi
 
 ```go
 client.kafkaconn.Handlers.Retry.PushBack(func(r *request.Request) {
-	if tfaws.ErrorMessageContains(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
+	if tfawserr.ErrMessageContains(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
 		r.Retryable = aws.Bool(true)
 	}
 })
