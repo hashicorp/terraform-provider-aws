@@ -1,8 +1,9 @@
 ## 3.28.0 (Unreleased)
 
-ENHANCEMENTS: 
+ENHANCEMENTS:
 
-* resource/aws_sns_topic_subscription: Add `redrive_policy` argument [GH-11770]
+* provider: Add terraform-provider-aws version to HTTP User-Agent header ([#17486](https://github.com/hashicorp/terraform-provider-aws/issues/17486))
+* resource/aws_sns_topic_subscription: Add `redrive_policy` argument ([#11770](https://github.com/hashicorp/terraform-provider-aws/issues/11770))
 
 ## 3.27.0 (February 05, 2021)
 
