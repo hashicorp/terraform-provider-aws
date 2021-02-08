@@ -109,7 +109,7 @@ data "aws_iam_policy_document" "inline_policy" {
 
 ### Example of Removing Inline Policies
 
-This example creates an IAM role with an empty IAM `inline_policy` argument. If someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
+This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
 
 ```hcl
@@ -186,45 +186,43 @@ resource "aws_iam_role" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following argument is required:
 
-* `name` - (Optional, Forces new resource) The name of the role. If omitted, Terraform will assign a random, unique name.
-* `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `assume_role_policy` - (Required) The policy that grants an entity permission to assume the role.
+* `assume_role_policy` - (Required) Policy that grants an entity permission to assume the role.
 
-~> **NOTE:** This `assume_role_policy` is very similar but slightly different than just a standard IAM policy and cannot use an `aws_iam_policy` resource.  It _can_ however, use an `aws_iam_policy_document` [data source](/docs/providers/aws/d/iam_policy_document.html), see example below for how this could work.
+~> **NOTE:** The `assume_role_policy` is very similar to but slightly different than a standard IAM policy and cannot use an `aws_iam_policy` resource.  However, it _can_ use an `aws_iam_policy_document` [data source](/docs/providers/aws/d/iam_policy_document.html). See the example above of how this works.
 
-* `force_detach_policies` - (Optional) Specifies to force detaching any policies the role has before destroying it. Defaults to `false`.
-* `path` - (Optional) The path to the role.
-  See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
-* `description` - (Optional) The description of the role.
+The following arguments are optional:
 
-* `max_session_duration` - (Optional) The maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
-* `permissions_boundary` - (Optional) The ARN of the policy that is used to set the permissions boundary for the role.
+* `description` - (Optional) Description of the role.
+* `force_detach_policies` - (Optional) Whether to force detaching any policies the role has before destroying it. Defaults to `false`.
+* `inline_policy` - (Optional) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. Defined below.
+* `managed_policy_arns` - (Optional) Set of exclusive IAM managed policy ARNs to attach to the IAM role. When a configuration does not include this attribute, Terraform will ignore out-of-band policy attachments on the next `apply`. However, when you include it, Terraform will, on the next `apply`, align the role's attachments with the set by attaching or detaching managed policies. This includes detaching all out-of-band attachments when you include an empty set (i.e., `managed_policy_arns = []`).
+* `max_session_duration` - (Optional) Maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
+* `name` - (Optional, Forces new resource) Friendly name of the role. If omitted, Terraform will assign a random, unique name. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
+* `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
+* `permissions_boundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
 * `tags` - Key-value mapping of tags for the IAM role
-* `managed_policy_arns` - (Optional) An exclusive set of IAM managed policy ARNs to attach to the IAM role. If the attribute is not used, the resource will not attach or detach the role's managed policies on the next `apply`. If the set is empty, all managed policies that are attached out of band, will be detached on the next `apply`.
-
-~> **NOTE:** The `managed_policy_arns` attribute, which provides an _exclusive_ set of managed policies for an IAM role, will conflict with using the `iam_role_policy_attachment` resource, which provides non-exclusive, managed policy-role attachment. See [`iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html).
-
-* `inline_policy` - (Optional) An exclusive set of IAM inline policies associated with the IAM role.  If the attribute is not used, the resource will ignore the role's inline policy changes on the next `apply`. Using one empty `inline_policy` attribute (i.e., `inline_policy = []`) will cause Terraform to remove any inline policies added out of band, on the next `apply`.
 
 ### inline_policy
 
-The following arguments are supported:
+If the `inline_policy` configuration block is not used, Terraform will ignore the role's inline policy changes on the next `apply`. Using an `inline_policy` like an empty attribute (i.e., `inline_policy = []`) will cause Terraform to remove any inline policies that were added out-of-band on the next `apply`.
 
-* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://www.terraform.io/docs/providers/aws/guides/iam-policy-documents.html).
-* `name` - (Required) The name of the role policy.
+This configuration block supports the following:
+
+* `name` - (Required) Name of the role policy.
+* `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://www.terraform.io/docs/providers/aws/guides/iam-policy-documents.html).
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+In addition to the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) specifying the role.
-* `create_date` - The creation date of the IAM role.
-* `description` - The description of the role.
-* `id` - The name of the role.
-* `name` - The name of the role.
-* `unique_id` - The stable and unique string identifying the role.
+* `arn` - Amazon Resource Name (ARN) specifying the role.
+* `create_date` - Creation date of the IAM role.
+* `id` - Name of the role.
+* `name` - Name of the role.
+* `unique_id` - Stable and unique string identifying the role.
 
 ## Import
 
