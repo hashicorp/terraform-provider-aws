@@ -75,7 +75,7 @@ func testSweepCognitoUserPoolDomains(region string) error {
 
 func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -106,7 +106,7 @@ func TestAccAWSCognitoUserPoolDomain_basic(t *testing.T) {
 func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -142,7 +142,7 @@ func TestAccAWSCognitoUserPoolDomain_custom(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolDomain_disappears(t *testing.T) {
 	domainName := fmt.Sprintf("tf-acc-test-domain-%d", acctest.RandInt())
-	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_pool_domain.main"
 
 	resource.ParallelTest(t, resource.TestCase{

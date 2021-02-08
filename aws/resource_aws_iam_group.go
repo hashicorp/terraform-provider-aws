@@ -61,7 +61,7 @@ func resourceAwsIamGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Group %s: %s", name, err)
 	}
-	d.SetId(*createResp.Group.GroupName)
+	d.SetId(aws.StringValue(createResp.Group.GroupName))
 
 	return resourceAwsIamGroupReadResult(d, createResp.Group)
 }

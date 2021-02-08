@@ -359,6 +359,50 @@ func TestValidateArn(t *testing.T) {
 	}
 }
 
+func TestValidatePrincipal(t *testing.T) {
+	v := ""
+	_, errors := validatePrincipal(v, "arn")
+	if len(errors) == 0 {
+		t.Fatalf("%q should not be validated as a principal %d: %q", v, len(errors), errors)
+	}
+
+	validNames := []string{
+		"IAM_ALLOWED_PRINCIPALS", // Special principal
+		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
+		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
+		"arn:aws-us-gov:iam:us-west-2:357342307427:role/tf-acc-test-3217321001347236965", // lintignore:AWSAT003,AWSAT005 // Non-global IAM Role?
+		"arn:aws:iam:us-east-1:123456789012:user/David",                                  // lintignore:AWSAT003,AWSAT005 // Non-global IAM User?
+	}
+	for _, v := range validNames {
+		_, errors := validatePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
+		"arn",
+		"123456789012",
+		"arn:aws",
+		"arn:aws:logs",            //lintignore:AWSAT005
+		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
+		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // not a user or role
+		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // not a user or role
+		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // not a user or role
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // not a user or role
+		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // not a user or role
+		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // not a user or role
+		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // not a user or role
+	}
+	for _, v := range invalidNames {
+		_, errors := validatePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid principal", v)
+		}
+	}
+}
+
 func TestValidateEC2AutomateARN(t *testing.T) {
 	validNames := []string{
 		"arn:aws:automate:us-east-1:ec2:reboot",    //lintignore:AWSAT003,AWSAT005
@@ -555,6 +599,23 @@ func TestCanonicalCidrBlock(t *testing.T) {
 		{"::0/0", "::/0"},
 		{"2001::/15", "2000::/15"},
 		{"2001:db8::1/120", "2001:db8::/120"},
+		{"", ""},
+	} {
+		got := canonicalCidrBlock(ts.cidr)
+		if ts.expected != got {
+			t.Fatalf("canonicalCidrBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
+		}
+	}
+}
+
+func Test_canonicalCidrBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr     string
+		expected string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"::/0", "::/0"},
+		{"::0/0", "::/0"},
 		{"", ""},
 	} {
 		got := canonicalCidrBlock(ts.cidr)
@@ -2135,7 +2196,7 @@ func TestValidateCognitoIdentityProvidersProviderName(t *testing.T) {
 		"foo:bar",
 		"foo/bar",
 		"foo-bar",
-		"cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu",
+		"cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu", //lintignore:AWSAT003
 		strings.Repeat("W", 128),
 	}
 
@@ -2655,8 +2716,8 @@ func TestValidateCognitoUserGroupName(t *testing.T) {
 
 func TestValidateCognitoUserPoolId(t *testing.T) {
 	validValues := []string{
-		"eu-west-1_Foo123",
-		"ap-southeast-2_BaRBaz987",
+		"eu-west-1_Foo123",         //lintignore:AWSAT003
+		"ap-southeast-2_BaRBaz987", //lintignore:AWSAT003
 	}
 
 	for _, s := range validValues {
@@ -2669,8 +2730,8 @@ func TestValidateCognitoUserPoolId(t *testing.T) {
 	invalidValues := []string{
 		"",
 		"foo",
-		"us-east-1-Foo123",
-		"eu-central-2_Bar+4",
+		"us-east-1-Foo123",   //lintignore:AWSAT003
+		"eu-central-2_Bar+4", //lintignore:AWSAT003
 	}
 
 	for _, s := range invalidValues {

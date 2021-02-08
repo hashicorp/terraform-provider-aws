@@ -31,6 +31,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(45 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(45 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -273,7 +274,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating FSx filesystem: %s", err)
 	}
 
-	d.SetId(*result.FileSystem.FileSystemId)
+	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
 	log.Println("[DEBUG] Waiting for filesystem to become available")
 
@@ -334,12 +335,13 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 	if requestUpdate {
 		_, err := conn.UpdateFileSystem(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating FSx Windows File System (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForFsxFileSystemUpdateOptimizing(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("Error waiting for filesystem (%s) to become available: %w", d.Id(), err)
+		if err := waitForFsxFileSystemUpdateAdministrativeActionsStatusFileSystemUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx Windows File System (%s) update: %w", d.Id(), err)
 		}
 	}
 

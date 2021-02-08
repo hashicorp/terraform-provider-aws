@@ -80,6 +80,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "directory_type", workspaces.WorkspaceDirectoryTypeSimpleAd),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
@@ -88,8 +89,16 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-directory-%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
@@ -250,6 +259,40 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 	})
 }
 
+func TestAccAwsWorkspacesDirectory_workspaceAccessProperties(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectory_workspaceAccessProperties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_osx", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "DENY"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "DENY"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	rName := acctest.RandString(8)
@@ -278,6 +321,55 @@ func TestAccAwsWorkspacesDirectory_workspaceCreationProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_maintenance_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWorkspacesDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+
+	resourceName := "aws_workspaces_directory.main"
+	resourceSecurityGroup := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckWorkspacesDirectory(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+			testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole")
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
+				),
+			},
+			{
+				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Present(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+				),
+			},
+			{
+				Config: testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.custom_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.default_ou"),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -323,6 +415,267 @@ func TestAccAwsWorkspacesDirectory_ipGroupIds(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestExpandSelfServicePermissions(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.SelfservicePermissions
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"change_compute_type":  false,
+					"increase_volume_size": false,
+					"rebuild_workspace":    true,
+					"restart_workspace":    true,
+					"switch_running_mode":  true,
+				},
+			},
+			expected: &workspaces.SelfservicePermissions{
+				ChangeComputeType:  aws.String(workspaces.ReconnectEnumDisabled),
+				IncreaseVolumeSize: aws.String(workspaces.ReconnectEnumDisabled),
+				RebuildWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
+				RestartWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
+				SwitchRunningMode:  aws.String(workspaces.ReconnectEnumEnabled),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandSelfServicePermissions(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenSelfServicePermissions(t *testing.T) {
+	cases := []struct {
+		input    *workspaces.SelfservicePermissions
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &workspaces.SelfservicePermissions{
+				ChangeComputeType:  aws.String(workspaces.ReconnectEnumDisabled),
+				IncreaseVolumeSize: aws.String(workspaces.ReconnectEnumDisabled),
+				RebuildWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
+				RestartWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
+				SwitchRunningMode:  aws.String(workspaces.ReconnectEnumEnabled),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"change_compute_type":  false,
+					"increase_volume_size": false,
+					"rebuild_workspace":    true,
+					"restart_workspace":    true,
+					"switch_running_mode":  true,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := flattenSelfServicePermissions(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestExpandWorkspaceAccessProperties(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.WorkspaceAccessProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"device_type_android":    "ALLOW",
+					"device_type_chromeos":   "ALLOW",
+					"device_type_ios":        "ALLOW",
+					"device_type_osx":        "ALLOW",
+					"device_type_web":        "DENY",
+					"device_type_windows":    "DENY",
+					"device_type_zeroclient": "DENY",
+				},
+			},
+			expected: &workspaces.WorkspaceAccessProperties{
+				DeviceTypeAndroid:    aws.String("ALLOW"),
+				DeviceTypeChromeOs:   aws.String("ALLOW"),
+				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeOsx:        aws.String("ALLOW"),
+				DeviceTypeWeb:        aws.String("DENY"),
+				DeviceTypeWindows:    aws.String("DENY"),
+				DeviceTypeZeroClient: aws.String("DENY"),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandWorkspaceAccessProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenWorkspaceAccessProperties(t *testing.T) {
+	cases := []struct {
+		input    *workspaces.WorkspaceAccessProperties
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &workspaces.WorkspaceAccessProperties{
+				DeviceTypeAndroid:    aws.String("ALLOW"),
+				DeviceTypeChromeOs:   aws.String("ALLOW"),
+				DeviceTypeIos:        aws.String("ALLOW"),
+				DeviceTypeOsx:        aws.String("ALLOW"),
+				DeviceTypeWeb:        aws.String("DENY"),
+				DeviceTypeWindows:    aws.String("DENY"),
+				DeviceTypeZeroClient: aws.String("DENY"),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"device_type_android":    "ALLOW",
+					"device_type_chromeos":   "ALLOW",
+					"device_type_ios":        "ALLOW",
+					"device_type_osx":        "ALLOW",
+					"device_type_web":        "DENY",
+					"device_type_windows":    "DENY",
+					"device_type_zeroclient": "DENY",
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := flattenWorkspaceAccessProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestExpandWorkspaceCreationProperties(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.WorkspaceCreationProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"custom_security_group_id":            "sg-123456789012",
+					"default_ou":                          "OU=AWS,DC=Workgroup,DC=Example,DC=com",
+					"enable_internet_access":              true,
+					"enable_maintenance_mode":             true,
+					"user_enabled_as_local_administrator": true,
+				},
+			},
+			expected: &workspaces.WorkspaceCreationProperties{
+				CustomSecurityGroupId:           aws.String("sg-123456789012"),
+				DefaultOu:                       aws.String("OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+				EnableInternetAccess:            aws.Bool(true),
+				EnableMaintenanceMode:           aws.Bool(true),
+				UserEnabledAsLocalAdministrator: aws.Bool(true),
+			},
+		},
+		// Without Custom Security Group ID & Default OU
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"custom_security_group_id":            "",
+					"default_ou":                          "",
+					"enable_internet_access":              true,
+					"enable_maintenance_mode":             true,
+					"user_enabled_as_local_administrator": true,
+				},
+			},
+			expected: &workspaces.WorkspaceCreationProperties{
+				CustomSecurityGroupId:           nil,
+				DefaultOu:                       nil,
+				EnableInternetAccess:            aws.Bool(true),
+				EnableMaintenanceMode:           aws.Bool(true),
+				UserEnabledAsLocalAdministrator: aws.Bool(true),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandWorkspaceCreationProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestFlattenWorkspaceCreationProperties(t *testing.T) {
+	cases := []struct {
+		input    *workspaces.DefaultWorkspaceCreationProperties
+		expected []interface{}
+	}{
+		// Empty
+		{
+			input:    nil,
+			expected: []interface{}{},
+		},
+		// Full
+		{
+			input: &workspaces.DefaultWorkspaceCreationProperties{
+				CustomSecurityGroupId:           aws.String("sg-123456789012"),
+				DefaultOu:                       aws.String("OU=AWS,DC=Workgroup,DC=Example,DC=com"),
+				EnableInternetAccess:            aws.Bool(true),
+				EnableMaintenanceMode:           aws.Bool(true),
+				UserEnabledAsLocalAdministrator: aws.Bool(true),
+			},
+			expected: []interface{}{
+				map[string]interface{}{
+					"custom_security_group_id":            "sg-123456789012",
+					"default_ou":                          "OU=AWS,DC=Workgroup,DC=Example,DC=com",
+					"enable_internet_access":              true,
+					"enable_maintenance_mode":             true,
+					"user_enabled_as_local_administrator": true,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := flattenWorkspaceCreationProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
 }
 
 func testAccPreCheckHasIAMRole(t *testing.T, roleName string) {
@@ -406,84 +759,6 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 	}
 }
 
-func TestExpandSelfServicePermissions(t *testing.T) {
-	cases := []struct {
-		input    []interface{}
-		expected *workspaces.SelfservicePermissions
-	}{
-		// Empty
-		{
-			input:    []interface{}{},
-			expected: nil,
-		},
-		// Full
-		{
-			input: []interface{}{
-				map[string]interface{}{
-					"change_compute_type":  false,
-					"increase_volume_size": false,
-					"rebuild_workspace":    true,
-					"restart_workspace":    true,
-					"switch_running_mode":  true,
-				},
-			},
-			expected: &workspaces.SelfservicePermissions{
-				ChangeComputeType:  aws.String(workspaces.ReconnectEnumDisabled),
-				IncreaseVolumeSize: aws.String(workspaces.ReconnectEnumDisabled),
-				RebuildWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
-				RestartWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
-				SwitchRunningMode:  aws.String(workspaces.ReconnectEnumEnabled),
-			},
-		},
-	}
-
-	for _, c := range cases {
-		actual := expandSelfServicePermissions(c.input)
-		if !reflect.DeepEqual(actual, c.expected) {
-			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
-		}
-	}
-}
-
-func TestFlattenSelfServicePermissions(t *testing.T) {
-	cases := []struct {
-		input    *workspaces.SelfservicePermissions
-		expected []interface{}
-	}{
-		// Empty
-		{
-			input:    nil,
-			expected: []interface{}{},
-		},
-		// Full
-		{
-			input: &workspaces.SelfservicePermissions{
-				ChangeComputeType:  aws.String(workspaces.ReconnectEnumDisabled),
-				IncreaseVolumeSize: aws.String(workspaces.ReconnectEnumDisabled),
-				RebuildWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
-				RestartWorkspace:   aws.String(workspaces.ReconnectEnumEnabled),
-				SwitchRunningMode:  aws.String(workspaces.ReconnectEnumEnabled),
-			},
-			expected: []interface{}{
-				map[string]interface{}{
-					"change_compute_type":  false,
-					"increase_volume_size": false,
-					"rebuild_workspace":    true,
-					"restart_workspace":    true,
-					"switch_running_mode":  true,
-				},
-			},
-		},
-	}
-
-	for _, c := range cases {
-		actual := flattenSelfServicePermissions(c.input)
-		if !reflect.DeepEqual(actual, c.expected) {
-			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
-		}
-	}
-}
-
 func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 
@@ -501,17 +776,11 @@ func testAccPreCheckWorkspacesDirectory(t *testing.T) {
 }
 
 func testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		//lintignore:AWSAT003
+		fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 locals {
   region_workspaces_az_ids = {
@@ -563,25 +832,31 @@ resource "aws_directory_service_directory" "main" {
     Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfig(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectory_selfServicePermissions(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
 
@@ -592,18 +867,27 @@ resource "aws_workspaces_directory" "main" {
     restart_workspace    = false
     switch_running_mode  = true
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfig_subnetIds(rName string) string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName), `
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = aws_directory_service_directory.main.id
   subnet_ids   = [aws_subnet.primary.id, aws_subnet.secondary.id]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
-`)
+`, rName))
 }
 
 func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -635,6 +919,30 @@ resource "aws_workspaces_directory" "main" {
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
+func testAccWorkspacesDirectory_workspaceAccessProperties(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_access_properties {
+    device_type_android    = "ALLOW"
+    device_type_chromeos   = "ALLOW"
+    device_type_ios        = "ALLOW"
+    device_type_osx        = "ALLOW"
+    device_type_web        = "DENY"
+    device_type_windows    = "DENY"
+    device_type_zeroclient = "DENY"
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
 func testAccWorkspacesDirectoryConfig_workspaceCreationProperties(rName string) string {
 	return composeConfig(
 		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
@@ -654,6 +962,57 @@ resource "aws_workspaces_directory" "main" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Absent(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_creation_properties {
+    enable_internet_access              = true
+    enable_maintenance_mode             = false
+    user_enabled_as_local_administrator = false
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
+}
+`, rName))
+}
+
+func testAccWorkspacesDirectoryConfig_workspaceCreationProperties_customSecurityGroupId_defaultOu_Present(rName string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.main.id
+  name   = "tf-acctest-%[1]s"
+}
+
+resource "aws_workspaces_directory" "main" {
+  directory_id = aws_directory_service_directory.main.id
+
+  workspace_creation_properties {
+    custom_security_group_id            = aws_security_group.test.id
+    default_ou                          = "OU=AWS,DC=Workgroup,DC=Example,DC=com"
+    enable_internet_access              = true
+    enable_maintenance_mode             = false
+    user_enabled_as_local_administrator = false
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
@@ -672,6 +1031,10 @@ resource "aws_workspaces_directory" "test" {
   ip_group_ids = [
     aws_workspaces_ip_group.test_alpha.id
   ]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }
@@ -695,6 +1058,10 @@ resource "aws_workspaces_directory" "test" {
     aws_workspaces_ip_group.test_beta.id,
     aws_workspaces_ip_group.test_gamma.id
   ]
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
+  }
 }
 `, rName))
 }

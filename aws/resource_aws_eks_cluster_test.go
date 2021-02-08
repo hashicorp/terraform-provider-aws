@@ -89,6 +89,8 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity.0.oidc.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "identity.0.oidc.0.issuer", regexp.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", eks.ClusterStatusActive),
@@ -423,6 +425,68 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksCluster_NetworkConfig_ServiceIpv4Cidr(t *testing.T) {
+	var cluster1, cluster2 eks.Cluster
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"10.0.0.0/11"`),
+				ExpectError: regexp.MustCompile(`expected .* to contain a network Value with between`),
+			},
+			{
+				Config:      testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"10.0.0.0/25"`),
+				ExpectError: regexp.MustCompile(`expected .* to contain a network Value with between`),
+			},
+			{
+				Config:      testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"9.0.0.0/16"`),
+				ExpectError: regexp.MustCompile(`must be within`),
+			},
+			{
+				Config:      testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"172.14.0.0/24"`),
+				ExpectError: regexp.MustCompile(`must be within`),
+			},
+			{
+				Config:      testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"192.167.0.0/24"`),
+				ExpectError: regexp.MustCompile(`must be within`),
+			},
+			{
+				Config: testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"192.168.0.0/24"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "192.168.0.0/24"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:             testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"192.168.0.0/24"`),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				Config: testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName, `"192.168.1.0/24"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "192.168.1.0/24"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEksClusterExists(resourceName string, cluster *eks.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -488,6 +552,16 @@ func testAccCheckAWSEksClusterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSEksClusterRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreatedAt) == aws.TimeValue(j.CreatedAt) {
+			return errors.New("EKS Cluster was not recreated")
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
@@ -765,4 +839,23 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, publicAccessCidr))
+}
+
+func testAccAWSEksClusterConfig_NetworkConfig_ServiceIpv4Cidr(rName string, serviceIpv4Cidr string) string {
+	return composeConfig(testAccAWSEksClusterConfig_Base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %q
+  role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  kubernetes_network_config {
+    service_ipv4_cidr = %s
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, serviceIpv4Cidr))
 }

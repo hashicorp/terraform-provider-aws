@@ -77,13 +77,14 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Default:  "HTTP1",
+				Computed: true,
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
 				ValidateFunc: validation.StringInSlice([]string{
-					"GRPC",
 					"HTTP1",
 					"HTTP2",
+					"GRPC",
 				}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Get("target_type").(string) == elbv2.TargetTypeEnumLambda {
@@ -688,6 +689,10 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		d.Set("protocol", targetGroup.Protocol)
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
+	switch d.Get("protocol").(string) {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
 		return fmt.Errorf("error setting health_check: %s", err)
@@ -783,7 +788,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 
-	// Network Load Balancers have many special qwirks to them.
+	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})

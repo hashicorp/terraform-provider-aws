@@ -1094,7 +1094,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
+func TestAccAWSSecurityGroup_Name_Generated(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1104,10 +1104,94 @@ func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupPrefixNameConfig("tf-acc-test-prefix-"),
+				Config: testAccAWSSecurityGroupConfig_generatedName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
+func TestAccAWSSecurityGroup_Name_TerraformPrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigName("terraform-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_NamePrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigNamePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
+func TestAccAWSSecurityGroup_NamePrefix_TerraformPrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigNamePrefix("terraform-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-test"),
 				),
 			},
 			{
@@ -1450,32 +1534,6 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 						"to_port":           "8000",
 					}),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSecurityGroupConfig_generatedName,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -3380,7 +3438,24 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccAWSSecurityGroupPrefixNameConfig(namePrefix string) string {
+func testAccAWSSecurityGroupConfigName(name string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-security-group-name"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+`, name)
+}
+
+func testAccAWSSecurityGroupConfigNamePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

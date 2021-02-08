@@ -210,10 +210,12 @@ large files efficiently.
 
 ## Argument Reference
 
-* `filename` - (Optional) The path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
-* `s3_bucket` - (Optional) The S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
-* `s3_key` - (Optional) The S3 key of an object containing the function's deployment package. Conflicts with `filename`.
-* `s3_object_version` - (Optional) The object version containing the function's deployment package. Conflicts with `filename`.
+* `filename` - (Optional) The path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options and `image_uri` cannot be used.
+* `s3_bucket` - (Optional) The S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. This bucket must reside in the same AWS region where you are creating the Lambda function.
+* `s3_key` - (Optional) The S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
+* `s3_object_version` - (Optional) The object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
+* `image_uri` - (Optional) The ECR image URI containing the function's deployment package. Conflicts with `filename`, `s3_bucket`, `s3_key`, and `s3_object_version`.
+* `package_type` - (Optional) The Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `function_name` - (Required) A unique name for your Lambda Function.
 * `dead_letter_config` - (Optional) Nested block to configure the function's *dead letter queue*. See details below.
 * `handler` - (Required) The function [entrypoint][3] in your code.
@@ -221,7 +223,7 @@ large files efficiently.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
-* `runtime` - (Required) See [Runtimes][6] for valid values.
+* `runtime` - (Optional) See [Runtimes][6] for valid values.
 * `timeout` - (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
 * `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
@@ -232,6 +234,7 @@ large files efficiently.
 * `tags` - (Optional) A map of tags to assign to the object.
 * `file_system_config` - (Optional) The connection settings for an EFS file system. Fields documented below. Before creating or updating Lambda functions with `file_system_config`, EFS mount targets much be in available lifecycle state. Use `depends_on` to explicitly declare this dependency. See [Using Amazon EFS with Lambda][12].
 * `code_signing_config_arn` - (Optional) Amazon Resource Name (ARN) for a Code Signing Configuration.
+* `image_config` - (Optional) The Lambda OCI image configurations. Fields documented below. See [Using container images with Lambda][13]
 
 **dead_letter_config** is a child block with a single argument:
 
@@ -264,6 +267,11 @@ For **environment** the following attributes are supported:
 * `arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - (Required) The path where the function can access the file system, starting with /mnt/.
 
+**image_config** is a child block with three arguments:
+
+* `entry_point` - (Optional) The ENTRYPOINT for the docker image.
+* `command` - (Optional) The CMD for the docker image.
+* `working_directory` - (Optional) The working directory for the docker image.
 
 ## Attributes Reference
 
@@ -293,10 +301,11 @@ In addition to all arguments above, the following attributes are exported:
 [10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 [12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
+[13]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-images.html
 
 ## Timeouts
 
-`aws_lambda_function` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+`aws_lambda_function` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Default `10m`) How long to wait for slow uploads or EC2 throttling errors.
 

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
@@ -351,7 +350,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
 					}),
 				),
@@ -376,7 +375,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
 					}),
 				),
@@ -387,10 +386,10 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
 					}),
 				),
@@ -400,7 +399,7 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
 					}),
 				),
@@ -432,10 +431,10 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
 					}),
 				),

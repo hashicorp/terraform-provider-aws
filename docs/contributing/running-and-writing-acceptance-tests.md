@@ -116,6 +116,8 @@ ok  	github.com/hashicorp/terraform-provider-aws/aws	55.619s
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
 
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#environment-variables) for more information.
+
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
 ### Running Cross-Account Tests
@@ -636,6 +638,32 @@ if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
 
 if err != nil {
   return fmt.Errorf("error reading Example Thing (%s): %w", d.Id(), err)
+}
+```
+
+For children resources that are encapsulated by a parent resource, it is also preferable to verify that removing the parent resource will not generate an error either. These are typically named `TestAccAws{SERVICE}{THING}_disappears_{PARENT}`, e.g. `TestAccAwsRoute53ZoneAssociation_disappears_Vpc`
+
+```go
+func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  parentResourceName := "aws_example_parent_thing.test"
+  resourceName := "aws_example_child_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceDisappears(testAccProvider, resourceAwsExampleParentThing(), parentResourceName),
+        ),
+        ExpectNonEmptyPlan: true,
+      },
+    },
+  })
 }
 ```
 

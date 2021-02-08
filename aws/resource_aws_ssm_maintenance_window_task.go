@@ -604,7 +604,7 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		return err
 	}
 
-	d.SetId(*resp.WindowTaskId)
+	d.SetId(aws.StringValue(resp.WindowTaskId))
 
 	return resourceAwsSsmMaintenanceWindowTaskRead(d, meta)
 }

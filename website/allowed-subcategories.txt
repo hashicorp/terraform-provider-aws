@@ -10,6 +10,7 @@ Application Autoscaling
 Athena
 Autoscaling
 Autoscaling Plans
+Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch
 Budgets
@@ -28,6 +29,7 @@ CodeStar Connections
 CodeStar Notifications
 Cognito
 Config
+Connect
 Cost and Usage Report
 Data Lifecycle Manager (DLM)
 DataPipeline
@@ -41,6 +43,7 @@ DynamoDB Accelerator (DAX)
 DynamoDB
 EC2
 ECR
+ECR Public
 ECS
 EFS
 EKS
@@ -49,6 +52,7 @@ Elastic Beanstalk
 Elastic Load Balancing (ELB Classic)
 Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
+Elastic Map Reduce Containers
 Elastic Transcoder
 ElasticSearch
 EventBridge (CloudWatch Events)
@@ -70,6 +74,7 @@ Kinesis Data Analytics (SQL Applications)
 Kinesis Data Analytics v2 (SQL and Flink Applications)
 Kinesis Firehose
 Kinesis Video
+Lake Formation
 Lambda
 Lex
 License Manager
@@ -81,6 +86,7 @@ Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
 MediaStore
+Managed Workflows for Apache Airflow (MWAA)
 Neptune
 Network Firewall
 OpsWorks

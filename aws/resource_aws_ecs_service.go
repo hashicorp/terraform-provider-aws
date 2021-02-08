@@ -731,8 +731,8 @@ func flattenEcsNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} 
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.SecurityGroups))
-	result["subnets"] = schema.NewSet(schema.HashString, flattenStringList(nc.AwsvpcConfiguration.Subnets))
+	result["security_groups"] = flattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result["subnets"] = flattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
 		result["assign_public_ip"] = *nc.AwsvpcConfiguration.AssignPublicIp == ecs.AssignPublicIpEnabled

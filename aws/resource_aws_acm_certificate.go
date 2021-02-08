@@ -285,7 +285,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error requesting certificate: %s", err)
 	}
 
-	d.SetId(*resp.CertificateArn)
+	d.SetId(aws.StringValue(resp.CertificateArn))
 
 	return resourceAwsAcmCertificateRead(d, meta)
 }

@@ -136,13 +136,13 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 		input.TemplateURL = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringList(v.(*schema.Set).List())
+		input.Capabilities = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
-		input.NotificationARNs = expandStringList(v.(*schema.Set).List())
+		input.NotificationARNs = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("on_failure"); ok {
 		input.OnFailure = aws.String(v.(string))
@@ -257,7 +257,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		d.Set("disable_rollback", stack.DisableRollback)
 	}
 	if len(stack.NotificationARNs) > 0 {
-		err = d.Set("notification_arns", schema.NewSet(schema.HashString, flattenStringList(stack.NotificationARNs)))
+		err = d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
 		if err != nil {
 			return err
 		}
@@ -279,7 +279,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if len(stack.Capabilities) > 0 {
-		err = d.Set("capabilities", schema.NewSet(schema.HashString, flattenStringList(stack.Capabilities)))
+		err = d.Set("capabilities", flattenStringSet(stack.Capabilities))
 		if err != nil {
 			return err
 		}
@@ -311,11 +311,11 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	// Capabilities must be present whether they are changed or not
 	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = expandStringList(v.(*schema.Set).List())
+		input.Capabilities = expandStringSet(v.(*schema.Set))
 	}
 
 	if d.HasChange("notification_arns") {
-		input.NotificationARNs = expandStringList(d.Get("notification_arns").(*schema.Set).List())
+		input.NotificationARNs = expandStringSet(d.Get("notification_arns").(*schema.Set))
 	}
 
 	// Parameters must be present whether they are changed or not

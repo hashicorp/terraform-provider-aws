@@ -76,7 +76,7 @@ func testSweepRoute53ResolverRuleAssociations(region string) error {
 	return errors
 }
 
-func TestAccAwsRoute53ResolverRuleAssociation_basic(t *testing.T) {
+func TestAccAWSRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	var assn route53resolver.ResolverRuleAssociation
 	resourceNameVpc := "aws_vpc.example"
 	resourceNameRule := "aws_route53_resolver_rule.example"
@@ -85,6 +85,7 @@ func TestAccAwsRoute53ResolverRuleAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{

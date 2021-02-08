@@ -109,6 +109,12 @@ func resourceAwsLb() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"ipv6_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv6Address,
+						},
 						"outpost_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -274,11 +280,11 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = expandStringList(v.(*schema.Set).List())
+		elbOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
+		elbOpts.Subnets = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_mapping"); ok {
@@ -297,6 +303,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 			if subnetMap["private_ipv4_address"].(string) != "" {
 				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
+			}
+
+			if subnetMap["ipv6_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].IPv6Address = aws.String(subnetMap["ipv6_address"].(string))
 			}
 		}
 	}
@@ -455,7 +465,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("security_groups") {
-		sgs := expandStringList(d.Get("security_groups").(*schema.Set).List())
+		sgs := expandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -473,7 +483,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	// resource is just created, so we don't attempt if it is a newly created
 	// resource.
 	if d.HasChange("subnets") && !d.IsNewResource() {
-		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
+		subnets := expandStringSet(d.Get("subnets").(*schema.Set))
 
 		params := &elbv2.SetSubnetsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -668,6 +678,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
 			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
+			m["ipv6_address"] = aws.StringValue(loadBalancerAddress.IPv6Address)
 		}
 
 		l = append(l, m)
