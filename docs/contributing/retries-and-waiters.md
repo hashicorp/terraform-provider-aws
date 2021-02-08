@@ -102,12 +102,11 @@ Given a properly ordered Terraform configuration, eventual consistency can unexp
 This type of logic should not be implemented to overcome improperly ordered Terraform configurations as it is not guaranteed to work in larger environments.
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/consts.go (created if does not exist)
-package {SERVICE}
+// aws/internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
-	// Maximum amount of time to wait for Example eventual consistency
-	ExampleTimeout = 2 * time.Minute
+	// Maximum amount of time to wait for Thing operation eventual consistency
+	ThingOperationTimeout = 2 * time.Minute
 )
 ```
 
@@ -116,11 +115,11 @@ const (
 
 import (
 	// ... other imports ...
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/{SERVICE}/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/example/waiter"
 )
 
 // ... Create, Read, Update, or Delete function ...
-	err := resource.Retry(waiter.ExampleTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.ThingOperationTimeout, func() *resource.RetryError {
 		_, err := conn./* ... AWS Go SDK operation with eventual consistency errors ... */
 
 		// Retryable conditions which can be checked.
@@ -172,7 +171,7 @@ Each AWS service API (and sometimes even operations within the same API) varies 
 
 import (
 	// ... other imports ...
-	// By convention, cross-service waiter imports are named {SERVICE}waiter
+	// By convention, cross-service waiter imports are aliased as {SERVICE}waiter
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
@@ -209,13 +208,11 @@ When the eventual consistency lies with the existence or configuration state of 
 When encountering this type of situation, every operation after the initial operation must account for the condition, which can be tricky depending on the resource logic itself. Most resources should be written where the `Create` function will return the `Read` function to fill in all computed attributes and ensure the configuration was applied correctly. In these cases, the `Read` function will need additional logic to overcome the temporary condition on resource creation. For eventually consistent resources, these "not found" type errors can still occur in the `Read` function even after implementing [Resource Lifecycle Waiters](#resource-lifecycle-waiters) in the Create function for the resource itself.
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/consts.go (created if does not exist)
-
-package {SERVICE}
+// aws/internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
-	// Maximum amount of time to wait for Example eventual consistency on creation
-	ExampleCreationTimeout = 2 * time.Minute
+	// Maximum amount of time to wait for Thing eventual consistency on creation
+	ThingCreationTimeout = 2 * time.Minute
 )
 ```
 
@@ -233,7 +230,7 @@ function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
 	input := &example.OperationInput{/* ... */}
 
 	var output *example.OperationOutput
-	err := resource.Retry(waiter.ExampleCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.ThingCreationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.Operation(input)
 
@@ -288,7 +285,7 @@ In rare cases, it may be easier to duplicate all `Read` function logic into the 
 An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example:
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/status.go (created if does not exist)
+// aws/internal/service/example/waiter/status.go (created if does not exist)
 
 // ThingAttribute fetches the Thing and its Attribute
 func ThingAttribute(conn *example.Example, id string) resource.StateRefreshFunc {
@@ -313,7 +310,7 @@ func ThingAttribute(conn *example.Example, id string) resource.StateRefreshFunc 
 ```
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/waiter.go (created if does not exist)
+// aws/internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	ThingAttributePropagationTimeout = 2 * time.Minute
@@ -378,7 +375,7 @@ If it is necessary to customize the timeouts and polling with these, it is gener
 Most of the codebase uses `resource.StateChangeConf` and `resource.RefreshStateFunc` handlers for tracking either component level status fields or explicit tracking identifiers. These should be placed in the `aws/internal/service/{SERVICE}/waiter` package and split into separate functions. For example:
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/status.go (created if does not exist)
+// aws/internal/service/example/waiter/status.go (created if does not exist)
 
 // ThingStatus fetches the Thing and its Status
 func ThingStatus(conn *example.Example, id string) resource.StateRefreshFunc {
@@ -403,7 +400,7 @@ func ThingStatus(conn *example.Example, id string) resource.StateRefreshFunc {
 ```
 
 ```go
-// aws/internal/service/{SERVICE}/waiter/waiter.go (created if does not exist)
+// aws/internal/service/example/waiter/waiter.go (created if does not exist)
 
 const (
 	ThingCreationTimeout = 2 * time.Minute
