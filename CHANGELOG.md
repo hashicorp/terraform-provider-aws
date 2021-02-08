@@ -1,5 +1,9 @@
 ## 3.28.0 (Unreleased)
 
+ENHANCEMENTS: 
+
+* resource/aws_sns_topic_subscription: Add `redrive_policy` argument [GH-11770]
+
 ## 3.27.0 (February 05, 2021)
 
 FEATURES:
