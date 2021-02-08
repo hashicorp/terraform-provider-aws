@@ -27,4 +27,30 @@ jobs:
 
             Also take a look at our [FAQ](https://github.com/terraform-providers/terraform-provider-aws/blob/main/docs/FAQ.md) which details how we prioritize Pull Requests for inclusion.
             
-            Thanks again, and welcome to the community! :smiley:         
+            Thanks again, and welcome to the community! :smiley:
+  ChangelogCheck:
+    # If there  a `pr/no-changelog` label we ignore this check
+    if: "!${{ contains(github.event.pull_request.labels.*.name, 'pr/no-changelog')}}"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0 # by default the checkout action doesn't checkout all branches
+      - name: Check for changelog entry in diff
+        run: |
+          # check if there is a diff in the .changelog directory
+          changelog_files=$(git --no-pager diff --name-only HEAD "$(git merge-base HEAD "origin/${{ github.event.pull_request.base.ref }}")" -- .changelog/)
+          # If we do not find a file in .changelog/, we post a comment to the PR
+          if [ -z "$changelog_files" ]; then
+            # post PR comment to GitHub when no .changelog entry was found on PR
+            echo "changelog-check: Did not find a .changelog entry, posting a reminder in the PR"
+            github_message="🤔 Double check that this PR does not require a changelog entry in the \`.changelog\` directory. [Reference](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/pullrequest-submission-and-lifecycle.md#changelog-process)"
+            curl -f -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -X POST \
+                -d "{ \"body\": \"${github_message}\"}" \
+                "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments"
+          else
+            echo "changelog-check: Found .changelog entry in PR!"
+          fi
