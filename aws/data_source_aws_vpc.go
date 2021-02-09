@@ -184,7 +184,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", vpc.State)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("owner_id", vpc.OwnerId)
@@ -208,7 +208,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		cidrAssociations = append(cidrAssociations, association)
 	}
 	if err := d.Set("cidr_block_associations", cidrAssociations); err != nil {
-		return fmt.Errorf("error setting cidr_block_associations: %s", err)
+		return fmt.Errorf("error setting cidr_block_associations: %w", err)
 	}
 
 	if vpc.Ipv6CidrBlockAssociationSet != nil {
