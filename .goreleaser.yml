@@ -35,6 +35,12 @@ env:
   - CGO_ENABLED=0
 release:
   disable: false
+  github:
+      owner: amadureira
+      name: terraform-provider-aws
+
+
+
 signs:
   - artifacts: checksum
     args:
