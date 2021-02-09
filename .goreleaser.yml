@@ -13,14 +13,14 @@ builds:
       - -trimpath
     goarch:
 #     - '386'
-#     - amd64
-#     - arm
+      - amd64
+      - arm
       - arm64
     goos:
       - darwin
-#     - freebsd
+      - freebsd
       - linux
-#     - windows
+      - windows
     ignore:
       - goarch: '386'
         goos: darwin
