@@ -156,7 +156,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 					iamPolicyDecodeConfigStringList(resources), doc.Version,
 				)
 				if err != nil {
-					return fmt.Errorf("error reading resources: %s", err)
+					return fmt.Errorf("error reading resources: %w", err)
 				}
 			}
 			if notResources := cfgStmt["not_resources"].(*schema.Set).List(); len(notResources) > 0 {
@@ -165,7 +165,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 					iamPolicyDecodeConfigStringList(notResources), doc.Version,
 				)
 				if err != nil {
-					return fmt.Errorf("error reading not_resources: %s", err)
+					return fmt.Errorf("error reading not_resources: %w", err)
 				}
 			}
 
@@ -173,7 +173,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 				var err error
 				stmt.Principals, err = dataSourceAwsIamPolicyDocumentMakePrincipals(principals, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading principals: %s", err)
+					return fmt.Errorf("error reading principals: %w", err)
 				}
 			}
 
@@ -181,7 +181,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 				var err error
 				stmt.NotPrincipals, err = dataSourceAwsIamPolicyDocumentMakePrincipals(notPrincipals, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading not_principals: %s", err)
+					return fmt.Errorf("error reading not_principals: %w", err)
 				}
 			}
 
@@ -189,7 +189,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 				var err error
 				stmt.Conditions, err = dataSourceAwsIamPolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading condition: %s", err)
+					return fmt.Errorf("error reading condition: %w", err)
 				}
 			}
 
@@ -262,7 +262,7 @@ func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version stri
 			), version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading values: %s", err)
+			return nil, fmt.Errorf("error reading values: %w", err)
 		}
 	}
 	return IAMPolicyStatementConditionSet(out), nil
@@ -282,7 +282,7 @@ func dataSourceAwsIamPolicyDocumentMakePrincipals(in []interface{}, version stri
 			), version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading identifiers: %s", err)
+			return nil, fmt.Errorf("error reading identifiers: %w", err)
 		}
 	}
 	return IAMPolicyStatementPrincipalSet(out), nil

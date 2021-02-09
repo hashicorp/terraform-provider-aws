@@ -76,7 +76,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 	resp, err := ssmconn.DescribePatchBaselines(params)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM PatchBaselines: %s", err)
+		return fmt.Errorf("Error describing SSM PatchBaselines: %w", err)
 	}
 
 	var filteredBaselines []*ssm.PatchBaselineIdentity

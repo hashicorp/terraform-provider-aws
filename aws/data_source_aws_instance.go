@@ -495,7 +495,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	// Security Groups
@@ -549,20 +549,20 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362
 		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
-			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
+			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %w", d.Id(), err)
 		}
 	}
 
 	if err := d.Set("credit_specification", creditSpecifications); err != nil {
-		return fmt.Errorf("error setting credit_specification: %s", err)
+		return fmt.Errorf("error setting credit_specification: %w", err)
 	}
 
 	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %s", err)
+		return fmt.Errorf("error setting metadata_options: %w", err)
 	}
 
 	if err := d.Set("enclave_options", flattenEc2EnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %s", err)
+		return fmt.Errorf("error setting enclave_options: %w", err)
 	}
 
 	return nil
