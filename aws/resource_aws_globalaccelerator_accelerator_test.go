@@ -172,7 +172,7 @@ func sweepGlobalAcceleratorEndpointGroups(conn *globalaccelerator.GlobalAccelera
 }
 
 func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
-	resourceName := "aws_globalaccelerator_accelerator.example"
+	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	ipRegex := regexp.MustCompile(`\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`)
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
@@ -183,7 +183,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(rName, false),
+				Config: testAccGlobalAcceleratorAcceleratorConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -212,7 +212,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_basic(t *testing.T) {
 }
 
 func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
-	resourceName := "aws_globalaccelerator_accelerator.example"
+	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	newName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -222,7 +222,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(rName, true),
+				Config: testAccGlobalAcceleratorAcceleratorConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -230,7 +230,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(newName, false),
+				Config: testAccGlobalAcceleratorAcceleratorConfig(newName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", newName),
@@ -247,8 +247,8 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 }
 
 func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
-	resourceName := "aws_globalaccelerator_accelerator.example"
-	s3BucketResourceName := "aws_s3_bucket.example"
+	resourceName := "aws_globalaccelerator_accelerator.test"
+	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -257,7 +257,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_attributes(rName),
+				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
@@ -276,7 +276,7 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 }
 
 func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
-	resourceName := "aws_globalaccelerator_accelerator.example"
+	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,13 +285,12 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAccelerator_tags(rName, false, "foo", "var"),
+				Config: testAccGlobalAcceleratorAcceleratorConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "var"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -300,18 +299,20 @@ func TestAccAwsGlobalAcceleratorAccelerator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalAcceleratorAccelerator_tags(rName, false, "foo", "var2"),
+				Config: testAccGlobalAcceleratorAcceleratorConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "var2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAccelerator_basic(rName, false),
+				Config: testAccGlobalAcceleratorAcceleratorConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -380,48 +381,61 @@ func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlobalAcceleratorAccelerator_basic(rName string, enabled bool) string {
+func testAccGlobalAcceleratorAcceleratorConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "%s"
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
   ip_address_type = "IPV4"
-  enabled         = %t
+  enabled         = %[2]t
 }
 `, rName, enabled)
 }
 
-func testAccGlobalAcceleratorAccelerator_attributes(rName string) string {
+func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "example" {
-  bucket_prefix = "tf-test-globalaccelerator-"
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
-resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "%s"
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
   ip_address_type = "IPV4"
   enabled         = false
 
   attributes {
     flow_logs_enabled   = true
-    flow_logs_s3_bucket = aws_s3_bucket.example.bucket
+    flow_logs_s3_bucket = aws_s3_bucket.test.bucket
     flow_logs_s3_prefix = "flow-logs/"
   }
 }
 `, rName)
 }
 
-func testAccGlobalAcceleratorAccelerator_tags(rName string, enabled bool, tagKey string, tagValue string) string {
+func testAccGlobalAcceleratorAcceleratorConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_globalaccelerator_accelerator" "example" {
-  name            = "%s"
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
   ip_address_type = "IPV4"
-  enabled         = %t
+  enabled         = false
 
   tags = {
-    Name = "%[1]s"
-
-    %[3]s = "%[4]s"
+    %[2]q = %[3]q
   }
 }
-`, rName, enabled, tagKey, tagValue)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccGlobalAcceleratorAcceleratorConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "IPV4"
+  enabled         = false
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

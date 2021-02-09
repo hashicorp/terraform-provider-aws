@@ -40,12 +40,10 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 				Required: true,
 			},
 			"ip_address_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  globalaccelerator.IpAddressTypeIpv4,
-				ValidateFunc: validation.StringInSlice([]string{
-					globalaccelerator.IpAddressTypeIpv4,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      globalaccelerator.IpAddressTypeIpv4,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -78,15 +76,10 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 				},
 			},
 			"attributes": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flow_logs_enabled": {
@@ -138,8 +131,8 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		return err
 	}
 
-	if v := d.Get("attributes").([]interface{}); len(v) > 0 {
-		err = resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn, d.Id(), d.Timeout(schema.TimeoutUpdate), v[0].(map[string]interface{}))
+	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		err := resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn, d.Id(), d.Timeout(schema.TimeoutUpdate), v.([]interface{})[0].(map[string]interface{}))
 		if err != nil {
 			return err
 		}
@@ -169,7 +162,7 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
 	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
-	if err := d.Set("ip_sets", resourceAwsGlobalAcceleratorAcceleratorFlattenIpSets(accelerator.IpSets)); err != nil {
+	if err := d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets)); err != nil {
 		return fmt.Errorf("Error setting Global Accelerator accelerator ip_sets: %s", err)
 	}
 
@@ -181,8 +174,12 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("Error reading Global Accelerator accelerator attributes: %s", err)
 	}
 
-	if err := d.Set("attributes", resourceAwsGlobalAcceleratorAcceleratorFlattenAttributes(resp.AcceleratorAttributes)); err != nil {
-		return fmt.Errorf("Error setting Global Accelerator accelerator attributes: %s", err)
+	if resp.AcceleratorAttributes != nil {
+		if err := d.Set("attributes", []interface{}{flattenGlobalAcceleratorAcceleratorAttributes(resp.AcceleratorAttributes)}); err != nil {
+			return fmt.Errorf("error setting attributes: %w", err)
+		}
+	} else {
+		d.Set("attributes", nil)
 	}
 
 	tags, err := keyvaluetags.GlobalacceleratorListTags(conn, d.Id())
@@ -197,34 +194,62 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorFlattenIpSets(ipsets []*globalaccelerator.IpSet) []interface{} {
-	out := make([]interface{}, len(ipsets))
-
-	for i, ipset := range ipsets {
-		m := make(map[string]interface{})
-
-		m["ip_addresses"] = flattenStringList(ipset.IpAddresses)
-		m["ip_family"] = aws.StringValue(ipset.IpFamily)
-
-		out[i] = m
-	}
-
-	return out
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorFlattenAttributes(attributes *globalaccelerator.AcceleratorAttributes) []interface{} {
-	if attributes == nil {
+func flattenGlobalAcceleratorIpSet(apiObject *globalaccelerator.IpSet) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	out := make([]interface{}, 1)
-	m := make(map[string]interface{})
-	m["flow_logs_enabled"] = aws.BoolValue(attributes.FlowLogsEnabled)
-	m["flow_logs_s3_bucket"] = aws.StringValue(attributes.FlowLogsS3Bucket)
-	m["flow_logs_s3_prefix"] = aws.StringValue(attributes.FlowLogsS3Prefix)
-	out[0] = m
+	tfMap := map[string]interface{}{}
 
-	return out
+	if v := apiObject.IpAddresses; v != nil {
+		tfMap["ip_addresses"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.IpFamily; v != nil {
+		tfMap["ip_family"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenGlobalAcceleratorIpSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenGlobalAcceleratorIpSet(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenGlobalAcceleratorAcceleratorAttributes(apiObject *globalaccelerator.AcceleratorAttributes) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.FlowLogsEnabled; v != nil {
+		tfMap["flow_logs_enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.FlowLogsS3Bucket; v != nil {
+		tfMap["flow_logs_s3_bucket"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.FlowLogsS3Prefix; v != nil {
+		tfMap["flow_logs_s3_prefix"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) resource.StateRefreshFunc {
@@ -291,8 +316,8 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange("attributes") {
-		if v := d.Get("attributes").([]interface{}); len(v) > 0 {
-			err := resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn, d.Id(), d.Timeout(schema.TimeoutUpdate), v[0].(map[string]interface{}))
+		if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			err := resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn, d.Id(), d.Timeout(schema.TimeoutUpdate), v.([]interface{})[0].(map[string]interface{}))
 			if err != nil {
 				return err
 			}
@@ -327,23 +352,26 @@ func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalacc
 	return nil
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string, timeout time.Duration, attributes map[string]interface{}) error {
-	opts := &globalaccelerator.UpdateAcceleratorAttributesInput{
-		AcceleratorArn:  aws.String(acceleratorArn),
-		FlowLogsEnabled: aws.Bool(attributes["flow_logs_enabled"].(bool)),
+func resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string, timeout time.Duration, tfMap map[string]interface{}) error {
+	input := &globalaccelerator.UpdateAcceleratorAttributesInput{
+		AcceleratorArn: aws.String(acceleratorArn),
 	}
 
-	if v := attributes["flow_logs_s3_bucket"]; v != nil {
-		opts.FlowLogsS3Bucket = aws.String(v.(string))
+	if v, ok := tfMap["flow_logs_enabled"].(bool); ok {
+		input.FlowLogsEnabled = aws.Bool(v)
 	}
 
-	if v := attributes["flow_logs_s3_prefix"]; v != nil {
-		opts.FlowLogsS3Prefix = aws.String(v.(string))
+	if v, ok := tfMap["flow_logs_s3_bucket"].(string); ok && v != "" {
+		input.FlowLogsS3Bucket = aws.String(v)
 	}
 
-	log.Printf("[DEBUG] Update Global Accelerator accelerator attributes: %s", opts)
+	if v, ok := tfMap["flow_logs_s3_prefix"].(string); ok && v != "" {
+		input.FlowLogsS3Prefix = aws.String(v)
+	}
 
-	_, err := conn.UpdateAcceleratorAttributes(opts)
+	log.Printf("[DEBUG] Update Global Accelerator accelerator attributes: %s", input)
+
+	_, err := conn.UpdateAcceleratorAttributes(input)
 	if err != nil {
 		return fmt.Errorf("Error updating Global Accelerator accelerator attributes: %s", err)
 	}
