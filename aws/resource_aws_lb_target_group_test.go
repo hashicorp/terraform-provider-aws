@@ -404,7 +404,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
 	var targetGroup1 elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -414,7 +414,7 @@ func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(targetGroupName),
+				Config: testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
