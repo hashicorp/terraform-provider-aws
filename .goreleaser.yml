@@ -6,6 +6,7 @@ archives:
 before:
   hooks:
     - go mod download
+
 builds:
   - binary: '{{ .ProjectName }}_{{ .Version }}'
     flags:
