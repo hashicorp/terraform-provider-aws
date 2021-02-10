@@ -194,7 +194,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
-func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_StringAndSlice(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -212,7 +212,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_Strin
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
-func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_MultiplePrincipals(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -229,7 +229,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_Multi
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_MultiplePrincipalsGov(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicyDocument_statementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -246,7 +246,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_Statement_Principal_Identifiers_Multi
 	})
 }
 
-func TestAccAWSDataSourceIAMPolicyDocument_Version_20081017(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicyDocument_version20081017(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
