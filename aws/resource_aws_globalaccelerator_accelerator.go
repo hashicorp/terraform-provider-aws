@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -29,8 +28,6 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
-		CustomizeDiff: resourceAwsGlobalAcceleratorAcceleratorCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -427,24 +424,6 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 				return nil
 			}
 			return fmt.Errorf("Error deleting Global Accelerator accelerator: %s", err)
-		}
-	}
-
-	return nil
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := tfMap["flow_logs_enabled"].(bool); ok && v {
-			if v, ok := tfMap["flow_logs_s3_bucket"].(string); !ok || v == "" {
-				return fmt.Errorf("'flow_logs_s3_bucket' must be set when 'flow_logs_enabled' is true")
-			}
-
-			if v, ok := tfMap["flow_logs_s3_prefix"].(string); !ok || v == "" {
-				return fmt.Errorf("'flow_logs_s3_prefix' must be set when 'flow_logs_enabled' is true")
-			}
 		}
 	}
 
