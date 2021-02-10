@@ -98,7 +98,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_sourceListConflicting(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSIAMPolicyDocumentSourceListConflictingConfig,
-				ExpectError: regexp.MustCompile(`Found duplicate sid (.*?) in source_json_list`),
+				ExpectError: regexp.MustCompile(`duplicate Sid (.*?)`),
 			},
 		},
 	})
@@ -179,7 +179,7 @@ func TestAccAWSDataSourceIAMPolicyDocument_duplicateSid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSIAMPolicyDocumentDuplicateSidConfig,
-				ExpectError: regexp.MustCompile(`Found duplicate sid`),
+				ExpectError: regexp.MustCompile(`duplicate Sid`),
 			},
 			{
 				Config: testAccAWSIAMPolicyDocumentDuplicateBlankSidConfig,
@@ -645,7 +645,7 @@ data "aws_iam_policy_document" "policy_c" {
 data "aws_iam_policy_document" "test_source_list" {
   version = "2012-10-17"
 
-  source_json_list = [
+  source_policy_documents = [
     data.aws_iam_policy_document.policy_a.json,
     data.aws_iam_policy_document.policy_b.json,
     data.aws_iam_policy_document.policy_c.json
@@ -768,7 +768,7 @@ data "aws_iam_policy_document" "policy_c" {
 data "aws_iam_policy_document" "test_source_list_conflicting" {
   version = "2012-10-17"
 
-  source_json_list = [
+  source_policy_documents = [
     data.aws_iam_policy_document.policy_a.json,
     data.aws_iam_policy_document.policy_b.json,
     data.aws_iam_policy_document.policy_c.json
@@ -861,7 +861,7 @@ data "aws_iam_policy_document" "policy_c" {
 data "aws_iam_policy_document" "test_override_list" {
   version = "2012-10-17"
 
-  override_json_list = [
+  override_policy_documents = [
     data.aws_iam_policy_document.policy_a.json,
     data.aws_iam_policy_document.policy_b.json,
     data.aws_iam_policy_document.policy_c.json
