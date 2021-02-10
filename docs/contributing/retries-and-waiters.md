@@ -2,7 +2,13 @@
 
 _Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
 
-Terraform plugins may run into situations where repeatedly checking or calling the remote system after an operation may be necessary. These typically fall under three classes. The first where the operation never reaches the remote system, the second where the operation reaches the remote system and the remote system responds that it temporarily cannot handle the request, and third where the implementation of the remote system requires additional operations to ensure success. This guide is designed to describe each of these situations and highlight implementations that can ensure operation success.
+Terraform plugins may run into situations where calling the remote system after an operation may be necessary. These typically fall under three classes where:
+
+- The request never reaches the remote system.
+- The request reaches the remote system and responds that it cannot handle the request temporarily.
+- The implementation of the remote system requires additional requests to ensure success.
+
+This guide describes the behavior of the Terraform AWS Provider and provides code implementations that help ensure success in each of these situations.
 
 - [Terraform Plugin SDK Functionality](#terraform-plugin-sdk-functionality)
     - [State Change Configuration and Functions](#state-change-configuration-and-functions)
