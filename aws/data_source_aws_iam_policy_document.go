@@ -116,16 +116,13 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	mergedDoc := &IAMPolicyDoc{}
 
-	// populate mergedDoc directly with any source_json
-	if sourceJSON, hasSourceJSON := d.GetOk("source_json"); hasSourceJSON {
-		if err := json.Unmarshal([]byte(sourceJSON.(string)), mergedDoc); err != nil {
+	if v, ok := d.GetOk("source_json"); ok {
+		if err := json.Unmarshal([]byte(v.(string)), mergedDoc); err != nil {
 			return err
 		}
 	}
 
-	// populate mergedDoc with any provided source_json_list
-	if sourceJSONList, hasSourceJSONList := d.GetOk("source_json_list"); hasSourceJSONList {
-
+	if v, ok := d.GetOk("source_json_list"); ok && len(v.([]interface{})) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
 		sidMap := make(map[string]struct{})
 		for _, stmt := range mergedDoc.Statements {
@@ -135,7 +132,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 		}
 
 		// merge sourceDocs in order specified
-		for sourceJSONIndex, sourceJSON := range sourceJSONList.([]interface{}) {
+		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
 			sourceDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
 				return err
@@ -145,7 +142,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 			for stmtIndex, stmt := range sourceDoc.Statements {
 				if stmt.Sid != "" {
 					if _, sidExists := sidMap[stmt.Sid]; sidExists {
-						return fmt.Errorf("Found duplicate sid (%s) in source_json_list (item %d; statement %d). Either remove the sid or ensure the sid is unique across all statements.", stmt.Sid, sourceJSONIndex, stmtIndex)
+						return fmt.Errorf("duplicate SID (%s) in source_json_list (item %d; statement %d). Remove the SID or ensure SIDs are unique.", stmt.Sid, sourceJSONIndex, stmtIndex)
 					}
 					sidMap[stmt.Sid] = struct{}{}
 				}
@@ -178,7 +175,7 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 
 			if sid, ok := cfgStmt["sid"]; ok {
 				if _, ok := sidMap[sid.(string)]; ok {
-					return fmt.Errorf("Found duplicate sid (%s). Either remove the sid or ensure the sid is unique across all statements.", sid.(string))
+					return fmt.Errorf("duplicate SID (%s). Remove the SID or ensure the SID is unique.", sid.(string))
 				}
 				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
@@ -247,8 +244,8 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	mergedDoc.Merge(doc)
 
 	// merge override_json_list policies into mergedDoc in order specified
-	if overrideJSONList, hasOverrideJSONList := d.GetOk("override_json_list"); hasOverrideJSONList {
-		for _, overrideJSON := range overrideJSONList.([]interface{}) {
+	if v, ok := d.GetOk("override_json_list"); ok && len(v.([]interface{})) > 0 {
+		for _, overrideJSON := range v.([]interface{}) {
 			overrideDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
 				return err
@@ -260,9 +257,9 @@ func dataSourceAwsIamPolicyDocumentRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// merge in override_json
-	if overrideJSON, hasOverrideJSON := d.GetOk("override_json"); hasOverrideJSON {
+	if v, ok := d.GetOk("override_json"); ok {
 		overrideDoc := &IAMPolicyDoc{}
-		if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
+		if err := json.Unmarshal([]byte(v.(string)), overrideDoc); err != nil {
 			return err
 		}
 
