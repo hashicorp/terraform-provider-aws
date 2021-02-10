@@ -78,104 +78,6 @@ resource "aws_iam_policy" "example" {
 ### Example Assume-Role Policy with Multiple Principals
 
 You can specify multiple principal blocks with different types. You can also use this data source to generate an assume-role policy.
-## Argument Reference
-
-The following arguments are supported:
-
-* `policy_id` (Optional) - An ID for the policy document.
-* `source_json` (Optional) - An IAM policy document to import as a base for the
-  current policy document.  Statements with non-blank `sid`s in the current
-  policy document will overwrite statements with the same `sid` in the source
-  json.  Statements without an `sid` cannot be overwritten.
-* `override_json` (Optional) - An IAM policy document to import and override the
-  current policy document.  Statements with non-blank `sid`s in the override
-  document will overwrite statements with the same `sid` in the current document.
-  Statements with non-blank `sid`s in the override document that do not match an
-  `sid` in the current document will be added to the current document.  Statements
-  without an `sid` cannot be overwritten.
-* `statement` (Optional) - A nested configuration block (described below)
-  configuring one *statement* to be included in the policy document.
-* `version` (Optional) - IAM policy document version. Valid values: `2008-10-17`, `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
-
-Each document configuration may have one or more `statement` blocks, which
-each accept the following arguments:
-
-* `sid` (Optional) - An ID for the policy statement.
-* `effect` (Optional) - Either "Allow" or "Deny", to specify whether this
-  statement allows or denies the given actions. The default is "Allow".
-* `actions` (Optional) - A list of actions that this statement either allows
-  or denies. For example, ``["ec2:RunInstances", "s3:*"]``.
-* `not_actions` (Optional) - A list of actions that this statement does *not*
-  apply to. Used to apply a policy statement to all actions *except* those
-  listed.
-* `resources` (Optional) - A list of resource ARNs that this statement applies
-  to. This is required by AWS if used for an IAM policy.
-* `not_resources` (Optional) - A list of resource ARNs that this statement
-  does *not* apply to. Used to apply a policy statement to all resources
-  *except* those listed.
-* `principals` (Optional) - A nested configuration block (described below)
-  specifying a principal (or principal pattern) to which this statement applies.
-* `not_principals` (Optional) - Like `principals` except gives principals that
-  the statement does *not* apply to.
-* `condition` (Optional) - A nested configuration block (described below)
-  that defines a further, possibly-service-specific condition that constrains
-  whether this statement applies.
-
-Each policy may have either zero or more `principals` blocks or zero or more
-`not_principals` blocks, both of which each accept the following arguments:
-
-* `type` (Required) The type of principal. For AWS ARNs this is "AWS".  For AWS services (e.g. Lambda), this is "Service". For Federated access the type is "Federated".
-* `identifiers` (Required) List of identifiers for principals. When `type`
-  is "AWS", these are IAM user or role ARNs.  When `type` is "Service", these are AWS Service roles e.g. `lambda.amazonaws.com`. When `type` is "Federated", these are web identity users or SAML provider ARNs.
-
-For further examples or information about AWS principals then please refer to the [documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html).
-
-Each policy statement may have zero or more `condition` blocks, which each
-accept the following arguments:
-
-* `test` (Required) The name of the
-  [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html)
-  to evaluate.
-* `variable` (Required) The name of a
-  [Context Variable](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AvailableKeys)
-  to apply the condition to. Context variables may either be standard AWS
-  variables starting with `aws:`, or service-specific variables prefixed with
-  the service name.
-* `values` (Required) The values to evaluate the condition against. If multiple
-  values are provided, the condition matches if at least one of them applies.
-  (That is, the tests are combined with the "OR" boolean operation.)
-
-When multiple `condition` blocks are provided, they must *all* evaluate to true
-for the policy statement to apply. (In other words, the conditions are combined
-with the "AND" boolean operation.)
-
-## Context Variable Interpolation
-
-The IAM policy document format allows context variables to be interpolated
-into various strings within a statement. The native IAM policy document format
-uses `${...}`-style syntax that is in conflict with Terraform's interpolation
-syntax, so this data source instead uses `&{...}` syntax for interpolations that
-should be processed by AWS rather than by Terraform.
-
-## Wildcard Principal
-
-In order to define wildcard principal (a.k.a. anonymous user) use `type = "*"` and
-`identifiers = ["*"]`. In that case the rendered json will contain `"Principal": "*"`.
-Note, that even though the [IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html)
-states that `"Principal": "*"` and `"Principal": {"AWS": "*"}` are equivalent,
-those principals have different behavior for IAM Role Trust Policy. Therefore
-Terraform will normalize the principal field only in above-mentioned case and principals
-like `type = "AWS"` and `identifiers = ["*"]` will be rendered as `"Principal": {"AWS": "*"}`.
-
-## Attributes Reference
-
-The following attribute is exported:
-
-* `json` - The above arguments serialized as a standard JSON policy document.
-
-## Example with Multiple Principals
-
-Showing how you can use this as an assume role policy as well as showing how you can specify multiple principal blocks with different types.
 
 ```hcl
 data "aws_iam_policy_document" "event_stream_bucket_role_assume_role_policy" {
@@ -519,11 +421,14 @@ data "aws_iam_policy_document" "combined" {
 
 The following arguments are optional:
 
-* `override_json` (Optional) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` in the exported document including any defined by the `override_policy_documents` argument. Statements without a `sid` cannot be overridden.
-* `override_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document, potentially overriding previously defined statements with the same `sid`s.
+* `override_json` (Optional) - IAM policy document whose statements with non-blank `sid`s will override statements with the same `sid` from documents assigned to the `source_json`, `source_policy_documents`, and `override_policy_documents` arguments. Non-overriding statements will be added to the exported document.
+
+~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from documents assigned to the `source_json` or `source_policy_documents` arguments cannot be overridden by statements from documents assigned to the `override_json` or `override_policy_documents` arguments.
+
+* `override_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. In merging, statements with non-blank `sid`s will override statements with the same `sid` from earlier documents in the list. Statements with non-blank `sid`s will also override statements with the same `sid` from documents provided in the `source_json` and `source_policy_documents` arguments.  Non-overriding statements will be added to the exported document.
 * `policy_id` (Optional) - ID for the policy document.
-* `source_json` (Optional) - IAM policy document used as a base for the exported policy document.
-* `source_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `source_policy_documents` or `source_json` must have unique `sid`s. Override statements with the same `sid` will override source statements. Statements without a `sid` cannot be overridden.
+* `source_json` (Optional) - IAM policy document used as a base for the exported policy document. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
+* `source_policy_documents` (Optional) - List of IAM policy documents that are merged together into the exported document. Statements defined in `source_policy_documents` or `source_json` must have unique `sid`s. Statements with the same `sid` from documents assigned to the `override_json` and `override_policy_documents` arguments will override source statements.
 * `statement` (Optional) - Configuration block for a policy statement. Detailed below.
 * `version` (Optional) - IAM policy document version. Valid values are `2008-10-17` and `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
 
