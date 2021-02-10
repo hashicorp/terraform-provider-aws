@@ -189,15 +189,22 @@ func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
 
 func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
 	dcb := &cloudfront.DefaultCacheBehavior{
+		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
 		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
+		dcb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	}
+
+	if m["cache_policy_id"].(string) == "" {
+		dcb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
+		dcb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		dcb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
 	}
 
 	if v, ok := m["trusted_signers"]; ok {

@@ -280,8 +280,7 @@ of several sub-resources - these resources are laid out below.
 
 * `default_ttl` (Optional) - The default amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
-    in the absence of an `Cache-Control max-age` or `Expires` header. Defaults to
-    1 day.
+    in the absence of an `Cache-Control max-age` or `Expires` header.
 
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
@@ -295,7 +294,7 @@ of several sub-resources - these resources are laid out below.
     object is in a CloudFront cache before CloudFront forwards another request
     to your origin to determine whether the object has been updated. Only
     effective in the presence of `Cache-Control max-age`, `Cache-Control
-    s-maxage`, and `Expires` headers. Defaults to 365 days.
+    s-maxage`, and `Expires` headers.
 
 * `min_ttl` (Optional) - The minimum amount of time that you want objects to
     stay in CloudFront caches before CloudFront queries your origin to see
