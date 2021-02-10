@@ -124,9 +124,8 @@ func RouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteT
 
 	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
 		return nil, &resource.NotFoundError{
-			Message:      "Empty result",
-			LastRequest:  input,
-			LastResponse: output,
+			Message:     "Empty result",
+			LastRequest: input,
 		}
 	}
 
