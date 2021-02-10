@@ -158,12 +158,6 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("redrive_policy") {
-		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
-			return err
-		}
-	}
-
 	if d.HasChange("subscription_role_arn") {
 		protocol := d.Get("protocol").(string)
 		subscription_role_arn := d.Get("subscription_role_arn").(string)
@@ -175,6 +169,12 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 
 		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "SubscriptionRoleArn", subscription_role_arn); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("redrive_policy") {
+		if err := snsSubscriptionAttributeUpdate(snsconn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
 			return err
 		}
 	}
