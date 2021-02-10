@@ -613,38 +613,43 @@ func testAccAWSIAMPolicyDocumentSourceExpectedJSON() string {
 
 var testAccAWSIAMPolicyDocumentSourceListConfig = `
 data "aws_iam_policy_document" "policy_a" {
-	statement {
-		sid = ""
-		effect = "Allow"
-		actions = [ "foo:ActionOne" ]
-	}
-	statement {
-		sid = "validSidOne"
-		effect = "Allow"
-		actions = [ "bar:ActionOne" ]
-	}
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["foo:ActionOne"]
+  }
+
+  statement {
+    sid     = "validSidOne"
+    effect  = "Allow"
+    actions = ["bar:ActionOne"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_b" {
-	statement {
-		sid = "validSidTwo"
-		effect = "Deny"
-		actions = [ "foo:ActionTwo" ]
-	}
+  statement {
+    sid     = "validSidTwo"
+    effect  = "Deny"
+    actions = ["foo:ActionTwo"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_c" {
-	statement {
-		sid = ""
-		effect = "Allow"
-		actions = [ "bar:ActionTwo" ]
-	}
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["bar:ActionTwo"]
+  }
 }
+
 data "aws_iam_policy_document" "test_source_list" {
-	version = "2012-10-17"
-	source_json_list = [
-		data.aws_iam_policy_document.policy_a.json,
-		data.aws_iam_policy_document.policy_b.json,
-		data.aws_iam_policy_document.policy_c.json
-	]
+  version = "2012-10-17"
+
+  source_json_list = [
+    data.aws_iam_policy_document.policy_a.json,
+    data.aws_iam_policy_document.policy_b.json,
+    data.aws_iam_policy_document.policy_c.json
+  ]
 }
 `
 var testAccAWSIAMPolicyDocumentSourceListExpectedJSON = `{
@@ -731,38 +736,43 @@ var testAccAWSIAMPolicyDocumentSourceConflictingExpectedJSON = `{
 
 var testAccAWSIAMPolicyDocumentSourceListConflictingConfig = `
 data "aws_iam_policy_document" "policy_a" {
-	statement {
-		sid = ""
-		effect = "Allow"
-		actions = [ "foo:ActionOne" ]
-	}
-	statement {
-		sid = "conflictSid"
-		effect = "Allow"
-		actions = [ "bar:ActionOne" ]
-	}
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["foo:ActionOne"]
+  }
+
+  statement {
+    sid     = "conflictSid"
+    effect  = "Allow"
+    actions = ["bar:ActionOne"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_b" {
-	statement {
-		sid = "validSid"
-		effect = "Deny"
-		actions = [ "foo:ActionTwo" ]
-	}
+  statement {
+    sid     = "validSid"
+    effect  = "Deny"
+    actions = ["foo:ActionTwo"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_c" {
-	statement {
-		sid = "conflictSid"
-		effect = "Allow"
-		actions = [ "bar:ActionTwo" ]
-	}
+  statement {
+    sid     = "conflictSid"
+    effect  = "Allow"
+    actions = ["bar:ActionTwo"]
+  }
 }
+
 data "aws_iam_policy_document" "test_source_list_conflicting" {
-	version = "2012-10-17"
-	source_json_list = [
-		data.aws_iam_policy_document.policy_a.json,
-		data.aws_iam_policy_document.policy_b.json,
-		data.aws_iam_policy_document.policy_c.json
-	]
+  version = "2012-10-17"
+
+  source_json_list = [
+    data.aws_iam_policy_document.policy_a.json,
+    data.aws_iam_policy_document.policy_b.json,
+    data.aws_iam_policy_document.policy_c.json
+  ]
 }
 `
 
@@ -819,38 +829,43 @@ var testAccAWSIAMPolicyDocumentOverrideExpectedJSON = `{
 
 var testAccAWSIAMPolicyDocumentOverrideListConfig = `
 data "aws_iam_policy_document" "policy_a" {
-	statement {
-		sid = ""
-		effect = "Allow"
-		actions = [ "foo:ActionOne" ]
-	}
-	statement {
-		sid = "overrideSid"
-		effect = "Allow"
-		actions = [ "bar:ActionOne" ]
-	}
+  statement {
+    sid     = ""
+    effect  = "Allow"
+    actions = ["foo:ActionOne"]
+  }
+
+  statement {
+    sid     = "overrideSid"
+    effect  = "Allow"
+    actions = ["bar:ActionOne"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_b" {
-	statement {
-		sid = "validSid"
-		effect = "Deny"
-		actions = [ "foo:ActionTwo" ]
-	}
+  statement {
+    sid     = "validSid"
+    effect  = "Deny"
+    actions = ["foo:ActionTwo"]
+  }
 }
+
 data "aws_iam_policy_document" "policy_c" {
-	statement {
-		sid = "overrideSid"
-		effect = "Deny"
-		actions = [ "bar:ActionOne" ]
-	}
+  statement {
+    sid     = "overrideSid"
+    effect  = "Deny"
+    actions = ["bar:ActionOne"]
+  }
 }
+
 data "aws_iam_policy_document" "test_override_list" {
-	version = "2012-10-17"
-	override_json_list = [
-		data.aws_iam_policy_document.policy_a.json,
-		data.aws_iam_policy_document.policy_b.json,
-		data.aws_iam_policy_document.policy_c.json
-	]
+  version = "2012-10-17"
+
+  override_json_list = [
+    data.aws_iam_policy_document.policy_a.json,
+    data.aws_iam_policy_document.policy_b.json,
+    data.aws_iam_policy_document.policy_c.json
+  ]
 }
 `
 
