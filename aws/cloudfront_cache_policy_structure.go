@@ -11,10 +11,7 @@ func expandCloudFrontCachePolicyCookieNames(tfMap map[string]interface{}) *cloud
 		return nil
 	}
 
-	var items []*string
-	for _, item := range tfMap["items"].(*schema.Set).List() {
-		items = append(items, aws.String(item.(string)))
-	}
+	items := expandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.CookieNames{
 		Items:    items,
@@ -45,10 +42,7 @@ func expandCloudFrontCachePolicyHeaders(tfMap map[string]interface{}) *cloudfron
 		return nil
 	}
 
-	var items []*string
-	for _, item := range tfMap["items"].(*schema.Set).List() {
-		items = append(items, aws.String(item.(string)))
-	}
+	items := expandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.Headers{
 		Items:    items,
@@ -79,10 +73,7 @@ func expandCloudFrontCachePolicyQueryStringNames(tfMap map[string]interface{}) *
 		return nil
 	}
 
-	var items []*string
-	for _, queryStringitesm := range tfMap["items"].(*schema.Set).List() {
-		items = append(items, aws.String(queryStringitesm.(string)))
-	}
+	items := expandStringSet(tfMap["items"].(*schema.Set))
 
 	apiObject := &cloudfront.QueryStringNames{
 		Items:    items,
