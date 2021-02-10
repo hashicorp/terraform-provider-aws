@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/route53resolver/waiter"
@@ -110,22 +111,80 @@ func resourceAwsRoute53ResolverDnssecConfigRead(d *schema.ResourceData, meta int
 func resourceAwsRoute53ResolverDnssecConfigDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver DNSSEC config: %s", d.Id())
-	_, err := conn.UpdateResolverDnssecConfig(&route53resolver.UpdateResolverDnssecConfigInput{
-		ResourceId: aws.String(d.Get("resource_id").(string)),
-		Validation: aws.String(route53resolver.ValidationDisable),
-	})
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	// To delete a Route53 ResolverDnssecConfig, it must be:
+	// (1) updated to a "DISABLED" state
+	// (2) updated again to be permanently removed
+	//
+	// To determine how many Updates are required,
+	// we first find the config by ID and proceed as follows:
+
+	config, err := finder.ResolverDnssecConfigByID(conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error deleting Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.DnssecConfigDeleted(conn, d.Id())
+	if config == nil {
+		return nil
+	}
+
+	// (1) Update Route53 ResolverDnssecConfig to "DISABLED" state, if necessary
+	if aws.StringValue(config.ValidationStatus) == route53resolver.ResolverDNSSECValidationStatusEnabled {
+		config, err = updateResolverDnsSecConfig(conn, config.ResourceId)
+		if err != nil {
+			return fmt.Errorf("error deleting Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
+		}
+		if config == nil {
+			return nil
+		}
+	}
+
+	// (1.a) Wait for Route53 ResolverDnssecConfig to reach "DISABLED" state, if necessary
+	if aws.StringValue(config.ValidationStatus) != route53resolver.ResolverDNSSECValidationStatusDisabled {
+		if _, err = waiter.DnssecConfigDisabled(conn, d.Id()); err != nil {
+			if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+				return nil
+			}
+
+			return fmt.Errorf("error waiting for Route53 Resolver DNSSEC config (%s) to be disabled: %w", d.Id(), err)
+		}
+	}
+
+	// (2) Update Route53 ResolverDnssecConfig again, effectively deleting the resource
+	_, err = updateResolverDnsSecConfig(conn, config.ResourceId)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Route53 Resolver DNSSEC config (%s): %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func updateResolverDnsSecConfig(conn *route53resolver.Route53Resolver, resourceId *string) (*route53resolver.ResolverDnssecConfig, error) {
+	output, err := conn.UpdateResolverDnssecConfig(&route53resolver.UpdateResolverDnssecConfigInput{
+		ResourceId: resourceId,
+		Validation: aws.String(route53resolver.ValidationDisable),
+	})
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output.ResolverDNSSECConfig, nil
 }
