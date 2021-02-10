@@ -202,7 +202,7 @@ func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
 }
 ```
 
-If the remote system is not strongly read-after-write consistent, see the [Retries and Waiters documentation on Resource Lifecycle Retries](retries-and-waiters.md#resource-lifecycle-retries) to further understand how to handle these situations and prevent these types of errors.
+If the remote system is not strongly read-after-write consistent, see the [Retries and Waiters documentation on Resource Lifecycle Retries](retries-and-waiters.md#resource-lifecycle-retries) for how to prevent consistency-type errors.
 
 #### Creation Error Message Context
 
