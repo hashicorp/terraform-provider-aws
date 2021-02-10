@@ -1,8 +1,10 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -24,10 +26,11 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 		Read:   resourceAwsGlobalAcceleratorAcceleratorRead,
 		Update: resourceAwsGlobalAcceleratorAcceleratorUpdate,
 		Delete: resourceAwsGlobalAcceleratorAcceleratorDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: resourceAwsGlobalAcceleratorAcceleratorCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -38,6 +41,12 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 			},
 			"ip_address_type": {
 				Type:         schema.TypeString,
@@ -88,12 +97,14 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 							Default:  false,
 						},
 						"flow_logs_s3_bucket": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 						"flow_logs_s3_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 					},
 				},
@@ -416,6 +427,24 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 				return nil
 			}
 			return fmt.Errorf("Error deleting Global Accelerator accelerator: %s", err)
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsGlobalAcceleratorAcceleratorCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := tfMap["flow_logs_enabled"].(bool); ok && v {
+			if v, ok := tfMap["flow_logs_s3_bucket"].(string); !ok || v == "" {
+				return fmt.Errorf("'flow_logs_s3_bucket' must be set when 'flow_logs_enabled' is true")
+			}
+
+			if v, ok := tfMap["flow_logs_s3_prefix"].(string); !ok || v == "" {
+				return fmt.Errorf("'flow_logs_s3_prefix' must be set when 'flow_logs_enabled' is true")
+			}
 		}
 	}
 
