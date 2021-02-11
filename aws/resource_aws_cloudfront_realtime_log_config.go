@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
@@ -113,7 +114,7 @@ func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta int
 
 	logConfig, err := finder.RealtimeLogConfigByARN(conn, d.Id())
 
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -170,7 +171,7 @@ func resourceAwsCloudFrontRealtimeLogConfigDelete(d *schema.ResourceData, meta i
 		ARN: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig, "") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
 		return nil
 	}
 
