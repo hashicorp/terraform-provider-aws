@@ -96,7 +96,7 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	arn := arn.ARN{

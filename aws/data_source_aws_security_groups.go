@@ -59,7 +59,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 	for {
 		resp, err := conn.DescribeSecurityGroups(req)
 		if err != nil {
-			return fmt.Errorf("error reading security groups: %s", err)
+			return fmt.Errorf("error reading security groups: %w", err)
 		}
 
 		for _, sg := range resp.SecurityGroups {
