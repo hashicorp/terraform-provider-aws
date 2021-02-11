@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_cloudfront_cache_policy` ([#17336](https://github.com/hashicorp/terraform-provider-aws/issues/17336))
+* **New Resource:** `aws_cloudfront_cache_policy` ([#17336](https://github.com/hashicorp/terraform-provider-aws/issues/17336))
 * **New Resource:** `aws_cloudfront_realtime_log_config` ([#14974](https://github.com/hashicorp/terraform-provider-aws/issues/14974))
 * **New Resource:** `aws_config_conformance_pack` ([#17313](https://github.com/hashicorp/terraform-provider-aws/issues/17313))
 * **New Resource:** `aws_sagemaker_model_package_group` ([#17366](https://github.com/hashicorp/terraform-provider-aws/issues/17366))
@@ -14,6 +16,7 @@ ENHANCEMENTS:
 * provider: Add terraform-provider-aws version to HTTP User-Agent header ([#17486](https://github.com/hashicorp/terraform-provider-aws/issues/17486))
 * resource/aws_budgets_budget: Add `arn` attribute ([#13139](https://github.com/hashicorp/terraform-provider-aws/issues/13139))
 * resource/aws_budgets_budget: Add plan time validation for `budget_type`, `time_unit`, and `subscriber_sns_topic_arns` arguments ([#13139](https://github.com/hashicorp/terraform-provider-aws/issues/13139))
+* resource/aws_cloudfront_distribution: Add `cache_policy_id` attribute ([#17336](https://github.com/hashicorp/terraform-provider-aws/issues/17336))
 * resource/aws_cloudfront_distribution: Add `realtime_log_config_arn` attribute to `default_cache_behavior` and `ordered_cache_behavior` configuration blocks ([#14974](https://github.com/hashicorp/terraform-provider-aws/issues/14974))
 * resource/aws_cloudfront_public_key: Add import support ([#17044](https://github.com/hashicorp/terraform-provider-aws/issues/17044))
 * resource/aws_cloudwatch_log_destination: Add plan time validation to `role_arn`, `name` and `target_arn`. ([#11687](https://github.com/hashicorp/terraform-provider-aws/issues/11687))
