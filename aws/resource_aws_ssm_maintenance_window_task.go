@@ -31,13 +31,15 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"max_concurrency": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), ""),
 			},
 
 			"max_errors": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), ""),
 			},
 
 			"task_type": {
@@ -60,7 +62,8 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 
 			"targets": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
@@ -70,6 +73,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						"values": {
 							Type:     schema.TypeList,
 							Required: true,
+							MaxItems: 50,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -90,8 +94,9 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"priority": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 
 			"task_invocation_parameters": {
@@ -168,19 +173,26 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"comment": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 100),
 									},
 
 									"document_hash": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
 
 									"document_hash_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(ssm.DocumentHashType_Values(), false),
+									},
+									"document_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), ""),
 									},
 
 									"notification_config": {
@@ -198,7 +210,17 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 												"notification_events": {
 													Type:     schema.TypeList,
 													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															"All",
+															"InProgress",
+															"Success",
+															"TimedOut",
+															"Cancelled",
+															"Failed",
+														}, false),
+													},
 												},
 
 												"notification_type": {
@@ -246,8 +268,9 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 									},
 
 									"timeout_seconds": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(30, 2592000),
 									},
 									"cloudwatch_config": {
 										Type:     schema.TypeList,
@@ -424,6 +447,9 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 	if attr, ok := configParam["document_hash_type"]; ok && len(attr.(string)) != 0 {
 		params.DocumentHashType = aws.String(attr.(string))
 	}
+	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
+		params.DocumentVersion = aws.String(attr.(string))
+	}
 	if attr, ok := configParam["notification_config"]; ok && len(attr.([]interface{})) > 0 {
 		params.NotificationConfig = expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(attr.([]interface{}))
 	}
@@ -460,6 +486,9 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 	}
 	if parameters.DocumentHashType != nil {
 		result["document_hash_type"] = aws.StringValue(parameters.DocumentHashType)
+	}
+	if parameters.DocumentVersion != nil {
+		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.NotificationConfig != nil {
 		result["notification_config"] = flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(parameters.NotificationConfig)
@@ -635,7 +664,10 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		TaskType:       aws.String(d.Get("task_type").(string)),
 		ServiceRoleArn: aws.String(d.Get("service_role_arn").(string)),
 		TaskArn:        aws.String(d.Get("task_arn").(string)),
-		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("targets"); ok {
+		params.Targets = expandAwsSsmTargets(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("name"); ok {

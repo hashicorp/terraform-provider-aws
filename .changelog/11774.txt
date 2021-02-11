@@ -3,5 +3,10 @@ resource/aws_ssm_maintenance_window_task: Add `cloudwatch_config` argument
 ```
 
 ```release-note:enhancement
-resource/aws_ssm_maintenance_window_task: Add plan time validation to `task_type`, `service_role_arn`, `targets.notification_arn`, `targets.service_role_arn`
+resource/aws_ssm_maintenance_window_task: Add `document_version` argument
+```
+
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add plan time validation to `task_type`, `service_role_arn`, `targets.notification_arn`, `targets.service_role_arn`, `max_concurrency`, `max_errors`, `targets`, `priority`, 
+`task_invocation_parameters.run_command_parameters.comment`, `task_invocation_parameters.run_command_parameters.document_hash`, `task_invocation_parameters.run_command_parameters.timeout_seconds`, `task_invocation_parameters.run_command_parameters.notification_config.notification_events` 
 ```
