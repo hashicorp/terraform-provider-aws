@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -25,11 +26,16 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.Any(
+					validation.StringLenBetween(3, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), ""),
+				),
 			},
 
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 
 			"global_filter": {
@@ -39,13 +45,19 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
 						},
 						"values": {
 							Type:     schema.TypeList,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							MaxItems: 20,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
 						},
 					},
 				},
@@ -99,13 +111,21 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			"approved_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 50,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
 			},
 
 			"rejected_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 50,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
 			},
 
 			"operating_system": {
