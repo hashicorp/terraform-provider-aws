@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_ssm_patch_baseline: Add plan time validation for `name`, `description`, `global_filter.key`, `global_filter.values`,
+`approved_patches`, `rejected_patches`.
+```
