@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add `cloudwatch_config` argument
+```
+
+```release-note:enhancement
+resource/aws_ssm_maintenance_window_task: Add plan time validation to `task_type`, `service_role_arn`, `targets.notification_arn`, `targets.service_role_arn`
+```
