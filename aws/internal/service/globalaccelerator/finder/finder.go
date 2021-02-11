@@ -14,6 +14,12 @@ func AcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*g
 		AcceleratorArn: aws.String(arn),
 	}
 
+	return Accelerator(conn, input)
+}
+
+// Accelerator returns the accelerator corresponding to the specified input.
+// Returns NotFoundError if no accelerator is found.
+func Accelerator(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
 	output, err := conn.DescribeAccelerator(input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
@@ -37,13 +43,19 @@ func AcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*g
 	return output.Accelerator, nil
 }
 
-// AcceleratorAttributesByARN returns the accelerator corresponding to the specified ARN.
+// AcceleratorAttributesByARN returns the accelerator attributes corresponding to the specified ARN.
 // Returns NotFoundError if no accelerator is found.
 func AcceleratorAttributesByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
+	return AcceleratorAttributes(conn, input)
+}
+
+// AcceleratorAttributes returns the accelerator attributes corresponding to the specified input.
+// Returns NotFoundError if no accelerator is found.
+func AcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
 	output, err := conn.DescribeAcceleratorAttributes(input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
