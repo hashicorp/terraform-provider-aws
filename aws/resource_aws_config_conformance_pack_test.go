@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,7 +16,6 @@ import (
 func testAccConfigConformancePack_basic(t *testing.T) {
 	var pack configservice.ConformancePackDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
@@ -23,22 +24,64 @@ func testAccConfigConformancePack_basic(t *testing.T) {
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConformancePackConfigRuleIdentifier(rName, rId),
+				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					testAccCheckConfigConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"template_body"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_body",
+				},
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_forceNew(t *testing.T) {
+	var before, after configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-update")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &before),
+				),
+			},
+			{
+				Config: testAccConfigConformancePackBasicConfig(rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &after),
+					testAccCheckConfigConformancePackRecreated(&before, &after),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rNameUpdated))),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_body",
+				},
 			},
 		},
 	})
@@ -55,7 +98,7 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConformancePackConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
+				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigConformancePack(), resourceName),
@@ -66,12 +109,9 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigConformancePack_InputParameters(t *testing.T) {
+func testAccConfigConformancePack_inputParameters(t *testing.T) {
 	var pack configservice.ConformancePackDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := "IAM_PASSWORD_POLICY"
-	pKey := "ParamKey"
-	pValue := "ParamValue"
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
@@ -80,15 +120,18 @@ func testAccConfigConformancePack_InputParameters(t *testing.T) {
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConformancePackConfigRuleIdentifierParameter(rName, rId, pKey, pValue),
+				Config: testAccConfigConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameters."+pKey, pValue),
-					testAccCheckConfigConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
+						"parameter_name":  "TestKey",
+						"parameter_value": "TestValue",
+					}),
 				),
 			},
 			{
@@ -104,8 +147,6 @@ func testAccConfigConformancePack_InputParameters(t *testing.T) {
 func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 	var pack configservice.ConformancePackDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	bName := "awsconfigconforms" + rName
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
@@ -114,15 +155,14 @@ func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConformancePackConfigRuleIdentifierS3Delivery(rName, rId, bName),
+				Config: testAccConfigConformancePackS3DeliveryConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rId),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					testAccCheckConfigConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 				),
 			},
 			{
@@ -138,9 +178,6 @@ func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 func testAccConfigConformancePack_S3Template(t *testing.T) {
 	var pack configservice.ConformancePackDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	bName := rName
-	kName := rName + ".yaml"
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
@@ -149,15 +186,14 @@ func testAccConfigConformancePack_S3Template(t *testing.T) {
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigConformancePackConfigRuleIdentifierS3Template(rName, rId, bName, kName),
+				Config: testAccConfigConformancePackS3TemplateConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					testAccCheckConfigConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 				),
 			},
 			{
@@ -165,6 +201,203 @@ func testAccConfigConformancePack_S3Template(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"template_s3_uri"},
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_updateInputParameters(t *testing.T) {
+	var pack configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigConformancePackUpdateInputParameterConfig(rName, "TestKey1", "TestKey2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
+						"parameter_name":  "TestKey1",
+						"parameter_value": "TestValue1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
+						"parameter_name":  "TestKey2",
+						"parameter_value": "TestValue2",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+			{
+				Config: testAccConfigConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_updateS3Delivery(t *testing.T) {
+	var pack configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackS3DeliveryConfig(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigConformancePackS3DeliveryConfig(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_updateS3Template(t *testing.T) {
+	var pack configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackS3TemplateConfig(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigConformancePackS3TemplateConfig(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_s3_uri"},
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_updateTemplateBody(t *testing.T) {
+	var pack configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigConformancePackUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_body",
+				},
+			},
+		},
+	})
+}
+
+func testAccConfigConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
+	var pack configservice.ConformancePackDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConformancePackS3TemplateAndTemplateBodyConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigConformancePackExists(resourceName, &pack),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_body",
+					"template_s3_uri",
+				},
 			},
 		},
 	})
@@ -178,25 +411,25 @@ func testAccCheckConfigConformancePackDestroy(s *terraform.State) error {
 			continue
 		}
 
-		rule, err := configDescribeConformancePack(conn, rs.Primary.ID)
+		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
 
-		if isAWSErr(err, configservice.ErrCodeNoSuchConformancePackException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error describing Config  Managed Rule (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error describing Config Conformance Pack (%s): %w", rs.Primary.ID, err)
 		}
 
-		if rule != nil {
-			return fmt.Errorf("Config  Managed Rule (%s) still exists", rs.Primary.ID)
+		if pack != nil {
+			return fmt.Errorf("Config Conformance Pack (%s) still exists", rs.Primary.ID)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckConfigConformancePackExists(resourceName string, ocr *configservice.ConformancePackDetail) resource.TestCheckFunc {
+func testAccCheckConfigConformancePackExists(resourceName string, detail *configservice.ConformancePackDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -208,47 +441,31 @@ func testAccCheckConfigConformancePackExists(resourceName string, ocr *configser
 		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing  conformance pack (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error describing Config Conformance Pack (%s): %w", rs.Primary.ID, err)
 		}
 
 		if pack == nil {
-			return fmt.Errorf(" conformance pack (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("Config Conformance Pack (%s) not found", rs.Primary.ID)
 		}
 
-		*ocr = *pack
+		*detail = *pack
 
 		return nil
 	}
 }
 
-func testAccCheckConfigConformancePackSuccessful(resourceName string) resource.TestCheckFunc {
+func testAccCheckConfigConformancePackRecreated(before, after *configservice.ConformancePackDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", resourceName)
+		if aws.StringValue(before.ConformancePackArn) == aws.StringValue(after.ConformancePackArn) {
+			return fmt.Errorf("AWS Config Conformance Pack was not recreated")
 		}
-
-		conn := testAccProvider.Meta().(*AWSClient).configconn
-
-		packStatus, err := configDescribeConformancePackStatus(conn, rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error describing conformance pack status (%s): %s", rs.Primary.ID, err)
-		}
-		if packStatus == nil {
-			return fmt.Errorf("conformance pack status (%s) not found", rs.Primary.ID)
-		}
-		if *packStatus.ConformancePackState != configservice.ConformancePackStateCreateComplete {
-			return fmt.Errorf("conformance pack (%s) returned %s status:  %s", rs.Primary.ID, *packStatus.ConformancePackState, *packStatus.ConformancePackStatusReason)
-		}
-
 		return nil
 	}
 }
 
 func testAccConfigConformancePackConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_config_configuration_recorder" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -283,13 +500,12 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccConfigConformancePackConfigRuleIdentifier(rName, ruleIdentifier string) string {
-	return fmt.Sprintf(`
-%[3]s
-
+func testAccConfigConformancePackBasicConfig(rName string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test]
-  name          = %[1]q
+  name          = %q
   template_body = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -297,25 +513,84 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier, testAccConfigConformancePackConfigBase(rName))
+`, rName))
 }
 
-func testAccConfigConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
-	return fmt.Sprintf(`
-%[5]s
+func testAccConfigConformancePackUpdateConfig(rName string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_conformance_pack" "test" {
+  depends_on    = [aws_config_configuration_recorder.test]
+  name          = %q
+  template_body = <<EOT
+Resources:
+  IAMGroupHasUsersCheck:
+    Properties:
+      ConfigRuleName: IAMGroupHasUsersCheck
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_GROUP_HAS_USERS_CHECK
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName))
+}
 
+func testAccConfigConformancePackInputParameterConfig(rName, pName, pValue string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test]
-  name       = %[1]q
-  input_parameters = {
-    %[3]s = %[4]q
+  name       = %q
+
+  input_parameter {
+    parameter_name  = %[2]q
+    parameter_value = %q
   }
+
   template_body = <<EOT
 Parameters:
+  %[2]s:
+    Type: String
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName, pName, pValue))
+}
+
+func testAccConfigConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_conformance_pack" "test" {
+  depends_on = [
+  aws_config_configuration_recorder.test]
+  name = %[1]q
+
+  input_parameter {
+    parameter_name  = %[2]q
+    parameter_value = "TestValue1"
+  }
+
+  input_parameter {
+    parameter_name  = %[3]q
+    parameter_value = "TestValue2"
+  }
+
+  template_body = <<EOT
+Parameters:
+  %[2]s:
+    Type: String
   %[3]s:
     Type: String
 Resources:
@@ -324,27 +599,27 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier, pKey, pValue, testAccConfigConformancePackConfigBase(rName))
+`, rName, pName1, pName2))
 }
 
-func testAccConfigConformancePackConfigRuleIdentifierS3Delivery(rName, ruleIdentifier, bName string) string {
-	return fmt.Sprintf(`
-%[4]s
-
+func testAccConfigConformancePackS3DeliveryConfig(rName, bucketName string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[3]q
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
+
 resource "aws_config_conformance_pack" "test" {
   depends_on             = [aws_config_configuration_recorder.test]
-  name                   = %[1]q
-  delivery_s3_bucket     = aws_s3_bucket.test.id
-  delivery_s3_key_prefix = %[2]q
+  name                   = %[2]q
+  delivery_s3_bucket     = aws_s3_bucket.test.bucket
+  delivery_s3_key_prefix = %[1]q
   template_body          = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -352,25 +627,25 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-`, rName, ruleIdentifier, bName, testAccConfigConformancePackConfigBase(rName))
+`, bucketName, rName))
 }
 
-func testAccConfigConformancePackConfigRuleIdentifierS3Template(rName, ruleIdentifier, bName, kName string) string {
-	return fmt.Sprintf(`
-%[5]s
-
+func testAccConfigConformancePackS3TemplateConfig(rName, bucketName string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %[3]q
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
+
 resource "aws_s3_bucket_object" "test" {
   bucket  = aws_s3_bucket.test.id
-  key     = %[4]q
+  key     = %[1]q
   content = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -378,14 +653,57 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
+
 resource "aws_config_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test]
-  name            = "%[1]s"
-  template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
+  name            = %q
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
 }
-`, rName, ruleIdentifier, bName, kName, testAccConfigConformancePackConfigBase(rName))
+`, bucketName, rName))
+}
+
+func testAccConfigConformancePackS3TemplateAndTemplateBodyConfig(rName string) string {
+	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = aws_s3_bucket.test.id
+  key     = %[1]q
+  content = <<EOT
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+}
+
+resource "aws_config_conformance_pack" "test" {
+  depends_on      = [aws_config_configuration_recorder.test]
+  name            = %[1]q
+  template_body   = <<EOT
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.id}"
+}
+`, rName))
 }
