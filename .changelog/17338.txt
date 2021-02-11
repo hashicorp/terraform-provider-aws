@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/codebuild_report_group: Allow for deleting reports when deleting a report group
+resource/aws_codebuild_report_group: Add `delete_reports` argument
 ```

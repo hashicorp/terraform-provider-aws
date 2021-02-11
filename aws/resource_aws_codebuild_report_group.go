@@ -191,7 +191,7 @@ func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := waiter.ReportGroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become deleted: %s", d.Id(), err)
+		return fmt.Errorf("error while waiting for CodeBuild Report Group (%s) to become deleted: %w", d.Id(), err)
 	}
 
 	return nil
