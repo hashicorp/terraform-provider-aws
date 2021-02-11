@@ -443,6 +443,8 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 * If any rule has `filter` specified then they all must
 * `priority` is optional (with a default value of `0`) but must be unique between multiple rules
 
+~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
+
 The `destination` object supports the following:
 
 * `bucket` - (Required) The ARN of the S3 bucket where you want Amazon S3 to store replicas of the object identified by the rule.
@@ -482,7 +484,7 @@ The `apply_server_side_encryption_by_default` object supports the following:
 
 The `grant` object supports the following:
 
-* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.  
+* `id` - (optional) Canonical user id to grant for. Used only when `type` is `CanonicalUser`.
 * `type` - (required) - Type of grantee to apply for. Valid values are `CanonicalUser` and `Group`. `AmazonCustomerByEmail` is not supported.
 * `permissions` - (required) List of permissions to apply for grantee. Valid values are `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`.
 * `uri` - (optional) Uri address to grant for. Used only when `type` is `Group`.
