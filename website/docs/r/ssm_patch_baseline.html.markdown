@@ -149,6 +149,7 @@ The `approval_rule` block supports:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the patch baseline.
+* `arn` - The ARN of the patch baseline.
 
 ## Import
 

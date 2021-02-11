@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,6 +25,10 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -142,6 +148,18 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 			},
+			"rejected_patches_action": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.PatchAction_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return old == ssm.PatchActionAllowAsDependency && new == ""
+				},
+			},
+			"approved_patches_enable_non_security": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -178,6 +196,14 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 
 	if _, ok := d.GetOk("approval_rule"); ok {
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
+	}
+
+	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
+		params.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("rejected_patches_action"); ok {
+		params.RejectedPatchesAction = aws.String(v.(string))
 	}
 
 	resp, err := conn.CreatePatchBaseline(params)
@@ -224,14 +250,24 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
 	}
 
-	_, err := conn.UpdatePatchBaseline(params)
-	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
-			log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+	if d.HasChange("approved_patches_enable_non_security") {
+		params.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
+	}
+
+	if d.HasChange("rejected_patches_action") {
+		params.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
+	}
+
+	if d.HasChangesExcept("tags") {
+		_, err := conn.UpdatePatchBaseline(params)
+		if err != nil {
+			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
+				log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return err
 		}
-		return err
 	}
 
 	if d.HasChange("tags") {
@@ -268,6 +304,8 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches", flattenStringList(resp.ApprovedPatches))
 	d.Set("rejected_patches", flattenStringList(resp.RejectedPatches))
+	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
+	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
 
 	if err := d.Set("global_filter", flattenAwsSsmPatchFilterGroup(resp.GlobalFilters)); err != nil {
 		return fmt.Errorf("Error setting global filters error: %#v", err)
@@ -276,6 +314,15 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ssm",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
+	}
+	d.Set("arn", arn.String())
 
 	tags, err := keyvaluetags.SsmListTags(conn, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline)
 
