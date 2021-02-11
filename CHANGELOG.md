@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_ses_configuration_set: Add `delivery_options` argument ([#11600](https://github.com/hashicorp/terraform-provider-aws/issues/11600))
 * resource/aws_ses_event_destination: Add `arn` attribute ([#13964](https://github.com/hashicorp/terraform-provider-aws/issues/13964))
 * resource/aws_ses_event_destination: Add plan time validation for `name`, `cloudwatch_destination.default_value`, `cloudwatch_destination.default_name`, `kinesis_destination.role_arn`, `kinesis_destination.stream_arn`, and `sns_destination.topic_arn` attributes ([#13964](https://github.com/hashicorp/terraform-provider-aws/issues/13964))
+* resource/aws_ses_template: Add `arn` attribute ([#13963](https://github.com/hashicorp/terraform-provider-aws/issues/13963))
 * resource/aws_sns_topic_subscription: Add `redrive_policy` argument ([#11770](https://github.com/hashicorp/terraform-provider-aws/issues/11770))
 
 BUG FIXES:
