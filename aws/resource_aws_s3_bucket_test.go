@@ -1562,6 +1562,7 @@ func TestAccAWSS3Bucket_Replication_MultipleDestinations_EmptyFilter(t *testing.
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheckSkipS3(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1628,6 +1629,7 @@ func TestAccAWSS3Bucket_Replication_MultipleDestinations_NonEmptyFilter(t *testi
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheckSkipS3(t),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -2567,6 +2569,13 @@ func TestWebsiteEndpoint(t *testing.T) {
 			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
 		}
 	}
+}
+
+// testAccErrorCheckSkipS3 skips tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipS3(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Number of distinct destination bucket ARNs cannot exceed",
+	)
 }
 
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
