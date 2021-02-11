@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
@@ -23,8 +24,9 @@ func resourceAwsSesActiveReceiptRuleSet() *schema.Resource {
 				Computed: true,
 			},
 			"rule_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
 	}
