@@ -13,35 +13,33 @@ import (
 func resourceAwsSesConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSesConfigurationSetCreate,
-		Update: resourceAwsSesConfigurationSetUpdate,
 		Read:   resourceAwsSesConfigurationSetRead,
+		Update: resourceAwsSesConfigurationSetUpdate,
 		Delete: resourceAwsSesConfigurationSetDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"delivery_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tls_policy": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ses.TlsPolicyOptional,
+							ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"delivery_options": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"tls_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  ses.TlsPolicyOptional,
-							ValidateFunc: validation.StringInSlice([]string{
-								ses.TlsPolicyRequire,
-								ses.TlsPolicyOptional,
-							}, false),
-						},
-					},
-				},
 			},
 		},
 	}
@@ -60,34 +58,21 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 
 	_, err := conn.CreateConfigurationSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating SES configuration set: %s", err)
+		return fmt.Errorf("error creating SES configuration set (%s): %w", configurationSetName, err)
 	}
 
 	d.SetId(configurationSetName)
 
-	return resourceAwsSesConfigurationSetUpdate(d, meta)
-}
-
-func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesconn
-
-	configurationSetName := d.Get("name").(string)
-
-	updateOpts := &ses.PutConfigurationSetDeliveryOptionsInput{
-		ConfigurationSetName: aws.String(configurationSetName),
-	}
-
-	if v, ok := d.GetOk("delivery_options"); ok {
-		options := v.(*schema.Set).List()
-		delivery := options[0].(map[string]interface{})
-		updateOpts.DeliveryOptions = &ses.DeliveryOptions{
-			TlsPolicy: aws.String(delivery["tls_policy"].(string)),
+	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &ses.PutConfigurationSetDeliveryOptionsInput{
+			ConfigurationSetName: aws.String(configurationSetName),
+			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(v.([]interface{})),
 		}
-	}
 
-	_, err := conn.PutConfigurationSetDeliveryOptions(updateOpts)
-	if err != nil {
-		return fmt.Errorf("Error updating SES configuration set: %s", err)
+		_, err := conn.PutConfigurationSetDeliveryOptions(input)
+		if err != nil {
+			return fmt.Errorf("error adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
+		}
 	}
 
 	return resourceAwsSesConfigurationSetRead(d, meta)
@@ -112,21 +97,31 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if response.DeliveryOptions != nil {
-		var deliveryOptions []map[string]interface{}
-		tlsPolicy := map[string]interface{}{
-			"tls_policy": response.DeliveryOptions.TlsPolicy,
-		}
-		deliveryOptions = append(deliveryOptions, tlsPolicy)
-
-		if err := d.Set("delivery_options", deliveryOptions); err != nil {
-			return fmt.Errorf("Error setting delivery_options for SES configuration set %s: %s", d.Id(), err)
-		}
+	if err := d.Set("delivery_options", flattenSesConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
+		return fmt.Errorf("error setting delivery_options: %w", err)
 	}
 
 	d.Set("name", aws.StringValue(response.ConfigurationSet.Name))
 
 	return nil
+}
+
+func resourceAwsSesConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).sesconn
+
+	if d.HasChange("delivery_options") {
+		input := &ses.PutConfigurationSetDeliveryOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+			DeliveryOptions:      expandSesConfigurationSetDeliveryOptions(d.Get("delivery_options").([]interface{})),
+		}
+
+		_, err := conn.PutConfigurationSetDeliveryOptions(input)
+		if err != nil {
+			return fmt.Errorf("error updating SES configuration set (%s) delivery options: %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsSesConfigurationSetRead(d, meta)
 }
 
 func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface{}) error {
@@ -138,4 +133,35 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 	})
 
 	return err
+}
+
+func expandSesConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &ses.DeliveryOptions{}
+
+	if v, ok := tfMap["tls_policy"].(string); ok && v != "" {
+		options.TlsPolicy = aws.String(v)
+	}
+
+	return options
+}
+
+func flattenSesConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []interface{} {
+	if options == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"tls_policy": aws.StringValue(options.TlsPolicy),
+	}
+
+	return []interface{}{m}
 }
