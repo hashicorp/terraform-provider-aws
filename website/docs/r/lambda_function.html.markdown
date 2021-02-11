@@ -216,23 +216,27 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `code_signing_config_arn` - (Optional) To enable code signing for this function, specify the ARN of a code-signing configuration. A code-signing configuration includes a set of signing profiles, which define the trusted publishers for this function.
 * `dead_letter_config` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Description of what your Lambda Function does.
 * `environment` - (Optional) Configuration block. Detailed below.
 * `file_system_config` - (Optional) Configuration block. Detailed below.
-* `filename` - (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
+* `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri`, `s3_bucket`, `s3_key`, and `s3_object_version`.
+* `image_config` - (Optional) Configuration block. Detailed below.
+* `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename`, `s3_bucket`, `s3_key`, and `s3_object_version`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
+* `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
-* `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename`. This bucket must reside in the same AWS region where you are creating the Lambda function.
-* `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename`.
-* `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename`.
+* `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. This bucket must reside in the same AWS region where you are creating the Lambda function.
+* `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
+* `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
 * `tags` - (Optional) Map of tags to assign to the object.
+* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracing_config` - (Optional) Configuration block. Detailed below.
-* `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 
 ### dead_letter_config
@@ -251,6 +255,14 @@ Connection settings for an EFS file system. Before creating or updating Lambda f
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - (Required) Path where the function can access the file system, starting with /mnt/.
+
+### image_config
+
+Container image configuration values that override the values in the container image Dockerfile.
+
+* `command` - (Optional) Parameters that you want to pass in with `entry_point`.
+* `entry_point` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
+* `working_directory` - (Optional) Working directory.
 
 ### tracing_config
 
@@ -273,9 +285,11 @@ In addition to arguments above, the following attributes are exported:
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
 * `last_modified` - Date this resource was last modified.
 * `qualified_arn` - ARN identifying your Lambda Function Version (if versioning is enabled via `publish = true`).
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file, provided either via `filename` or `s3_*` parameters.
+* `signing_job_arn` - ARN of the signing job.
+* `signing_profile_version_arn` - ARN of the signing profile version.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `version` - Latest published version of your Lambda Function.
+* `vpc_config.vpc_id` - ID of the VPC.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/walkthrough-s3-events-adminuser-create-test-function-create-function.html
