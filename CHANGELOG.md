@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_config_conformance_pack` [GH-17313]
 * **New Resource:** `aws_sagemaker_model_package_group` ([#17366](https://github.com/hashicorp/terraform-provider-aws/issues/17366))
 * **New Resource:** `aws_securityhub_organization_admin_account` ([#17501](https://github.com/hashicorp/terraform-provider-aws/issues/17501))
 
