@@ -149,3 +149,11 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - The description of the security group
 
 [aws-default-security-groups]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html#default-security-group
+
+## Import
+
+Security Groups can be imported using the `security group id`, e.g.
+
+```
+$ terraform import aws_default_security_group.default_sg sg-903004f8
+```

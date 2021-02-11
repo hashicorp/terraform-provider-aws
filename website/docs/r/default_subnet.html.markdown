@@ -60,3 +60,11 @@ In addition to all arguments above, the following attributes are exported:
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - The IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the subnet.
+
+## Import
+
+Subnets can be imported using the `subnet id`, e.g.
+
+```
+$ terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
+```
