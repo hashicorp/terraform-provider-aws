@@ -308,7 +308,7 @@ More details about this code generation, including fixes for potential error mes
   ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
   if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-    return fmt.Errorf("error setting tags: %s", err)
+    return fmt.Errorf("error setting tags: %w", err)
   }
   ```
 
@@ -325,7 +325,7 @@ More details about this code generation, including fixes for potential error mes
   }
 
   if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-    return fmt.Errorf("error setting tags: %s", err)
+    return fmt.Errorf("error setting tags: %w", err)
   }
   ```
 

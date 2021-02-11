@@ -205,7 +205,7 @@ func configRefreshOrganizationConfigRuleStatus(conn *configservice.ConfigService
 			memberAccountStatuses, err := configGetOrganizationConfigRuleDetailedStatus(conn, name, aws.StringValue(status.OrganizationRuleStatus))
 
 			if err != nil {
-				return status, aws.StringValue(status.OrganizationRuleStatus), fmt.Errorf("unable to get Organization Config Rule detailed status for showing member account errors: %s", err)
+				return status, aws.StringValue(status.OrganizationRuleStatus), fmt.Errorf("unable to get Organization Config Rule detailed status for showing member account errors: %w", err)
 			}
 
 			var errBuilder strings.Builder
