@@ -337,11 +337,10 @@ This can be used with third party S3 implementations that do not support such fe
 
 ```hcl
 resource "aws_s3_bucket" "bucket" {
-  bucket = "mybucket"
- 
+  bucket                   = "mybucket"
   skip_acceleration_config = true
-  skip_payer_config = true
-  skip_lock_config = true
+  skip_payer_config        = true
+  skip_lock_config         = true
 
 }
 ```
