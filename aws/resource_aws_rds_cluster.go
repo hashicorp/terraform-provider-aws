@@ -131,6 +131,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Optional: true,
 			},
 
+			"enable_global_write_forwarding": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"reader_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -853,6 +859,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.GlobalClusterIdentifier = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("enable_global_write_forwarding"); ok {
+			createOpts.EnableGlobalWriteForwarding = aws.Bool(attr.(bool))
+		}
+
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			createOpts.VpcSecurityGroupIds = expandStringSet(attr)
 		}
@@ -1205,6 +1215,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("enable_http_endpoint") {
 		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("enable_global_write_forwarding") {
+		req.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
 		requestUpdate = true
 	}
 
