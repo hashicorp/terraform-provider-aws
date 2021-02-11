@@ -331,7 +331,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 ```
 
-### Skipping acceleration, payer and lock configuration 
+### Skipping acceleration, payer and lock configuration
 
 This can be used with third party S3 implementations that do not support such features.
 
