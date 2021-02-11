@@ -180,7 +180,7 @@ func resourceAwsCloudFrontRealtimeLogConfigDelete(d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 Resolver Query Log Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Cloudfront Real-time Log Config (%s): %w", d.Id(), err)
 	}
 
 	return nil
