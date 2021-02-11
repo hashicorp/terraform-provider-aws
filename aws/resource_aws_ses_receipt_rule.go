@@ -313,11 +313,9 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"scope": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ses.StopScopeRuleSet,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ses.StopScope_Values(), false),
 						},
 
 						"topic_arn": {
