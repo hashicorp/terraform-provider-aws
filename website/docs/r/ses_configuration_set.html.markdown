@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ses_configuration_set
 
-Provides an SES configuration set resource
+Provides an SES configuration set resource.
 
 ## Example Usage
 
@@ -32,14 +32,15 @@ resource "aws_ses_configuration_set" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following argument is required:
 
-* `delivery_options` - (Optional) A configuration block that specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Detailed below.
-* `name` - (Required) The name of the configuration set
+* `name` - (Required) Name of the configuration set.
 
-### delivery_options Argument Reference
+The following argument is optional:
 
-The `delivery_options` configuration block supports the following argument:
+* `delivery_options` - (Optional) Configuration block. Detailed below.
+
+### delivery_options
 
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). If the value is `Require`, messages are only delivered if a TLS connection can be established. If the value is `Optional`, messages can be delivered in plain text if a TLS connection can't be established. Valid values: `Require` or `Optional`. Defaults to `Optional`.
 
@@ -47,8 +48,8 @@ The `delivery_options` configuration block supports the following argument:
 
 In addition to the arguments, which are exported, the following attributes are exported:
 
-* `id` - The SES configuration set name.
-* `arn` - The SES configuration set ARN.
+* `arn` - SES configuration set ARN.
+* `id` - SES configuration set name.
 
 ## Import
 
