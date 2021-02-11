@@ -88,7 +88,7 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 
 	listenerArn, certificateArn, err := tfelbv2.ListenerCertificateParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
