@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/ses_template: Add `arn` attribute.
+```
+
