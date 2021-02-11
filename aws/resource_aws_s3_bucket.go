@@ -1064,6 +1064,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
 			d.Set("acceleration_status", accelerate.Status)
 		}
+	} else {
+		d.Set("acceleration_status", "")
 	}
 
 	// Read the request payer configuration.
@@ -1082,6 +1084,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		if payer, ok := payerResponse.(*s3.GetBucketRequestPaymentOutput); ok {
 			d.Set("request_payer", payer.Payer)
 		}
+	} else {
+		d.Set("request_payer", "BucketOwner")
 	}
 
 	// Read the logging configuration
