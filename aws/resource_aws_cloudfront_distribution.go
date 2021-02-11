@@ -58,6 +58,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"compress": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -66,7 +70,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"default_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  86400,
+							Computed: true,
 						},
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
@@ -74,8 +78,9 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
@@ -104,6 +109,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"headers": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"query_string": {
@@ -113,6 +119,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"query_string_cache_keys": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
@@ -144,7 +151,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  31536000,
+							Computed: true,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
@@ -229,6 +236,10 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"compress": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -237,7 +248,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"default_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  86400,
+							Computed: true,
 						},
 						"field_level_encryption_id": {
 							Type:     schema.TypeString,
@@ -245,7 +256,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						},
 						"forwarded_values": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -267,6 +279,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
 													Optional: true,
+													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
@@ -275,6 +288,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"headers": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"query_string": {
@@ -284,6 +298,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"query_string_cache_keys": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
@@ -315,7 +330,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"max_ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  31536000,
+							Computed: true,
 						},
 						"min_ttl": {
 							Type:     schema.TypeInt,
@@ -342,6 +357,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"trusted_signers": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
@@ -539,6 +555,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"locations": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"restriction_type": {
