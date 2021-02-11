@@ -78,7 +78,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 									"dimensions": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										MaxItems: 10,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"metric_name": {
@@ -187,7 +186,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			"dimensions": {
 				Type:          schema.TypeMap,
 				Optional:      true,
-				MaxItems:      10,
 				ConflictsWith: []string{"metric_query"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
