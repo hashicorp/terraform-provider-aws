@@ -45,6 +45,9 @@ func dataSourceVPCPeeringConnectionsRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
+	if resp == nil {
+		return fmt.Errorf("error reading EC2 VPC Peering Connections: empty response")
+	}
 
 	var ids []string
 	for _, pcx := range resp.VpcPeeringConnections {
