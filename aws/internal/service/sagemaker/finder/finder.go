@@ -24,6 +24,25 @@ func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	return output, nil
 }
 
+// ModelPackageGroupByName returns the Model Package Group corresponding to the specified name.
+// Returns nil if no Model Package Group is found.
+func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+	input := &sagemaker.DescribeModelPackageGroupInput{
+		ModelPackageGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeModelPackageGroup(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}
+
 // ImageByName returns the Image corresponding to the specified name.
 // Returns nil if no Image is found.
 func ImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
