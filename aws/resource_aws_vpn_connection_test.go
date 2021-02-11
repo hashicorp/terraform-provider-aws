@@ -524,6 +524,50 @@ func TestAccAWSVpnConnection_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfigLocalRemoteIpv4Cidrs("10.111.0.0/16", "10.222.33.0/24"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "local_ipv4_network_cidr", "10.111.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "remote_ipv4_network_cidr", "10.222.33.0/24"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfigIpv6(65000, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "local_ipv6_network_cidr", "1111:2222:3333:4444::/64"),
+					resource.TestCheckResourceAttr(resourceName, "remote_ipv6_network_cidr", "5555:6666:7777::/48"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnConnection_disappears(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
@@ -1114,6 +1158,36 @@ resource "aws_vpn_connection" "test" {
   }
 }
 `, rBgpAsn, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAwsVpnConnectionConfigLocalRemoteIpv4Cidrs(localIpv4Cidr string, remoteIpv4Cidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "vpn_gateway" {
+  tags = {
+    Name = "vpn_gateway"
+  }
+}
+
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = 65000
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "main-customer-gateway"
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
+  type                = "ipsec.1"
+  static_routes_only  = false
+
+  local_ipv4_network_cidr  = "%s"
+  remote_ipv4_network_cidr = "%s"
+}
+`, localIpv4Cidr, remoteIpv4Cidr)
 }
 
 // Test our VPN tunnel config XML parsing
