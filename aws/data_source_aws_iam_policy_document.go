@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
@@ -69,7 +70,7 @@ func dataSourceAwsIamPolicyDocument() *schema.Resource {
 										Required: true,
 									},
 									"values": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -310,9 +311,8 @@ func dataSourceAwsIamPolicyDocumentMakeConditions(in []interface{}, version stri
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourceAwsIamPolicyDocumentReplaceVarsInList(
-			iamPolicyDecodeConfigStringList(
-				item["values"].(*schema.Set).List(),
-			), version,
+			aws.StringValueSlice(expandStringList(item["values"].([]interface{}))),
+			version,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error reading values: %w", err)

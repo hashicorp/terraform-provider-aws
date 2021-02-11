@@ -393,8 +393,8 @@ func testAccAWSIAMPolicyDocumentExpectedJSON() string {
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "home/${aws:username}/",
-            "home/"
+            "home/",
+            "home/${aws:username}/"
           ]
         }
       }
@@ -560,8 +560,8 @@ func testAccAWSIAMPolicyDocumentSourceExpectedJSON() string {
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "home/${aws:username}/",
-            "home/"
+            "home/",
+            "home/${aws:username}/"
           ]
         }
       }
