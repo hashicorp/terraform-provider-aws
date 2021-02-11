@@ -23,9 +23,12 @@ func dataSourceAwsCustomerGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"bgp_asn": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"device_name": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"ip_address": {
@@ -81,6 +84,7 @@ func dataSourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("ip_address", cg.IpAddress)
 	d.Set("type", cg.Type)
+	d.Set("device_name", cg.DeviceName)
 	d.SetId(aws.StringValue(cg.CustomerGatewayId))
 
 	if v := aws.StringValue(cg.BgpAsn); v != "" {
