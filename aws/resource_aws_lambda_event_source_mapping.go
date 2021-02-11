@@ -60,6 +60,13 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"topics": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"batch_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -205,6 +212,11 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		t, _ := time.Parse(time.RFC3339, startingPositionTimestamp.(string))
 		params.StartingPositionTimestamp = aws.Time(t)
 	}
+
+	if topics, ok := d.GetOk("topics"); ok && topics.(*schema.Set).Len() > 0 {
+		params.Topics = expandStringSet(topics.(*schema.Set))
+	}
+
 	if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
 		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
 	}
@@ -253,9 +265,8 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error creating Lambda event source mapping: %s", err)
 	}
 
-	// No error
-	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
+
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
 }
 
@@ -297,6 +308,9 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
 	if err := d.Set("destination_config", flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)); err != nil {
 		return fmt.Errorf("error setting destination_config: %s", err)
+	}
+	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
+		return fmt.Errorf("error setting topics: %s", err)
 	}
 
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
