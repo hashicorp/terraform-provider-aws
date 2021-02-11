@@ -16,6 +16,7 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCodeStarConnectionsConnectionCreate,
 		Read:   resourceAwsCodeStarConnectionsConnectionRead,
+		Update: resourceAwsCodeStarConnectionsConnectionUpdate,
 		Delete: resourceAwsCodeStarConnectionsConnectionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -45,12 +46,7 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
 
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -63,7 +59,7 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
 		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CodestarconnectionsTags()
 	}
 
@@ -105,12 +101,27 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 	d.Set("provider_type", resp.Connection.ProviderType)
 
 	tags, err := keyvaluetags.CodestarconnectionsListTags(conn, arn)
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for CodeStar connection (%s): %w", arn, err)
+		return fmt.Errorf("error listing tags for CodeStar Connection (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for CodeStar connection (%s): %w", arn, err)
+		return fmt.Errorf("error setting tags for CodeStar Connection (%s): %w", arn, err)
+	}
+
+	return nil
+}
+
+func resourceAwsCodeStarConnectionsConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).codestarconnectionsconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CodestarconnectionsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error Codestar Connection (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return nil

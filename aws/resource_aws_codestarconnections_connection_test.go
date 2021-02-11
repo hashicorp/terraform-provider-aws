@@ -65,7 +65,7 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeStarConnectionsConnection_tags(t *testing.T) {
+func TestAccAWSCodeStarConnectionsConnection_Tags(t *testing.T) {
 	var v codestarconnections.Connection
 	resourceName := "aws_codestarconnections_connection.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -76,17 +76,34 @@ func TestAccAWSCodeStarConnectionsConnection_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeStarConnectionsConnectionConfigTags(rName),
+				Config: testAccAWSCodeStarConnectionsConnectionConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeStarConnectionsConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeStarConnectionsConnectionConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -146,16 +163,29 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName)
 }
 
-func testAccAWSCodeStarConnectionsConnectionConfigTags(rName string) string {
+func testAccAWSCodeStarConnectionsConnectionConfigTags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "Bitbucket"
 
   tags = {
-    Name        = %[1]q
-    Environment = "production"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSCodeStarConnectionsConnectionConfigTags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "Bitbucket"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
