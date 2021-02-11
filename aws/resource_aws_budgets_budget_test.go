@@ -284,7 +284,7 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
