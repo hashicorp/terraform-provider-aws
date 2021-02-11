@@ -1987,7 +1987,8 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
-				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				}
+				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
 					// `throughput` is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
@@ -2061,7 +2062,8 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
 						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
-				} else if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				}
+				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
 					// throughput is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
