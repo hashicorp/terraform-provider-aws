@@ -263,7 +263,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
     - [`aws_dx_transit_virtual_interface` resource](/docs/providers/aws/r/dx_transit_virtual_interface.html)
     - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
-    - [`aws_ec2_capacity_reservation` resource](/docs/providers/aws/r/ec2_capacity_reservation.html)
     - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
     - [`aws_ec2_traffic_mirror_filter` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter.html)
     - [`aws_ec2_traffic_mirror_filter_rule` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter_rule.html)
