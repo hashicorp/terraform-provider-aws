@@ -75,8 +75,9 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"approve_after_days": {
-							Type:     schema.TypeInt,
-							Required: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
 						},
 
 						"compliance_level": {
@@ -99,13 +100,19 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"key": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
 									},
 									"values": {
 										Type:     schema.TypeList,
 										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										MaxItems: 20,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 64),
+										},
 									},
 								},
 							},
