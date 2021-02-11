@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -262,10 +263,14 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
+
+	if _, err := waiter.EventSourceMappingCreate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
+	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
 }
@@ -316,12 +321,12 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
 	switch state {
-	case "Enabled", "Enabling":
+	case waiter.EventSourceMappingStateEnabled, waiter.EventSourceMappingStateEnabling:
 		d.Set("enabled", true)
-	case "Disabled", "Disabling":
+	case waiter.EventSourceMappingStateDisabled, waiter.EventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
-		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
+		log.Printf("[WARN] Lambda event source mapping is neither enabled nor disabled but %s", state)
 	}
 
 	return nil
@@ -415,7 +420,11 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		_, err = conn.UpdateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.EventSourceMappingUpdate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
