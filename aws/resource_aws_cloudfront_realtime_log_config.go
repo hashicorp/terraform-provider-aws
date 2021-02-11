@@ -115,7 +115,7 @@ func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta int
 
 	logConfig, err := finder.RealtimeLogConfigByARN(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
