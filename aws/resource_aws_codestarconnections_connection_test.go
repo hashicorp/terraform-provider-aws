@@ -65,6 +65,33 @@ func TestAccAWSCodeStarConnectionsConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeStarConnectionsConnection_tags(t *testing.T) {
+	var v codestarconnections.Connection
+	resourceName := "aws_codestarconnections_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeStarConnectionsConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeStarConnectionsConnectionConfigTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCodeStarConnectionsConnectionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodeStarConnectionsConnectionExists(n string, v *codestarconnections.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -115,6 +142,20 @@ func testAccAWSCodeStarConnectionsConnectionConfigBasic(rName string) string {
 resource "aws_codestarconnections_connection" "test" {
   name          = %[1]q
   provider_type = "Bitbucket"
+}
+`, rName)
+}
+
+func testAccAWSCodeStarConnectionsConnectionConfigTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codestarconnections_connection" "test" {
+  name          = %[1]q
+  provider_type = "Bitbucket"
+
+  tags = {
+    Name        = %[1]q
+    Environment = "production"
+  }
 }
 `, rName)
 }
