@@ -83,7 +83,6 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource5Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource5Name, "tags.Name", rName),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
