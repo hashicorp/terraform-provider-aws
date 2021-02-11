@@ -155,7 +155,7 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapsho
 	d.Set("owner_alias", snapshot.OwnerAlias)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	snapshotArn := arn.ARN{

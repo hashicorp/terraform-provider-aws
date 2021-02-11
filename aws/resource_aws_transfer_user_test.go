@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,27 +14,28 @@ import (
 
 func TestAccAWSTransferUser_basic(t *testing.T) {
 	var conf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_user.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_transfer_user.foo", "arn", "transfer", regexp.MustCompile(`user/.+`)),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`user/.+`)),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "server_id", "aws_transfer_server.foo", "id"),
+						resourceName, "server_id", "aws_transfer_server.foo", "id"),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_transfer_user.foo",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -45,57 +45,58 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 
 func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	var conf transfer.DescribedUser
+	resourceName := "aws_transfer_user.foo"
 	rName := acctest.RandString(10)
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: "aws_transfer_user.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_options(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/home/tftestuser"),
+						resourceName, "home_directory", "/home/tftestuser"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.%", "3"),
+						resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.NAME", "tftestuser"),
+						resourceName, "tags.NAME", "tftestuser"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.ENV", "test"),
+						resourceName, "tags.ENV", "test"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.ADMIN", "test"),
+						resourceName, "tags.ADMIN", "test"),
 				),
 			},
 			{
 				Config: testAccAWSTransferUserConfig_modify(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/test"),
+						resourceName, "home_directory", "/test"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.%", "2"),
+						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.NAME", "tf-test-user"),
+						resourceName, "tags.NAME", "tf-test-user"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "tags.TEST", "test2"),
+						resourceName, "tags.TEST", "test2"),
 				),
 			},
 			{
 				Config: testAccAWSTransferUserConfig_forceNew(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferUserExists("aws_transfer_user.foo", &conf),
+					testAccCheckAWSTransferUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "user_name", "tftestuser2"),
+						resourceName, "user_name", "tftestuser2"),
 					resource.TestCheckResourceAttrPair(
-						"aws_transfer_user.foo", "role", "aws_iam_role.foo", "arn"),
+						resourceName, "role", "aws_iam_role.foo", "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_transfer_user.foo", "home_directory", "/home/tftestuser2"),
+						resourceName, "home_directory", "/home/tftestuser2"),
 				),
 			},
 		},
@@ -133,19 +134,24 @@ func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSTransferUserName_validation("!@#$%^"),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation(acctest.RandString(2)),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
-				Config:      testAccAWSTransferUserName_validation(acctest.RandString(33)),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				Config:             testAccAWSTransferUserName_validation(acctest.RandString(33)),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation(acctest.RandString(101)),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation("-abcdef"),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
 			},
 			{
 				Config:             testAccAWSTransferUserName_validation("valid_username"),
@@ -274,13 +280,14 @@ resource "aws_transfer_server" "foo" {
     NAME = "tf-acc-test-transfer-server"
   }
 }
+
+data "aws_partition" "current" {}
 `
 
 func testAccAWSTransferUserConfig_basic(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -289,7 +296,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -299,7 +306,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -324,12 +331,11 @@ resource "aws_transfer_user" "foo" {
   user_name = "tftestuser"
   role      = aws_iam_role.foo.arn
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserName_validation(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_transfer_user" "foo" {
   server_id = aws_transfer_server.foo.id
   user_name = "%s"
@@ -346,7 +352,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -354,14 +360,13 @@ resource "aws_iam_role" "foo" {
 }
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -370,7 +375,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -380,7 +385,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -409,7 +414,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -438,7 +443,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -456,14 +461,13 @@ resource "aws_transfer_user" "foo" {
     ADMIN = "test"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -472,7 +476,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -482,7 +486,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -511,7 +515,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -538,7 +542,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -555,14 +559,13 @@ resource "aws_transfer_user" "foo" {
     TEST = "test2"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
-	return testAccAWSTransferUserConfig_base + fmt.Sprintf(`
-
+	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -571,7 +574,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -581,7 +584,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -610,7 +613,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeBucket}",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeBucket}",
     ]
   }
 
@@ -639,7 +642,7 @@ data "aws_iam_policy_document" "foo" {
     ]
 
     resources = [
-      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+      "arn:${data.aws_partition.current.partition}:s3:::&{transfer:HomeDirectory}*",
     ]
   }
 }
@@ -656,7 +659,7 @@ resource "aws_transfer_user" "foo" {
     TEST = "test2"
   }
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappings(rName string) string {
@@ -673,7 +676,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -711,7 +714,7 @@ resource "aws_transfer_user" "foo" {
 
   home_directory_mappings {
     entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf" 
+    target = "/bucket3/customized-reports/tftestuser.pdf"
   }
 }
 `, rName))
@@ -731,7 +734,7 @@ resource "aws_iam_role" "foo" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "transfer.amazonaws.com"
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -769,12 +772,12 @@ resource "aws_transfer_user" "foo" {
 
   home_directory_mappings {
     entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf" 
+    target = "/bucket3/customized-reports/tftestuser.pdf"
   }
 
   home_directory_mappings {
     entry  = "/your-personal-report2.pdf"
-    target = "/bucket3/customized-reports2/tftestuser.pdf" 
+    target = "/bucket3/customized-reports2/tftestuser.pdf"
   }
 }
 `, rName))

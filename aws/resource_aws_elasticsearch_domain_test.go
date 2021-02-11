@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -26,35 +27,79 @@ func init() {
 func testSweepElasticSearchDomains(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).esconn
 
-	out, err := conn.ListDomainNames(&elasticsearch.ListDomainNamesInput{})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Elasticsearch Domains: %s", err)
-	}
-	for _, domain := range out.DomainNames {
-		log.Printf("[INFO] Deleting Elasticsearch Domain: %s", *domain.DomainName)
+	var sweeperErrs *multierror.Error
 
-		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-			DomainName: domain.DomainName,
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete Elasticsearch Domain %s: %s", *domain.DomainName, err)
+	input := &elasticsearch.ListDomainNamesInput{}
+
+	// ListDomainNames has no pagination support whatsoever
+	output, err := conn.ListDomainNames(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Elasticsearch Domains: %w", err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if output == nil {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: empty response", region)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	for _, domainInfo := range output.DomainNames {
+		if domainInfo == nil {
 			continue
 		}
-		err = resourceAwsElasticSearchDomainDeleteWaiter(*domain.DomainName, conn)
+
+		name := aws.StringValue(domainInfo.DomainName)
+
+		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
+		// e.g. Deleted and Processing are both true for days in the API
+		// Filter out domains that are Deleted already.
+
+		input := &elasticsearch.DescribeElasticsearchDomainInput{
+			DomainName: domainInfo.DomainName,
+		}
+
+		output, err := conn.DescribeElasticsearchDomain(input)
+
 		if err != nil {
-			log.Printf("[ERROR] Failed to wait for deletion of Elasticsearch Domain %s: %s", *domain.DomainName, err)
+			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+
+		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
+			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
+			continue
+		}
+
+		r := resourceAwsElasticSearchDomain()
+		d := r.Data(nil)
+		d.SetId(name)
+		d.Set("domain_name", name)
+
+		err = r.Delete(d, client)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting Elasticsearch Domain (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
 		}
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
@@ -123,7 +168,7 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,7 +226,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 
 func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -570,7 +615,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_Disabled(t *testing.T
 	})
 }
 
-func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_IndexSlowLogs(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
@@ -582,9 +627,13 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_LogPublishingOptions(ri),
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeIndexSlowLogs),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeIndexSlowLogs,
+					}),
 				),
 			},
 			{
@@ -592,6 +641,101 @@ func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     resourceId,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_SearchSlowLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeSearchSlowLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeSearchSlowLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_EsApplicationLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeEsApplicationLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeEsApplicationLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_LogPublishingOptions_AuditLogs(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_LogPublishingOptions(ri, elasticsearch.LogTypeAuditLogs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_publishing_options.*", map[string]string{
+						"log_type": elasticsearch.LogTypeAuditLogs,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{"advanced_security_options.0.master_user_options"},
 			},
 		},
 	})
@@ -902,11 +1046,11 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13867
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
@@ -2071,17 +2215,17 @@ resource "aws_elasticsearch_domain" "test" {
 `, domainName)
 }
 
-func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
+func testAccESDomain_LogPublishingOptions_BaseConfig(randInt int) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
 
 resource "aws_cloudwatch_log_group" "test" {
-  name = "tf-test-%d"
+  name = "tf-test-%[1]d"
 }
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
-  policy_name = "tf-cwlp-%d"
+  policy_name = "tf-cwlp-%[1]d"
 
   policy_document = <<CONFIG
 {
@@ -2103,21 +2247,53 @@ resource "aws_cloudwatch_log_resource_policy" "example" {
 }
 CONFIG
 }
+`, randInt)
+}
 
+func testAccESDomainConfig_LogPublishingOptions(randInt int, logType string) string {
+	var auditLogsConfig string
+	if logType == elasticsearch.LogTypeAuditLogs {
+		auditLogsConfig = `
+	  	advanced_security_options {
+			enabled                        = true
+			internal_user_database_enabled = true
+			master_user_options {
+			  master_user_name     = "testmasteruser"
+			  master_user_password = "Barbarbarbar1!"
+			}
+	  	}
+	
+		domain_endpoint_options {
+	  		enforce_https       = true
+	  		tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+		}
+	
+		encrypt_at_rest {
+			enabled = true
+		}
+	
+		node_to_node_encryption {
+			enabled = true
+		}`
+	}
+	return composeConfig(testAccESDomain_LogPublishingOptions_BaseConfig(randInt), fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "7.1" # needed for ESApplication/Audit Log Types
 
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
 
+    %s
+
   log_publishing_options {
-    log_type                 = "INDEX_SLOW_LOGS"
+    log_type                 = "%s"
     cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
   }
 }
-`, randInt, randInt, randInt)
+`, randInt, auditLogsConfig, logType))
 }
 
 func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions bool) string {
@@ -2140,16 +2316,16 @@ data "aws_partition" "current" {
 }
 
 resource "aws_cognito_user_pool" "example" {
-  name = "tf-test-%d"
+  name = "tf-test-%[1]d"
 }
 
 resource "aws_cognito_user_pool_domain" "example" {
-  domain       = "tf-test-%d"
+  domain       = "tf-test-%[1]d"
   user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
-  identity_pool_name               = "tf_test_%d"
+  identity_pool_name               = "tf_test_%[1]d"
   allow_unauthenticated_identities = false
 
   lifecycle {
@@ -2158,7 +2334,7 @@ resource "aws_cognito_identity_pool" "example" {
 }
 
 resource "aws_iam_role" "example" {
-  name               = "tf-test-%d"
+  name               = "tf-test-%[1]d"
   path               = "/service-role/"
   assume_role_policy = data.aws_iam_policy_document.assume-role-policy.json
 }
@@ -2182,7 +2358,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 }
 
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name = "tf-test-%[1]d"
 
   elasticsearch_version = "6.0"
 
@@ -2198,5 +2374,5 @@ resource "aws_elasticsearch_domain" "test" {
     aws_iam_role_policy_attachment.example,
   ]
 }
-`, randInt, randInt, randInt, randInt, randInt, cognitoOptions)
+`, randInt, cognitoOptions)
 }
