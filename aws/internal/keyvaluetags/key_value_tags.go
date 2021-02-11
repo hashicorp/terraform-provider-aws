@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	AwsTagKeyPrefix              = `aws:`
-	ElasticbeanstalkTagKeyPrefix = `elasticbeanstalk:`
-	NameTagKey                   = `Name`
-	RdsTagKeyPrefix              = `rds:`
+	AwsTagKeyPrefix                             = `aws:`
+	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
+	NameTagKey                                  = `Name`
+	RdsTagKeyPrefix                             = `rds:`
+	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
 // IgnoreConfig contains various options for removing resource tags.
@@ -127,6 +128,25 @@ func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 	return result
 }
 
+// IgnoreServerlessApplicationRepository returns non-AWS and non-ServerlessApplicationRepository tag keys.
+func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+			continue
+		}
+
+		if strings.HasPrefix(k, ServerlessApplicationRepositoryTagKeyPrefix) {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
 // Ignore returns non-matching tag keys.
 func (tags KeyValueTags) Ignore(ignoreTags KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)
@@ -222,7 +242,7 @@ func (tags KeyValueTags) Keys() []string {
 // ListofMap returns a list of flattened tags.
 // Compatible with setting Terraform state for strongly typed configuration blocks.
 func (tags KeyValueTags) ListofMap() []map[string]interface{} {
-	result := make([]map[string]interface{}, len(tags))
+	result := make([]map[string]interface{}, 0, len(tags))
 
 	for k, v := range tags {
 		m := map[string]interface{}{

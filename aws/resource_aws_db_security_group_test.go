@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
@@ -31,7 +30,7 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARNEc2Classic(resourceName, "arn", "rds", fmt.Sprintf("secgrp:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr": "10.0.0.1/24",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
@@ -48,7 +47,7 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 }
 
 func testAccCheckAWSDBSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_security_group" {
@@ -115,7 +114,7 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 			return fmt.Errorf("No DB Security Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
 
 		opts := rds.DescribeDBSecurityGroupsInput{
 			DBSecurityGroupName: aws.String(rs.Primary.ID),

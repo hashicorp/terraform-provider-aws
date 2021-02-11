@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 // add sweeper to delete known test sgs
@@ -696,7 +695,7 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "",
@@ -815,7 +814,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", sgName),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "0",
 						"description":        "egress for all ipv6",
 						"from_port":          "0",
@@ -827,7 +826,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 						"self":               "false",
 						"to_port":            "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "0.0.0.0/0",
 						"description":        "egress for all ipv4",
@@ -840,7 +839,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 						"to_port":            "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "5"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "192.168.0.0/16",
 						"description":        "ingress from 192.168.0.0/16",
@@ -851,7 +850,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 						"self":               "false",
 						"to_port":            "80",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "0",
 						"description":        "ingress from all ipv6",
 						"from_port":          "80",
@@ -862,7 +861,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 						"self":               "false",
 						"to_port":            "80",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "2",
 						"cidr_blocks.0":      "10.0.2.0/24",
 						"cidr_blocks.1":      "10.0.3.0/24",
@@ -874,7 +873,7 @@ func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 						"self":               "false",
 						"to_port":            "80",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "2",
 						"cidr_blocks.0":      "10.0.0.0/24",
 						"cidr_blocks.1":      "10.0.1.0/24",
@@ -1060,7 +1059,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "0",
 						"description":        "",
 						"from_port":          "80",
@@ -1072,7 +1071,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 						"to_port":            "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "0",
 						"description":        "",
 						"from_port":          "80",
@@ -1095,7 +1094,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
+func TestAccAWSSecurityGroup_Name_Generated(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
 
@@ -1105,10 +1104,94 @@ func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSecurityGroupPrefixNameConfig("tf-acc-test-prefix-"),
+				Config: testAccAWSSecurityGroupConfig_generatedName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
+func TestAccAWSSecurityGroup_Name_TerraformPrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigName("terraform-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_NamePrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigNamePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
+func TestAccAWSSecurityGroup_NamePrefix_TerraformPrefix(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigNamePrefix("terraform-test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &group),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "terraform-test"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-test"),
 				),
 			},
 			{
@@ -1151,7 +1234,7 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":  "tcp",
 						"from_port": "80",
 						"to_port":   "8000",
@@ -1187,14 +1270,14 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 					testAccCheckAWSSecurityGroupAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "tcp",
 						"from_port":     "80",
 						"to_port":       "8000",
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"protocol":      "tcp",
 						"from_port":     "80",
 						"to_port":       "8000",
@@ -1231,7 +1314,7 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 					testAccCheckAWSSecurityGroupAttributesNegOneProtocol(&group),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "-1",
 						"from_port":     "0",
 						"to_port":       "0",
@@ -1266,7 +1349,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform_acceptance_test_example"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"protocol":      "50",
 						"from_port":     "0",
 						"to_port":       "0",
@@ -1359,7 +1442,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "Egress description",
@@ -1372,7 +1455,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 						"to_port":            "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "Ingress description",
@@ -1397,7 +1480,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "New egress description",
@@ -1410,7 +1493,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 						"to_port":            "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "New ingress description",
@@ -1429,7 +1512,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":     "1",
 						"cidr_blocks.0":     "10.0.0.0/8",
 						"description":       "",
@@ -1440,7 +1523,7 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 						"to_port":           "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":     "1",
 						"cidr_blocks.0":     "10.0.0.0/8",
 						"description":       "",
@@ -1451,32 +1534,6 @@ func TestAccAWSSecurityGroup_ruleDescription(t *testing.T) {
 						"to_port":           "8000",
 					}),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSecurityGroupConfig_generatedName,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSecurityGroupExists(resourceName, &group),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 		},
 	})
@@ -1552,7 +1609,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "",
@@ -1563,7 +1620,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 						"self":               "false",
 						"to_port":            "8000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "206.0.0.0/8",
 						"description":        "",
@@ -1604,7 +1661,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "description", "Used in the terraform acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "",
@@ -1616,7 +1673,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 						"self":               "false",
 						"to_port":            "8000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "206.0.0.0/8",
 						"description":        "",
@@ -1629,7 +1686,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 						"to_port":            "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "",
@@ -1640,7 +1697,7 @@ func TestAccAWSSecurityGroup_driftComplex(t *testing.T) {
 						"self":               "false",
 						"to_port":            "8000",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "206.0.0.0/8",
 						"description":        "",
@@ -1778,7 +1835,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					testAccCheckAWSSecurityGroupSGandCidrAttributes(&group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "10.0.0.0/8",
 						"description":        "",
@@ -1791,7 +1848,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsVPC(t *testing.T) {
 						"to_port":            "8000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "192.168.0.1/32",
 						"description":        "",
@@ -1830,7 +1887,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGsClassic(t *testing.T) {
 					testAccCheckAWSSecurityGroupEc2ClassicExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "192.168.0.1/32",
 						"description":        "",
@@ -1922,7 +1979,7 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "1",
 						"cidr_blocks.0":      "0.0.0.0/0",
 						"description":        "",
@@ -1934,7 +1991,7 @@ func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 						"self":               "false",
 						"to_port":            "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":      "0",
 						"description":        "",
 						"from_port":          "0",
@@ -3381,7 +3438,24 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccAWSSecurityGroupPrefixNameConfig(namePrefix string) string {
+func testAccAWSSecurityGroupConfigName(name string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-security-group-name"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+`, name)
+}
+
+func testAccAWSSecurityGroupConfigNamePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

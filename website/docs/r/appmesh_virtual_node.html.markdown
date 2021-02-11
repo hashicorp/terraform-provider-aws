@@ -173,8 +173,8 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name to use for the virtual node.
-* `mesh_name` - (Required) The name of the service mesh in which to create the virtual node.
+* `name` - (Required) The name to use for the virtual node. Must be between 1 and 255 characters in length.
+* `mesh_name` - (Required) The name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual node specification to apply.
 * `tags` - (Optional) A map of tags to assign to the resource.
@@ -194,7 +194,7 @@ The `backend` object supports the following:
 The `virtual_service` object supports the following:
 
 * `client_policy` - (Optional) The client policy for the backend.
-* `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend.
+* `virtual_service_name` - (Required) The name of the virtual service that is acting as a virtual node backend. Must be between 1 and 255 characters in length.
 
 The `client_policy` object supports the following:
 
@@ -221,7 +221,7 @@ The `acm` object supports the following:
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on.
+* `certificate_chain` - (Required) The certificate trust chain for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
 The `backend_defaults` object supports the following:
 
@@ -230,7 +230,9 @@ The `backend_defaults` object supports the following:
 The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
+* `connection_pool` - (Optional) The connection pool information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
+* `outlier_detection` - (Optional) The outlier detection information for the listener.
 * `timeout` - (Optional) Timeouts for different protocols.
 * `tls` - (Optional) The Transport Layer Security (TLS) properties for the listener
 
@@ -244,7 +246,7 @@ The `access_log` object supports the following:
 
 The `file` object supports the following:
 
-* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out.
+* `path` - (Required) The file path to write access logs to. You can use `/dev/stdout` to send access logs to standard out. Must be between 1 and 255 characters in length.
 
 The `service_discovery` object supports the following:
 
@@ -255,8 +257,8 @@ The `aws_cloud_map` object supports the following:
 
 * `attributes` - (Optional) A string map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
 * `namespace_name` - (Required) The name of the AWS Cloud Map namespace to use.
-Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace.
-* `service_name` - (Required) The name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service.
+Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
+* `service_name` - (Required) The name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
 
 The `dns` object supports the following:
 
@@ -267,6 +269,30 @@ The `port_mapping` object supports the following:
 * `port` - (Required) The port used for the port mapping.
 * `protocol` - (Required) The protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
 
+The `connection_pool` object supports the following:
+
+* `grpc` - (Optional) Connection pool information for gRPC listeners.
+* `http` - (Optional) Connection pool information for HTTP listeners.
+* `http2` - (Optional) Connection pool information for HTTP2 listeners.
+* `tcp` - (Optional) Connection pool information for TCP listeners.
+
+The `grpc` connection pool object supports the following:
+
+* `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
+
+The `http` connection pool object supports the following:
+
+* `max_connections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
+* `max_pending_requests` - (Optional) Number of overflowing requests after `max_connections` Envoy will queue to upstream cluster. Minimum value of `1`.
+
+The `http2` connection pool object supports the following:
+
+* `max_requests` - (Required) Maximum number of inflight requests Envoy can concurrently support across hosts in upstream cluster. Minimum value of `1`.
+
+The `tcp` connection pool object supports the following:
+
+* `max_connections` - (Required) Maximum number of outbound TCP connections Envoy can establish concurrently with all hosts in upstream cluster. Minimum value of `1`.
+
 The `health_check` object supports the following:
 
 * `healthy_threshold` - (Required) The number of consecutive successful health checks that must occur before declaring listener healthy.
@@ -276,6 +302,19 @@ The `health_check` object supports the following:
 * `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
 * `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http` or `http2`.
 * `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+
+The `outlier_detection` object supports the following:
+
+* `base_ejection_duration` - (Required) The base amount of time for which a host is ejected.
+* `interval` - (Required) The time interval between ejection sweep analysis.
+* `max_ejection_percent` - (Required) Maximum percentage of hosts in load balancing pool for upstream service that can be ejected. Will eject at least one host regardless of the value.
+Minimum value of `0`. Maximum value of `100`.
+* `max_server_errors` - (Required) Number of consecutive `5xx` errors required for ejection. Minimum value of `1`.
+
+The `base_ejection_duration` and `interval` objects support the following:
+
+* `unit` - (Required) The unit of time. Valid values: `ms`, `s`.
+* `value` - (Required) The number of time units. Minimum value of `0`.
 
 The `timeout` object supports the following:
 
@@ -329,8 +368,8 @@ The `acm` object supports the following:
 
 The `file` object supports the following:
 
-* `certificate_chain` - (Required) The certificate chain for the certificate.
-* `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on.
+* `certificate_chain` - (Required) The certificate chain for the certificate. Must be between 1 and 255 characters in length.
+* `private_key` - (Required) The private key for a certificate stored on the file system of the virtual node that the proxy is running on. Must be between 1 and 255 characters in length.
 
 ## Attributes Reference
 

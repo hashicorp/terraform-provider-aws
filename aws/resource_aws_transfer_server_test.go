@@ -159,7 +159,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -422,7 +422,7 @@ resource "aws_transfer_server" "foo" {}
 func testAccAWSTransferServerConfig_basicUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-%s"
+  name = "tf-test-transfer-server-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -441,7 +441,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -470,7 +470,7 @@ resource "aws_transfer_server" "foo" {
     ENV  = "test"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSTransferServerConfig_apigateway(rName string) string {
@@ -521,8 +521,8 @@ resource "aws_api_gateway_deployment" "test" {
 
   rest_api_id       = aws_api_gateway_rest_api.test.id
   stage_name        = "test"
-  description       = "%s"
-  stage_description = "%s"
+  description       = "%[1]s"
+  stage_description = "%[1]s"
 
   variables = {
     "a" = "2"
@@ -530,7 +530,7 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-for-apigateway-%s"
+  name = "tf-test-transfer-server-iam-role-for-apigateway-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -549,7 +549,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -569,9 +569,11 @@ resource "aws_iam_role_policy" "foo" {
 POLICY
 }
 
+data "aws_region" "current" {}
+
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.us-west-2.amazonaws.com${aws_api_gateway_resource.test.path}"
+  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.foo.arn
   logging_role           = aws_iam_role.foo.arn
 
@@ -580,7 +582,7 @@ resource "aws_transfer_server" "foo" {
     TYPE = "apigateway"
   }
 }
-`, rName, rName, rName, rName)
+`, rName)
 
 }
 
@@ -591,7 +593,7 @@ resource "aws_transfer_server" "foo" {
 }
 
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -610,7 +612,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
   role = aws_iam_role.foo.id
 
   policy = <<POLICY
@@ -629,7 +631,7 @@ resource "aws_iam_role_policy" "foo" {
 }
 POLICY
 }
-`, rName, rName)
+`, rName)
 }
 
 const testAccAWSTransferServerConfig_VpcEndPoint = `

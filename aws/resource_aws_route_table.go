@@ -548,7 +548,7 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["ipv6_cidr_block"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		buf.WriteString(fmt.Sprintf("%s-", canonicalCidrBlock(v.(string))))
 	}
 
 	if v, ok := m["cidr_block"]; ok {

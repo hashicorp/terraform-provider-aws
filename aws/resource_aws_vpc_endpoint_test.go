@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -21,64 +21,70 @@ func init() {
 	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
 		Name: "aws_vpc_endpoint",
 		F:    testSweepEc2VpcEndpoints,
+		Dependencies: []string{
+			"aws_route_table",
+		},
 	})
 }
 
 func testSweepEc2VpcEndpoints(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).ec2conn
+
+	var sweeperErrs *multierror.Error
+
 	input := &ec2.DescribeVpcEndpointsInput{}
 
-	for {
-		output, err := conn.DescribeVpcEndpoints(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeVpcEndpointsPages(input, func(page *ec2.DescribeVpcEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 VPC Endpoints: %s", err)
-		}
+		for _, vpcEndpoint := range page.VpcEndpoints {
+			if vpcEndpoint == nil {
+				continue
+			}
 
-		for _, vpcEndpoint := range output.VpcEndpoints {
 			if aws.StringValue(vpcEndpoint.State) != "available" {
 				continue
 			}
 
 			id := aws.StringValue(vpcEndpoint.VpcEndpointId)
 
-			input := &ec2.DeleteVpcEndpointsInput{
-				VpcEndpointIds: []*string{aws.String(id)},
-			}
-
 			log.Printf("[INFO] Deleting EC2 VPC Endpoint: %s", id)
-			_, err := conn.DeleteVpcEndpoints(input)
 
-			if isAWSErr(err, "InvalidVpcEndpointId.NotFound", "") {
-				continue
-			}
+			r := resourceAwsVpcEndpoint()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			err := r.Delete(d, client)
 
 			if err != nil {
-				return fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %s", id, err)
-			}
-
-			if err := vpcEndpointWaitUntilDeleted(conn, id, 10*time.Minute); err != nil {
-				return fmt.Errorf("error waiting for VPC Endpoint (%s) to delete: %s", id, err)
+				sweeperErr := fmt.Errorf("error deleting EC2 VPC Endpoint (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 VPC Endpoints: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
@@ -511,7 +517,7 @@ func TestAccAWSVpcEndpoint_VpcEndpointType_GatewayLoadBalancer(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{

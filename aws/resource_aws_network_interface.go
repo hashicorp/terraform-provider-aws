@@ -170,7 +170,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error creating ENI: %s", err)
 	}
 
-	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
+	d.SetId(aws.StringValue(resp.NetworkInterface.NetworkInterfaceId))
 
 	if err := waitForNetworkInterfaceCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Network Interface (%s) creation: %s", d.Id(), err)

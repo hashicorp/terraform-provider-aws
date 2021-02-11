@@ -51,7 +51,7 @@ The settings for conversation logs.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 1 mins) Used when creating the bot alias
 * `update` - (Defaults to 1 mins) Used when updating the bot alias
@@ -59,7 +59,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the bot alias.
 * `checksum` - Checksum of the bot alias.

@@ -85,6 +85,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "version", LambdaFunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					testAccCheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, LambdaFunctionVersionLatest)),
 				),
 			},
@@ -175,6 +176,64 @@ func TestAccAWSLambdaFunction_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsLambdaFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_codeSigningConfig(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_csc_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_csc_%s", rString)
+	resourceName := "aws_lambda_function.test"
+	cscResourceName := "aws_lambda_code_signing_config.code_signing_config_1"
+	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigCSCCreate(roleName, funcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccAWSLambdaConfigCSCUpdate(roleName, funcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscUpdateResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccAWSLambdaConfigCSCDelete(roleName, funcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "code_signing_config_arn", ""),
+				),
 			},
 		},
 	})
@@ -289,7 +348,7 @@ func TestAccAWSLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLambdaConfigWithoutFilenameAndS3Attributes(funcName, policyName, roleName, sgName),
-				ExpectError: regexp.MustCompile(`filename or s3_\* attributes must be set`),
+				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
 			},
 		},
 	})
@@ -352,6 +411,33 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckNoResourceAttr(resourceName, "environment"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_Environment_Variables_NoValue(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.key1", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -800,6 +886,77 @@ func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccLambdaImagePreCheck(t *testing.T) {
+	if (os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V1_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V2_ID") == "") {
+		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID, AWS_LAMBDA_IMAGE_V1_ID and AWS_LAMBDA_IMAGE_V2_ID env vars must be set for Lambda Container Image Support acceptance tests. ")
+	}
+}
+
+func TestAccAWSLambdaFunction_imageConfig(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageV1ID := os.Getenv("AWS_LAMBDA_IMAGE_V1_ID")
+	imageV2ID := os.Getenv("AWS_LAMBDA_IMAGE_V2_ID")
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccLambdaImagePreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure a function with lambda image configuration can be created
+			{
+				Config: testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageLatestID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure lambda image code can be updated
+			{
+				Config: testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV1ID),
+				),
+			},
+			// Ensure lambda image config can be updated
+			{
+				Config: testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageV2ID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.another_handler"),
 				),
 			},
 		},
@@ -1918,6 +2075,113 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
+func testAccAWSLambdaConfigCSCBasic(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "policy" {
+  statement {
+    sid    = ""
+    effect = "Allow"
+
+    principals {
+      identifiers = ["lambda.amazonaws.com"]
+      type        = "Service"
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name               = "%s"
+  assume_role_policy = data.aws_iam_policy_document.policy.json
+}
+
+resource "aws_signer_signing_profile" "test1" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test2" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test3" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_signer_signing_profile" "test4" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config_1" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test1.version_arn,
+      aws_signer_signing_profile.test2.version_arn
+    ]
+  }
+
+  policies {
+    untrusted_artifact_on_deployment = "Warn"
+  }
+
+  description = "Code Signing Config for test account"
+}
+
+resource "aws_lambda_code_signing_config" "code_signing_config_2" {
+  allowed_publishers {
+    signing_profile_version_arns = [
+      aws_signer_signing_profile.test3.version_arn,
+      aws_signer_signing_profile.test4.version_arn
+    ]
+  }
+
+  policies {
+    untrusted_artifact_on_deployment = "Warn"
+  }
+
+  description = "Code Signing Config for test account update"
+}
+`, roleName)
+}
+
+func testAccAWSLambdaConfigCSCCreate(roleName, funcName string) string {
+	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+resource "aws_lambda_function" "test" {
+  filename                = "test-fixtures/lambdatest.zip"
+  function_name           = "%s"
+  role                    = aws_iam_role.iam_for_lambda.arn
+  handler                 = "exports.example"
+  runtime                 = "nodejs12.x"
+  code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_1.arn
+}
+`, funcName)
+}
+
+func testAccAWSLambdaConfigCSCUpdate(roleName, funcName string) string {
+	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+resource "aws_lambda_function" "test" {
+  filename                = "test-fixtures/lambdatest.zip"
+  function_name           = "%s"
+  role                    = aws_iam_role.iam_for_lambda.arn
+  handler                 = "exports.example"
+  runtime                 = "nodejs12.x"
+  code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_2.arn
+}
+`, funcName)
+}
+
+func testAccAWSLambdaConfigCSCDelete(roleName, funcName string) string {
+	return fmt.Sprintf(testAccAWSLambdaConfigCSCBasic(roleName)+`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+`, funcName)
+}
+
 func testAccAWSLambdaConfigBasicConcurrency(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
@@ -2002,6 +2266,26 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 `, funcName)
+}
+
+func testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName string) string {
+	return composeConfig(
+		baseAccAWSLambdaConfig(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      key1 = ""
+    }
+  }
+}
+`, rName))
 }
 
 func testAccAWSLambdaConfigEncryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
@@ -2219,6 +2503,47 @@ resource "aws_lambda_function" "test" {
   depends_on = [aws_efs_mount_target.mount_target_az2]
 }
 `, funcName)
+}
+
+func testAccAWSLambdaImageConfig(funcName, policyName, roleName, sgName, imageID string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "%s"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+  image_config {
+    entry_point       = ["/bootstrap-with-handler"]
+    command           = ["app.lambda_handler"]
+    working_directory = "/var/task"
+  }
+}
+`, imageID, funcName)
+}
+
+func testAccAWSLambdaImageConfigUpdateCode(funcName, policyName, roleName, sgName, imageID string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "%s"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+}
+`, imageID, funcName)
+}
+
+func testAccAWSLambdaImageConfigUpdateConfig(funcName, policyName, roleName, sgName, imageID string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+  image_uri     = "%s"
+  function_name = "%s"
+  role          = aws_iam_role.iam_for_lambda.arn
+  package_type  = "Image"
+  image_config {
+    command = ["app.another_handler"]
+  }
+}
+`, imageID, funcName)
 }
 
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {

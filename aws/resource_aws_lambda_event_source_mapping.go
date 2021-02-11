@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -59,6 +60,13 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
+			},
+			"topics": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"batch_size": {
 				Type:     schema.TypeInt,
@@ -205,6 +213,11 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		t, _ := time.Parse(time.RFC3339, startingPositionTimestamp.(string))
 		params.StartingPositionTimestamp = aws.Time(t)
 	}
+
+	if topics, ok := d.GetOk("topics"); ok && topics.(*schema.Set).Len() > 0 {
+		params.Topics = expandStringSet(topics.(*schema.Set))
+	}
+
 	if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
 		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
 	}
@@ -250,12 +263,15 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	// No error
-	d.Set("uuid", eventSourceMappingConfiguration.UUID)
-	d.SetId(*eventSourceMappingConfiguration.UUID)
+	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
+
+	if _, err := waiter.EventSourceMappingCreate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
+	}
+
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
 }
 
@@ -298,16 +314,19 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	if err := d.Set("destination_config", flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)); err != nil {
 		return fmt.Errorf("error setting destination_config: %s", err)
 	}
+	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
+		return fmt.Errorf("error setting topics: %s", err)
+	}
 
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
 	switch state {
-	case "Enabled", "Enabling":
+	case waiter.EventSourceMappingStateEnabled, waiter.EventSourceMappingStateEnabling:
 		d.Set("enabled", true)
-	case "Disabled", "Disabling":
+	case waiter.EventSourceMappingStateDisabled, waiter.EventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
-		log.Printf("[DEBUG] Lambda event source mapping is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
+		log.Printf("[WARN] Lambda event source mapping is neither enabled nor disabled but %s", state)
 	}
 
 	return nil
@@ -352,10 +371,11 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
 
 	params := &lambda.UpdateEventSourceMappingInput{
-		UUID:         aws.String(d.Id()),
-		BatchSize:    aws.Int64(int64(d.Get("batch_size").(int))),
-		FunctionName: aws.String(d.Get("function_name").(string)),
-		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+		UUID:                           aws.String(d.Id()),
+		BatchSize:                      aws.Int64(int64(d.Get("batch_size").(int))),
+		FunctionName:                   aws.String(d.Get("function_name").(string)),
+		Enabled:                        aws.Bool(d.Get("enabled").(bool)),
+		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int))),
 	}
 
 	// AWS API will fail if this parameter is set (even as default value) for sqs event source.  Ideally this should be implemented in GO SDK or AWS API itself.
@@ -365,8 +385,6 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if eventSourceArn.Service != "sqs" {
-		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
-
 		if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
 			params.SetParallelizationFactor(int64(parallelizationFactor.(int)))
 		}
@@ -402,7 +420,11 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		_, err = conn.UpdateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.EventSourceMappingUpdate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)

@@ -241,7 +241,7 @@ slot values into the response card. For more information, see
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 1 min) Used when creating the intent
 * `update` - (Defaults to 1 min) Used when updating the intent
@@ -250,7 +250,7 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not

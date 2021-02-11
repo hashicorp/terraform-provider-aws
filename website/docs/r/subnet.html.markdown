@@ -51,8 +51,10 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The AZ for the subnet.
 * `availability_zone_id` - (Optional) The AZ ID of the subnet.
 * `cidr_block` - (Required) The CIDR block for the subnet.
+* `customer_owned_ipv4_pool` - (Optional) The customer owned IPv4 address pool. Typically used with the `map_customer_owned_ip_on_launch` argument. The `outpost_arn` argument must be specified when configured.
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
+* `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
     a public IP address. Default is `false`.
@@ -74,7 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_subnet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_subnet` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
 - `create` - (Default `10m`) How long to wait for a subnet to be created.

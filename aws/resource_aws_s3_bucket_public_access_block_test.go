@@ -67,7 +67,7 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3BucketPublicAccessBlock_bucketDisappears(t *testing.T) {
+func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 	var config s3.PublicAccessBlockConfiguration
 	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	resourceName := "aws_s3_bucket_public_access_block.bucket"

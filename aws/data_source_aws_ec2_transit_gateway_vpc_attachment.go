@@ -28,6 +28,7 @@ func dataSourceAwsEc2TransitGatewayVpcAttachment() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ipv6_support": {
 				Type:     schema.TypeString,
