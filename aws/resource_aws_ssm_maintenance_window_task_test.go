@@ -15,23 +15,23 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(name, "test description", "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 3, 2),
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, "test description", "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 3, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("maintenance-window-task-%s", name)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("maintenance-window-task-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
@@ -53,7 +53,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -62,13 +62,13 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(name),
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", "TestMaintenanceWindowTask"),
@@ -90,21 +90,21 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *te
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskAutomationConfig(name, "$DEFAULT"),
+				Config: testAccAWSSSMMaintenanceWindowTaskAutomationConfig(rName, "$DEFAULT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.automation_parameters.0.document_version", "$DEFAULT"),
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(name, "$LATEST"),
+				Config: testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(rName, "$LATEST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.automation_parameters.0.document_version", "$LATEST"),
@@ -156,16 +156,16 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
-	s3BucketResourceName := "aws_s3_bucket.foo"
+	s3BucketResourceName := "aws_s3_bucket.test"
 
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(name, "test comment", 30),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, "test comment", 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
@@ -175,7 +175,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, "test comment update", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
@@ -499,10 +499,10 @@ func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, tas
 
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
-  task_type        = "%[2]s"
-  task_arn         = "%[3]s"
+  task_type        = %[2]q
+  task_arn         = %[3]q
   name             = "maintenance-window-task-%[1]s"
-  description      = "%[4]s"
+  description      = %[4]q
   priority         = %[5]d
   service_role_arn = aws_iam_role.ssm_role_update.arn
   max_concurrency  = %[6]d
@@ -646,7 +646,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
   task_invocation_parameters {
     automation_parameters {
-      document_version = "%[2]s"
+      document_version = %[2]q
 
       parameter {
         name   = "InstanceId"
@@ -665,8 +665,8 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(rName, version string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
-resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-s3-%[1]s"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
@@ -687,7 +687,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
   task_invocation_parameters {
     automation_parameters {
-      document_version = "%[2]s"
+      document_version = %[2]q
 
       parameter {
         name   = "InstanceId"
@@ -757,7 +757,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
   task_invocation_parameters {
     run_command_parameters {
-      comment            = "%[2]s"
+      comment            = %[2]q
       document_hash      = sha256("COMMAND")
       document_hash_type = "Sha256"
       service_role_arn   = aws_iam_role.test.arn
@@ -775,8 +775,8 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
-resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-s3-%[1]s"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   acl           = "private"
   force_destroy = true
 }
@@ -797,12 +797,12 @@ resource "aws_ssm_maintenance_window_task" "test" {
 
   task_invocation_parameters {
     run_command_parameters {
-      comment              = "%[2]s"
+      comment              = %[2]q
       document_hash        = sha256("COMMAND")
       document_hash_type   = "Sha256"
       service_role_arn     = aws_iam_role.test.arn
       timeout_seconds      = %[3]d
-      output_s3_bucket     = aws_s3_bucket.foo.id
+      output_s3_bucket     = aws_s3_bucket.test.id
       output_s3_key_prefix = "foo"
 
       parameter {
