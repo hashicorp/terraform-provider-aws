@@ -40,21 +40,21 @@ resource "aws_lambda_function" "test_lambda" {
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 ```
 
@@ -90,21 +90,21 @@ resource "aws_lambda_function" "func" {
 resource "aws_iam_role" "default" {
   name = "iam_for_lambda_with_sns"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 ```
 
