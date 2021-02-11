@@ -125,9 +125,9 @@ func resourceAwsCloudFrontRealtimeLogConfigRead(d *schema.ResourceData, meta int
 	}
 
 	if logConfig == nil {
-	        if d.IsNewResource() {
-	            return fmt.Errorf("error reading CloudFront Real-time Log Config (%s): not found", d.Id())
-	        }
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading CloudFront Real-time Log Config (%s): not found", d.Id())
+		}
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
