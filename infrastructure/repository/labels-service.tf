@@ -143,6 +143,7 @@ variable "service_labels" {
     "networkfirewall",
     "networkmanager",
     "opsworks",
+    "opsworkscm",
     "organizations",
     "outposts",
     "personalize",
