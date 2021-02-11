@@ -1,8 +1,8 @@
 ```release-note:enhancement
-resource/aws_ses_receipt_rule_set: Add `arn` attribute.
+resource/ses_receipt_rule: Add `arn` attribute.
 ```
 
 ```release-note:enhancement
-resource/aws_ses_receipt_rule_set: Add plan time validation to `name`.
+resource/ses_receipt_rule: Add plan time validation to `name`.
 ```
 
