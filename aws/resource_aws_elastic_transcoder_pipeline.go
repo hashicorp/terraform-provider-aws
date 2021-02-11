@@ -82,11 +82,6 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"grantee": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"AllUsers",
-								"AuthenticatedUsers",
-								"LogDelivery",
-							}, false),
 						},
 						"grantee_type": {
 							Type:     schema.TypeString,
@@ -211,11 +206,6 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 						"grantee": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"AllUsers",
-								"AuthenticatedUsers",
-								"LogDelivery",
-							}, false),
 						},
 						"grantee_type": {
 							Type:     schema.TypeString,
