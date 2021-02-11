@@ -16,7 +16,7 @@ Attaches a policy to an S3 bucket resource.
 
 ```hcl
 resource "aws_s3_bucket" "b" {
-  bucket = "my_tf_test_bucket"
+  bucket = "my-tf-test-bucket"
 }
 
 resource "aws_s3_bucket_policy" "b" {
@@ -32,7 +32,7 @@ resource "aws_s3_bucket_policy" "b" {
       "Effect": "Deny",
       "Principal": "*",
       "Action": "s3:*",
-      "Resource": "arn:aws:s3:::my_tf_test_bucket/*",
+      "Resource": "arn:aws:s3:::my-tf-test-bucket/*",
       "Condition": {
          "IpAddress": {"aws:SourceIp": "8.8.8.8/32"}
       }
@@ -48,7 +48,8 @@ POLICY
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket to which to apply the policy.
-* `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
+* `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
+
 
 ## Import
 
