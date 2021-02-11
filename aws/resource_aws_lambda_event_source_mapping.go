@@ -15,15 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-)
-
-const (
-	LambdaEventSourceMappingCreating  = "Creating"
-	LambdaEventSourceMappingEnabling  = "Enabling"
-	LambdaEventSourceMappingUpdating  = "Updating"
-	LambdaEventSourceMappingDisabling = "Disabling"
-	LambdaEventSourceMappingEnabled   = "Enabled"
-	LambdaEventSourceMappingDisabled  = "Disabled"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -259,15 +251,15 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
 	// No error
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
 
-	if err := waitForLambdaEventSourceMapping(conn, *eventSourceMappingConfiguration.UUID); err != nil {
-		return err
+	if _, err := waiter.EventSourceMappingCreate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
@@ -316,12 +308,12 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
 
 	switch state {
-	case LambdaEventSourceMappingEnabled:
+	case waiter.EventSourceMappingStateEnabled, waiter.EventSourceMappingStateEnabling:
 		d.Set("enabled", true)
-	case LambdaEventSourceMappingDisabled:
+	case waiter.EventSourceMappingStateDisabled, waiter.EventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
-		return fmt.Errorf("state is neither enabled nor disabled but %s", *eventSourceMappingConfiguration.State)
+		log.Printf("[WARN] Lambda event source mapping is neither enabled nor disabled but %s", state)
 	}
 
 	return nil
@@ -415,38 +407,12 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		_, err = conn.UpdateEventSourceMapping(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating Lambda event source mapping: %s", err)
+		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForLambdaEventSourceMapping(conn, d.Id()); err != nil {
-		return err
+	if _, err := waiter.EventSourceMappingUpdate(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to update: %w", d.Id(), err)
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
-}
-
-func waitForLambdaEventSourceMapping(conn *lambda.Lambda, id string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{LambdaEventSourceMappingCreating, LambdaEventSourceMappingEnabling, LambdaEventSourceMappingUpdating, LambdaEventSourceMappingDisabling},
-		Target:  []string{LambdaEventSourceMappingEnabled, LambdaEventSourceMappingDisabled},
-		Refresh: func() (interface{}, string, error) {
-			params := &lambda.GetEventSourceMappingInput{
-				UUID: aws.String(id),
-			}
-
-			res, err := conn.GetEventSourceMapping(params)
-			if err != nil {
-				return nil, "", err
-			}
-
-			return res, aws.StringValue(res.State), err
-		},
-		Timeout: 10 * time.Minute,
-		Delay:   5 * time.Second,
-	}
-
-	log.Printf("[DEBUG] Waiting for LambdaEventSourceMapping state update: %s", id)
-	_, err := stateConf.WaitForState()
-
-	return err
 }
