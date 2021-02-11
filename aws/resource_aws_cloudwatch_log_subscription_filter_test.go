@@ -361,7 +361,6 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "firehose" {
@@ -390,7 +389,6 @@ resource "aws_iam_role_policy" "firehose" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "cloudwatchlogs" {
@@ -411,7 +409,6 @@ resource "aws_iam_role" "cloudwatchlogs" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "cloudwatchlogs" {
@@ -434,7 +431,6 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -483,7 +479,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test" {
@@ -506,7 +501,6 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_kinesis_stream" "test" {
@@ -544,7 +538,6 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
@@ -648,7 +641,6 @@ resource "aws_iam_role" "test2" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "test2" {
@@ -671,7 +663,6 @@ resource "aws_iam_role_policy" "test2" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "test" {

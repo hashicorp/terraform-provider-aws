@@ -13,12 +13,20 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	// Maximum amount of time for VpcLink to become available
+	apigatewayVpcLinkAvailableTimeout = 20 * time.Minute
+	// Maximum amount of time for VpcLink to delete
+	apigatewayVpcLinkDeleteTimeout = 20 * time.Minute
+)
+
 func resourceAwsApiGatewayVpcLink() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsApiGatewayVpcLinkCreate,
 		Read:   resourceAwsApiGatewayVpcLinkRead,
 		Update: resourceAwsApiGatewayVpcLinkUpdate,
 		Delete: resourceAwsApiGatewayVpcLinkDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -66,13 +74,13 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	d.SetId(*resp.Id)
+	d.SetId(aws.StringValue(resp.Id))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, *resp.Id),
-		Timeout:    8 * time.Minute,
+		Timeout:    apigatewayVpcLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -168,7 +176,7 @@ func resourceAwsApiGatewayVpcLinkUpdate(d *schema.ResourceData, meta interface{}
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
 		Refresh:    apigatewayVpcLinkRefreshStatusFunc(conn, d.Id()),
-		Timeout:    8 * time.Minute,
+		Timeout:    apigatewayVpcLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -223,7 +231,7 @@ func waitForApiGatewayVpcLinkDeletion(conn *apigateway.APIGateway, vpcLinkID str
 			apigateway.VpcLinkStatusAvailable,
 			apigateway.VpcLinkStatusDeleting},
 		Target:     []string{""},
-		Timeout:    5 * time.Minute,
+		Timeout:    apigatewayVpcLinkDeleteTimeout,
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.GetVpcLink(&apigateway.GetVpcLinkInput{

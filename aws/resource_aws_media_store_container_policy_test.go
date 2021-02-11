@@ -101,26 +101,36 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
 }
 
 resource "aws_media_store_container_policy" "test" {
-  container_name = "${aws_media_store_container.test.name}"
+  container_name = aws_media_store_container.test.name
 
   policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "%s",
-    "Action": [ "mediastore:*" ],
-    "Principal": {"AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
-    "Effect": "Allow",
-    "Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
-    "Condition": {
-      "Bool": { "aws:SecureTransport": "true" }
+  "Statement": [
+    {
+      "Sid": "%s",
+      "Action": [
+        "mediastore:*"
+      ],
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Effect": "Allow",
+      "Resource": "arn:${data.aws_partition.current.partition}:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
     }
-  }]
+  ]
 }
 EOF
 }

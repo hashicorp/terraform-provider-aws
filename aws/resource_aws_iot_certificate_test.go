@@ -89,7 +89,7 @@ func testAccCheckAWSIoTCertificateDestroy_basic(s *terraform.State) error {
 
 var testAccAWSIoTCertificate_csr = `
 resource "aws_iot_certificate" "foo_cert" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = file("test-fixtures/iot-csr.pem")
   active = true
 }
 `

@@ -19,7 +19,7 @@ func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayGatewayResponseDestroy,
 		Steps: []resource.TestStep{
@@ -155,7 +155,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
   status_code   = "401"
   response_type = "UNAUTHORIZED"
 
@@ -177,7 +177,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
   status_code   = "477"
   response_type = "UNAUTHORIZED"
 

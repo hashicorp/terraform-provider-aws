@@ -97,15 +97,15 @@ func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
 	return oldUrl.String() == newUrl.String()
 }
 
-func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	normalizedOld, err := normalizeCloudFormationTemplate(old)
+func suppressEquivalentJsonOrYamlDiffs(k, old, new string, d *schema.ResourceData) bool {
+	normalizedOld, err := normalizeJsonOrYamlString(old)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform state CloudFormation template body: %s", err)
 		return false
 	}
 
-	normalizedNew, err := normalizeCloudFormationTemplate(new)
+	normalizedNew, err := normalizeJsonOrYamlString(new)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform configuration CloudFormation template body: %s", err)

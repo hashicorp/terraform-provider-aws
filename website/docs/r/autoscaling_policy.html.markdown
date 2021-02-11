@@ -41,13 +41,15 @@ resource "aws_autoscaling_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
-
 * `name` - (Required) The name of the policy.
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
 * `adjustment_type` - (Optional) Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `policy_type` - (Optional) The policy type, either "SimpleScaling", "StepScaling" or "TargetTrackingScaling". If this value isn't provided, AWS will default to "SimpleScaling."
 * `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
+
+The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
+
+* `min_adjustment_magnitude` - (Optional) Minimum value to scale by when `adjustment_type` is set to `PercentChangeInCapacity`.
 
 The following arguments are only available to "SimpleScaling" type policies:
 
@@ -155,7 +157,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the dimension.
 * `value` - (Required) The value of the dimension.
 
-## Attribute Reference
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS to the scaling policy.
 * `name` - The scaling policy's name.

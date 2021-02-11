@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -67,22 +66,13 @@ func testAccPreCheckAwsEc2SpotPrice(t *testing.T) {
 }
 
 func testAccAwsEc2SpotPriceDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {
   filter {
     name   = "instance-type"
     values = ["m5.xlarge"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "region-name"
-    values = [data.aws_region.current.name]
   }
 }
 
@@ -100,22 +90,13 @@ data "aws_ec2_spot_price" "test" {
 }
 
 func testAccAwsEc2SpotPriceDataSourceFilterConfig() string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 data "aws_region" "current" {}
 
 data "aws_ec2_instance_type_offering" "test" {
   filter {
     name   = "instance-type"
     values = ["m5.xlarge"]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "region-name"
-    values = [data.aws_region.current.name]
   }
 }
 

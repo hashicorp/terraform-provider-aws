@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -199,6 +200,63 @@ func TestAccAWSSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 	})
 }
 
+func TestAccAWSSNSTopicSubscription_redrivePolicy(t *testing.T) {
+	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_subscription.test_subscription"
+	ri := acctest.RandInt()
+	dlqName := fmt.Sprintf("tf-acc-test-queue-dlq-%d", ri)
+	updatedDlqName := fmt.Sprintf("tf-acc-test-queue-dlq-update-%d", ri)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(ri, dlqName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, dlqName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// Test attribute update
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(ri, updatedDlqName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes, updatedDlqName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// Test attribute removal
+			{
+				Config: testAccAWSSNSTopicSubscriptionConfig(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test_subscription"
@@ -251,7 +309,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -280,7 +338,7 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -379,6 +437,37 @@ func testAccCheckAWSSNSTopicSubscriptionDeliveryPolicyAttribute(attributes map[s
 	}
 }
 
+func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[string]string, expectedRedrivePolicyResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		apiRedrivePolicyJSONString, ok := attributes["RedrivePolicy"]
+
+		if !ok {
+			return fmt.Errorf("RedrivePolicy attribute not found in attributes: %s", attributes)
+		}
+
+		var apiRedrivePolicy snsTopicSubscriptionRedrivePolicy
+		if err := json.Unmarshal([]byte(apiRedrivePolicyJSONString), &apiRedrivePolicy); err != nil {
+			return fmt.Errorf("unable to unmarshal SNS Topic Subscription redrive policy JSON (%s): %s", apiRedrivePolicyJSONString, err)
+		}
+
+		expectedRedrivePolicy := snsTopicSubscriptionRedrivePolicy{
+			DeadLetterTargetArn: arn.ARN{
+				AccountID: testAccGetAccountID(),
+				Partition: testAccGetPartition(),
+				Region:    testAccGetRegion(),
+				Resource:  expectedRedrivePolicyResource,
+				Service:   "sqs",
+			}.String(),
+		}
+
+		if reflect.DeepEqual(apiRedrivePolicy, expectedRedrivePolicy) {
+			return nil
+		}
+
+		return fmt.Errorf("SNS Topic Subscription redrive policy did not match:\n\nReceived\n\n%s\n\nExpected\n\n%s\n\n", apiRedrivePolicy, expectedRedrivePolicy)
+	}
+}
+
 func TestObfuscateEndpointPassword(t *testing.T) {
 	checks := map[string]string{
 		"https://example.com/myroute":                   "https://example.com/myroute",
@@ -405,9 +494,9 @@ resource "aws_sqs_queue" "test_queue" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  topic_arn = "${aws_sns_topic.test_topic.arn}"
+  topic_arn = aws_sns_topic.test_topic.arn
   protocol  = "sqs"
-  endpoint  = "${aws_sqs_queue.test_queue.arn}"
+  endpoint  = aws_sqs_queue.test_queue.arn
 }
 `, i, i)
 }
@@ -423,9 +512,9 @@ resource "aws_sqs_queue" "test_queue" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  topic_arn     = "${aws_sns_topic.test_topic.arn}"
+  topic_arn     = aws_sns_topic.test_topic.arn
   protocol      = "sqs"
-  endpoint      = "${aws_sqs_queue.test_queue.arn}"
+  endpoint      = aws_sqs_queue.test_queue.arn
   filter_policy = %s
 }
 `, i, i, policy)
@@ -443,11 +532,34 @@ resource "aws_sqs_queue" "test_queue" {
 
 resource "aws_sns_topic_subscription" "test_subscription" {
   delivery_policy = %s
-  endpoint        = "${aws_sqs_queue.test_queue.arn}"
+  endpoint        = aws_sqs_queue.test_queue.arn
   protocol        = "sqs"
-  topic_arn       = "${aws_sns_topic.test_topic.arn}"
+  topic_arn       = aws_sns_topic.test_topic.arn
 }
 `, i, i, policy)
+}
+
+func testAccAWSSNSTopicSubscriptionConfig_redrivePolicy(i int, dlqName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = "terraform-test-topic-%[1]d"
+}
+
+resource "aws_sqs_queue" "test_queue" {
+  name = "terraform-subscription-test-queue-%[1]d"
+}
+
+resource "aws_sqs_queue" "test_queue_dlq" {
+  name = "%s"
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+  redrive_policy = jsonencode({ deadLetterTargetArn : aws_sqs_queue.test_queue_dlq.arn })
+  endpoint       = aws_sqs_queue.test_queue.arn
+  protocol       = "sqs"
+  topic_arn      = aws_sns_topic.test_topic.arn
+}
+`, i, dlqName)
 }
 
 func testAccAWSSNSTopicSubscriptionConfig_rawMessageDelivery(i int, rawMessageDelivery bool) string {
@@ -461,10 +573,10 @@ resource "aws_sqs_queue" "test_queue" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  endpoint             = "${aws_sqs_queue.test_queue.arn}"
+  endpoint             = aws_sqs_queue.test_queue.arn
   protocol             = "sqs"
   raw_message_delivery = %t
-  topic_arn            = "${aws_sns_topic.test_topic.arn}"
+  topic_arn            = aws_sns_topic.test_topic.arn
 }
 `, i, i, rawMessageDelivery)
 }
@@ -481,16 +593,16 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_rest_api.test.root_resource_id
   http_method   = "POST"
   authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_rest_api.test.root_resource_id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "200"
 
   response_parameters = {
@@ -499,20 +611,20 @@ resource "aws_api_gateway_method_response" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id             = "${aws_api_gateway_rest_api.test.id}"
-  resource_id             = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method             = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_rest_api.test.root_resource_id
+  http_method             = aws_api_gateway_method.test.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "${aws_lambda_function.lambda.invoke_arn}"
+  uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  depends_on  = ["aws_api_gateway_integration.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.test.status_code}"
+  depends_on  = [aws_api_gateway_integration.test]
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_rest_api.test.root_resource_id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = aws_api_gateway_method_response.test.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
@@ -541,7 +653,7 @@ EOF
 
 resource "aws_iam_role_policy" "policy" {
   name = "tf-acc-test-sns-%d"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
@@ -562,7 +674,7 @@ EOF
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.lambda.arn}"
+  function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
 }
@@ -570,23 +682,23 @@ resource "aws_lambda_permission" "apigw_lambda" {
 resource "aws_lambda_function" "lambda" {
   filename         = "test-fixtures/lambda_confirm_sns.zip"
   function_name    = "tf-acc-test-sns-%d"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "main.confirm_subscription"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambda_confirm_sns.zip")
   runtime          = "python3.6"
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on  = ["aws_api_gateway_integration_response.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  depends_on  = [aws_api_gateway_integration_response.test]
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "acctest"
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  depends_on             = ["aws_lambda_permission.apigw_lambda"]
-  topic_arn              = "${aws_sns_topic.test_topic.arn}"
+  depends_on             = [aws_lambda_permission.apigw_lambda]
+  topic_arn              = aws_sns_topic.test_topic.arn
   protocol               = "https"
-  endpoint               = "${aws_api_gateway_deployment.test.invoke_url}"
+  endpoint               = aws_api_gateway_deployment.test.invoke_url
   endpoint_auto_confirms = true
 }
 `, i, i, i, i, i)
@@ -604,17 +716,17 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_rest_api.test.root_resource_id
   http_method   = "POST"
   authorization = "CUSTOM"
-  authorizer_id = "${aws_api_gateway_authorizer.test.id}"
+  authorizer_id = aws_api_gateway_authorizer.test.id
 }
 
 resource "aws_api_gateway_method_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_rest_api.test.root_resource_id
+  http_method = aws_api_gateway_method.test.http_method
   status_code = "200"
 
   response_parameters = {
@@ -623,20 +735,20 @@ resource "aws_api_gateway_method_response" "test" {
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id             = "${aws_api_gateway_rest_api.test.id}"
-  resource_id             = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method             = "${aws_api_gateway_method.test.http_method}"
+  rest_api_id             = aws_api_gateway_rest_api.test.id
+  resource_id             = aws_api_gateway_rest_api.test.root_resource_id
+  http_method             = aws_api_gateway_method.test.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "${aws_lambda_function.lambda.invoke_arn}"
+  uri                     = aws_lambda_function.lambda.invoke_arn
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  depends_on  = ["aws_api_gateway_integration.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.test.status_code}"
+  depends_on  = [aws_api_gateway_integration.test]
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_rest_api.test.root_resource_id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = aws_api_gateway_method_response.test.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin" = "'*'"
@@ -665,7 +777,7 @@ EOF
 
 resource "aws_iam_role_policy" "policy" {
   name = "tf-acc-test-sns-%d"
-  role = "${aws_iam_role.iam_for_lambda.id}"
+  role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
 {
@@ -686,7 +798,7 @@ EOF
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.lambda.arn}"
+  function_name = aws_lambda_function.lambda.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
 }
@@ -694,15 +806,15 @@ resource "aws_lambda_permission" "apigw_lambda" {
 resource "aws_lambda_function" "lambda" {
   filename         = "test-fixtures/lambda_confirm_sns.zip"
   function_name    = "tf-acc-test-sns-%d"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "main.confirm_subscription"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambda_confirm_sns.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambda_confirm_sns.zip")
   runtime          = "python3.6"
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on  = ["aws_api_gateway_integration_response.test"]
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  depends_on  = [aws_api_gateway_integration_response.test]
+  rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "acctest"
 }
 
@@ -729,7 +841,7 @@ EOF
 
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "tf-acc-test-authorizer-%d"
-  role = "${aws_iam_role.invocation_role.id}"
+  role = aws_iam_role.invocation_role.id
 
   policy = <<EOF
 {
@@ -746,17 +858,17 @@ EOF
 }
 
 resource "aws_api_gateway_authorizer" "test" {
-  name                             = "tf-acc-test-api-gw-authorizer-%d"
-  rest_api_id                      = "${aws_api_gateway_rest_api.test.id}"
-  authorizer_uri                   = "${aws_lambda_function.authorizer.invoke_arn}"
-  authorizer_credentials           = "${aws_iam_role.invocation_role.arn}"
+  name                   = "tf-acc-test-api-gw-authorizer-%d"
+  rest_api_id            = aws_api_gateway_rest_api.test.id
+  authorizer_uri         = aws_lambda_function.authorizer.invoke_arn
+  authorizer_credentials = aws_iam_role.invocation_role.arn
 }
 
 resource "aws_lambda_function" "authorizer" {
   filename         = "test-fixtures/lambda_basic_authorizer.zip"
-  source_code_hash = "${filebase64sha256("test-fixtures/lambda_basic_authorizer.zip")}"
+  source_code_hash = filebase64sha256("test-fixtures/lambda_basic_authorizer.zip")
   function_name    = "tf-acc-test-authorizer-%d"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  role             = aws_iam_role.iam_for_lambda.arn
   handler          = "main.authenticate"
   runtime          = "nodejs12.x"
 
@@ -769,7 +881,7 @@ resource "aws_lambda_function" "authorizer" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
   status_code   = "401"
   response_type = "UNAUTHORIZED"
 
@@ -783,10 +895,10 @@ resource "aws_api_gateway_gateway_response" "test" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  depends_on             = ["aws_lambda_permission.apigw_lambda"]
-  topic_arn              = "${aws_sns_topic.test_topic.arn}"
+  depends_on             = [aws_lambda_permission.apigw_lambda]
+  topic_arn              = aws_sns_topic.test_topic.arn
   protocol               = "https"
-  endpoint               = "${replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://%s:%s@")}"
+  endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://%s:%s@")
   endpoint_auto_confirms = true
 }
 `, i, i, i, i, i, i, i, i, i, username, password, username, password)

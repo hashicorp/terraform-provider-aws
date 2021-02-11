@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -166,6 +167,8 @@ func TestAccAWSEcsService_basicImport(t *testing.T) {
 				ImportStateId:     importInput,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"wait_for_steady_state"},
 			},
 			// Test non-existent resource import
 			{
@@ -452,7 +455,8 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Resource currently defaults to importing task_definition as family:revision
-				ImportStateVerifyIgnore: []string{"task_definition"},
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 		},
 	})
@@ -481,6 +485,8 @@ func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
+				// wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"wait_for_steady_state"},
 			},
 		},
 	})
@@ -513,7 +519,7 @@ func TestAccAWSEcsService_withDeploymentValues(t *testing.T) {
 	})
 }
 
-// Regression for https://github.com/terraform-providers/terraform-provider-aws/issues/6315
+// Regression for https://github.com/hashicorp/terraform-provider-aws/issues/6315
 func TestAccAWSEcsService_withDeploymentMinimumZeroMaximumOneHundred(t *testing.T) {
 	var service ecs.Service
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -737,7 +743,7 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13146
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13146
 func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -894,6 +900,81 @@ func TestAccAWSEcsService_withLaunchTypeFargateAndPlatformVersion(t *testing.T) 
 	})
 }
 
+func TestAccAWSEcsService_withLaunchTypeFargateAndWaitForSteadyState(t *testing.T) {
+	var service ecs.Service
+	resourceName := "aws_ecs_service.test"
+	rString := acctest.RandString(8)
+	rName := fmt.Sprintf("tf-acc-svc-w-ltf-ss-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Wait for the ECS Cluster to reach a steady state w/specified count
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 1, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Resource currently defaults to importing task_definition as family:revision
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withLaunchTypeFargateAndUpdateWaitForSteadyState(t *testing.T) {
+	var service ecs.Service
+	resourceName := "aws_ecs_service.test"
+	rString := acctest.RandString(8)
+
+	rName := fmt.Sprintf("tf-acc-svc-w-ltf-ss-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateWithoutWait(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+				),
+			},
+			{
+				// Modify desired count and wait for the ECS Cluster to reach steady state
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+				),
+			},
+			{
+				// Modify desired count without wait
+				Config: testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName, 1, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withLaunchTypeEC2AndNetworkConfiguration(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1012,7 +1093,7 @@ func TestAccAWSEcsService_withServiceRegistries(t *testing.T) {
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
@@ -1036,7 +1117,7 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
@@ -1075,7 +1156,8 @@ func TestAccAWSEcsService_Tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Resource currently defaults to importing task_definition as family:revision
-				ImportStateVerifyIgnore: []string{"task_definition"},
+				// and wait_for_steady_state is not read from API
+				ImportStateVerifyIgnore: []string{"task_definition", "wait_for_steady_state"},
 			},
 			{
 				Config: testAccAWSEcsServiceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1308,7 +1390,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1340,7 +1421,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1350,6 +1430,235 @@ resource "aws_ecs_service" "mongo" {
   desired_count   = 2
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithLaunchTypeFargateWithoutWait(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count             = 2
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count          = 2
+  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Allow traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.mongo.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+}
+`, rName)
+}
+
+func testAccAWSEcsServiceWithLaunchTypeFargateAndWait(rName string, desiredCount int, waitForSteadyState bool) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count             = 2
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-launch-type-fargate"
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  count          = 2
+  subnet_id      = element(aws_subnet.test.*.id, count.index)
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Allow traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.mongo.arn
+  desired_count   = %d
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  wait_for_steady_state = %t
+}
+
+`, rName, desiredCount, waitForSteadyState)
 }
 
 func testAccAWSEcsServiceWithInterchangeablePlacementStrategy(clusterName, tdName, svcName string) string {
@@ -1372,7 +1681,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1427,8 +1735,8 @@ resource "aws_ecs_service" "mongo" {
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.test.name
-    weight = %d
-    base   = %d
+    weight            = %d
+    base              = %d
   }
 }
 `, providerName, clusterName, tdName, svcName, weight, base)
@@ -1441,7 +1749,7 @@ resource "aws_ecs_service" "mongo" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.mongo.arn
   desired_count   = 1
-  
+
   network_configuration {
     security_groups  = [aws_security_group.allow_all.id]
     subnets          = [aws_subnet.main.id]
@@ -1493,8 +1801,8 @@ resource "aws_security_group" "allow_all" {
 }
 
 resource "aws_subnet" "main" {
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
-  vpc_id            = aws_vpc.main.id
+  cidr_block = cidrsubnet(aws_vpc.main.cidr_block, 8, 1)
+  vpc_id     = aws_vpc.main.id
 
   tags = {
     Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
@@ -1531,7 +1839,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1569,7 +1876,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1641,7 +1947,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1677,7 +1982,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1728,7 +2032,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1765,7 +2068,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -1860,7 +2162,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -1872,7 +2173,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = %s
   }
 }
@@ -1958,7 +2259,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -1971,7 +2271,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.allow_all_a.id, aws_security_group.allow_all_b.id]
-    subnets          = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets          = aws_subnet.main[*].id
     assign_public_ip = false
   }
 }
@@ -2033,7 +2333,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2054,7 +2353,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2080,7 +2378,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2093,7 +2390,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2182,7 +2479,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2201,7 +2497,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2226,12 +2521,11 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 8080
@@ -2279,7 +2573,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "mongo" {
@@ -2348,7 +2641,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2367,7 +2659,6 @@ resource "aws_iam_role" "ecs_service" {
     ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2392,12 +2683,11 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_elb" "main" {
   internal = true
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = %[6]d
@@ -2455,7 +2745,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2487,7 +2776,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2519,7 +2807,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -2551,7 +2838,6 @@ resource "aws_ecs_task_definition" "jenkins" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "jenkins" {
@@ -2617,7 +2903,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_iam_role" "ecs_service" {
@@ -2638,7 +2923,6 @@ resource "aws_iam_role" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
@@ -2664,7 +2948,6 @@ resource "aws_iam_role_policy" "ecs_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2677,7 +2960,7 @@ resource "aws_lb_target_group" "test" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2767,7 +3050,6 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2787,7 +3069,7 @@ resource "aws_lb_target_group" "static" {
 resource "aws_lb" "main" {
   name     = "%s"
   internal = true
-  subnets  = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+  subnets  = aws_subnet.main[*].id
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2923,7 +3205,6 @@ resource "aws_ecs_task_definition" "mongo" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "main" {
@@ -2933,7 +3214,7 @@ resource "aws_ecs_service" "main" {
   desired_count   = 1
   network_configuration {
     security_groups = [%s]
-    subnets         = [aws_subnet.main[0].id, aws_subnet.main[1].id]
+    subnets         = aws_subnet.main[*].id
   }
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, securityGroups)
@@ -3019,7 +3300,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3035,7 +3315,7 @@ resource "aws_ecs_service" "test" {
 
   network_configuration {
     security_groups = [aws_security_group.test.id]
-    subnets         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnets         = aws_subnet.test[*].id
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -3128,7 +3408,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3166,7 +3445,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3198,7 +3476,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {
@@ -3245,7 +3522,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_lb_listener" "test" {
@@ -3290,7 +3567,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3350,7 +3626,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3455,7 +3730,6 @@ resource "aws_ecs_task_definition" "test" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "test" {
@@ -3534,7 +3808,6 @@ resource "aws_ecs_task_definition" "ghost" {
   }
 ]
 DEFINITION
-
 }
 
 resource "aws_ecs_service" "ghost" {

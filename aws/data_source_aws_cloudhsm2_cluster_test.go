@@ -31,19 +31,10 @@ func TestAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckCloudHsmV2ClusterDataSourceConfig = fmt.Sprintf(`
+var testAccCheckCloudHsmV2ClusterDataSourceConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "cloudhsm_v2_test_vpc" {
@@ -68,7 +59,7 @@ resource "aws_subnet" "cloudhsm_v2_test_subnets" {
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
   hsm_type   = "hsm1.medium"
-  subnet_ids = [aws_subnet.cloudhsm_v2_test_subnets.0.id, aws_subnet.cloudhsm_v2_test_subnets.1.id]
+  subnet_ids = aws_subnet.cloudhsm_v2_test_subnets[*].id
 
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-data-source-basic-%d"

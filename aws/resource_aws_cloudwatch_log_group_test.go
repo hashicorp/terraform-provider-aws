@@ -557,7 +557,6 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_cloudwatch_log_group" "test" {

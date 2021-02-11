@@ -229,7 +229,7 @@ resource "aws_inspector_resource_group" "test2" {
 
 resource "aws_inspector_assessment_target" "test" {
   name               = %q
-  resource_group_arn = "${%s.arn}"
+  resource_group_arn = %s.arn
 }
 `, rName, rName, rName, inspectorResourceGroupResourceName)
 }

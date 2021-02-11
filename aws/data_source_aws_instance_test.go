@@ -98,6 +98,30 @@ func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_gp3ThroughputDevice(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_gp3ThroughputDevice,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.#", resourceName, "root_block_device.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_size", resourceName, "root_block_device.0.volume_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_type", resourceName, "root_block_device.0.volume_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.device_name", resourceName, "root_block_device.0.device_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.throughput", resourceName, "root_block_device.0.throughput"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -175,7 +199,7 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -196,7 +220,7 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 func TestAccAWSInstanceDataSource_secondaryPrivateIPs(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -239,7 +263,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -262,7 +286,7 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -304,7 +328,7 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -325,7 +349,7 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -351,7 +375,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -377,7 +401,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -411,7 +435,7 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -448,7 +472,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandString(12))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -483,6 +507,45 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_enclaveOptions(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_enclaveOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.#", resourceName, "enclave_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "enclave_options.0.enabled", resourceName, "enclave_options.0.enabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_blockDeviceTags(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 				),
 			},
 		},
@@ -531,8 +594,8 @@ data "aws_instance" "test" {
 }
 
 // filter on tag, populate more attributes
-var testAccInstanceDataSourceConfig_AzUserData = testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-	testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+var testAccInstanceDataSourceConfig_AzUserData = composeConfig(testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+	testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
 resource "aws_instance" "test" {
   ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   availability_zone = data.aws_availability_zones.available.names[0]
@@ -554,7 +617,7 @@ data "aws_instance" "test" {
 var testAccInstanceDataSourceConfig_gp2IopsDevice = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m3.medium"
+  instance_type = "t3.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -567,11 +630,29 @@ data "aws_instance" "test" {
 }
 `
 
+// GP3ThroughputDevice
+var testAccInstanceDataSourceConfig_gp3ThroughputDevice = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t3.medium"
+
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = 10
+    throughput  = 300
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`
+
 // Block Device
 var testAccInstanceDataSourceConfig_blockDevices = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m3.medium"
+  instance_type = "t3.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -601,6 +682,13 @@ resource "aws_instance" "test" {
     device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
+
+  ebs_block_device {
+    device_name = "/dev/sdf"
+    volume_size = 10
+    volume_type = "gp3"
+    throughput  = 300
+  }
 }
 
 data "aws_instance" "test" {
@@ -615,7 +703,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m3.medium"
+  instance_type = "t3.medium"
 
   root_block_device {
     volume_type = "gp2"
@@ -642,7 +730,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m3.medium"
+  instance_type = "t3.medium"
 
   root_block_device {
     encrypted   = true
@@ -660,7 +748,7 @@ data "aws_instance" "test" {
 var testAccInstanceDataSourceConfig_rootInstanceStore = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m3.medium"
+  instance_type = "t3.medium"
 }
 
 data "aws_instance" "test" {
@@ -669,7 +757,7 @@ data "aws_instance" "test" {
 `
 
 func testAccInstanceDataSourceConfig_privateIP(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfigBasic(rName) + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfigBasic(rName), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -684,7 +772,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_secondaryPrivateIPs(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfigBasic(rName) + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfigBasic(rName), `
 resource "aws_instance" "test" {
   ami                   = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type         = "t2.micro"
@@ -707,7 +795,7 @@ resource "aws_key_pair" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+  instance_type = "t2.micro"
   key_name      = aws_key_pair.test.key_name
 
   tags = {
@@ -730,7 +818,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPC(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfigBasic(rName) + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfigBasic(rName), `
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type               = "t2.small"
@@ -757,7 +845,7 @@ resource "aws_placement_group" "test" {
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "test" {
   ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type               = "c3.large"
+  instance_type               = "c5.large"
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
   placement_group             = aws_placement_group.test.name
@@ -800,16 +888,16 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		testAccAwsInstanceVpcConfigBasic(rName) +
-		testAccAwsInstanceVpcSecurityGroupConfig(rName) +
-		fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfigBasic(rName),
+		testAccAwsInstanceVpcSecurityGroupConfig(rName),
+		`
 resource "aws_instance" "test" {
   ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type          = "t2.micro"
   vpc_security_group_ids = [aws_security_group.test.id]
   subnet_id              = aws_subnet.test.id
-  depends_on             = ["aws_internet_gateway.test"]
+  depends_on             = [aws_internet_gateway.test]
 }
 
 data "aws_instance" "test" {
@@ -876,7 +964,8 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfigBasic(rName) + fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfigBasic(rName), `
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
@@ -912,6 +1001,69 @@ resource "aws_instance" "test" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName))
+}
+
+func testAccInstanceDataSourceConfig_enclaveOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAvailableEc2InstanceTypeForRegion("c5a.xlarge", "c5.xlarge"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  enclave_options {
+    enabled = true
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName))
+}
+
+func testAccInstanceDataSourceConfig_blockDeviceTags(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name = %[1]q
+  }
+
+  ebs_block_device {
+    device_name = "/dev/xvdc"
+    volume_size = 10
+
+    tags = {
+      Name   = %[1]q
+      Factum = "SapereAude"
+    }
+  }
+
+  root_block_device {
+    tags = {
+      Name   = %[1]q
+      Factum = "VincitQuiSeVincit"
+    }
   }
 }
 

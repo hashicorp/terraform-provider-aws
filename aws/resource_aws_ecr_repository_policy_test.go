@@ -118,7 +118,6 @@ resource "aws_ecr_repository_policy" "default" {
     ]
 }
 EOF
-
 }
 `, randString)
 }
@@ -150,7 +149,6 @@ resource "aws_iam_role" "foo" {
   ]
 }
 EOF
-
 }
 
 resource "aws_ecr_repository_policy" "default" {
@@ -173,7 +171,6 @@ resource "aws_ecr_repository_policy" "default" {
     ]
 }
 EOF
-
 }
 `, randString, randString)
 }

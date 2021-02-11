@@ -137,7 +137,6 @@ func testAccCheckAWSLightsailKeyPairExists(n string, res *lightsail.KeyPair) res
 }
 
 func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_key_pair" {
 			continue

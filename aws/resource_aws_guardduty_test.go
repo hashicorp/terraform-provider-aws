@@ -13,6 +13,12 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"datasource_basic": testAccAWSGuarddutyDetectorDataSource_basic,
 			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
 		},
+		"Filter": {
+			"basic":      testAccAwsGuardDutyFilter_basic,
+			"update":     testAccAwsGuardDutyFilter_update,
+			"tags":       testAccAwsGuardDutyFilter_tags,
+			"disappears": testAccAwsGuardDutyFilter_disappears,
+		},
 		"InviteAccepter": {
 			"basic": testAccAwsGuardDutyInviteAccepter_basic,
 		},
@@ -35,6 +41,10 @@ func TestAccAWSGuardDuty_serial(t *testing.T) {
 			"inviteOnUpdate":     testAccAwsGuardDutyMember_invite_onUpdate,
 			"inviteDisassociate": testAccAwsGuardDutyMember_invite_disassociate,
 			"invitationMessage":  testAccAwsGuardDutyMember_invitationMessage,
+		},
+		"PublishingDestination": {
+			"basic":      testAccAwsGuardDutyPublishingDestination_basic,
+			"disappears": testAccAwsGuardDutyPublishingDestination_disappears,
 		},
 	}
 

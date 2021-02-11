@@ -123,6 +123,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
 		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
+		TagSpecifications:            ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSpotInstancesRequest),
 
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -210,7 +211,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	sir := *resp.SpotInstanceRequests[0]
-	d.SetId(*sir.SpotInstanceRequestId)
+	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
 		spotStateConf := &resource.StateChangeConf{
@@ -228,12 +229,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 		if err != nil {
 			return fmt.Errorf("Error while waiting for spot request (%s) to resolve: %s", sir, err)
-		}
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
 		}
 	}
 

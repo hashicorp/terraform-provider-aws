@@ -80,6 +80,8 @@ locals {
   random_name = "test-es-%d"
 }
 
+data "aws_partition" "current" {}
+
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
@@ -96,7 +98,7 @@ resource "aws_elasticsearch_domain" "test" {
       "Action": "es:*",
       "Principal": "*",
       "Effect": "Allow",
-      "Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": [
@@ -139,16 +141,7 @@ data "aws_elasticsearch_domain" "test" {
 }
 
 func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}

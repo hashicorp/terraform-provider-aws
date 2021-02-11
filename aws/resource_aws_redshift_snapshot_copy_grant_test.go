@@ -167,8 +167,8 @@ resource "aws_redshift_snapshot_copy_grant" "test" {
   snapshot_copy_grant_name = %[1]q
 
   tags = {
-	Name = %[1]q
-	Env	 = "Test"
+    Name = %[1]q
+    Env  = "Test"
   }
 }
 `, rName)

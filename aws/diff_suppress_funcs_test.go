@@ -71,7 +71,7 @@ func TestSuppressEquivalentTypeStringBoolean(t *testing.T) {
 	}
 }
 
-func TestSuppressCloudFormationTemplateBodyDiffs(t *testing.T) {
+func TestSuppressEquivalentJsonOrYamlDiffs(t *testing.T) {
 	testCases := []struct {
 		description string
 		equivalent  bool
@@ -253,7 +253,7 @@ Outputs:
 	}
 
 	for _, tc := range testCases {
-		value := suppressCloudFormationTemplateBodyDiffs("test_property", tc.old, tc.new, nil)
+		value := suppressEquivalentJsonOrYamlDiffs("test_property", tc.old, tc.new, nil)
 
 		if tc.equivalent && !value {
 			t.Fatalf("expected test case (%s) to be equivalent", tc.description)

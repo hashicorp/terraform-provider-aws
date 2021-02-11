@@ -91,16 +91,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 }
 
 func testAccAWSEc2InstanceTypeOfferingsDataSourceConfigLocationType() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "location"

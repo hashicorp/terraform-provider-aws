@@ -88,16 +88,7 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsEbsSnapshotDataSourceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsSnapshotDataSourceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -113,16 +104,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-const testAccCheckAwsEbsSnapshotDataSourceConfigFilter = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsSnapshotDataSourceConfigFilter = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -141,16 +123,7 @@ data "aws_ebs_snapshot" "test" {
 }
 `
 
-const testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

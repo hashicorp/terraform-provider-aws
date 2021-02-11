@@ -100,22 +100,22 @@ func dmsReplicationSubnetGroupDestroy(s *terraform.State) error {
 }
 
 func dmsReplicationSubnetGroupConfig(randId string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-dms-replication-subnet-group"
+    Name = "terraform-testacc-dms-replication-subnet-group-%[1]s"
   }
 }
 
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-1"
+    Name = "tf-acc-dms-replication-subnet-group-1-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -123,11 +123,11 @@ resource "aws_subnet" "dms_subnet_1" {
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-2"
+    Name = "tf-acc-dms-replication-subnet-group-2-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -135,11 +135,11 @@ resource "aws_subnet" "dms_subnet_2" {
 
 resource "aws_subnet" "dms_subnet_3" {
   cidr_block        = "10.1.3.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-3"
+    Name = "tf-acc-dms-replication-subnet-group-3-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -156,26 +156,26 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
     Remove = "to-remove"
   }
 }
-`, randId)
+`, randId))
 }
 
 func dmsReplicationSubnetGroupConfigUpdate(randId string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "dms_vpc" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-dms-replication-subnet-group"
+    Name = "terraform-testacc-dms-replication-subnet-group-%[1]s"
   }
 }
 
 resource "aws_subnet" "dms_subnet_1" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-1"
+    Name = "tf-acc-dms-replication-subnet-group-1-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -183,11 +183,11 @@ resource "aws_subnet" "dms_subnet_1" {
 
 resource "aws_subnet" "dms_subnet_2" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-2"
+    Name = "tf-acc-dms-replication-subnet-group-2-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -195,11 +195,11 @@ resource "aws_subnet" "dms_subnet_2" {
 
 resource "aws_subnet" "dms_subnet_3" {
   cidr_block        = "10.1.3.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.dms_vpc.id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-3"
+    Name = "tf-acc-dms-replication-subnet-group-3-%[1]s"
   }
 
   depends_on = [aws_vpc.dms_vpc]
@@ -216,5 +216,5 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
     Add    = "added"
   }
 }
-`, randId)
+`, randId))
 }

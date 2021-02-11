@@ -18,6 +18,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
@@ -43,6 +44,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 			{
 				Config: testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID(),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
@@ -57,18 +59,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -105,17 +96,8 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
 }
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
-	return `
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
+	return testAccAvailableAZsNoOptInDefaultExcludeConfig() + `
+# IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

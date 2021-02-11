@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -87,7 +86,7 @@ func testAccAWSPinpointBaiduChannelConfig_basic(apiKey, secretKey string) string
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
 
   enabled    = "false"
   api_key    = "%s"

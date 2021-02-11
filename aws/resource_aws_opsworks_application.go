@@ -34,17 +34,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 				ForceNew: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					opsworks.AppTypeAwsFlowRuby,
-					opsworks.AppTypeJava,
-					opsworks.AppTypeRails,
-					opsworks.AppTypePhp,
-					opsworks.AppTypeNodejs,
-					opsworks.AppTypeStatic,
-					opsworks.AppTypeOther,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(opsworks.AppType_Values(), false),
 			},
 			"stack_id": {
 				Type:     schema.TypeString,
@@ -77,15 +69,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								opsworks.SourceTypeGit,
-								opsworks.SourceTypeSvn,
-								opsworks.SourceTypeArchive,
-								opsworks.SourceTypeS3,
-								"other",
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
 						"url": {

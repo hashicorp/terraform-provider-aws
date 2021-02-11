@@ -149,7 +149,6 @@ func testAccCheckAWSLightsailStaticIpExists(n string, staticIp *lightsail.Static
 }
 
 func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_static_ip" {
 			continue

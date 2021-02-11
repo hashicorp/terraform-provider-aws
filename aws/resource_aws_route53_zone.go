@@ -33,10 +33,11 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				// returned from API, no longer requiring custom DiffSuppressFunc;
 				// instead a StateFunc allows input to be provided
 				// with or without the trailing period
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: trimTrailingPeriod,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				StateFunc:    trimTrailingPeriod,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 
 			"comment": {
@@ -77,6 +78,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"vpc"},
+				ValidateFunc:  validation.StringLenBetween(0, 32),
 			},
 
 			"name_servers": {
@@ -397,17 +399,23 @@ func cleanZoneID(ID string) string {
 
 // trimTrailingPeriod is used to remove the trailing period
 // of "name" or "domain name" attributes often returned from
-// the Route53 API or provided as user input
+// the Route53 API or provided as user input.
+// The single dot (".") domain name is returned as-is.
 func trimTrailingPeriod(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
-		str = *value
+		str = aws.StringValue(value)
 	case string:
 		str = value
 	default:
 		return ""
 	}
+
+	if str == "." {
+		return str
+	}
+
 	return strings.TrimSuffix(str, ".")
 }
 

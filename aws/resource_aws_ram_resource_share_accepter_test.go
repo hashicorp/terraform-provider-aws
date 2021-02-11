@@ -5,13 +5,12 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
 )
 
 func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
@@ -19,14 +18,14 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
 
-	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	shareName := fmt.Sprintf("tf-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +108,7 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 func testAccAwsRamResourceShareAccepterBasic(shareName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
-  share_arn = "${aws_ram_principal_association.test.resource_share_arn}"
+  share_arn = aws_ram_principal_association.test.resource_share_arn
 }
 
 resource "aws_ram_resource_share" "test" {
@@ -119,15 +118,15 @@ resource "aws_ram_resource_share" "test" {
   allow_external_principals = true
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
 resource "aws_ram_principal_association" "test" {
   provider = "awsalternate"
 
-  principal          = "${data.aws_caller_identity.receiver.account_id}"
-  resource_share_arn = "${aws_ram_resource_share.test.arn}"
+  principal          = data.aws_caller_identity.receiver.account_id
+  resource_share_arn = aws_ram_resource_share.test.arn
 }
 
 data "aws_caller_identity" "receiver" {}

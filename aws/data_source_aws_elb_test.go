@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAWSELB_basic(t *testing.T) {
 	// Must be less than 32 characters for ELB name
-	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("TestAccDataSourceAWSELB-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -37,12 +37,12 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 }
 
 func testAccDataSourceAWSELBConfigBasic(rName, testName string) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 resource "aws_elb" "elb_test" {
   name            = "%[1]s"
   internal        = true
   security_groups = [aws_security_group.elb_test.id]
-  subnets         = [aws_subnet.elb_test.0.id, aws_subnet.elb_test.1.id]
+  subnets         = aws_subnet.elb_test[*].id
 
   idle_timeout = 30
 
@@ -61,15 +61,6 @@ resource "aws_elb" "elb_test" {
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = "list"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_vpc" "elb_test" {

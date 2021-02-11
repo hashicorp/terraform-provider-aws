@@ -277,8 +277,25 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 			}
 		}
 
+		toRemove := map[string]*rds.Parameter{}
+
+		for _, p := range expandParameters(os.List()) {
+			if p.ParameterName != nil {
+				toRemove[*p.ParameterName] = p
+			}
+		}
+
+		for _, p := range expandParameters(ns.List()) {
+			if p.ParameterName != nil {
+				delete(toRemove, *p.ParameterName)
+			}
+		}
+
 		// Reset parameters that have been removed
-		resetParameters := expandParameters(os.Difference(ns).List())
+		var resetParameters []*rds.Parameter
+		for _, v := range toRemove {
+			resetParameters = append(resetParameters, v)
+		}
 		if len(resetParameters) > 0 {
 			maxParams := 20
 			for resetParameters != nil {

@@ -14,9 +14,9 @@ import (
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,9 +48,9 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
-	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	poolName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
+	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandString(10))
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,11 +196,13 @@ resource "aws_cognito_user_group" "main" {
 func testAccAWSCognitoUserGroupConfig_complex(poolName, groupName, groupDescription string, precedence int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "main" {
-  name = "%s"
+  name = "%[1]s"
 }
 
+data "aws_region" "current" {}
+
 resource "aws_iam_role" "group_role" {
-  name = "%s"
+  name = "%[2]s"
 
   assume_role_policy = <<EOF
 {
@@ -215,7 +217,7 @@ resource "aws_iam_role" "group_role" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "us-east-1:12345678-dead-beef-cafe-123456790ab"
+          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.name}:12345678-dead-beef-cafe-123456790ab"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
@@ -225,17 +227,16 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {
-  name         = "%s"
+  name         = "%[2]s"
   user_pool_id = aws_cognito_user_pool.main.id
-  description  = "%s"
-  precedence   = %v
+  description  = "%[3]s"
+  precedence   = %[4]d
   role_arn     = aws_iam_role.group_role.arn
 }
-`, poolName, groupName, groupName, groupDescription, precedence)
+`, poolName, groupName, groupDescription, precedence)
 }
 
 func testAccAWSCognitoUserGroupConfig_RoleArn(rName string) string {
@@ -262,7 +263,6 @@ resource "aws_iam_role" "group_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {
@@ -297,7 +297,6 @@ resource "aws_iam_role" "group_role_updated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_cognito_user_group" "main" {

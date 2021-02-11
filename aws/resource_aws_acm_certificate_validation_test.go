@@ -239,7 +239,7 @@ resource "aws_route53_record" "test" {
 }
 
 resource "aws_acm_certificate_validation" "test" {
-  depends_on = ["aws_route53_record.test"]
+  depends_on = [aws_route53_record.test]
 
   certificate_arn = aws_acm_certificate.test.arn
 }

@@ -33,6 +33,11 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -46,6 +51,7 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	}
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener_certificate.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,6 +71,11 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccLbListenerCertificateConfigMultipleAddNew(rName, keys, certificates),
@@ -97,6 +108,29 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	resourceName := "aws_lb_listener_certificate.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLbListenerCertificateExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLbListenerCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -182,9 +216,9 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = "tf-acc-lb-listener-certificate-${count.index}"
@@ -194,13 +228,13 @@ resource "aws_subnet" "test" {
 resource "aws_lb_target_group" "test" {
   port     = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 }
 
 resource "aws_lb" "test" {
   internal = true
   name     = "%[1]s"
-  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  subnets  = aws_subnet.test[*].id
 }
 
 resource "aws_iam_server_certificate" "test" {
@@ -210,14 +244,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.test.arn}"
+  load_balancer_arn = aws_lb.test.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
+  certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
     type             = "forward"
   }
 }
@@ -227,8 +261,8 @@ resource "aws_lb_listener" "test" {
 func testAccLbListenerCertificateConfig(rName, key, certificate string) string {
 	return testAccLbListenerCertificateConfigLbListenerBase(rName, key, certificate) + `
 resource "aws_lb_listener_certificate" "test" {
-  certificate_arn = "${aws_iam_server_certificate.test.arn}"
-  listener_arn    = "${aws_lb_listener.test.arn}"
+  certificate_arn = aws_iam_server_certificate.test.arn
+  listener_arn    = aws_lb_listener.test.arn
 }
 `
 }
@@ -236,18 +270,18 @@ resource "aws_lb_listener_certificate" "test" {
 func testAccLbListenerCertificateConfigMultiple(rName string, keys, certificates []string) string {
 	return testAccLbListenerCertificateConfigLbListenerBase(rName, keys[0], certificates[0]) + fmt.Sprintf(`
 resource "aws_lb_listener_certificate" "default" {
-  listener_arn    = "${aws_lb_listener.test.arn}"
-  certificate_arn = "${aws_iam_server_certificate.test.arn}"
+  listener_arn    = aws_lb_listener.test.arn
+  certificate_arn = aws_iam_server_certificate.test.arn
 }
 
 resource "aws_lb_listener_certificate" "additional_1" {
-  listener_arn    = "${aws_lb_listener.test.arn}"
-  certificate_arn = "${aws_iam_server_certificate.additional_1.arn}"
+  listener_arn    = aws_lb_listener.test.arn
+  certificate_arn = aws_iam_server_certificate.additional_1.arn
 }
 
 resource "aws_lb_listener_certificate" "additional_2" {
-  listener_arn    = "${aws_lb_listener.test.arn}"
-  certificate_arn = "${aws_iam_server_certificate.additional_2.arn}"
+  listener_arn    = aws_lb_listener.test.arn
+  certificate_arn = aws_iam_server_certificate.additional_2.arn
 }
 
 resource "aws_iam_server_certificate" "additional_1" {
@@ -273,8 +307,8 @@ resource "aws_iam_server_certificate" "additional_3" {
 }
 
 resource "aws_lb_listener_certificate" "additional_3" {
-  listener_arn    = "${aws_lb_listener.test.arn}"
-  certificate_arn = "${aws_iam_server_certificate.additional_3.arn}"
+  listener_arn    = aws_lb_listener.test.arn
+  certificate_arn = aws_iam_server_certificate.additional_3.arn
 }
 `, rName, tlsPemEscapeNewlines(certificates[3]), tlsPemEscapeNewlines(keys[3]))
 }

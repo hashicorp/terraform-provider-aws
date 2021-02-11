@@ -31,7 +31,7 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 			"operating_system": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
 			},
 			// Computed values
 			"description": {
@@ -76,7 +76,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 	resp, err := ssmconn.DescribePatchBaselines(params)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM PatchBaselines: %s", err)
+		return fmt.Errorf("Error describing SSM PatchBaselines: %w", err)
 	}
 
 	var filteredBaselines []*ssm.PatchBaselineIdentity
@@ -107,7 +107,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 
 	baseline := *filteredBaselines[0]
 
-	d.SetId(*baseline.BaselineId)
+	d.SetId(aws.StringValue(baseline.BaselineId))
 	d.Set("name", baseline.BaselineName)
 	d.Set("description", baseline.BaselineDescription)
 	d.Set("default_baseline", baseline.DefaultBaseline)

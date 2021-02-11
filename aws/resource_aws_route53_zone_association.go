@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsRoute53ZoneAssociation() *schema.Resource {
@@ -173,6 +173,14 @@ func resourceAwsRoute53ZoneAssociationDelete(d *schema.ResourceData, meta interf
 
 	_, err = conn.DisassociateVPCFromHostedZone(input)
 
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeVPCAssociationNotFound) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error disassociating Route 53 Hosted Zone (%s) from EC2 VPC (%s): %w", zoneID, vpcID, err)
 	}
@@ -214,19 +222,25 @@ func route53GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion s
 		VPCRegion: aws.String(vpcRegion),
 	}
 
-	output, err := conn.ListHostedZonesByVPC(input)
+	for {
+		output, err := conn.ListHostedZonesByVPC(input)
 
-	if err != nil {
-		return nil, err
-	}
+		if err != nil {
+			return nil, err
+		}
 
-	var associatedHostedZoneSummary *route53.HostedZoneSummary
-	for _, hostedZoneSummary := range output.HostedZoneSummaries {
-		if zoneID == aws.StringValue(hostedZoneSummary.HostedZoneId) {
-			associatedHostedZoneSummary = hostedZoneSummary
+		var associatedHostedZoneSummary *route53.HostedZoneSummary
+		for _, hostedZoneSummary := range output.HostedZoneSummaries {
+			if zoneID == aws.StringValue(hostedZoneSummary.HostedZoneId) {
+				associatedHostedZoneSummary = hostedZoneSummary
+				return associatedHostedZoneSummary, nil
+			}
+		}
+		if output.NextToken == nil {
 			break
 		}
+		input.NextToken = output.NextToken
 	}
 
-	return associatedHostedZoneSummary, nil
+	return nil, nil
 }

@@ -2,12 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strings"
 	"testing"
 	"time"
-
-	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -764,7 +763,6 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 }
 
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 
 		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")

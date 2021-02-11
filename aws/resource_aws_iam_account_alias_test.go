@@ -162,7 +162,7 @@ resource "aws_iam_account_alias" "test" {
 }
 
 data "aws_iam_account_alias" "current" {
-  depends_on = ["aws_iam_account_alias.test"]
+  depends_on = [aws_iam_account_alias.test]
 }
 `, rstring)
 }

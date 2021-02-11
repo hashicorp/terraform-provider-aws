@@ -339,7 +339,6 @@ resource "aws_dynamodb_table_item" "test" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, hashKey, item)
 }
@@ -372,7 +371,6 @@ resource "aws_dynamodb_table_item" "test" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, item)
 }
@@ -405,7 +403,6 @@ resource "aws_dynamodb_table_item" "test1" {
   item = <<ITEM
 %s
 ITEM
-
 }
 
 resource "aws_dynamodb_table_item" "test2" {
@@ -416,7 +413,6 @@ resource "aws_dynamodb_table_item" "test2" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, firstItem, secondItem)
 }

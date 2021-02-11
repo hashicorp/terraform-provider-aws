@@ -59,11 +59,11 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := ssmconn.GetParameter(paramInput)
 
 	if err != nil {
-		return fmt.Errorf("Error describing SSM parameter: %s", err)
+		return fmt.Errorf("Error describing SSM parameter (%s): %w", name, err)
 	}
 
 	param := resp.Parameter
-	d.SetId(*param.Name)
+	d.SetId(aws.StringValue(param.Name))
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,

@@ -318,7 +318,6 @@ resource "aws_iam_role" "beanstalk_service" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "beanstalk_service" {
@@ -342,7 +341,6 @@ resource "aws_iam_role_policy" "beanstalk_service" {
     ]
 }
 EOF
-
 }
 `, rName)
 }
