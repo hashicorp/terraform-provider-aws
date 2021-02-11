@@ -90,10 +90,11 @@ func resourceAwsCloudFrontRealtimeLogConfig() *schema.Resource {
 func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
+	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
 		EndPoints:    expandCloudFrontEndPoints(d.Get("endpoint").([]interface{})),
 		Fields:       expandStringSet(d.Get("fields").(*schema.Set)),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(name),
 		SamplingRate: aws.Int64(int64(d.Get("sampling_rate").(int))),
 	}
 
@@ -101,7 +102,7 @@ func resourceAwsCloudFrontRealtimeLogConfigCreate(d *schema.ResourceData, meta i
 	output, err := conn.CreateRealtimeLogConfig(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Real-time Log Config: %w", err)
+		return fmt.Errorf("error creating CloudFront Real-time Log Config (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.RealtimeLogConfig.ARN))
