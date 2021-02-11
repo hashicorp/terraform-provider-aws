@@ -33,13 +33,13 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"max_concurrency": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), ""),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
 			"max_errors": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), ""),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
 
 			"task_type": {
@@ -192,7 +192,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 									"document_version": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), ""),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
 									},
 
 									"notification_config": {
@@ -211,15 +211,8 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Elem: &schema.Schema{
-														Type: schema.TypeString,
-														ValidateFunc: validation.StringInSlice([]string{
-															"All",
-															"InProgress",
-															"Success",
-															"TimedOut",
-															"Cancelled",
-															"Failed",
-														}, false),
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringInSlice(ssm.NotificationEvent_Values(), false),
 													},
 												},
 
