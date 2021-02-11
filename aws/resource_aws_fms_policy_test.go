@@ -223,7 +223,10 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccFmsPolicyConfig_cloudfrontDistribution(name string, group string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(name),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(name),
+		fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = "%[1]s"
@@ -232,7 +235,7 @@ resource "aws_fms_policy" "test" {
 
   security_service_policy_data {
     type                 = "WAFV2"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    managed_service_data = "{\"type\":\"WAFV2\",\"preProcessRuleGroups\":[{\"ruleGroupArn\":null,\"overrideAction\":{\"type\":\"NONE\"},\"managedRuleGroupIdentifier\":{\"version\":null,\"vendorName\":\"AWS\",\"managedRuleGroupName\":\"AWSManagedRulesAmazonIpReputationList\"},\"ruleGroupType\":\"ManagedRuleGroup\",\"excludeRules\":[]}],\"postProcessRuleGroups\":[],\"defaultAction\":{\"type\":\"ALLOW\"},\"overrideCustomerWebACLAssociation\":false,\"loggingConfiguration\":{\"logDestinationConfigs\":[\"${aws_kinesis_firehose_delivery_stream.test.arn}\"],\"redactedFields\":[{\"redactedFieldType\":\"SingleHeader\",\"redactedFieldValue\":\"Cookies\"}]}}"
   }
 }
 
@@ -241,7 +244,8 @@ resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
   name        = "%[2]s"
 }
-`, name, group)
+`, name, group),
+	)
 }
 
 func testAccFmsPolicyConfig_updated(name string, group string) string {
