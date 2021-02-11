@@ -111,7 +111,7 @@ func testAccCheckAWSElasticTranscoderPipeline_notifications(
 	return func(s *terraform.State) error {
 
 		var notes []string
-		if p.Notifications.Completed != nil && aws.StringValue(p.Notifications.Completed) != "" {
+		if aws.StringValue(p.Notifications.Completed) != "" {
 			notes = append(notes, "completed")
 		}
 		if p.Notifications.Error != nil && aws.StringValue(p.Notifications.Error) != "" {
