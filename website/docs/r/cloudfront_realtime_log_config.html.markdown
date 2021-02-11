@@ -105,5 +105,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudFront real-time log configurations can be imported using the ARN, e.g.
 
 ```
-$ terraform import aws_cloudfront_realtime_log_config.example TODO
+$ terraform import aws_cloudfront_realtime_log_config.example arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig
 ```
