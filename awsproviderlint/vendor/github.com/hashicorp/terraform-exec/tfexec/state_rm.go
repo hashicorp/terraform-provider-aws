@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-type stateMvConfig struct {
+type stateRmConfig struct {
 	backup      string
 	backupOut   string
 	dryRun      bool
@@ -16,61 +16,61 @@ type stateMvConfig struct {
 	stateOut    string
 }
 
-var defaultStateMvOptions = stateMvConfig{
+var defaultStateRmOptions = stateRmConfig{
 	lock:        true,
 	lockTimeout: "0s",
 }
 
-// StateMvCmdOption represents options used in the Refresh method.
-type StateMvCmdOption interface {
-	configureStateMv(*stateMvConfig)
+// StateRmCmdOption represents options used in the Refresh method.
+type StateRmCmdOption interface {
+	configureStateRm(*stateRmConfig)
 }
 
-func (opt *BackupOption) configureStateMv(conf *stateMvConfig) {
+func (opt *BackupOption) configureStateRm(conf *stateRmConfig) {
 	conf.backup = opt.path
 }
 
-func (opt *BackupOutOption) configureStateMv(conf *stateMvConfig) {
+func (opt *BackupOutOption) configureStateRm(conf *stateRmConfig) {
 	conf.backupOut = opt.path
 }
 
-func (opt *DryRunOption) configureStateMv(conf *stateMvConfig) {
+func (opt *DryRunOption) configureStateRm(conf *stateRmConfig) {
 	conf.dryRun = opt.dryRun
 }
 
-func (opt *LockOption) configureStateMv(conf *stateMvConfig) {
+func (opt *LockOption) configureStateRm(conf *stateRmConfig) {
 	conf.lock = opt.lock
 }
 
-func (opt *LockTimeoutOption) configureStateMv(conf *stateMvConfig) {
+func (opt *LockTimeoutOption) configureStateRm(conf *stateRmConfig) {
 	conf.lockTimeout = opt.timeout
 }
 
-func (opt *StateOption) configureStateMv(conf *stateMvConfig) {
+func (opt *StateOption) configureStateRm(conf *stateRmConfig) {
 	conf.state = opt.path
 }
 
-func (opt *StateOutOption) configureStateMv(conf *stateMvConfig) {
+func (opt *StateOutOption) configureStateRm(conf *stateRmConfig) {
 	conf.stateOut = opt.path
 }
 
-// StateMv represents the terraform state mv subcommand.
-func (tf *Terraform) StateMv(ctx context.Context, source string, destination string, opts ...StateMvCmdOption) error {
-	cmd, err := tf.stateMvCmd(ctx, source, destination, opts...)
+// StateRm represents the terraform state rm subcommand.
+func (tf *Terraform) StateRm(ctx context.Context, address string, opts ...StateRmCmdOption) error {
+	cmd, err := tf.stateRmCmd(ctx, address, opts...)
 	if err != nil {
 		return err
 	}
 	return tf.runTerraformCmd(ctx, cmd)
 }
 
-func (tf *Terraform) stateMvCmd(ctx context.Context, source string, destination string, opts ...StateMvCmdOption) (*exec.Cmd, error) {
-	c := defaultStateMvOptions
+func (tf *Terraform) stateRmCmd(ctx context.Context, address string, opts ...StateRmCmdOption) (*exec.Cmd, error) {
+	c := defaultStateRmOptions
 
 	for _, o := range opts {
-		o.configureStateMv(&c)
+		o.configureStateRm(&c)
 	}
 
-	args := []string{"state", "mv", "-no-color"}
+	args := []string{"state", "rm", "-no-color"}
 
 	// string opts: only pass if set
 	if c.backup != "" {
@@ -98,8 +98,7 @@ func (tf *Terraform) stateMvCmd(ctx context.Context, source string, destination 
 	}
 
 	// positional arguments
-	args = append(args, source)
-	args = append(args, destination)
+	args = append(args, address)
 
 	return tf.buildTerraformCmd(ctx, nil, args...), nil
 }
