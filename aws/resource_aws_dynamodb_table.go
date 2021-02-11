@@ -166,9 +166,10 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							ForceNew: true,
 						},
 						"projection_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
 						},
 						"non_key_attributes": {
 							Type:     schema.TypeList,
@@ -211,8 +212,9 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Optional: true,
 						},
 						"projection_type": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
 						},
 						"non_key_attributes": {
 							Type:     schema.TypeSet,
