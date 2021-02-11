@@ -257,6 +257,7 @@ provider "aws" {
     cloudformation = "http://localhost:4581"
     cloudwatch     = "http://localhost:4582"
     dynamodb       = "http://localhost:4569"
+    ec2            = "http://localhost:4597"
     es             = "http://localhost:4578"
     firehose       = "http://localhost:4573"
     iam            = "http://localhost:4593"
