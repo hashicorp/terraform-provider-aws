@@ -96,7 +96,6 @@ In addition to the arguments, which are exported, the following attributes are e
 * `id` - The SES event destination name.
 * `arn` - The SES event destination ARN.
 
-
 ## Import
 
 SES event destinations can be imported using `configuration_set_name` together with the event destination's `name`,
