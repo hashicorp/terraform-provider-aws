@@ -4302,8 +4302,8 @@ resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
 
   skip_acceleration_config = true
-  skip_payer_config = true
-  skip_lock_config = true
+  skip_payer_config        = true
+  skip_lock_config         = true
 }
 `, bucketName)
 }
