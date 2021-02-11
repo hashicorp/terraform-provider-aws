@@ -2,12 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
@@ -29,6 +31,10 @@ func resourceAwsCloudWatchLogDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringLenBetween(1, 512),
+					validation.StringMatch(regexp.MustCompile(`[^:*]*`), ""),
+				),
 			},
 
 			"role_arn": {
