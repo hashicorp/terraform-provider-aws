@@ -259,15 +259,15 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 		out, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
 		})
-
-		if err == nil {
-			if out.Pipeline != nil && aws.StringValue(out.Pipeline.Id) == rs.Primary.ID {
-				return fmt.Errorf("Elastic Transcoder Pipeline still exists")
-			}
+		if isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("unexpected error: %w", err)
 		}
 
-		if !isAWSErr(err, elastictranscoder.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("unexpected error: %s", err)
+		if out.Pipeline != nil && aws.StringValue(out.Pipeline.Id) == rs.Primary.ID {
+			return fmt.Errorf("Elastic Transcoder Pipeline still exists")
 		}
 	}
 	return nil
