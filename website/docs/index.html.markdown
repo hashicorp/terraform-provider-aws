@@ -317,7 +317,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_s3_account_public_access_block` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
     - [`aws_ses_active_receipt_rule_set` resource](/docs/providers/aws/r/ses_active_receipt_rule_set.html)
     - [`aws_ses_configuration_set` resource](/docs/providers/aws/r/ses_configuration_set.html)
-    - [`aws_ses_configuration_set` resource](/docs/providers/aws/r/ses_configuration_set.html)
     - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
     - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
     - [`aws_ses_email_identity` resource](/docs/providers/aws/r/ses_email_identity.html)
