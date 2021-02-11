@@ -10,14 +10,21 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Support merging policy documents by adding `source_policy_documents` and `override_policy_documents` arguments ([#12055](https://github.com/hashicorp/terraform-provider-aws/issues/12055))
 * provider: Add terraform-provider-aws version to HTTP User-Agent header ([#17486](https://github.com/hashicorp/terraform-provider-aws/issues/17486))
+* resource/aws_cloudwatch_log_destination: Add plan time validation to `role_arn`, `name` and `target_arn`. ([#11687](https://github.com/hashicorp/terraform-provider-aws/issues/11687))
 * resource/aws_ec2_traffic_mirror_filter: Add `arn` attribute. ([#13948](https://github.com/hashicorp/terraform-provider-aws/issues/13948))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add arn attribute. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add plan time validation to `destination_port_range.from_port`, 
 `destination_port_range.to_port`, `source_port_range.from_port`, and `source_port_range.to_port`. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_lambda_event_source_mapping: Add `topics` attribute to support Amazon MSK as an event source ([#14746](https://github.com/hashicorp/terraform-provider-aws/issues/14746))
+* resource/aws_ses_active_receipt_rule_set: Add `arn` attribute ([#13962](https://github.com/hashicorp/terraform-provider-aws/issues/13962))
+* resource/aws_ses_active_receipt_rule_set: Add plan time validation for `rule_set_name` argument ([#13962](https://github.com/hashicorp/terraform-provider-aws/issues/13962))
+* resource/aws_ses_configuration_set: Add `arn` attribute. ([#13972](https://github.com/hashicorp/terraform-provider-aws/issues/13972))
 * resource/aws_ses_configuration_set: Add `delivery_options` argument ([#11600](https://github.com/hashicorp/terraform-provider-aws/issues/11600))
+* resource/aws_ses_configuration_set: Add plan time validation to `name`. ([#13972](https://github.com/hashicorp/terraform-provider-aws/issues/13972))
 * resource/aws_ses_event_destination: Add `arn` attribute ([#13964](https://github.com/hashicorp/terraform-provider-aws/issues/13964))
 * resource/aws_ses_event_destination: Add plan time validation for `name`, `cloudwatch_destination.default_value`, `cloudwatch_destination.default_name`, `kinesis_destination.role_arn`, `kinesis_destination.stream_arn`, and `sns_destination.topic_arn` attributes ([#13964](https://github.com/hashicorp/terraform-provider-aws/issues/13964))
+* resource/aws_ses_receipt_rule: Add `arn` attribute ([#13960](https://github.com/hashicorp/terraform-provider-aws/issues/13960))
+* resource/aws_ses_receipt_rule: Add plan time validations for `name`, `tls_policy`, `add_header_action.header_name`, `add_header_action.header_value`, `bounce_action.topic_arn`, `lambda_action.function_arn`, `lambda_action.topic_arn`, `lambda_action.invocation_type`, `s3_action,topic_arn`, `sns_action.topic_arn`, `stop_action.scope`, `stop_action.topic_arn`, `workmail_action.topic_arn`, and `workmail_action.organization_arn` attributes ([#13960](https://github.com/hashicorp/terraform-provider-aws/issues/13960))
 * resource/aws_ses_template: Add `arn` attribute ([#13963](https://github.com/hashicorp/terraform-provider-aws/issues/13963))
 * resource/aws_sns_topic_subscription: Add `redrive_policy` argument ([#11770](https://github.com/hashicorp/terraform-provider-aws/issues/11770))
 
