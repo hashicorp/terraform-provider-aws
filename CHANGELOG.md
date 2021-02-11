@@ -2,20 +2,27 @@
 
 FEATURES:
 
+* **New Resource:** `aws_cloudfront_realtime_log_config` ([#14974](https://github.com/hashicorp/terraform-provider-aws/issues/14974))
 * **New Resource:** `aws_config_conformance_pack` ([#17313](https://github.com/hashicorp/terraform-provider-aws/issues/17313))
 * **New Resource:** `aws_sagemaker_model_package_group` ([#17366](https://github.com/hashicorp/terraform-provider-aws/issues/17366))
 * **New Resource:** `aws_securityhub_organization_admin_account` ([#17501](https://github.com/hashicorp/terraform-provider-aws/issues/17501))
 
 ENHANCEMENTS:
 
+* data-source/aws_customer_gateway: Add `device_name` attribute ([#14786](https://github.com/hashicorp/terraform-provider-aws/issues/14786))
 * data-source/aws_iam_policy_document: Support merging policy documents by adding `source_policy_documents` and `override_policy_documents` arguments ([#12055](https://github.com/hashicorp/terraform-provider-aws/issues/12055))
 * provider: Add terraform-provider-aws version to HTTP User-Agent header ([#17486](https://github.com/hashicorp/terraform-provider-aws/issues/17486))
+* resource/aws_cloudfront_distribution: Add `realtime_log_config_arn` attribute to `default_cache_behavior` and `ordered_cache_behavior` configuration blocks ([#14974](https://github.com/hashicorp/terraform-provider-aws/issues/14974))
 * resource/aws_cloudwatch_log_destination: Add plan time validation to `role_arn`, `name` and `target_arn`. ([#11687](https://github.com/hashicorp/terraform-provider-aws/issues/11687))
+* resource/aws_cloudwatch_log_group: Add plan time validation for `retention_in_days` argument ([#14673](https://github.com/hashicorp/terraform-provider-aws/issues/14673))
+* resource/aws_codebuild_report_group: Add `delete_reports` argument ([#17338](https://github.com/hashicorp/terraform-provider-aws/issues/17338))
+* resource/aws_customer_gateway: Add `device_name` argument ([#14786](https://github.com/hashicorp/terraform-provider-aws/issues/14786))
 * resource/aws_ec2_traffic_mirror_filter: Add `arn` attribute. ([#13948](https://github.com/hashicorp/terraform-provider-aws/issues/13948))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add arn attribute. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add plan time validation to `destination_port_range.from_port`, 
 `destination_port_range.to_port`, `source_port_range.from_port`, and `source_port_range.to_port`. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_lambda_event_source_mapping: Add `topics` attribute to support Amazon MSK as an event source ([#14746](https://github.com/hashicorp/terraform-provider-aws/issues/14746))
+* resource/aws_lb_listener_certificate: Add import support ([#16474](https://github.com/hashicorp/terraform-provider-aws/issues/16474))
 * resource/aws_ses_active_receipt_rule_set: Add `arn` attribute ([#13962](https://github.com/hashicorp/terraform-provider-aws/issues/13962))
 * resource/aws_ses_active_receipt_rule_set: Add plan time validation for `rule_set_name` argument ([#13962](https://github.com/hashicorp/terraform-provider-aws/issues/13962))
 * resource/aws_ses_configuration_set: Add `arn` attribute. ([#13972](https://github.com/hashicorp/terraform-provider-aws/issues/13972))
@@ -31,8 +38,11 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_glue_catalog_database: Use Catalog Id when deleting Databases. ([#17489](https://github.com/hashicorp/terraform-provider-aws/issues/17489))
+* resource/aws_iam_instance_profile: Detach role when role doesn't exist + remove when deleted from state. ([#16188](https://github.com/hashicorp/terraform-provider-aws/issues/16188))
 * resource/aws_instance: Fix use of `throughput` and `iops` for `gp3` volumes at the same time ([#17380](https://github.com/hashicorp/terraform-provider-aws/issues/17380))
 * resource/aws_lambda_event_source_mapping: Wait for create and update operations to complete ([#14765](https://github.com/hashicorp/terraform-provider-aws/issues/14765))
+* resource/aws_lambda_function: Prevent crash when using `Image` package type ([#17082](https://github.com/hashicorp/terraform-provider-aws/issues/17082))
+* resource/aws_wafv2_web_acl_association: Increase creation timeout value from 2 to 5 minutes to prevent WAFUnavailableEntityException ([#17545](https://github.com/hashicorp/terraform-provider-aws/issues/17545))
 
 ## 3.27.0 (February 05, 2021)
 
