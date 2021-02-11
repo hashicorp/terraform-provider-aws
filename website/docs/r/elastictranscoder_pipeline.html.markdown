@@ -100,6 +100,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Elastictranscoder pipeline.
 * `arn` - The ARN of the Elastictranscoder pipeline.
+
 ## Import
 
 Elastic Transcoder pipelines can be imported using the `id`, e.g.
