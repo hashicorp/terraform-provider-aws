@@ -275,7 +275,6 @@ func testAccCheckAWSCodeBuildReportGroupDestroy(s *terraform.State) error {
 			return fmt.Errorf("Found Report Group %s", rs.Primary.ID)
 		}
 
-		return nil
 	}
 	return nil
 }
