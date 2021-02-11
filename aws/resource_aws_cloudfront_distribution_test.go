@@ -624,6 +624,72 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedSigners(t *tes
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_RealtimeLogConfigArn(t *testing.T) {
+	var distribution cloudfront.Distribution
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudfront_distribution.test"
+	realtimeLogConfigResourceName := "aws_cloudfront_realtime_log_config.test"
+	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorRealtimeLogConfigArn(rName, retainOnDelete),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontDistribution_OrderedCacheBehavior_RealtimeLogConfigArn(t *testing.T) {
+	var distribution cloudfront.Distribution
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudfront_distribution.test"
+	realtimeLogConfigResourceName := "aws_cloudfront_realtime_log_config.test"
+	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigOrderedCacheBehaviorRealtimeLogConfigArn(rName, retainOnDelete),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ordered_cache_behavior.0.realtime_log_config_arn", realtimeLogConfigResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFrontDistribution_Enabled(t *testing.T) {
 	var distribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_distribution.test"
@@ -2825,4 +2891,186 @@ resource "aws_cloudfront_distribution" "test" {
   }
 }
 `, enabled, waitForDeployment)
+}
+
+func testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 2
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "cloudfront.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "kinesis:DescribeStreamSummary",
+      "kinesis:DescribeStream",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords"
+    ],
+    "Resource": "${aws_kinesis_stream.test.arn}"
+  }]
+}
+EOF
+}
+
+resource "aws_cloudfront_realtime_log_config" "test" {
+  name          = %[1]q
+  sampling_rate = 50
+  fields        = ["timestamp", "c-ip"]
+
+  endpoint {
+    stream_type = "Kinesis"
+
+    kinesis_stream_config {
+      role_arn   = aws_iam_role.test.arn
+      stream_arn = aws_kinesis_stream.test.arn
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName)
+}
+
+func testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorRealtimeLogConfigArn(rName string, retainOnDelete bool) string {
+	return composeConfig(
+		testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods         = ["GET", "HEAD"]
+    cached_methods          = ["GET", "HEAD"]
+    target_origin_id        = "test"
+    viewer_protocol_policy  = "allow-all"
+    realtime_log_config_arn = aws_cloudfront_realtime_log_config.test.arn
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete))
+}
+
+func testAccAWSCloudFrontDistributionConfigOrderedCacheBehaviorRealtimeLogConfigArn(rName string, retainOnDelete bool) string {
+	return composeConfig(
+		testAccAWSCloudFrontDistributionConfigCacheBehaviorRealtimeLogConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  ordered_cache_behavior {
+    allowed_methods         = ["GET", "HEAD"]
+    cached_methods          = ["GET", "HEAD"]
+    path_pattern            = "/test/*"
+    target_origin_id        = "test"
+    viewer_protocol_policy  = "allow-all"
+    realtime_log_config_arn = aws_cloudfront_realtime_log_config.test.arn
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, retainOnDelete))
 }

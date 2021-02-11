@@ -25,6 +25,7 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 		"cached_methods":              cachedMethodsConf(),
 		"compress":                    true,
 		"field_level_encryption_id":   "",
+		"realtime_log_config_arn":     "",
 	}
 }
 

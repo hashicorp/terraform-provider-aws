@@ -159,6 +159,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"realtime_log_config_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -320,6 +325,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"origin_request_policy_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"realtime_log_config_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 						"smooth_streaming": {
 							Type:     schema.TypeBool,

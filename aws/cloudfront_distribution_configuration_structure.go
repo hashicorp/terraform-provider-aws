@@ -219,6 +219,9 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 	if v, ok := m["cached_methods"]; ok {
 		dcb.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set))
 	}
+	if v, ok := m["realtime_log_config_arn"]; ok && v.(string) != "" {
+		dcb.RealtimeLogConfigArn = aws.String(v.(string))
+	}
 
 	return dcb
 }
@@ -258,6 +261,10 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	if v, ok := m["path_pattern"]; ok {
 		cb.PathPattern = aws.String(v.(string))
 	}
+	if v, ok := m["realtime_log_config_arn"]; ok && v.(string) != "" {
+		cb.RealtimeLogConfigArn = aws.String(v.(string))
+	}
+
 	return cb
 }
 
@@ -269,6 +276,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
 		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
 		"origin_request_policy_id":  aws.StringValue(dcb.OriginRequestPolicyId),
+		"realtime_log_config_arn":   aws.StringValue(dcb.RealtimeLogConfigArn),
 	}
 
 	if dcb.ForwardedValues != nil {
@@ -308,6 +316,7 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
 	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
 	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
+	m["realtime_log_config_arn"] = aws.StringValue(cb.RealtimeLogConfigArn)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}

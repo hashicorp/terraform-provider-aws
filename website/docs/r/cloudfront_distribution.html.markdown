@@ -233,7 +233,7 @@ of several sub-resources - these resources are laid out below.
     distribution (multiples allowed).
 
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
-  distribution (multiples allowed).  
+  distribution (multiples allowed).
 
 * `price_class` (Optional) - The price class for this distribution. One of
     `PriceClass_All`, `PriceClass_200`, `PriceClass_100`
@@ -300,6 +300,9 @@ of several sub-resources - these resources are laid out below.
 
 * `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
     specifies which requests you want this cache behavior to apply to.
+
+* `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
+    that is attached to this cache behavior.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
     media files in Microsoft Smooth Streaming format using the origin that is
