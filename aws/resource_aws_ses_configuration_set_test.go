@@ -68,7 +68,7 @@ func testSweepSesConfigurationSets(region string) error {
 }
 
 func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,9 +80,11 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", ses.ServiceName, fmt.Sprintf("configuration-set/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
@@ -96,7 +98,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -108,7 +110,7 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(escRandomInteger, ses.TlsPolicyRequire),
+				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -125,7 +127,7 @@ func TestAccAWSSESConfigurationSet_deliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -137,13 +139,13 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(escRandomInteger, ses.TlsPolicyRequire),
+				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -156,7 +158,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(escRandomInteger, ses.TlsPolicyOptional),
+				Config: testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyOptional),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -164,7 +166,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
@@ -180,7 +182,7 @@ func TestAccAWSSESConfigurationSet_update_deliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -192,7 +194,7 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -209,7 +211,7 @@ func TestAccAWSSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 }
 
 func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_configuration_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -221,14 +223,14 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -241,7 +243,7 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSESConfigurationSetBasicConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
@@ -251,6 +253,30 @@ func TestAccAWSSESConfigurationSet_update_emptyDeliveryOptions(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSESConfigurationSet_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESConfigurationSetBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESConfigurationSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesConfigurationSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -307,30 +333,32 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSSESConfigurationSetBasicConfig(escRandomInteger int) string {
+func testAccAWSSESConfigurationSetBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
-  name = "some-configuration-set-%d"
+  name = %[1]q
 }
-`, escRandomInteger)
+`, rName)
 }
 
-func testAccAWSSESConfigurationSetDeliveryOptionsConfig(escRandomInteger int, tlsPolicy string) string {
+func testAccAWSSESConfigurationSetDeliveryOptionsConfig(rName, tlsPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
-  name = "some-configuration-set-%d"
+  name = %[1]q
+
   delivery_options {
-    tls_policy = %q
+    tls_policy = %[2]q
   }
 }
-`, escRandomInteger, tlsPolicy)
+`, rName, tlsPolicy)
 }
 
-func testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(escRandomInteger int) string {
+func testAccAWSSESConfigurationSetEmptyDeliveryOptionsConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
-  name = "some-configuration-set-%d"
+  name = %[1]q
+
   delivery_options {}
 }
-`, escRandomInteger)
+`, rName)
 }
