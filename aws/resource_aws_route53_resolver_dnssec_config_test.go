@@ -44,7 +44,7 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 			id := aws.StringValue(resolverDnssecConfig.Id)
 			resourceId := aws.StringValue(resolverDnssecConfig.ResourceId)
 
-			log.Printf("[INFO] Deleting Route53 Resolver Dnssec config: %s", id)
+			log.Printf("[INFO] Deleting Route 53 Resolver Dnssec config: %s", id)
 
 			r := resourceAwsRoute53ResolverDnssecConfig()
 			d := r.Data(nil)
@@ -54,7 +54,7 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 			err := r.Delete(d, client)
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Route53 Resolver Resolver Dnssec config (%s): %w", id, err)
+				sweeperErr := fmt.Errorf("error deleting Route 53 Resolver Resolver Dnssec config (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
@@ -65,12 +65,12 @@ func testSweepRoute53ResolverDnssecConfig(region string) error {
 	})
 
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Route53 Resolver Resolver Dnssec config sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping Route 53 Resolver Resolver Dnssec config sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 Resolver Resolver Dnssec config: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route 53 Resolver Resolver Dnssec config: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -177,11 +177,11 @@ func testAccCheckRoute53ResolverDnssecConfigExists(n string) resource.TestCheckF
 		}
 
 		if config == nil {
-			return fmt.Errorf("Route53 Resolver Dnssec config (%s) not found", id)
+			return fmt.Errorf("Route 53 Resolver Dnssec config (%s) not found", id)
 		}
 
 		if aws.StringValue(config.ValidationStatus) != route53resolver.ResolverDNSSECValidationStatusEnabled {
-			return fmt.Errorf("Route53 Resolver Dnssec config (%s) is not enabled", aws.StringValue(config.Id))
+			return fmt.Errorf("Route 53 Resolver Dnssec config (%s) is not enabled", aws.StringValue(config.Id))
 		}
 
 		return nil
