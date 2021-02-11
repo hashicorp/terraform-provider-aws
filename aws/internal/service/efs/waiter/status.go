@@ -6,8 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// AccessPointStatus fetches the Access Point and its Status
-func AccessPointStatus(conn *efs.EFS, accessPointId string) resource.StateRefreshFunc {
+// AccessPointLifeCycleState fetches the Access Point and its LifecycleState
+func AccessPointLifeCycleState(conn *efs.EFS, accessPointId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &efs.DescribeAccessPointsInput{
 			AccessPointId: aws.String(accessPointId),
@@ -19,7 +19,7 @@ func AccessPointStatus(conn *efs.EFS, accessPointId string) resource.StateRefres
 			return nil, "", err
 		}
 
-		if output == nil && len(output.AccessPoints) == 0 {
+		if output == nil || len(output.AccessPoints) == 0 || output.AccessPoints[0] == nil {
 			return nil, "", nil
 		}
 
