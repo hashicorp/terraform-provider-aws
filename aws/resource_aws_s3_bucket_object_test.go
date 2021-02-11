@@ -798,9 +798,9 @@ func TestAccAWSS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
@@ -862,9 +862,9 @@ func TestAccAWSS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
 				),
 			},
 			{
