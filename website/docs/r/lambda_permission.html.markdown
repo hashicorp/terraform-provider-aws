@@ -40,21 +40,21 @@ resource "aws_lambda_function" "test_lambda" {
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 ```
 
@@ -90,21 +90,21 @@ resource "aws_lambda_function" "func" {
 resource "aws_iam_role" "default" {
   name = "iam_for_lambda_with_sns"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 ```
 
@@ -125,6 +125,57 @@ resource "aws_lambda_permission" "lambda_permission" {
   # The /*/*/* part allows invocation from any stage, method and resource path
   # within API Gateway REST API.
   source_arn = "${aws_api_gateway_rest_api.MyDemoAPI.execution_arn}/*/*/*"
+}
+```
+
+## Usage with CloudWatch log group
+
+```hcl
+resource "aws_lambda_permission" "logging" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.logging.function_name
+  principal     = "logs.eu-west-1.amazonaws.com"
+  source_arn    = "${aws_cloudwatch_log_group.default.arn}:*"
+}
+
+resource "aws_cloudwatch_log_group" "default" {
+  name = "/default"
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "logging" {
+  depends_on      = [aws_lambda_permission.logging]
+  destination_arn = aws_lambda_function.logging.arn
+  filter_pattern  = ""
+  log_group_name  = aws_cloudwatch_log_group.default.name
+  name            = "logging_default"
+}
+
+resource "aws_lambda_function" "logging" {
+  filename      = "lamba_logging.zip"
+  function_name = "lambda_called_from_cloudwatch_logs"
+  handler       = "exports.handler"
+  role          = aws_iam_role.default.arn
+  runtime       = "python2.7"
+}
+
+resource "aws_iam_role" "default" {
+  name = "iam_for_lambda_called_from_cloudwatch_logs"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
 }
 ```
 
