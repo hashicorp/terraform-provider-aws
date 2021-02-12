@@ -88,23 +88,29 @@ func testAccCheckAWSS3ObjectCopyExists(n string) resource.TestCheckFunc {
 func testAccAWSS3ObjectCopyConfig_basic(rName1, sourceKey, rName2, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "source" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_object" "source" {
   bucket  = aws_s3_bucket.source.bucket
-  key     = %q
+  key     = %[2]q
   content = "Ingen ko på isen"
 }
 
 resource "aws_s3_bucket" "target" {
-  bucket = %q
+  bucket = %[3]q
 }
 
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
-  key    = %q
+  key    = %[4]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
+
+  grant {
+	  uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
+	  type        = "Group"
+	  permissions = ["READ"]
+  }
 }
 `, rName1, sourceKey, rName2, key)
 }

@@ -407,8 +407,13 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 		input.Expires = expandS3ObjectDate(v.(string))
 	}
 
-	if err := resourceAwsS3ObjectCopyIncludeGrants(input, d); err != nil {
-		return err
+	if v, ok := d.GetOk("grant"); ok && v.(*schema.Set).Len() > 0 {
+		grants := expandS3Grants(v.(*schema.Set).List())
+		input.GrantFullControl = grants.FullControl
+		input.GrantRead = grants.Read
+		input.GrantReadACP = grants.ReadACP
+		input.GrantWriteACP = grants.WriteACP
+		input.ACL = nil
 	}
 
 	if v, ok := d.GetOk("kms_encryption_context"); ok {
@@ -502,85 +507,102 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 	return resourceAwsS3BucketObjectRead(d, meta)
 }
 
-func resourceAwsS3ObjectCopyIncludeGrants(input *s3.CopyObjectInput, d *schema.ResourceData) error {
-	grants := d.Get("grant").(*schema.Set).List()
-
-	if len(grants) > 0 {
-		grantFullControl := make([]*s3.Grantee, 0)
-		grantRead := make([]*s3.Grantee, 0)
-		grantReadACP := make([]*s3.Grantee, 0)
-		grantWriteACP := make([]*s3.Grantee, 0)
-
-		for _, grant := range grants {
-			grantMap := grant.(map[string]interface{})
-
-			for _, perm := range grantMap["permissions"].(*schema.Set).List() {
-				ge := &s3.Grantee{}
-
-				if i, ok := grantMap["email"].(string); ok && i != "" {
-					ge.SetEmailAddress(i)
-				}
-
-				if i, ok := grantMap["id"].(string); ok && i != "" {
-					ge.SetID(i)
-				}
-
-				if t, ok := grantMap["type"].(string); ok && t != "" {
-					ge.SetType(t)
-				}
-
-				if u, ok := grantMap["uri"].(string); ok && u != "" {
-					ge.SetURI(u)
-				}
-
-				switch perm.(string) {
-				case s3.PermissionFullControl:
-					grantFullControl = append(grantFullControl, ge)
-				case s3.PermissionRead:
-					grantRead = append(grantRead, ge)
-				case s3.PermissionReadAcp:
-					grantReadACP = append(grantReadACP, ge)
-				case s3.PermissionWriteAcp:
-					grantWriteACP = append(grantWriteACP, ge)
-				}
-			}
-		}
-
-		if len(grantFullControl) > 0 {
-			input.GrantFullControl = aws.String(flattenS3ObjectCopyGrantees(grantFullControl))
-		}
-
-		if len(grantRead) > 0 {
-			input.GrantRead = aws.String(flattenS3ObjectCopyGrantees(grantRead))
-		}
-
-		if len(grantReadACP) > 0 {
-			input.GrantReadACP = aws.String(flattenS3ObjectCopyGrantees(grantReadACP))
-		}
-
-		if len(grantWriteACP) > 0 {
-			input.GrantWriteACP = aws.String(flattenS3ObjectCopyGrantees(grantWriteACP))
-		}
-	}
-	return nil
+type s3Grants struct {
+	FullControl *string
+	Read        *string
+	ReadACP     *string
+	WriteACP    *string
 }
 
-func flattenS3ObjectCopyGrantees(grantees []*s3.Grantee) string {
+func expandS3Grant(tfMap map[string]interface{}) string {
+	if tfMap == nil {
+		return ""
+	}
+
+	apiObject := &s3.Grantee{}
+
+	if v, ok := tfMap["email"].(string); ok && v != "" {
+		apiObject.SetEmailAddress(v)
+	}
+
+	if v, ok := tfMap["id"].(string); ok && v != "" {
+		apiObject.SetID(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.SetType(v)
+	}
+
+	if v, ok := tfMap["uri"].(string); ok && v != "" {
+		apiObject.SetURI(v)
+	}
+
+	// Examples:
 	//"GrantFullControl": "emailaddress=user1@example.com,emailaddress=user2@example.com",
 	//"GrantRead": "uri=http://acs.amazonaws.com/groups/global/AllUsers",
 	//"GrantFullControl": "id=examplee7a2f25102679df27bb0ae12b3f85be6f290b936c4393484",
 	//"GrantWrite": "uri=http://acs.amazonaws.com/groups/s3/LogDelivery"
-	flatGrants := make([]string, 0)
-	for _, grantee := range grantees {
-		switch *grantee.Type {
-		case s3.TypeAmazonCustomerByEmail:
-			flatGrants = append(flatGrants, fmt.Sprintf("emailaddress=%s", *grantee.EmailAddress))
-		case s3.TypeCanonicalUser:
-			flatGrants = append(flatGrants, fmt.Sprintf("id=%s", *grantee.ID))
-		case s3.TypeGroup:
-			flatGrants = append(flatGrants, fmt.Sprintf("uri=%s", *grantee.URI))
+
+	switch *apiObject.Type {
+	case s3.TypeAmazonCustomerByEmail:
+		return fmt.Sprintf("emailaddress=%s", *apiObject.EmailAddress)
+	case s3.TypeCanonicalUser:
+		return fmt.Sprintf("id=%s", *apiObject.ID)
+	}
+
+	return fmt.Sprintf("uri=%s", *apiObject.URI)
+}
+
+func expandS3Grants(tfList []interface{}) *s3Grants {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	grantFullControl := make([]string, 0)
+	grantRead := make([]string, 0)
+	grantReadACP := make([]string, 0)
+	grantWriteACP := make([]string, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		for _, perm := range tfMap["permissions"].(*schema.Set).List() {
+			if v := expandS3Grant(tfMap); v != "" {
+				switch perm.(string) {
+				case s3.PermissionFullControl:
+					grantFullControl = append(grantFullControl, v)
+				case s3.PermissionRead:
+					grantRead = append(grantRead, v)
+				case s3.PermissionReadAcp:
+					grantReadACP = append(grantReadACP, v)
+				case s3.PermissionWriteAcp:
+					grantWriteACP = append(grantWriteACP, v)
+				}
+			}
 		}
 	}
 
-	return strings.Join(flatGrants, ",")
+	apiObjects := &s3Grants{}
+
+	if len(grantFullControl) > 0 {
+		apiObjects.FullControl = aws.String(strings.Join(grantFullControl, ","))
+	}
+
+	if len(grantRead) > 0 {
+		apiObjects.Read = aws.String(strings.Join(grantRead, ","))
+	}
+
+	if len(grantReadACP) > 0 {
+		apiObjects.ReadACP = aws.String(strings.Join(grantReadACP, ","))
+	}
+
+	if len(grantWriteACP) > 0 {
+		apiObjects.WriteACP = aws.String(strings.Join(grantWriteACP, ","))
+	}
+
+	return apiObjects
 }
