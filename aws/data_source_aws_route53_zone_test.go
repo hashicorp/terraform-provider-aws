@@ -25,7 +25,7 @@ func TestAccAWSRoute53ZoneDataSource_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "name_servers", dataSourceName, "name_servers"),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccAWSRoute53ZoneDataSource_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "name_servers", dataSourceName, "name_servers"),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccAWSRoute53ZoneDataSource_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "name_servers", dataSourceName, "name_servers"),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccAWSRoute53ZoneDataSource_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "name_servers", dataSourceName, "name_servers"),
+					resource.TestCheckResourceAttrPair(resourceName, "name_servers.#", dataSourceName, "name_servers.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},

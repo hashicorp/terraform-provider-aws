@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfimagebuilder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/imagebuilder"
 )
 
 func init() {
@@ -326,7 +327,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeSize(t *test
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeType(t *testing.T) {
+func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp2(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -342,6 +343,34 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeType(t *test
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
 						"ebs.0.volume_type": imagebuilder.EbsVolumeTypeGp2,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp3(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsImageBuilderImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsImageBuilderImageRecipeConfigBlockDeviceMappingEbsVolumeType(rName, tfimagebuilder.EbsVolumeTypeGp3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
+						"ebs.0.volume_type": tfimagebuilder.EbsVolumeTypeGp3,
 					}),
 				),
 			},
@@ -399,6 +428,34 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_VirtualName(t *testing
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
 						"virtual_name": "ephemeral0",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsImageBuilderImageRecipe_Component(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsImageBuilderImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsImageBuilderImageRecipeConfigComponent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "component.0.component_arn", "data.aws_imagebuilder_component.aws-cli-version-2-linux", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "component.1.component_arn", "data.aws_imagebuilder_component.update-linux", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "component.2.component_arn", "aws_imagebuilder_component.test", "arn"),
 				),
 			},
 			{
@@ -473,6 +530,31 @@ func TestAccAwsImageBuilderImageRecipe_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsImageBuilderImageRecipe_WorkingDirectory(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsImageBuilderImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsImageBuilderImageRecipeConfigWorkingDirectory(rName, "/tmp"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "working_directory", "/tmp"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -787,6 +869,38 @@ resource "aws_imagebuilder_image_recipe" "test" {
 `, rName, virtualName))
 }
 
+func testAccAwsImageBuilderImageRecipeConfigComponent(rName string) string {
+	return composeConfig(
+		testAccAwsImageBuilderImageRecipeConfigBase(rName),
+		fmt.Sprintf(`
+data "aws_imagebuilder_component" "aws-cli-version-2-linux" {
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/aws-cli-version-2-linux/1.0.0"
+}
+
+data "aws_imagebuilder_component" "update-linux" {
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+}
+
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = data.aws_imagebuilder_component.aws-cli-version-2-linux.arn
+  }
+
+  component {
+    component_arn = data.aws_imagebuilder_component.update-linux.arn
+  }
+
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+`, rName))
+}
+
 func testAccAwsImageBuilderImageRecipeConfigDescription(rName string, description string) string {
 	return composeConfig(
 		testAccAwsImageBuilderImageRecipeConfigBase(rName),
@@ -859,4 +973,21 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAwsImageBuilderImageRecipeConfigWorkingDirectory(rName string, workingDirectory string) string {
+	return composeConfig(
+		testAccAwsImageBuilderImageRecipeConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name              = %[1]q
+  parent_image      = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version           = "1.0.0"
+  working_directory = %[2]q
+}
+`, rName, workingDirectory))
 }

@@ -84,7 +84,7 @@ func resourceAwsIamUserSshKeyCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating IAM User SSH Key %s: %s", username, err)
 	}
 
-	d.SetId(*createResp.SSHPublicKey.SSHPublicKeyId)
+	d.SetId(aws.StringValue(createResp.SSHPublicKey.SSHPublicKeyId))
 
 	return resourceAwsIamUserSshKeyUpdate(d, meta)
 }

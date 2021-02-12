@@ -22,6 +22,7 @@
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
         - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
         - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-tests)
+        - [Acceptance Test Concurrency](#acceptance-test-concurrency)
     - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
     - [Running Test Sweepers](#running-test-sweepers)
@@ -115,6 +116,8 @@ ok  	github.com/hashicorp/terraform-provider-aws/aws	55.619s
 ```
 
 Running acceptance tests requires version 0.12.26 or higher of the Terraform CLI to be installed.
+
+For advanced developers, the acceptance testing framework accepts some additional environment variables that can be used to control Terraform CLI binary selection, logging, and other behaviors. See the [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html#environment-variables) for more information.
 
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
@@ -639,6 +642,32 @@ if err != nil {
 }
 ```
 
+For children resources that are encapsulated by a parent resource, it is also preferable to verify that removing the parent resource will not generate an error either. These are typically named `TestAccAws{SERVICE}{THING}_disappears_{PARENT}`, e.g. `TestAccAwsRoute53ZoneAssociation_disappears_Vpc`
+
+```go
+func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  parentResourceName := "aws_example_parent_thing.test"
+  resourceName := "aws_example_child_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceDisappears(testAccProvider, resourceAwsExampleParentThing(), parentResourceName),
+        ),
+        ExpectNonEmptyPlan: true,
+      },
+    },
+  })
+}
+```
+
 #### Per Attribute Acceptance Tests
 
 These are typically named `TestAccAws{SERVICE}{THING}_{ATTRIBUTE}`, e.g. `TestAccAwsCloudWatchDashboard_Name`
@@ -925,6 +954,45 @@ func testAccDataSourceAwsPricingProductConfigRedshift() string {
 ```
 
 If the testing configurations require more than one region, reach out to the maintainers for further assistance.
+
+#### Acceptance Test Concurrency
+
+Certain AWS service APIs allow a limited number of a certain component, while the acceptance testing runs at a default concurrency of twenty tests at a time. For example as of this writing, the SageMaker service only allows one SageMaker Domain per AWS Region. Running the tests with the default concurrency will fail with API errors relating to the component quota being exceeded.
+
+When encountering these types of components, the acceptance testing can be setup to limit the available concurrency of that particular component. When limited to one component at a time, this may also be referred to as serializing the acceptance tests.
+
+To convert to serialized (one test at a time) acceptance testing:
+
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g. `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+    - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
+- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `aws/{Service}_test.go`. The contents of this test can be setup like the following:
+
+```go
+func TestAccAwsExampleThing_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Thing": {
+			"basic":        testAccAWSExampleThing_basic,
+			"disappears":   testAccAWSExampleThing_disappears,
+			// ... potentially other resource tests ...
+		},
+		// ... potentially other top level resource test groups ...
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+```
+
+_NOTE: Future iterations of these acceptance testing concurrency instructions will include the ability to handle more than one component at a time including service quota lookup, if supported by the service API._
 
 ### Data Source Acceptance Testing
 

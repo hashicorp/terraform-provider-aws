@@ -47,6 +47,10 @@ const (
 	sageMakerRepositoryScikitLearn = "sagemaker-scikit-learn"
 	// SageMaker Library Spark ML
 	sageMakerRepositorySparkML = "sagemaker-sparkml-serving"
+	// SageMaker Library TensorFlow Serving
+	sageMakerRepositoryTensorFlowServing = "sagemaker-tensorflow-serving"
+	// SageMaker Library TensorFlow Serving EIA
+	sageMakerRepositoryTensorFlowServingEIA = "sagemaker-tensorflow-serving-eia"
 	// SageMaker Repo MXNet Inference
 	sageMakerRepositoryMXNetInference = "mxnet-inference"
 	// SageMaker Repo MXNet Inference EIA
@@ -204,6 +208,7 @@ var sageMakerPrebuiltECRImageIDByRegion_SparkML = map[string]string{
 }
 
 // https://github.com/aws/deep-learning-containers/blob/master/available_images.md
+// https://github.com/aws/sagemaker-tensorflow-serving-container
 var sageMakerPrebuiltECRImageIDByRegion_DeepLearning = map[string]string{
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
@@ -223,8 +228,33 @@ var sageMakerPrebuiltECRImageIDByRegion_DeepLearning = map[string]string{
 	endpoints.SaEast1RegionID:      "763104351884",
 	endpoints.UsEast1RegionID:      "763104351884",
 	endpoints.UsEast2RegionID:      "763104351884",
+	endpoints.UsIsoEast1RegionID:   "886529160074",
 	endpoints.UsWest1RegionID:      "763104351884",
 	endpoints.UsWest2RegionID:      "763104351884",
+}
+
+// https://github.com/aws/sagemaker-tensorflow-serving-container
+var sageMakerPrebuiltECRImageIDByRegion_TensorFlowServing = map[string]string{
+	endpoints.ApEast1RegionID:      "057415533634",
+	endpoints.ApNortheast1RegionID: "520713654638",
+	endpoints.ApNortheast2RegionID: "520713654638",
+	endpoints.ApSouth1RegionID:     "520713654638",
+	endpoints.ApSoutheast1RegionID: "520713654638",
+	endpoints.ApSoutheast2RegionID: "520713654638",
+	endpoints.CaCentral1RegionID:   "520713654638",
+	endpoints.CnNorth1RegionID:     "520713654638",
+	endpoints.CnNorthwest1RegionID: "520713654638",
+	endpoints.EuCentral1RegionID:   "520713654638",
+	endpoints.EuNorth1RegionID:     "520713654638",
+	endpoints.EuWest1RegionID:      "520713654638",
+	endpoints.EuWest2RegionID:      "520713654638",
+	endpoints.EuWest3RegionID:      "520713654638",
+	endpoints.MeSouth1RegionID:     "724002660598",
+	endpoints.SaEast1RegionID:      "520713654638",
+	endpoints.UsEast1RegionID:      "520713654638",
+	endpoints.UsEast2RegionID:      "520713654638",
+	endpoints.UsWest1RegionID:      "520713654638",
+	endpoints.UsWest2RegionID:      "520713654638",
 }
 
 func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
@@ -244,25 +274,27 @@ func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
 					sageMakerRepositoryKNearestNeighbor,
 					sageMakerRepositoryLDA,
 					sageMakerRepositoryLinearLearner,
+					sageMakerRepositoryMXNetInference,
+					sageMakerRepositoryMXNetInferenceEIA,
+					sageMakerRepositoryMXNetTraining,
 					sageMakerRepositoryNeuralTopicModel,
 					sageMakerRepositoryObject2Vec,
 					sageMakerRepositoryObjectDetection,
 					sageMakerRepositoryPCA,
-					sageMakerRepositoryRandomCutForest,
-					sageMakerRepositorySemanticSegmentation,
-					sageMakerRepositorySeq2Seq,
-					sageMakerRepositoryXGBoost,
-					sageMakerRepositoryScikitLearn,
-					sageMakerRepositorySparkML,
-					sageMakerRepositoryMXNetInference,
-					sageMakerRepositoryMXNetInferenceEIA,
-					sageMakerRepositoryMXNetTraining,
 					sageMakerRepositoryPyTorchInference,
 					sageMakerRepositoryPyTorchInferenceEIA,
 					sageMakerRepositoryPyTorchTraining,
+					sageMakerRepositoryRandomCutForest,
+					sageMakerRepositoryScikitLearn,
+					sageMakerRepositorySemanticSegmentation,
+					sageMakerRepositorySeq2Seq,
+					sageMakerRepositorySparkML,
 					sageMakerRepositoryTensorFlowInference,
 					sageMakerRepositoryTensorFlowInferenceEIA,
+					sageMakerRepositoryTensorFlowServing,
+					sageMakerRepositoryTensorFlowServingEIA,
 					sageMakerRepositoryTensorFlowTraining,
+					sageMakerRepositoryXGBoost,
 				}, false),
 			},
 
@@ -324,6 +356,8 @@ func dataSourceAwsSageMakerPrebuiltECRImageRead(d *schema.ResourceData, meta int
 		id = sageMakerPrebuiltECRImageIDByRegion_XGBoost[region]
 	case sageMakerRepositoryScikitLearn, sageMakerRepositorySparkML:
 		id = sageMakerPrebuiltECRImageIDByRegion_SparkML[region]
+	case sageMakerRepositoryTensorFlowServing, sageMakerRepositoryTensorFlowServingEIA:
+		id = sageMakerPrebuiltECRImageIDByRegion_TensorFlowServing[region]
 	case sageMakerRepositoryMXNetInference,
 		sageMakerRepositoryMXNetInferenceEIA,
 		sageMakerRepositoryMXNetTraining,

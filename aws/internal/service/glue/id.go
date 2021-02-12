@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func ReadAwsGluePartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {
@@ -19,13 +18,13 @@ func ReadAwsGluePartitionID(id string) (catalogID string, dbName string, tableNa
 	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
-func CreateAwsGluePartitionID(catalogID, dbName, tableName string, values *schema.Set) string {
+func CreateAwsGluePartitionID(catalogID, dbName, tableName string, values []interface{}) string {
 	return fmt.Sprintf("%s:%s:%s:%s", catalogID, dbName, tableName, stringifyAwsGluePartition(values))
 }
 
-func stringifyAwsGluePartition(partValues *schema.Set) string {
+func stringifyAwsGluePartition(partValues []interface{}) string {
 	var b bytes.Buffer
-	for _, val := range partValues.List() {
+	for _, val := range partValues {
 		b.WriteString(fmt.Sprintf("%s#", val.(string)))
 	}
 	vals := strings.Trim(b.String(), "#")
@@ -36,5 +35,11 @@ func stringifyAwsGluePartition(partValues *schema.Set) string {
 func CreateAwsGlueRegistryID(id string) *glue.RegistryId {
 	return &glue.RegistryId{
 		RegistryArn: aws.String(id),
+	}
+}
+
+func CreateAwsGlueSchemaID(id string) *glue.SchemaId {
+	return &glue.SchemaId{
+		SchemaArn: aws.String(id),
 	}
 }

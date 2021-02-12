@@ -809,25 +809,24 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
-	codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-	}
-
 	// Code Signing is only supported on zip packaged lambda functions.
-	if *function.PackageType == lambda.PackageTypeZip {
+	var codeSigningConfigArn string
+
+	if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
+		codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+			FunctionName: aws.String(d.Id()),
+		}
 		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
 		if err != nil {
 			return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
 		}
 
-		if getCodeSigningConfigOutput == nil || getCodeSigningConfigOutput.CodeSigningConfigArn == nil {
-			d.Set("code_signing_config_arn", "")
-		} else {
-			d.Set("code_signing_config_arn", getCodeSigningConfigOutput.CodeSigningConfigArn)
+		if getCodeSigningConfigOutput != nil {
+			codeSigningConfigArn = aws.StringValue(getCodeSigningConfigOutput.CodeSigningConfigArn)
 		}
-	} else {
-		d.Set("code_signing_config_arn", "")
 	}
+
+	d.Set("code_signing_config_arn", codeSigningConfigArn)
 
 	return nil
 }
@@ -1275,6 +1274,20 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	return err
 }
 
+func flattenLambdaEnvironment(apiObject *lambda.EnvironmentResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Variables; v != nil {
+		tfMap["variables"] = aws.StringValueMap(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0, len(fscList))
 	for _, fsc := range fscList {
@@ -1302,7 +1315,7 @@ func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemCo
 func flattenLambdaImageConfig(response *lambda.ImageConfigResponse) []map[string]interface{} {
 	settings := make(map[string]interface{})
 
-	if response == nil || response.Error != nil {
+	if response == nil || response.Error != nil || response.ImageConfig == nil {
 		return nil
 	}
 

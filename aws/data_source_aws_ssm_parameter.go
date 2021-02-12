@@ -61,7 +61,8 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	param := resp.Parameter
-	d.SetId(*param.Name)
+
+	d.SetId(aws.StringValue(param.Name))
 	d.Set("arn", param.ARN)
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)

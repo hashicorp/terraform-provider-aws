@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -45,6 +44,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
@@ -70,6 +70,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/forecastservice"
@@ -119,6 +120,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/personalize"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
@@ -162,8 +164,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/version"
 )
 
 type Config struct {
@@ -239,6 +243,7 @@ type AWSClient struct {
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
+	connectconn                         *connect.Connect
 	costandusagereportconn              *costandusagereportservice.CostandUsageReportService
 	dataexchangeconn                    *dataexchange.DataExchange
 	datapipelineconn                    *datapipeline.DataPipeline
@@ -264,6 +269,7 @@ type AWSClient struct {
 	elbconn                             *elb.ELB
 	elbv2conn                           *elbv2.ELBV2
 	emrconn                             *emr.EMR
+	emrcontainersconn                   *emrcontainers.EMRContainers
 	esconn                              *elasticsearch.ElasticsearchService
 	firehoseconn                        *firehose.Firehose
 	fmsconn                             *fms.FMS
@@ -315,6 +321,7 @@ type AWSClient struct {
 	outpostsconn                        *outposts.Outposts
 	partition                           string
 	personalizeconn                     *personalize.Personalize
+	prometheusserviceconn               *prometheusservice.PrometheusService
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
 	qldbconn                            *qldb.QLDB
@@ -326,6 +333,7 @@ type AWSClient struct {
 	region                              string
 	resourcegroupsconn                  *resourcegroups.ResourceGroups
 	resourcegroupstaggingapiconn        *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
+	reverseDnsPrefix                    string
 	route53domainsconn                  *route53domains.Route53Domains
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
@@ -417,8 +425,8 @@ func (c *Config) Client() (interface{}, error) {
 		UserAgentProducts: []*awsbase.UserAgentProduct{
 			{Name: "APN", Version: "1.0"},
 			{Name: "HashiCorp", Version: "1.0"},
-			{Name: "Terraform", Version: c.terraformVersion,
-				Extra: []string{"+https://www.terraform.io"}},
+			{Name: "Terraform", Version: c.terraformVersion, Extra: []string{"+https://www.terraform.io"}},
+			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Extra: []string{"+https://registry.terraform.io/providers/hashicorp/aws"}},
 		},
 	}
 
@@ -478,6 +486,7 @@ func (c *Config) Client() (interface{}, error) {
 		cognitoconn:                         cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
 		cognitoidpconn:                      cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
 		configconn:                          configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
+		connectconn:                         connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["connect"])})),
 		costandusagereportconn:              costandusagereportservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cur"])})),
 		dataexchangeconn:                    dataexchange.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dataexchange"])})),
 		datapipelineconn:                    datapipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datapipeline"])})),
@@ -503,6 +512,7 @@ func (c *Config) Client() (interface{}, error) {
 		elbconn:                             elb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
 		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
 		emrconn:                             emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emr"])})),
+		emrcontainersconn:                   emrcontainers.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emrcontainers"])})),
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
 		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
 		fmsconn:                             fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
@@ -552,6 +562,7 @@ func (c *Config) Client() (interface{}, error) {
 		outpostsconn:                        outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["outposts"])})),
 		partition:                           partition,
 		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
+		prometheusserviceconn:               prometheusservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["prometheusservice"])})),
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
 		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
 		qldbconn:                            qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["qldb"])})),
@@ -562,6 +573,7 @@ func (c *Config) Client() (interface{}, error) {
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
 		resourcegroupstaggingapiconn:        resourcegroupstaggingapi.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroupstaggingapi"])})),
+		reverseDnsPrefix:                    ReverseDns(dnsSuffix),
 		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
@@ -640,16 +652,21 @@ func (c *Config) Client() (interface{}, error) {
 	client.r53conn = route53.New(sess.Copy(route53Config))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
+	client.apigatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Many operations can return an error such as:
+		//   ConflictException: Unable to complete operation due to concurrent modification. Please try again later.
+		// Handle them all globally for the service client.
+		if tfawserr.ErrMessageContains(r.Error, apigateway.ErrCodeConflictException, "try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
 			return
 		}
-		err, ok := r.Error.(awserr.Error)
-		if !ok || err == nil {
-			return
-		}
-		if err.Code() == applicationautoscaling.ErrCodeFailedResourceAccessException {
+		if tfawserr.ErrCodeEquals(r.Error, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 			r.Retryable = aws.Bool(true)
 		}
 	})

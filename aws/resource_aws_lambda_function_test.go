@@ -416,6 +416,33 @@ func TestAccAWSLambdaFunction_envVariables(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_Environment_Variables_NoValue(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.key1", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -2241,6 +2268,26 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
+func testAccAWSLambdaConfigEnvironmentVariablesNoValue(rName string) string {
+	return composeConfig(
+		baseAccAWSLambdaConfig(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs12.x"
+
+  environment {
+    variables = {
+      key1 = ""
+    }
+  }
+}
+`, rName))
+}
+
 func testAccAWSLambdaConfigEncryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_kms_key" "foo" {
@@ -3092,4 +3139,10 @@ resource "aws_lambda_function" "test" {
   runtime       = %[2]q
 }
 `, rName, runtime))
+}
+
+func TestFlattenLambdaImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
+	t.Parallel()
+	response := lambda.ImageConfigResponse{}
+	flattenLambdaImageConfig(&response)
 }
