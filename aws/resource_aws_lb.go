@@ -109,6 +109,12 @@ func resourceAwsLb() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"ipv6_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv6Address,
+						},
 						"outpost_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -297,6 +303,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 			if subnetMap["private_ipv4_address"].(string) != "" {
 				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
+			}
+
+			if subnetMap["ipv6_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].IPv6Address = aws.String(subnetMap["ipv6_address"].(string))
 			}
 		}
 	}
@@ -668,6 +678,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
 			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
+			m["ipv6_address"] = aws.StringValue(loadBalancerAddress.IPv6Address)
 		}
 
 		l = append(l, m)

@@ -22,6 +22,7 @@
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
         - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
         - [Service-Specific Region Acceptance Tests](#service-specific-region-acceptance-tests)
+        - [Acceptance Test Concurrency](#acceptance-test-concurrency)
     - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
     - [Running Test Sweepers](#running-test-sweepers)
@@ -953,6 +954,45 @@ func testAccDataSourceAwsPricingProductConfigRedshift() string {
 ```
 
 If the testing configurations require more than one region, reach out to the maintainers for further assistance.
+
+#### Acceptance Test Concurrency
+
+Certain AWS service APIs allow a limited number of a certain component, while the acceptance testing runs at a default concurrency of twenty tests at a time. For example as of this writing, the SageMaker service only allows one SageMaker Domain per AWS Region. Running the tests with the default concurrency will fail with API errors relating to the component quota being exceeded.
+
+When encountering these types of components, the acceptance testing can be setup to limit the available concurrency of that particular component. When limited to one component at a time, this may also be referred to as serializing the acceptance tests.
+
+To convert to serialized (one test at a time) acceptance testing:
+
+- Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g. `TestAccSagemakerDomain_basic` becomes `testAccSagemakerDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
+    - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
+- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `aws/{Service}_test.go`. The contents of this test can be setup like the following:
+
+```go
+func TestAccAwsExampleThing_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Thing": {
+			"basic":        testAccAWSExampleThing_basic,
+			"disappears":   testAccAWSExampleThing_disappears,
+			// ... potentially other resource tests ...
+		},
+		// ... potentially other top level resource test groups ...
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+```
+
+_NOTE: Future iterations of these acceptance testing concurrency instructions will include the ability to handle more than one component at a time including service quota lookup, if supported by the service API._
 
 ### Data Source Acceptance Testing
 

@@ -95,7 +95,7 @@ func testAccAWSLakeFormationPermissions_database(t *testing.T) {
 	})
 }
 
-func testAccAWSLakeFormationPermissions_table(t *testing.T) {
+func testAccAWSLakeFormationPermissions_table_name(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lakeformation_permissions.test"
 	roleName := "aws_iam_role.test"
@@ -107,7 +107,7 @@ func testAccAWSLakeFormationPermissions_table(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLakeFormationPermissionsConfig_table(rName),
+				Config: testAccAWSLakeFormationPermissionsConfig_table_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
@@ -118,6 +118,29 @@ func testAccAWSLakeFormationPermissions_table(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionDelete),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDescribe),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSLakeFormationPermissions_table_wildcard(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lakeformation_permissions.test"
+	databaseResourceName := "aws_glue_catalog_database.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_table_wildcard(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", databaseResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "table.0.wildcard", "true"),
 				),
 			},
 		},
@@ -474,7 +497,7 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
-func testAccAWSLakeFormationPermissionsConfig_table(rName string) string {
+func testAccAWSLakeFormationPermissionsConfig_table_name(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -521,6 +544,54 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+  }
+}
+`, rName)
+}
+
+func testAccAWSLakeFormationPermissionsConfig_table_wildcard(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "glue.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_caller_identity.current.arn]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions                   = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT"]
+  permissions_with_grant_option = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT"]
+  principal                     = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    wildcard      = true
   }
 }
 `, rName)
@@ -648,7 +719,7 @@ resource "aws_glue_catalog_table" "test" {
 }
 
 resource "aws_lakeformation_data_lake_settings" "test" {
-  // this will result in multiple permissions for iam role
+  # this will result in multiple permissions for iam role
   admins = [aws_iam_role.test.arn, data.aws_caller_identity.current.arn]
 }
 
