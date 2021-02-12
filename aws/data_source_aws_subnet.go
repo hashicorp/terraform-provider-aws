@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -36,6 +36,11 @@ func dataSourceAwsSubnet() *schema.Resource {
 			"ipv6_cidr_block": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+
+			"outpost_arn": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 
@@ -72,6 +77,16 @@ func dataSourceAwsSubnet() *schema.Resource {
 				Computed: true,
 			},
 
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"map_customer_owned_ip_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"map_public_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -97,6 +112,7 @@ func dataSourceAwsSubnet() *schema.Resource {
 
 func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSubnetsInput{}
 
@@ -131,9 +147,13 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	req.Filters = buildEC2AttributeFilterList(filters)
-	req.Filters = append(req.Filters, buildEC2TagFilterList(
-		tagsFromMap(d.Get("tags").(map[string]interface{})),
-	)...)
+
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+		req.Filters = append(req.Filters, buildEC2TagFilterList(
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
+		)...)
+	}
+
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
@@ -156,19 +176,22 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	subnet := resp.Subnets[0]
 
-	d.SetId(*subnet.SubnetId)
+	d.SetId(aws.StringValue(subnet.SubnetId))
 	d.Set("vpc_id", subnet.VpcId)
 	d.Set("availability_zone", subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("state", subnet.State)
+	d.Set("outpost_arn", subnet.OutpostArn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 
 	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
