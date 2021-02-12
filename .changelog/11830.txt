@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssm_parameter: Add support for parameter policies
+```
+
+```release-note:enhancement
+resource/aws_ssm_parameter: Add plan time validation for `description`, `allowed_pattern`
+```
