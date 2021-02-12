@@ -152,17 +152,15 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.0"),
+				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.1"),
 				),
 			},
 			{
@@ -172,10 +170,10 @@ func TestAccAWSSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
 			},
 			{
-				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.0-beta"),
+				Config: testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, "syn-nodejs-2.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.0-beta"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-2.2"),
 				),
 			},
 		},
@@ -844,7 +842,6 @@ resource "aws_synthetics_canary" "test" {
   s3_key               = aws_s3_bucket_object.test.key
   s3_version           = aws_s3_bucket_object.test.version_id
   runtime_version      = "syn-1.0"
-
 
   schedule {
     expression = "rate(0 minute)"
