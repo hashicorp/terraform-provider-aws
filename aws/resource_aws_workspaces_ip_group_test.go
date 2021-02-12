@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
@@ -124,6 +124,35 @@ func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAwsWorkspacesIpGroup_MultipleDirectories(t *testing.T) {
+	var v workspaces.IpGroup
+	var d1, d2 workspaces.WorkspaceDirectory
+
+	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_workspaces_ip_group.test"
+	directoryResourceName1 := "aws_workspaces_directory.test1"
+	directoryResourceName2 := "aws_workspaces_directory.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWorkspacesIpGroupConfigMultipleDirectories(ipGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
+					testAccCheckAwsWorkspacesDirectoryExists(directoryResourceName1, &d1),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName1, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+					testAccCheckAwsWorkspacesDirectoryExists(directoryResourceName2, &d2),
+					resource.TestCheckTypeSetElemAttrPair(directoryResourceName2, "ip_group_ids.*", "aws_workspaces_ip_group.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_workspaces_ip_group" {
@@ -136,7 +165,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error Describing Workspaces IP Group: %s", err)
+			return fmt.Errorf("error Describing Workspaces IP Group: %w", err)
 		}
 
 		// Return nil if the IP Group is already destroyed (does not exist)
@@ -215,7 +244,7 @@ resource "aws_workspaces_ip_group" "test" {
 func testAccAwsWorkspacesIpGroupConfigTags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   rules {
     source = "10.0.0.0/16"
@@ -236,7 +265,7 @@ resource "aws_workspaces_ip_group" "test" {
 func testAccAwsWorkspacesIpGroupConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
+  name = %[1]q
 
   rules {
     source = "10.0.0.0/16"
@@ -253,4 +282,30 @@ resource "aws_workspaces_ip_group" "test" {
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAwsWorkspacesIpGroupConfigMultipleDirectories(name string) string {
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(name),
+		fmt.Sprintf(`
+resource "aws_workspaces_ip_group" "test" {
+  name = %q
+}
+
+resource "aws_workspaces_directory" "test1" {
+  directory_id = aws_directory_service_directory.main.id
+
+  ip_group_ids = [
+    aws_workspaces_ip_group.test.id
+  ]
+}
+
+resource "aws_workspaces_directory" "test2" {
+  directory_id = aws_directory_service_directory.main.id
+
+  ip_group_ids = [
+    aws_workspaces_ip_group.test.id
+  ]
+}
+  `, name))
 }

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -9,11 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -182,12 +182,11 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 	return nil
 }
 
-func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
+// V0 state upgrade testing must be done via acceptance testing due to API call
+func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
-	resourceNameDxGw := "aws_dx_gateway.test"
-	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -195,18 +194,9 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_deprecatedSingleAccount(rName, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "associated_gateway_id"),
-					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
 					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
@@ -219,7 +209,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -233,12 +223,11 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
 				),
 			},
 			{
@@ -264,14 +253,14 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -281,13 +270,12 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
+					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
 				),
 			},
 		},
@@ -299,7 +287,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -313,13 +301,12 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 				),
 			},
 			{
@@ -345,14 +332,14 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -362,14 +349,13 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
-					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
+					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 				),
 			},
 		},
@@ -381,7 +367,7 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 	resourceName2 := "aws_dx_gateway_association.test2"
 	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -395,10 +381,10 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 					testAccCheckAwsDxGatewayAssociationExists(resourceName2),
 					resource.TestCheckResourceAttrSet(resourceName1, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.16/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.16/28"),
 					resource.TestCheckResourceAttrSet(resourceName2, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName2, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName2, "allowed_prefixes.*", "10.255.255.32/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName2, "allowed_prefixes.*", "10.255.255.32/28"),
 				),
 			},
 		},
@@ -410,7 +396,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -425,8 +411,8 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 				),
 			},
 			{
@@ -434,7 +420,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
 				),
 			},
 		},
@@ -447,14 +433,14 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
-	rBgpAsn := randIntRange(64512, 65534)
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -465,7 +451,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
 				),
 				// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 				ExpectNonEmptyPlan: true,
@@ -478,8 +464,8 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 				),
 			},
 		},
@@ -537,10 +523,10 @@ func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.Tes
 
 		rawState := map[string]interface{}{
 			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
-			"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
+			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}
 
-		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
+		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(context.Background(), rawState, testAccProvider.Meta())
 		if err != nil {
 			return err
 		}
@@ -575,8 +561,8 @@ resource "aws_vpn_gateway" "test" {
 }
 
 resource "aws_vpn_gateway_attachment" "test" {
-  vpc_id         = "${aws_vpc.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 `, rName, rBgpAsn)
 }
@@ -601,13 +587,13 @@ resource "aws_vpn_gateway" "test" {
 }
 
 resource "aws_vpn_gateway_attachment" "test" {
-  vpc_id         = "${aws_vpc.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test.id}"
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
 }
 
 # Accepter
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q
@@ -615,42 +601,33 @@ resource "aws_dx_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccDxGatewayAssociationConfig_deprecatedSingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
-resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id  = "${aws_dx_gateway.test.id}"
-  vpn_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
-}
-`)
-}
-
 func testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName string, rBgpAsn int) string {
@@ -667,8 +644,8 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -685,7 +662,7 @@ data "aws_caller_identity" "creator" {}
 
 # Accepter
 resource "aws_dx_gateway" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   amazon_side_asn = %[2]d
   name            = %[1]q
@@ -699,9 +676,9 @@ resource "aws_ec2_transit_gateway" "test" {
 
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_ec2_transit_gateway.test.id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_ec2_transit_gateway.test.id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -711,11 +688,11 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 }
 `, rName, rBgpAsn)
 }
@@ -742,13 +719,13 @@ resource "aws_vpn_gateway" "test1" {
 }
 
 resource "aws_vpn_gateway_attachment" "test1" {
-  vpc_id         = "${aws_vpc.test1.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test1.id}"
+  vpc_id         = aws_vpc.test1.id
+  vpn_gateway_id = aws_vpn_gateway.test1.id
 }
 
 resource "aws_dx_gateway_association" "test1" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test1.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test1.vpn_gateway_id
 }
 
 resource "aws_vpc" "test2" {
@@ -766,51 +743,51 @@ resource "aws_vpn_gateway" "test2" {
 }
 
 resource "aws_vpn_gateway_attachment" "test2" {
-  vpc_id         = "${aws_vpc.test2.id}"
-  vpn_gateway_id = "${aws_vpn_gateway.test2.id}"
+  vpc_id         = aws_vpc.test2.id
+  vpn_gateway_id = aws_vpn_gateway.test2.id
 }
 
 resource "aws_dx_gateway_association" "test2" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test2.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test2.vpn_gateway_id
 }
 `, rName1, rName2, rBgpAsn)
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.0/30",
     "10.255.255.8/30",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccountUpdated(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewaySingleAccount(rName, rBgpAsn) + `
 resource "aws_dx_gateway_association" "test" {
-  dx_gateway_id         = "${aws_dx_gateway.test.id}"
-  associated_gateway_id = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id         = aws_dx_gateway.test.id
+  associated_gateway_id = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.8/29",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 
   allowed_prefixes = [
     "10.255.255.0/30",
@@ -820,40 +797,40 @@ resource "aws_dx_gateway_association_proposal" "test" {
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.8/29",
   ]
 }
-`)
+`
 }
 
 func testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccountUpdated(rName string, rBgpAsn int) string {
-	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + fmt.Sprintf(`
+	return testAccDxGatewayAssociationConfigBase_vpnGatewayCrossAccount(rName, rBgpAsn) + `
 # Creator
 resource "aws_dx_gateway_association_proposal" "test" {
-  dx_gateway_id               = "${aws_dx_gateway.test.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.test.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway_attachment.test.vpn_gateway_id}"
+  dx_gateway_id               = aws_dx_gateway.test.id
+  dx_gateway_owner_account_id = aws_dx_gateway.test.owner_account_id
+  associated_gateway_id       = aws_vpn_gateway_attachment.test.vpn_gateway_id
 }
 
 # Accepter
 resource "aws_dx_gateway_association" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  proposal_id                         = "${aws_dx_gateway_association_proposal.test.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.test.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
+  proposal_id                         = aws_dx_gateway_association_proposal.test.id
+  dx_gateway_id                       = aws_dx_gateway.test.id
+  associated_gateway_owner_account_id = data.aws_caller_identity.creator.account_id
 
   allowed_prefixes = [
     "10.255.255.0/30",
     "10.255.255.8/30",
   ]
 }
-`)
+`
 }

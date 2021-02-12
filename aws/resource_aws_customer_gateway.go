@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -27,10 +27,17 @@ func resourceAwsCustomerGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bgp_asn": {
-				Type:         schema.TypeInt,
+				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 65534),
+				ValidateFunc: validate4ByteAsn,
+			},
+
+			"device_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
 			"ip_address": {
@@ -53,6 +60,7 @@ func resourceAwsCustomerGateway() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -66,21 +74,32 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 
 	ipAddress := d.Get("ip_address").(string)
 	vpnType := d.Get("type").(string)
-	bgpAsn := d.Get("bgp_asn").(int)
+	bgpAsn := d.Get("bgp_asn").(string)
+	deviceName := d.Get("device_name").(string)
 
-	alreadyExists, err := resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, conn)
+	alreadyExists, err := resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName, conn)
 	if err != nil {
 		return err
 	}
 
 	if alreadyExists {
-		return fmt.Errorf("An existing customer gateway for IpAddress: %s, VpnType: %s, BGP ASN: %d has been found", ipAddress, vpnType, bgpAsn)
+		return fmt.Errorf("An existing customer gateway for IpAddress: %s, VpnType: %s, BGP ASN: %s has been found", ipAddress, vpnType, bgpAsn)
+	}
+
+	i64BgpAsn, err := strconv.ParseInt(bgpAsn, 10, 64)
+	if err != nil {
+		return err
 	}
 
 	createOpts := &ec2.CreateCustomerGatewayInput{
-		BgpAsn:   aws.Int64(int64(bgpAsn)),
-		PublicIp: aws.String(ipAddress),
-		Type:     aws.String(vpnType),
+		BgpAsn:            aws.Int64(i64BgpAsn),
+		PublicIp:          aws.String(ipAddress),
+		Type:              aws.String(vpnType),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeCustomerGateway),
+	}
+
+	if len(deviceName) != 0 {
+		createOpts.DeviceName = aws.String(deviceName)
 	}
 
 	// Create the Customer Gateway.
@@ -107,15 +126,10 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	_, stateErr := stateConf.WaitForState()
+
 	if stateErr != nil {
 		return fmt.Errorf(
 			"Error waiting for customer gateway (%s) to become ready: %s", cgId, err)
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 Customer Gateway (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	return resourceAwsCustomerGatewayRead(d, meta)
@@ -150,25 +164,31 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 	}
 }
 
-func resourceAwsCustomerGatewayExists(vpnType, ipAddress string, bgpAsn int, conn *ec2.EC2) (bool, error) {
-	ipAddressFilter := &ec2.Filter{
-		Name:   aws.String("ip-address"),
-		Values: []*string{aws.String(ipAddress)},
+func resourceAwsCustomerGatewayExists(vpnType, ipAddress, bgpAsn, deviceName string, conn *ec2.EC2) (bool, error) {
+	filters := []*ec2.Filter{
+		{
+			Name:   aws.String("ip-address"),
+			Values: []*string{aws.String(ipAddress)},
+		},
+		{
+			Name:   aws.String("type"),
+			Values: []*string{aws.String(vpnType)},
+		},
+		{
+			Name:   aws.String("bgp-asn"),
+			Values: []*string{aws.String(bgpAsn)},
+		},
 	}
 
-	typeFilter := &ec2.Filter{
-		Name:   aws.String("type"),
-		Values: []*string{aws.String(vpnType)},
-	}
-
-	bgp := strconv.Itoa(bgpAsn)
-	bgpAsnFilter := &ec2.Filter{
-		Name:   aws.String("bgp-asn"),
-		Values: []*string{aws.String(bgp)},
+	if len(deviceName) != 0 {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String("device-name"),
+			Values: []*string{aws.String(deviceName)},
+		})
 	}
 
 	resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-		Filters: []*ec2.Filter{ipAddressFilter, typeFilter, bgpAsnFilter},
+		Filters: filters,
 	})
 	if err != nil {
 		return false, err
@@ -215,20 +235,13 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	customerGateway := resp.CustomerGateways[0]
+	d.Set("bgp_asn", customerGateway.BgpAsn)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
+	d.Set("device_name", customerGateway.DeviceName)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(customerGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	if aws.StringValue(customerGateway.BgpAsn) != "" {
-		val, err := strconv.ParseInt(aws.StringValue(customerGateway.BgpAsn), 0, 0)
-		if err != nil {
-			return fmt.Errorf("error parsing bgp_asn: %s", err)
-		}
-
-		d.Set("bgp_asn", int(val))
 	}
 
 	arn := arn.ARN{

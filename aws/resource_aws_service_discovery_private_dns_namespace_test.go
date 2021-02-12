@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 )
 
@@ -164,8 +164,8 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
 }
 
 // This acceptance test ensures we properly send back error messaging. References:
-//  * https://github.com/terraform-providers/terraform-provider-aws/issues/2830
-//  * https://github.com/terraform-providers/terraform-provider-aws/issues/5532
+//  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
+//  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -288,7 +288,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
-  vpc  = "${aws_vpc.test.id}"
+  vpc  = aws_vpc.test.id
 }
 `, rName)
 }
@@ -306,7 +306,7 @@ resource "aws_vpc" "test" {
 resource "aws_service_discovery_private_dns_namespace" "test" {
   description = %[1]q
   name        = "%[2]s.tf"
-  vpc         = "${aws_vpc.test.id}"
+  vpc         = aws_vpc.test.id
 }
 `, description, rName)
 }
@@ -323,13 +323,13 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "top" {
   name = "%[1]s.tf"
-  vpc  = "${aws_vpc.test.id}"
+  vpc  = aws_vpc.test.id
 }
 
 # Ensure ordering after first namespace
 resource "aws_service_discovery_private_dns_namespace" "subdomain" {
-  name = "${aws_service_discovery_private_dns_namespace.top.name}"
-  vpc  = "${aws_service_discovery_private_dns_namespace.top.vpc}"
+  name = aws_service_discovery_private_dns_namespace.top.name
+  vpc  = aws_service_discovery_private_dns_namespace.top.vpc
 }
 `, rName)
 }
@@ -346,7 +346,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
-  vpc  = "${aws_vpc.test.id}"
+  vpc  = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -367,7 +367,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   name = "%[1]s.tf"
-  vpc  = "${aws_vpc.test.id}"
+  vpc  = aws_vpc.test.id
 
   tags = {
     %[2]q = %[3]q

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSOutpostsOutpostsDataSource_basic(t *testing.T) {
@@ -63,12 +63,12 @@ func testAccPreCheckAWSOutpostsOutposts(t *testing.T) {
 
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
-		t.Skip("skipping since no Outposts Outpost found")
+		t.Skip("skipping since no Outposts found")
 	}
 }
 
 func testAccAWSOutpostsOutpostsDataSourceConfig() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_outposts_outposts" "test" {}
-`)
+`
 }

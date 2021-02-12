@@ -15,10 +15,35 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
+Terraform 0.13 and later:
+
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
+Terraform 0.12 and earlier:
+
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 2.0"
+  version = "~> 3.0"
   region  = "us-east-1"
 }
 
@@ -36,13 +61,14 @@ explained below:
 
 - Static credentials
 - Environment variables
-- Shared credentials file
-- EC2 Role
+- Shared credentials/configuration file
+- CodeBuild, ECS, and EKS Roles
+- EC2 Instance Metadata Service (IMDS and IMDSv2)
 
-### Static credentials
+### Static Credentials
 
-!> **Warning:** Hard-coding credentials into any Terraform configuration is not
-recommended, and risks secret leakage should this file ever be committed to a
+!> **Warning:** Hard-coded credentials are not recommended in any Terraform
+configuration and risks secret leakage should this file ever be committed to a
 public version control system.
 
 Static credentials can be provided by adding an `access_key` and `secret_key`
@@ -58,7 +84,7 @@ provider "aws" {
 }
 ```
 
-### Environment variables
+### Environment Variables
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
@@ -81,17 +107,9 @@ $ export AWS_DEFAULT_REGION="us-west-2"
 $ terraform plan
 ```
 
-### Shared Credentials file
+### Shared Credentials File
 
-You can use an AWS credentials file to specify your credentials. The
-default location is `$HOME/.aws/credentials` on Linux and OS X, or
-`"%USERPROFILE%\.aws\credentials"` for Windows users. If we fail to
-detect credentials inline, or in the environment, Terraform will check
-this location. You can optionally specify a different location in the
-configuration by providing the `shared_credentials_file` attribute, or
-in the environment with the `AWS_SHARED_CREDENTIALS_FILE` variable. This
-method also supports a `profile` configuration and matching
-`AWS_PROFILE` environment variable:
+You can use an [AWS credentials or configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials. The default location is `$HOME/.aws/credentials` on Linux and macOS, or `"%USERPROFILE%\.aws\credentials"` on Windows. You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` argument or using the `AWS_SHARED_CREDENTIALS_FILE` environment variable. This method also supports a `profile` configuration and matching `AWS_PROFILE` environment variable:
 
 Usage:
 
@@ -103,17 +121,23 @@ provider "aws" {
 }
 ```
 
-If specifying the profile through the `AWS_PROFILE` environment variable, you
-may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
+Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features, such as Single Sign On (SSO) configuration or credentials.
 
-### ECS and CodeBuild Task Roles
+### CodeBuild, ECS, and EKS Roles
 
-If you're running Terraform on ECS or CodeBuild and you have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html),
-Terraform will use the container's Task Role. Terraform looks for the presence of the `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`
-environment variable that AWS injects when a Task Role is configured. If you have not defined a Task Role for your container
-or CodeBuild job, Terraform will continue to use the [EC2 Role](#ec2-role).
+If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html), Terraform will use the container's Task Role. This support is based on the underlying `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` and `AWS_CONTAINER_CREDENTIALS_FULL_URI` environment variables being automatically set by those services or manually for advanced usage.
 
-### EC2 Role
+If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
+
+### Custom User-Agent Information
+
+By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS Go SDK versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. e.g.
+
+```sh
+$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```
+
+### EC2 Instance Metadata Service
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
 using IAM Role, Terraform will just ask
@@ -127,15 +151,7 @@ which reduces the chance of leakage.
 You can provide the custom metadata API endpoint via the `AWS_METADATA_URL` variable
 which expects the endpoint URL, including the version, and defaults to `http://169.254.169.254:80/latest`.
 
-The default deadline for the EC2 metadata API endpoint is 100 milliseconds,
-which can be overidden by setting the `AWS_METADATA_TIMEOUT` environment
-variable. The variable expects a positive golang Time.Duration string, which is
-a sequence of decimal numbers and a unit suffix; valid suffixes are `ns`
-(nanoseconds), `us` (microseconds), `ms` (milliseconds), `s` (seconds), `m`
-(minutes), and `h` (hours). Examples of valid inputs: `100ms`, `250ms`, `1s`,
-`2.5s`, `2.5m`, `1m30s`.
-
-### Assume role
+### Assume Role
 
 If provided with a role ARN, Terraform will attempt to assume this role
 using the supplied credentials.
@@ -183,12 +199,12 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
-* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterwards, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
+* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
   experiencing transient failures. The delay between the subsequent API
-  calls increases exponentially.
+  calls increases exponentially. If omitted, the default value is `25`.
 
 * `allowed_account_ids` - (Optional) List of allowed AWS
   account IDs to prevent you from mistakenly using an incorrect one (and
@@ -196,14 +212,14 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   `forbidden_account_ids`.
 
 * `forbidden_account_ids` - (Optional) List of forbidden
-  AWS account IDs to prevent you mistakenly using a wrong one (and
+  AWS account IDs to prevent you from mistakenly using the wrong one (and
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
 
-* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except `aws_autoscaling_group` and any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
+* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 
 * `insecure` - (Optional) Explicitly allow the provider to
-  perform "insecure" SSL requests. If omitted, default value is `false`.
+  perform "insecure" SSL requests. If omitted, the default value is `false`.
 
 * `skip_credentials_validation` - (Optional) Skip the credentials
   validation via the STS API. Useful for AWS API implementations that do
@@ -230,7 +246,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
     - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
     - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
-    - [`aws_cognito_user_pool` resource](/docs/providers/aws/r/cognito_user_pool.html)
     - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
     - [`aws_default_network_acl` resource](/docs/providers/aws/r/default_network_acl.html)
     - [`aws_default_vpc_dhcp_options`](/docs/providers/aws/r/default_vpc_dhcp_options.html)
@@ -248,15 +263,18 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
     - [`aws_dx_transit_virtual_interface` resource](/docs/providers/aws/r/dx_transit_virtual_interface.html)
     - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
-    - [`aws_ec2_capacity_reservation` resource](/docs/providers/aws/r/ec2_capacity_reservation.html)
     - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
+    - [`aws_ec2_traffic_mirror_filter` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter.html)
+    - [`aws_ec2_traffic_mirror_filter_rule` resource](/docs/providers/aws/r/ec2_traffic_mirror_filter_rule.html)
     - [`aws_ec2_traffic_mirror_session` resource](/docs/providers/aws/r/ec2_traffic_mirror_session.html)
     - [`aws_ec2_traffic_mirror_target` resource](/docs/providers/aws/r/ec2_traffic_mirror_target.html)
+    - [`aws_ec2_transit_gateway_route_table` data source](/docs/providers/aws/d/ec2_transit_gateway_route_table.html)
+    - [`aws_ec2_transit_gateway_route_table` resource](/docs/providers/aws/r/ec2_transit_gateway_route_table.html)
     - [`aws_ecs_capacity_provider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
     - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
     - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
     - [`aws_customer_gateway` data source](/docs/providers/aws/d/customer_gateway.html)
-    - [`aws_customer_gateway` resource](/docs/providers/aws/r/customer_gateway.html)  
+    - [`aws_customer_gateway` resource](/docs/providers/aws/r/customer_gateway.html)
     - [`aws_efs_access_point` data source](/docs/providers/aws/d/efs_access_point.html)
     - [`aws_efs_access_point` resource](/docs/providers/aws/r/efs_access_point.html)
     - [`aws_efs_file_system` data source](/docs/providers/aws/d/efs_file_system.html)
@@ -273,7 +291,10 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_glue_connection` resource](/docs/providers/aws/r/glue_connection.html)
     - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
     - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
+    - [`aws_glue_ml_transform` resource](/docs/providers/aws/r/glue_ml_transform.html)
     - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
+    - [`aws_glue_user_defined_function` resource](/docs/providers/aws/r/glue_user_defined_function.html)
+    - [`aws_glue_workflow` resource](/docs/providers/aws/r/glue_workflow.html)
     - [`aws_guardduty_detector` resource](/docs/providers/aws/r/guardduty_detector.html)
     - [`aws_guardduty_ipset` resource](/docs/providers/aws/r/guardduty_ipset.html)
     - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)
@@ -293,10 +314,15 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_redshift_snapshot_schedule` resource](/docs/providers/aws/r/redshift_snapshot_schedule.html)
     - [`aws_redshift_subnet_group` resource](/docs/providers/aws/r/redshift_subnet_group.html)
     - [`aws_s3_account_public_access_block` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
-    - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
+    - [`aws_ses_active_receipt_rule_set` resource](/docs/providers/aws/r/ses_active_receipt_rule_set.html)
+    - [`aws_ses_configuration_set` resource](/docs/providers/aws/r/ses_configuration_set.html)
     - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
+    - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
     - [`aws_ses_email_identity` resource](/docs/providers/aws/r/ses_email_identity.html)
+    - [`aws_ses_event_destination` resource](/docs/providers/aws/r/ses_event_destination.html)
     - [`aws_ses_receipt_filter` resource](/docs/providers/aws/r/ses_receipt_filter.html)
+    - [`aws_ses_receipt_rule` resource](/docs/providers/aws/r/ses_receipt_rule.html)
+    - [`aws_ses_template` resource](/docs/providers/aws/r/ses_template.html)
     - [`aws_ssm_document` data source](/docs/providers/aws/d/ssm_document.html)
     - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
     - [`aws_ssm_parameter` data source](/docs/providers/aws/d/ssm_parameter.html)
@@ -343,20 +369,16 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 
 ### assume_role Configuration Block
 
-The `assume_role` configuration block supports the following arguments:
+The `assume_role` configuration block supports the following optional arguments:
 
-* `role_arn` - (Required) The ARN of the role to assume.
-
-* `session_name` - (Optional) The session name to use when making the
-  AssumeRole call.
-
-* `external_id` - (Optional) The external ID to use when making the
-  AssumeRole call.
-
-* `policy` - (Optional) A more restrictive policy to apply to the temporary credentials.
-This gives you a way to further restrict the permissions for the resulting temporary
-security credentials. You cannot use the passed policy to grant permissions that are
-in excess of those allowed by the access policy of the role that is being assumed.
+* `duration_seconds` - (Optional) Number of seconds to restrict the assume role session duration.
+* `external_id` - (Optional) External identifier to use when assuming the role.
+* `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
+* `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
+* `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume.
+* `session_name` - (Optional) Session name to use when assuming the role.
+* `tags` - (Optional) Map of assume role session tags.
+* `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
 
 ### ignore_tags Configuration Block
 
@@ -372,8 +394,8 @@ provider "aws" {
 
 The `ignore_tags` configuration block supports the following arguments:
 
-* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used.
-* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used.
+* `keys` - (Optional) List of exact resource tag keys to ignore across all resources handled by this provider. This configuration prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
+* `key_prefixes` - (Optional) List of resource tag key prefixes to ignore across all resources handled by this provider. This configuration prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) is also used.
 
 ## Getting the Account ID
 
@@ -396,4 +418,4 @@ Approaches differ per authentication providers:
       need to be _assuming_ an IAM role which allows `iam:ListRoles`.
       Used in Terraform `0.6.16+`.
       There used to be no better way to get account ID out of the API
-      when using federated account until `sts:GetCallerIdentity` was introduced.
+      when using the federated account until `sts:GetCallerIdentity` was introduced.

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -108,7 +108,7 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating Gamelift build client: %s", err)
 	}
 
-	d.SetId(*out.Build.BuildId)
+	d.SetId(aws.StringValue(out.Build.BuildId))
 
 	stateConf := resource.StateChangeConf{
 		Pending: []string{gamelift.BuildStatusInitialized},
