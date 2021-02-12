@@ -753,6 +753,13 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testSortResourceBrokers(t *testing.T) {
+	testString := "this:123,is:147,just.a.test:443"
+	if "is:147,just.a.test:443,this:123" != sortResourceBrokers(testString) {
+		t.Fail()
+	}
+}
+
 func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1423,5 +1430,4 @@ resource "aws_msk_cluster" "test" {
   }
 }
 `, rName)
-
 }

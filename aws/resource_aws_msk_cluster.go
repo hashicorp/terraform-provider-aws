@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -455,7 +457,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 	cluster := out.ClusterInfo
 
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
+	d.Set("bootstrap_brokers", sortResourceBrokers(aws.StringValue(brokerOut.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram))
 	d.Set("bootstrap_brokers_tls", aws.StringValue(brokerOut.BootstrapBrokerStringTls))
 
@@ -1205,4 +1207,10 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func sortResourceBrokers(s string) string {
+	splitBootstrapBrokers := strings.Split(s, ",")
+	sort.Strings(splitBootstrapBrokers)
+	return strings.Join(splitBootstrapBrokers, ",")
 }

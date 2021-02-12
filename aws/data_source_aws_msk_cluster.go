@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -103,7 +105,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString))
+	d.Set("bootstrap_brokers", sortDataSourceBrokers(aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringSaslScram))
 	d.Set("bootstrap_brokers_tls", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringTls))
 	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
@@ -119,4 +121,10 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 
 	return nil
+}
+
+func sortDataSourceBrokers(s string) string {
+	splitBootstrapBrokers := strings.Split(s, ",")
+	sort.Strings(splitBootstrapBrokers)
+	return strings.Join(splitBootstrapBrokers, ",")
 }

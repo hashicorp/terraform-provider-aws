@@ -61,3 +61,10 @@ data "aws_msk_cluster" "test" {
 }
 `, rName)
 }
+
+func testSortDataSourceBrokers(t *testing.T) {
+	testString := "this:123,is:147,just.a.test:443"
+	if "is:147,just.a.test:443,this:123" != sortDataSourceBrokers(testString) {
+		t.Fail()
+	}
+}
