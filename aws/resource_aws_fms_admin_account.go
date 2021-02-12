@@ -56,7 +56,7 @@ func resourceAwsFmsAdminAccountCreate(d *schema.ResourceData, meta interface{}) 
 	stateConf := &resource.StateChangeConf{
 		Target:  []string{accountID},
 		Refresh: associateFmsAdminAccountRefreshFunc(conn, accountID),
-		Timeout: 1 * time.Minute,
+		Timeout: 10 * time.Minute,
 		Delay:   10 * time.Second,
 	}
 
