@@ -345,22 +345,10 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
 
-	// Only set non-default KMS key ID (one that doesn't match default)
-	if resp.SSEKMSKeyId != nil {
-		// retrieve S3 KMS Default Master Key
-		kmsconn := meta.(*AWSClient).kmsconn
-		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
-			KeyId: aws.String("alias/aws/s3"),
-		})
-		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
-		}
-
-		if *resp.SSEKMSKeyId != *kmsresp.KeyMetadata.Arn {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *resp.SSEKMSKeyId)
-			d.Set("kms_key_id", resp.SSEKMSKeyId)
-		}
+	if err := resourceAwsS3BucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+		return fmt.Errorf("bucket object KMS: %w", err)
 	}
+
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
 
@@ -477,6 +465,27 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	if err != nil {
 		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	return nil
+}
+
+func resourceAwsS3BucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
+	// Only set non-default KMS key ID (one that doesn't match default)
+	if sseKMSKeyId != nil {
+		// retrieve S3 KMS Default Master Key
+		kmsconn := meta.(*AWSClient).kmsconn
+		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+			KeyId: aws.String("alias/aws/s3"),
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
+		}
+
+		if *sseKMSKeyId != *kmsresp.KeyMetadata.Arn {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *sseKMSKeyId)
+			d.Set("kms_key_id", sseKMSKeyId)
+		}
 	}
 
 	return nil
