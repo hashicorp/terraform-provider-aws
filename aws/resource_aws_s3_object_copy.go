@@ -2,10 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,9 +19,9 @@ import (
 func resourceAwsS3ObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsS3ObjectCopyCreate,
-		Read:   resourceAwsS3BucketObjectRead,
+		Read:   resourceAwsS3ObjectCopyRead,
 		Update: resourceAwsS3ObjectCopyUpdate,
-		Delete: resourceAwsS3BucketObjectDelete,
+		Delete: resourceAwsS3ObjectCopyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"acl": {
@@ -280,6 +284,95 @@ func resourceAwsS3ObjectCopyCreate(d *schema.ResourceData, meta interface{}) err
 	return resourceAwsS3ObjectCopyDoCopy(d, meta)
 }
 
+func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
+	s3conn := meta.(*AWSClient).s3conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	bucket := d.Get("bucket").(string)
+	key := d.Get("key").(string)
+
+	resp, err := s3conn.HeadObject(
+		&s3.HeadObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		})
+
+	if err != nil {
+		// If S3 returns a 404 Request Failure, mark the object as destroyed
+		if awsErr, ok := err.(awserr.RequestFailure); ok && awsErr.StatusCode() == 404 {
+			d.SetId("")
+			log.Printf("[WARN] Error Reading Object (%s), object not found (HTTP status 404)", key)
+			return nil
+		}
+		return err
+	}
+	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+
+	d.Set("cache_control", resp.CacheControl)
+	d.Set("content_disposition", resp.ContentDisposition)
+	d.Set("content_encoding", resp.ContentEncoding)
+	d.Set("content_language", resp.ContentLanguage)
+	d.Set("content_type", resp.ContentType)
+	metadata := pointersMapToStringList(resp.Metadata)
+
+	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
+	for k, v := range metadata {
+		delete(metadata, k)
+		metadata[strings.ToLower(k)] = v
+	}
+
+	if err := d.Set("metadata", metadata); err != nil {
+		return fmt.Errorf("error setting metadata: %s", err)
+	}
+	d.Set("version_id", resp.VersionId)
+	d.Set("server_side_encryption", resp.ServerSideEncryption)
+	d.Set("website_redirect", resp.WebsiteRedirectLocation)
+	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", resp.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
+
+	// Only set non-default KMS key ID (one that doesn't match default)
+	if resp.SSEKMSKeyId != nil {
+		// retrieve S3 KMS Default Master Key
+		kmsconn := meta.(*AWSClient).kmsconn
+		kmsresp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+			KeyId: aws.String("alias/aws/s3"),
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
+		}
+
+		if *resp.SSEKMSKeyId != *kmsresp.KeyMetadata.Arn {
+			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *resp.SSEKMSKeyId)
+			d.Set("kms_key_id", resp.SSEKMSKeyId)
+		}
+	}
+	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
+	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
+
+	// The "STANDARD" (which is also the default) storage
+	// class when set would not be included in the results.
+	d.Set("storage_class", s3.StorageClassStandard)
+	if resp.StorageClass != nil {
+		d.Set("storage_class", resp.StorageClass)
+	}
+
+	// Retry due to S3 eventual consistency
+	tags, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return keyvaluetags.S3ObjectListTags(s3conn, bucket, key)
+	})
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+
+	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
+}
+
 func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 	// if any of these exist, let the API decide whether to copy
 	for _, key := range []string{
@@ -331,6 +424,29 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 		return resourceAwsS3ObjectCopyDoCopy(d, meta)
 	}
 
+	return nil
+}
+
+func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
+	s3conn := meta.(*AWSClient).s3conn
+
+	bucket := d.Get("bucket").(string)
+	key := d.Get("key").(string)
+	// We are effectively ignoring all leading '/'s in the key name and
+	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
+	key = strings.TrimLeft(key, "/")
+	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
+
+	var err error
+	if _, ok := d.GetOk("version_id"); ok {
+		err = deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false)
+	} else {
+		err = deleteS3ObjectVersion(s3conn, bucket, key, "", false)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
 	return nil
 }
 
