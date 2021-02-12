@@ -466,24 +466,23 @@ resource "aws_iam_role" "test" {
 POLICY
 
 }
-  
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.name
 
   policy = <<POLICY
 {
-    "Version": "2012-10-17",
-    "Statement": {
-      "Effect": "Allow",
-      "Action": "ssm:*",
-      "Resource": "*"
-    }
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "ssm:*",
+    "Resource": "*"
+  }
 }
 POLICY
 
 }
-  `, rName)
+`, rName)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
@@ -937,5 +936,5 @@ resource "aws_ssm_maintenance_window_task" "test" {
     }
   }
 }
-`)
+`, rName)
 }
