@@ -77,6 +77,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"active_tracing": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -91,10 +95,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(60, 14*60),
 							Default:      840,
-						},
-						"active_tracing": {
-							Type:     schema.TypeBool,
-							Optional: true,
 						},
 					},
 				},
@@ -126,16 +126,16 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"duration_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
 						"expression": {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return new == "rate(0 minute)" && old == "rate(0 hour)"
 							},
-						},
-						"duration_in_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
 						},
 					},
 				},
