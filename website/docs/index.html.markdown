@@ -325,8 +325,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_ses_template` resource](/docs/providers/aws/r/ses_template.html)
     - [`aws_ssm_document` data source](/docs/providers/aws/d/ssm_document.html)
     - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
-    - [`aws_ssm_parameter` data source](/docs/providers/aws/d/ssm_parameter.html)
-    - [`aws_ssm_parameter` resource](/docs/providers/aws/r/ssm_parameter.html)
     - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
     - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
     - [`aws_vpc_dhcp_options` data source](/docs/providers/aws/d/vpc_dhcp_options.html)
