@@ -660,7 +660,7 @@ func testAccAWSSSMDocumentBasicConfigVersionName(rName, version string) string {
 resource "aws_ssm_document" "test" {
   name          = "%s"
   document_type = "Command"
-  version_name   = "%s"
+  version_name  = "%s"
 
   content = <<DOC
     {
