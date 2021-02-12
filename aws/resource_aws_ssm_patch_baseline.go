@@ -165,6 +165,41 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+
+			"source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 20,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(3, 50),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+							),
+						},
+
+						"configuration": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+
+						"products": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 20,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+						},
+					},
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -203,6 +238,10 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
 	}
 
+	if _, ok := d.GetOk("source"); ok {
+		params.Sources = expandAwsSsmPatchSource(d)
+	}
+
 	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
 		params.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
 	}
@@ -212,6 +251,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	resp, err := conn.CreatePatchBaseline(params)
+
 	if err != nil {
 		return err
 	}
@@ -253,6 +293,10 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("global_filter") {
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
+	}
+
+	if d.HasChange("source") {
+		params.Sources = expandAwsSsmPatchSource(d)
 	}
 
 	if d.HasChange("approved_patches_enable_non_security") {
@@ -313,6 +357,10 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
+	}
+
+	if err := d.Set("source", flattenAwsSsmPatchSource(resp.Sources)); err != nil {
+		return fmt.Errorf("Error setting patch sources error: %#v", err)
 	}
 
 	arn := arn.ARN{
@@ -448,6 +496,44 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 		r["enable_non_security"] = aws.BoolValue(rule.EnableNonSecurity)
 		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
 		result = append(result, r)
+	}
+
+	return result
+}
+
+func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
+	var sources []*ssm.PatchSource
+
+	sourceConfigs := d.Get("source").([]interface{})
+
+	for _, sConfig := range sourceConfigs {
+		config := sConfig.(map[string]interface{})
+
+		source := &ssm.PatchSource{
+			Name:          aws.String(config["name"].(string)),
+			Configuration: aws.String(config["configuration"].(string)),
+			Products:      expandStringList(config["products"].([]interface{})),
+		}
+
+		sources = append(sources, source)
+	}
+
+	return sources
+}
+
+func flattenAwsSsmPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
+	if len(sources) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0, len(sources))
+
+	for _, source := range sources {
+		s := make(map[string]interface{})
+		s["name"] = aws.StringValue(source.Name)
+		s["configuration"] = aws.StringValue(source.Configuration)
+		s["products"] = flattenStringList(source.Products)
+		result = append(result, s)
 	}
 
 	return result

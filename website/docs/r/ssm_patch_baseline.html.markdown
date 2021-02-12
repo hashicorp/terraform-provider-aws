@@ -119,6 +119,40 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
 }
 ```
 
+Advanced usage, specifying alternate patch source repository
+
+```hcl
+resource "aws_ssm_patch_baseline" "al_2017_09" {
+  name             = "Amazon-Linux-2017.09"
+  description      = "My patch repository for Amazon Linux 2017.09"
+  operating_system = "AMAZON_LINUX"
+
+  approval_rule {
+    # ...
+  }
+
+  source {
+    name          = "My-AL2017.09"
+    products      = ["AmazonLinux2017.09"]
+    configuration = <<EOF
+[amzn-main]
+name=amzn-main-Base
+mirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list
+mirrorlist_expire=300
+metadata_expire=300
+priority=10
+failovermethod=priority
+fastestmirror_enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga
+enabled=1
+retries=3
+timeout=5
+report_instanceid=yes
+EOF
+  }
+}
+```
 
 ## Argument Reference
 
@@ -132,6 +166,7 @@ The following arguments are supported:
 * `rejected_patches` - (Optional) A list of rejected patches.
 * `global_filter` - (Optional) A set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
 * `approval_rule` - (Optional) A set of rules used to include patches in the baseline. up to 10 approval rules can be specified. Each approval_rule block requires the fields documented below.
+* `source` - (Optional) Configuration block(s) with alternate sources for patches. Applies to Linux instances only. Documented below.
 * `rejected_patches_action` - (Optional) The action for Patch Manager to take on patches included in the `rejected_patches` list. Allow values are `ALLOW_AS_DEPENDENCY` and `BLOCK`.
 * `approved_patches_enable_non_security` - (Optional) Indicates whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
 
@@ -143,6 +178,12 @@ The `approval_rule` block supports:
 * `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is 'false'. Valid for Linux instances only.
 * `tags` - (Optional) A map of tags to assign to the resource.
+
+The `source` block supports:
+
+* `name` - (Required) The name specified to identify the patch source.
+* `configuration` - (Required) The value of the yum repo configuration. For information about other options available for your yum repository configuration, see the [`dnf.conf` documentation](https://man7.org/linux/man-pages/man5/dnf.conf.5.html)
+* `products` - (Required) The specific operating system versions a patch repository applies to, such as `"Ubuntu16.04"`, `"AmazonLinux2016.09"`, `"RedhatEnterpriseLinux7.2"` or `"Suse12.7"`. For lists of supported product values, see [PatchFilter](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchFilter.html).
 
 ## Attributes Reference
 
