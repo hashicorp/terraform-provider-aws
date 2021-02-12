@@ -76,8 +76,14 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"approve_after_days": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100),
+						},
+
+						"approve_until_date": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
 						},
 
 						"compliance_level": {
@@ -468,10 +474,15 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 		}
 
 		rule := &ssm.PatchRule{
-			ApproveAfterDays:  aws.Int64(int64(rCfg["approve_after_days"].(int))),
 			PatchFilterGroup:  filterGroup,
 			ComplianceLevel:   aws.String(rCfg["compliance_level"].(string)),
 			EnableNonSecurity: aws.Bool(rCfg["enable_non_security"].(bool)),
+		}
+
+		if v, ok := rCfg["approve_until_date"].(string); ok && v != "" {
+			rule.ApproveUntilDate = aws.String(v)
+		} else if v, ok := rCfg["approve_after_days"].(int); ok {
+			rule.ApproveAfterDays = aws.Int64(int64(v))
 		}
 
 		rules = append(rules, rule)
@@ -491,10 +502,18 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 
 	for _, rule := range group.PatchRules {
 		r := make(map[string]interface{})
-		r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
 		r["compliance_level"] = aws.StringValue(rule.ComplianceLevel)
 		r["enable_non_security"] = aws.BoolValue(rule.EnableNonSecurity)
 		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
+
+		if rule.ApproveAfterDays != nil {
+			r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
+		}
+
+		if rule.ApproveUntilDate != nil {
+			r["approve_until_date"] = aws.StringValue(rule.ApproveUntilDate)
+		}
+
 		result = append(result, r)
 	}
 

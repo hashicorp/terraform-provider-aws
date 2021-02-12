@@ -171,6 +171,54 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMPatchBaseline_ApproveUntilDateParam(t *testing.T) {
+	var before, after ssm.PatchBaselineIdentity
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithApproveUntilDate(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-01-01"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.enable_non_security", "true"),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "AMAZON_LINUX"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMPatchBaselineConfigWithApproveUntilDateUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-02-02"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "AMAZON_LINUX"),
+					func(*terraform.State) error {
+						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
+							t.Fatal("Baseline IDs changed unexpectedly")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMPatchBaseline_Sources(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
@@ -252,6 +300,7 @@ func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
 	var ssmPatch ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -455,6 +504,66 @@ resource "aws_ssm_patch_baseline" "test" {
 
     patch_filter {
       key    = "MSRC_SEVERITY"
+      values = ["Critical", "Important"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithApproveUntilDate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = "AMAZON_LINUX"
+  description      = "Baseline containing all updates approved for production systems"
+
+  tags = {
+    Name = "My Patch Baseline"
+  }
+
+  approval_rule {
+    approve_until_date  = "2020-01-01"
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
+
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
+
+    patch_filter {
+      key    = "SEVERITY"
+      values = ["Critical", "Important"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineConfigWithApproveUntilDateUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = "AMAZON_LINUX"
+  description      = "Baseline containing all updates approved for production systems"
+
+  tags = {
+    Name = "My Patch Baseline"
+  }
+
+  approval_rule {
+    approve_until_date  = "2020-02-02"
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
+
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
+
+    patch_filter {
+      key    = "SEVERITY"
       values = ["Critical", "Important"]
     }
   }
