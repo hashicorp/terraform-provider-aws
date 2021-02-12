@@ -27,116 +27,96 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 				ValidateFunc:  validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 				ConflictsWith: []string{"grant"},
 			},
-
 			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"content_disposition": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"content_encoding": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"content_language": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"content_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"copy_if_match": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"copy_if_modified_since": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"copy_if_none_match": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"copy_if_unmodified_since": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"customer_algorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"customer_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-
 			"customer_key_md5": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"expected_bucket_owner": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"expected_source_bucket_owner": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"expiration": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"expires": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
 			"grant": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -148,23 +128,10 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(s3.Type_Values(), false),
-						},
-
-						"uri": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
 						"permissions": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -180,17 +147,24 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 								}, false),
 							},
 						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(s3.Type_Values(), false),
+						},
+						"uri": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
-
 			"key": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-
 			"kms_encryption_context": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -198,7 +172,6 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 				ValidateFunc: validateArn,
 				Sensitive:    true,
 			},
-
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -206,12 +179,10 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 				ValidateFunc: validateArn,
 				Sensitive:    true,
 			},
-
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"metadata": {
 				Type:         schema.TypeMap,
 				ValidateFunc: validateMetadataIsLowerCase,
@@ -219,100 +190,83 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 				Computed:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-
 			"metadata_directive": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.MetadataDirective_Values(), false),
 			},
-
 			"object_lock_legal_hold_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
-
 			"object_lock_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
-
 			"object_lock_retain_until_date": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"request_charged": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"request_payer": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.RequestPayer_Values(), false),
 			},
-
 			"server_side_encryption": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
 			},
-
 			"source": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-
 			"source_customer_algorithm": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"source_customer_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
 			},
-
 			"source_customer_key_md5": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"source_version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"storage_class": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.StorageClass_Values(), false),
 			},
-
 			"tagging_directive": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.TaggingDirective_Values(), false),
 			},
-
 			"tags": tagsSchema(),
-
 			"version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"website_redirect": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -323,7 +277,7 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 }
 
 func resourceAwsS3ObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAwsS3ObjectCopyCopy(d, meta)
+	return resourceAwsS3ObjectCopyDoCopy(d, meta)
 }
 
 func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -335,7 +289,7 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 		"copy_if_unmodified_since",
 	} {
 		if _, ok := d.GetOk(key); ok {
-			return resourceAwsS3ObjectCopyCopy(d, meta)
+			return resourceAwsS3ObjectCopyDoCopy(d, meta)
 		}
 	}
 
@@ -381,13 +335,13 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 		"website_redirect",
 	}
 	if d.HasChanges(args...) {
-		return resourceAwsS3ObjectCopyCopy(d, meta)
+		return resourceAwsS3ObjectCopyDoCopy(d, meta)
 	}
 
 	return nil
 }
 
-func resourceAwsS3ObjectCopyCopy(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
 
 	input := &s3.CopyObjectInput{
