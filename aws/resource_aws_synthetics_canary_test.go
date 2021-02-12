@@ -90,7 +90,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -120,7 +120,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryZipUpdatedConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -246,7 +246,7 @@ func TestAccAWSSyntheticsCanary_s3(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-1.0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

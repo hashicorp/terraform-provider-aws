@@ -294,20 +294,20 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	canary := resp.Canary
-	d.Set("name", canary.Name)
-	d.Set("engine_arn", canary.EngineArn)
-	d.Set("status", canary.Status.State)
-	d.Set("execution_role_arn", canary.ExecutionRoleArn)
-	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
+	d.Set("engine_arn", canary.EngineArn)
+	d.Set("execution_role_arn", canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
-	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
+	d.Set("name", canary.Name)
+	d.Set("runtime_version", canary.RuntimeVersion)
 	d.Set("source_location_arn", canary.Code.SourceLocationArn)
+	d.Set("status", canary.Status.State)
+	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 
 	canaryArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "synthetics",
+		Service:   synthetics.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("canary:%s", aws.StringValue(canary.Name)),
@@ -469,7 +469,6 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 }
 
 func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, error) {
-
 	codeConfig := &synthetics.CanaryCodeInput{
 		Handler: aws.String(d.Get("handler").(string)),
 	}
