@@ -241,11 +241,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, ok := d.GetOk("approval_rule"); ok {
-		rules, err := expandAwsSsmPatchRuleGroup(d)
-		if err != nil {
-			return err
-		}
-		params.ApprovalRules = rules
+		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
 	}
 
 	if _, ok := d.GetOk("source"); ok {
@@ -298,11 +294,7 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("approval_rule") {
-		rules, err := expandAwsSsmPatchRuleGroup(d)
-		if err != nil {
-			return err
-		}
-		params.ApprovalRules = rules
+		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
 	}
 
 	if d.HasChange("global_filter") {
@@ -455,7 +447,7 @@ func flattenAwsSsmPatchFilterGroup(group *ssm.PatchFilterGroup) []map[string]int
 	return result
 }
 
-func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) (*ssm.PatchRuleGroup, error) {
+func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 	var rules []*ssm.PatchRule
 
 	ruleConfig := d.Get("approval_rule").([]interface{})
@@ -487,18 +479,12 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) (*ssm.PatchRuleGroup, er
 			EnableNonSecurity: aws.Bool(rCfg["enable_non_security"].(bool)),
 		}
 
-		// Verify that at least one of approve_after_days or approve_until_date is set
-		approveAfterDays, _ := rCfg["approve_after_days"].(int)
-		approveUntilDate, _ := rCfg["approve_until_date"].(string)
-
-		if approveAfterDays > 0 && len(approveUntilDate) > 0 {
-			return nil, fmt.Errorf("Only one of approve_after_days or approve_until_date must be configured")
+		if v, ok := rCfg["approve_after_days"].(int); ok && v != 0 {
+			rule.ApproveAfterDays = aws.Int64(int64(v))
 		}
 
-		if len(approveUntilDate) > 0 {
-			rule.ApproveUntilDate = aws.String(approveUntilDate)
-		} else {
-			rule.ApproveAfterDays = aws.Int64(int64(approveAfterDays))
+		if v, ok := rCfg["approve_until_date"].(string); ok && v != "" {
+			rule.ApproveUntilDate = aws.String(v)
 		}
 
 		rules = append(rules, rule)
@@ -506,7 +492,7 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) (*ssm.PatchRuleGroup, er
 
 	return &ssm.PatchRuleGroup{
 		PatchRules: rules,
-	}, nil
+	}
 }
 
 func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interface{} {
@@ -523,11 +509,11 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 		r["patch_filter"] = flattenAwsSsmPatchFilterGroup(rule.PatchFilterGroup)
 
 		if rule.ApproveAfterDays != nil {
-      r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
+			r["approve_after_days"] = aws.Int64Value(rule.ApproveAfterDays)
 		}
 
 		if rule.ApproveUntilDate != nil {
-      r["approve_until_date"] = aws.StringValue(rule.ApproveUntilDate)
+			r["approve_until_date"] = aws.StringValue(rule.ApproveUntilDate)
 		}
 
 		result = append(result, r)
