@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -2233,8 +2234,8 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 			hashKey := index["hash_key"].(string)
 			indexedAttributes[hashKey] = true
 
-			if rk, ok := index["range_key"]; ok {
-				indexedAttributes[rk.(string)] = true
+			if rk, ok := index["range_key"].(string); ok && rk != "" {
+				indexedAttributes[rk] = true
 			}
 		}
 	}
@@ -2253,8 +2254,10 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
+	var err *multierror.Error
+
 	if len(missingAttrDefs) > 0 {
-		return fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs)
+		err = multierror.Append(err, fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs))
 	}
 
 	if len(indexedAttributes) > 0 {
@@ -2263,10 +2266,10 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 			missingIndexes = append(missingIndexes, index)
 		}
 
-		return fmt.Errorf("All indexes must be attribute. Unused indexes: %q", missingIndexes)
+		err = multierror.Append(err, fmt.Errorf("All indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
 
-	return nil
+	return err.ErrorOrNil()
 }
 
 func validateLaunchTemplateName(v interface{}, k string) (ws []string, errors []error) {
