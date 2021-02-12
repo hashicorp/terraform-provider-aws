@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -2207,69 +2206,6 @@ func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []stri
 			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
 	return
-}
-
-func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
-	// Collect all indexed attributes
-	primaryHashKey := d.Get("hash_key").(string)
-	indexedAttributes := map[string]bool{
-		primaryHashKey: true,
-	}
-	if v, ok := d.GetOk("range_key"); ok {
-		indexedAttributes[v.(string)] = true
-	}
-	if v, ok := d.GetOk("local_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-			rangeKey := index["range_key"].(string)
-			indexedAttributes[rangeKey] = true
-		}
-	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-
-			hashKey := index["hash_key"].(string)
-			indexedAttributes[hashKey] = true
-
-			if rk, ok := index["range_key"].(string); ok && rk != "" {
-				indexedAttributes[rk] = true
-			}
-		}
-	}
-
-	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
-	missingAttrDefs := []string{}
-	for _, attr := range attributes {
-		attribute := attr.(map[string]interface{})
-		attrName := attribute["name"].(string)
-
-		if _, ok := indexedAttributes[attrName]; !ok {
-			missingAttrDefs = append(missingAttrDefs, attrName)
-		} else {
-			delete(indexedAttributes, attrName)
-		}
-	}
-
-	var err *multierror.Error
-
-	if len(missingAttrDefs) > 0 {
-		err = multierror.Append(err, fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs))
-	}
-
-	if len(indexedAttributes) > 0 {
-		missingIndexes := []string{}
-		for index := range indexedAttributes {
-			missingIndexes = append(missingIndexes, index)
-		}
-
-		err = multierror.Append(err, fmt.Errorf("All indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
-	}
-
-	return err.ErrorOrNil()
 }
 
 func validateLaunchTemplateName(v interface{}, k string) (ws []string, errors []error) {
