@@ -3,12 +3,12 @@ subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_tables"
 description: |-
-  Get information on an EC2 Transit Gateway Route Tables
+  Get information on EC2 Transit Gateway Route Tables
 ---
 
 # Data Source: aws_ec2_transit_gateway_route_tables
 
-Get information on an EC2 Transit Gateway Route Tables.
+Get information on EC2 Transit Gateway Route Tables.
 
 ## Example Usage
 

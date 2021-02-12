@@ -51,11 +51,11 @@ func dataSourceAwsEc2TransitGatewayRouteTablesRead(d *schema.ResourceData, meta 
 	output, err := conn.DescribeTransitGatewayRouteTables(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %s", err)
+		return fmt.Errorf("error reading EC2 Transit Gateway Route Tables: %s", err)
 	}
 
 	if output == nil || len(output.TransitGatewayRouteTables) == 0 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
+		return errors.New("error reading EC2 Transit Gateway Route Tables: no results found")
 	}
 
 	d.SetId(meta.(*AWSClient).region)
