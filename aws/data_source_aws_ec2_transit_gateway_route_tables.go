@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEc2TransitGatewayRouteTables() *schema.Resource {
@@ -44,8 +43,8 @@ func dataSourceAwsEc2TransitGatewayRouteTablesRead(d *schema.ResourceData, meta 
 		)
 	}
 
-	input.Filters = append(input.Filters, buildEC2TagFilterList(
-		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+	input.Filters = append(input.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	log.Printf("[DEBUG] Reading EC2 Transit Gateway Route Tables: %s", input)
