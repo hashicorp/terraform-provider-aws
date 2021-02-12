@@ -4,11 +4,15 @@ package keyvaluetags
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -25,7 +29,7 @@ func S3BucketListTags(conn *s3.S3, identifier string) (KeyValueTags, error) {
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, tfs3.NoSuchTagSet) {
+	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 		return New(nil), nil
 	}
 
@@ -86,9 +90,29 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 		Key:    aws.String(key),
 	}
 
-	output, err := conn.GetObjectTagging(input)
+	var output *s3.GetObjectTaggingOutput
 
-	if tfawserr.ErrCodeEquals(err, tfs3.NoSuchTagSet) {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.GetObjectTagging(input)
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "NoSuchKey" {
+				return resource.RetryableError(
+					fmt.Errorf("getting object tagging %s, retrying: %w", bucket, err),
+				)
+			}
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		output, err = conn.GetObjectTagging(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 		return New(nil), nil
 	}
 

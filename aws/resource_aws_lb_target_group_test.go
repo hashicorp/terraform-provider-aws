@@ -68,12 +68,12 @@ func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 	}{
 		{
 			name:   "valid suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067`), //lintignore:AWSAT003,AWSAT005
 			suffix: `targetgroup/my-targets/73e2d6bc24d8a067`,
 		},
 		{
 			name:   "no suffix",
-			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup`),
+			arn:    aws.String(`arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup`), //lintignore:AWSAT003,AWSAT005
 			suffix: ``,
 		},
 		{
@@ -93,7 +93,7 @@ func TestLBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,6 +110,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -137,7 +138,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -166,9 +167,54 @@ func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_ProtocolVersion(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_ProtocolVersion(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttr(resourceName, "port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -193,7 +239,7 @@ func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	var targetGroup1, targetGroup2, targetGroup3 elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -271,9 +317,41 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_Protocol_Geneve(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfigProtocolGeneve(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_Protocol_Tcp_HealthCheck_Protocol(t *testing.T) {
 	var targetGroup1, targetGroup2 elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -326,7 +404,7 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -423,7 +501,7 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -507,8 +585,8 @@ func TestAccAWSLBTargetGroup_generatedName(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(4, acctest.CharSetAlphaNum))
+	targetGroupNameBefore := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	targetGroupNameAfter := fmt.Sprintf("test-target-group-%s", acctest.RandString(4))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -537,7 +615,7 @@ func TestAccAWSLBTargetGroup_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -566,7 +644,7 @@ func TestAccAWSLBTargetGroup_changeProtocolForceNew(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -595,7 +673,7 @@ func TestAccAWSLBTargetGroup_changePortForceNew(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 	var before, after elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -622,7 +700,7 @@ func TestAccAWSLBTargetGroup_changeVpcForceNew(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -662,7 +740,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -699,7 +777,7 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -771,7 +849,7 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -857,7 +935,7 @@ func TestAccAWSLBTargetGroup_updateSticknessEnabled(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -894,7 +972,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_defaults_network(t *testing.T) {
 	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
 	healthCheckInvalid1 := `
 path     = "/health"
@@ -1048,6 +1126,15 @@ func TestAccAWSLBTargetGroup_stickinessValidNLB(t *testing.T) {
 				),
 			},
 			{
+				// this test should be invalid but allowed to avoid breaking changes
+				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "lb_cookie", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+				),
+			},
+			{
 				Config: testAccAWSLBTargetGroupConfig_stickinessValidity("TCP", "source_ip", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
@@ -1129,11 +1216,6 @@ func TestAccAWSLBTargetGroup_stickinessInvalidNLB(t *testing.T) {
 			{
 				Config:      testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", true),
 				ExpectError: regexp.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
-			},
-			{
-				Config:             testAccAWSLBTargetGroupConfig_stickinessValidity("TCP_UDP", "lb_cookie", false),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1428,6 +1510,73 @@ resource "aws_vpc" "test" {
   }
 }
 `, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_ProtocolVersion(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name             = "%s"
+  port             = 443
+  protocol         = "HTTPS"
+  protocol_version = "HTTP2"
+  vpc_id           = aws_vpc.test.id
+
+  deregistration_delay = 200
+  slow_start           = 0
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = "TestAccAWSLBTargetGroup_basic"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-basic"
+  }
+}
+`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfigProtocolGeneve(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-lb-target-group"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    port     = 80
+    protocol = "HTTP"
+  }
+}
+`, rName)
 }
 
 func testAccAWSLBTargetGroupConfigTags1(targetGroupName, tagKey1, tagValue1 string) string {

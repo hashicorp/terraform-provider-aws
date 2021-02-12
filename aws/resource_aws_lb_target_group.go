@@ -66,16 +66,23 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 			},
 
 			"protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+			},
+
+			"protocol_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
 				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.ProtocolEnumHttp,
-					elbv2.ProtocolEnumHttps,
-					elbv2.ProtocolEnumTcp,
-					elbv2.ProtocolEnumTls,
-					elbv2.ProtocolEnumUdp,
-					elbv2.ProtocolEnumTcpUdp,
+					"HTTP1",
+					"HTTP2",
+					"GRPC",
 				}, true),
 			},
 
@@ -152,6 +159,16 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								"lb_cookie", // Only for ALBs
 								"source_ip", // Only for NLBs
 							}, false),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("protocol").(string) {
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+									if new == "lb_cookie" && !d.Get("stickiness.0.enabled").(bool) {
+										log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", d.Get("stickiness.0.enabled").(bool), d.Get("protocol").(string), new)
+										return true
+									}
+								}
+								return false
+							},
 						},
 						"cookie_duration": {
 							Type:         schema.TypeInt,
@@ -291,6 +308,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
+		switch d.Get("protocol").(string) {
+		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
+		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
@@ -447,23 +468,27 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			if len(stickinessBlocks) == 1 {
 				stickiness := stickinessBlocks[0].(map[string]interface{})
 
-				attrs = append(attrs,
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-					},
-					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.type"),
-						Value: aws.String(stickiness["type"].(string)),
-					})
-
-				switch d.Get("protocol").(string) {
-				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+				if !stickiness["enabled"].(bool) && stickiness["type"].(string) == "lb_cookie" && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
+					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
+				} else {
 					attrs = append(attrs,
 						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							Key:   aws.String("stickiness.enabled"),
+							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.type"),
+							Value: aws.String(stickiness["type"].(string)),
 						})
+
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					}
 				}
 			} else if len(stickinessBlocks) == 0 {
 				attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -625,6 +650,10 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
 	}
+	switch d.Get("protocol").(string) {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
+	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
 		return fmt.Errorf("error setting health_check: %s", err)
@@ -720,7 +749,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 
-	// Network Load Balancers have many special qwirks to them.
+	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})

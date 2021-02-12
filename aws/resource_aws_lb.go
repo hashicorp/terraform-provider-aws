@@ -74,14 +74,11 @@ func resourceAwsLb() *schema.Resource {
 			},
 
 			"load_balancer_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Default:  elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.LoadBalancerTypeEnumApplication,
-					elbv2.LoadBalancerTypeEnumNetwork,
-				}, false),
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Default:      elbv2.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(elbv2.LoadBalancerTypeEnum_Values(), false),
 			},
 
 			"security_groups": {
@@ -111,6 +108,12 @@ func resourceAwsLb() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"ipv6_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsIPv6Address,
 						},
 						"outpost_id": {
 							Type:     schema.TypeString,
@@ -277,11 +280,11 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		elbOpts.SecurityGroups = expandStringList(v.(*schema.Set).List())
+		elbOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnets"); ok {
-		elbOpts.Subnets = expandStringList(v.(*schema.Set).List())
+		elbOpts.Subnets = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_mapping"); ok {
@@ -300,6 +303,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 
 			if subnetMap["private_ipv4_address"].(string) != "" {
 				elbOpts.SubnetMappings[i].PrivateIPv4Address = aws.String(subnetMap["private_ipv4_address"].(string))
+			}
+
+			if subnetMap["ipv6_address"].(string) != "" {
+				elbOpts.SubnetMappings[i].IPv6Address = aws.String(subnetMap["ipv6_address"].(string))
 			}
 		}
 	}
@@ -428,7 +435,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-	case elbv2.LoadBalancerTypeEnumNetwork:
+	case elbv2.LoadBalancerTypeEnumGateway, elbv2.LoadBalancerTypeEnumNetwork:
 		if d.HasChange("enable_cross_zone_load_balancing") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -458,7 +465,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("security_groups") {
-		sgs := expandStringList(d.Get("security_groups").(*schema.Set).List())
+		sgs := expandStringSet(d.Get("security_groups").(*schema.Set))
 
 		params := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -476,7 +483,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	// resource is just created, so we don't attempt if it is a newly created
 	// resource.
 	if d.HasChange("subnets") && !d.IsNewResource() {
-		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
+		subnets := expandStringSet(d.Get("subnets").(*schema.Set))
 
 		params := &elbv2.SetSubnetsInput{
 			LoadBalancerArn: aws.String(d.Id()),
@@ -671,6 +678,7 @@ func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.Avail
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
 			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
 			m["private_ipv4_address"] = aws.StringValue(loadBalancerAddress.PrivateIPv4Address)
+			m["ipv6_address"] = aws.StringValue(loadBalancerAddress.IPv6Address)
 		}
 
 		l = append(l, m)

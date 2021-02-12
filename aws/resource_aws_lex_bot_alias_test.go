@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsLexBotAlias_basic(t *testing.T) {
@@ -20,7 +19,7 @@ func TestAccAwsLexBotAlias_basic(t *testing.T) {
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -60,7 +59,7 @@ func testAccAwsLexBotAlias_botVersion(t *testing.T) {
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -110,7 +109,7 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -125,13 +124,13 @@ func TestAccAwsLexBotAlias_conversationLogsText(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						"destination": "CLOUDWATCH_LOGS",
 						"log_type":    "TEXT",
 						"kms_key_arn": "",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
-					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
 						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, LexBotVersionLatest))),
 					}),
 				),
@@ -156,7 +155,7 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -171,13 +170,13 @@ func TestAccAwsLexBotAlias_conversationLogsAudio(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bot_version", LexBotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						"destination": "S3",
 						"log_type":    "AUDIO",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
-					tfawsresource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
 						"resource_prefix": regexp.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`aws/lex/%s/%s/%s/`, testBotID, testBotAliasID, LexBotVersionLatest))),
 					}),
 				),
@@ -203,7 +202,7 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -219,19 +218,19 @@ func TestAccAwsLexBotAlias_conversationLogsBoth(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						"destination": "CLOUDWATCH_LOGS",
 						"log_type":    "TEXT",
 						"kms_key_arn": "",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, "arn"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						"destination": "S3",
 						"log_type":    "AUDIO",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
-					tfawsresource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
@@ -249,7 +248,7 @@ func TestAccAwsLexBotAlias_description(t *testing.T) {
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotAliasID, testBotAliasID),
 		Steps: []resource.TestStep{
@@ -294,7 +293,7 @@ func TestAccAwsLexBotAlias_disappears(t *testing.T) {
 	testBotAliasID := "test_bot_alias" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsLexBotDestroy,
 		Steps: []resource.TestStep{

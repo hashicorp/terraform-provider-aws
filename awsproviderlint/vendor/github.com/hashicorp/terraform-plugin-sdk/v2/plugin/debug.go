@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-plugin"
@@ -87,14 +89,26 @@ func Debug(ctx context.Context, providerAddr string, opts *ServeOpts) error {
 		case <-ctx.Done():
 		}
 	}()
-	reattachStr, err := json.Marshal(map[string]ReattachConfig{
+	reattachBytes, err := json.Marshal(map[string]ReattachConfig{
 		providerAddr: config,
 	})
 	if err != nil {
 		return fmt.Errorf("Error building reattach string: %w", err)
 	}
 
-	fmt.Printf("Provider server started; to attach Terraform, set TF_REATTACH_PROVIDERS to the following:\n%s\n", string(reattachStr))
+	reattachStr := string(reattachBytes)
+
+	fmt.Printf("Provider started, to attach Terraform set the TF_REATTACH_PROVIDERS env var:\n\n")
+	switch runtime.GOOS {
+	case "windows":
+		fmt.Printf("\tCommand Prompt:\tset \"TF_REATTACH_PROVIDERS=%s\"\n", reattachStr)
+		fmt.Printf("\tPowerShell:\t$env:TF_REATTACH_PROVIDERS='%s'\n", strings.ReplaceAll(reattachStr, `'`, `''`))
+	case "linux", "darwin":
+		fmt.Printf("\tTF_REATTACH_PROVIDERS='%s'\n", strings.ReplaceAll(reattachStr, `'`, `'"'"'`))
+	default:
+		fmt.Println(reattachStr)
+	}
+	fmt.Println("")
 
 	// wait for the server to be done
 	<-closeCh

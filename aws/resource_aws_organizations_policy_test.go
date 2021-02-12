@@ -51,7 +51,7 @@ func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5073
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5073
 func testAccAwsOrganizationsPolicy_concurrent(t *testing.T) {
 	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -220,14 +220,13 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy.test"
 	// Reference: https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_backup_syntax.html
-	backupPolicyContent := `{
+	backupPolicyContent := fmt.Sprintf(`{
    "plans":{
       "PII_Backup_Plan":{
          "regions":{
             "@@assign":[
-               "ap-northeast-2",
-               "us-east-1",
-               "eu-north-1"
+               "%[1]s",
+               "%[2]s"
             ]
          },
          "rules":{
@@ -253,9 +252,9 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
                   "@@assign":"FortKnox"
                },
                "copy_actions":{
-                  "arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault":{
+                  "arn:%[3]s:backup:%[1]s:$account:backup-vault:secondary_vault":{
                      "target_backup_vault_arn":{
-                        "@@assign":"arn:aws:backup:us-east-1:$account:backup-vault:secondary_vault"
+                        "@@assign":"arn:%[3]s:backup:%[1]s:$account:backup-vault:secondary_vault"
                      },
                      "lifecycle":{
                         "delete_after_days":{
@@ -273,7 +272,7 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
             "tags":{
                "datatype":{
                   "iam_role_arn":{
-                     "@@assign":"arn:aws:iam::$account:role/MyIamRole"
+                     "@@assign":"arn:%[3]s:iam::$account:role/MyIamRole"
                   },
                   "tag_key":{
                      "@@assign":"dataType"
@@ -289,7 +288,7 @@ func testAccAwsOrganizationsPolicy_type_Backup(t *testing.T) {
          }
       }
    }
-}`
+}`, testAccGetAlternateRegion(), testAccGetRegion(), testAccGetPartition())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },

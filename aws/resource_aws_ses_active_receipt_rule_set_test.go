@@ -36,6 +36,7 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
@@ -44,6 +45,7 @@ func testAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 		},
@@ -58,6 +60,7 @@ func testAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
@@ -126,7 +129,7 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 func testAccAWSSESActiveReceiptRuleSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
-  rule_set_name = "%s"
+  rule_set_name = %[1]q
 }
 
 resource "aws_ses_active_receipt_rule_set" "test" {

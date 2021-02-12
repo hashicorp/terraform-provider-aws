@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeArtifactRepository() *schema.Resource {
@@ -37,10 +38,11 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 				ForceNew: true,
 			},
 			"domain_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -61,12 +63,13 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 			},
 			"external_connections": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_connection_name": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
 						},
 						"package_format": {
 							Type:     schema.TypeString,
@@ -83,6 +86,7 @@ func resourceAwsCodeArtifactRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -94,6 +98,7 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 	params := &codeartifact.CreateRepositoryInput{
 		Repository: aws.String(d.Get("repository").(string)),
 		Domain:     aws.String(d.Get("domain").(string)),
+		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodeartifactTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -116,6 +121,21 @@ func resourceAwsCodeArtifactRepositoryCreate(d *schema.ResourceData, meta interf
 	repo := res.Repository
 	d.SetId(aws.StringValue(repo.Arn))
 
+	if v, ok := d.GetOk("external_connections"); ok {
+		externalConnection := v.([]interface{})[0].(map[string]interface{})
+		input := &codeartifact.AssociateExternalConnectionInput{
+			Domain:             repo.DomainName,
+			Repository:         repo.Name,
+			DomainOwner:        repo.DomainOwner,
+			ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
+		}
+
+		_, err := conn.AssociateExternalConnection(input)
+		if err != nil {
+			return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
+		}
+	}
+
 	return resourceAwsCodeArtifactRepositoryRead(d, meta)
 }
 
@@ -123,6 +143,7 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).codeartifactconn
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
+	needsUpdate := false
 	params := &codeartifact.UpdateRepositoryInput{
 		Repository:  aws.String(d.Get("repository").(string)),
 		Domain:      aws.String(d.Get("domain").(string)),
@@ -132,18 +153,60 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 	if d.HasChange("description") {
 		if v, ok := d.GetOk("description"); ok {
 			params.Description = aws.String(v.(string))
+			needsUpdate = true
 		}
 	}
 
 	if d.HasChange("upstream") {
 		if v, ok := d.GetOk("upstream"); ok {
 			params.Upstreams = expandCodeArtifactUpstreams(v.([]interface{}))
+			needsUpdate = true
 		}
 	}
 
-	_, err := conn.UpdateRepository(params)
-	if err != nil {
-		return fmt.Errorf("error updating CodeArtifact Repository: %w", err)
+	if needsUpdate {
+		_, err := conn.UpdateRepository(params)
+		if err != nil {
+			return fmt.Errorf("error updating CodeArtifact Repository: %w", err)
+		}
+	}
+
+	if d.HasChange("external_connections") {
+		if v, ok := d.GetOk("external_connections"); ok {
+			externalConnection := v.([]interface{})[0].(map[string]interface{})
+			input := &codeartifact.AssociateExternalConnectionInput{
+				Repository:         aws.String(d.Get("repository").(string)),
+				Domain:             aws.String(d.Get("domain").(string)),
+				DomainOwner:        aws.String(d.Get("domain_owner").(string)),
+				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
+			}
+
+			_, err := conn.AssociateExternalConnection(input)
+			if err != nil {
+				return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
+			}
+		} else {
+			oldConn, _ := d.GetChange("external_connections")
+			externalConnection := oldConn.([]interface{})[0].(map[string]interface{})
+			input := &codeartifact.DisassociateExternalConnectionInput{
+				Repository:         aws.String(d.Get("repository").(string)),
+				Domain:             aws.String(d.Get("domain").(string)),
+				DomainOwner:        aws.String(d.Get("domain_owner").(string)),
+				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
+			}
+
+			_, err := conn.DisassociateExternalConnection(input)
+			if err != nil {
+				return fmt.Errorf("error disassociating external connection to CodeArtifact repository: %w", err)
+			}
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.CodeartifactUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating CodeArtifact Repository (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCodeArtifactRepositoryRead(d, meta)
@@ -151,6 +214,7 @@ func resourceAwsCodeArtifactRepositoryUpdate(d *schema.ResourceData, meta interf
 
 func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codeartifactconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading CodeArtifact Repository: %s", d.Id())
 
@@ -172,8 +236,9 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error reading CodeArtifact Repository (%s): %w", d.Id(), err)
 	}
 
+	arn := aws.StringValue(sm.Repository.Arn)
 	d.Set("repository", sm.Repository.Name)
-	d.Set("arn", sm.Repository.Arn)
+	d.Set("arn", arn)
 	d.Set("domain_owner", sm.Repository.DomainOwner)
 	d.Set("domain", sm.Repository.DomainName)
 	d.Set("administrator_account", sm.Repository.AdministratorAccount)
@@ -189,6 +254,16 @@ func resourceAwsCodeArtifactRepositoryRead(d *schema.ResourceData, meta interfac
 		if err := d.Set("external_connections", flattenCodeArtifactExternalConnections(sm.Repository.ExternalConnections)); err != nil {
 			return fmt.Errorf("[WARN] Error setting external_connections: %w", err)
 		}
+	}
+
+	tags, err := keyvaluetags.CodeartifactListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for CodeArtifact Repository (%s): %w", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

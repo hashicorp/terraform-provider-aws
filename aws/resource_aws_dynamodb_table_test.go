@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -361,7 +360,7 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						"name": "TestTableHashKey",
 						"type": "S",
 					}),
@@ -468,23 +467,23 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						"name": "TestTableHashKey",
 						"type": "S",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						"name": "TestTableRangeKey",
 						"type": "S",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						"name": "TestLSIRangeKey",
 						"type": "N",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						"name": "ReplacementGSIRangeKey",
 						"type": "N",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"name":                 "ReplacementTestTableGSI",
 						"hash_key":             "TestTableHashKey",
 						"range_key":            "ReplacementGSIRangeKey",
@@ -493,8 +492,8 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 						"projection_type":      "INCLUDE",
 						"non_key_attributes.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
 						"name":            "TestTableLSI",
 						"range_key":       "TestLSIRangeKey",
 						"projection_type": "ALL",
@@ -766,17 +765,17 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
 						"name":           "att1-index",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
 						"name":           "att2-index",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
 						"name":           "att3-index",
@@ -793,17 +792,17 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
 						"name":           "att1-index",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
 						"name":           "att2-index",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
 						"name":           "att3-index",
@@ -829,7 +828,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						"name":                 "att3-index",
 						"non_key_attributes.#": "0",
@@ -838,7 +837,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
 						"non_key_attributes.#": "0",
@@ -847,7 +846,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att2",
 						"name":                 "att2-index",
 						"non_key_attributes.#": "0",
@@ -868,7 +867,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						"name":                 "att2-index",
 						"non_key_attributes.#": "0",
@@ -877,7 +876,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						"name":                 "att3-index",
 						"non_key_attributes.#": "1",
@@ -886,8 +885,8 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
 						"non_key_attributes.#": "0",
@@ -902,7 +901,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/15115
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15115
 func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
@@ -918,7 +917,7 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
 						"name":                 "TestTableLSI",
 						"non_key_attributes.#": "1",
 						"non_key_attributes.0": "TestNonKeyAttribute",
@@ -936,7 +935,7 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/566
+// https://github.com/hashicorp/terraform-provider-aws/issues/566
 func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
@@ -952,7 +951,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						"name":                 "att2-index",
 						"non_key_attributes.#": "0",
@@ -961,7 +960,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						"name":                 "att3-index",
 						"non_key_attributes.#": "1",
@@ -970,8 +969,8 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
 						"non_key_attributes.#": "0",
@@ -991,7 +990,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						"name":                 "att2-index",
 						"non_key_attributes.#": "0",
@@ -1000,7 +999,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						"name":                 "att3-index",
 						"non_key_attributes.#": "2",
@@ -1009,9 +1008,9 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
 						"non_key_attributes.#": "0",
@@ -1026,7 +1025,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	})
 }
 
-// https://github.com/terraform-providers/terraform-provider-aws/issues/671
+// https://github.com/hashicorp/terraform-provider-aws/issues/671
 func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
@@ -1043,7 +1042,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(name, attributes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						"name":                 "att1-index",
 						"non_key_attributes.#": "2",
@@ -1052,8 +1051,8 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 						"read_capacity":        "1",
 						"write_capacity":       "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
 				),
 			},
 			{
@@ -1226,6 +1225,10 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 				Config:      testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
 				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
 			},
+			{
+				Config:      testAccAWSDynamoDbConfigUnmatchedIndexes(rName, "firstUnused", "secondUnused"),
+				ExpectError: regexp.MustCompile(`All indexes must match a defined attribute. Unmatched indexes: \["firstUnused"\ \"secondUnused\"]`),
+			},
 		},
 	})
 }
@@ -1359,23 +1362,23 @@ func testAccCheckInitialAWSDynamoDbTableConf(resourceName string) resource.TestC
 		resource.TestCheckResourceAttr(resourceName, "attribute.#", "4"),
 		resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
 		resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			"name": "TestTableHashKey",
 			"type": "S",
 		}),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			"name": "TestTableRangeKey",
 			"type": "S",
 		}),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			"name": "TestLSIRangeKey",
 			"type": "N",
 		}),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			"name": "TestGSIRangeKey",
 			"type": "S",
 		}),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 			"name":            "InitialTestTableGSI",
 			"hash_key":        "TestTableHashKey",
 			"range_key":       "TestGSIRangeKey",
@@ -1383,7 +1386,7 @@ func testAccCheckInitialAWSDynamoDbTableConf(resourceName string) resource.TestC
 			"read_capacity":   "1",
 			"projection_type": "KEYS_ONLY",
 		}),
-		tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
+		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
 			"name":            "TestTableLSI",
 			"range_key":       "TestLSIRangeKey",
 			"projection_type": "ALL",
@@ -1402,7 +1405,7 @@ func TestAccAWSDynamoDbTable_Replica_Multiple(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 3)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1447,7 +1450,7 @@ func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -2176,7 +2179,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = "%[1]s"
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "staticHashKey"
@@ -2187,25 +2190,25 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "%s"
-    type = "%s"
+    name = "%[3]s"
+    type = "%[4]s"
   }
 
   global_secondary_index {
     name            = "gsiName"
-    hash_key        = "%s"
+    hash_key        = "%[2]s"
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }
-`, rName, attrName, attrType, hashKey)
+`, rName, hashKey, attrName, attrType)
 }
 
 func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = "%[1]s"
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "staticHashKey"
@@ -2216,25 +2219,48 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "%s"
-    type = "%s"
+    name = "%[4]s"
+    type = "%[5]s"
   }
 
   attribute {
-    name = "%s"
-    type = "%s"
+    name = "%[6]s"
+    type = "%[7]s"
   }
 
   global_secondary_index {
     name            = "gsiName"
-    hash_key        = "%s"
-    range_key       = "%s"
+    hash_key        = "%[2]s"
+    range_key       = "%[3]s"
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }
-`, rName, attrName1, attrType1, attrName2, attrType2, hashKey, rangeKey)
+`, rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2)
+}
+
+func testAccAWSDynamoDbConfigUnmatchedIndexes(rName, attr1, attr2 string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key       = "staticHashKey"
+  range_key      = %[2]q
+
+  attribute {
+    name = "staticHashKey"
+    type = "S"
+  }
+
+  local_secondary_index {
+    name            = "lsiName"
+    range_key       = %[3]q
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName, attr1, attr2)
 }
 
 func testAccAWSDynamoDbTableConfigReplica0(rName string) string {
@@ -2344,7 +2370,7 @@ resource "aws_dynamodb_table" "test" {
 
   local_secondary_index {
     name            = "%s"
-    range_key        = "staticLSIRangeKey"
+    range_key       = "staticLSIRangeKey"
     projection_type = "KEYS_ONLY"
   }
 }

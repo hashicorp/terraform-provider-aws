@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,18 +47,10 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"acl": {
-				Type:     schema.TypeString,
-				Default:  s3.ObjectCannedACLPrivate,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectCannedACLPrivate,
-					s3.ObjectCannedACLPublicRead,
-					s3.ObjectCannedACLPublicReadWrite,
-					s3.ObjectCannedACLAuthenticatedRead,
-					s3.ObjectCannedACLAwsExecRead,
-					s3.ObjectCannedACLBucketOwnerRead,
-					s3.ObjectCannedACLBucketOwnerFullControl,
-				}, false),
+				Type:         schema.TypeString,
+				Default:      s3.ObjectCannedACLPrivate,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 
 			"cache_control": {
@@ -112,28 +105,17 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"storage_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectStorageClassStandard,
-					s3.ObjectStorageClassReducedRedundancy,
-					s3.ObjectStorageClassGlacier,
-					s3.ObjectStorageClassStandardIa,
-					s3.ObjectStorageClassOnezoneIa,
-					s3.ObjectStorageClassIntelligentTiering,
-					s3.ObjectStorageClassDeepArchive,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectStorageClass_Values(), false),
 			},
 
 			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ServerSideEncryptionAes256,
-					s3.ServerSideEncryptionAwsKms,
-				}, false),
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ServerSideEncryption_Values(), false),
+				Computed:     true,
 			},
 
 			"kms_key_id": {
@@ -179,21 +161,15 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			},
 
 			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockLegalHoldStatusOn,
-					s3.ObjectLockLegalHoldStatusOff,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockLegalHoldStatus_Values(), false),
 			},
 
 			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					s3.ObjectLockModeGovernance,
-					s3.ObjectLockModeCompliance,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ObjectLockMode_Values(), false),
 			},
 
 			"object_lock_retain_until_date": {
@@ -412,26 +388,8 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	// Changes to any of these attributes requires creation of a new object version (if bucket is versioned):
-	for _, key := range []string{
-		"cache_control",
-		"content_base64",
-		"content_disposition",
-		"content_encoding",
-		"content_language",
-		"content_type",
-		"content",
-		"etag",
-		"kms_key_id",
-		"metadata",
-		"server_side_encryption",
-		"source",
-		"storage_class",
-		"website_redirect",
-	} {
-		if d.HasChange(key) {
-			return resourceAwsS3BucketObjectPut(d, meta)
-		}
+	if hasS3BucketObjectContentChanges(d) {
+		return resourceAwsS3BucketObjectPut(d, meta)
 	}
 
 	conn := meta.(*AWSClient).s3conn
@@ -505,8 +463,10 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
-	key = strings.TrimPrefix(key, "/")
+	// We are effectively ignoring all leading '/'s in the key name and
+	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
+	key = strings.TrimLeft(key, "/")
+	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
@@ -535,11 +495,34 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 }
 
 func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.HasChange("etag") {
-		d.SetNewComputed("version_id")
+	if hasS3BucketObjectContentChanges(d) {
+		return d.SetNewComputed("version_id")
 	}
-
 	return nil
+}
+
+func hasS3BucketObjectContentChanges(d resourceDiffer) bool {
+	for _, key := range []string{
+		"cache_control",
+		"content_base64",
+		"content_disposition",
+		"content_encoding",
+		"content_language",
+		"content_type",
+		"content",
+		"etag",
+		"kms_key_id",
+		"metadata",
+		"server_side_encryption",
+		"source",
+		"storage_class",
+		"website_redirect",
+	} {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
 }
 
 // deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
