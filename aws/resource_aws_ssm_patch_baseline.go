@@ -166,16 +166,19 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Optional: true,
 			},
 
-			"patch_source": {
+			"source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,50}$`), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_PatchSource.html"),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(3, 50),
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+							),
 						},
 
 						"configuration": {
@@ -235,7 +238,7 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 		params.ApprovalRules = expandAwsSsmPatchRuleGroup(d)
 	}
 
-	if _, ok := d.GetOk("patch_source"); ok {
+	if _, ok := d.GetOk("source"); ok {
 		params.Sources = expandAwsSsmPatchSource(d)
 	}
 
@@ -292,7 +295,7 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		params.GlobalFilters = expandAwsSsmPatchFilterGroup(d)
 	}
 
-	if d.HasChange("patch_source") {
+	if d.HasChange("source") {
 		params.Sources = expandAwsSsmPatchSource(d)
 	}
 
@@ -356,7 +359,7 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
 	}
 
-	if err := d.Set("patch_source", flattenAwsSsmPatchSource(resp.Sources)); err != nil {
+	if err := d.Set("source", flattenAwsSsmPatchSource(resp.Sources)); err != nil {
 		return fmt.Errorf("Error setting patch sources error: %#v", err)
 	}
 
@@ -501,7 +504,7 @@ func flattenAwsSsmPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interfa
 func expandAwsSsmPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 	var sources []*ssm.PatchSource
 
-	sourceConfigs := d.Get("patch_source").([]interface{})
+	sourceConfigs := d.Get("source").([]interface{})
 
 	for _, sConfig := range sourceConfigs {
 		config := sConfig.(map[string]interface{})
@@ -527,8 +530,8 @@ func flattenAwsSsmPatchSource(sources []*ssm.PatchSource) []map[string]interface
 
 	for _, source := range sources {
 		s := make(map[string]interface{})
-		s["name"] = *source.Name
-		s["configuration"] = *source.Configuration
+		s["name"] = aws.StringValue(source.Name)
+		s["configuration"] = aws.StringValue(source.Configuration)
 		s["products"] = flattenStringList(source.Products)
 		result = append(result, s)
 	}
