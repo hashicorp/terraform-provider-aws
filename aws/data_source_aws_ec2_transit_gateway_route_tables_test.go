@@ -16,7 +16,7 @@ func TestAccAWSEc2TransitGatewayRouteTablesDataSource_Filter(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayRouteTableDataSourceConfigFilter(),
+				Config: testAccAWSEc2TransitGatewayRouteTablesDataSourceConfigFilter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "default_association_route_table", dataSourceName, "default_association_route_table"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_propagation_route_table", dataSourceName, "default_propagation_route_table"),
@@ -29,9 +29,9 @@ func TestAccAWSEc2TransitGatewayRouteTablesDataSource_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
-	dataSourceName := "data.aws_ec2_transit_gateway_route_table.test"
-	resourceName := "aws_ec2_transit_gateway_route_table.test"
+func TestAccAWSEc2TransitGatewayRouteTablesDataSource_ID(t *testing.T) {
+	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
+	resourceName := "aws_ec2_transit_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
@@ -52,7 +52,7 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayRouteTableDataSourceTransitGatewayFilter() string {
+func testAccAWSEc2TransitGatewayRouteTablesDataSourceTransitGatewayFilter() string {
 	return `
 resource "aws_ec2_transit_gateway" "test" {}
 
@@ -63,7 +63,7 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 data "aws_ec2_transit_gateway_route_tables" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
 
-  depends_on = [ aws_ec2_transit_gateway_route_table.test ]
+  depends_on = [aws_ec2_transit_gateway_route_table.test]
 }
 `
 }
