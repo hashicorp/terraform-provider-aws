@@ -30,18 +30,9 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 21),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_\-]+$`), "must contain only alphanumeric, hyphen, underscore."),
-				),
-			},
-			"runtime_version": {
-				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"artifact_s3_location": {
 				Type:     schema.TypeString,
@@ -51,41 +42,14 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					return strings.TrimPrefix(new, "s3://") == old
 				},
 			},
-			"handler": {
+			"engine_arn": {
 				Type:     schema.TypeString,
-				Required: true,
-			},
-			"s3_bucket": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-				RequiredWith:  []string{"s3_key"},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-				RequiredWith:  []string{"s3_bucket"},
-			},
-			"s3_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"zip_file"},
-			},
-			"zip_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
+				Computed: true,
 			},
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateArn,
-			},
-			"start_canary": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
 			},
 			"failure_retention_period": {
 				Type:         schema.TypeInt,
@@ -93,11 +57,18 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Default:      31,
 				ValidateFunc: validation.IntBetween(1, 455),
 			},
-			"success_retention_period": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      31,
-				ValidateFunc: validation.IntBetween(1, 455),
+			"handler": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 21),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z_\-]+$`), "must contain only alphanumeric, hyphen, underscore."),
+				),
 			},
 			"run_config": {
 				Type:     schema.TypeList,
@@ -128,6 +99,27 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					},
 				},
 			},
+			"runtime_version": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"s3_bucket": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+				RequiredWith:  []string{"s3_key"},
+			},
+			"s3_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+				RequiredWith:  []string{"s3_bucket"},
+			},
+			"s3_version": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+			},
 			"schedule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -144,6 +136,50 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						"duration_in_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+					},
+				},
+			},
+			"source_location_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"start_canary": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"success_retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      31,
+				ValidateFunc: validation.IntBetween(1, 455),
+			},
+			"tags": tagsSchema(),
+			"timeline": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"created": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_modified": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_started": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_stopped": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -171,47 +207,11 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					},
 				},
 			},
-			"timeline": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"created": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_modified": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_started": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_stopped": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+			"zip_file": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
 			},
-			"engine_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_location_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tagsSchema(),
 		},
 	}
 }
