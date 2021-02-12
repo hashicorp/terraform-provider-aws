@@ -479,12 +479,10 @@ func expandAwsSsmPatchRuleGroup(d *schema.ResourceData) *ssm.PatchRuleGroup {
 			EnableNonSecurity: aws.Bool(rCfg["enable_non_security"].(bool)),
 		}
 
-		if v, ok := rCfg["approve_after_days"].(int); ok && v != 0 {
-			rule.ApproveAfterDays = aws.Int64(int64(v))
-		}
-
 		if v, ok := rCfg["approve_until_date"].(string); ok && v != "" {
 			rule.ApproveUntilDate = aws.String(v)
+		} else if v, ok := rCfg["approve_after_days"].(int); ok {
+			rule.ApproveAfterDays = aws.Int64(int64(v))
 		}
 
 		rules = append(rules, rule)
