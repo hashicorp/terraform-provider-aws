@@ -51,6 +51,26 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_noRole(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskNoRoleConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -620,6 +640,35 @@ resource "aws_ssm_maintenance_window_task" "test" {
       parameter {
         name   = "Operation"
         values = ["Install"]
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskNoRoleConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+resource "aws_ssm_maintenance_window_task" "test" {
+  description     = "This resource is for test purpose only"
+  max_concurrency = 2
+  max_errors      = 1
+  name            = "TestMaintenanceWindowTask"
+  priority        = 1
+  task_arn        = "AWS-RunShellScript"
+  task_type       = "RUN_COMMAND"
+  window_id       = aws_ssm_maintenance_window.test.id
+
+  targets {
+    key    = "WindowTargetIds"
+    values = [aws_ssm_maintenance_window_target.test.id]
+  }
+
+  task_invocation_parameters {
+    run_command_parameters {
+      parameter {
+        name   = "commands"
+        values = ["pwd"]
       }
     }
   }
