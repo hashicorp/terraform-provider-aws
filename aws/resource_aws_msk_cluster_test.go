@@ -753,7 +753,7 @@ func testAccCheckMskClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testSortResourceBrokers(t *testing.T) {
+func TestAccMskClusterReource_SortBrokers(t *testing.T) {
 	testString := "this:123,is:147,just.a.test:443"
 	if "is:147,just.a.test:443,this:123" != sortResourceBrokers(testString) {
 		t.Fail()
