@@ -38,26 +38,20 @@ func resourceAwsSsmParameter() *schema.Resource {
 				ForceNew: true,
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.ParameterTierStandard,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTierStandard,
-					ssm.ParameterTierAdvanced,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.ParameterTierStandard,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTypeString,
-					ssm.ParameterTypeStringList,
-					ssm.ParameterTypeSecureString,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
 			},
 			"value": {
 				Type:      schema.TypeString,
@@ -87,20 +81,24 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 			},
 			"allowed_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
 			"policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.Any(
+					validation.StringIsJSON,
+					validation.StringLenBetween(1, 4096),
+				),
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
+			"tags": tagsSchema(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -172,7 +170,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	describeResp, err := conn.DescribeParameters(describeParamsInput)
 	if err != nil {
-		return fmt.Errorf("error describing SSM parameter: %s", err)
+		return fmt.Errorf("error describing SSM parameter: %w", err)
 	}
 
 	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
@@ -195,11 +193,11 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := keyvaluetags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Parameter (%s): %s", name, err)
+		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("arn", param.ARN)
@@ -216,7 +214,7 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting SSM Parameter (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting SSM Parameter (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -266,14 +264,14 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM parameter: %s", err)
+		return fmt.Errorf("error creating SSM parameter: %w", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SsmUpdateTags(conn, ssmParamName, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %s", ssmParamName, err)
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", ssmParamName, err)
 		}
 	}
 
