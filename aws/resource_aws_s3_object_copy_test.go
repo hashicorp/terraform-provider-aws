@@ -107,9 +107,9 @@ resource "aws_s3_object_copy" "test" {
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_bucket_object.source.key}"
 
   grant {
-	  uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
-	  type        = "Group"
-	  permissions = ["READ"]
+    uri         = "http://acs.amazonaws.com/groups/global/AllUsers"
+    type        = "Group"
+    permissions = ["READ"]
   }
 }
 `, rName1, sourceKey, rName2, key)
