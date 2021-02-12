@@ -249,8 +249,12 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		paramInput.Description = aws.String(n.(string))
 	}
 
-	if v, ok := d.GetOk("policies"); ok {
-		paramInput.Policies = aws.String(v.(string))
+	if d.HasChange("policies") {
+		o, n := d.GetChange("policies")
+		if o.(string) == "" {
+			paramInput.Policies = aws.String("[{}]")
+		}
+		paramInput.Policies = aws.String(n.(string))
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {

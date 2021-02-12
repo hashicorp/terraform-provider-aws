@@ -462,7 +462,7 @@ func TestAccAWSSSMParameter_policies(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterPoliciesEmptyConfig(name, "String", "test2"),
+				Config: testAccAWSSSMParameterConfigTier(name, "Advanced"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "policies", ""),
@@ -671,12 +671,12 @@ resource "aws_ssm_parameter" "test" {
   value    = %[3]q
   tier     = "Advanced"
   policies = jsonencode([{
-   "Type":"Expiration",
-   "Version":"1.0",
-   "Attributes":{
-      "Timestamp":"2050-12-02T21:34:33Z"
-   }
-}])
+    "Type" : "Expiration",
+    "Version" : "1.0",
+    "Attributes" : {
+      "Timestamp" : "2050-12-02T21:34:33Z"
+    }
+  }])
 }
 `, rName, pType, value)
 }
@@ -689,35 +689,35 @@ resource "aws_ssm_parameter" "test" {
   value    = %[3]q
   tier     = "Advanced"
   policies = jsonencode([{
-   "Type":"Expiration",
-   "Version":"1.0",
-   "Attributes":{
-      "Timestamp":"2050-12-02T21:34:33Z"
-   }
-},
-{
-   "Type":"ExpirationNotification",
-   "Version":"1.0",
-   "Attributes":{
-      "Before":"30",
-      "Unit":"Days"
-   }
-}])
+    "Type" : "Expiration",
+    "Version" : "1.0",
+    "Attributes" : {
+      "Timestamp" : "2050-12-02T21:34:33Z"
+    }
+    },
+    {
+      "Type" : "ExpirationNotification",
+      "Version" : "1.0",
+      "Attributes" : {
+        "Before" : "30",
+        "Unit" : "Days"
+      }
+  }])
 }
 `, rName, pType, value)
 }
 
-func testAccAWSSSMParameterPoliciesEmptyConfig(rName, pType, value string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_parameter" "test" {
-  name     = %[1]q
-  type     = %[2]q
-  value    = %[3]q
-  tier     = "Advanced"
-  policies = "[{}]"
-}
-`, rName, pType, value)
-}
+// func type(rName, pType, value string) string {
+// 	return fmt.Sprintf(`
+// resource "aws_ssm_parameter" "test" {
+//   name     = %[1]q
+//   type     = %[2]q
+//   value    = %[3]q
+//   tier     = "Advanced"
+//   policies = "[{}]"
+// }
+// `, rName, pType, value)
+// }
 
 func TestAWSSSMParameterShouldUpdate(t *testing.T) {
 	data := resourceAwsSsmParameter().TestResourceData()
