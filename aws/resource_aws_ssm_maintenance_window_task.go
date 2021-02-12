@@ -57,6 +57,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			"service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateArn,
 			},
 
