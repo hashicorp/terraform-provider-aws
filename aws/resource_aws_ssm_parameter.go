@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -97,6 +98,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 					validation.StringLenBetween(1, 4096),
 				),
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"tags": tagsSchema(),
 		},
@@ -244,11 +249,8 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		paramInput.Description = aws.String(n.(string))
 	}
 
-	v, ok := d.GetOk("policies")
-	if ok {
+	if v, ok := d.GetOk("policies"); ok {
 		paramInput.Policies = aws.String(v.(string))
-	} else {
-		paramInput.Policies = aws.String("[{}]")
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {

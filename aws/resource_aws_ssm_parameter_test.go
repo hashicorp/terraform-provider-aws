@@ -99,7 +99,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					testAccCheckAWSSSMParameterDisappears(&param),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -452,7 +452,7 @@ func TestAccAWSSSMParameter_policies(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite", "policies"},
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
 				Config: testAccAWSSSMParameterPoliciesMultiConfig(name, "String", "test2"),
@@ -462,7 +462,7 @@ func TestAccAWSSSMParameter_policies(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(name, "Advanced"),
+				Config: testAccAWSSSMParameterPoliciesEmptyConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "policies", ""),
@@ -514,20 +514,6 @@ func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.
 		*param = *resp.Parameters[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSSSMParameterDisappears(param *ssm.Parameter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
-
-		paramInput := &ssm.DeleteParameterInput{
-			Name: param.Name,
-		}
-
-		_, err := conn.DeleteParameter(paramInput)
-
-		return err
 	}
 }
 
@@ -672,7 +658,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_kms_alias" "test" {
   name          = "alias/%[3]s"
-  target_key_id = aws_kms_key.test_key.id
+  target_key_id = aws_kms_key.test.id
 }
 `, rName, value, keyAlias)
 }
@@ -680,21 +666,17 @@ resource "aws_kms_alias" "test" {
 func testAccAWSSSMParameterPoliciesSingleConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
-  type  = %[2]q
-  value = %[3]q
-  tier  = "Advanced"
-
-  policies = <<EOF
-[{
+  name     = %[1]q
+  type     = %[2]q
+  value    = %[3]q
+  tier     = "Advanced"
+  policies = jsonencode([{
    "Type":"Expiration",
    "Version":"1.0",
    "Attributes":{
       "Timestamp":"2050-12-02T21:34:33Z"
    }
-}]
-EOF
-
+}])
 }
 `, rName, pType, value)
 }
@@ -702,13 +684,11 @@ EOF
 func testAccAWSSSMParameterPoliciesMultiConfig(rName, pType, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
-  type  = %[2]q
-  value = %[3]q
-  tier  = "Advanced"
-
-  policies = <<EOF
-[{
+  name     = %[1]q
+  type     = %[2]q
+  value    = %[3]q
+  tier     = "Advanced"
+  policies = jsonencode([{
    "Type":"Expiration",
    "Version":"1.0",
    "Attributes":{
@@ -722,9 +702,19 @@ resource "aws_ssm_parameter" "test" {
       "Before":"30",
       "Unit":"Days"
    }
-}]
-EOF
+}])
+}
+`, rName, pType, value)
+}
 
+func testAccAWSSSMParameterPoliciesEmptyConfig(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name     = %[1]q
+  type     = %[2]q
+  value    = %[3]q
+  tier     = "Advanced"
+  policies = "[{}]"
 }
 `, rName, pType, value)
 }
