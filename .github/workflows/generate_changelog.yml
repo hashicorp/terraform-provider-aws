@@ -15,7 +15,7 @@ jobs:
       - run: ./scripts/generate-changelog.sh
       - run: |
           if [[ `git status --porcelain` ]]; then
-            if [ ${{github.event_name == 'workflow_dispatch'}} ]; then
+            if ${{github.event_name == 'workflow_dispatch'}}; then
               MSG="Update CHANGELOG.md (Manual Trigger)"
             else
               MSG="Update CHANGELOG.md for #${{ github.event.pull_request.number }}"
