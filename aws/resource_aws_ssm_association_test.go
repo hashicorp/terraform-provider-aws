@@ -351,7 +351,7 @@ func TestAccAWSSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
+func TestAccAWSSSMAssociation_withScheduleExpressionAndCronInterval(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_association.test"
 
@@ -364,8 +364,8 @@ func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfigWithScheduleExpression(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "schedule_expression", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "true"),
 				),
 			},
 			{
@@ -377,8 +377,8 @@ func TestAccAWSSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAWSSSMAssociationBasicConfigWithScheduleExpressionUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMAssociationExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName, "schedule_expression", "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
 				),
 			},
 		},
@@ -934,6 +934,7 @@ DOC
 resource "aws_ssm_association" "test" {
   name                = aws_ssm_document.test.name
   schedule_expression = "cron(0 16 ? * TUE *)"
+  apply_only_at_cron_interval = true
 
   targets {
     key    = "tag:Name"
@@ -974,6 +975,7 @@ DOC
 resource "aws_ssm_association" "test" {
   name                = aws_ssm_document.test.name
   schedule_expression = "cron(0 16 ? * WED *)"
+  apply_only_at_cron_interval = false
 
   targets {
     key    = "tag:Name"

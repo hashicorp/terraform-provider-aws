@@ -28,6 +28,7 @@ resource "aws_ssm_association" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the SSM document to apply.
+* `apply_only_at_cron_interval` - (Optional) System runs the new associations immediately after it is created and then according to the schedule you specified. Specify this option if you don't want an association to run immediately after you create it (Default: `false`).
 * `association_name` - (Optional) The descriptive name for the association.
 * `document_version` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 * `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.
