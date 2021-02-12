@@ -466,6 +466,7 @@ resource "aws_iam_role" "test" {
 POLICY
 
 }
+
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.name
