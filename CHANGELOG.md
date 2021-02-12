@@ -29,6 +29,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_traffic_mirror_filter_rule: Add arn attribute. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
 * resource/aws_ec2_traffic_mirror_filter_rule: Add plan time validation to `destination_port_range.from_port`, 
 `destination_port_range.to_port`, `source_port_range.from_port`, and `source_port_range.to_port`. ([#13949](https://github.com/hashicorp/terraform-provider-aws/issues/13949))
+* resource/aws_fms_policy: Allow use of `resource_type` or `resource_type_list` attributes ([#17418](https://github.com/hashicorp/terraform-provider-aws/issues/17418))
 * resource/aws_imagebuilder_image_recipe: Add `gp3` as a valid value for the `volume_type` attribute ([#17286](https://github.com/hashicorp/terraform-provider-aws/issues/17286))
 * resource/aws_lambda_event_source_mapping: Add `topics` attribute to support Amazon MSK as an event source ([#14746](https://github.com/hashicorp/terraform-provider-aws/issues/14746))
 * resource/aws_lb_listener_certificate: Add import support ([#16474](https://github.com/hashicorp/terraform-provider-aws/issues/16474))
@@ -44,6 +45,12 @@ ENHANCEMENTS:
 * resource/aws_ses_receipt_rule: Add plan time validations for `name`, `tls_policy`, `add_header_action.header_name`, `add_header_action.header_value`, `bounce_action.topic_arn`, `lambda_action.function_arn`, `lambda_action.topic_arn`, `lambda_action.invocation_type`, `s3_action,topic_arn`, `sns_action.topic_arn`, `stop_action.scope`, `stop_action.topic_arn`, `workmail_action.topic_arn`, and `workmail_action.organization_arn` attributes ([#13960](https://github.com/hashicorp/terraform-provider-aws/issues/13960))
 * resource/aws_ses_template: Add `arn` attribute ([#13963](https://github.com/hashicorp/terraform-provider-aws/issues/13963))
 * resource/aws_sns_topic_subscription: Add `redrive_policy` argument ([#11770](https://github.com/hashicorp/terraform-provider-aws/issues/11770))
+* resource/aws_ssm_maintenance_window_task: Add `task_invocation_parameters` `run_command_parameters` block `cloudwatch_config` and `document_version` arguments ([#11774](https://github.com/hashicorp/terraform-provider-aws/issues/11774))
+* resource/aws_ssm_maintenance_window_task: Add plan time validation to `max_concurrency`, `max_errors`, `priority`, `service_role_arn`, `targets`, `targets.notification_arn`, `targets.service_role_arn`, `task_type`, `task_invocation_parameters.run_command_parameters.comment`, `task_invocation_parameters.run_command_parameters.document_hash`, `task_invocation_parameters.run_command_parameters.timeout_seconds`, and `task_invocation_parameters.run_command_parameters.notification_config.notification_events` arguments ([#11774](https://github.com/hashicorp/terraform-provider-aws/issues/11774))
+* resource/aws_ssm_patch_baseline: Add `approved_patches_enable_non_security` and `rejected_patches_action` arguments ([#11772](https://github.com/hashicorp/terraform-provider-aws/issues/11772))
+* resource/aws_ssm_patch_baseline: Adds `arn` attribute. ([#11772](https://github.com/hashicorp/terraform-provider-aws/issues/11772))
+* resource/aws_ssm_patch_baseline: Adds plan time validation for `name`, `description`, `global_filter.key`, `global_filter.values`,
+`approved_patches`, `rejected_patches`, `approval_rule.approve_after_days`, `approval_rule.patch_filter.key`, and `approval_rule.patch_filter.values`. ([#11772](https://github.com/hashicorp/terraform-provider-aws/issues/11772))
 
 BUG FIXES:
 
