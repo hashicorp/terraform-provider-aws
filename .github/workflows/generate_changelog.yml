@@ -2,6 +2,7 @@ name: Generate CHANGELOG
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
 jobs:
   GenerateChangelog:
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
