@@ -32,16 +32,16 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.Any(
+				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), ""),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 				),
 			},
 
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"global_filter": {
@@ -158,10 +158,8 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			"rejected_patches_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ssm.PatchAction_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == ssm.PatchActionAllowAsDependency && new == ""
-				},
 			},
 			"approved_patches_enable_non_security": {
 				Type:     schema.TypeBool,
@@ -268,12 +266,7 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChangesExcept("tags") {
 		_, err := conn.UpdatePatchBaseline(params)
 		if err != nil {
-			if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
-				log.Printf("[WARN] Patch Baseline %s not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return err
+			return fmt.Errorf("error updating SSM Patch Baseline (%s): %w", d.Id(), err)
 		}
 	}
 

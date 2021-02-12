@@ -4,7 +4,7 @@ resource/aws_ssm_patch_baseline: Adds plan time validation for `name`, `descript
 ```
 
 ```release-note:enhancement
-resource/aws_ssm_patch_baseline: Adds support for `rejected_patches_action` and `approved_patches_enable_non_security`.
+resource/aws_ssm_patch_baseline: Add `approved_patches_enable_non_security` and `rejected_patches_action` arguments
 ```
 
 ```release-note:enhancement
