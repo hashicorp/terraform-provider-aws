@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -107,6 +108,9 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 
 		return nil
 	})
+	if tfresource.TimedOut(err) {
+		output, err = conn.GetObjectTagging(input)
+	}
 
 	if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchTagSet) {
 		return New(nil), nil

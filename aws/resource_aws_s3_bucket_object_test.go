@@ -1248,6 +1248,9 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			out, err = s3conn.GetObject(input)
+		}
 
 		if err != nil {
 			return fmt.Errorf("S3Bucket Object error: %s", err)
