@@ -30,6 +30,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
+					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 				),
 			},
 			{
@@ -72,7 +73,7 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMDocument_version_name(t *testing.T) {
+func TestAccAWSSSMDocument_VersionName(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -659,14 +660,14 @@ DOC
 func testAccAWSSSMDocumentBasicConfigVersionName(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
-  name          = "%s"
+  name          = %[1]q
   document_type = "Command"
-  version_name  = "%s"
+  version_name  = %[2]q
 
   content = <<DOC
     {
        "schemaVersion": "2.0",
-       "description": "Sample version 2.0 document v2",
+       "description": "Sample version 2.0 document %[2]s",
        "parameters": {
 
        },

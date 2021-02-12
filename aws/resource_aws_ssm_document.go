@@ -175,8 +175,6 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"version_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -656,6 +654,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("target_type"); ok {
 		updateDocInput.TargetType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("version_name"); ok {
+		updateDocInput.VersionName = aws.String(v.(string))
 	}
 
 	if d.HasChange("attachments_source") {
