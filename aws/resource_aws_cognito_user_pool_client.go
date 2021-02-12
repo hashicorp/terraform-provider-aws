@@ -51,17 +51,8 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAdminNoSrpAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeCustomAuthFlowOnly,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeUserPasswordAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowCustomAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserPasswordAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserSrpAuth,
-						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowRefreshTokenAuth,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.ExplicitAuthFlowsType_Values(), false),
 				},
 			},
 
@@ -93,12 +84,8 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				Optional: true,
 				MaxItems: 3,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.OAuthFlowTypeCode,
-						cognitoidentityprovider.OAuthFlowTypeImplicit,
-						cognitoidentityprovider.OAuthFlowTypeClientCredentials,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.OAuthFlowType_Values(), false),
 				},
 			},
 

@@ -277,7 +277,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
+	userPoolName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	resourceName := "aws_cognito_user_pool_client.test"
 
