@@ -698,7 +698,7 @@ EOF
 }
 
 func testAccAWSSyntheticsCanaryRunConfigConfig1(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -715,11 +715,11 @@ resource "aws_synthetics_canary" "test" {
     timeout_in_seconds = 60
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryRunConfigConfig2(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -737,11 +737,11 @@ resource "aws_synthetics_canary" "test" {
     memory_in_mb       = 960
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryRunConfigTracingConfig(rName string, tracing bool) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -759,11 +759,11 @@ resource "aws_synthetics_canary" "test" {
     timeout_in_seconds = 60
   }
 }
-`, rName, tracing)
+`, rName, tracing))
 }
 
 func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -776,11 +776,11 @@ resource "aws_synthetics_canary" "test" {
     expression = "rate(0 minute)"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryRuntimeVersionConfig(rName, version string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -793,11 +793,11 @@ resource "aws_synthetics_canary" "test" {
     expression = "rate(0 minute)"
   }
 }
-`, rName, version)
+`, rName, version))
 }
 
 func testAccAWSSyntheticsCanaryZipUpdatedConfig(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -810,11 +810,11 @@ resource "aws_synthetics_canary" "test" {
     expression = "rate(0 minute)"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryStartCanaryConfig(rName string, state bool) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -828,11 +828,11 @@ resource "aws_synthetics_canary" "test" {
     expression = "rate(0 minute)"
   }
 }
-`, rName, state)
+`, rName, state))
 }
 
 func testAccAWSSyntheticsCanaryBasicS3CodeConfig(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -855,11 +855,11 @@ resource "aws_s3_bucket_object" "test" {
   etag   = filemd5("test-fixtures/lambdatest.zip")
 }
 
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -908,12 +908,13 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.test.name
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig1(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) +
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+	return composeConfig(
+		testAccAWSSyntheticsCanaryConfigBase(rName),
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -934,12 +935,13 @@ resource "aws_synthetics_canary" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig2(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) +
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+	return composeConfig(
+		testAccAWSSyntheticsCanaryConfigBase(rName),
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -960,12 +962,13 @@ resource "aws_synthetics_canary" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryVPCConfig3(rName string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) +
-		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+	return composeConfig(
+		testAccAWSSyntheticsCanaryConfigBase(rName),
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -986,11 +989,11 @@ resource "aws_synthetics_canary" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSyntheticsCanaryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1007,11 +1010,11 @@ resource "aws_synthetics_canary" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAWSSyntheticsCanaryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
@@ -1029,5 +1032,5 @@ resource "aws_synthetics_canary" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
