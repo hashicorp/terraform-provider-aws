@@ -45,20 +45,15 @@ resource "aws_sqs_queue" "user_updates_queue" {
 }
 
 resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
-  topic_arn = "${aws_sns_topic.user_updates.arn}"
+  topic_arn = aws_sns_topic.user_updates.arn
   protocol  = "sqs"
-  endpoint  = "${aws_sqs_queue.user_updates_queue.arn}"
+  endpoint  = aws_sqs_queue.user_updates_queue.arn
 }
 ```
 
 You can subscribe SNS topics to SQS queues in different Amazon accounts and regions:
 
 ```hcl
-/*
-#
-# Variables
-#
-*/
 variable "sns" {
   default = {
     account-id   = "111111111111"
@@ -86,7 +81,6 @@ data "aws_iam_policy_document" "sns-topic-policy" {
       "SNS:Subscribe",
       "SNS:SetTopicAttributes",
       "SNS:RemovePermission",
-      "SNS:Receive",
       "SNS:Publish",
       "SNS:ListSubscriptionsByTopic",
       "SNS:GetTopicAttributes",
@@ -99,7 +93,7 @@ data "aws_iam_policy_document" "sns-topic-policy" {
       variable = "AWS:SourceOwner"
 
       values = [
-        "${var.sns["account-id"]}",
+        var.sns["account-id"],
       ]
     }
 
@@ -181,7 +175,7 @@ data "aws_iam_policy_document" "sqs-queue-policy" {
 # provider to manage SNS topics
 provider "aws" {
   alias  = "sns"
-  region = "${var.sns["region"]}"
+  region = var.sns["region"]
 
   assume_role {
     role_arn     = "arn:aws:iam::${var.sns["account-id"]}:role/${var.sns["role-name"]}"
@@ -192,7 +186,7 @@ provider "aws" {
 # provider to manage SQS queues
 provider "aws" {
   alias  = "sqs"
-  region = "${var.sqs["region"]}"
+  region = var.sqs["region"]
 
   assume_role {
     role_arn     = "arn:aws:iam::${var.sqs["account-id"]}:role/${var.sqs["role-name"]}"
@@ -203,7 +197,7 @@ provider "aws" {
 # provider to subscribe SQS to SNS (using the SQS account but the SNS region)
 provider "aws" {
   alias  = "sns2sqs"
-  region = "${var.sns["region"]}"
+  region = var.sns["region"]
 
   assume_role {
     role_arn     = "arn:aws:iam::${var.sqs["account-id"]}:role/${var.sqs["role-name"]}"
@@ -213,22 +207,22 @@ provider "aws" {
 
 resource "aws_sns_topic" "sns-topic" {
   provider     = "aws.sns"
-  name         = "${var.sns["name"]}"
-  display_name = "${var.sns["display_name"]}"
-  policy       = "${data.aws_iam_policy_document.sns-topic-policy.json}"
+  name         = var.sns["name"]
+  display_name = var.sns["display_name"]
+  policy       = data.aws_iam_policy_document.sns-topic-policy.json
 }
 
 resource "aws_sqs_queue" "sqs-queue" {
   provider = "aws.sqs"
-  name     = "${var.sqs["name"]}"
-  policy   = "${data.aws_iam_policy_document.sqs-queue-policy.json}"
+  name     = var.sqs["name"]
+  policy   = data.aws_iam_policy_document.sqs-queue-policy.json
 }
 
 resource "aws_sns_topic_subscription" "sns-topic" {
   provider  = "aws.sns2sqs"
-  topic_arn = "${aws_sns_topic.sns-topic.arn}"
+  topic_arn = aws_sns_topic.sns-topic.arn
   protocol  = "sqs"
-  endpoint  = "${aws_sqs_queue.sqs-queue.arn}"
+  endpoint  = aws_sqs_queue.sqs-queue.arn
 }
 ```
 
@@ -244,6 +238,7 @@ The following arguments are supported:
 * `raw_message_delivery` - (Optional) Boolean indicating whether or not to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property) (default is false).
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
+* `redrive_policy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
 
 ### Protocols supported
 

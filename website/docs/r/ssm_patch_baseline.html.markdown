@@ -10,7 +10,7 @@ description: |-
 
 Provides an SSM Patch Baseline resource
 
-~> **NOTE on Patch Baselines:** The `approved_patches` and `approval_rule` are 
+~> **NOTE on Patch Baselines:** The `approved_patches` and `approval_rule` are
 both marked as optional fields, but the Patch Baseline requires that at least one
 of them is specified.
 
@@ -92,12 +92,12 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
     approve_after_days = 7
 
     patch_filter {
-      key = "CLASSIFICATION"
+      key    = "CLASSIFICATION"
       values = ["CriticalUpdates", "SecurityUpdates"]
     }
 
     patch_filter {
-      key = "MSRC_SEVERITY"
+      key    = "MSRC_SEVERITY"
       values = ["Critical", "Important"]
     }
   }
@@ -106,13 +106,13 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
     approve_after_days = 7
 
     patch_filter {
-      key = "PATCH_SET"
+      key    = "PATCH_SET"
       values = ["APPLICATION"]
     }
 
-    # Filter on Microsoft product if necessary 
+    # Filter on Microsoft product if necessary
     patch_filter {
-      key = "PRODUCT"
+      key    = "PRODUCT"
       values = ["Office 2013", "Office 2016"]
     }
   }
@@ -152,15 +152,17 @@ The following arguments are supported:
 * `global_filter` - (Optional) A set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
 * `approval_rule` - (Optional) A set of rules used to include patches in the baseline. up to 10 approval rules can be specified. Each approval_rule block requires the fields documented below.
 * `patch_source` - (Optional) A list of alternate source repositories to retrieve patches from. Each patch_source block requires the fields documented below. Applies to Linux instances only.
+* `rejected_patches_action` - (Optional) The action for Patch Manager to take on patches included in the `rejected_patches` list. Allow values are `ALLOW_AS_DEPENDENCY` and `BLOCK`.
+* `approved_patches_enable_non_security` - (Optional) Indicates whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
 
 The `approval_rule` block supports:
 
 * `approve_after_days` - (Required) The number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 100.
-* `patch_filter` - (Required) The patch filter group that defines the criteria for the rule. Up to 5 patch filters can be specified per approval rule using Key/Value pairs. Valid Keys are `PATCH_SET | PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`.
-  * `PATCH_SET` defaults to `OS` if unspecified
+* `patch_filter` - (Required) The patch filter group that defines the criteria for the rule. Up to 5 patch filters can be specified per approval rule using Key/Value pairs. Valid Keys are `PATCH_SET | PRODUCT | CLASSIFICATION | MSRC_SEVERITY | PATCH_ID`. Valid combinations of these Keys and the `operating_system` value can be found in the [SSM DescribePatchProperties API Reference](https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_DescribePatchProperties.html). Valid Values are exact values for the patch property given as the key, or a wildcard `*`, which matches all values.
+    * `PATCH_SET` defaults to `OS` if unspecified
 * `compliance_level` - (Optional) Defines the compliance level for patches approved by this rule. Valid compliance levels include the following: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is 'false'. Valid for Linux instances only.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `patch_source` block supports:
 
@@ -173,6 +175,7 @@ The `patch_source` block supports:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the patch baseline.
+* `arn` - The ARN of the patch baseline.
 
 ## Import
 

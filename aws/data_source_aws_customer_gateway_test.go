@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
@@ -29,6 +29,7 @@ func TestAccAWSCustomerGatewayDataSource_Filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
@@ -56,6 +57,7 @@ func TestAccAWSCustomerGatewayDataSource_ID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, "device_name", dataSourceName, "device_name"),
 				),
 			},
 		},
@@ -66,20 +68,20 @@ func testAccAWSCustomerGatewayDataSourceConfigFilter(asn, hostOctet int) string 
 	name := acctest.RandomWithPrefix("test-filter")
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-	bgp_asn    = %d
-	ip_address = "50.0.0.%d"
-	type       = "ipsec.1"
+  bgp_asn    = %d
+  ip_address = "50.0.0.%d"
+  type       = "ipsec.1"
 
-	tags = {
-		Name = "%s"
-	}
+  tags = {
+    Name = "%s"
+  }
 }
 
 data "aws_customer_gateway" "test" {
-	filter {
-		name   = "tag:Name"
-		values = ["${aws_customer_gateway.test.tags.Name}"]
-	}
+  filter {
+    name   = "tag:Name"
+    values = [aws_customer_gateway.test.tags.Name]
+  }
 }
 `, asn, hostOctet, name)
 }
@@ -87,13 +89,14 @@ data "aws_customer_gateway" "test" {
 func testAccAWSCustomerGatewayDataSourceConfigID(asn, hostOctet int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
-	bgp_asn    = %d
-	ip_address = "50.0.0.%d"
-	type       = "ipsec.1"
+  bgp_asn     = %d
+  ip_address  = "50.0.0.%d"
+  device_name = "test"
+  type        = "ipsec.1"
 }
 
 data "aws_customer_gateway" "test" {
-	id = "${aws_customer_gateway.test.id}"
+  id = aws_customer_gateway.test.id
 }
 `, asn, hostOctet)
 }

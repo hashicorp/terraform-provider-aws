@@ -2,19 +2,20 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.foo"
+	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -24,12 +25,14 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.2062620480", "KB123456"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelCritical),
 					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
 				),
 			},
 			{
@@ -41,15 +44,16 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &after),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.2062620480", "KB123456"),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.2291496788", "KB456789"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("updated-patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelHigh),
 					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems - August 2017"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					func(*terraform.State) error {
-						if *before.BaselineId != *after.BaselineId {
+						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
 						}
 						return nil
@@ -63,7 +67,7 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 	var patch ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.foo"
+	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -106,7 +110,7 @@ func TestAccAWSSSMPatchBaseline_tags(t *testing.T) {
 func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 	var identity ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.foo"
+	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -117,7 +121,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &identity),
-					testAccCheckAWSSSMPatchBaselineDisappears(&identity),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,7 +132,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.foo"
+	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -170,14 +174,15 @@ func TestAccAWSSSMPatchBaseline_OperatingSystem(t *testing.T) {
 func TestAccAWSSSMPatchBaseline_PatchSources(t *testing.T) {
 	var before, after ssm.PatchBaselineIdentity
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.foo"
+	resourceName := "aws_ssm_patch_baseline.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMPatchBaselineConfigWithPatchSource(name),
+ 				Config: testAccAWSSSMPatchBaselineConfigWithPatchSource(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "patch_source.#", "1"),
@@ -212,6 +217,57 @@ func TestAccAWSSSMPatchBaseline_PatchSources(t *testing.T) {
 						return nil
 					},
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMPatchBaseline_ApprovedPatchesNonSec(t *testing.T) {
+	var ssmPatch ssm.PatchBaselineIdentity
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineBasicConfigApprovedPatchesNonSec(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &ssmPatch),
+					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMPatchBaseline_RejectPatchesAction(t *testing.T) {
+	var ssmPatch ssm.PatchBaselineIdentity
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMPatchBaselineBasicConfigRejectPatchesAction(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMPatchBaselineExists(resourceName, &ssmPatch),
+					resource.TestCheckResourceAttr(resourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -263,24 +319,6 @@ func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIde
 	}
 }
 
-func testAccCheckAWSSSMPatchBaselineDisappears(patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
-
-		id := aws.StringValue(patch.BaselineId)
-		params := &ssm.DeletePatchBaselineInput{
-			BaselineId: aws.String(id),
-		}
-
-		_, err := conn.DeletePatchBaseline(params)
-		if err != nil {
-			return fmt.Errorf("error deleting Patch Baseline %s: %s", id, err)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ssmconn
 
@@ -314,7 +352,7 @@ func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
 
 func testAccAWSSSMPatchBaselineBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name                              = "patch-baseline-%s"
   description                       = "Baseline containing all updates approved for production systems"
   approved_patches                  = ["KB123456"]
@@ -325,7 +363,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 
 func testAccAWSSSMPatchBaselineBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
   description                       = "Baseline containing all updates approved for production systems"
   approved_patches                  = ["KB123456"]
@@ -340,7 +378,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 
 func testAccAWSSSMPatchBaselineBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name                              = %[1]q
   description                       = "Baseline containing all updates approved for production systems"
   approved_patches                  = ["KB123456"]
@@ -356,7 +394,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 
 func testAccAWSSSMPatchBaselineBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name                              = "updated-patch-baseline-%s"
   description                       = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches                  = ["KB123456", "KB456789"]
@@ -367,7 +405,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 
 func testAccAWSSSMPatchBaselineConfigWithOperatingSystem(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
   operating_system = "AMAZON_LINUX"
   description      = "Baseline containing all updates approved for production systems"
@@ -397,7 +435,7 @@ resource "aws_ssm_patch_baseline" "foo" {
 
 func testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name             = "patch-baseline-%s"
   operating_system = "WINDOWS"
   description      = "Baseline containing all updates approved for production systems"
@@ -434,8 +472,8 @@ resource "aws_ssm_patch_baseline" "foo" {
   operating_system                  = "AMAZON_LINUX"
 
   patch_source {
-	name          = "My-AL2017.09"
-	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    name          = "My-AL2017.09"
+    configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
     products      = ["AmazonLinux2017.09"]
   }
 }
@@ -452,16 +490,41 @@ resource "aws_ssm_patch_baseline" "foo" {
   operating_system                  = "AMAZON_LINUX"
 
   patch_source {
-	name          = "My-AL2017.09"
-	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    name          = "My-AL2017.09"
+    configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
     products      = ["AmazonLinux2017.09"]
   }
 
   patch_source {
-	name          = "My-AL2018.03"
-	configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
+    name          = "My-AL2018.03"
+    configuration = "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"
     products      = ["AmazonLinux2018.03"]
   }
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineBasicConfigApprovedPatchesNonSec(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                                 = %q
+  operating_system                     = "AMAZON_LINUX"
+  description                          = "Baseline containing all updates approved for production systems"
+  approved_patches                     = ["KB123456"]
+  approved_patches_compliance_level    = "CRITICAL"
+  approved_patches_enable_non_security = true
+}
+`, rName)
+}
+
+func testAccAWSSSMPatchBaselineBasicConfigRejectPatchesAction(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = "patch-baseline-%s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+  rejected_patches_action           = "ALLOW_AS_DEPENDENCY"
 }
 `, rName)
 }
