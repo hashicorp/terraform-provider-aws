@@ -162,7 +162,7 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 				),
 			},
 			{
@@ -174,14 +174,14 @@ func TestAccAWSSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
 				),
 			},
 			{
 				Config: testAccAWSSESConfigurationSetReputationMetricsConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 				),
 			},
 		},
