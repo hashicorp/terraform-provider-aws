@@ -30,6 +30,7 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
+					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 				),
 			},
 			{
@@ -66,6 +67,37 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "/AWS::EC2::Instance"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_VersionName(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.1"),
 				),
 			},
 		},
@@ -623,6 +655,37 @@ DOC
 
 }
 `, rName, typ)
+}
+
+func testAccAWSSSMDocumentBasicConfigVersionName(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Command"
+  version_name  = %[2]q
+
+  content = <<DOC
+    {
+       "schemaVersion": "2.0",
+       "description": "Sample version 2.0 document %[2]s",
+       "parameters": {
+
+       },
+       "mainSteps": [
+          {
+             "action": "aws:runPowerShellScript",
+             "name": "runPowerShellScript",
+             "inputs": {
+                "runCommand": [
+                   "Get-Process"
+                ]
+             }
+          }
+       ]
+    }
+DOC
+}
+`, rName, version)
 }
 
 func testAccAWSSSMDocument20Config(rName string) string {

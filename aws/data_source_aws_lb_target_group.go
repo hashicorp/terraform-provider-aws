@@ -175,7 +175,7 @@ func dataSourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading Load Balancer Target Group: %s", describeTgOpts)
 	describeResp, err := elbconn.DescribeTargetGroups(describeTgOpts)
 	if err != nil {
-		return fmt.Errorf("Error retrieving LB Target Group: %s", err)
+		return fmt.Errorf("Error retrieving LB Target Group: %w", err)
 	}
 	if len(describeResp.TargetGroups) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(describeResp.TargetGroups))

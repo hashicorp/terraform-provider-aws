@@ -113,7 +113,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 
 	if d.Get("id").(string) == "" {
 		if err := dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d, conn); err != nil {
-			return fmt.Errorf("Unable to find origin request policy by name: %s", err.Error())
+			return fmt.Errorf("Unable to find origin request policy by name: %w", err)
 		}
 	}
 
@@ -124,7 +124,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 
 		resp, err := conn.GetOriginRequestPolicy(request)
 		if err != nil {
-			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %s", d.Id(), err.Error())
+			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %w", d.Id(), err)
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 

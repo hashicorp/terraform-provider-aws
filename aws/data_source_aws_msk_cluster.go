@@ -66,7 +66,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 		listClustersOutput, err := conn.ListClusters(listClustersInput)
 
 		if err != nil {
-			return fmt.Errorf("error listing MSK Clusters: %s", err)
+			return fmt.Errorf("error listing MSK Clusters: %w", err)
 		}
 
 		if listClustersOutput == nil {
@@ -99,7 +99,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	bootstrapBrokersoOutput, err := conn.GetBootstrapBrokers(bootstrapBrokersInput)
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %s", aws.StringValue(cluster.ClusterArn), err)
+		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %w", aws.StringValue(cluster.ClusterArn), err)
 	}
 
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
@@ -111,7 +111,7 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
 
 	if err := d.Set("tags", keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("zookeeper_connect_string", aws.StringValue(cluster.ZookeeperConnectString))

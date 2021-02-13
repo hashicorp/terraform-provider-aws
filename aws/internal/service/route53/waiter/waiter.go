@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -48,15 +49,12 @@ func KeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, name
 		if err != nil && output != nil && output.Status != nil && output.StatusMessage != nil {
 			newErr := fmt.Errorf("%s: %s", aws.StringValue(output.Status), aws.StringValue(output.StatusMessage))
 
-			switch e := err.(type) {
-			case *resource.TimeoutError:
-				if e.LastError == nil {
-					e.LastError = newErr
-				}
-			case *resource.UnexpectedStateError:
-				if e.LastError == nil {
-					e.LastError = newErr
-				}
+			var te *resource.TimeoutError
+			var use *resource.UnexpectedStateError
+			if ok := errors.As(err, &te); ok && te.LastError == nil {
+				te.LastError = newErr
+			} else if ok := errors.As(err, &use); ok && use.LastError == nil {
+				use.LastError = newErr
 			}
 		}
 

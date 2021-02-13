@@ -186,7 +186,7 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("outpost_arn", subnet.OutpostArn)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)

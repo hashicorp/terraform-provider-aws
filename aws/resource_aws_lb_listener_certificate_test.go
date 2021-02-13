@@ -33,6 +33,11 @@ func TestAccAwsLbListenerCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -46,6 +51,7 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 	}
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_listener_certificate.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,6 +71,11 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccLbListenerCertificateConfigMultipleAddNew(rName, keys, certificates),
@@ -97,6 +108,29 @@ func TestAccAwsLbListenerCertificate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsLbListenerCertificate_disappears(t *testing.T) {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	resourceName := "aws_lb_listener_certificate.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsLbListenerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbListenerCertificateConfig(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLbListenerCertificateExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLbListenerCertificate(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
