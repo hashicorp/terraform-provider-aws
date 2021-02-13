@@ -215,11 +215,17 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).sesconn
 
 	log.Printf("[DEBUG] SES Delete Configuration Rule Set: %s", d.Id())
-	_, err := conn.DeleteConfigurationSet(&ses.DeleteConfigurationSetInput{
+	input := &ses.DeleteConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
-	})
+	}
 
-	return err
+	if _, err := conn.DeleteConfigurationSet(input); err != nil {
+		if !isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func expandSesConfigurationSetDeliveryOptions(l []interface{}) *ses.DeliveryOptions {
