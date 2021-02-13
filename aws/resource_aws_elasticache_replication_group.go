@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -105,11 +106,16 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					versions := strings.Split(new, ".")
 
-					// For example 6.x
-					if len(versions) == 2 {
-						major, minor := versions[0], versions[1]
+					majorInt, err := strconv.Atoi(versions[0])
+					if err != nil {
+						return false
+					}
 
-						if minor == "x" && strings.HasPrefix(old, major) {
+					// For example 6.x
+					if majorInt >= 6 && len(versions) == 2 {
+						majorStr, minorStr := versions[0], versions[1]
+
+						if minorStr == "x" && strings.HasPrefix(old, majorStr) {
 							return true
 						}
 					}
