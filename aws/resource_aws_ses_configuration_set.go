@@ -108,7 +108,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if v := d.Get("sending_enabled"); v.(bool) == false {
+	if v := d.Get("sending_enabled"); !v.(bool) {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
 			Enabled:              aws.Bool(v.(bool)),
