@@ -87,6 +87,9 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", ses.ServiceName, fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "last_fresh_start", ""),
 				),
 			},
 			{
