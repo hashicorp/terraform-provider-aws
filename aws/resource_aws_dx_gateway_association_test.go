@@ -378,23 +378,11 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 					testAccCheckAwsDxGatewayAssociationExists(resourceName2, &ga, &gap),
 					resource.TestCheckResourceAttrSet(resourceName1, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.16/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.0/28"),
 					resource.TestCheckResourceAttrSet(resourceName2, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName2, "allowed_prefixes.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName2, "allowed_prefixes.*", "10.255.255.32/28"),
+					resource.TestCheckTypeSetElemAttr(resourceName2, "allowed_prefixes.*", "10.255.255.16/28"),
 				),
-			},
-			{
-				ResourceName:      resourceName1,
-				ImportStateIdFunc: testAccAwsDxGatewayAssociationImportStateIdFunc(resourceName1),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				ResourceName:      resourceName2,
-				ImportStateIdFunc: testAccAwsDxGatewayAssociationImportStateIdFunc(resourceName2),
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -820,7 +808,7 @@ resource "aws_dx_gateway" "test" {
 resource "aws_vpc" "test" {
   count = 2
 
-  cidr_block = cidrsubnet("10.255.255.16/26", 2, count.index)
+  cidr_block = cidrsubnet("10.255.255.0/26", 2, count.index)
 
   tags = {
     Name = %[1]q
