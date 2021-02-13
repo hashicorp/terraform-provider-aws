@@ -96,7 +96,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if v, ok := d.GetOk("reputation_metrics_enabled"); ok {
+	if v := d.Get("reputation_metrics_enabled"); v.(bool) {
 		input := &ses.UpdateConfigurationSetReputationMetricsEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
 			Enabled:              aws.Bool(v.(bool)),
@@ -108,7 +108,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if v, ok := d.GetOk("sending_enabled"); ok && !v.(bool) {
+	if v := d.Get("sending_enabled"); v.(bool) == false {
 		input := &ses.UpdateConfigurationSetSendingEnabledInput{
 			ConfigurationSetName: aws.String(configurationSetName),
 			Enabled:              aws.Bool(v.(bool)),
@@ -149,9 +149,13 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("name", aws.StringValue(response.ConfigurationSet.Name))
-	d.Set("reputation_metrics_enabled", response.ReputationOptions.ReputationMetricsEnabled)
-	d.Set("sending_enabled", response.ReputationOptions.SendingEnabled)
-	d.Set("last_fresh_start", response.ReputationOptions.LastFreshStart.Format(time.RFC3339))
+
+	repOpts := response.ReputationOptions
+	if repOpts != nil {
+		d.Set("reputation_metrics_enabled", repOpts.ReputationMetricsEnabled)
+		d.Set("sending_enabled", repOpts.SendingEnabled)
+		d.Set("last_fresh_start", aws.TimeValue(repOpts.LastFreshStart).Format(time.RFC3339))
+	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
