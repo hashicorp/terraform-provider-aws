@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,7 +30,21 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "add_header_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bounce_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workmail_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recipients.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "recipients.*", "test@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "scan_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_policy", "Require"),
 				),
 			},
 			{
@@ -61,6 +74,72 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleS3ActionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_action.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "s3_action.*.bucket_name", "aws_s3_bucket.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSNSActionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_stopAction(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleStopActionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "stop_action.*", map[string]string{
+						"scope": "RuleSet",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "stop_action.*.topic_arn", "aws_sns_topic.test", "arn"),
 				),
 			},
 			{
@@ -214,26 +293,26 @@ func testAccCheckAwsSESReceiptRuleExists(n string) resource.TestCheckFunc {
 			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
 		}
 
-		response, err := conn.DescribeReceiptRule(params)
+		_, err := conn.DescribeReceiptRule(params)
 		if err != nil {
 			return err
 		}
 
-		if !aws.BoolValue(response.Rule.Enabled) {
-			return fmt.Errorf("Enabled (%v) was not set to true", *response.Rule.Enabled)
-		}
+		// if !aws.BoolValue(response.Rule.Enabled) {
+		// 	return fmt.Errorf("Enabled (%v) was not set to true", *response.Rule.Enabled)
+		// }
 
-		if !reflect.DeepEqual(response.Rule.Recipients, []*string{aws.String("test@example.com")}) {
-			return fmt.Errorf("Recipients (%v) was not set to [test@example.com]", response.Rule.Recipients)
-		}
+		// if !reflect.DeepEqual(response.Rule.Recipients, []*string{aws.String("test@example.com")}) {
+		// 	return fmt.Errorf("Recipients (%v) was not set to [test@example.com]", response.Rule.Recipients)
+		// }
 
-		if !aws.BoolValue(response.Rule.ScanEnabled) {
-			return fmt.Errorf("ScanEnabled (%v) was not set to true", *response.Rule.ScanEnabled)
-		}
+		// if !aws.BoolValue(response.Rule.ScanEnabled) {
+		// 	return fmt.Errorf("ScanEnabled (%v) was not set to true", *response.Rule.ScanEnabled)
+		// }
 
-		if aws.StringValue(response.Rule.TlsPolicy) != ses.TlsPolicyRequire {
-			return fmt.Errorf("TLS Policy (%s) was not set to Require", *response.Rule.TlsPolicy)
-		}
+		// if aws.StringValue(response.Rule.TlsPolicy) != ses.TlsPolicyRequire {
+		// 	return fmt.Errorf("TLS Policy (%s) was not set to Require", *response.Rule.TlsPolicy)
+		// }
 
 		return nil
 	}
@@ -402,6 +481,59 @@ resource "aws_ses_receipt_rule" "test" {
   s3_action {
     bucket_name = aws_s3_bucket.test.id
     position    = 1
+  }
+}
+`, rName)
+}
+
+func testAccAWSSESReceiptRuleSNSActionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+  rule_set_name = %[1]q
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_ses_receipt_rule" "test" {
+  name          = %[1]q
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  recipients    = ["test@example.com"]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+  
+  sns_action {
+  	topic_arn = aws_sns_topic.test.arn
+  	position  = 1
+  }
+}
+`, rName)
+}
+
+func testAccAWSSESReceiptRuleStopActionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+  rule_set_name = %[1]q
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_ses_receipt_rule" "test" {
+  name          = %[1]q
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  recipients    = ["test@example.com"]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+  
+  stop_action {
+  	topic_arn = aws_sns_topic.test.arn
+    scope     = "RuleSet"
+  	position  = 1
   }
 }
 `, rName)
