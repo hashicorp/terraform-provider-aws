@@ -998,7 +998,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 	}
-	if d.HasChange("vpc_config") {
+	if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 		configReq.VpcConfig = &lambda.VpcConfig{
 			SecurityGroupIds: []*string{},
 			SubnetIds:        []*string{},
