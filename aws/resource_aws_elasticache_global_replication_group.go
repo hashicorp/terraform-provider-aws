@@ -262,24 +262,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		RetainPrimaryReplicationGroup: aws.Bool(retainPrimaryReplicationGroup),
 	}
 
-	// // TODO: is this needed?
-	// err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 	_, err := conn.DeleteGlobalReplicationGroup(input)
-
-	// 	if isAWSErr(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault, "is not empty") {
-	// 		return resource.RetryableError(err)
-	// 	}
-
-	// 	if err != nil {
-	// 		return resource.NonRetryableError(err)
-	// 	}
-
-	// 	return nil
-	// })
-	// if isResourceTimeoutError(err) {
-	// 	_, err = conn.DeleteGlobalReplicationGroup(input)
-	// }
-
 	if err != nil {
 		return err
 	}
