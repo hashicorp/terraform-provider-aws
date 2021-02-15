@@ -210,9 +210,7 @@ For larger deployment packages it is recommended by Amazon to upload via S3, sin
 The following arguments are required:
 
 * `function_name` - (Required) Unique name for your Lambda Function.
-* `handler` - (Required) Function [entrypoint][3] in your code.
 * `role` - (Required) Amazon Resource Name (ARN) of the function's execution role. The role provides the function's identity and access to AWS services and resources.
-* `runtime` - (Required) Identifier of the function's runtime. See [Runtimes][6] for valid values.
 
 The following arguments are optional:
 
@@ -222,6 +220,7 @@ The following arguments are optional:
 * `environment` - (Optional) Configuration block. Detailed below.
 * `file_system_config` - (Optional) Configuration block. Detailed below.
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri`, `s3_bucket`, `s3_key`, and `s3_object_version`.
+* `handler` - (Optional) Function [entrypoint][3] in your code.
 * `image_config` - (Optional) Configuration block. Detailed below.
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename`, `s3_bucket`, `s3_key`, and `s3_object_version`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
@@ -230,6 +229,7 @@ The following arguments are optional:
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
+* `runtime` - (Optional) Identifier of the function's runtime. See [Runtimes][6] for valid values.
 * `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. This bucket must reside in the same AWS region where you are creating the Lambda function.
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
