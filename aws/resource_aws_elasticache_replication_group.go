@@ -180,16 +180,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Required: true,
 			},
 			"replication_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateReplicationGroupID,
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
@@ -913,3 +907,11 @@ func resourceAwsElasticacheReplicationGroupModify(conn *elasticache.ElastiCache,
 	}
 	return nil
 }
+
+var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
+	validation.StringLenBetween(1, 40),
+	validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
+	validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+	validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+)
