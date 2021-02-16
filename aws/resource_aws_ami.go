@@ -53,15 +53,11 @@ func resourceAwsAmi() *schema.Resource {
 				ForceNew: true,
 			},
 			"architecture": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.ArchitectureTypeX8664,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.ArchitectureTypeX8664,
-					ec2.ArchitectureValuesI386,
-					ec2.ArchitectureValuesArm64,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.ArchitectureValuesX8664,
+				ValidateFunc: validation.StringInSlice(ec2.ArchitectureValues_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -212,14 +208,11 @@ func resourceAwsAmi() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"virtualization_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VirtualizationTypeParavirtual,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VirtualizationTypeParavirtual,
-					ec2.VirtualizationTypeHvm,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.VirtualizationTypeParavirtual,
+				ValidateFunc: validation.StringInSlice(ec2.VirtualizationType_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
