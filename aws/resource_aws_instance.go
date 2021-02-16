@@ -918,7 +918,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		if err := d.Set("volume_tags", keyvaluetags.Ec2KeyValueTags(volumeTags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("volume_tags", keyvaluetags.Ec2KeyValueTags(volumeTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting volume_tags: %s", err)
 		}
 	}
@@ -927,7 +927,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := readBlockDevices(d, instance, conn); err != nil {
+	if err := readBlockDevices(d, instance, conn, ignoreTagsConfig); err != nil {
 		return err
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
@@ -1652,8 +1652,8 @@ func stringifyStateReason(sr *ec2.StateReason) string {
 	return sr.String()
 }
 
-func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	ibds, err := readBlockDevicesFromInstance(d, instance, conn)
+func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
+	ibds, err := readBlockDevicesFromInstance(d, instance, conn, ignoreTagsConfig)
 	if err != nil {
 		return err
 	}
@@ -1729,7 +1729,7 @@ func disassociateInstanceProfile(associationId *string, conn *ec2.EC2) error {
 	return nil
 }
 
-func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
@@ -1791,7 +1791,7 @@ func readBlockDevicesFromInstance(d *schema.ResourceData, instance *ec2.Instance
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = keyvaluetags.Ec2KeyValueTags(vol.Tags).IgnoreAws().Map()
+			bd["tags"] = keyvaluetags.Ec2KeyValueTags(vol.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
