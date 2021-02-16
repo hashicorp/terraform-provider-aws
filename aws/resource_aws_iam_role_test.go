@@ -544,6 +544,27 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
+	var role iam.GetRoleOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRolePolicyEmptyInlineConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 	var role iam.GetRoleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -735,7 +756,8 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testing.T) {
 	var role iam.GetRoleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	policyName := acctest.RandomWithPrefix("tf-acc-test")
+	policyName1 := acctest.RandomWithPrefix("tf-acc-test")
+	policyName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -747,16 +769,25 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 				Config: testAccAWSRolePolicyNoInlineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName}),
+					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName1),
+					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1}),
 				),
 			},
 			{
 				Config: testAccAWSRolePolicyNoInlineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName}),
-					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName),
+					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName2),
+					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1, policyName2}),
+				),
+			},
+			{
+				Config: testAccAWSRolePolicyNoInlineConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(resourceName, &role),
+					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1, policyName2}),
+					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName1),
+					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName2),
 				),
 			},
 		},
@@ -2142,7 +2173,7 @@ resource "aws_iam_role" "test" {
 }
 EOF
 
-  inline_policy = []
+  inline_policy {}
 }
 `, roleName)
 }

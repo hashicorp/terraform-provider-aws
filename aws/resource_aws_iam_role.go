@@ -112,20 +112,19 @@ func resourceAwsIamRole() *schema.Resource {
 			"tags": tagsSchema(),
 
 			"inline_policy": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validateIamRolePolicyName,
 						},
 						"policy": {
 							Type:             schema.TypeString,
-							Required:         true,
+							Optional:         true,
 							ValidateFunc:     validateIAMPolicyJson,
 							DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 						},
@@ -594,6 +593,10 @@ func readIamRolePolicyNames(conn *iam.IAM, roleName string) ([]*string, error) {
 
 func deleteIamRolePolicies(conn *iam.IAM, roleName string, policyNames []*string) error {
 	for _, name := range policyNames {
+		if len(aws.StringValue(name)) == 0 {
+			continue
+		}
+
 		input := &iam.DeleteRolePolicyInput{
 			PolicyName: name,
 			RoleName:   aws.String(roleName),
@@ -687,6 +690,10 @@ func addIamInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{}) 
 
 	var errs *multierror.Error
 	for _, policy := range policies {
+		if len(aws.StringValue(policy.PolicyName)) == 0 || len(aws.StringValue(policy.PolicyDocument)) == 0 {
+			continue
+		}
+
 		if _, err := conn.PutRolePolicy(policy); err != nil {
 			newErr := fmt.Errorf("creating inline policy (%s): %w", aws.StringValue(policy.PolicyName), err)
 			log.Printf("[ERROR] %s", newErr)
@@ -742,6 +749,13 @@ func readIamInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePol
 		}
 
 		apiObjects = append(apiObjects, apiObject)
+	}
+
+	if len(apiObjects) == 0 {
+		apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
+			PolicyDocument: aws.String(""),
+			PolicyName:     aws.String(""),
+		})
 	}
 
 	return apiObjects, nil
