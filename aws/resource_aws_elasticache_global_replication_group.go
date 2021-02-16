@@ -248,7 +248,7 @@ func updateElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id(), true)
+	err := deleteElasticacheGlobalReplicationGroup(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting ElastiCache Global Replication Group: %w", err)
 	}
@@ -256,10 +256,10 @@ func resourceAwsElasticacheGlobalReplicationGroupDelete(d *schema.ResourceData, 
 	return nil
 }
 
-func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, retainPrimaryReplicationGroup bool) error {
+func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id string) error {
 	input := &elasticache.DeleteGlobalReplicationGroupInput{
 		GlobalReplicationGroupId:      aws.String(id),
-		RetainPrimaryReplicationGroup: aws.Bool(retainPrimaryReplicationGroup),
+		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
 	_, err := conn.DeleteGlobalReplicationGroup(input)

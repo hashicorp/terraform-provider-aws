@@ -22,9 +22,6 @@ func init() {
 	resource.AddTestSweepers("aws_elasticache_global_replication_group", &resource.Sweeper{
 		Name: "aws_elasticache_global_replication_group",
 		F:    testSweepElasticacheGlobalReplicationGroups,
-		Dependencies: []string{
-			"aws_elasticache_replication_group",
-		},
 	})
 }
 
@@ -47,7 +44,7 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 			id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
 
 			log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-			err := deleteElasticacheGlobalReplicationGroup(conn, id, false)
+			err := deleteElasticacheGlobalReplicationGroup(conn, id)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
