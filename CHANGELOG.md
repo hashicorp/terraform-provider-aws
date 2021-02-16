@@ -1,5 +1,10 @@
 ## 3.29.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_lb_cookie_stickiness_policy: Allow zero value for `cookie_expiration_period` ([#17204](https://github.com/hashicorp/terraform-provider-aws/issues/17204))
+* resource/aws_ses_receipt_rule: Fix name validation regex to include `.` (period) ([#17627](https://github.com/hashicorp/terraform-provider-aws/issues/17627))
+
 ## 3.28.0 (February 12, 2021)
 
 FEATURES:
