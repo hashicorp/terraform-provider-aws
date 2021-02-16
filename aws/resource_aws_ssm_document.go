@@ -43,26 +43,30 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"attachments_source": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ssm.AttachmentsSourceKeyAttachmentReference,
-								ssm.AttachmentsSourceKeySourceUrl,
-								ssm.AttachmentsSourceKeyS3fileUrl,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ssm.AttachmentsSourceKey_Values(), false),
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), ""),
+								validation.StringLenBetween(1, 128),
+							),
 						},
 						"values": {
 							Type:     schema.TypeList,
 							MinItems: 1,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 1024),
+							},
 						},
 					},
 				},
@@ -72,24 +76,15 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Required: true,
 			},
 			"document_format": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.DocumentFormatJson,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentFormatJson,
-					ssm.DocumentFormatYaml,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
 			},
 			"document_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.DocumentTypeCommand,
-					ssm.DocumentTypePolicy,
-					ssm.DocumentTypeAutomation,
-					ssm.DocumentTypeSession,
-					ssm.DocumentTypePackage,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentType_Values(), false),
 			},
 			"schema_version": {
 				Type:     schema.TypeString,
@@ -171,10 +166,18 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^\/[\w\.\-\:\/]*$`), ""),
+					validation.StringLenBetween(1, 200),
+				),
 			},
 			"version_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), ""),
+					validation.StringLenBetween(1, 128),
+				),
 			},
 		},
 	}
