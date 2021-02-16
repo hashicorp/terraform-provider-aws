@@ -104,6 +104,14 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	if serviceNameOk {
 		req.ServiceNames = aws.StringSlice([]string{serviceName})
 	}
+
+	if v, ok := d.GetOk("service_type"); ok {
+		req.Filters = append(req.Filters, &ec2.Filter{
+			Name:   aws.String("service-type"),
+			Values: aws.StringSlice([]string{v.(string)}),
+		})
+	}
+
 	if tagsOk {
 		req.Filters = append(req.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
@@ -134,29 +142,11 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("no matching VPC Endpoint Service found")
 	}
 
-	var serviceDetails []*ec2.ServiceDetail
-
-	// Client-side filtering. When the EC2 API supports this functionality
-	// server-side it should be moved.
-	for _, serviceDetail := range resp.ServiceDetails {
-		if serviceDetail == nil {
-			continue
-		}
-
-		if v, ok := d.GetOk("service_type"); ok {
-			if len(serviceDetail.ServiceType) > 0 && serviceDetail.ServiceType[0] != nil && v.(string) != aws.StringValue(serviceDetail.ServiceType[0].ServiceType) {
-				continue
-			}
-		}
-
-		serviceDetails = append(serviceDetails, serviceDetail)
-	}
-
-	if len(serviceDetails) > 1 {
+	if len(resp.ServiceDetails) > 1 {
 		return fmt.Errorf("multiple VPC Endpoint Services matched; use additional constraints to reduce matches to a single VPC Endpoint Service")
 	}
 
-	sd := serviceDetails[0]
+	sd := resp.ServiceDetails[0]
 	serviceId := aws.StringValue(sd.ServiceId)
 	serviceName = aws.StringValue(sd.ServiceName)
 
