@@ -138,7 +138,7 @@ data "aws_security_group" "default_by_name" {
 
 data "aws_security_group" "by_tag" {
   tags = {
-    Seed = "${aws_security_group.test.tags["Seed"]}"
+    Seed = aws_security_group.test.tags["Seed"]
   }
 }
 
