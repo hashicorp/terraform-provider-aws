@@ -268,6 +268,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
+
 		// Here we ansure that SecurityGroupsids is nil. We can't update this
 		createOpts.EndpointDetails.SecurityGroupIds = nil
 

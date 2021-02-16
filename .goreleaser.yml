@@ -6,13 +6,12 @@ archives:
 before:
   hooks:
     - go mod download
-
 builds:
   - binary: '{{ .ProjectName }}_{{ .Version }}'
     flags:
       - -trimpath
     goarch:
-#     - '386'
+      - '386'
       - amd64
       - arm
       - arm64
@@ -28,20 +27,14 @@ builds:
       - -s -w -X version.ProviderVersion={{.Version}}
     mod_timestamp: '{{ .CommitTimestamp }}'
 changelog:
-  skip: false
+  skip: true
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
 env:
   - CGO_ENABLED=0
 release:
-  disable: false
-  github:
-      owner: amadureira
-      name: terraform-provider-aws
-
-
-
+  disable: true
 signs:
   - artifacts: checksum
     args:
