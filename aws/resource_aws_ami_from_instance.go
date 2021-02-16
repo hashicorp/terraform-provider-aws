@@ -234,12 +234,7 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-<<<<<<< HEAD
 	d.SetId(aws.StringValue(res.ImageId))
-=======
-	id := aws.StringValue(res.ImageId)
-	d.SetId(id)
->>>>>>> e196a4433 (ami copy from instance resource add attributes)
 	d.Set("manage_ebs_snapshots", true)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
