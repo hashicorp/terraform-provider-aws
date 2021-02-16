@@ -116,7 +116,8 @@ This example creates an IAM role with what appears to be empty IAM `inline_polic
 resource "aws_iam_role" "example" {
   name               = "yak_role"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
-  inline_policy      = []
+
+  inline_policy {}
 }
 ```
 
@@ -207,7 +208,7 @@ The following arguments are optional:
 
 ### inline_policy
 
-If the `inline_policy` configuration block is not used, Terraform will ignore the role's inline policy changes on the next `apply`. Using an `inline_policy` like an empty attribute (i.e., `inline_policy = []`) will cause Terraform to remove any inline policies that were added out-of-band on the next `apply`.
+If the `inline_policy` configuration block is not used, Terraform will ignore the role's inline policy changes on the next `apply`. Using an empty `inline_policy` (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies that were added out-of-band on the next `apply`.
 
 This configuration block supports the following:
 
