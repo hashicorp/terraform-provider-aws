@@ -457,7 +457,7 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigSizeType(rName, 10, "gp3"),
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -495,7 +495,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigGp3Iops(rName, 4000),
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -518,7 +518,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigGp3Iops(rName, 5000),
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -551,7 +551,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigGp3Throughput(rName, 400),
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -574,7 +574,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEbsVolumeConfigGp3Throughput(rName, 600),
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "", "600"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
@@ -1194,55 +1194,32 @@ resource "aws_ebs_volume" "test" {
 `, rName)
 }
 
-func testAccAwsEbsVolumeConfigSizeType(rName string, size int, volumeType string) string {
+func testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, size, volumeType, iops, throughput string) string {
+	if volumeType == "" {
+		volumeType = "null"
+	}
+	if iops == "" {
+		iops = "null"
+	}
+	if throughput == "" {
+		throughput = "null"
+	}
+
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
+  size              = %[2]s
   type              = %[3]q
-  size              = %[2]d
+  iops              = %[4]s
+  throughput        = %[5]s
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName, size, volumeType))
-}
-
-func testAccAwsEbsVolumeConfigGp3Throughput(rName string, throughput int) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
-		fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  type              = "gp3"
-  size              = 10
-  throughput        = %[2]d
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, throughput))
-}
-
-func testAccAwsEbsVolumeConfigGp3Iops(rName string, iops int) string {
-	return composeConfig(
-		testAccAvailableAZsNoOptInConfig(),
-		fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  type              = "gp3"
-  iops              = %[2]d
-  size              = 10
-  throughput        = 200
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, iops))
+`, rName, size, volumeType, iops, throughput))
 }
 
 func testAccAwsEbsVolumeConfigSnapshotId(rName string) string {
