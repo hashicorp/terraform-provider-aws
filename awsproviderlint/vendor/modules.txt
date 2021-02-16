@@ -68,11 +68,12 @@ github.com/bflad/gopaniccheck/passes/logpaniccallexpr
 github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
 github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
 github.com/bflad/gopaniccheck/passes/paniccallexpr
-# github.com/bflad/tfproviderlint v0.21.0
+# github.com/bflad/tfproviderlint v0.22.0
 ## explicit
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
 github.com/bflad/tfproviderlint/helper/terraformtype
+github.com/bflad/tfproviderlint/helper/terraformtype/diag
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/acctest
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/resource
 github.com/bflad/tfproviderlint/helper/terraformtype/helper/schema
@@ -199,6 +200,7 @@ github.com/bflad/tfproviderlint/xpasses/XR002
 github.com/bflad/tfproviderlint/xpasses/XR003
 github.com/bflad/tfproviderlint/xpasses/XR004
 github.com/bflad/tfproviderlint/xpasses/XR005
+github.com/bflad/tfproviderlint/xpasses/XR006
 github.com/bflad/tfproviderlint/xpasses/XS001
 github.com/bflad/tfproviderlint/xpasses/XS002
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
