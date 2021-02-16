@@ -595,6 +595,62 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 	})
 }
 
+func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp3", "3000", "400"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "400"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsEbsVolumeConfigSizeTypeIopsThroughput(rName, "10", "gp2", "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_snapshotID(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
