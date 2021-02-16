@@ -16,11 +16,11 @@ For information about Lambda Layer Permissions and how to use them, see [Using R
 
 ```hcl
 resource "aws_lambda_layer_version_permission" "lambda_layer_permission" {
-  layer_arn = "arn:aws:lambda:us-west-2:123456654321:layer:test_layer1"
+  layer_arn     = "arn:aws:lambda:us-west-2:123456654321:layer:test_layer1"
   layer_version = 1
-  principal = "111111111111"
-  action = "lambda:GetLayerVersion"
-  statement_id = "dev-account"
+  principal     = "111111111111"
+  action        = "lambda:GetLayerVersion"
+  statement_id  = "dev-account"
 }
 ```
 
