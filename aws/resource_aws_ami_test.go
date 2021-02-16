@@ -422,10 +422,12 @@ func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
 	}
 }
 
+func testAccAmiConfigBase(rName string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
   size              = 8
 
   tags = {
@@ -494,6 +496,7 @@ resource "aws_ami" "test" {
     device_name = "/dev/sda1"
     snapshot_id = aws_ebs_snapshot.test.id
   }
+
   ephemeral_block_device {
     device_name  = "/dev/sdb"
     virtual_name = "ephemeral0"
