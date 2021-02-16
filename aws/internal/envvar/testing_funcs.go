@@ -12,17 +12,13 @@ import (
 func TestFailIfAllEmpty(t testing.T, names []string, usageMessage string) (string, string) {
 	t.Helper()
 
-	for _, variable := range names {
-		value := os.Getenv(variable)
-
-		if value != "" {
-			return variable, value
-		}
+	name, value, err := RequireOneOf(names, usageMessage)
+	if err != nil {
+		t.Fatal(err)
+		return "", ""
 	}
 
-	t.Fatalf("at least one environment variable of %v must be set. Usage: %s", names, usageMessage)
-
-	return "", ""
+	return name, value
 }
 
 // TestFailIfEmpty verifies that an environment variable is non-empty or fails the test.
