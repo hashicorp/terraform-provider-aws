@@ -129,7 +129,7 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 
 	repository := out.Repository
 
-	log.Printf("[DEBUG] ECR Public repository created: %q", *repository.RepositoryArn)
+	log.Printf("[DEBUG] ECR Public repository created: %q", aws.StringValue(repository.RepositoryArn))
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
 
