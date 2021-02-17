@@ -95,43 +95,6 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 	})
 }
 
-func TestAccAWSSESReceiptRule_bounceAction(t *testing.T) {
-	var rule ses.ReceiptRule
-
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_ses_receipt_rule.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckAWSSES(t)
-			testAccPreCheckSESReceiptRule(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSESReceiptRuleBounceActionConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "bounce_action.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "bounce_action.*", map[string]string{
-						"message":         rName,
-						"sender":          "test@example.com",
-						"smtp_reply_code": "2yz",
-						"position":        "1",
-					}),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
 func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
 	var rule ses.ReceiptRule
 
@@ -520,30 +483,6 @@ resource "aws_ses_receipt_rule" "test" {
   s3_action {
     bucket_name = aws_s3_bucket.test.id
     position    = 1
-  }
-}
-`, rName)
-}
-
-func testAccAWSSESReceiptRuleBounceActionConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ses_receipt_rule_set" "test" {
-  rule_set_name = %[1]q
-}
-
-resource "aws_ses_receipt_rule" "test" {
-  name          = %[1]q
-  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
-  recipients    = ["test@example.com"]
-  enabled       = true
-  scan_enabled  = true
-  tls_policy    = "Require"
-
-  bounce_action {
-    message         = %[1]q
-    sender          = "test@example.com"
-    smtp_reply_code = "2yz"
-    position        = 1
   }
 }
 `, rName)
