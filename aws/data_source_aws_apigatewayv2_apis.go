@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
 )
 
 func dataSourceAwsApiGatewayV2Apis() *schema.Resource {
@@ -40,34 +41,28 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 
 	tagsToMatch := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
-	var ids []*string
-
-	err := ListAllApiGatewayV2Apis(conn, func(page *apigatewayv2.GetApisOutput, isLast bool) bool {
-		if page == nil {
-			return !isLast
-		}
-
-		for _, api := range page.Items {
-			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(api.Name) {
-				continue
-			}
-
-			if v, ok := d.GetOk("protocol_type"); ok && v.(string) != aws.StringValue(api.ProtocolType) {
-				continue
-			}
-
-			if len(tagsToMatch) > 0 && !keyvaluetags.Apigatewayv2KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
-				continue
-			}
-
-			ids = append(ids, api.ApiId)
-		}
-
-		return !isLast
-	})
+	apis, err := finder.Apis(conn, &apigatewayv2.GetApisInput{})
 
 	if err != nil {
-		return fmt.Errorf("error listing API Gateway v2 APIs: %w", err)
+		return fmt.Errorf("error reading API Gateway v2 APIs: %w", err)
+	}
+
+	var ids []*string
+
+	for _, api := range apis {
+		if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(api.Name) {
+			continue
+		}
+
+		if v, ok := d.GetOk("protocol_type"); ok && v.(string) != aws.StringValue(api.ProtocolType) {
+			continue
+		}
+
+		if len(tagsToMatch) > 0 && !keyvaluetags.Apigatewayv2KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+			continue
+		}
+
+		ids = append(ids, api.ApiId)
 	}
 
 	d.SetId(resource.UniqueId())
@@ -76,30 +71,5 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting ids: %w", err)
 	}
 
-	return nil
-}
-
-//
-// These can be moved to a per-service package like "aws/internal/service/apigatewayv2/lister" in the future.
-//
-
-func ListAllApiGatewayV2Apis(conn *apigatewayv2.ApiGatewayV2, fn func(*apigatewayv2.GetApisOutput, bool) bool) error {
-	return ListApiGatewayV2ApisPages(conn, &apigatewayv2.GetApisInput{}, fn)
-}
-
-func ListApiGatewayV2ApisPages(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput, fn func(*apigatewayv2.GetApisOutput, bool) bool) error {
-	for {
-		output, err := conn.GetApis(input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
 	return nil
 }
