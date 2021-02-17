@@ -61,7 +61,7 @@ To do this, populate a Terraform CLI configuration file can be created (in `~/.t
 ```
 provider_installation {
   dev_overrides {
-    "hashicorp/aws" = "[REPLACE WITH GOPATH]/bin/terraform-provider-aws"
+    "hashicorp/aws" = "[REPLACE WITH GOPATH]/bin"
   }
   direct {}
 }
