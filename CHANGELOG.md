@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_lb_cookie_stickiness_policy: Allow zero value for `cookie_expiration_period` ([#17204](https://github.com/hashicorp/terraform-provider-aws/issues/17204))
+* resource/aws_lb_listener_certificate: Prevent resource ID parsing error with IAM Server Certificate names containing underscores ([#17645](https://github.com/hashicorp/terraform-provider-aws/issues/17645))
 * resource/aws_lb_target_group: Use gRPC matcher when using gRPC protocol ([#17534](https://github.com/hashicorp/terraform-provider-aws/issues/17534))
 * resource/aws_ses_receipt_rule: Fix name validation regex to include `.` (period) ([#17627](https://github.com/hashicorp/terraform-provider-aws/issues/17627))
 
