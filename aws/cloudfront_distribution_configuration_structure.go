@@ -199,6 +199,8 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 
 	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
 		dcb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	} else {
+		dcb.ForwardedValues = &cloudfront.ForwardedValues{}
 	}
 
 	if m["cache_policy_id"].(string) == "" {
@@ -237,6 +239,8 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	var forwardedValues *cloudfront.ForwardedValues
 	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
 		forwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	} else {
+		forwardedValues = &cloudfront.ForwardedValues{}
 	}
 
 	cb := &cloudfront.CacheBehavior{
