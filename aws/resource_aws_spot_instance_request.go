@@ -89,9 +89,10 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Computed: true,
 			}
 			s["block_duration_minutes"] = &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntDivisibleBy(60),
 			}
 			s["instance_interruption_behaviour"] = &schema.Schema{
 				Type:         schema.TypeString,
