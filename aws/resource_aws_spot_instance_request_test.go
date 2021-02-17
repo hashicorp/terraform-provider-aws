@@ -791,7 +791,7 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-  	Name = %[1]q
+    Name = %[1]q
   }
 }
 
@@ -847,8 +847,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -869,7 +869,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-	values = ["Windows_Server-2016-English-Core-Base-*"]
+    values = ["Windows_Server-2016-English-Core-Base-*"]
   }
 }
 
