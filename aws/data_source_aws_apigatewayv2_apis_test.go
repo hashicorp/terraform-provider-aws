@@ -111,7 +111,7 @@ resource "aws_apigatewayv2_api" "test3" {
 func testAccAWSAPIGatewayV2ApisDataSourceConfigName(rName1, rName2 string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
-		fmt.Sprintf(`
+		`
 data "aws_apigatewayv2_apis" "test1" {
   # Force dependency on resources.
   name = element([aws_apigatewayv2_api.test1.name, aws_apigatewayv2_api.test2.name, aws_apigatewayv2_api.test3.name], 0)
@@ -121,7 +121,7 @@ data "aws_apigatewayv2_apis" "test2" {
   # Force dependency on resources.
   name = element([aws_apigatewayv2_api.test1.name, aws_apigatewayv2_api.test2.name, aws_apigatewayv2_api.test3.name], 1)
 }
-`))
+`)
 }
 
 func testAccAWSAPIGatewayV2ApisDataSourceConfigProtocolType(rName1, rName2 string) string {
@@ -145,7 +145,7 @@ data "aws_apigatewayv2_apis" "test2" {
 func testAccAWSAPIGatewayV2ApisDataSourceConfigTags(rName1, rName2 string) string {
 	return composeConfig(
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
-		fmt.Sprintf(`
+		`
 data "aws_apigatewayv2_apis" "test1" {
   # Force dependency on resources.
   tags = {
@@ -167,5 +167,5 @@ data "aws_apigatewayv2_apis" "test3" {
     Key2 = "Value2"
   }
 }
-`))
+`)
 }

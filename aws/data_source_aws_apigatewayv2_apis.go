@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
@@ -65,7 +64,7 @@ func dataSourceAwsAwsApiGatewayV2ApisRead(d *schema.ResourceData, meta interface
 		ids = append(ids, api.ApiId)
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(meta.(*AWSClient).region)
 
 	if err := d.Set("ids", flattenStringSet(ids)); err != nil {
 		return fmt.Errorf("error setting ids: %w", err)
