@@ -52,7 +52,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 							ValidateFunc: validation.StringLenBetween(0, 10240),
 						},
 						"architectures": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 50,
 							Elem: &schema.Schema{
@@ -93,7 +93,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,7 +170,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("repository_name", d.Id())
 	d.Set("registry_id", repository.RegistryId)
-	d.Set("repository_arn", repository.RepositoryArn)
+	d.Set("arn", repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
