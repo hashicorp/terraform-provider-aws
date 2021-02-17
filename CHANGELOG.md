@@ -1,5 +1,9 @@
 ## 3.29.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_dx_gateway_association: Changes to `proposal_id` do not force resource recreation ([#12482](https://github.com/hashicorp/terraform-provider-aws/issues/12482))
+
 BUG FIXES:
 
 * resource/aws_lb_cookie_stickiness_policy: Allow zero value for `cookie_expiration_period` ([#17204](https://github.com/hashicorp/terraform-provider-aws/issues/17204))
