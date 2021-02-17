@@ -117,12 +117,17 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Creating ECR Public repository: %#v", input)
+
 	out, err := conn.CreateRepository(&input)
 	if err != nil {
 		return fmt.Errorf("error creating ECR Public repository: %s", err)
 	}
 
-	repository := *out.Repository
+	if out == nil {
+		return fmt.Errorf("error creating ECR Public Repository: empty response")
+	}
+
+	repository := out.Repository
 
 	log.Printf("[DEBUG] ECR Public repository created: %q", *repository.RepositoryArn)
 
