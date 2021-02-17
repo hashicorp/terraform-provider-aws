@@ -502,6 +502,26 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_disappears(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmDocument(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestValidateSSMDocumentPermissions(t *testing.T) {
 	validValues := []map[string]interface{}{
 		{
@@ -980,7 +1000,36 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+}
 
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets",
+        "s3:GetObjectVersion",
+        "s3:GetBucketAcl",
+        "s3:GetObject",
+        "s3:GetObjectACL",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+      ]
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_s3_bucket" "test" {
@@ -990,7 +1039,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_object" "test" {
   bucket       = aws_s3_bucket.test.bucket
   key          = "test.zip"
-  source       = %[3]q
+  source       = "test-fixtures/ssm-doc-acc-test.zip"
   content_type = "binary/octet-stream"
 }
 
@@ -1000,7 +1049,7 @@ resource "aws_ssm_document" "test" {
 
   attachments_source {
     key    = "SourceUrl"
-    values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
+    values = ["s3://${aws_s3_bucket_object.test.bucket}"]
   }
 
   content = <<DOC
@@ -1012,7 +1061,7 @@ resource "aws_ssm_document" "test" {
   "files": {
     "test.zip": {
       "checksums": {
-        "sha256": "thisistwentycharactersatleast"
+        "sha256": "${filesha256("test-fixtures/ssm-doc-acc-test.zip")}"
       }
     }
   },
@@ -1020,7 +1069,7 @@ resource "aws_ssm_document" "test" {
     "amazon": {
       "_any": {
         "x86_64": {
-          "file": "test.zip"
+          "file": "${aws_s3_bucket_object.test.key}"
         }
       }
     }
@@ -1028,8 +1077,9 @@ resource "aws_ssm_document" "test" {
 }
 DOC
 
+ depends_on = [aws_iam_role_policy.test]
 }
-`, rName, rInt, source)
+`, rName, rInt)
 }
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
