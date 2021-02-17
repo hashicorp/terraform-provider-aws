@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -54,10 +53,6 @@ func testSweepElasticacheClusters(region string) error {
 
 			log.Printf("[INFO] Deleting ElastiCache Cluster: %s", id)
 			err := deleteElasticacheCacheCluster(conn, id, "")
-			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "only member of a replication group") {
-				log.Printf("[WARN] ElastiCache Cache Cluster (%s) is member of a Replication Group. Ignoring. %s", id, err)
-				continue
-			}
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
