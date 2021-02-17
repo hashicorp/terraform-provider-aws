@@ -117,7 +117,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	output, err := conn.GetApi(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %w", d.Id(), err)
 	}
 
 	d.Set("api_endpoint", output.ApiEndpoint)
@@ -130,7 +130,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	}.String()
 	d.Set("arn", apiArn)
 	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(output.CorsConfiguration)); err != nil {
-		return fmt.Errorf("error setting cors_configuration: %s", err)
+		return fmt.Errorf("error setting cors_configuration: %w", err)
 	}
 	d.Set("description", output.Description)
 	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
@@ -146,7 +146,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
 	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 	d.Set("version", output.Version)
 
