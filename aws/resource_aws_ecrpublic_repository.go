@@ -73,7 +73,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 							Computed: true,
 						},
 						"operating_systems": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 50,
 							Elem: &schema.Schema{
@@ -161,7 +161,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 		out, err = conn.DescribeRepositories(input)
 	}
 
-	if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if !d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -169,6 +169,10 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 
 	if err != nil {
 		return fmt.Errorf("error reading ECR Public repository: %s", err)
+	}
+
+	if out == nil || len(out.Repositories) == 0 || out.Repositories[0] == nil {
+		return fmt.Errorf("error reading ECR Public Repository (%s): empty response", d.Id())
 	}
 
 	repository := out.Repositories[0]
@@ -315,8 +319,8 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 		repositoryCatalogDataInput.AboutText = aws.String(v)
 	}
 
-	if v, ok := tfMap["architectures"].([]interface{}); ok && len(v) > 0 {
-		repositoryCatalogDataInput.Architectures = expandStringList(v)
+	if v, ok := tfMap["architectures"].(*schema.Set); ok {
+		repositoryCatalogDataInput.Architectures = expandStringSet(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -328,8 +332,8 @@ func expandEcrPublicRepositoryCatalogData(tfMap map[string]interface{}) *ecrpubl
 		repositoryCatalogDataInput.LogoImageBlob = data
 	}
 
-	if v, ok := tfMap["operating_systems"].([]interface{}); ok && len(v) > 0 {
-		repositoryCatalogDataInput.OperatingSystems = expandStringList(v)
+	if v, ok := tfMap["operating_systems"].(*schema.Set); ok {
+		repositoryCatalogDataInput.OperatingSystems = expandStringSet(v)
 	}
 
 	if v, ok := tfMap["usage_text"].(string); ok && v != "" {
