@@ -36,7 +36,10 @@ func testSweepElasticacheClusters(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
+	input := &elasticache.DescribeCacheClustersInput{
+		ShowCacheClustersNotInReplicationGroups: aws.Bool(true),
+	}
+	err = conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
 			return false
