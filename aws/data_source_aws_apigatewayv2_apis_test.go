@@ -102,7 +102,7 @@ resource "aws_apigatewayv2_api" "test3" {
   route_selection_expression = "$request.body.action"
 
   tags = {
-	Name = %[2]q
+    Name = %[2]q
   }
 }
 `, rName1, rName2)
@@ -147,6 +147,7 @@ func testAccAWSAPIGatewayV2ApisDataSourceConfigTags(rName1, rName2 string) strin
 		testAccAWSAPIGatewayV2ApisDataSourceConfigBase(rName1, rName2),
 		fmt.Sprintf(`
 data "aws_apigatewayv2_apis" "test1" {
+  # Force dependency on resources.
   tags = {
     Name = element([aws_apigatewayv2_api.test1.name, aws_apigatewayv2_api.test2.name, aws_apigatewayv2_api.test3.name], 0)
   }
