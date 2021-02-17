@@ -870,7 +870,6 @@ data "aws_ami" "test" {
   filter {
     name   = "name"
 	values = ["Windows_Server-2016-English-Core-Base-*"]
-
   }
 }
 
