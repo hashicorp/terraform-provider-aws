@@ -3,11 +3,11 @@ package aws
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func dataSourceAwsApiGatewayV2Api() *schema.Resource {
@@ -107,21 +107,22 @@ func dataSourceAwsApiGatewayV2Api() *schema.Resource {
 func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	apiID := d.Get("api_id").(string)
 
-	d.SetId(d.Get("api_id").(string))
+	api, err := finder.ApiByID(conn, apiID)
 
-	input := &apigatewayv2.GetApiInput{
-		ApiId: aws.String(d.Id()),
+	if tfresource.NotFound(err) {
+		return fmt.Errorf("no API Gateway v2 API matched; change the search criteria and try again")
 	}
-
-	output, err := conn.GetApi(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %w", apiID, err)
 	}
 
-	d.Set("api_endpoint", output.ApiEndpoint)
-	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
+	d.SetId(apiID)
+
+	d.Set("api_endpoint", api.ApiEndpoint)
+	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	apiArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "apigateway",
@@ -129,11 +130,11 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(output.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(api.CorsConfiguration)); err != nil {
 		return fmt.Errorf("error setting cors_configuration: %w", err)
 	}
-	d.Set("description", output.Description)
-	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
+	d.Set("description", api.Description)
+	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
 	executionArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "execute-api",
@@ -142,13 +143,13 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 		Resource:  d.Id(),
 	}.String()
 	d.Set("execution_arn", executionArn)
-	d.Set("name", output.Name)
-	d.Set("protocol_type", output.ProtocolType)
-	d.Set("route_selection_expression", output.RouteSelectionExpression)
-	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	d.Set("name", api.Name)
+	d.Set("protocol_type", api.ProtocolType)
+	d.Set("route_selection_expression", api.RouteSelectionExpression)
+	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(api.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
-	d.Set("version", output.Version)
+	d.Set("version", api.Version)
 
 	return nil
 }
