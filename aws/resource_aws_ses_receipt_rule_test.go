@@ -113,6 +113,79 @@ func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
+						"encpding": "UTF-8",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
+	var rule ses.ReceiptRule
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSNSActionEncodingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
+						"encoding": "Base64",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_lambdaAction(t *testing.T) {
+	var rule ses.ReceiptRule
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_receipt_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+			testAccPreCheckSESReceiptRule(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSNSActionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "lambda_action.*.function_arn", "aws_lambda_function.test", "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lambda_action.*", map[string]string{
+						"invocation_type": "Event",
+					}),
 				),
 			},
 			{
@@ -430,6 +503,82 @@ resource "aws_ses_receipt_rule" "test" {
   sns_action {
   	topic_arn = aws_sns_topic.test.arn
   	position  = 1
+  }
+}
+`, rName)
+}
+
+func testAccAWSSESReceiptRuleSNSActionEncodingConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+  rule_set_name = %[1]q
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_ses_receipt_rule" "test" {
+  name          = %[1]q
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  recipients    = ["test@example.com"]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+  
+  sns_action {
+  	topic_arn = aws_sns_topic.test.arn
+    encoding  = "Base64"
+  	position  = 1
+  }
+}
+`, rName)
+}
+
+func testAccAWSSESReceiptRuleLambdaActionConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+  rule_set_name = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : "sts:AssumeRole",
+        "Principal" : {
+          "Service" : "lambda.amazonaws.com"
+        },
+        "Effect" : "Allow",
+        "Sid" : ""
+      }
+    ]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename         = "test-fixtures/lambdatest.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
+  function_name    = %[1]q
+  role             = aws_iam_role.test.arn
+  handler          = "exports.example"
+  runtime          = "nodejs12.x"
+}
+
+resource "aws_ses_receipt_rule" "test" {
+  name          = %[1]q
+  rule_set_name = aws_ses_receipt_rule_set.test.rule_set_name
+  recipients    = ["test@example.com"]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+  
+  lambda_action {
+	function_arn = aws_lambda_function.test.arn
+  	position     = 1
   }
 }
 `, rName)

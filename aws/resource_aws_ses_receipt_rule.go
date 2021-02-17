@@ -188,7 +188,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 						"invocation_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ses.InvocationTypeEvent,
 							ValidateFunc: validation.StringInSlice(ses.InvocationType_Values(), false),
 						},
 
