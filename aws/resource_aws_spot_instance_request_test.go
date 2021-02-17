@@ -27,7 +27,7 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
 					testAccCheckAWSSpotInstanceRequestAttributes(&sir),
-					testCheckKeyPair(fmt.Sprintf("tmp-key-%d", rInt), &sir),
+					testCheckKeyPair(rName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "terminate"),
@@ -46,8 +46,8 @@ func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
 
 func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
 	var sir ec2.SpotInstanceRequest
-	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_spot_instance_request.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,6 +61,12 @@ func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
 				Config: testAccAWSSpotInstanceRequestTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
@@ -343,51 +349,6 @@ func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
-	var sir ec2.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotInstanceRequestConfigTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
-			},
-			{
-				Config: testAccAWSSpotInstanceRequestConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSSpotInstanceRequestConfigTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if sir.LaunchSpecification.KeyName == nil {
@@ -660,7 +621,7 @@ func TestAccAWSSpotInstanceRequest_InterruptHibernate(t *testing.T) {
 }
 
 func testAccAWSSpotInstanceRequestConfigBase(rName string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
@@ -669,36 +630,74 @@ resource "aws_key_pair" "test" {
     Name = %[1]q
   }
 }
-
-data "aws_ec2_instance_type_offering" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["t3.micro", "t2.micro"]
-  }
-  location_type            = "availability-zone"
-  preferred_instance_types = ["t3.micro", "t2.micro"]
-}
 `, rName)
 }
 
 func testAccAWSSpotInstanceRequestConfig(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
   spot_price           = "0.05"
   wait_for_fulfillment = true
 }
 `)
 }
 
-func testAccAWSSpotInstanceRequestConfigValidUntil(rName string, validUntil string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSSpotInstanceRequestTagsConfig1(rName, tagKey1, tagValue1 string) string {
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccAWSSpotInstanceRequestTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAWSSpotInstanceRequestConfigValidUntil(rName string, validUntil string) string {
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
   spot_price           = "0.05"
   valid_until          = %[2]q
   wait_for_fulfillment = true
@@ -707,30 +706,38 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
-`, rName, validUntil)
+`, rName, validUntil))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
   wait_for_fulfillment = true
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
   spot_price           = "0.05"
   wait_for_fulfillment = true
   launch_group         = %[1]q
@@ -739,15 +746,19 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type          = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name               = "${aws_key_pair.test.key_name}"
+  ami                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name               = aws_key_pair.test.key_name
   spot_price             = "0.05"
   wait_for_fulfillment   = true
   block_duration_minutes = 60
@@ -756,20 +767,16 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestConfigVPC(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
-
-  tags = {
-    Name = "terraform-testacc-spot-instance-request-vpc"
-  }
-}
-
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -779,9 +786,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
   	Name = %[1]q
@@ -789,39 +796,33 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name             = aws_key_pair.test.key_name
   spot_price           = "0.05"
   wait_for_fulfillment = true
-  subnet_id            = "${aws_subnet.test.id}"
+  subnet_id            = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type               = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price                  = "0.05"
   wait_for_fulfillment        = true
-  subnet_id                   = "${aws_subnet.test.id}"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
+  subnet_id                   = aws_subnet.test.id
+  vpc_security_group_ids      = [aws_security_group.test.id]
   associate_public_ip_address = true
 }
 
@@ -835,29 +836,32 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone       = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id                  = "${aws_vpc.test.id}"
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "tf-acc-spot-instance-request-subnet-and-sg-public-ip"
-  }
-}
-
-resource "aws_security_group" "tf_test_sg_ssh" {
-  name        = "tf_test_sg_ssh-%[1]d"
-  description = "tf_test_sg_ssh"
-  vpc_id      = aws_vpc.default.id
-
     Name = %[1]q
   }
 }
-`, rName)
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  vpc_id      = aws_vpc.default.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestConfig_getPasswordData(rName string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSSpotInstanceRequestConfigBase(rName),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 # Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
 data "aws_ami" "test" {
   most_recent = true
@@ -869,10 +873,10 @@ data "aws_ami" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.test.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  ami                  = data.aws_ami.test.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
-  key_name             = aws_key_pair.foo.key_name
+  key_name             = aws_key_pair.test.key_name
   wait_for_fulfillment = true
   get_password_data    = true
 
@@ -880,51 +884,20 @@ resource "aws_spot_instance_request" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruptionBehavior string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("c5.large", "c4.large"),
+		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.test.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  spot_price           = "0.07"
-  wait_for_fulfillment = true
-
+  ami                             = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type                   = data.aws_ec2_instance_type_offering.available.instance_type
+  spot_price                      = "0.07"
+  wait_for_fulfillment            = true
   instance_interruption_behaviour = %[1]q
 }
-`, interruptionBehavior)
-}
-
-func testAccAWSSpotInstanceRequestConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
-  spot_price           = "0.05"
-  wait_for_fulfillment = true
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccAWSSpotInstanceRequestConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
-  spot_price           = "0.05"
-  wait_for_fulfillment = true
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, interruptionBehavior))
 }

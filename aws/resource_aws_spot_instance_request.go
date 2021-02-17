@@ -61,13 +61,10 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				},
 			}
 			s["spot_type"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.SpotInstanceTypePersistent,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.SpotInstanceTypePersistent,
-					ec2.SpotInstanceTypeOneTime,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SpotInstanceTypePersistent,
+				ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -97,15 +94,11 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ForceNew: true,
 			}
 			s["instance_interruption_behaviour"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.InstanceInterruptionBehaviorTerminate,
-					ec2.InstanceInterruptionBehaviorStop,
-					ec2.InstanceInterruptionBehaviorHibernate,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
@@ -365,7 +358,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 		for _, ni := range instance.NetworkInterfaces {
 			if *ni.Attachment.DeviceIndex == 0 {
 				d.Set("subnet_id", ni.SubnetId)
-				d.Set("network_interface_id", ni.NetworkInterfaceId)
+				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
@@ -377,7 +370,6 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("subnet_id", instance.SubnetId)
 		d.Set("primary_network_interface_id", "")
-		d.Set("network_interface_id", "")
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
