@@ -402,6 +402,60 @@ func TestAccAWSLBTargetGroup_Protocol_Tls(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_ProtocolVersion_GRPC_HealthCheck(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/Test.Check/healthcheck"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "0-99"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroup_ProtocolVersion_HTTP_GRPC_Update(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_networkLB_TargetGroupWithProxy(t *testing.T) {
 	var confBefore, confAfter elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
@@ -952,6 +1006,7 @@ func TestAccAWSLBTargetGroup_defaults_application(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -1822,6 +1877,56 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold   = 3
     unhealthy_threshold = 3
     matcher             = "200-299"
+  }
+
+  tags = {
+    Name = "TestAccAWSLBTargetGroup_basic"
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-basic-2"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-basic"
+  }
+}
+`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_GRPC_ProtocolVersion(targetGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name             = "%s"
+  port             = 80
+  protocol         = "HTTP"
+  protocol_version = "GRPC"
+  vpc_id           = aws_vpc.test2.id
+
+  deregistration_delay = 200
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path                = "/Test.Check/healthcheck"
+    interval            = 60
+    port                = 8080
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "0-99"
   }
 
   tags = {
