@@ -651,7 +651,7 @@ resource "aws_ses_receipt_rule" "test" {
 
   lambda_action {
     function_arn = aws_lambda_function.test.arn
-  	position     = 1
+    position     = 1
   }
 
   depends_on = [aws_lambda_permission.test]
@@ -676,11 +676,11 @@ resource "aws_ses_receipt_rule" "test" {
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
-  
+
   stop_action {
-  	topic_arn = aws_sns_topic.test.arn
+    topic_arn = aws_sns_topic.test.arn
     scope     = "RuleSet"
-  	position  = 1
+    position  = 1
   }
 }
 `, rName)
