@@ -105,7 +105,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.r", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.example", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
