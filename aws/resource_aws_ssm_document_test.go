@@ -1077,7 +1077,7 @@ resource "aws_ssm_document" "test" {
 }
 DOC
 
- depends_on = [aws_iam_role_policy.test]
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, rInt)
 }
