@@ -81,8 +81,8 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					testAccCheckAWSEcrPublicRepositoryRegistryID(resourceName),
-					testAccCheckAWSEcrPublicRepositoryRepositoryARN(resourceName, rName),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -105,17 +105,25 @@ func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName),
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName, "about_text_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "About Text"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName, "about_text_2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_2"),
+				),
 			},
 		},
 	})
@@ -132,7 +140,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName),
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName, "Linux"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", "1"),
@@ -143,6 +151,14 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName, "Windows"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.0", "Windows"),
+				),
 			},
 		},
 	})
@@ -159,17 +175,25 @@ func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName),
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "Description"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName, "description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 2"),
+				),
 			},
 		},
 	})
@@ -186,7 +210,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName),
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName, "ARM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", "1"),
@@ -197,6 +221,14 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName, "x86"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.0", "x86"),
+				),
 			},
 		},
 	})
@@ -213,17 +245,25 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName),
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName, "usage text 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "Usage Text"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName, "usage text 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 2"),
+				),
 			},
 		},
 	})
@@ -251,6 +291,35 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
+	var v ecrpublic.Repository
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecrpublic_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrPublicRepositoryConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "ecr-public", "repository/"+rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -339,20 +408,6 @@ func testAccCheckAWSEcrPublicRepositoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrPublicRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		attributeValue := testAccGetAccountID()
-		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
-	}
-}
-
-func testAccCheckAWSEcrPublicRepositoryRepositoryARN(resourceName string, rName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("arn:%s:ecr-public::%s:repository/%s", testAccGetPartition(), testAccGetAccountID(), rName)
-		return resource.TestCheckResourceAttr(resourceName, "arn", attributeValue)(s)
-	}
-}
-
 func testAccAWSEcrPublicRepositoryConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
@@ -361,59 +416,68 @@ resource "aws_ecrpublic_repository" "test" {
 `, rName)
 }
 
-func testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName string) string {
+func testAccAWSEcrPublicRepositoryConfigForceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
-  catalog_data {
-    about_text = "About Text"
-  }
+  force_destroy   = true
 }
 `, rName)
 }
 
-func testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName string) string {
+func testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName string, aboutText string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-    architectures = ["Linux"]
+    about_text = %q
   }
 }
-`, rName)
+`, rName, aboutText)
 }
 
-func testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName string) string {
+func testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName string, architecture string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-    description = "Description"
+    architectures = [%q]
   }
 }
-`, rName)
+`, rName, architecture)
 }
 
-func testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName string) string {
+func testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-    operating_systems = ["ARM"]
+    description = %q
   }
 }
-`, rName)
+`, rName, description)
 }
 
-func testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName string) string {
+func testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName string, operatingSystem string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
   repository_name = %q
   catalog_data {
-    usage_text = "Usage Text"
+    operating_systems = [%q]
   }
 }
-`, rName)
+`, rName, operatingSystem)
+}
+
+func testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName string, usageText string) string {
+	return fmt.Sprintf(`
+resource "aws_ecrpublic_repository" "test" {
+  repository_name = %q
+  catalog_data {
+    usage_text = %q
+  }
+}
+`, rName, usageText)
 }
 
 func testAccAWSEcrPublicRepositoryCatalogDataConfigLogoImageBlob(rName string) string {
