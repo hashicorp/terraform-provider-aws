@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsConfigOrganizationConformancePackPut,
+		Create: resourceAwsConfigOrganizationConformancePackCreate,
 		Read:   resourceAwsConfigOrganizationConformancePackRead,
-		Update: resourceAwsConfigOrganizationConformancePackPut,
+		Update: resourceAwsConfigOrganizationConformancePackUpdate,
 		Delete: resourceAwsConfigOrganizationConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -26,40 +26,16 @@ func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 51200),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z][-a-zA-Z0-9]*$`), "must be a valid conformance pack name"),
-				),
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"template_s3_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"template_body": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 51200),
-					validateStringIsJsonOrYaml),
-				StateFunc: func(v interface{}) string {
-					template, _ := normalizeJsonOrYamlString(v)
-					return template
-				},
 			},
 			"delivery_s3_bucket": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile("awsconfigconforms.+"), "must start with 'awsconfigconforms'"),
+					validation.StringMatch(regexp.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
 				),
 			},
 			"delivery_s3_key_prefix": {
@@ -67,24 +43,66 @@ func resourceAwsConfigOrganizationConformancePack() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"input_parameters": {
-				Type:     schema.TypeMap,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
 			"excluded_accounts": {
-				Type: schema.TypeList,
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1000,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9]{12}$`), "must be a valid AWS account ID"),
+					ValidateFunc: validateAwsAccountId,
 				},
+			},
+			"input_parameter": {
+				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 60,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parameter_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"parameter_value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+				),
+			},
+			"template_body": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppressEquivalentJsonOrYamlDiffs,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 51200),
+					validateStringIsJsonOrYaml,
+				),
+				ConflictsWith: []string{"template_s3_uri"},
+			},
+			"template_s3_uri": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 1024),
+					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+				),
+				ConflictsWith: []string{"template_body"},
 			},
 		},
 	}
 }
 
-func resourceAwsConfigOrganizationConformancePackPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
 	name := d.Get("name").(string)
@@ -95,167 +113,179 @@ func resourceAwsConfigOrganizationConformancePackPut(d *schema.ResourceData, met
 	if v, ok := d.GetOk("delivery_s3_bucket"); ok {
 		input.DeliveryS3Bucket = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("delivery_s3_key_prefix"); ok {
 		input.DeliveryS3KeyPrefix = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("excluded_accounts"); ok {
-		input.ExcludedAccounts = expandConfigConformancePackExcludedAccounts(v.([]interface{}))
+		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
 	}
-	if v, ok := d.GetOk("input_parameters"); ok {
-		input.ConformancePackInputParameters = expandConfigConformancePackParameters(v.(map[string]interface{}))
+
+	if v, ok := d.GetOk("input_parameter"); ok {
+		input.ConformancePackInputParameters = expandConfigConformancePackInputParameters(v.(*schema.Set).List())
 	}
+
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
 	}
+
+	if v, ok := d.GetOk("template_s3_uri"); ok {
+		input.TemplateS3Uri = aws.String(v.(string))
+	}
+
+	err := resource.Retry(ConfigOrganizationConformancePackCreateTimeout, func() *resource.RetryError {
+		_, err := conn.PutOrganizationConformancePack(&input)
+
+		if err != nil {
+			// OrganizationAccessDeniedException seems to be a transient error
+			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeOrganizationAccessDeniedException) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutOrganizationConformancePack(&input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error creating Config Organization Conformance Pack (%s): %w", name, err)
+	}
+
+	d.SetId(name)
+
+	if err := configWaitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be created: %w", d.Id(), err)
+	}
+
+	return resourceAwsConfigOrganizationConformancePackRead(d, meta)
+}
+
+func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).configconn
+
+	pack, err := configDescribeOrganizationConformancePack(conn, d.Id())
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
+		log.Printf("[WARN] Config Organization Conformance Pack (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing Config Organization Conformance Pack (%s): %w", d.Id(), err)
+	}
+
+	if pack == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error describing Config Organization Conformance Pack (%s): not found", d.Id())
+		}
+
+		log.Printf("[WARN] Config Organization Conformance Pack (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("arn", pack.OrganizationConformancePackArn)
+	d.Set("name", pack.OrganizationConformancePackName)
+	d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket)
+	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
+
+	if err = d.Set("excluded_accounts", flattenStringSet(pack.ExcludedAccounts)); err != nil {
+		return fmt.Errorf("error setting excluded_accounts: %w", err)
+	}
+
+	if err = d.Set("input_parameter", flattenConfigConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
+		return fmt.Errorf("error setting input_parameter: %w", err)
+	}
+
+	return nil
+}
+
+func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).configconn
+
+	input := configservice.PutOrganizationConformancePackInput{
+		OrganizationConformancePackName: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("delivery_s3_bucket"); ok {
+		input.DeliveryS3Bucket = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("delivery_s3_key_prefix"); ok {
+		input.DeliveryS3KeyPrefix = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("excluded_accounts"); ok {
+		input.ExcludedAccounts = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("input_parameter"); ok {
+		input.ConformancePackInputParameters = expandConfigConformancePackInputParameters(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("template_body"); ok {
+		input.TemplateBody = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("template_s3_uri"); ok {
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
 	_, err := conn.PutOrganizationConformancePack(&input)
 	if err != nil {
-		return fmt.Errorf("failed to put AWSConfig organization conformance pack %q: %s", name, err)
+		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(name)
-	conf := resource.StateChangeConf{
-		Pending: []string{
-			configservice.OrganizationResourceDetailedStatusCreateInProgress,
-			configservice.OrganizationResourceDetailedStatusUpdateInProgress,
-		},
-		Target: []string{
-			configservice.OrganizationResourceDetailedStatusCreateSuccessful,
-			configservice.OrganizationResourceDetailedStatusUpdateSuccessful,
-		},
-		Timeout: 30 * time.Minute,
-		Refresh: refreshOrganizationConformancePackStatus(d, conn),
+	if err := configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be updated: %w", d.Id(), err)
 	}
-	if _, err := conf.WaitForState(); err != nil {
-		return err
-	}
+
 	return resourceAwsConfigOrganizationConformancePackRead(d, meta)
-}
-
-func expandConfigConformancePackExcludedAccounts(i []interface{}) (ret []*string) {
-	for _, v := range i {
-		ret = append(ret, aws.String(v.(string)))
-	}
-	return
-}
-
-func refreshOrganizationConformancePackStatus(d *schema.ResourceData, conn *configservice.ConfigService) func() (interface{}, string, error) {
-	return func() (interface{}, string, error) {
-		out, err := conn.DescribeOrganizationConformancePackStatuses(&configservice.DescribeOrganizationConformancePackStatusesInput{
-			OrganizationConformancePackNames: []*string{aws.String(d.Id())},
-		})
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && isAWSErr(awsErr, configservice.ErrCodeNoSuchOrganizationConformancePackException, "") {
-				return 42, "", nil
-			}
-			return 42, "", fmt.Errorf("failed to describe organization conformance pack %q: %s", d.Id(), err)
-		}
-		if len(out.OrganizationConformancePackStatuses) < 1 {
-			return 42, "", nil
-		}
-		status := out.OrganizationConformancePackStatuses[0]
-		return out, *status.Status, nil
-	}
-}
-
-func resourceAwsConfigOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
-
-	out, err := conn.DescribeOrganizationConformancePacks(&configservice.DescribeOrganizationConformancePacksInput{
-		OrganizationConformancePackNames: []*string{aws.String(d.Id())},
-	})
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConformancePackException, "") {
-			log.Printf("[WARN] Organization Conformance Pack %q is gone (%s)", d.Id(), awsErr.Code())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	numberOfPacks := len(out.OrganizationConformancePacks)
-	if numberOfPacks < 1 {
-		log.Printf("[WARN] Organization Conformance Pack %q is gone (no packs found)", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if numberOfPacks > 1 {
-		return fmt.Errorf("expected exactly 1 organization conformance pack, received %d: %#v",
-			numberOfPacks, out.OrganizationConformancePacks)
-	}
-
-	log.Printf("[DEBUG] AWS Config organization conformance packs received: %s", out)
-
-	pack := out.OrganizationConformancePacks[0]
-	if err = d.Set("arn", pack.OrganizationConformancePackArn); err != nil {
-		return err
-	}
-	if err = d.Set("name", pack.OrganizationConformancePackName); err != nil {
-		return err
-	}
-	if err = d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket); err != nil {
-		return err
-	}
-	if err = d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix); err != nil {
-		return err
-	}
-	if err = d.Set("excluded_accounts", pack.ExcludedAccounts); err != nil {
-		return err
-	}
-
-	if pack.ConformancePackInputParameters != nil {
-		if err = d.Set("input_parameters", flattenConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func resourceAwsConfigOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
-	name := d.Get("name").(string)
-
-	log.Printf("[DEBUG] Deleting AWS Config organization conformance pack %q", name)
 	input := &configservice.DeleteOrganizationConformancePackInput{
-		OrganizationConformancePackName: aws.String(name),
+		OrganizationConformancePackName: aws.String(d.Id()),
 	}
-	err := resource.Retry(30*time.Minute, func() *resource.RetryError {
+
+	err := resource.Retry(ConfigOrganizationConformancePackDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteOrganizationConformancePack(input)
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {
+			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
 				return resource.RetryableError(err)
 			}
+
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+
+	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteOrganizationConformancePack(input)
 	}
-	if err != nil {
-		return fmt.Errorf("deleting organization conformance pack failed: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
+		return nil
 	}
 
-	conf := resource.StateChangeConf{
-		Pending: []string{
-			configservice.OrganizationResourceDetailedStatusDeleteInProgress,
-		},
-		Target:  []string{""},
-		Timeout: 30 * time.Minute,
-		Refresh: refreshOrganizationConformancePackStatus(d, conn),
-	}
-	_, err = conf.WaitForState()
 	if err != nil {
-		return err
+		return fmt.Errorf("erorr deleting Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] AWS organization conformance pack %q deleted", name)
+	if err := configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be deleted: %w", d.Id(), err)
+	}
 
 	return nil
 }

@@ -15,8 +15,15 @@ const (
 	ConfigConformancePackCreateTimeout = 5 * time.Minute
 	ConfigConformancePackDeleteTimeout = 5 * time.Minute
 
+	ConfigOrganizationConformancePackCreateTimeout = 10 * time.Minute
+	ConfigOrganizationConformancePackUpdateTimeout = 10 * time.Minute
+	ConfigOrganizationConformancePackDeleteTimeout = 10 * time.Minute
+
 	ConfigConformancePackStatusNotFound = "NotFound"
 	ConfigConformancePackStatusUnknown  = "Unknown"
+
+	ConfigOrganizationConformancePackStatusNotFound = "NotFound"
+	ConfigOrganizationConformancePackStatusUnknown  = "Unknown"
 )
 
 func configDescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
@@ -135,6 +142,62 @@ func configDescribeOrganizationConfigRuleStatus(conn *configservice.ConfigServic
 	return nil, nil
 }
 
+func configDescribeOrganizationConformancePack(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePack, error) {
+	input := &configservice.DescribeOrganizationConformancePacksInput{
+		OrganizationConformancePackNames: []*string{aws.String(name)},
+	}
+
+	for {
+		output, err := conn.DescribeOrganizationConformancePacks(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, pack := range output.OrganizationConformancePacks {
+			if aws.StringValue(pack.OrganizationConformancePackName) == name {
+				return pack, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
+
+func configDescribeOrganizationConformancePackStatus(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePackStatus, error) {
+	input := &configservice.DescribeOrganizationConformancePackStatusesInput{
+		OrganizationConformancePackNames: []*string{aws.String(name)},
+	}
+
+	for {
+		output, err := conn.DescribeOrganizationConformancePackStatuses(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, status := range output.OrganizationConformancePackStatuses {
+			if aws.StringValue(status.OrganizationConformancePackName) == name {
+				return status, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
+
 func configGetOrganizationConfigRuleDetailedStatus(conn *configservice.ConfigService, ruleName, ruleStatus string) ([]*configservice.MemberAccountStatus, error) {
 	input := &configservice.GetOrganizationConfigRuleDetailedStatusInput{
 		Filters: &configservice.StatusDetailFilters{
@@ -152,6 +215,35 @@ func configGetOrganizationConfigRuleDetailedStatus(conn *configservice.ConfigSer
 		}
 
 		statuses = append(statuses, output.OrganizationConfigRuleDetailedStatus...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return statuses, nil
+}
+
+func configGetOrganizationConformancePackDetailedStatus(conn *configservice.ConfigService, name, status string) ([]*configservice.OrganizationConformancePackDetailedStatus, error) {
+	input := &configservice.GetOrganizationConformancePackDetailedStatusInput{
+		Filters: &configservice.OrganizationResourceDetailedStatusFilters{
+			Status: aws.String(status),
+		},
+		OrganizationConformancePackName: aws.String(name),
+	}
+
+	var statuses []*configservice.OrganizationConformancePackDetailedStatus
+
+	for {
+		output, err := conn.GetOrganizationConformancePackDetailedStatus(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		statuses = append(statuses, output.OrganizationConformancePackDetailedStatuses...)
 
 		if aws.StringValue(output.NextToken) == "" {
 			break
@@ -221,6 +313,44 @@ func configRefreshOrganizationConfigRuleStatus(conn *configservice.ConfigService
 	}
 }
 
+func configRefreshOrganizationConformancePackStatus(conn *configservice.ConfigService, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		status, err := configDescribeOrganizationConformancePackStatus(conn, name)
+
+		if err != nil {
+			return nil, ConfigOrganizationConformancePackStatusUnknown, err
+		}
+
+		if status == nil {
+			return nil, ConfigOrganizationConformancePackStatusNotFound, nil
+		}
+
+		if status.ErrorCode != nil {
+			return status, aws.StringValue(status.Status), fmt.Errorf("%s: %s", aws.StringValue(status.ErrorCode), aws.StringValue(status.ErrorMessage))
+		}
+
+		switch aws.StringValue(status.Status) {
+		case configservice.OrganizationResourceStatusCreateFailed, configservice.OrganizationResourceStatusDeleteFailed, configservice.OrganizationResourceStatusUpdateFailed:
+			// Display detailed errors for failed member accounts
+			memberAccountStatuses, err := configGetOrganizationConformancePackDetailedStatus(conn, name, aws.StringValue(status.Status))
+
+			if err != nil {
+				return status, aws.StringValue(status.Status), fmt.Errorf("unable to get Config Organization Conformance Pack detailed status for showing member account errors: %w", err)
+			}
+
+			var errBuilder strings.Builder
+
+			for _, mas := range memberAccountStatuses {
+				errBuilder.WriteString(fmt.Sprintf("Account ID (%s): %s: %s\n", aws.StringValue(mas.AccountId), aws.StringValue(mas.ErrorCode), aws.StringValue(mas.ErrorMessage)))
+			}
+
+			return status, aws.StringValue(status.Status), fmt.Errorf("Failed in %d account(s):\n\n%s", len(memberAccountStatuses), errBuilder.String())
+		}
+
+		return status, aws.StringValue(status.Status), nil
+	}
+}
+
 func configWaitForConformancePackStateCreateComplete(conn *configservice.ConfigService, name string) error {
 	stateChangeConf := resource.StateChangeConf{
 		Pending: []string{configservice.ConformancePackStateCreateInProgress},
@@ -230,10 +360,6 @@ func configWaitForConformancePackStateCreateComplete(conn *configservice.ConfigS
 	}
 
 	_, err := stateChangeConf.WaitForState()
-
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
-		return nil
-	}
 
 	return err
 
@@ -250,6 +376,52 @@ func configWaitForConformancePackStateDeleteComplete(conn *configservice.ConfigS
 	_, err := stateChangeConf.WaitForState()
 
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
+		return nil
+	}
+
+	return err
+}
+
+func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *configservice.ConfigService, name string) error {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{configservice.OrganizationResourceStatusCreateInProgress},
+		Target:  []string{configservice.OrganizationResourceStatusCreateSuccessful},
+		Timeout: ConfigOrganizationConformancePackCreateTimeout,
+		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
+		// Include a Delay to avoid transient error i.e. OrganizationAccessDeniedException
+		Delay: 1 * time.Minute,
+	}
+
+	_, err := stateChangeConf.WaitForState()
+
+	return err
+
+}
+
+func configWaitForOrganizationConformancePackStatusUpdateSuccessful(conn *configservice.ConfigService, name string) error {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{configservice.OrganizationResourceStatusUpdateInProgress},
+		Target:  []string{configservice.OrganizationResourceStatusUpdateSuccessful},
+		Timeout: ConfigOrganizationConformancePackUpdateTimeout,
+		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
+	}
+
+	_, err := stateChangeConf.WaitForState()
+
+	return err
+}
+
+func configWaitForOrganizationConformancePackStatusDeleteSuccessful(conn *configservice.ConfigService, name string) error {
+	stateChangeConf := resource.StateChangeConf{
+		Pending: []string{configservice.OrganizationResourceStatusDeleteInProgress},
+		Target:  []string{configservice.OrganizationResourceStatusDeleteSuccessful},
+		Timeout: ConfigOrganizationConformancePackDeleteTimeout,
+		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
+	}
+
+	_, err := stateChangeConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 		return nil
 	}
 
@@ -300,102 +472,4 @@ func configWaitForOrganizationRuleStatusUpdateSuccessful(conn *configservice.Con
 	_, err := stateChangeConf.WaitForState()
 
 	return err
-}
-
-func configDescribeOrganizationConformancePack(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePack, error) {
-	input := &configservice.DescribeOrganizationConformancePacksInput{
-		OrganizationConformancePackNames: []*string{aws.String(name)},
-	}
-
-	for {
-		output, err := conn.DescribeOrganizationConformancePacks(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, pack := range output.OrganizationConformancePacks {
-			if aws.StringValue(pack.OrganizationConformancePackName) == name {
-				return pack, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
-func configDescribeOrganizationConformancePackStatus(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePackStatus, error) {
-	input := &configservice.DescribeOrganizationConformancePackStatusesInput{
-		OrganizationConformancePackNames: []*string{aws.String(name)},
-	}
-
-	for {
-		output, err := conn.DescribeOrganizationConformancePackStatuses(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, status := range output.OrganizationConformancePackStatuses {
-			if aws.StringValue(status.OrganizationConformancePackName) == name {
-				return status, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
-func configDescribeOrganizationConformancePackDetailedStatus(conn *configservice.ConfigService, name string) ([]*configservice.OrganizationConformancePackDetailedStatus, error) {
-	input := &configservice.GetOrganizationConformancePackDetailedStatusInput{
-		OrganizationConformancePackName: aws.String(name),
-	}
-	var ret []*configservice.OrganizationConformancePackDetailedStatus
-	for {
-		output, err := conn.GetOrganizationConformancePackDetailedStatus(input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		ret = append(ret, output.OrganizationConformancePackDetailedStatuses...)
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return ret, nil
-}
-
-func expandConfigConformancePackParameters(m map[string]interface{}) (params []*configservice.ConformancePackInputParameter) {
-	for k, v := range m {
-		params = append(params, &configservice.ConformancePackInputParameter{
-			ParameterName:  aws.String(k),
-			ParameterValue: aws.String(v.(string)),
-		})
-	}
-	return
-}
-
-func flattenConformancePackInputParameters(parameters []*configservice.ConformancePackInputParameter) (m map[string]string) {
-	m = make(map[string]string)
-	for _, p := range parameters {
-		m[*p.ParameterName] = *p.ParameterValue
-	}
-	return
 }

@@ -792,38 +792,6 @@ func testAccOrganizationsEnabledPreCheck(t *testing.T) {
 	}
 }
 
-func testAccOrganizationsMasterPreCheck(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
-	input := &organizations.DescribeOrganizationInput{}
-	out, err := conn.DescribeOrganization(input)
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-		t.Skip("this AWS account must be an existing member of an AWS Organization")
-	}
-	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
-	}
-	masterAccountId := *out.Organization.MasterAccountId
-	thisAccountId := testAccProvider.Meta().(*AWSClient).accountid
-	if masterAccountId != thisAccountId {
-		t.Skipf("this AWS account must be master of its AWS Organization ( %q != %q )", masterAccountId, thisAccountId)
-	}
-}
-
-func testAccOrganizationsMinAccountsPreCheck(t *testing.T, minAccounts int) {
-	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
-	input := &organizations.ListAccountsInput{}
-	out, err := conn.ListAccounts(input)
-	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-		t.Skip("this AWS account must be an existing member of an AWS Organization")
-	}
-	if err != nil {
-		t.Fatalf("error listing accounts in AWS Organization: %s", err)
-	}
-	if len(out.Accounts) < minAccounts {
-		t.Skipf("this AWS account must have at least %d accounts in its organization", minAccounts)
-	}
-}
-
 func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
 	conn := testAccProvider.Meta().(*AWSClient).iamconn
 

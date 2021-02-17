@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,25 +16,23 @@ import (
 func testAccConfigOrganizationConformancePack_basic(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifier(rName, rId),
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					resource.TestCheckNoResourceAttr(resourceName, "excluded_accounts"),
-					testAccCheckConfigOrganizationConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 			{
@@ -51,12 +51,12 @@ func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifier(rName, "IAM_PASSWORD_POLICY"),
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigOrganizationConformancePack(), resourceName),
@@ -67,30 +67,114 @@ func testAccConfigOrganizationConformancePack_disappears(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_InputParameters(t *testing.T) {
+func testAccConfigOrganizationConformancePack_excludedAccounts(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := "IAM_PASSWORD_POLICY"
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigOrganizationConformancePackExcludedAccounts1Config(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackExcludedAccounts2Config(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccConfigOrganizationConformancePack_forceNew(t *testing.T) {
+	var before, after configservice.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-update")
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &before),
+				),
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &after),
+					testAccCheckConfigOrganizationConformancePackRecreated(&before, &after),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rNameUpdated))),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+		},
+	})
+}
+
+func testAccConfigOrganizationConformancePack_inputParameters(t *testing.T) {
+	var pack configservice.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	pKey := "ParamKey"
 	pValue := "ParamValue"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifierParameter(rName, rId, pKey, pValue),
+				Config: testAccConfigOrganizationConformancePackInputParameterConfig(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameters."+pKey, pValue),
-					resource.TestCheckNoResourceAttr(resourceName, "excluded_accounts"),
-					testAccCheckConfigOrganizationConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameters.*", map[string]string{
+						"parameter_name":  pKey,
+						"parameter_value": pValue,
+					}),
 				),
 			},
 			{
@@ -106,26 +190,20 @@ func testAccConfigOrganizationConformancePack_InputParameters(t *testing.T) {
 func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	bName := "awsconfigconforms" + rName
-	rId := "IAM_PASSWORD_POLICY"
+	bucketName := acctest.RandomWithPrefix("awsconfigconforms")
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Delivery(rName, rId, bName),
+				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rId),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					resource.TestCheckNoResourceAttr(resourceName, "excluded_accounts"),
-					testAccCheckConfigOrganizationConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
 				),
 			},
 			{
@@ -141,27 +219,23 @@ func testAccConfigOrganizationConformancePack_S3Delivery(t *testing.T) {
 func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	bName := rName
-	kName := rName + ".yaml"
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsMasterPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Template(rName, rId, bName, kName),
+				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					resource.TestCheckNoResourceAttr(resourceName, "excluded_accounts"),
-					testAccCheckConfigOrganizationConformancePackSuccessful(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 			{
@@ -174,35 +248,145 @@ func testAccConfigOrganizationConformancePack_S3Template(t *testing.T) {
 	})
 }
 
-func testAccConfigOrganizationConformancePack_ExcludedAccounts(t *testing.T) {
+func testAccConfigOrganizationConformancePack_updateInputParameters(t *testing.T) {
 	var pack configservice.OrganizationConformancePack
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rId := "IAM_PASSWORD_POLICY"
 	resourceName := "aws_config_organization_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsMasterPreCheck(t)
-			testAccOrganizationsMinAccountsPreCheck(t, 2)
-			// TODO: All accounts in the organization must also have configuration recorders in the current region,
-			//       which is a little complicated for a precheck.  If you get an 'unexpected state' error with this
-			//       test, try enabling configuration recorders across the org.
-		},
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigOrganizationConformancePackConfigRuleIdentifierExcludedAccounts(rName, rId),
+				Config: testAccConfigOrganizationConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
-					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "input_parameters"),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
-					testAccCheckConfigOrganizationConformancePackSuccessful(resourceName),
+				),
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackUpdateInputParameterConfig(rName, "TestKey1", "TestKey2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
+						"parameter_name":  "TestKey1",
+						"parameter_value": "TestValue1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
+						"parameter_name":  "TestKey2",
+						"parameter_value": "TestValue2",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccConfigOrganizationConformancePack_updateS3Delivery(t *testing.T) {
+	var pack configservice.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := acctest.RandomWithPrefix("awsconfigconforms")
+	updatedBucketName := fmt.Sprintf("%s-update", bucketName)
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
+				),
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, updatedBucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", updatedBucketName),
+					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_body"},
+			},
+		},
+	})
+}
+
+func testAccConfigOrganizationConformancePack_updateS3Template(t *testing.T) {
+	var pack configservice.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackS3TemplateConfig(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"template_s3_uri"},
+			},
+		},
+	})
+}
+
+func testAccConfigOrganizationConformancePack_updateTemplateBody(t *testing.T) {
+	var pack configservice.OrganizationConformancePack
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_organization_conformance_pack.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckConfigOrganizationConformancePackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigOrganizationConformancePackBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
+				),
+			},
+			{
+				Config: testAccConfigOrganizationConformancePackUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigOrganizationConformancePackExists(resourceName, &pack),
 				),
 			},
 			{
@@ -223,25 +407,25 @@ func testAccCheckConfigOrganizationConformancePackDestroy(s *terraform.State) er
 			continue
 		}
 
-		rule, err := configDescribeOrganizationConformancePack(conn, rs.Primary.ID)
+		pack, err := configDescribeOrganizationConformancePack(conn, rs.Primary.ID)
 
-		if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConformancePackException, "") {
+		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error describing Config Organization Conformance Pack (%s): %w", rs.Primary.ID, err)
 		}
 
-		if rule != nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) still exists", rs.Primary.ID)
+		if pack != nil {
+			return fmt.Errorf("Config Organization Conformance Pack (%s) still exists", rs.Primary.ID)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckConfigOrganizationConformancePackExists(resourceName string, ocr *configservice.OrganizationConformancePack) resource.TestCheckFunc {
+func testAccCheckConfigOrganizationConformancePackExists(resourceName string, ocp *configservice.OrganizationConformancePack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -253,61 +437,31 @@ func testAccCheckConfigOrganizationConformancePackExists(resourceName string, oc
 		pack, err := configDescribeOrganizationConformancePack(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing organization conformance pack (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("error describing Config Organization Conformance Pack (%s): %w", rs.Primary.ID, err)
 		}
 
 		if pack == nil {
-			return fmt.Errorf("organization conformance pack (%s) not found", rs.Primary.ID)
+			return fmt.Errorf("Config Organization Conformance Pack (%s) not found", rs.Primary.ID)
 		}
 
-		*ocr = *pack
+		*ocp = *pack
 
 		return nil
 	}
 }
 
-func testAccCheckConfigOrganizationConformancePackSuccessful(resourceName string) resource.TestCheckFunc {
+func testAccCheckConfigOrganizationConformancePackRecreated(before, after *configservice.OrganizationConformancePack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", resourceName)
+		if aws.StringValue(before.OrganizationConformancePackArn) == aws.StringValue(after.OrganizationConformancePackArn) {
+			return fmt.Errorf("AWS Config Organization Conformance Pack was not recreated")
 		}
-
-		conn := testAccProvider.Meta().(*AWSClient).configconn
-
-		packStatus, err := configDescribeOrganizationConformancePackStatus(conn, rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error describing organization conformance pack status (%s): %s", rs.Primary.ID, err)
-		}
-		if packStatus == nil {
-			return fmt.Errorf("organization conformance pack status (%s) not found", rs.Primary.ID)
-		}
-		if *packStatus.Status != configservice.OrganizationResourceStatusCreateSuccessful {
-			return fmt.Errorf("organization conformance pack (%s) returned %s status (%s):  %s", rs.Primary.ID, *packStatus.Status, *packStatus.ErrorCode, *packStatus.ErrorMessage)
-		}
-
-		detailedStatus, err := configDescribeOrganizationConformancePackDetailedStatus(conn, rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error describing organization conformance pack detailed status (%s): %s", rs.Primary.ID, err)
-		}
-		if detailedStatus == nil {
-			return fmt.Errorf("organization conformance pack detailed status (%s) not found", rs.Primary.ID)
-		}
-		for _, s := range detailedStatus {
-			if *s.Status != configservice.OrganizationResourceDetailedStatusCreateSuccessful {
-				return fmt.Errorf("organization conformance pack (%s) on account %s returned %s status (%s):  %s", rs.Primary.ID, *s.Status, *s.AccountId, *s.ErrorCode, *s.ErrorMessage)
-			}
-		}
-
 		return nil
 	}
 }
 
 func testAccConfigOrganizationConformancePackBase(rName string) string {
 	return fmt.Sprintf(`
-
-data "aws_partition" "current" {
-}
+data "aws_partition" "current" {}
 
 resource "aws_config_configuration_recorder" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -339,15 +493,19 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
 }
 
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["config-multiaccountsetup.${data.aws_partition.current.dns_suffix}"]
+  feature_set                   = "ALL"
+}
 `, rName)
 }
 
-func testAccConfigOrganizationConformancePackConfigRuleIdentifier(rName, ruleIdentifier string) string {
-	return fmt.Sprintf(`
-%[3]s
-
+func testAccConfigOrganizationConformancePackBasicConfig(rName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  depends_on    = [aws_config_configuration_recorder.test]
+  depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
   name          = %[1]q
   template_body = <<EOT
 Resources:
@@ -356,26 +514,65 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-
-`, rName, ruleIdentifier, testAccConfigOrganizationConformancePackBase(rName))
+`, rName))
 }
 
-func testAccConfigOrganizationConformancePackConfigRuleIdentifierParameter(rName, ruleIdentifier, pKey, pValue string) string {
-	return fmt.Sprintf(`
-%[5]s
-
+func testAccConfigOrganizationConformancePackInputParameterConfig(rName, pKey, pValue string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  depends_on = [aws_config_configuration_recorder.test]
-  name       = %[1]q
-  input_parameters = {
-    %[3]s = %[4]q
+  depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  name       = %q
+
+  input_parameter {
+    parameter_name  = %[2]q
+    parameter_value = %q
   }
+
   template_body = <<EOT
 Parameters:
+  %[2]s:
+    Type: String
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName, pKey, pValue))
+}
+
+func testAccConfigOrganizationConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_organization_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  name       = %[1]q
+
+  input_parameter {
+    parameter_name  = %[2]q
+    parameter_value = "TestValue1"
+  }
+
+  input_parameter {
+    parameter_name  = %[3]q
+    parameter_value = "TestValue2"
+  }
+
+  template_body = <<EOT
+Parameters:
+  %[2]s:
+    Type: String
   %[3]s:
     Type: String
 Resources:
@@ -384,29 +581,22 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-
-`, rName, ruleIdentifier, pKey, pValue, testAccConfigOrganizationConformancePackBase(rName))
+`, rName, pName1, pName2))
 }
 
-func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Delivery(rName, ruleIdentifier, bName string) string {
-	return fmt.Sprintf(`
-%[4]s
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[3]q
-  acl           = "private"
-  force_destroy = true
-}
-
+func testAccConfigOrganizationConformancePackS3DeliveryConfig(rName, bName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  depends_on             = [aws_config_configuration_recorder.test]
+  depends_on             = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
   name                   = %[1]q
   delivery_s3_bucket     = aws_s3_bucket.test.id
-  delivery_s3_key_prefix = %[2]q
+  delivery_s3_key_prefix = %[1]q
   template_body          = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -414,27 +604,38 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
 
-`, rName, ruleIdentifier, bName, testAccConfigOrganizationConformancePackBase(rName))
+resource "aws_s3_bucket" "test" {
+  bucket        = %q
+  acl           = "private"
+  force_destroy = true
+}
+`, rName, bName))
 }
 
-func testAccConfigOrganizationConformancePackConfigRuleIdentifierS3Template(rName, ruleIdentifier, bName, kName string) string {
-	return fmt.Sprintf(`
-%[5]s
+func testAccConfigOrganizationConformancePackS3TemplateConfig(rName, bName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_organization_conformance_pack" "test" {
+  depends_on      = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  name            = %q
+  template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
+}
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %[3]q
+  bucket        = %[2]q
   acl           = "private"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_object" "test" {
   bucket  = aws_s3_bucket.test.id
-  key     = %[4]q
+  key     = %[2]q
   content = <<EOT
 Resources:
   IAMPasswordPolicy:
@@ -442,41 +643,78 @@ Resources:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
-
-resource "aws_config_organization_conformance_pack" "test" {
-  depends_on      = [aws_config_configuration_recorder.test]
-  name            = "%[1]s"
-  template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.id}"
+`, rName, bName))
 }
 
-`, rName, ruleIdentifier, bName, kName, testAccConfigOrganizationConformancePackBase(rName))
+func testAccConfigOrganizationConformancePackUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_organization_conformance_pack" "test" {
+  depends_on    = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+  name          = %q
+  template_body = <<EOT
+Resources:
+  IAMGroupHasUsersCheck:
+    Properties:
+      ConfigRuleName: IAMGroupHasUsersCheck
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_GROUP_HAS_USERS_CHECK
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName))
 }
 
-func testAccConfigOrganizationConformancePackConfigRuleIdentifierExcludedAccounts(rName, ruleIdentifier string) string {
-	return fmt.Sprintf(`
-%[3]s
-
-data "aws_caller_identity" "current" {}
-
+func testAccConfigOrganizationConformancePackExcludedAccounts1Config(rName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_organization_conformance_pack" "test" {
-  depends_on        = [aws_config_configuration_recorder.test]
-  name              = %[1]q
-  excluded_accounts = [data.aws_caller_identity.current.account_id]
-  template_body     = <<EOT
+  depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+
+  excluded_accounts = ["111111111111"]
+  name              = %q
+
+  template_body = <<EOT
 Resources:
   IAMPasswordPolicy:
     Properties:
       ConfigRuleName: IAMPasswordPolicy
       Source:
         Owner: AWS
-        SourceIdentifier: %[2]q
+        SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
 }
+`, rName))
+}
 
-`, rName, ruleIdentifier, testAccConfigOrganizationConformancePackBase(rName))
+func testAccConfigOrganizationConformancePackExcludedAccounts2Config(rName string) string {
+	return composeConfig(
+		testAccConfigOrganizationConformancePackBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_organization_conformance_pack" "test" {
+  depends_on = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
+
+  excluded_accounts = ["111111111111", "222222222222"]
+  name              = %q
+
+  template_body = <<EOT
+Resources:
+  IAMPasswordPolicy:
+    Properties:
+      ConfigRuleName: IAMPasswordPolicy
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_PASSWORD_POLICY
+    Type: AWS::Config::ConfigRule
+EOT
+}
+`, rName))
 }
