@@ -3,9 +3,7 @@ package aws
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"regexp"
 	"time"
 
@@ -67,10 +65,9 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 						"logo_image_blob": {
 							Type:     schema.TypeString,
 							Optional: true,
-						},
-						"logo_image_url": {
-							Type:     schema.TypeString,
-							Computed: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return true
+							},
 						},
 						"operating_systems": {
 							Type:     schema.TypeSet,
@@ -298,20 +295,6 @@ func flattenEcrPublicRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCat
 
 	if v := catalogData.Description; v != nil {
 		tfMap["description"] = aws.StringValue(v)
-	}
-
-	if v := catalogData.LogoUrl; v != nil {
-		tfMap["logo_image_url"] = aws.StringValue(v)
-
-		resp, err := http.Get(aws.StringValue(v))
-
-		if err != nil {
-			log.Printf("[ERROR] unable to read logo image contents: %s", err)
-		}
-
-		defer resp.Body.Close()
-		imageData, _ := ioutil.ReadAll(resp.Body)
-		tfMap["logo_image_blob"] = base64.StdEncoding.EncodeToString(imageData)
 	}
 
 	if v := catalogData.OperatingSystems; v != nil {
