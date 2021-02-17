@@ -32,6 +32,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidInstanceIDNotFound = "InvalidInstanceID.NotFound"
+)
+
+const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
