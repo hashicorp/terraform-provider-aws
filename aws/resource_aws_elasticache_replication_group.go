@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -112,6 +113,25 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"global_replication_group_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ConflictsWith: []string{
+					"automatic_failover_enabled",
+					"cluster_mode", // should/will be "num_node_groups"
+					"parameter_group_name",
+					"engine",
+					"engine_version",
+					"node_type",
+					"security_group_names",
+					"transit_encryption_enabled",
+					"at_rest_encryption_enabled",
+					"snapshot_arns",
+					"snapshot_name",
+				},
 			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
@@ -318,11 +338,21 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
 		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
-		AutomaticFailoverEnabled:    aws.Bool(d.Get("automatic_failover_enabled").(bool)),
 		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		CacheNodeType:               aws.String(d.Get("node_type").(string)),
-		Engine:                      aws.String(d.Get("engine").(string)),
 		Tags:                        tags,
+	}
+
+	if v, ok := d.GetOk("global_replication_group_id"); ok {
+		params.GlobalReplicationGroupId = aws.String(v.(string))
+	} else {
+		// This cannot be handled at plan-time
+		nodeType := d.Get("node_type").(string)
+		if nodeType == "" {
+			return errors.New(`"node_type" is required unless "global_replication_group_id" is set.`)
+		}
+		params.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
+		params.CacheNodeType = aws.String(nodeType)
+		params.Engine = aws.String(d.Get("engine").(string))
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
@@ -416,7 +446,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	resp, err := conn.CreateReplicationGroup(params)
 	if err != nil {
-		return fmt.Errorf("Error creating ElastiCache Replication Group: %w", err)
+		return fmt.Errorf("Error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReplicationGroup.ReplicationGroupId))
@@ -443,10 +473,14 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	if aws.StringValue(rgp.Status) == "deleting" {
+	if aws.StringValue(rgp.Status) == waiter.ReplicationGroupStatusDeleting {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) is currently in the `deleting` status, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
+		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 	}
 
 	if rgp.AutomaticFailover != nil {
@@ -687,6 +721,13 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
+	if globalReplicationGroupID, ok := d.GetOk("global_replication_group_id"); ok {
+		err := disassociateElasticacheReplicationGroup(conn, globalReplicationGroupID.(string), d.Id(), meta.(*AWSClient).region)
+		if err != nil {
+			return fmt.Errorf("error disassociating ElastiCache Replication Group (%s) from Global Replication Group (%s): %w", d.Id(), globalReplicationGroupID, err)
+		}
+	}
+
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := deleteElasticacheReplicationGroup(d.Id(), conn, finalSnapshotID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
@@ -694,6 +735,49 @@ func resourceAwsElasticacheReplicationGroupDelete(d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func disassociateElasticacheReplicationGroup(conn *elasticache.ElastiCache, globalReplicationGroupID, id, region string) error {
+	input := &elasticache.DisassociateGlobalReplicationGroupInput{
+		GlobalReplicationGroupId: aws.String(globalReplicationGroupID),
+		ReplicationGroupId:       aws.String(id),
+		ReplicationGroupRegion:   aws.String(region),
+	}
+	err := resource.Retry(waiter.GlobalReplicationGroupDisassociationRetryTimeout, func() *resource.RetryError {
+		_, err := conn.DisassociateGlobalReplicationGroup(input)
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
+			return nil
+		}
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DisassociateGlobalReplicationGroup(input)
+	}
+	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "is not associated with Global Replication Group") {
+		return nil
+	}
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
+		return fmt.Errorf("tried for %s: %w", waiter.GlobalReplicationGroupDisassociationRetryTimeout.String(), err)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waiter.GlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	if err != nil {
+		return fmt.Errorf("waiting for completion: %w", err)
+	}
+
+	return nil
+
 }
 
 func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {
