@@ -75,6 +75,10 @@ func dataSourceAwsApiGatewayV2Api() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"disable_execute_api_endpoint": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -129,6 +133,7 @@ func dataSourceAwsAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting cors_configuration: %s", err)
 	}
 	d.Set("description", output.Description)
+	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
 	executionArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "execute-api",
