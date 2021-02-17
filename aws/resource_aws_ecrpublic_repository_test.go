@@ -428,9 +428,9 @@ resource "aws_ecrpublic_repository" "test" {
 func testAccAWSEcrPublicRepositoryCatalogDataConfigAboutText(rName string, aboutText string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   catalog_data {
-    about_text = %q
+    about_text = %[2]q
   }
 }
 `, rName, aboutText)
@@ -439,9 +439,9 @@ resource "aws_ecrpublic_repository" "test" {
 func testAccAWSEcrPublicRepositoryCatalogDataConfigArchitectures(rName string, architecture string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   catalog_data {
-    architectures = [%q]
+    architectures = [%[2]q]
   }
 }
 `, rName, architecture)
@@ -450,9 +450,9 @@ resource "aws_ecrpublic_repository" "test" {
 func testAccAWSEcrPublicRepositoryCatalogDataConfigDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   catalog_data {
-    description = %q
+    description = %[2]q
   }
 }
 `, rName, description)
@@ -461,9 +461,9 @@ resource "aws_ecrpublic_repository" "test" {
 func testAccAWSEcrPublicRepositoryCatalogDataConfigOperatingSystems(rName string, operatingSystem string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   catalog_data {
-    operating_systems = [%q]
+    operating_systems = [%[2]q]
   }
 }
 `, rName, operatingSystem)
@@ -472,9 +472,9 @@ resource "aws_ecrpublic_repository" "test" {
 func testAccAWSEcrPublicRepositoryCatalogDataConfigUsageText(rName string, usageText string) string {
 	return fmt.Sprintf(`
 resource "aws_ecrpublic_repository" "test" {
-  repository_name = %q
+  repository_name = %[1]q
   catalog_data {
-    usage_text = %q
+    usage_text = %[2]q
   }
 }
 `, rName, usageText)
