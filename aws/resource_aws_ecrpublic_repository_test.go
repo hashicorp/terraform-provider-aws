@@ -72,7 +72,7 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -100,7 +100,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -154,7 +154,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -181,7 +181,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -208,7 +208,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -235,7 +235,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -262,7 +262,7 @@ func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -425,4 +425,16 @@ resource "aws_ecrpublic_repository" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPreCheckAwsEcrPublic(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).ecrpublicconn
+	input := &ecrpublic.DescribeRepositoriesInput{}
+	_, err := conn.DescribeRepositories(input)
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
