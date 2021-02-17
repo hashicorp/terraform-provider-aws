@@ -538,7 +538,7 @@ resource "aws_ses_receipt_rule" "test" {
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
-  
+
   bounce_action {
     message         = %[1]q
     sender          = "test@example.com"
@@ -566,10 +566,10 @@ resource "aws_ses_receipt_rule" "test" {
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
-  
+
   sns_action {
-  	topic_arn = aws_sns_topic.test.arn
-  	position  = 1
+    topic_arn = aws_sns_topic.test.arn
+    position  = 1
   }
 }
 `, rName)
@@ -592,11 +592,11 @@ resource "aws_ses_receipt_rule" "test" {
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
-  
+
   sns_action {
-  	topic_arn = aws_sns_topic.test.arn
+    topic_arn = aws_sns_topic.test.arn
     encoding  = "Base64"
-  	position  = 1
+    position  = 1
   }
 }
 `, rName)
