@@ -103,6 +103,40 @@ resource "aws_elasticache_replication_group" "baz" {
 and unavailable on T1 node types. For T2 node types, it is only available on Redis version 3.2.4 or later with cluster mode enabled. See the [High Availability Using Replication Groups](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Replication.html) guide
 for full details on using Replication Groups.
 
+### Creating a secondary replication group for a global replication group
+
+A Global Replication Group can have one one two secondary Replication Groups in different regions. These are added to an existing Global Replication Group.
+
+```hcl
+resource "aws_elasticache_replication_group" "secondary" {
+  replication_group_id          = "example-secondary"
+  replication_group_description = "secondary replication group"
+  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_global_replication_group" "example" {
+  provider = aws.other_region
+
+  global_replication_group_id_suffix = "example"
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws.other_region
+
+  replication_group_id          = "example-primary"
+  replication_group_description = "primary replication group"
+
+  engine         = "redis"
+  engine_version = "5.0.6"
+  node_type      = "cache.m5.large"
+
+  number_cache_clusters = 1
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
