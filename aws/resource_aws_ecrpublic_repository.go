@@ -89,6 +89,11 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 				},
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -182,6 +187,12 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
+	if v, ok := d.GetOk("force_destroy"); ok {
+		d.Set("force_destroy", v.(bool))
+	} else {
+		d.Set("force_destroy", false)
+	}
+
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
 	catalogInput := &ecrpublic.GetRepositoryCatalogDataInput{
 		RepositoryName: aws.String(d.Id()),
@@ -206,11 +217,17 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrpublicconn
 
-	_, err := conn.DeleteRepository(&ecrpublic.DeleteRepositoryInput{
+	deleteInput := &ecrpublic.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
-		Force:          aws.Bool(true),
-	})
+	}
+
+	if v, ok := d.GetOk("force_destroy"); ok {
+		deleteInput.Force = aws.Bool(v.(bool))
+	}
+
+	_, err := conn.DeleteRepository(deleteInput)
+
 	if err != nil {
 		if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return nil
