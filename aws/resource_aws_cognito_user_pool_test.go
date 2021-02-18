@@ -2044,10 +2044,10 @@ func testAccAWSCognitoUserPoolConfig_withUICustomization(userPoolName, css strin
 resource "aws_cognito_user_pool" "pool" {
   name = "%s"
 
-	ui_customization {
-		css        = "%s"
-		image_file = "test-fixtures/logo.png"
-	}
+  ui_customization {
+    css        = "%s"
+    image_file = "test-fixtures/logo.png"
+  }
 }
 `, userPoolName, css)
 }

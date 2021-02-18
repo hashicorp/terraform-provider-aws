@@ -111,22 +111,23 @@ resource "aws_cognito_user_pool_client" "test" {
 ```
 
 ### Create a user pool client with UI customization
+
 ```hcl
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
 
 data "template_file" "custom_css" {
-  template = "${file("files/custom.css")}"
+  template = file("files/custom.css")
 }
 
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
 
   ui_customization {
-    css        = "${data.template_file.custom_css.rendered}"
+    css        = data.template_file.custom_css.rendered
     image_file = "files/logo.png"
   }
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func cognitoUserPoolUICustomizationSchema() *schema.Schema {
@@ -22,9 +22,9 @@ func cognitoUserPoolUICustomizationSchema() *schema.Schema {
 						return new == stringHashSum(old)
 					},
 					StateFunc: func(v interface{}) string {
-						switch v.(type) {
+						switch t := v.(type) {
 						case string:
-							return stringHashSum(v.(string))
+							return stringHashSum(t)
 						default:
 							return ""
 						}
@@ -37,9 +37,9 @@ func cognitoUserPoolUICustomizationSchema() *schema.Schema {
 						return new == remoteFileHashSum(old)
 					},
 					StateFunc: func(v interface{}) string {
-						switch v.(type) {
+						switch t := v.(type) {
 						case string:
-							return remoteFileHashSum(v.(string))
+							return remoteFileHashSum(t)
 						default:
 							return ""
 						}

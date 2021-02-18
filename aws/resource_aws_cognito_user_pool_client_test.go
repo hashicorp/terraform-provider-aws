@@ -168,7 +168,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 
 func TestAccAWSCognitoUserPoolClient_withUICustomization(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	clientName := acctest.RandString(10)
 	css := ".label-customizable {font-weight: 400;}"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -636,11 +636,11 @@ resource "aws_cognito_user_pool" "pool" {
 
 resource "aws_cognito_user_pool_client" "client" {
   name         = "%s"
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id = aws_cognito_user_pool.pool.id
   ui_customization {
-		css        = "%s"
-		image_file = "test-fixtures/logo.png"
-	}
+    css        = "%s"
+    image_file = "test-fixtures/logo.png"
+  }
 }
 `, userPoolName, clientName, css)
 }
