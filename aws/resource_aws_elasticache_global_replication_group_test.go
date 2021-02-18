@@ -100,15 +100,6 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", elasticacheEmptyDescription),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "false"),
-
-					resource.TestCheckResourceAttr(resourceName, "global_replication_group_members.#", "1"),
-					func(s *terraform.State) error {
-						return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_replication_group_members.*", map[string]string{
-							"replication_group_id":     aws.StringValue(primaryReplicationGroup.ReplicationGroupId),
-							"replication_group_region": testAccGetRegion(),
-							"role":                     GlobalReplicationGroupMemberRolePrimary,
-						})(s)
-					},
 				),
 			},
 			{

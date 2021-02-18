@@ -92,26 +92,28 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 				DiffSuppressFunc: elasticacheDescriptionDiffSuppress,
 				StateFunc:        elasticacheDescriptionStateFunc,
 			},
-			"global_replication_group_members": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"replication_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"replication_group_region": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"role": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			// global_replication_group_members cannot be correctly implemented because any secondary
+			// replication groups will be added after this resource completes.
+			// "global_replication_group_members": {
+			// 	Type:     schema.TypeSet,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"replication_group_id": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"replication_group_region": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"role": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"primary_replication_group_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -197,10 +199,6 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
 
 	d.Set("primary_replication_group_id", flattenElasticacheGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
-
-	if err := d.Set("global_replication_group_members", flattenElasticacheGlobalReplicationGroupMembers(globalReplicationGroup.Members)); err != nil {
-		return fmt.Errorf("error setting global_cluster_members: %w", err)
-	}
 
 	return nil
 }
@@ -306,23 +304,4 @@ func flattenElasticacheGlobalReplicationGroupPrimaryGroupID(members []*elasticac
 		}
 	}
 	return ""
-}
-
-func flattenElasticacheGlobalReplicationGroupMembers(members []*elasticache.GlobalReplicationGroupMember) []interface{} {
-	if len(members) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range members {
-		tfMap := map[string]interface{}{
-			"replication_group_id":     aws.StringValue(apiObject.ReplicationGroupId),
-			"replication_group_region": aws.StringValue(apiObject.ReplicationGroupRegion),
-			"role":                     aws.StringValue(apiObject.Role),
-		}
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
 }
