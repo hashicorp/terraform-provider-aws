@@ -32,6 +32,7 @@ func resourceAwsCloudWatchEventArchive() *schema.Resource {
 			"event_source_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"description": {
@@ -97,7 +98,6 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] Found Archive: #{*out}")
 
-	// Review Question - Is there a problem in setting more than should name and Arn?
 	d.Set("name", out.ArchiveName)
 	d.Set("description", out.Description)
 	d.Set("event_pattern", out.EventPattern)
