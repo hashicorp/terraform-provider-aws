@@ -1179,9 +1179,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			FunctionName: aws.String(d.Id()),
 		}
 
+		var output *lambda.FunctionConfiguration
 		err := resource.Retry(waiter.LambdaFunctionPublishTimeout, func() *resource.RetryError {
-			//_, err := conn.PublishVersion(versionReq)
-			result, err := conn.PublishVersion(versionReq)
+			var err error
+			output, err = conn.PublishVersion(versionReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "in progress") {
 				log.Printf("[DEBUG] Retrying publish of Lambda function (%s) version after error: %s", d.Id(), err)
@@ -1192,33 +1193,25 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				return resource.NonRetryableError(err)
 			}
 
-			// Return the newly published values as the read is eventually consistent
-			// Return the newly published values as the read is eventually consistent
-			re := regexp.MustCompile(`:[0-9]+$`)
-			d.Set("arn", re.ReplaceAllString(*result.FunctionArn, ""))
-			d.Set("description", result.Description)
-			d.Set("handler", result.Handler)
-			d.Set("memory_size", result.MemorySize)
-			d.Set("last_modified", result.LastModified)
-			d.Set("role", result.Role)
-			d.Set("runtime", result.Runtime)
-			d.Set("timeout", result.Timeout)
-			d.Set("source_code_hash", result.CodeSha256)
-			d.Set("source_code_size", result.CodeSize)
-			d.Set("version", result.Version)
-
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.PublishVersion(versionReq)
+			output, err = conn.PublishVersion(versionReq)
 		}
 
 		if err != nil {
 			return fmt.Errorf("error publishing Lambda Function (%s) version: %w", d.Id(), err)
 		}
 
-		return nil
+		err = conn.WaitUntilFunctionUpdated(&lambda.GetFunctionConfigurationInput{
+			FunctionName: output.FunctionArn,
+			Qualifier:    output.Version,
+		})
+
+		if err != nil {
+			return fmt.Errorf("while waiting for function (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsLambdaFunctionRead(d, meta)
