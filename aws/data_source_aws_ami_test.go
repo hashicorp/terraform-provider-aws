@@ -96,7 +96,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestMatchResourceAttr(resourceName, "platform_details", regexp.MustCompile(`Windows`)),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances:0002"),
+					resource.TestMatchResourceAttr(resourceName, "usage_operation", regexp.MustCompile(`^RunInstances`)),
 				),
 			},
 		},
