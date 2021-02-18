@@ -74,6 +74,7 @@ The following arguments are supported:
 * `schedule` - (Optional) The schedule for this action. The following formats are supported: At expressions - at(yyyy-mm-ddThh:mm:ss), Rate expressions - rate(valueunit), Cron expressions - cron(fields). In UTC. Documentation can be found in the parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_PutScheduledAction.html#ApplicationAutoScaling-PutScheduledAction-request-Schedule)
 * `start_time` - (Optional) The date and time for the scheduled action to start. Specify the following format: 2006-01-02T15:04:05Z
 * `end_time` - (Optional) The date and time for the scheduled action to end. Specify the following format: 2006-01-02T15:04:05Z
+* `timezone` - (Optional) The time zone used when setting a scheduled action by using an at or cron expression. Default is UTC.
 
 ### Scalable Target Action Arguments
 

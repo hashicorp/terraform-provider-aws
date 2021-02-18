@@ -75,6 +75,11 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"timezone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -121,6 +126,9 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action End Time: %s", err.Error())
 		}
 		input.EndTime = aws.Time(t)
+	}
+	if v, ok := d.GetOk("timezone"); ok {
+		input.Timezone = aws.String(v.(string))
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
