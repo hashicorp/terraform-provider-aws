@@ -43,7 +43,7 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Route Table.
 * `vpc_id` - (Optional) ID of the VPC that the desired Route Table belongs to.
 
-### filter 
+### filter
 
 Complex filters can be expressed using one or more `filter` blocks.
 
