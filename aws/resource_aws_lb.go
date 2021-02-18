@@ -7,17 +7,18 @@ import (
 	"log"
 	"regexp"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLb() *schema.Resource {
@@ -374,11 +375,11 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		err := resource.Retry(waiter.TagPropagationTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeLoadBalancerNotFoundException, "") {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
 				return resource.RetryableError(err)
 			}
 
@@ -389,7 +390,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
+		if tfresource.TimedOut(err) {
 			err = keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 		}
 
@@ -634,7 +635,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	}
 	var out *ec2.DescribeNetworkInterfacesOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.LoadBalancerNetworkInterfaceDetachTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {
@@ -650,19 +651,23 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+
+	if tfresource.TimedOut(err) {
 		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {
 			return fmt.Errorf("error describing network inferfaces: %w", err)
 		}
+
 		niCount := len(out.NetworkInterfaces)
 		if niCount > 0 {
 			return fmt.Errorf("error waiting for %d ENIs of %q to clean up", niCount, lbArn)
 		}
 	}
+
 	if err != nil {
 		return fmt.Errorf("error describing network inferfaces: %w", err)
 	}
+
 	return nil
 }
 

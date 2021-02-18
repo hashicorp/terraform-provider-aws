@@ -18,7 +18,13 @@ const (
 	LoadBalancerDeleteTimeout = 10 * time.Minute
 
 	// Default maximum amount of time to wait for Tag Propagation for a Load Balancer
-	TagPropagationTimeout = 2 * time.Minute
+	LoadBalancerTagPropagationTimeout = 2 * time.Minute
+
+	// Default maximum amount of time to wait for target group to delete
+	TargetGroupDeleteTimeout = 2 * time.Minute
+
+	// Default maximum amount of time to wait for network interfaces to propagate
+	LoadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
 )
 
 // LoadBalancerActive waits for a Load Balancer to return active

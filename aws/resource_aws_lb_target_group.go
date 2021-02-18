@@ -8,15 +8,16 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -289,7 +290,7 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -367,7 +368,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	resp, err := elbconn.CreateTargetGroup(params)
+	resp, err := conn.CreateTargetGroup(params)
 	if err != nil {
 		return fmt.Errorf("error creating LB Target Group: %w", err)
 	}
@@ -380,9 +381,9 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
-	resp, err := elbconn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
+	resp, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
@@ -402,15 +403,15 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		err := resource.Retry(waiter.TagPropagationTimeout, func() *resource.RetryError {
-			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 
-			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
 				return resource.RetryableError(err)
 			}
@@ -422,8 +423,8 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			return nil
 		})
 
-		if isResourceTimeoutError(err) {
-			err = keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+		if tfresource.TimedOut(err) {
+			err = keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {
@@ -474,7 +475,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if params != nil {
-			_, err := elbconn.ModifyTargetGroup(params)
+			_, err := conn.ModifyTargetGroup(params)
 			if err != nil {
 				return fmt.Errorf("error modifying Target Group: %w", err)
 			}
@@ -562,7 +563,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			Attributes:     attrs,
 		}
 
-		_, err := elbconn.ModifyTargetGroupAttributes(params)
+		_, err := conn.ModifyTargetGroupAttributes(params)
 		if err != nil {
 			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
 		}
@@ -572,17 +573,17 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsLbTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	input := &elbv2.DeleteTargetGroupInput{
 		TargetGroupArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := elbconn.DeleteTargetGroup(input)
+	err := resource.Retry(waiter.TargetGroupDeleteTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteTargetGroup(input)
 
-		if isAWSErr(err, "ResourceInUse", "is currently in use by a listener or a rule") {
+		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
 			return resource.RetryableError(err)
 		}
 
@@ -593,8 +594,8 @@ func resourceAwsLbTargetGroupDelete(d *schema.ResourceData, meta interface{}) er
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
-		_, err = elbconn.DeleteTargetGroup(input)
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteTargetGroup(input)
 	}
 
 	if err != nil {
@@ -665,7 +666,7 @@ func lbTargetGroupSuffixFromARN(arn *string) string {
 
 // flattenAwsLbTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
@@ -705,7 +706,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error setting health_check: %w", err)
 	}
 
-	attrResp, err := elbconn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
+	attrResp, err := conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -742,7 +743,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return err
 	}
 
-	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
