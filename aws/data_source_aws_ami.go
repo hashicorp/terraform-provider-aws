@@ -321,7 +321,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 	}.String()
 
 	d.Set("arn", imageArn)

@@ -425,7 +425,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
