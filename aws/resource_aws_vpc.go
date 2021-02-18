@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,13 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpc() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsVpcCreate,
 		Read:   resourceAwsVpcRead,
@@ -132,6 +134,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		CidrBlock:                   aws.String(d.Get("cidr_block").(string)),
 		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
+		TagSpecifications:           ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpc),
 	}
 
 	log.Printf("[DEBUG] VPC create config: %#v", *createOpts)
@@ -142,7 +145,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Get the ID and store it
 	vpc := vpcResp.Vpc
-	d.SetId(*vpc.VpcId)
+	d.SetId(aws.StringValue(vpc.VpcId))
 	log.Printf("[INFO] VPC ID: %s", d.Id())
 
 	// Wait for the VPC to become available
@@ -220,38 +223,12 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		// Handle EC2 eventual consistency on creation
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-
-			if isAWSErr(err, "InvalidVpcID.NotFound", "") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			err = keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
-	}
-
 	return resourceAwsVpcRead(d, meta)
 }
 
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	ignoreTags := meta.(*AWSClient).ignoreTags
-	ignoreTagPrefixes := meta.(*AWSClient).ignoreTagPrefixes
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the VPC state
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
@@ -280,7 +257,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -568,7 +545,7 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsVpcCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
 			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)

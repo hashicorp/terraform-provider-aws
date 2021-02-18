@@ -21,11 +21,11 @@ resource "aws_athena_workgroup" "example" {
     publish_cloudwatch_metrics_enabled = true
 
     result_configuration {
-      output_location = "s3://{aws_s3_bucket.example.bucket}/output/"
+      output_location = "s3://${aws_s3_bucket.example.bucket}/output/"
 
       encryption_configuration {
         encryption_option = "SSE_KMS"
-        kms_key_arn       = "${aws_kms_key.example.arn}"
+        kms_key_arn       = aws_kms_key.example.arn
       }
     }
   }
@@ -40,7 +40,7 @@ The following arguments are supported:
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
 * `description` - (Optional) Description of the workgroup.
 * `state` - (Optional) State of the workgroup. Valid values are `DISABLED` or `ENABLED`. Defaults to `ENABLED`.
-* `tags` - (Optional) Key-value mapping of resource tags for the workgroup.
+* `tags` - (Optional) Key-value map of resource tags for the workgroup.
 * `force_destroy` - (Optional) The option to delete the workgroup and its contents even if the workgroup contains any named queries.
 
 ### configuration Argument Reference

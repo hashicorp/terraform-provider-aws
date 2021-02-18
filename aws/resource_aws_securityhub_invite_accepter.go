@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsSecurityHubInviteAccepter() *schema.Resource {
@@ -49,10 +50,10 @@ func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error accepting Security Hub invitation: %s", err)
+		return fmt.Errorf("error accepting Security Hub invitation: %w", err)
 	}
 
-	d.SetId("securityhub-invitation-accepter")
+	d.SetId(invitationId)
 
 	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
 }
@@ -63,7 +64,7 @@ func resourceAwsSecurityHubInviteAccepterGetInvitationId(conn *securityhub.Secur
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
 
 	if err != nil {
-		return "", fmt.Errorf("Error listing Security Hub invitations: %s", err)
+		return "", fmt.Errorf("error listing Security Hub invitations: %w", err)
 	}
 
 	for _, invitation := range resp.Invitations {
@@ -83,7 +84,7 @@ func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta inter
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
 	if err != nil {
-		if isAWSErr(err, securityhub.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
 			log.Print("[WARN] Security Hub master account not found, removing from state")
 			d.SetId("")
 			return nil
@@ -111,11 +112,10 @@ func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta int
 
 	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})
 
+	if tfawserr.ErrMessageContains(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, "BadRequestException", "The request is rejected because the current account is not associated to a master account") {
-			log.Print("[WARN] Security Hub account is not a member account")
-			return nil
-		}
 		return err
 	}
 

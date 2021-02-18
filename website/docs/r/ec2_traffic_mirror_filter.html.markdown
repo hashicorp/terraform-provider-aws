@@ -28,13 +28,14 @@ The following arguments are supported:
 
 * `description` - (Optional, Forces new resource) A description of the filter.
 * `network_services` - (Optional) List of amazon network services that should be mirrored. Valid values: `amazon-dns`.
-* `tags` - (Optional) Key-value mapping of resource tags.
+* `tags` - (Optional) Key-value map of resource tags.
 
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the traffic mirror filter.
 * `id` - The name of the filter.
 
 ## Import
