@@ -1548,6 +1548,202 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_Replication_MultipleDestinations_EmptyFilter(t *testing.T) {
+	rInt := acctest.RandInt()
+	alternateRegion := testAccGetAlternateRegion()
+	region := testAccGetRegion()
+	resourceName := "aws_s3_bucket.bucket"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithMultipleDestinationsEmptyFilter(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination2", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination3", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule1",
+						"priority":                    "1",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule2",
+						"priority":                    "2",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD_IA",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule3",
+						"priority":                    "3",
+						"status":                      "Disabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "",
+						"destination.#":               "1",
+						"destination.0.storage_class": "ONEZONE_IA",
+					}),
+				),
+			},
+			{
+				Config:                  testAccAWSS3BucketConfigReplicationWithMultipleDestinationsEmptyFilter(rInt),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_Replication_MultipleDestinations_NonEmptyFilter(t *testing.T) {
+	rInt := acctest.RandInt()
+	alternateRegion := testAccGetAlternateRegion()
+	region := testAccGetRegion()
+	resourceName := "aws_s3_bucket.bucket"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithMultipleDestinationsNonEmptyFilter(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination2", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination3", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule1",
+						"priority":                    "1",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "prefix1",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule2",
+						"priority":                    "2",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.tags.%":             "1",
+						"filter.0.tags.Key2":          "Value2",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD_IA",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule3",
+						"priority":                    "3",
+						"status":                      "Disabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "prefix3",
+						"filter.0.tags.%":             "1",
+						"filter.0.tags.Key3":          "Value3",
+						"destination.#":               "1",
+						"destination.0.storage_class": "ONEZONE_IA",
+					}),
+				),
+			},
+			{
+				Config:                  testAccAWSS3BucketConfigReplicationWithMultipleDestinationsNonEmptyFilter(rInt),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_Replication_MultipleDestinations_TwoDestination(t *testing.T) {
+	// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
+	rInt := acctest.RandInt()
+	alternateRegion := testAccGetAlternateRegion()
+	region := testAccGetRegion()
+	resourceName := "aws_s3_bucket.bucket"
+
+	// record the initialized providers so that we can use them to check for the instances in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheckSkipS3(t),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithMultipleDestinationsTwoDestination(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination2", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule1",
+						"priority":                    "1",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.prefix":             "prefix1",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
+						"id":                          "rule2",
+						"priority":                    "2",
+						"status":                      "Enabled",
+						"filter.#":                    "1",
+						"filter.0.tags.%":             "1",
+						"filter.0.tags.Key2":          "Value2",
+						"destination.#":               "1",
+						"destination.0.storage_class": "STANDARD_IA",
+					}),
+				),
+			},
+			{
+				Config:                  testAccAWSS3BucketConfigReplicationWithMultipleDestinationsTwoDestination(rInt),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+			},
+		},
+	})
+}
+
 func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlTranslation(t *testing.T) {
 	rInt := acctest.RandInt()
 	region := testAccGetRegion()
@@ -2432,6 +2628,13 @@ func TestWebsiteEndpoint(t *testing.T) {
 			t.Errorf("WebsiteEndpointUrl(\"bucket-name\", %q) => %q, want %q", testCase.LocationConstraint, got.Endpoint, testCase.Expected)
 		}
 	}
+}
+
+// testAccErrorCheckSkipS3 skips tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipS3(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Number of distinct destination bucket ARNs cannot exceed",
+	)
 }
 
 func testAccCheckAWSS3BucketDestroy(s *terraform.State) error {
@@ -3763,6 +3966,230 @@ resource "aws_s3_bucket" "bucket" {
   }
 }
 `, randInt, storageClass)
+}
+
+func testAccAWSS3BucketConfigReplicationWithMultipleDestinationsEmptyFilter(randInt int) string {
+	return composeConfig(
+		testAccAWSS3BucketConfigReplicationBasic(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "destination2" {
+  provider = "awsalternate"
+  bucket   = "tf-test-bucket-destination2-%[1]d"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "destination3" {
+  provider = "awsalternate"
+  bucket   = "tf-test-bucket-destination3-%[1]d"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id       = "rule1"
+      priority = 1
+      status   = "Enabled"
+
+      filter {}
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+
+    rules {
+      id       = "rule2"
+      priority = 2
+      status   = "Enabled"
+
+      filter {}
+
+      destination {
+        bucket        = aws_s3_bucket.destination2.arn
+        storage_class = "STANDARD_IA"
+      }
+    }
+
+    rules {
+      id       = "rule3"
+      priority = 3
+      status   = "Disabled"
+
+      filter {}
+
+      destination {
+        bucket        = aws_s3_bucket.destination3.arn
+        storage_class = "ONEZONE_IA"
+      }
+    }
+  }
+}
+`, randInt))
+}
+
+func testAccAWSS3BucketConfigReplicationWithMultipleDestinationsNonEmptyFilter(randInt int) string {
+	return composeConfig(
+		testAccAWSS3BucketConfigReplicationBasic(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "destination2" {
+  provider = "awsalternate"
+  bucket   = "tf-test-bucket-destination2-%[1]d"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "destination3" {
+  provider = "awsalternate"
+  bucket   = "tf-test-bucket-destination3-%[1]d"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id       = "rule1"
+      priority = 1
+      status   = "Enabled"
+
+      filter {
+        prefix = "prefix1"
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+
+    rules {
+      id       = "rule2"
+      priority = 2
+      status   = "Enabled"
+
+      filter {
+        tags = {
+          Key2 = "Value2"
+        }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination2.arn
+        storage_class = "STANDARD_IA"
+      }
+    }
+
+    rules {
+      id       = "rule3"
+      priority = 3
+      status   = "Disabled"
+
+      filter {
+        prefix = "prefix3"
+
+        tags = {
+          Key3 = "Value3"
+        }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination3.arn
+        storage_class = "ONEZONE_IA"
+      }
+    }
+  }
+}
+`, randInt))
+}
+
+func testAccAWSS3BucketConfigReplicationWithMultipleDestinationsTwoDestination(randInt int) string {
+	return composeConfig(
+		testAccAWSS3BucketConfigReplicationBasic(randInt),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "destination2" {
+  provider = "awsalternate"
+  bucket   = "tf-test-bucket-destination2-%[1]d"
+
+  versioning {
+    enabled = true
+  }
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id       = "rule1"
+      priority = 1
+      status   = "Enabled"
+
+      filter {
+        prefix = "prefix1"
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+
+    rules {
+      id       = "rule2"
+      priority = 2
+      status   = "Enabled"
+
+      filter {
+        tags = {
+          Key2 = "Value2"
+        }
+      }
+
+      destination {
+        bucket        = aws_s3_bucket.destination2.arn
+        storage_class = "STANDARD_IA"
+      }
+    }
+  }
+}
+`, randInt))
 }
 
 func testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjects(randInt int) string {

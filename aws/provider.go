@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -189,7 +190,9 @@ func Provider() *schema.Provider {
 			"aws_canonical_user_id":                          dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_export":                      dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":                       dataSourceAwsCloudFormationStack(),
+			"aws_cloudfront_cache_policy":                    dataSourceAwsCloudFrontCachePolicy(),
 			"aws_cloudfront_distribution":                    dataSourceAwsCloudFrontDistribution(),
+			"aws_cloudfront_origin_request_policy":           dataSourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudhsm_v2_cluster":                        dataSourceCloudHsmV2Cluster(),
 			"aws_cloudtrail_service_account":                 dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":                       dataSourceAwsCloudwatchLogGroup(),
@@ -272,6 +275,7 @@ func Provider() *schema.Provider {
 			"aws_identitystore_user":                         dataSourceAwsIdentityStoreUser(),
 			"aws_imagebuilder_component":                     dataSourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":    datasourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image":                         dataSourceAwsImageBuilderImage(),
 			"aws_imagebuilder_image_pipeline":                dataSourceAwsImageBuilderImagePipeline(),
 			"aws_imagebuilder_image_recipe":                  dataSourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":  datasourceAwsImageBuilderInfrastructureConfiguration(),
@@ -483,9 +487,12 @@ func Provider() *schema.Provider {
 			"aws_cloudformation_stack":                                resourceAwsCloudFormationStack(),
 			"aws_cloudformation_stack_set":                            resourceAwsCloudFormationStackSet(),
 			"aws_cloudformation_stack_set_instance":                   resourceAwsCloudFormationStackSetInstance(),
+			"aws_cloudfront_cache_policy":                             resourceAwsCloudFrontCachePolicy(),
 			"aws_cloudfront_distribution":                             resourceAwsCloudFrontDistribution(),
 			"aws_cloudfront_origin_access_identity":                   resourceAwsCloudFrontOriginAccessIdentity(),
+			"aws_cloudfront_origin_request_policy":                    resourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                               resourceAwsCloudFrontPublicKey(),
+			"aws_cloudfront_realtime_log_config":                      resourceAwsCloudFrontRealtimeLogConfig(),
 			"aws_cloudtrail":                                          resourceAwsCloudTrail(),
 			"aws_cloudwatch_event_bus":                                resourceAwsCloudWatchEventBus(),
 			"aws_cloudwatch_event_permission":                         resourceAwsCloudWatchEventPermission(),
@@ -504,6 +511,7 @@ func Provider() *schema.Provider {
 			"aws_config_configuration_aggregator":                     resourceAwsConfigConfigurationAggregator(),
 			"aws_config_configuration_recorder":                       resourceAwsConfigConfigurationRecorder(),
 			"aws_config_configuration_recorder_status":                resourceAwsConfigConfigurationRecorderStatus(),
+			"aws_config_conformance_pack":                             resourceAwsConfigConformancePack(),
 			"aws_config_delivery_channel":                             resourceAwsConfigDeliveryChannel(),
 			"aws_config_organization_custom_rule":                     resourceAwsConfigOrganizationCustomRule(),
 			"aws_config_organization_managed_rule":                    resourceAwsConfigOrganizationManagedRule(),
@@ -622,6 +630,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway":                                 resourceAwsEc2TransitGateway(),
 			"aws_ec2_transit_gateway_peering_attachment":              resourceAwsEc2TransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":     resourceAwsEc2TransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_prefix_list_reference":           resourceAwsEc2TransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                           resourceAwsEc2TransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                     resourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_route_table_association":         resourceAwsEc2TransitGatewayRouteTableAssociation(),
@@ -730,6 +739,7 @@ func Provider() *schema.Provider {
 			"aws_iam_user_login_profile":                              resourceAwsIamUserLoginProfile(),
 			"aws_imagebuilder_component":                              resourceAwsImageBuilderComponent(),
 			"aws_imagebuilder_distribution_configuration":             resourceAwsImageBuilderDistributionConfiguration(),
+			"aws_imagebuilder_image":                                  resourceAwsImageBuilderImage(),
 			"aws_imagebuilder_image_pipeline":                         resourceAwsImageBuilderImagePipeline(),
 			"aws_imagebuilder_image_recipe":                           resourceAwsImageBuilderImageRecipe(),
 			"aws_imagebuilder_infrastructure_configuration":           resourceAwsImageBuilderInfrastructureConfiguration(),
@@ -838,6 +848,7 @@ func Provider() *schema.Provider {
 			"aws_organizations_policy_attachment":                     resourceAwsOrganizationsPolicyAttachment(),
 			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
+			"aws_prometheus_workspace":                                resourceAwsPrometheusWorkspace(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
@@ -861,6 +872,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_event_subscription":                         resourceAwsRedshiftEventSubscription(),
 			"aws_resourcegroups_group":                                resourceAwsResourceGroupsGroup(),
 			"aws_route53_delegation_set":                              resourceAwsRoute53DelegationSet(),
+			"aws_route53_key_signing_key":                             resourceAwsRoute53KeySigningKey(),
 			"aws_route53_query_log":                                   resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                                      resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                            resourceAwsRoute53ZoneAssociation(),
@@ -877,6 +889,7 @@ func Provider() *schema.Provider {
 			"aws_route_table":                                         resourceAwsRouteTable(),
 			"aws_default_route_table":                                 resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                             resourceAwsRouteTableAssociation(),
+			"aws_sagemaker_app_image_config":                          resourceAwsSagemakerAppImageConfig(),
 			"aws_sagemaker_code_repository":                           resourceAwsSagemakerCodeRepository(),
 			"aws_sagemaker_domain":                                    resourceAwsSagemakerDomain(),
 			"aws_sagemaker_endpoint":                                  resourceAwsSagemakerEndpoint(),
@@ -885,6 +898,7 @@ func Provider() *schema.Provider {
 			"aws_sagemaker_image":                                     resourceAwsSagemakerImage(),
 			"aws_sagemaker_image_version":                             resourceAwsSagemakerImageVersion(),
 			"aws_sagemaker_model":                                     resourceAwsSagemakerModel(),
+			"aws_sagemaker_model_package_group":                       resourceAwsSagemakerModelPackageGroup(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": resourceAwsSagemakerNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_sagemaker_user_profile":                              resourceAwsSagemakerUserProfile(),
@@ -927,7 +941,9 @@ func Provider() *schema.Provider {
 			"aws_security_group_rule":                                 resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                                 resourceAwsSecurityHubAccount(),
 			"aws_securityhub_action_target":                           resourceAwsSecurityHubActionTarget(),
+			"aws_securityhub_invite_accepter":                         resourceAwsSecurityHubInviteAccepter(),
 			"aws_securityhub_member":                                  resourceAwsSecurityHubMember(),
+			"aws_securityhub_organization_admin_account":              resourceAwsSecurityHubOrganizationAdminAccount(),
 			"aws_securityhub_product_subscription":                    resourceAwsSecurityHubProductSubscription(),
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
@@ -980,6 +996,7 @@ func Provider() *schema.Provider {
 			"aws_default_subnet":                                      resourceAwsDefaultSubnet(),
 			"aws_subnet":                                              resourceAwsSubnet(),
 			"aws_swf_domain":                                          resourceAwsSwfDomain(),
+			"aws_synthetics_canary":                                   resourceAwsSyntheticsCanary(),
 			"aws_transfer_server":                                     resourceAwsTransferServer(),
 			"aws_transfer_ssh_key":                                    resourceAwsTransferSshKey(),
 			"aws_transfer_user":                                       resourceAwsTransferUser(),
@@ -1207,6 +1224,7 @@ func init() {
 		"elastictranscoder",
 		"elb",
 		"emr",
+		"emrcontainers",
 		"es",
 		"firehose",
 		"fms",
@@ -1507,4 +1525,15 @@ func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {
 	}
 
 	return ignoreConfig
+}
+
+// ReverseDns switches a DNS hostname to reverse DNS and vice-versa.
+func ReverseDns(hostname string) string {
+	parts := strings.Split(hostname, ".")
+
+	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+		parts[i], parts[j] = parts[j], parts[i]
+	}
+
+	return strings.Join(parts, ".")
 }

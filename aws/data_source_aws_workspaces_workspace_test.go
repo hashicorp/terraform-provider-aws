@@ -67,7 +67,6 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_properties.0.user_volume_size_gib", resourceName, "workspace_properties.0.user_volume_size_gib"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
-				ExpectNonEmptyPlan: true, // Hack to overcome data source with depends_on refresh
 			},
 		},
 	})
@@ -137,10 +136,8 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 data "aws_workspaces_workspace" "test" {
-  directory_id = aws_workspaces_directory.test.id
-  user_name    = "Administrator"
-
-  depends_on = [aws_workspaces_workspace.test]
+  directory_id = aws_workspaces_workspace.test.directory_id
+  user_name    = aws_workspaces_workspace.test.user_name
 }
 `)
 }

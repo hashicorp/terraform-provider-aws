@@ -11,15 +11,16 @@ import (
 )
 
 const (
-	SagemakerNotebookInstanceStatusNotFound = "NotFound"
-	SagemakerImageStatusNotFound            = "NotFound"
-	SagemakerImageStatusFailed              = "Failed"
-	SagemakerImageVersionStatusNotFound     = "NotFound"
-	SagemakerImageVersionStatusFailed       = "Failed"
-	SagemakerDomainStatusNotFound           = "NotFound"
-	SagemakerFeatureGroupStatusNotFound     = "NotFound"
-	SagemakerFeatureGroupStatusUnknown      = "Unknown"
-	SagemakerUserProfileStatusNotFound      = "NotFound"
+	SagemakerNotebookInstanceStatusNotFound  = "NotFound"
+	SagemakerImageStatusNotFound             = "NotFound"
+	SagemakerImageStatusFailed               = "Failed"
+	SagemakerImageVersionStatusNotFound      = "NotFound"
+	SagemakerImageVersionStatusFailed        = "Failed"
+	SagemakerDomainStatusNotFound            = "NotFound"
+	SagemakerFeatureGroupStatusNotFound      = "NotFound"
+	SagemakerFeatureGroupStatusUnknown       = "Unknown"
+	SagemakerUserProfileStatusNotFound       = "NotFound"
+	SagemakerModelPackageGroupStatusNotFound = "NotFound"
 )
 
 // NotebookInstanceStatus fetches the NotebookInstance and its Status
@@ -44,6 +45,31 @@ func NotebookInstanceStatus(conn *sagemaker.SageMaker, notebookName string) reso
 		}
 
 		return output, aws.StringValue(output.NotebookInstanceStatus), nil
+	}
+}
+
+// ModelPackageGroupStatus fetches the ModelPackageGroup and its Status
+func ModelPackageGroupStatus(conn *sagemaker.SageMaker, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &sagemaker.DescribeModelPackageGroupInput{
+			ModelPackageGroupName: aws.String(name),
+		}
+
+		output, err := conn.DescribeModelPackageGroup(input)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
+			return nil, SagemakerModelPackageGroupStatusNotFound, nil
+		}
+
+		if err != nil {
+			return nil, sagemaker.ModelPackageGroupStatusFailed, err
+		}
+
+		if output == nil {
+			return nil, SagemakerModelPackageGroupStatusNotFound, nil
+		}
+
+		return output, aws.StringValue(output.ModelPackageGroupStatus), nil
 	}
 }
 

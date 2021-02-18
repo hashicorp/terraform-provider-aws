@@ -363,7 +363,7 @@ func TestAccAWSCloudWatchEventRule_Name_Generated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &v),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 			{

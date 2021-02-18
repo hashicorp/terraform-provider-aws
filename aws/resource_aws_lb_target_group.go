@@ -72,6 +72,30 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"GRPC",
+					"HTTP1",
+					"HTTP2",
+				}, true),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("target_type").(string) == elbv2.TargetTypeEnumLambda {
+						return true
+					}
+					switch d.Get("protocol").(string) {
+					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+						return false
+					}
+					return true
+				},
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -294,6 +318,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		params.Port = aws.Int64(int64(d.Get("port").(int)))
 		params.Protocol = aws.String(d.Get("protocol").(string))
+		switch d.Get("protocol").(string) {
+		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
+		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
@@ -319,9 +347,16 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			m := healthCheck["matcher"].(string)
+			protocolVersion := d.Get("protocol_version").(string)
 			if m != "" {
-				params.Matcher = &elbv2.Matcher{
-					HttpCode: aws.String(m),
+				if protocolVersion == "GRPC" {
+					params.Matcher = &elbv2.Matcher{
+						GrpcCode: aws.String(m),
+					}
+				} else {
+					params.Matcher = &elbv2.Matcher{
+						HttpCode: aws.String(m),
+					}
 				}
 			}
 		}
@@ -398,10 +433,16 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			healthCheckProtocol := healthCheck["protocol"].(string)
-
+			protocolVersion := d.Get("protocol_version").(string)
 			if healthCheckProtocol != elbv2.ProtocolEnumTcp && !d.IsNewResource() {
-				params.Matcher = &elbv2.Matcher{
-					HttpCode: aws.String(healthCheck["matcher"].(string)),
+				if protocolVersion == "GRPC" {
+					params.Matcher = &elbv2.Matcher{
+						GrpcCode: aws.String(healthCheck["matcher"].(string)),
+					}
+				} else {
+					params.Matcher = &elbv2.Matcher{
+						HttpCode: aws.String(healthCheck["matcher"].(string)),
+					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
@@ -627,10 +668,17 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.HttpCode)
 	}
+	if targetGroup.Matcher != nil && targetGroup.Matcher.GrpcCode != nil {
+		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.GrpcCode)
+	}
 	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
 		d.Set("vpc_id", targetGroup.VpcId)
 		d.Set("port", targetGroup.Port)
 		d.Set("protocol", targetGroup.Protocol)
+	}
+	switch d.Get("protocol").(string) {
+	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
@@ -727,7 +775,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 
-	// Network Load Balancers have many special qwirks to them.
+	// Network Load Balancers have many special quirks to them.
 	// See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})

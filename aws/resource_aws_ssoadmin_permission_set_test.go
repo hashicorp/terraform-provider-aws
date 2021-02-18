@@ -272,6 +272,47 @@ func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 	})
 }
 
+// TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration validates
+// the resource's unchanged values (primarily relay_state) after updating the session_duration argument
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17411
+func TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration(t *testing.T) {
+	resourceName := "aws_ssoadmin_permission_set.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSOAdminPermissionSetRelayStateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSOAdminPermissionSetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT1H"),
+				),
+			},
+			{
+				Config: testAccAWSSSOAdminPermissionSetRelayStateConfig_updateSessionDuration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSOAdminPermissionSetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT2H"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -411,6 +452,34 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_permission_set" "test" {
   name             = %[1]q
   instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  session_duration = "PT2H"
+}
+`, rName)
+}
+
+func testAccAWSSSOAdminPermissionSetRelayStateConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_ssoadmin_permission_set" "test" {
+  description      = %[1]q
+  name             = %[1]q
+  instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  relay_state      = "https://example.com"
+  session_duration = "PT1H"
+}
+`, rName)
+}
+
+func testAccAWSSSOAdminPermissionSetRelayStateConfig_updateSessionDuration(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_ssoadmin_permission_set" "test" {
+  description      = %[1]q
+  name             = %[1]q
+  instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  relay_state      = "https://example.com"
   session_duration = "PT2H"
 }
 `, rName)

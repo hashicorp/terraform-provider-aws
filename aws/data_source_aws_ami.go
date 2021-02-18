@@ -298,7 +298,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 		return err
 	}
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	imageArn := arn.ARN{

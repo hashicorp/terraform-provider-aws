@@ -1915,19 +1915,6 @@ func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validateAwsSSMMaintenanceWindowTaskName(v interface{}, k string) (ws []string, errors []error) {
-	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_RegisterTaskWithMaintenanceWindow.html#systemsmanager-RegisterTaskWithMaintenanceWindow-request-Name
-	value := v.(string)
-
-	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
-			k, value))
-	}
-
-	return
-}
-
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {
@@ -2206,56 +2193,6 @@ func validateIotThingTypeSearchableAttribute(v interface{}, k string) (ws []stri
 			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
 	return
-}
-
-func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
-	// Collect all indexed attributes
-	primaryHashKey := d.Get("hash_key").(string)
-	indexedAttributes := map[string]bool{
-		primaryHashKey: true,
-	}
-	if v, ok := d.GetOk("range_key"); ok {
-		indexedAttributes[v.(string)] = true
-	}
-	if v, ok := d.GetOk("local_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-			rangeKey := index["range_key"].(string)
-			indexedAttributes[rangeKey] = true
-		}
-	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-
-			hashKey := index["hash_key"].(string)
-			indexedAttributes[hashKey] = true
-
-			if rk, ok := index["range_key"]; ok {
-				indexedAttributes[rk.(string)] = true
-			}
-		}
-	}
-
-	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
-	missingAttrDefs := []string{}
-	for _, attr := range attributes {
-		attribute := attr.(map[string]interface{})
-		attrName := attribute["name"].(string)
-
-		if _, ok := indexedAttributes[attrName]; !ok {
-			missingAttrDefs = append(missingAttrDefs, attrName)
-		}
-	}
-
-	if len(missingAttrDefs) > 0 {
-		return fmt.Errorf("All attributes must be indexed. Unused attributes: %q", missingAttrDefs)
-	}
-
-	return nil
 }
 
 func validateLaunchTemplateName(v interface{}, k string) (ws []string, errors []error) {

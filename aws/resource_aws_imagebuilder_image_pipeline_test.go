@@ -651,6 +651,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = "%[1]s-1"
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 
@@ -676,6 +680,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = "%[1]s-2"
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 

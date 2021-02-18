@@ -62,7 +62,7 @@ func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta i
 	output, err := conn.DescribeTransitGatewayRouteTables(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %s", err)
+		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %w", err)
 	}
 
 	if output == nil || len(output.TransitGatewayRouteTables) == 0 {
@@ -83,7 +83,7 @@ func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta i
 	d.Set("default_propagation_route_table", aws.BoolValue(transitGatewayRouteTable.DefaultPropagationRouteTable))
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("transit_gateway_id", aws.StringValue(transitGatewayRouteTable.TransitGatewayId))

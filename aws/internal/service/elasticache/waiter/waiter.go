@@ -63,6 +63,28 @@ func ReplicationGroupDeleted(conn *elasticache.ElastiCache, replicationGroupID s
 	return nil, err
 }
 
+// ReplicationGroupMemberClustersAvailable waits for all of a ReplicationGroup's Member Clusters to return Available
+func ReplicationGroupMemberClustersAvailable(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) ([]*elasticache.CacheCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			CacheClusterStatusCreating,
+			CacheClusterStatusDeleting,
+			CacheClusterStatusModifying,
+		},
+		Target:     []string{CacheClusterStatusAvailable},
+		Refresh:    ReplicationGroupMemberClustersStatus(conn, replicationGroupID),
+		Timeout:    timeout,
+		MinTimeout: cacheClusterAvailableMinTimeout,
+		Delay:      cacheClusterAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+	if v, ok := outputRaw.([]*elasticache.CacheCluster); ok {
+		return v, err
+	}
+	return nil, err
+}
+
 const (
 	CacheClusterCreatedTimeout = 40 * time.Minute
 	CacheClusterUpdatedTimeout = 80 * time.Minute
