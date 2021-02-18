@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -2231,16 +2232,17 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
 	rInt := acctest.RandInt()
+	resourceName := "aws_db_instance.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		CheckDestroy:      testAccCheckAWSDBInstanceEc2ClassicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfig_Ec2Classic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
+					testAccCheckAWSDBInstanceEc2ClassicExists(resourceName, &v),
 				),
 			},
 		},
@@ -2732,6 +2734,70 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 		}
 
 		*v = *resp.DBInstances[0]
+
+		return nil
+	}
+}
+
+func testAccCheckAWSDBInstanceEc2ClassicDestroy(s *terraform.State) error {
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		input := &rds.DescribeDBInstancesInput{
+			DBInstanceIdentifier: aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.DescribeDBInstances(input)
+
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error reading RDS DB Instance (%s): %w", rs.Primary.ID, err)
+		}
+
+		if output != nil && len(output.DBInstances) != 0 && output.DBInstances[0] != nil && aws.StringValue(output.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
+			return fmt.Errorf("RDS DB Instance (%s) still exists", rs.Primary.ID)
+		}
+	}
+
+	return nil
+}
+
+func testAccCheckAWSDBInstanceEc2ClassicExists(resourceName string, dbInstance *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("resource (%s) state not found", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource ID not set")
+		}
+
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).rdsconn
+
+		input := &rds.DescribeDBInstancesInput{
+			DBInstanceIdentifier: aws.String(rs.Primary.ID),
+		}
+
+		output, err := conn.DescribeDBInstances(input)
+
+		if err != nil {
+			return fmt.Errorf("error reading RDS DB Instance (%s): %w", rs.Primary.ID, err)
+		}
+
+		if output == nil || len(output.DBInstances) != 1 || output.DBInstances[0] == nil || aws.StringValue(output.DBInstances[0].DBInstanceIdentifier) != rs.Primary.ID {
+			return fmt.Errorf("RDS DB Instance (%s): not found", rs.Primary.ID)
+		}
+
+		*dbInstance = *output.DBInstances[0]
 
 		return nil
 	}
@@ -3952,21 +4018,17 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  identifier = "tf-test-mssql-%[1]d"
-
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
-
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
   backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "tf-test-mssql-%[1]d"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "somecrazypassword"
   skip_final_snapshot     = true
-
-  #publicly_accessible = true
-
-  vpc_security_group_ids = [aws_security_group.rds-mssql.id]
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
 }
 
 resource "aws_security_group" "rds-mssql" {
@@ -4030,22 +4092,18 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  identifier = "tf-test-mssql-%[1]d"
-
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
-
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
   backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "tf-test-mssql-%[1]d"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "somecrazypassword"
   skip_final_snapshot     = true
-
-  #publicly_accessible = true
-
-  vpc_security_group_ids = [aws_security_group.rds-mssql.id]
-  timezone               = "Alaskan Standard Time"
+  timezone                = "Alaskan Standard Time"
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
 }
 
 resource "aws_security_group" "rds-mssql" {
@@ -4109,22 +4167,19 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  identifier = "tf-test-mssql-%[1]d"
-
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
-
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
   backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  domain                  = aws_directory_service_directory.foo.id
+  domain_iam_role_name    = aws_iam_role.role.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "tf-test-mssql-%[1]d"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "somecrazypassword"
   skip_final_snapshot     = true
-
-  domain               = aws_directory_service_directory.foo.id
-  domain_iam_role_name = aws_iam_role.role.name
-
-  vpc_security_group_ids = [aws_security_group.rds-mssql.id]
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
 }
 
 resource "aws_security_group" "rds-mssql" {
@@ -4239,23 +4294,20 @@ resource "aws_subnet" "other" {
 }
 
 resource "aws_db_instance" "mssql" {
-  identifier = "tf-test-mssql-%[1]d"
-
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
-
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
-  backup_retention_period = 0
-  skip_final_snapshot     = true
   apply_immediately       = true
-
-  domain               = aws_directory_service_directory.bar.id
-  domain_iam_role_name = aws_iam_role.role.name
-
-  vpc_security_group_ids = [aws_security_group.rds-mssql.id]
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  domain                  = aws_directory_service_directory.bar.id
+  domain_iam_role_name    = aws_iam_role.role.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = "tf-test-mssql-%[1]d"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "somecrazypassword"
+  skip_final_snapshot     = true
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
 }
 
 resource "aws_security_group" "rds-mssql" {
@@ -4372,6 +4424,7 @@ resource "aws_subnet" "other" {
 resource "aws_db_instance" "mssql" {
   allocated_storage   = 20
   engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
   identifier          = "tf-test-mssql-%[1]d"
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   password            = "somecrazypassword"
@@ -4385,24 +4438,21 @@ resource "aws_db_snapshot" "mssql-snap" {
 }
 
 resource "aws_db_instance" "mssql_restore" {
-  identifier = "tf-test-mssql-%[1]d-restore"
-
-  db_subnet_group_name = aws_db_subnet_group.rds_one.name
-
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "somecrazyusername"
-  password                = "somecrazypassword"
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  apply_immediately       = true
   backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  domain                  = aws_directory_service_directory.foo.id
+  domain_iam_role_name    = aws_iam_role.role.name
+  engine                  = aws_db_instance.mssql.engine
+  engine_version          = aws_db_instance.mssql.engine_version
+  identifier              = "tf-test-mssql-%[1]d-restore"
+  instance_class          = aws_db_instance.mssql.instance_class
+  password                = "somecrazypassword"
   skip_final_snapshot     = true
   snapshot_identifier     = aws_db_snapshot.mssql-snap.id
-
-  domain               = aws_directory_service_directory.foo.id
-  domain_iam_role_name = aws_iam_role.role.name
-
-  apply_immediately      = true
-  vpc_security_group_ids = [aws_security_group.rds-mssql.id]
+  username                = "somecrazyusername"
+  vpc_security_group_ids  = [aws_security_group.rds-mssql.id]
 }
 
 resource "aws_security_group" "rds-mssql" {
