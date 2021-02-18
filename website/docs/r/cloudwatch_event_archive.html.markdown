@@ -50,7 +50,7 @@ PATTERN
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 chars.
+* `name` - (Required) The name of the new event archive. The archive name cannot exceed 48 characters.
 * `event_source_arn` - (Required) Event bus source ARN from where these events should be archived.
 * `description` - (Optional) The description of the new event archive.
 * `event_pattern` - (Optional) Instructs the new event archive to only capture events matched by this pattern. By default, it attempts to archive every event received in the `event_source_arn`.
