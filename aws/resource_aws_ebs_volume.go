@@ -273,7 +273,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 	}
 	d.Set("arn", arn.String())
 	d.Set("availability_zone", volume.AvailabilityZone)
