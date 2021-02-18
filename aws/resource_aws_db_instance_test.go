@@ -2201,10 +2201,8 @@ func TestAccAWSDBInstance_MySQL_SnapshotRestoreWithEngineVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mysql_restore", &vRestoredInstance),
 					testAccCheckAWSDBInstanceExists("aws_db_instance.mysql", &v),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.mysql", "engine_version", "5.6.35"),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.mysql_restore", "engine_version", "5.6.41"),
+					resource.TestCheckResourceAttr("aws_db_instance.mysql", "engine_version", "5.6.35"),
+					resource.TestCheckResourceAttr("aws_db_instance.mysql_restore", "engine_version", "5.6.41"),
 				),
 			},
 		},
@@ -4577,8 +4575,6 @@ resource "aws_db_instance" "mysql_restore" {
 
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
-  username                = "root"
-  password                = "password"
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = "5.6.41"
   backup_retention_period = 0
