@@ -172,7 +172,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	filter, filterOk := d.GetOk("filter")
 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
-		return fmt.Errorf("One of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
+		return fmt.Errorf("one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
@@ -195,10 +195,10 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 	if resp == nil || len(resp.RouteTables) == 0 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
+		return fmt.Errorf("query returned no results. Please change your search criteria and try again")
 	}
 	if len(resp.RouteTables) > 1 {
-		return fmt.Errorf("Multiple Route Table matched; use additional constraints to reduce matches to a single Route Table")
+		return fmt.Errorf("multiple Route Tables matched; use additional constraints to reduce matches to a single Route Table")
 	}
 
 	rt := resp.RouteTables[0]
@@ -208,7 +208,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	ownerID := aws.StringValue(rt.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
