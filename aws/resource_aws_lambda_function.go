@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -517,26 +516,25 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LambdaTags()
 	}
 
-	// IAM changes can take some time to propagate in AWS
-	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(waiter.LambdaFunctionCreateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 		_, err := conn.CreateFunction(params)
 
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "The role defined for the function cannot be assumed by Lambda") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
 
-		if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
 			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 			return resource.RetryableError(err)
 		}
@@ -553,14 +551,14 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
-			return fmt.Errorf("error creating Lambda Function: %w", err)
+		if !tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+			return fmt.Errorf("error creating Lambda Function (1): %w", err)
 		}
 
 		err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
@@ -577,7 +575,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating Lambda Function: %w", err)
+			return fmt.Errorf("error creating Lambda Function (2): %w", err)
 		}
 	}
 
@@ -1039,26 +1037,25 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if configUpdate {
 		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		// IAM changes can take 1 minute to propagate in AWS
-		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+		err := resource.Retry(waiter.LambdaFunctionUpdateTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
 			_, err := conn.UpdateFunctionConfiguration(configReq)
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "The role defined for the function cannot be assumed by Lambda") {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
 				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 				return resource.RetryableError(err)
 			}
@@ -1075,7 +1072,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
+			if !tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 				return fmt.Errorf("error modifying Lambda Function (%s) configuration : %w", d.Id(), err)
 			}
 
@@ -1083,7 +1080,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateFunctionConfiguration(configReq)
 
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "throttled by EC2") {
+				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
