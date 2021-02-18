@@ -53,7 +53,7 @@ func resourceAwsSecurityHubInviteAccepterCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error accepting Security Hub invitation: %w", err)
 	}
 
-	d.SetId(invitationId)
+	d.SetId(meta.(*AWSClient).accountid)
 
 	return resourceAwsSecurityHubInviteAccepterRead(d, meta)
 }
@@ -82,14 +82,13 @@ func resourceAwsSecurityHubInviteAccepterRead(d *schema.ResourceData, meta inter
 	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
-
+	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+		log.Print("[WARN] Security Hub master account not found, removing from state")
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-			log.Print("[WARN] Security Hub master account not found, removing from state")
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error retrieving Security Hub master account: %w", err)
 	}
 
 	master := resp.Master
@@ -116,7 +115,7 @@ func resourceAwsSecurityHubInviteAccepterDelete(d *schema.ResourceData, meta int
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error disassociating from Security Hub master account: %w", err)
 	}
 
 	return nil

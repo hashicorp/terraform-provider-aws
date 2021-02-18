@@ -44,12 +44,12 @@ The following arguments are supported:
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `id` - Returns `securityhub-invite-accepter`.
+* `invitation_id` - The ID of the invitation.
 
 ## Import
 
-Security Hub invite acceptance can be imported using the word `securityhub-invite-accepter`, e.g.
+Security Hub invite acceptance can be imported using the account ID, e.g.
 
 ```
-$ terraform import aws_securityhub_invite_acceptor.example securityhub-invite-accepter
+$ terraform import aws_securityhub_invite_acceptor.example 123456789012
 ```

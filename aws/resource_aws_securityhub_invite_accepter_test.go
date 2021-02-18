@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
+func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_securityhub_invite_accepter.test"
 
@@ -52,7 +52,7 @@ func testAccCheckAWSSecurityHubInviteAccepterExists(resourceName string) resourc
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving Security Hub master account: %w", err)
 		}
 
 		if resp == nil || resp.Master == nil || aws.StringValue(resp.Master.AccountId) == "" {
@@ -72,12 +72,15 @@ func testAccCheckAWSSecurityHubInviteAccepterDestroy(s *terraform.State) error {
 		}
 
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
-
+		if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
+			continue
+		}
+		// If Security Hub is not enabled, the API returns "BadRequestException"
+		if tfawserr.ErrCodeEquals(err, "BadRequestException") {
+			continue
+		}
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-				continue
-			}
-			return err
+			return fmt.Errorf("error retrieving Security Hub master account: %w", err)
 		}
 
 		if resp == nil || resp.Master == nil || aws.StringValue(resp.Master.AccountId) == "" {
