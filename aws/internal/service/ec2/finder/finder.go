@@ -76,6 +76,25 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
+// InstanceByID looks up a Instance by ID. When not found, returns nil and potentially an API error.
+func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
+	input := &ec2.DescribeInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeInstances(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Reservations) == 0 || output.Reservations[0] == nil || len(output.Reservations[0].Instances) == 0 || output.Reservations[0].Instances[0] == nil {
+		return nil, nil
+	}
+
+	return output.Reservations[0].Instances[0], nil
+}
+
 // SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
 func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	req := &ec2.DescribeSecurityGroupsInput{

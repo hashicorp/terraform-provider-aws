@@ -284,11 +284,11 @@ of several sub-resources - these resources are laid out below.
 
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
-* `forwarded_values` (Required) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
+* `forwarded_values` (Optional) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     handles query strings, cookies and headers (maximum one).
 
-* `lambda_function_association` (Optional) - A config block that triggers a lambda function with
-  specific actions. Defined below, maximum 4.
+* `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda
+    function with specific actions (maximum 4).
 
 * `max_ttl` (Optional) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
@@ -299,6 +299,9 @@ of several sub-resources - these resources are laid out below.
 * `min_ttl` (Optional) - The minimum amount of time that you want objects to
     stay in CloudFront caches before CloudFront queries your origin to see
     whether the object has been updated. Defaults to 0 seconds.
+
+* `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
+    that is attached to the behavior.
 
 * `path_pattern` (Required) - The pattern (for example, `images/*.jpg)` that
     specifies which requests you want this cache behavior to apply to.
