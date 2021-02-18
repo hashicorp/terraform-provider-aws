@@ -194,7 +194,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Optional: true,
 				MaxItems: 5,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
 						validateArn,
 						validateEC2AutomateARN,
@@ -206,7 +206,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Optional: true,
 				MaxItems: 5,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
 						validateArn,
 						validateEC2AutomateARN,
