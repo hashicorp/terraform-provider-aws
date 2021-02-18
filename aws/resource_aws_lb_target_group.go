@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -406,7 +407,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(waiter.TagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
 
 			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {

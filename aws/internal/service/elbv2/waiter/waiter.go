@@ -16,6 +16,9 @@ const (
 
 	// Default maximum amount of time to wait for a Load Balancer to be deleted
 	LoadBalancerDeleteTimeout = 10 * time.Minute
+
+	// Default maximum amount of time to wait for Tag Propagation for a Load Balancer
+	TagPropagationTimeout = 2 * time.Minute
 )
 
 // LoadBalancerActive waits for a Load Balancer to return active

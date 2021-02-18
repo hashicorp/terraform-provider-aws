@@ -374,8 +374,26 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ALB (%s) tags: %s", d.Id(), err)
+		err := resource.Retry(waiter.TagPropagationTimeout, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
+
+			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			err = keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB (%s) tags: %s", d.Id(), err)
 		}
 	}
 
