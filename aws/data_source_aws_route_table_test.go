@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -28,6 +29,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 				Config: testAccDataSourceAwsRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// By tags.
+					testAccMatchResourceAttrRegionalARN(datasource1Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource1Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "owner_id", rtResourceName, "owner_id"),
@@ -39,6 +41,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource1Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource1Name, "tags.Name", rName),
 					// By filter.
+					testAccMatchResourceAttrRegionalARN(datasource2Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource2Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "owner_id", rtResourceName, "owner_id"),
@@ -50,6 +53,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource2Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource2Name, "tags.Name", rName),
 					// By subnet ID.
+					testAccMatchResourceAttrRegionalARN(datasource3Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource3Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "owner_id", rtResourceName, "owner_id"),
@@ -61,6 +65,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource3Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource3Name, "tags.Name", rName),
 					// By route table ID.
+					testAccMatchResourceAttrRegionalARN(datasource4Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource4Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource4Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource4Name, "owner_id", rtResourceName, "owner_id"),
@@ -72,6 +77,7 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 					testAccCheckListHasSomeElementAttrPair(datasource4Name, "associations", "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(datasource4Name, "tags.Name", rName),
 					// By gateway ID.
+					testAccMatchResourceAttrRegionalARN(datasource5Name, "arn", "ec2", regexp.MustCompile(`route-table/.+$`)),
 					resource.TestCheckResourceAttrPair(datasource5Name, "id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "route_table_id", rtResourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasource5Name, "owner_id", rtResourceName, "owner_id"),
