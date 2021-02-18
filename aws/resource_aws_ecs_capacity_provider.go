@@ -68,7 +68,7 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 										Optional:     true,
 										Computed:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
