@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -316,16 +315,13 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 	rInt2 := acctest.RandInt()
 	resourceName := "aws_ssm_document.test"
 
-	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
-	defer os.Remove(source)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt),
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
@@ -338,7 +334,7 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"attachments_source"}, // This doesn't work because the API doesn't provide attachments info directly
 			},
 			{
-				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt2),
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, rInt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
@@ -972,7 +968,7 @@ DOC
 `, rName))
 }
 
-func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
+func testAccAWSSSMDocumentTypePackageConfig(rName string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "ssm_profile-%[1]s"
