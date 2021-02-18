@@ -247,7 +247,7 @@ func TestAccAWSCloudWatchEventTarget_GeneratedTargetId(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventTarget_retrypolicy_dlc(t *testing.T) {
+func TestAccAWSCloudWatchEventTarget_RetryPolicy_DeadLetterConfig(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	queueResourceName := "aws_sqs_queue.test"
@@ -263,7 +263,7 @@ func TestAccAWSCloudWatchEventTarget_retrypolicy_dlc(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventTargetConfig_retrypolicy_dlc(ruleName, targetID, ssmDocumentName),
+				Config: testAccAWSCloudWatchEventTargetConfig_retryPolicyDlc(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
@@ -765,7 +765,7 @@ resource "aws_sns_topic" "test" {
 `, ruleName, snsTopicName)
 }
 
-func testAccAWSCloudWatchEventTargetConfig_retrypolicy_dlc(ruleName, targetName, rName string) string {
+func testAccAWSCloudWatchEventTargetConfig_retryPolicyDlc(ruleName, targetName, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
