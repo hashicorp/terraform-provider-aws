@@ -14,7 +14,7 @@ This resource can prove useful when a module accepts a subnet ID as an input var
 
 ## Example Usage
 
-The following example shows how one might accept a subnet id as a variable and use this data source to obtain the data necessary to create a security group that allows connections from hosts in that subnet.
+The following example shows how one might accept a subnet ID as a variable and use this data source to obtain the data necessary to create a security group that allows connections from hosts in that subnet.
 
 ```hcl
 variable "subnet_id" {}
@@ -54,16 +54,16 @@ The arguments of this data source act as filters for querying the available subn
 
 The following arguments are optional:
 
-* `availability_zone` - (Optional) The availability zone where the subnet must reside.
-* `availability_zone_id` - (Optional) The ID of the Availability Zone for the subnet.
-* `cidr_block` - (Optional) The CIDR block of the desired subnet.
-* `default_for_az` - (Optional) Boolean constraint for whether the desired subnet must be the default subnet for its associated availability zone.
+* `availability_zone` - (Optional) Availability zone where the subnet must reside.
+* `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet.
+* `cidr_block` - (Optional) CIDR block of the desired subnet.
+* `default_for_az` - (Optional) Whether the desired subnet must be the default subnet for its associated availability zone.
 * `filter` - (Optional) Configuration block. Detailed below.
-* `id` - (Optional) The id of the specific subnet to retrieve.
-* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the desired subnet
-* `state` - (Optional) The state that the desired subnet must have.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired subnet.
-* `vpc_id` - (Optional) The id of the VPC that the desired subnet belongs to.
+* `id` - (Optional) ID of the specific subnet to retrieve.
+* `ipv6_cidr_block` - (Optional) IPv6 CIDR block of the desired subnet.
+* `state` - (Optional) State that the desired subnet must have.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired subnet.
+* `vpc_id` - (Optional) ID of the VPC that the desired subnet belongs to.
 
 ### filter
 
