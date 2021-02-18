@@ -96,7 +96,7 @@ func testAccAWSSecurityHubInviteAccepterConfig_basic() string {
 	return composeConfig(
 		testAccAlternateAccountProviderConfig(), `
 resource "aws_securityhub_invite_accepter" "test" {
-  master_id  = aws_securityhub_member.source.master_id
+  master_id = aws_securityhub_member.source.master_id
 
   depends_on = [aws_securityhub_account.test]
 }
