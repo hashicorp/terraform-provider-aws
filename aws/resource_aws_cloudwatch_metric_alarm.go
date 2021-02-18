@@ -88,9 +88,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ValidateFunc: validation.Any(
+										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 255),
-											validation.StringMatch(regexp.MustCompile(`[^:].*`), ""),
+											validation.StringMatch(regexp.MustCompile(`[^:].*`), "must not contain colon characters"),
 										),
 									},
 									"period": {
@@ -125,9 +125,9 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
-				ValidateFunc: validation.Any(
+				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[^:].*`), ""),
+					validation.StringMatch(regexp.MustCompile(`[^:].*`), "must not contain colon characters"),
 				),
 			},
 			"period": {
@@ -195,7 +195,10 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: validation.Any(
+						validateArn,
+						validateEC2AutomateARN,
+					),
 				},
 			},
 			"ok_actions": {
@@ -204,7 +207,10 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: validation.Any(
+						validateArn,
+						validateEC2AutomateARN,
+					),
 				},
 			},
 			"unit": {
@@ -216,7 +222,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"statistic", "metric_query"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), ""),
+				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
 			},
 			"treat_missing_data": {
 				Type:         schema.TypeString,
