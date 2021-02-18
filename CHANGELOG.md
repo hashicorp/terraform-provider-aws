@@ -7,7 +7,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ami: Add `usage_operation`, `platform_details`, `ena_support` attributes ([#13971](https://github.com/hashicorp/terraform-provider-aws/issues/13971))
+* resource/aws_ami: Add `usage_operation`, `platform_details`, `image_owner_alias`, `image_type`, `hypervisor`, `owner_id`, `platform`, `public` attributes ([#13971](https://github.com/hashicorp/terraform-provider-aws/issues/13971))
+* resource/aws_ami_copy: Add `usage_operation`, `platform_details`, `image_owner_alias`, `image_type`, `hypervisor`, `owner_id`, `platform`, `public` attributes ([#13971](https://github.com/hashicorp/terraform-provider-aws/issues/13971))
+* resource/aws_ami_from_instance: Add `usage_operation`, `platform_details`, `image_owner_alias`, `image_type`, `hypervisor`, `owner_id`, `platform`, `public` attributes ([#13971](https://github.com/hashicorp/terraform-provider-aws/issues/13971))
 * resource/aws_dx_gateway_association: Changes to `proposal_id` do not force resource recreation ([#12482](https://github.com/hashicorp/terraform-provider-aws/issues/12482))
+* resource/aws_spot_instance_request: Add import support ([#12787](https://github.com/hashicorp/terraform-provider-aws/issues/12787))
+* resource/aws_spot_instance_request: Add plan time validation for `spot_type` and `block_duration_minutes` ([#12787](https://github.com/hashicorp/terraform-provider-aws/issues/12787))
 
 BUG FIXES:
 
