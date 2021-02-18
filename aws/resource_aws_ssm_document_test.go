@@ -42,6 +42,39 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_Name(t *testing.T) {
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_target_type(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
