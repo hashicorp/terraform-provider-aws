@@ -384,6 +384,18 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if t.RetryPolicy != nil {
+		if err := d.Set("retry_policy", flatternAwsCloudWatchEventTargetRetryPolicy(t.RetryPolicy)); err != nil {
+			return fmt.Errorf("Error setting retry_policy error: #{err}")
+		}
+	}
+
+	if t.DeadLetterConfig != nil {
+		if err := d.Set("dead_letter_config", flatternAwsCloudWatchEventTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
+			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
+		}
+	}
+
 	return nil
 }
 
@@ -728,6 +740,25 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 	}
 	config["input_template"] = aws.StringValue(inputTransformer.InputTemplate)
 	config["input_paths"] = inputPathsMap
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flatternAwsCloudWatchEventTargetRetryPolicy(rp *events.RetryPolicy) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["maximum_event_age_in_seconds"] = aws.Int64Value(rp.MaximumEventAgeInSeconds)
+	config["maximum_retry_attempts"] = aws.Int64Value(rp.MaximumRetryAttempts)
+
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flatternAwsCloudWatchEventTargetDeadLetterConfig(dlc *events.DeadLetterConfig) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	config["arn"] = aws.StringValue(dlc.Arn)
 
 	result := []map[string]interface{}{config}
 	return result
