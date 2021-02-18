@@ -89,12 +89,12 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
 					testAccCheckAWSElasticacheReplicationGroupExists(primaryReplicationGroupResourceName, &primaryReplcationGroup),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
-					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", "false"), // TODO: change to Pair
-					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),         // TODO: change to Pair
-					resource.TestCheckResourceAttr(resourceName, "cache_node_type", "cache.m5.large"),   // TODO: change to Pair
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),            // TODO: change to Pair
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),                     // TODO: change to Pair
-					resource.TestCheckResourceAttr(resourceName, "actual_engine_version", "5.0.6"),      // TODO: change to Pair
+					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_enabled", primaryReplicationGroupResourceName, "cluster_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryReplicationGroupResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "actual_engine_version", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", elasticacheEmptyDescription),
