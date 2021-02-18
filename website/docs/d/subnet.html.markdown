@@ -56,11 +56,11 @@ The following arguments are optional:
 
 * `availability_zone` - (Optional) The availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) The ID of the Availability Zone for the subnet.
-* `cidr_block` - (Optional) The cidr block of the desired subnet.
+* `cidr_block` - (Optional) The CIDR block of the desired subnet.
 * `default_for_az` - (Optional) Boolean constraint for whether the desired subnet must be the default subnet for its associated availability zone.
 * `filter` - (Optional) Configuration block. Detailed below.
 * `id` - (Optional) The id of the specific subnet to retrieve.
-* `ipv6_cidr_block` - (Optional) The Ipv6 cidr block of the desired subnet
+* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the desired subnet
 * `state` - (Optional) The state that the desired subnet must have.
 * `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired subnet.
 * `vpc_id` - (Optional) The id of the VPC that the desired subnet belongs to.
@@ -79,8 +79,10 @@ The following arguments are required:
 In addition to the attributes above, the following attributes are exported:
 
 * `arn` - ARN of the subnet.
+* `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.
 * `available_ip_address_count` - Available IP addresses of the subnet.
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
+* `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
 * `outpost_arn` - ARN of the Outpost.
