@@ -587,7 +587,7 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 
 	output, err := conn.CopyObject(input)
 	if err != nil {
-		return fmt.Errorf("error copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
+		return fmt.Errorf("error copying S3 object (bucket: %s; key: %s; source: %s): %w", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
 	}
 
 	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
