@@ -12,6 +12,9 @@ const (
 	// Maximum amount of time to wait for a Capacity Provider to return INACTIVE
 	CapacityProviderInactiveTimeout = 20 * time.Minute
 
+	// Maximum amount of time to wait for a Capacity Provider to return UPDATE_COMPLETE or UPDATE_FAILED
+	CapacityProviderUpdateTimeout = 10 * time.Minute
+
 	ServiceCreateTimeout      = 2 * time.Minute
 	ServiceInactiveTimeout    = 10 * time.Minute
 	ServiceInactiveTimeoutMin = 1 * time.Second
@@ -132,6 +135,24 @@ func ClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*ecs.Cluster); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// CapacityProviderUpdate waits for a Capacity Provider to return UPDATE_COMPLETE or UPDATE_FAILED
+func CapacityProviderUpdate(conn *ecs.ECS, capacityProvider string) (*ecs.CapacityProvider, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ecs.CapacityProviderUpdateStatusUpdateInProgress},
+		Target:  []string{ecs.CapacityProviderUpdateStatusUpdateComplete},
+		Refresh: CapacityProviderUpdateStatus(conn, capacityProvider),
+		Timeout: CapacityProviderUpdateTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ecs.CapacityProvider); ok {
 		return v, err
 	}
 

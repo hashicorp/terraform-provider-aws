@@ -170,14 +170,14 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName),
+				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName, ecs.ManagedScalingStatusEnabled, 300, 10, 1, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "400"),
-					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "300"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "50"),
@@ -188,6 +188,20 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName, ecs.ManagedScalingStatusDisabled, 400, 100, 10, 100),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.instance_warmup_period", "400"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
+				),
 			},
 		},
 	})
@@ -273,8 +287,6 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 		},
 	})
 }
-
-// TODO add an update test config - Reference: https://github.com/aws/containers-roadmap/issues/633
 
 func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecsconn
@@ -396,24 +408,24 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccAWSEcsCapacityProviderConfigManagedScaling(rName string) string {
+func testAccAWSEcsCapacityProviderConfigManagedScaling(rName, status string, warmup, max, min, cap int) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %q
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
 
     managed_scaling {
-      instance_warmup_period    = 400
-      maximum_scaling_step_size = 10
-      minimum_scaling_step_size = 2
-      status                    = "ENABLED"
-      target_capacity           = 50
+      instance_warmup_period    = %v
+      maximum_scaling_step_size = %v
+      minimum_scaling_step_size = %v
+      status                    = %q
+      target_capacity           = %v
     }
   }
 }
-`, rName)
+`, rName, warmup, max, min, status, cap)
 }
 
 func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {

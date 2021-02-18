@@ -3,14 +3,20 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
+)
+
+const (
+	ecsCapacityProviderTimeoutUpdate = 10 * time.Minute
 )
 
 func resourceAwsEcsCapacityProvider() *schema.Resource {
@@ -51,7 +57,6 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								ecs.ManagedTerminationProtectionEnabled,
 								ecs.ManagedTerminationProtectionDisabled,
@@ -62,35 +67,30 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 							MaxItems: 1,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"instance_warmup_period": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"minimum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"status": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ForceNew: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											ecs.ManagedScalingStatusEnabled,
 											ecs.ManagedScalingStatusDisabled,
@@ -99,7 +99,6 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 100),
 									},
 								},
@@ -121,7 +120,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(d.Get("name").(string)),
-		AutoScalingGroupProvider: expandAutoScalingGroupProvider(d.Get("auto_scaling_group_provider")),
+		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
 	}
 
 	// `CreateCapacityProviderInput` does not accept an empty array of tags
@@ -132,7 +131,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 	out, err := conn.CreateCapacityProvider(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating capacity provider: %s", err)
+		return fmt.Errorf("error creating ECS Capacity Provider: %s", err)
 	}
 
 	provider := *out.CapacityProvider
@@ -203,15 +202,44 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
+	input := &ecs.UpdateCapacityProviderInput{
+		Name: aws.String(d.Get("name").(string)),
+	}
+
+	if d.HasChange("auto_scaling_group_provider") {
+		input.AutoScalingGroupProvider = expandAutoScalingGroupProviderUpdate(d.Get("auto_scaling_group_provider"))
+
+		err := resource.Retry(ecsCapacityProviderTimeoutUpdate, func() *resource.RetryError {
+			_, err := conn.UpdateCapacityProvider(input)
+			if err != nil {
+				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateCapacityProvider(input)
+		}
+		if err != nil {
+			return fmt.Errorf("error updating ECS Capacity Provider (%s): %s", d.Id(), err)
+		}
+
+		if _, err = waiter.CapacityProviderUpdate(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for ECS Capacity Provider (%s) update: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Cluster (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating ECS Capacity Provider (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return resourceAwsEcsCapacityProviderRead(d, meta)
 }
 
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
@@ -246,7 +274,7 @@ func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGroupProvider {
+func expandAutoScalingGroupProviderCreate(configured interface{}) *ecs.AutoScalingGroupProvider {
 	if configured == nil {
 		return nil
 	}
@@ -264,29 +292,62 @@ func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGrou
 		prov.ManagedTerminationProtection = aws.String(mtp)
 	}
 
-	if v := p["managed_scaling"].([]interface{}); len(v) > 0 && v[0].(map[string]interface{}) != nil {
-		ms := v[0].(map[string]interface{})
-		managedScaling := ecs.ManagedScaling{}
-
-		if val, ok := ms["instance_warmup_period"].(int); ok && val != 0 {
-			managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
-		}
-		if val, ok := ms["maximum_scaling_step_size"].(int); ok && val != 0 {
-			managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
-		}
-		if val, ok := ms["minimum_scaling_step_size"].(int); ok && val != 0 {
-			managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
-		}
-		if val, ok := ms["status"].(string); ok && len(val) > 0 {
-			managedScaling.Status = aws.String(val)
-		}
-		if val, ok := ms["target_capacity"].(int); ok && val != 0 {
-			managedScaling.TargetCapacity = aws.Int64(int64(val))
-		}
-		prov.ManagedScaling = &managedScaling
-	}
+	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
 
 	return &prov
+}
+
+func expandAutoScalingGroupProviderUpdate(configured interface{}) *ecs.AutoScalingGroupProviderUpdate {
+	if configured == nil {
+		return nil
+	}
+
+	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+		return nil
+	}
+
+	prov := ecs.AutoScalingGroupProviderUpdate{}
+	p := configured.([]interface{})[0].(map[string]interface{})
+
+	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
+		prov.ManagedTerminationProtection = aws.String(mtp)
+	}
+
+	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
+
+	return &prov
+}
+
+func expandManagedScaling(configured interface{}) *ecs.ManagedScaling {
+	if configured == nil {
+		return nil
+	}
+
+	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+		return nil
+	}
+
+	p := configured.([]interface{})[0].(map[string]interface{})
+
+	managedScaling := ecs.ManagedScaling{}
+
+	if val, ok := p["instance_warmup_period"].(int); ok && val != 0 {
+		managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
+	}
+	if val, ok := p["maximum_scaling_step_size"].(int); ok && val != 0 {
+		managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
+	}
+	if val, ok := p["minimum_scaling_step_size"].(int); ok && val != 0 {
+		managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
+	}
+	if val, ok := p["status"].(string); ok && len(val) > 0 {
+		managedScaling.Status = aws.String(val)
+	}
+	if val, ok := p["target_capacity"].(int); ok && val != 0 {
+		managedScaling.TargetCapacity = aws.Int64(int64(val))
+	}
+
+	return &managedScaling
 }
 
 func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []map[string]interface{} {

@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,5 +94,26 @@ func ClusterStatus(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
 		}
 
 		return output, aws.StringValue(output.Clusters[0].Status), err
+	}
+}
+
+// CapacityProviderUpdateStatus fetches the Capacity Provider and its Update Status
+func CapacityProviderUpdateStatus(conn *ecs.ECS, capacityProvider string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.DescribeCapacityProviders(&ecs.DescribeCapacityProvidersInput{
+			CapacityProviders: []*string{aws.String(capacityProvider)},
+		})
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if len(output.CapacityProviders) == 0 {
+			return nil, "", fmt.Errorf("ECS Capacity Provider %q missing", capacityProvider)
+		}
+
+		c := output.CapacityProviders[0]
+
+		return c, aws.StringValue(c.UpdateStatus), nil
 	}
 }
