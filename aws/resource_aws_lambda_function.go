@@ -1077,8 +1077,8 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 
 			// Allow more time for EC2 throttling
-			err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError {
-				_, err := conn.UpdateFunctionConfiguration(configReq)
+			err := resource.Retry(waiter.LambdaFunctionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+				_, err = conn.UpdateFunctionConfiguration(configReq)
 
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
