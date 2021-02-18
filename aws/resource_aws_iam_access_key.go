@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/encryption"
@@ -80,7 +79,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		)
 	}
 
-	d.SetId(*createResp.AccessKey.AccessKeyId)
+	d.SetId(aws.StringValue(createResp.AccessKey.AccessKeyId))
 
 	if createResp.AccessKey == nil || createResp.AccessKey.SecretAccessKey == nil {
 		return fmt.Errorf("CreateAccessKey response did not contain a Secret Access Key as expected")
@@ -148,7 +147,7 @@ func resourceAwsIamAccessKeyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsIamAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetadata) error {
-	d.SetId(*key.AccessKeyId)
+	d.SetId(aws.StringValue(key.AccessKeyId))
 	if err := d.Set("user", key.UserName); err != nil {
 		return err
 	}
