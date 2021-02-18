@@ -50,8 +50,8 @@ func TestGetWithDefault(t *testing.T) {
 }
 
 func TestRequireOneOf(t *testing.T) {
-	envVar1 := "TESTENVVAR_FAILIFALLEMPTY1"
-	envVar2 := "TESTENVVAR_FAILIFALLEMPTY2"
+	envVar1 := "TESTENVVAR_REQUIREONEOF1"
+	envVar2 := "TESTENVVAR_REQUIREONEOF2"
 	envVars := []string{envVar1, envVar2}
 
 	t.Run("missing", func(t *testing.T) {
@@ -124,7 +124,7 @@ func TestRequireOneOf(t *testing.T) {
 }
 
 func TestRequire(t *testing.T) {
-	envVar := "TESTENVVAR_FAILIFEMPTY"
+	envVar := "TESTENVVAR_REQUIRE"
 
 	t.Run("missing", func(t *testing.T) {
 		os.Unsetenv(envVar)
