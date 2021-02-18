@@ -354,7 +354,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
