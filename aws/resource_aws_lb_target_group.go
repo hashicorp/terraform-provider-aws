@@ -369,11 +369,11 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := elbconn.CreateTargetGroup(params)
 	if err != nil {
-		return fmt.Errorf("Error creating LB Target Group: %s", err)
+		return fmt.Errorf("error creating LB Target Group: %w", err)
 	}
 
 	if len(resp.TargetGroups) == 0 {
-		return errors.New("Error creating LB Target Group: no groups returned in response")
+		return errors.New("error creating LB Target Group: no groups returned in response")
 	}
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
 	return resourceAwsLbTargetGroupUpdate(d, meta)
@@ -391,11 +391,11 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Target Group: %s", err)
+		return fmt.Errorf("error retrieving Target Group: %w", err)
 	}
 
 	if len(resp.TargetGroups) != 1 {
-		return fmt.Errorf("Error retrieving Target Group %q", d.Id())
+		return fmt.Errorf("error retrieving Target Group %q", d.Id())
 	}
 
 	return flattenAwsLbTargetGroupResource(d, meta, resp.TargetGroups[0])
@@ -411,6 +411,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
 
 			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
 				return resource.RetryableError(err)
 			}
 
@@ -426,7 +427,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating LB Target Group (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -475,7 +476,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		if params != nil {
 			_, err := elbconn.ModifyTargetGroup(params)
 			if err != nil {
-				return fmt.Errorf("Error modifying Target Group: %s", err)
+				return fmt.Errorf("error modifying Target Group: %w", err)
 			}
 		}
 	}
@@ -563,7 +564,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := elbconn.ModifyTargetGroupAttributes(params)
 		if err != nil {
-			return fmt.Errorf("Error modifying Target Group Attributes: %s", err)
+			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
 		}
 	}
 
@@ -597,7 +598,7 @@ func resourceAwsLbTargetGroupDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Target Group: %s", err)
+		return fmt.Errorf("error deleting Target Group: %w", err)
 	}
 
 	return nil
@@ -701,14 +702,14 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
-		return fmt.Errorf("error setting health_check: %s", err)
+		return fmt.Errorf("error setting health_check: %w", err)
 	}
 
 	attrResp, err := elbconn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error retrieving Target Group Attributes: %s", err)
+		return fmt.Errorf("error retrieving Target Group Attributes: %w", err)
 	}
 
 	for _, attr := range attrResp.Attributes {
@@ -716,19 +717,19 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		case "lambda.multi_value_headers.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("lambda_multi_value_headers_enabled", enabled)
 		case "proxy_protocol_v2.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("proxy_protocol_v2", enabled)
 		case "slow_start.duration_seconds":
 			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("slow_start", slowStart)
 		case "load_balancing.algorithm.type":
@@ -744,11 +745,11 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for LB Target Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -761,7 +762,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 		case "stickiness.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting stickiness.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting stickiness.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			stickinessMap["enabled"] = enabled
 		case "stickiness.type":
@@ -769,13 +770,13 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 		case "stickiness.lb_cookie.duration_seconds":
 			duration, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting stickiness.lb_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting stickiness.lb_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			stickinessMap["cookie_duration"] = duration
 		case "deregistration_delay.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("error converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("deregistration_delay", timeout)
 		}
