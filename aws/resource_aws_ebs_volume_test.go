@@ -66,12 +66,21 @@ func testSweepEbsVolumes(region string) error {
 	return nil
 }
 
+// testAccErrorCheckSkipEBSVolume skips EBS volume tests that have error messages indicating unsupported features
+func testAccErrorCheckSkipEBSVolume(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"specified zone does not support multi-attach-enabled volumes",
+		"Unsupported volume type",
+	)
+}
+
 func TestAccAWSEBSVolume_basic(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -107,6 +116,7 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -142,6 +152,7 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -177,6 +188,7 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -212,6 +224,7 @@ func TestAccAWSEBSVolume_updateIops_Io1(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -247,6 +260,7 @@ func TestAccAWSEBSVolume_updateIops_Io2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -285,6 +299,7 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -313,6 +328,7 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -337,6 +353,7 @@ func TestAccAWSEBSVolume_InvalidIopsForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -352,6 +369,7 @@ func TestAccAWSEBSVolume_InvalidThroughputForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
@@ -369,6 +387,7 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -397,6 +416,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -425,6 +445,7 @@ func TestAccAWSEBSVolume_outpost(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -452,6 +473,7 @@ func TestAccAWSEBSVolume_gp3_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -490,6 +512,7 @@ func TestAccAWSEBSVolume_gp3_iops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -546,6 +569,7 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -602,6 +626,7 @@ func TestAccAWSEBSVolume_gp3_to_gp2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -659,6 +684,7 @@ func TestAccAWSEBSVolume_snapshotID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -698,6 +724,7 @@ func TestAccAWSEBSVolume_snapshotIDAndSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipEBSVolume(t),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVolumeDestroy,
@@ -735,6 +762,7 @@ func TestAccAWSEBSVolume_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipEBSVolume(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
