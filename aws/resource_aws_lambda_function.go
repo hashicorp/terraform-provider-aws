@@ -1179,8 +1179,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			FunctionName: aws.String(d.Id()),
 		}
 
+		var output *lambda.FunctionConfiguration
 		err := resource.Retry(waiter.LambdaFunctionPublishTimeout, func() *resource.RetryError {
-			_, err := conn.PublishVersion(versionReq)
+			var err error
+			output, err = conn.PublishVersion(versionReq)
 
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "in progress") {
 				log.Printf("[DEBUG] Retrying publish of Lambda function (%s) version after error: %s", d.Id(), err)
@@ -1195,11 +1197,20 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.PublishVersion(versionReq)
+			output, err = conn.PublishVersion(versionReq)
 		}
 
 		if err != nil {
 			return fmt.Errorf("error publishing Lambda Function (%s) version: %w", d.Id(), err)
+		}
+
+		err = conn.WaitUntilFunctionUpdated(&lambda.GetFunctionConfigurationInput{
+			FunctionName: output.FunctionArn,
+			Qualifier:    output.Version,
+		})
+
+		if err != nil {
+			return fmt.Errorf("while waiting for function (%s) update: %w", d.Id(), err)
 		}
 	}
 
