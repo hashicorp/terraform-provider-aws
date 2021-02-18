@@ -321,7 +321,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := d.Set("metadata", metadata); err != nil {
-		return fmt.Errorf("error setting metadata: %s", err)
+		return fmt.Errorf("error setting metadata: %w", err)
 	}
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
