@@ -69,8 +69,8 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 }
 
 func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
-	var globalReplcationGroup elasticache.GlobalReplicationGroup
-	var primaryReplcationGroup elasticache.ReplicationGroup
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
+	var primaryReplicationGroup elasticache.ReplicationGroup
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	primaryReplicationGroupId := acctest.RandomWithPrefix("tf-acc-test")
@@ -86,8 +86,8 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
-					testAccCheckAWSElasticacheReplicationGroupExists(primaryReplicationGroupResourceName, &primaryReplcationGroup),
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
+					testAccCheckAWSElasticacheReplicationGroupExists(primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
@@ -104,7 +104,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_members.#", "1"),
 					func(s *terraform.State) error {
 						return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_replication_group_members.*", map[string]string{
-							"replication_group_id":     aws.StringValue(primaryReplcationGroup.ReplicationGroupId),
+							"replication_group_id":     aws.StringValue(primaryReplicationGroup.ReplicationGroupId),
 							"replication_group_region": testAccGetRegion(),
 							"role":                     GlobalReplicationGroupMemberRolePrimary,
 						})(s)
@@ -121,7 +121,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
-	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	primaryReplicationGroupId := acctest.RandomWithPrefix("tf-acc-test")
 	description1 := acctest.RandString(10)
@@ -136,7 +136,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_description(rName, primaryReplicationGroupId, description1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", description1),
 				),
 			},
@@ -148,7 +148,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_description(rName, primaryReplicationGroupId, description2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", description2),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 }
 
 func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
-	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	primaryReplicationGroupId := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_elasticache_global_replication_group.test"
@@ -170,7 +170,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticacheGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,

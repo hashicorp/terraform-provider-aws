@@ -39,7 +39,7 @@ func ReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticach
 func ReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
 	rg, err := ReplicationGroupByID(conn, id)
 	if err != nil {
-		return []*elasticache.CacheCluster{}, err
+		return nil, err
 	}
 
 	clusters, err := CacheClustersByID(conn, aws.StringValueSlice(rg.MemberClusters))
@@ -163,7 +163,7 @@ func GlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalRepli
 		}
 	}
 
-	if len(globalReplicationGroup.Members) == 0 {
+	if globalReplicationGroup == nil || len(globalReplicationGroup.Members) == 0 {
 		return nil, &resource.NotFoundError{
 			Message: "empty result",
 		}
