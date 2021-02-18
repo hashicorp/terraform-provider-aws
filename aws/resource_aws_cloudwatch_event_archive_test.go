@@ -87,6 +87,8 @@ func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
 				),
 			},
 			{
@@ -115,11 +117,12 @@ func TestAccAWSCloudWatchArchive_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchArchiveConfig_updateRetentionAndPattern(archiveName),
+				Config: testAccAWSCloudWatchArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 		},
@@ -210,7 +213,7 @@ resource "aws_cloudwatch_event_archive" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchArchiveConfig_updateRetentionAndPattern(name string) string {
+func testAccAWSCloudWatchArchiveConfig_updateAttributes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -220,6 +223,7 @@ resource "aws_cloudwatch_event_archive" "test" {
   name             = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
   retention_days   = 7
+  description      = "test"
   event_pattern    = <<PATTERN
 {
   "source": ["company.team.service"]
