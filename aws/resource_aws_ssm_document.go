@@ -38,6 +38,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateAwsSSMName,
 			},
 			"attachments_source": {
