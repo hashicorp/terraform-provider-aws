@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
@@ -262,7 +264,30 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := conn.DeleteGlobalReplicationGroup(input)
+	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
+	err := resource.Retry(waiter.GlobalReplicationGroupDefaultUpdatedTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteGlobalReplicationGroup(input)
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
+			return resource.NonRetryableError(&resource.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			})
+		}
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault, "is not empty") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteGlobalReplicationGroup(input)
+	}
+	if tfresource.NotFound(err) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
