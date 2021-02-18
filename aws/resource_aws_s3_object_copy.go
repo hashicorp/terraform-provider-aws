@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -587,7 +587,7 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 
 	output, err := conn.CopyObject(input)
 	if err != nil {
-		return fmt.Errorf("Error copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
+		return fmt.Errorf("error copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.StringValue(input.Bucket), aws.StringValue(input.Key), aws.StringValue(input.CopySource), err)
 	}
 
 	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
