@@ -432,7 +432,7 @@ func resourceAwsS3ObjectCopyDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
 	}
 	return nil
 }
