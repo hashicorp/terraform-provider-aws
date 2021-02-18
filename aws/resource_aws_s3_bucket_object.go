@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -462,8 +463,10 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
-	key = strings.TrimPrefix(key, "/")
+	// We are effectively ignoring all leading '/'s in the key name and
+	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
+	key = strings.TrimLeft(key, "/")
+	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {

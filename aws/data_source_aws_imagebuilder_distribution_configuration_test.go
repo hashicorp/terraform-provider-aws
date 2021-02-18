@@ -42,6 +42,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 }

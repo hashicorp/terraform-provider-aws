@@ -2723,7 +2723,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode(map("username", "user", "password", "pass"))
+  secret_string = jsonencode({ username : "user", password : "pass" })
 }
 `, rName))
 }
@@ -2763,7 +2763,7 @@ resource "aws_secretsmanager_secret" "test" {
 
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode(map("username", "user", "password", "pass"))
+  secret_string = jsonencode({ username : "user", password : "pass" })
 }
 `, rName))
 }

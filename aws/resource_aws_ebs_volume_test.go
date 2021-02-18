@@ -595,6 +595,84 @@ func TestAccAWSEBSVolume_gp3_throughput(t *testing.T) {
 	})
 }
 
+func TestAccAWSEBSVolume_snapshotID(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	snapshotResourceName := "aws_ebs_snapshot.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigSnapshotId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEBSVolume_snapshotIDAndSize(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	snapshotResourceName := "aws_ebs_snapshot.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "size", "20"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_disappears(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
@@ -1165,4 +1243,69 @@ resource "aws_ebs_volume" "test" {
   }
 }
 `, rName, iops))
+}
+
+func testAccAwsEbsVolumeConfigSnapshotId(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "source" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.source.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  snapshot_id       = aws_ebs_snapshot.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccAwsEbsVolumeConfigSnapshotIdAndSize(rName string, size int) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "source" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.source.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  snapshot_id       = aws_ebs_snapshot.test.id
+  size              = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, size))
 }

@@ -172,6 +172,10 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"version_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -206,6 +210,9 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("target_type"); ok {
 		docInput.TargetType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("version_name"); ok {
+		docInput.VersionName = aws.String(v.(string))
 	}
 
 	resp, err := ssmconn.CreateDocument(docInput)
@@ -282,6 +289,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
+	d.Set("version_name", doc.VersionName)
 	d.Set("name", doc.Name)
 	d.Set("owner", doc.Owner)
 	d.Set("platform_types", flattenStringList(doc.PlatformTypes))
@@ -646,6 +654,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("target_type"); ok {
 		updateDocInput.TargetType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("version_name"); ok {
+		updateDocInput.VersionName = aws.String(v.(string))
 	}
 
 	if d.HasChange("attachments_source") {

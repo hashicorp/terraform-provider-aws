@@ -33,6 +33,28 @@ func ReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticach
 	return result.ReplicationGroups[0], nil
 }
 
+// ReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
+func ReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
+	var results []*elasticache.CacheCluster
+
+	rg, err := ReplicationGroupByID(conn, id)
+	if err != nil {
+		return results, err
+	}
+
+	clusters, err := CacheClustersByID(conn, aws.StringValueSlice(rg.MemberClusters))
+	if err != nil {
+		return clusters, err
+	}
+	if len(clusters) == 0 {
+		return clusters, &resource.NotFoundError{
+			Message: "No Member Clusters found",
+		}
+	}
+
+	return clusters, nil
+}
+
 // CacheClusterByID retrieves an ElastiCache Cache Cluster by id.
 func CacheClusterByID(conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
@@ -71,4 +93,35 @@ func CacheCluster(conn *elasticache.ElastiCache, input *elasticache.DescribeCach
 	}
 
 	return result.CacheClusters[0], nil
+}
+
+// CacheClustersByID retrieves a list of ElastiCache Cache Clusters by id.
+// Order of the clusters is not guaranteed.
+func CacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*elasticache.CacheCluster, error) {
+	var results []*elasticache.CacheCluster
+	ids := make(map[string]bool)
+	for _, v := range idList {
+		ids[v] = true
+	}
+
+	input := &elasticache.DescribeCacheClustersInput{}
+	err := conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, _ bool) bool {
+		if page == nil || page.CacheClusters == nil || len(page.CacheClusters) == 0 {
+			return true
+		}
+
+		for _, v := range page.CacheClusters {
+			if ids[aws.StringValue(v.CacheClusterId)] {
+				results = append(results, v)
+				delete(ids, aws.StringValue(v.CacheClusterId))
+				if len(ids) == 0 {
+					break
+				}
+			}
+		}
+
+		return len(ids) != 0
+	})
+
+	return results, err
 }

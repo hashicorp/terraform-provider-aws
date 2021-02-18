@@ -77,6 +77,16 @@ func dataSourceAwsSubnet() *schema.Resource {
 				Computed: true,
 			},
 
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"map_customer_owned_ip_on_launch": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"map_public_ip_on_launch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -176,10 +186,12 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("outpost_arn", subnet.OutpostArn)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 
 	for _, a := range subnet.Ipv6CidrBlockAssociationSet {
