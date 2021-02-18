@@ -413,12 +413,8 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_type", image.ImageType)
 	d.Set("owner_id", image.OwnerId)
 	d.Set("public", image.Public)
-	if image.ImageOwnerAlias != nil {
-		d.Set("image_owner_alias", image.ImageOwnerAlias)
-	}
-	if image.Platform != nil {
-		d.Set("platform", image.Platform)
-	}
+	d.Set("image_owner_alias", image.ImageOwnerAlias)
+	d.Set("platform", image.Platform)
 
 	imageArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,

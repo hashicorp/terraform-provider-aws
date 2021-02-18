@@ -10,5 +10,5 @@ resource/aws_ami_from_instance: Add `usage_operation`, `platform_details`, `imag
 ```
 
 ```release-note:enhancement
-data_source/aws_ami: Add `usage_operation`, `platform_details`, `ena_support` attributes
+data-source/aws_ami: Add `usage_operation`, `platform_details`, `ena_support` attributes
 ```
