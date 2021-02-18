@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_s3_object_copy` ([#15461](https://github.com/hashicorp/terraform-provider-aws/issues/15461))
 * **New Resource:** `aws_securityhub_invite_accepter` ([#12684](https://github.com/hashicorp/terraform-provider-aws/issues/12684))
 
 ENHANCEMENTS:
