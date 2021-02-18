@@ -359,10 +359,10 @@ func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return fmt.Errorf("Error retrieving ALB: %s", err)
+		return fmt.Errorf("error retrieving ALB: %w", err)
 	}
 	if len(describeResp.LoadBalancers) != 1 {
-		return fmt.Errorf("Unable to find ALB: %#v", describeResp.LoadBalancers)
+		return fmt.Errorf("unable to find ALB: %#v", describeResp.LoadBalancers)
 	}
 
 	return flattenAwsLbResource(d, meta, describeResp.LoadBalancers[0])
@@ -374,8 +374,27 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ALB (%s) tags: %s", d.Id(), err)
+		err := resource.Retry(waiter.TagPropagationTimeout, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
+
+			if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeLoadBalancerNotFoundException, "") {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			err = keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -460,7 +479,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
 		_, err := conn.ModifyLoadBalancerAttributes(input)
 		if err != nil {
-			return fmt.Errorf("Failure configuring LB attributes: %s", err)
+			return fmt.Errorf("failure configuring LB attributes: %w", err)
 		}
 	}
 
@@ -473,7 +492,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, err := conn.SetSecurityGroups(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting LB Security Groups: %s", err)
+			return fmt.Errorf("failure Setting LB Security Groups: %w", err)
 		}
 
 	}
@@ -492,7 +511,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.SetSubnets(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting LB Subnets: %s", err)
+			return fmt.Errorf("failure Setting LB Subnets: %w", err)
 		}
 	}
 
@@ -505,7 +524,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.SetIpAddressType(params)
 		if err != nil {
-			return fmt.Errorf("Failure Setting LB IP Address Type: %s", err)
+			return fmt.Errorf("failure Setting LB IP Address Type: %w", err)
 		}
 	}
 
@@ -527,7 +546,7 @@ func resourceAwsLbDelete(d *schema.ResourceData, meta interface{}) error {
 		LoadBalancerArn: aws.String(d.Id()),
 	}
 	if _, err := conn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-		return fmt.Errorf("Error deleting LB: %s", err)
+		return fmt.Errorf("error deleting LB: %w", err)
 	}
 
 	ec2conn := meta.(*AWSClient).ec2conn
@@ -625,7 +644,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		niCount := len(out.NetworkInterfaces)
 		if niCount > 0 {
 			log.Printf("[DEBUG] Found %d ENIs to cleanup for NLB %q", niCount, lbArn)
-			return resource.RetryableError(fmt.Errorf("Waiting for %d ENIs of %q to clean up", niCount, lbArn))
+			return resource.RetryableError(fmt.Errorf("waiting for %d ENIs of %q to clean up", niCount, lbArn))
 		}
 		log.Printf("[DEBUG] ENIs gone for NLB %q", lbArn)
 
@@ -634,15 +653,15 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 	if isResourceTimeoutError(err) {
 		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {
-			return fmt.Errorf("Error describing network inferfaces: %s", err)
+			return fmt.Errorf("error describing network inferfaces: %w", err)
 		}
 		niCount := len(out.NetworkInterfaces)
 		if niCount > 0 {
-			return fmt.Errorf("Error waiting for %d ENIs of %q to clean up", niCount, lbArn)
+			return fmt.Errorf("error waiting for %d ENIs of %q to clean up", niCount, lbArn)
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing network inferfaces: %s", err)
+		return fmt.Errorf("error describing network inferfaces: %w", err)
 	}
 	return nil
 }
@@ -651,7 +670,7 @@ func getLbNameFromArn(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
-		return "", fmt.Errorf("Unexpected ARN format: %q", arn)
+		return "", fmt.Errorf("unexpected ARN format: %q", arn)
 	}
 
 	// e.g. app/example-alb/b26e625cdde161e6
@@ -718,28 +737,28 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnets: %s", err)
+		return fmt.Errorf("error setting subnets: %w", err)
 	}
 
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnet_mapping: %s", err)
+		return fmt.Errorf("error setting subnet_mapping: %w", err)
 	}
 
 	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error retrieving LB Attributes: %s", err)
+		return fmt.Errorf("error retrieving LB Attributes: %w", err)
 	}
 
 	accessLogMap := map[string]interface{}{
@@ -759,7 +778,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("Error parsing ALB timeout: %s", err)
+				return fmt.Errorf("error parsing ALB timeout: %w", err)
 			}
 			log.Printf("[DEBUG] Setting ALB Timeout Seconds: %d", timeout)
 			d.Set("idle_timeout", timeout)
@@ -783,7 +802,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
-		return fmt.Errorf("error setting access_logs: %s", err)
+		return fmt.Errorf("error setting access_logs: %w", err)
 	}
 
 	return nil
