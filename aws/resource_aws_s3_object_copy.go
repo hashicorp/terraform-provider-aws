@@ -350,7 +350,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
 	}
 
 	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
