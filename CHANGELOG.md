@@ -1,5 +1,9 @@
 ## 3.29.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_securityhub_invite_accepter` ([#12684](https://github.com/hashicorp/terraform-provider-aws/issues/12684))
+
 ENHANCEMENTS:
 
 * resource/aws_dx_gateway_association: Changes to `proposal_id` do not force resource recreation ([#12482](https://github.com/hashicorp/terraform-provider-aws/issues/12482))
