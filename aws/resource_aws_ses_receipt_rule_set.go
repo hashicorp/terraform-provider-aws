@@ -46,7 +46,7 @@ func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.CreateReceiptRuleSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating SES rule set: %w", err)
+		return fmt.Errorf("error creating SES rule set: %w", err)
 	}
 
 	d.SetId(ruleSetName)
