@@ -519,6 +519,40 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_SMBFileShareVisibility(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBFileShareVisibility(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", `true`),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigSMBFileShareVisibility(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", `false`),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1106,6 +1140,19 @@ resource "aws_storagegateway_gateway" "test" {
   smb_security_strategy = %q
 }
 `, rName, strategy)
+}
+
+func testAccAWSStorageGatewayGatewayConfigSMBFileShareVisibility(rName string, visibility bool) string {
+	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address        = aws_instance.test.public_ip
+  gateway_name              = %[1]q
+  gateway_timezone          = "GMT"
+  gateway_type              = "FILE_S3"
+  smb_security_strategy     = "ClientSpecified"
+  smb_file_share_visibility = %[2]t
+}
+`, rName, visibility)
 }
 
 func testAccAWSStorageGatewayGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {

@@ -187,6 +187,10 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
+			"smb_file_share_visibility": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"smb_security_strategy": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -378,6 +382,19 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if v, ok := d.GetOk("smb_file_share_visibility"); ok {
+		input := &storagegateway.UpdateSMBFileShareVisibilityInput{
+			GatewayARN:        aws.String(d.Id()),
+			FileSharesVisible: aws.Bool(v.(bool)),
+		}
+
+		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB File Share Visibility", input)
+		_, err := conn.UpdateSMBFileShareVisibility(input)
+		if err != nil {
+			return fmt.Errorf("error setting SMB File Share Visibility: %w", err)
+		}
+	}
+
 	if v, ok := d.GetOk("smb_security_strategy"); ok {
 		input := &storagegateway.UpdateSMBSecurityStrategyInput{
 			GatewayARN:          aws.String(d.Id()),
@@ -525,6 +542,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
+	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
 	d.Set("endpoint_type", output.EndpointType)
@@ -599,6 +617,19 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.SetSMBGuestPassword(input)
 		if err != nil {
 			return fmt.Errorf("error setting SMB guest password: %w", err)
+		}
+	}
+
+	if d.HasChange("smb_file_share_visibility") {
+		input := &storagegateway.UpdateSMBFileShareVisibilityInput{
+			GatewayARN:        aws.String(d.Id()),
+			FileSharesVisible: aws.Bool(d.Get("smb_file_share_visibility").(bool)),
+		}
+
+		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB File Share Visibility", input)
+		_, err := conn.UpdateSMBFileShareVisibility(input)
+		if err != nil {
+			return fmt.Errorf("error updating SMB File Share Visibility: %w", err)
 		}
 	}
 
