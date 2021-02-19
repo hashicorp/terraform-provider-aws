@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glue_partition: Add nil check for `schema_reference`
+```
+
+```release-note:enhancement
+resource/aws_glue_partition: Add plan time validation for `partition_values`
+```
