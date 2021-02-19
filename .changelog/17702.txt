@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_glue_partition: Add nil check for `schema_reference`
+resource/aws_glue_catalog_table: Add nil check for `schema_reference`
 ```
 
 ```release-note:enhancement
