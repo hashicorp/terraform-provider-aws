@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/url"
 	"strings"
 	"time"
 
@@ -18,10 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sns/waiter"
 )
-
-const awsSNSPendingConfirmationMessage = "pending confirmation"
-const awsSNSPendingConfirmationMessageWithoutSpaces = "pendingconfirmation"
-const awsSNSPasswordObfuscationPattern = "****"
 
 func resourceAwsSnsTopicSubscription() *schema.Resource {
 	return &schema.Resource{
@@ -290,25 +285,6 @@ func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]
 	}
 
 	return attributes
-}
-
-// returns the endpoint with obfuscated password, if any
-func obfuscateEndpoint(endpoint string) string {
-	res, err := url.Parse(endpoint)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var obfuscatedEndpoint = res.String()
-
-	// If the user is defined, we try to get the username and password, if defined.
-	// Then, we update the user with the obfuscated version.
-	if res.User != nil {
-		if password, ok := res.User.Password(); ok {
-			obfuscatedEndpoint = strings.Replace(obfuscatedEndpoint, password, awsSNSPasswordObfuscationPattern, 1)
-		}
-	}
-	return obfuscatedEndpoint
 }
 
 func snsSubscriptionAttributeUpdate(conn *sns.SNS, subscriptionArn, attributeName, attributeValue string) error {

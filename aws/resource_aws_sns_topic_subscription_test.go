@@ -3,9 +3,11 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -468,6 +470,27 @@ func testAccCheckAWSSNSTopicSubscriptionRedrivePolicyAttribute(attributes map[st
 
 		return fmt.Errorf("SNS Topic Subscription redrive policy did not match:\n\nReceived\n\n%s\n\nExpected\n\n%s\n\n", apiRedrivePolicy, expectedRedrivePolicy)
 	}
+}
+
+const awsSNSPasswordObfuscationPattern = "****"
+
+// returns the endpoint with obfuscated password, if any
+func obfuscateEndpoint(endpoint string) string {
+	res, err := url.Parse(endpoint)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var obfuscatedEndpoint = res.String()
+
+	// If the user is defined, we try to get the username and password, if defined.
+	// Then, we update the user with the obfuscated version.
+	if res.User != nil {
+		if password, ok := res.User.Password(); ok {
+			obfuscatedEndpoint = strings.Replace(obfuscatedEndpoint, password, awsSNSPasswordObfuscationPattern, 1)
+		}
+	}
+	return obfuscatedEndpoint
 }
 
 func TestObfuscateEndpointPassword(t *testing.T) {
