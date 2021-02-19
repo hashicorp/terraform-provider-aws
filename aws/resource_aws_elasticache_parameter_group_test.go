@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,7 +30,7 @@ func init() {
 func testSweepElasticacheParameterGroups(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
@@ -63,7 +63,7 @@ func testSweepElasticacheParameterGroups(region string) error {
 			log.Printf("[WARN] Skipping Elasticache Parameter Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Elasticache Parameter Group: %s", err)
+		return fmt.Errorf("Error retrieving Elasticache Parameter Group: %w", err)
 	}
 	return nil
 }
@@ -412,7 +412,6 @@ func testAccCheckAWSElasticacheParameterGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the Group
 		resp, err := conn.DescribeCacheParameterGroups(
 			&elasticache.DescribeCacheParameterGroupsInput{
 				CacheParameterGroupName: aws.String(rs.Primary.ID),
@@ -425,12 +424,10 @@ func testAccCheckAWSElasticacheParameterGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
+			return nil
 		}
-		if newerr.Code() != "CacheParameterGroupNotFound" {
+		if err != nil {
 			return err
 		}
 	}
