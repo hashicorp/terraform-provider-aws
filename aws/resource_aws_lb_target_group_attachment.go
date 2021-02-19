@@ -81,6 +81,9 @@ func resourceAwsLbAttachmentCreate(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = elbconn.RegisterTargets(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error registering targets with target group: %s", err)
 	}
