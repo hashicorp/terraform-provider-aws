@@ -98,7 +98,7 @@ func validateTransferUserName(v interface{}, k string) (ws []string, errors []er
 	value := v.(string)
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
 	if !regexp.MustCompile(`^[\w][\w@.-]{2,99}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen, period, or at sign", k, k))
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 100 alphanumeric characters, special characters, hyphens, or underscores. However, it cannot begin with a hyphen, period, or at sign", k))
 	}
 	return
 }
