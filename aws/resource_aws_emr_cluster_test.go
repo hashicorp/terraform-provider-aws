@@ -1185,6 +1185,7 @@ func TestAccAWSEMRCluster_s3Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
+					resource.TestMatchResourceAttr(resourceName, "log_encryption_kms_key_id", regexp.MustCompile("^arn")),
 				),
 			},
 			{
@@ -3053,7 +3054,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   log_encryption_kms_key_id = aws_kms_key.foo.key_id
-  log_uri = "s3://${aws_s3_bucket.test.bucket}/"
+  log_uri                   = "s3://${aws_s3_bucket.test.bucket}/"
 
   ec2_attributes {
     instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
