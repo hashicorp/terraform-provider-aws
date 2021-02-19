@@ -293,7 +293,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	ownerID := aws.StringValue(rt.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
