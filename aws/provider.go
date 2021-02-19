@@ -360,6 +360,7 @@ func Provider() *schema.Provider {
 			"aws_redshift_service_account":                   dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                                     dataSourceAwsRegion(),
 			"aws_regions":                                    dataSourceAwsRegions(),
+			"aws_resourcegroupstaggingapi_resources":         dataSourceAwsResourceGroupsTaggingAPIResources(),
 			"aws_route":                                      dataSourceAwsRoute(),
 			"aws_route_table":                                dataSourceAwsRouteTable(),
 			"aws_route_tables":                               dataSourceAwsRouteTables(),
