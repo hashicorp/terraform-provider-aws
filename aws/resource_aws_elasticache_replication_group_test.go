@@ -23,6 +23,9 @@ func init() {
 	resource.AddTestSweepers("aws_elasticache_replication_group", &resource.Sweeper{
 		Name: "aws_elasticache_replication_group",
 		F:    testSweepElasticacheReplicationGroups,
+		Dependencies: []string{
+			"aws_elasticache_global_replication_group",
+		},
 	})
 }
 
