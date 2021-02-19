@@ -443,7 +443,6 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 	if cacheClusters, ok := d.GetOk("number_cache_clusters"); ok {
 		params.NumCacheClusters = aws.Int64(int64(cacheClusters.(int)))
 	}
-
 	resp, err := conn.CreateReplicationGroup(params)
 	if err != nil {
 		return fmt.Errorf("Error creating ElastiCache Replication Group (%s): %w", d.Get("replication_group_id").(string), err)
@@ -453,7 +452,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	_, err = waiter.ReplicationGroupAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Replication Group (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("error creating ElastiCache Replication Group (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceAwsElasticacheReplicationGroupRead(d, meta)

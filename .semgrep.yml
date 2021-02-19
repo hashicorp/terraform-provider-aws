@@ -10,6 +10,8 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      # To allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
+      - pattern-not: func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_disappears(t *testing.T) { ... }
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -160,6 +162,12 @@ rules:
               ...
               errors.As($ERR, &$CAST)
           - pattern-not-inside: func NotFound(err error) bool { ... }
+          - pattern-not-inside: |
+              var $CAST *resource.NotFoundError
+              ...
+              errors.As($ERR, &$CAST)
+              ...
+              $CAST.$FIELD
         - patterns:
           - pattern: |
               $X, $Y := $ERR.(*resource.NotFoundError)

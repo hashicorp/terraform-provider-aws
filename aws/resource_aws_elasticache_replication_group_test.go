@@ -1438,7 +1438,7 @@ func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_Basic(t *tes
 }
 
 // Test for out-of-band deletion
-func TestAccAWSElasticacheReplicationGroup_disappears_GlobalReplicationGroupId(t *testing.T) {
+func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	var rg elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")

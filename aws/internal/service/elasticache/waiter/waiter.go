@@ -201,9 +201,9 @@ func GlobalReplicationGroupDeleted(conn *elasticache.ElastiCache, globalReplicat
 }
 
 const (
-	GlobalReplicationGroupDisassociationRetryTimeout = 30 * time.Minute
+	GlobalReplicationGroupDisassociationRetryTimeout = 45 * time.Minute
 
-	globalReplicationGroupDisassociationTimeout = 10 * time.Minute
+	globalReplicationGroupDisassociationTimeout = 20 * time.Minute
 
 	globalReplicationGroupDisassociationMinTimeout = 10 * time.Second
 	globalReplicationGroupDisassociationDelay      = 30 * time.Second

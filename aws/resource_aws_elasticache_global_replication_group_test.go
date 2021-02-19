@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
@@ -170,6 +171,60 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.T) {
+	var providers []*schema.Provider
+	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegion(t *testing.T) {
+	var providers []*schema.Provider
+	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string, v *elasticache.GlobalReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -187,7 +242,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if aws.StringValue(grg.Status) != waiter.GlobalReplicationGroupStatusAvailable && aws.StringValue(grg.Status) != waiter.GlobalReplicationGroupStatusPrimaryOnly {
+		if aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleting || aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleted {
 			return fmt.Errorf("ElastiCache Global Replication Group (%s) exists, but is in a non-available state: %s", rs.Primary.ID, aws.StringValue(grg.Status))
 		}
 
@@ -272,4 +327,194 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, description)
+}
+
+func testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "alternate" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-a"
+  replication_group_description = "alternate"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "third" {
+  provider = awsthird
+
+  replication_group_id          = "%[1]s-t"
+  replication_group_description = "third"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_SameRegion_Setup(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "original" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-o"
+  replication_group_description = "original"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_SameRegion_Move(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(2),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "new" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-t"
+  replication_group_description = "new"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-a"
+  replication_group_description = "alternate"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "third" {
+  provider = awsthird
+
+  replication_group_id          = "%[1]s-t"
+  replication_group_description = "third"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  number_cache_clusters = 1
+}
+`, rName))
 }
