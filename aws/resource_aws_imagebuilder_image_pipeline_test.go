@@ -415,11 +415,11 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.
 		CheckDestroy: testAccCheckAwsImageBuilderImagePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsImageBuilderImagePipelineConfigScheduleScheduleExpression(rName, "cron(1 0 * * *)"),
+				Config: testAccAwsImageBuilderImagePipelineConfigScheduleScheduleExpression(rName, "cron(1 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImagePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 				),
 			},
 			{
@@ -428,11 +428,11 @@ func TestAccAwsImageBuilderImagePipeline_Schedule_ScheduleExpression(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsImageBuilderImagePipelineConfigScheduleScheduleExpression(rName, "cron(2 0 * * *)"),
+				Config: testAccAwsImageBuilderImagePipelineConfigScheduleScheduleExpression(rName, "cron(2 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsImageBuilderImagePipelineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(2 0 * * *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(2 0 * * ? *)"),
 				),
 			},
 		},
@@ -808,7 +808,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
   schedule {
     pipeline_execution_start_condition = %[2]q
-    schedule_expression                = "cron(0 0 * * *)"
+    schedule_expression                = "cron(0 0 * * ? *)"
   }
 }
 `, rName, pipelineExecutionStartCondition))

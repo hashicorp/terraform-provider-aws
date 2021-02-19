@@ -76,6 +76,25 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
 
+// InstanceByID looks up a Instance by ID. When not found, returns nil and potentially an API error.
+func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
+	input := &ec2.DescribeInstancesInput{
+		InstanceIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeInstances(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Reservations) == 0 || output.Reservations[0] == nil || len(output.Reservations[0].Instances) == 0 || output.Reservations[0].Instances[0] == nil {
+		return nil, nil
+	}
+
+	return output.Reservations[0].Instances[0], nil
+}
+
 // SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
 func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	req := &ec2.DescribeSecurityGroupsInput{
@@ -154,6 +173,41 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 	}
 
 	return TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+}
+
+// VpcAttribute looks up a VPC attribute.
+func VpcAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) {
+	input := &ec2.DescribeVpcAttributeInput{
+		Attribute: aws.String(attribute),
+		VpcId:     aws.String(vpcID),
+	}
+
+	output, err := conn.DescribeVpcAttribute(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	switch attribute {
+	case ec2.VpcAttributeNameEnableDnsHostnames:
+		if output.EnableDnsHostnames == nil {
+			return nil, nil
+		}
+
+		return output.EnableDnsHostnames.Value, nil
+	case ec2.VpcAttributeNameEnableDnsSupport:
+		if output.EnableDnsSupport == nil {
+			return nil, nil
+		}
+
+		return output.EnableDnsSupport.Value, nil
+	}
+
+	return nil, fmt.Errorf("unimplemented VPC attribute: %s", attribute)
 }
 
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
