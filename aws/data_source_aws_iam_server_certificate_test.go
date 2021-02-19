@@ -29,7 +29,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 		},
 	}
 	sort.Sort(certificateByExpiration(certs))
-	if *certs[0].ServerCertificateName != "latest" {
+	if aws.StringValue(certs[0].ServerCertificateName) != "latest" {
 		t.Fatalf("Expected first item to be %q, but was %q", "latest", *certs[0].ServerCertificateName)
 	}
 }
