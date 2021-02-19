@@ -1,4 +1,4 @@
-## 3.29.0 (Unreleased)
+## 3.29.0 (February 19, 2021)
 
 FEATURES:
 
