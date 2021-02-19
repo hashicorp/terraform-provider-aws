@@ -54,10 +54,6 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_enabled` - Indicates whether the Global Datastore is cluster enabled.
 * `engine` - The name of the cache engine to be used for the clusters in this global replication group.
 * `global_replication_group_id` - The full ID of the global replication group.
-* `global_replication_group_members` - Set of the replication groups that are part of this global replication group.
-    * `replication_group_id` - The replication group id of the Global Datastore member.
-    * `replication_group_region` - The AWS region of the Global Datastore member.
-    * `role` - Indicates the role of the replication group, either `PRIMARY` or `SECONDARY`.
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
 
 ## Import
