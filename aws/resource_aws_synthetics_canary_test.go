@@ -223,6 +223,7 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf3),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf2, &conf3),
 				),
 			},
@@ -246,6 +247,7 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 				),
@@ -260,6 +262,7 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf1, &conf2),
