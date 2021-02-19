@@ -265,6 +265,7 @@ func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf1, &conf2),
 				),
 			},
