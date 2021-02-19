@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -59,6 +59,8 @@ func dataSourceAwsCloudFrontDistribution() *schema.Resource {
 func dataSourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("id").(string))
 	conn := meta.(*AWSClient).cloudfrontconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	input := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
 	}
@@ -85,8 +87,8 @@ func dataSourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %w", d.Id(), err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)

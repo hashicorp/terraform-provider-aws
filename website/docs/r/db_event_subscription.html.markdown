@@ -31,10 +31,10 @@ resource "aws_sns_topic" "default" {
 
 resource "aws_db_event_subscription" "default" {
   name      = "rds-event-sub"
-  sns_topic = "${aws_sns_topic.default.arn}"
+  sns_topic = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = ["${aws_db_instance.default.id}"]
+  source_ids  = [aws_db_instance.default.id]
 
   event_categories = [
     "availability",
@@ -74,12 +74,12 @@ The following additional atttributes are provided:
 
 ## Timeouts
 
-`aws_db_event_subscription` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_db_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
 configuration options:
 
-- `create` - (Default `40m`) How long to wait for a RDS event notification subscription to be ready.
-- `delete` - (Default `40m`) How long to wait for a RDS event notification subscription to be deleted.
-- `update` - (Default `40m`) How long to wait for a RDS event notification subscription to be updated.
+- `create` - (Default `40m`) How long to wait for an RDS event notification subscription to be ready.
+- `delete` - (Default `40m`) How long to wait for an RDS event notification subscription to be deleted.
+- `update` - (Default `40m`) How long to wait for an RDS event notification subscription to be updated.
 
 ## Import
 

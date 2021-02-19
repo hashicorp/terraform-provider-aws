@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
@@ -29,12 +29,47 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", name)),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
+					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_Name(t *testing.T) {
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
 			},
 		},
 	})
@@ -65,6 +100,37 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "/AWS::EC2::Instance"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_VersionName(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.1"),
 				),
 			},
 		},
@@ -469,6 +535,46 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 	})
 }
 
+func TestValidateSSMDocumentPermissions(t *testing.T) {
+	validValues := []map[string]interface{}{
+		{
+			"type":        "Share",
+			"account_ids": "123456789012,123456789014",
+		},
+		{
+			"type":        "Share",
+			"account_ids": "all",
+		},
+	}
+
+	for _, s := range validValues {
+		errors := validateSSMDocumentPermissions(s)
+		if len(errors) > 0 {
+			t.Fatalf("%q should be valid SSM Document Permissions: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		{},
+		{"type": ""},
+		{"type": "Share"},
+		{"account_ids": ""},
+		{"account_ids": "all"},
+		{"type": "", "account_ids": ""},
+		{"type": "", "account_ids": "all"},
+		{"type": "share", "account_ids": ""},
+		{"type": "share", "account_ids": "all"},
+		{"type": "private", "account_ids": "all"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateSSMDocumentPermissions(s)
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be valid SSM Document Permissions: %v", s, errors)
+		}
+	}
+}
+
 func testAccCheckAWSSSMDocumentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -531,23 +637,25 @@ resource "aws_ssm_document" "test" {
   document_type = "Command"
 
   content = <<DOC
-    {
-      "schemaVersion": "1.2",
-      "description": "Check ip configuration of a Linux instance.",
-      "parameters": {
-      },
-      "runtimeConfig": {
-        "aws:runShellScript": {
-          "properties": [
-            {
-              "id": "0.aws:runShellScript",
-              "runCommand": ["ifconfig"]
-            }
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
           ]
         }
-      }
+      ]
     }
+  }
+}
 DOC
+
 }
 `, rName)
 }
@@ -560,9 +668,39 @@ resource "aws_ssm_document" "test" {
   target_type   = "%s"
 
   content = <<DOC
+{
+  "schemaVersion": "2.0",
+  "description": "Sample version 2.0 document v2",
+  "parameters": {},
+  "mainSteps": [
+    {
+      "action": "aws:runPowerShellScript",
+      "name": "runPowerShellScript",
+      "inputs": {
+        "runCommand": [
+          "Get-Process"
+        ]
+      }
+    }
+  ]
+}
+DOC
+
+}
+`, rName, typ)
+}
+
+func testAccAWSSSMDocumentBasicConfigVersionName(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Command"
+  version_name  = %[2]q
+
+  content = <<DOC
     {
        "schemaVersion": "2.0",
-       "description": "Sample version 2.0 document v2",
+       "description": "Sample version 2.0 document %[2]s",
        "parameters": {
 
        },
@@ -580,7 +718,7 @@ resource "aws_ssm_document" "test" {
     }
 DOC
 }
-`, rName, typ)
+`, rName, version)
 }
 
 func testAccAWSSSMDocument20Config(rName string) string {
@@ -590,25 +728,24 @@ resource "aws_ssm_document" "test" {
   document_type = "Command"
 
   content = <<DOC
+{
+  "schemaVersion": "2.0",
+  "description": "Sample version 2.0 document v2",
+  "parameters": {},
+  "mainSteps": [
     {
-       "schemaVersion": "2.0",
-       "description": "Sample version 2.0 document v2",
-       "parameters": {
-
-       },
-       "mainSteps": [
-          {
-             "action": "aws:runPowerShellScript",
-             "name": "runPowerShellScript",
-             "inputs": {
-                "runCommand": [
-                   "Get-Process"
-                ]
-             }
-          }
-       ]
+      "action": "aws:runPowerShellScript",
+      "name": "runPowerShellScript",
+      "inputs": {
+        "runCommand": [
+          "Get-Process"
+        ]
+      }
     }
+  ]
+}
 DOC
+
 }
 `, rName)
 }
@@ -620,25 +757,24 @@ resource "aws_ssm_document" "test" {
   document_type = "Command"
 
   content = <<DOC
+{
+  "schemaVersion": "2.0",
+  "description": "Sample version 2.0 document v2",
+  "parameters": {},
+  "mainSteps": [
     {
-       "schemaVersion": "2.0",
-       "description": "Sample version 2.0 document v2",
-       "parameters": {
-
-       },
-       "mainSteps": [
-          {
-             "action": "aws:runPowerShellScript",
-             "name": "runPowerShellScript",
-             "inputs": {
-                "runCommand": [
-                   "Get-Process -Verbose"
-                ]
-             }
-          }
-       ]
+      "action": "aws:runPowerShellScript",
+      "name": "runPowerShellScript",
+      "inputs": {
+        "runCommand": [
+          "Get-Process -Verbose"
+        ]
+      }
     }
+  ]
+}
 DOC
+
 }
 `, rName)
 }
@@ -655,24 +791,25 @@ resource "aws_ssm_document" "test" {
   }
 
   content = <<DOC
-    {
-      "schemaVersion": "1.2",
-      "description": "Check ip configuration of a Linux instance.",
-      "parameters": {
-
-      },
-      "runtimeConfig": {
-        "aws:runShellScript": {
-          "properties": [
-            {
-              "id": "0.aws:runShellScript",
-              "runCommand": ["ifconfig"]
-            }
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
           ]
         }
-      }
+      ]
     }
+  }
+}
 DOC
+
 }
 `, rName)
 }
@@ -689,24 +826,25 @@ resource "aws_ssm_document" "test" {
   }
 
   content = <<DOC
-    {
-      "schemaVersion": "1.2",
-      "description": "Check ip configuration of a Linux instance.",
-      "parameters": {
-
-      },
-      "runtimeConfig": {
-        "aws:runShellScript": {
-          "properties": [
-            {
-              "id": "0.aws:runShellScript",
-              "runCommand": ["ifconfig"]
-            }
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
           ]
         }
-      }
+      ]
     }
+  }
+}
 DOC
+
 }
 `, rName, rIds)
 }
@@ -718,223 +856,213 @@ resource "aws_ssm_document" "test" {
   document_type = "Command"
 
   content = <<DOC
-		{
-		    "schemaVersion":"1.2",
-		    "description":"Run a PowerShell script or specify the paths to scripts to run.",
-		    "parameters":{
-		        "commands":{
-		            "type":"StringList",
-		            "description":"(Required) Specify the commands to run or the paths to existing scripts on the instance.",
-		            "minItems":1,
-		            "displayType":"textarea"
-		        },
-		        "workingDirectory":{
-		            "type":"String",
-		            "default":"",
-		            "description":"(Optional) The path to the working directory on your instance.",
-		            "maxChars":4096
-		        },
-		        "executionTimeout":{
-		            "type":"String",
-		            "default":"3600",
-		            "description":"(Optional) The time in seconds for a command to be completed before it is considered to have failed. Default is 3600 (1 hour). Maximum is 28800 (8 hours).",
-		            "allowedPattern":"([1-9][0-9]{0,3})|(1[0-9]{1,4})|(2[0-7][0-9]{1,3})|(28[0-7][0-9]{1,2})|(28800)"
-		        }
-		    },
-		    "runtimeConfig":{
-		        "aws:runPowerShellScript":{
-		            "properties":[
-		                {
-		                    "id":"0.aws:runPowerShellScript",
-		                    "runCommand":"{{ commands }}",
-		                    "workingDirectory":"{{ workingDirectory }}",
-		                    "timeoutSeconds":"{{ executionTimeout }}"
-		                }
-		            ]
-		        }
-		    }
-		}
+{
+  "schemaVersion": "1.2",
+  "description": "Run a PowerShell script or specify the paths to scripts to run.",
+  "parameters": {
+    "commands": {
+      "type": "StringList",
+      "description": "(Required) Specify the commands to run or the paths to existing scripts on the instance.",
+      "minItems": 1,
+      "displayType": "textarea"
+    },
+    "workingDirectory": {
+      "type": "String",
+      "default": "",
+      "description": "(Optional) The path to the working directory on your instance.",
+      "maxChars": 4096
+    },
+    "executionTimeout": {
+      "type": "String",
+      "default": "3600",
+      "description": "(Optional) The time in seconds for a command to be completed before it is considered to have failed. Default is 3600 (1 hour). Maximum is 28800 (8 hours).",
+      "allowedPattern": "([1-9][0-9]{0,3})|(1[0-9]{1,4})|(2[0-7][0-9]{1,3})|(28[0-7][0-9]{1,2})|(28800)"
+    }
+  },
+  "runtimeConfig": {
+    "aws:runPowerShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runPowerShellScript",
+          "runCommand": "{{ commands }}",
+          "workingDirectory": "{{ workingDirectory }}",
+          "timeoutSeconds": "{{ executionTimeout }}"
+        }
+      ]
+    }
+  }
+}
 DOC
+
 }
 `, rName)
 }
 
 func testAccAWSSSMDocumentTypeAutomationConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "ssm_ami" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
-  }
-}
-
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "ssm_profile" {
-  name = "ssm_profile-%s"
-  role = "${aws_iam_role.ssm_role.name}"
+  name = "ssm_profile-%[1]s"
+  role = aws_iam_role.ssm_role.name
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "ssm_role" {
-  name = "ssm_role-%s"
+  name = "ssm_role-%[1]s"
   path = "/"
 
   assume_role_policy = <<EOF
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-               "Service": "ec2.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
+
 }
 
 resource "aws_ssm_document" "test" {
-  name          = "test_document-%s"
+  name          = "test_document-%[1]s"
   document_type = "Automation"
 
   content = <<DOC
-	{
-	   "description": "Systems Manager Automation Demo",
-	   "schemaVersion": "0.3",
-	   "assumeRole": "${aws_iam_role.ssm_role.arn}",
-	   "mainSteps": [
-	      {
-	         "name": "startInstances",
-	         "action": "aws:runInstances",
-	         "timeoutSeconds": 1200,
-	         "maxAttempts": 1,
-	         "onFailure": "Abort",
-	         "inputs": {
-	            "ImageId": "${data.aws_ami.ssm_ami.id}",
-	            "InstanceType": "t2.small",
-	            "MinInstanceCount": 1,
-	            "MaxInstanceCount": 1,
-	            "IamInstanceProfileName": "${aws_iam_instance_profile.ssm_profile.name}"
-	         }
-	      },
-	      {
-	         "name": "stopInstance",
-	         "action": "aws:changeInstanceState",
-	         "maxAttempts": 1,
-	         "onFailure": "Continue",
-	         "inputs": {
-	            "InstanceIds": [
-	               "{{ startInstances.InstanceIds }}"
-	            ],
-	            "DesiredState": "stopped"
-	         }
-	      },
-	      {
-	         "name": "terminateInstance",
-	         "action": "aws:changeInstanceState",
-	         "maxAttempts": 1,
-	         "onFailure": "Continue",
-	         "inputs": {
-	            "InstanceIds": [
-	               "{{ startInstances.InstanceIds }}"
-	            ],
-	            "DesiredState": "terminated"
-	         }
-	      }
-	   ]
-	}
-DOC
+{
+  "description": "Systems Manager Automation Demo",
+  "schemaVersion": "0.3",
+  "assumeRole": "${aws_iam_role.ssm_role.arn}",
+  "mainSteps": [
+    {
+      "name": "startInstances",
+      "action": "aws:runInstances",
+      "timeoutSeconds": 1200,
+      "maxAttempts": 1,
+      "onFailure": "Abort",
+      "inputs": {
+        "ImageId": "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}",
+        "InstanceType": "t2.small",
+        "MinInstanceCount": 1,
+        "MaxInstanceCount": 1,
+        "IamInstanceProfileName": "${aws_iam_instance_profile.ssm_profile.name}"
+      }
+    },
+    {
+      "name": "stopInstance",
+      "action": "aws:changeInstanceState",
+      "maxAttempts": 1,
+      "onFailure": "Continue",
+      "inputs": {
+        "InstanceIds": [
+          "{{ startInstances.InstanceIds }}"
+        ],
+        "DesiredState": "stopped"
+      }
+    },
+    {
+      "name": "terminateInstance",
+      "action": "aws:changeInstanceState",
+      "maxAttempts": 1,
+      "onFailure": "Continue",
+      "inputs": {
+        "InstanceIds": [
+          "{{ startInstances.InstanceIds }}"
+        ],
+        "DesiredState": "terminated"
+      }
+    }
+  ]
 }
-`, rName, rName, rName)
+DOC
+
+}
+`, rName))
 }
 
 func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
 	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
-  }
-}
-
 resource "aws_iam_instance_profile" "test" {
-  name = "ssm_profile-%s"
-  role = "${aws_iam_role.test.name}"
+  name = "ssm_profile-%[1]s"
+  role = aws_iam_role.test.name
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "ssm_role-%s"
+  name = "ssm_role-%[1]s"
   path = "/"
 
   assume_role_policy = <<EOF
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-               "Service": "ec2.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
+
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "tf-object-test-bucket-%d"
+  bucket = "tf-object-test-bucket-%[2]d"
 }
 
 resource "aws_s3_bucket_object" "test" {
-  bucket       = "${aws_s3_bucket.test.bucket}"
+  bucket       = aws_s3_bucket.test.bucket
   key          = "test.zip"
-  source       = %q
+  source       = %[3]q
   content_type = "binary/octet-stream"
 }
 
 resource "aws_ssm_document" "test" {
-  name          = "test_document-%s"
+  name          = "test_document-%[1]s"
   document_type = "Package"
+
   attachments_source {
-	key = "SourceUrl"
-	values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
+    key    = "SourceUrl"
+    values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
   }
 
   content = <<DOC
-	{
-	   "description": "Systems Manager Package Document Test",
-	   "schemaVersion": "2.0",
-	   "version": "0.1",
-	   "assumeRole": "${aws_iam_role.test.arn}",
-	   "files": {
-		   "test.zip": {
-			   "checksums": {
-					"sha256": "thisistwentycharactersatleast"
-			   }
-		   }
-	   },
-	   "packages": {
-			"amazon": {
-				"_any": {
-					"x86_64": {
-						"file": "test.zip"
-					}
-				}
-			}
-		}
-	}
-DOC
+{
+  "description": "Systems Manager Package Document Test",
+  "schemaVersion": "2.0",
+  "version": "0.1",
+  "assumeRole": "${aws_iam_role.test.arn}",
+  "files": {
+    "test.zip": {
+      "checksums": {
+        "sha256": "thisistwentycharactersatleast"
+      }
+    }
+  },
+  "packages": {
+    "amazon": {
+      "_any": {
+        "x86_64": {
+          "file": "test.zip"
+        }
+      }
+    }
+  }
 }
-`, rName, rName, rInt, source, rName)
+DOC
+
+}
+`, rName, rInt, source)
 }
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
@@ -945,18 +1073,19 @@ resource "aws_ssm_document" "test" {
 
   content = <<DOC
 {
-    "schemaVersion": "1.0",
-    "description": "Document to hold regional settings for Session Manager",
-    "sessionType": "Standard_Stream",
-    "inputs": {
-        "s3BucketName": "test",
-        "s3KeyPrefix": "test",
-        "s3EncryptionEnabled": true,
-        "cloudWatchLogGroupName": "/logs/sessions",
-        "cloudWatchEncryptionEnabled": false
-    }
+  "schemaVersion": "1.0",
+  "description": "Document to hold regional settings for Session Manager",
+  "sessionType": "Standard_Stream",
+  "inputs": {
+    "s3BucketName": "test",
+    "s3KeyPrefix": "test",
+    "s3EncryptionEnabled": true,
+    "cloudWatchLogGroupName": "/logs/sessions",
+    "cloudWatchEncryptionEnabled": false
+  }
 }
 DOC
+
 }
 `, rName)
 }
@@ -971,6 +1100,7 @@ resource "aws_ssm_document" "test" {
   content = <<DOC
 %s
 DOC
+
 }
 `, rName, content)
 }
@@ -978,23 +1108,24 @@ DOC
 func testAccAWSSSMDocumentConfigSchemaVersion1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
-  name          = %[1]q
+  name          = %q
   document_type = "Session"
 
   content = <<DOC
 {
-    "schemaVersion": "1.0",
-    "description": "Document to hold regional settings for Session Manager",
-    "sessionType": "Standard_Stream",
-    "inputs": {
-        "s3BucketName": "test",
-        "s3KeyPrefix": "test",
-        "s3EncryptionEnabled": true,
-        "cloudWatchLogGroupName": "/logs/sessions",
-        "cloudWatchEncryptionEnabled": false
-    }
+  "schemaVersion": "1.0",
+  "description": "Document to hold regional settings for Session Manager",
+  "sessionType": "Standard_Stream",
+  "inputs": {
+    "s3BucketName": "test",
+    "s3KeyPrefix": "test",
+    "s3EncryptionEnabled": true,
+    "cloudWatchLogGroupName": "/logs/sessions",
+    "cloudWatchEncryptionEnabled": false
+  }
 }
 DOC
+
 }
 `, rName)
 }
@@ -1002,23 +1133,24 @@ DOC
 func testAccAWSSSMDocumentConfigSchemaVersion1Update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
-  name          = %[1]q
+  name          = %q
   document_type = "Session"
 
   content = <<DOC
 {
-    "schemaVersion": "1.0",
-    "description": "Document to hold regional settings for Session Manager",
-    "sessionType": "Standard_Stream",
-    "inputs": {
-        "s3BucketName": "test",
-        "s3KeyPrefix": "test",
-        "s3EncryptionEnabled": true,
-        "cloudWatchLogGroupName": "/logs/sessions-updated",
-        "cloudWatchEncryptionEnabled": false
-    }
+  "schemaVersion": "1.0",
+  "description": "Document to hold regional settings for Session Manager",
+  "sessionType": "Standard_Stream",
+  "inputs": {
+    "s3BucketName": "test",
+    "s3KeyPrefix": "test",
+    "s3EncryptionEnabled": true,
+    "cloudWatchLogGroupName": "/logs/sessions-updated",
+    "cloudWatchEncryptionEnabled": false
+  }
 }
 DOC
+
 }
 `, rName)
 }
@@ -1030,23 +1162,23 @@ resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
 
   content = <<DOC
-    {
-      "schemaVersion": "1.2",
-      "description": "Check ip configuration of a Linux instance.",
-      "parameters": {
-
-      },
-      "runtimeConfig": {
-        "aws:runShellScript": {
-          "properties": [
-            {
-              "id": "0.aws:runShellScript",
-              "runCommand": ["ifconfig"]
-            }
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
           ]
         }
-      }
+      ]
     }
+  }
+}
 DOC
 
   tags = {
@@ -1063,23 +1195,23 @@ resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
 
   content = <<DOC
-    {
-      "schemaVersion": "1.2",
-      "description": "Check ip configuration of a Linux instance.",
-      "parameters": {
-
-      },
-      "runtimeConfig": {
-        "aws:runShellScript": {
-          "properties": [
-            {
-              "id": "0.aws:runShellScript",
-              "runCommand": ["ifconfig"]
-            }
+{
+  "schemaVersion": "1.2",
+  "description": "Check ip configuration of a Linux instance.",
+  "parameters": {},
+  "runtimeConfig": {
+    "aws:runShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runShellScript",
+          "runCommand": [
+            "ifconfig"
           ]
         }
-      }
+      ]
     }
+  }
+}
 DOC
 
   tags = {
