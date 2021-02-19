@@ -26,6 +26,7 @@ Cloud Control API
 CloudFormation
 CloudFront
 CloudHSM v2
+CloudSearch
 CloudTrail
 CloudWatch
 CodeArtifact
