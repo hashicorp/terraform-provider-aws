@@ -79,6 +79,7 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "UTC",
 			},
 			"arn": {
 				Type:     schema.TypeString,
