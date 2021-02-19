@@ -1,5 +1,11 @@
 ## 3.29.0 (February 19, 2021)
 
+BUG FIXES:
+
+* resource/aws_synthetics_canary: Fix Canary Update when in running state ([#17704](https://github.com/hashicorp/terraform-provider-aws/issues/17704))
+
+## 3.29.0 (February 19, 2021)
+
 FEATURES:
 
 * **New Resource:** `aws_cloudwatch_event_archive` ([#17270](https://github.com/hashicorp/terraform-provider-aws/issues/17270))
