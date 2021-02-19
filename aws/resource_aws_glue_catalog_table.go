@@ -755,8 +755,11 @@ func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interf
 	storageDescriptor["sort_columns"] = flattenGlueOrders(s.SortColumns)
 	storageDescriptor["parameters"] = aws.StringValueMap(s.Parameters)
 	storageDescriptor["skewed_info"] = flattenGlueSkewedInfo(s.SkewedInfo)
-	storageDescriptor["schema_reference"] = flattenGlueTableSchemaReference(s.SchemaReference)
 	storageDescriptor["stored_as_sub_directories"] = aws.BoolValue(s.StoredAsSubDirectories)
+
+	if s.SchemaReference != nil {
+		storageDescriptor["schema_reference"] = flattenGlueTableSchemaReference(s.SchemaReference)
+	}
 
 	storageDescriptors[0] = storageDescriptor
 

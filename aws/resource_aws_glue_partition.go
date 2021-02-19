@@ -46,7 +46,10 @@ func resourceAwsGluePartition() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
 			},
 			"storage_descriptor": {
 				Type:     schema.TypeList,
