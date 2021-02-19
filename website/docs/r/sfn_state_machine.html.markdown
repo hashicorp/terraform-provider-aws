@@ -108,7 +108,7 @@ The following arguments are supported:
 
 ### `logging_configuration` Configuration Block
 
-* `log_destination` - (Optional) Amazon Resource Name (ARN) of CloudWatch log group. Make sure the State Machine does have the right IAM Policies for Logging. Log Group ARN must be provided with '*' qualifier.
+* `log_destination` - (Optional) Amazon Resource Name (ARN) of CloudWatch log group. Make sure the State Machine does have the right IAM Policies for Logging. The ARN must end with `:*`
 * `include_execution_data` - (Optional) Determines whether execution data is included in your log. When set to FALSE, data is excluded.
 * `level` - (Optional) Defines which category of execution history events are logged. Valid Values: ALL | ERROR | FATAL | OFF
 
