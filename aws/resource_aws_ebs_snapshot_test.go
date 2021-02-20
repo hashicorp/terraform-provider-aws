@@ -414,6 +414,10 @@ data "aws_outposts_outpost" "test" {
 resource "aws_ebs_volume" "description_test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ebs_snapshot" "test" {
