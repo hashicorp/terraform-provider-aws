@@ -365,6 +365,35 @@ func TestAccAWSSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) 
 	})
 }
 
+func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
+	attributes := make(map[string]string)
+	resourceName := "aws_sns_topic_subscription.test_subscription"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicSubscriptionEmailConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "endpoint", "invalid_email@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "email"),
+					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test_topic", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).snsconn
 
@@ -925,6 +954,20 @@ resource "aws_sns_topic_subscription" "test_subscription" {
   protocol               = "https"
   endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
   endpoint_auto_confirms = true
+}
+`, rName)
+}
+
+func testAccAWSSNSTopicSubscriptionEmailConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+  name = %[1]q
+}
+
+resource "aws_sns_topic_subscription" "test_subscription" {
+  topic_arn = aws_sns_topic.test_topic.arn
+  protocol  = "email"
+  endpoint  = "invalid_email@example.com"
 }
 `, rName)
 }

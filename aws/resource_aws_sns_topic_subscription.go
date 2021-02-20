@@ -256,6 +256,12 @@ func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interfac
 		SubscriptionArn: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "Cannot unsubscribe a subscription that is pending confirmation") {
+		log.Printf("[WARN] Removing unconfirmed SNS topic subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	return err
 }
 
