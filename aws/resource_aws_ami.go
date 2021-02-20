@@ -53,15 +53,11 @@ func resourceAwsAmi() *schema.Resource {
 				ForceNew: true,
 			},
 			"architecture": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.ArchitectureTypeX8664,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.ArchitectureTypeX8664,
-					ec2.ArchitectureValuesI386,
-					ec2.ArchitectureValuesArm64,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.ArchitectureValuesX8664,
+				ValidateFunc: validation.StringInSlice(ec2.ArchitectureValues_Values(), false),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -212,17 +208,46 @@ func resourceAwsAmi() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"virtualization_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VirtualizationTypeParavirtual,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VirtualizationTypeParavirtual,
-					ec2.VirtualizationTypeHvm,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.VirtualizationTypeParavirtual,
+				ValidateFunc: validation.StringInSlice(ec2.VirtualizationType_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"hypervisor": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
@@ -287,7 +312,7 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	id := *res.ImageId
+	id := aws.StringValue(res.ImageId)
 	d.SetId(id)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -346,7 +371,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	image := res.Images[0]
-	state := *image.State
+	state := aws.StringValue(image.State)
 
 	if state == ec2.ImageStatePending {
 		// This could happen if a user manually adds an image we didn't create
@@ -382,12 +407,20 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("virtualization_type", image.VirtualizationType)
 	d.Set("ena_support", image.EnaSupport)
+	d.Set("usage_operation", image.UsageOperation)
+	d.Set("platform_details", image.PlatformDetails)
+	d.Set("hypervisor", image.Hypervisor)
+	d.Set("image_type", image.ImageType)
+	d.Set("owner_id", image.OwnerId)
+	d.Set("public", image.Public)
+	d.Set("image_owner_alias", image.ImageOwnerAlias)
+	d.Set("platform", image.Platform)
 
 	imageArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 	}.String()
 
 	d.Set("arn", imageArn)
@@ -500,7 +533,7 @@ func AMIStateRefreshFunc(client *ec2.EC2, id string) resource.StateRefreshFunc {
 		}
 
 		// AMI is valid, so return it's state
-		return resp.Images[0], *resp.Images[0].State, nil
+		return resp.Images[0], aws.StringValue(resp.Images[0].State), nil
 	}
 }
 

@@ -24,6 +24,25 @@ func CodeRepositoryByName(conn *sagemaker.SageMaker, name string) (*sagemaker.De
 	return output, nil
 }
 
+// ModelPackageGroupByName returns the Model Package Group corresponding to the specified name.
+// Returns nil if no Model Package Group is found.
+func ModelPackageGroupByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+	input := &sagemaker.DescribeModelPackageGroupInput{
+		ModelPackageGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeModelPackageGroup(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}
+
 // ImageByName returns the Image corresponding to the specified name.
 // Returns nil if no Image is found.
 func ImageByName(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeImageOutput, error) {
@@ -109,6 +128,25 @@ func UserProfileByName(conn *sagemaker.SageMaker, domainID, userProfileName stri
 	}
 
 	output, err := conn.DescribeUserProfile(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}
+
+// AppImageConfigByName returns the App Image Config corresponding to the specified App Image Config ID.
+// Returns nil if no App Image Cofnig is found.
+func AppImageConfigByName(conn *sagemaker.SageMaker, appImageConfigID string) (*sagemaker.DescribeAppImageConfigOutput, error) {
+	input := &sagemaker.DescribeAppImageConfigInput{
+		AppImageConfigName: aws.String(appImageConfigID),
+	}
+
+	output, err := conn.DescribeAppImageConfig(input)
 	if err != nil {
 		return nil, err
 	}

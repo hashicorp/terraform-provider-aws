@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 )
 
 func TestAccAWSCodePipeline_basic(t *testing.T) {
@@ -467,15 +467,15 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 }
 
 func TestAccAWSCodePipeline_WithGitHubv1SourceAction(t *testing.T) {
+	githubToken := envvar.TestSkipIfEmpty(t, envvar.GithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
+
 	var v codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
-	githubToken := os.Getenv("GITHUB_TOKEN")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccEnvironmentVariableSetPreCheck("GITHUB_TOKEN", t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
 		Providers:    testAccProviders,

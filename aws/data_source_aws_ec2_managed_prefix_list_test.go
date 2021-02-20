@@ -44,7 +44,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_basic(t *testing.T) {
 	prefixListResourceName := "data.aws_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func TestAccDataSourceAwsEc2ManagedPrefixList_filter(t *testing.T) {
 	resourceById := "data.aws_ec2_managed_prefix_list.s3_by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +149,7 @@ data "aws_ec2_managed_prefix_list" "s3_by_id" {
 
 func TestAccDataSourceAwsEc2ManagedPrefixList_matchesTooMany(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

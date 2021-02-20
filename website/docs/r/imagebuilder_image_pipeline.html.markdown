@@ -19,7 +19,7 @@ resource "aws_imagebuilder_image_pipeline" "example" {
   name                             = "example"
 
   schedule {
-    schedule_expression = "cron(0 0 * * *)"
+    schedule_expression = "cron(0 0 * * ? *)"
   }
 }
 ```
@@ -53,7 +53,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `schedule_expression` - (Required) Cron expression of how often the pipeline start condition is evaluated. For example, `cron(0 0 * * *)` is evaluated every day at midnight UTC.
+* `schedule_expression` - (Required) Cron expression of how often the pipeline start condition is evaluated. For example, `cron(0 0 * * ? *)` is evaluated every day at midnight UTC. Configurations using the five field syntax that was previously accepted by the API, such as `cron(0 0 * * *)`, must be updated to the six field syntax. For more information, see the [Image Builder User Guide](https://docs.aws.amazon.com/imagebuilder/latest/userguide/cron-expressions.html).
 
 The following arguments are optional:
 

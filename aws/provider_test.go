@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 )
 
 const (
@@ -179,6 +179,49 @@ func TestProvider_impl(t *testing.T) {
 	var _ *schema.Provider = Provider()
 }
 
+func TestReverseDns(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "amazonaws.com",
+			input:    "amazonaws.com",
+			expected: "com.amazonaws",
+		},
+		{
+			name:     "amazonaws.com.cn",
+			input:    "amazonaws.com.cn",
+			expected: "cn.com.amazonaws",
+		},
+		{
+			name:     "sc2s.sgov.gov",
+			input:    "sc2s.sgov.gov",
+			expected: "gov.sgov.sc2s",
+		},
+		{
+			name:     "c2s.ic.gov",
+			input:    "c2s.ic.gov",
+			expected: "gov.ic.c2s",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			if got, want := ReverseDns(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
 // testAccPreCheck verifies and sets required provider testing configuration
 //
 // This PreCheck function should be present in every acceptance test. It allows
@@ -191,12 +234,10 @@ func testAccPreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID, AWS_PROFILE, or AWS_CONTAINER_CREDENTIALS_FULL_URI must be set for acceptance tests")
-		}
+		envvar.TestFailIfAllEmpty(t, []string{envvar.AwsProfile, envvar.AwsAccessKeyId, envvar.AwsContainerCredentialsFullUri}, "credentials for running acceptance testing")
 
-		if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
+		if os.Getenv(envvar.AwsAccessKeyId) != "" {
+			envvar.TestFailIfEmpty(t, envvar.AwsSecretAccessKey, "static credentials value when using "+envvar.AwsAccessKeyId)
 		}
 
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
@@ -207,7 +248,7 @@ func testAccPreCheck(t *testing.T) {
 		//   * AWS_DEFAULT_REGION is required and checked above (should mention us-west-2 default)
 		//   * Region is automatically handled via shared AWS configuration file and still verified
 		region := testAccGetRegion()
-		os.Setenv("AWS_DEFAULT_REGION", region)
+		os.Setenv(envvar.AwsDefaultRegion, region)
 
 		err := testAccProvider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 		if err != nil {
@@ -610,27 +651,15 @@ func testAccGetAccountID() string {
 }
 
 func testAccGetRegion() string {
-	v := os.Getenv("AWS_DEFAULT_REGION")
-	if v == "" {
-		return "us-west-2" // lintignore:AWSAT003
-	}
-	return v
+	return envvar.GetWithDefault(envvar.AwsDefaultRegion, endpoints.UsWest2RegionID)
 }
 
 func testAccGetAlternateRegion() string {
-	v := os.Getenv("AWS_ALTERNATE_REGION")
-	if v == "" {
-		return "us-east-1" // lintignore:AWSAT003
-	}
-	return v
+	return envvar.GetWithDefault(envvar.AwsAlternateRegion, endpoints.UsEast1RegionID)
 }
 
 func testAccGetThirdRegion() string {
-	v := os.Getenv("AWS_THIRD_REGION")
-	if v == "" {
-		return "us-east-2" // lintignore:AWSAT003
-	}
-	return v
+	return envvar.GetWithDefault(envvar.AwsThirdRegion, endpoints.UsEast2RegionID)
 }
 
 func testAccGetPartition() string {
@@ -649,9 +678,7 @@ func testAccGetPartitionDNSSuffix() string {
 
 func testAccGetPartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		dnsParts := strings.Split(partition.DNSSuffix(), ".")
-		sort.Sort(sort.Reverse(sort.StringSlice(dnsParts)))
-		return strings.Join(dnsParts, ".")
+		return ReverseDns(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -672,12 +699,10 @@ func testAccGetThirdRegionPartition() string {
 }
 
 func testAccAlternateAccountPreCheck(t *testing.T) {
-	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
-		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
-	}
+	envvar.TestFailIfAllEmpty(t, []string{envvar.AwsAlternateProfile, envvar.AwsAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
 
-	if os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") != "" && os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY") == "" {
-		t.Fatal("AWS_ALTERNATE_SECRET_ACCESS_KEY must be set for acceptance tests")
+	if os.Getenv(envvar.AwsAlternateAccessKeyId) != "" {
+		envvar.TestFailIfEmpty(t, envvar.AwsAlternateSecretAccessKey, "static credentials value when using "+envvar.AwsAlternateAccessKeyId)
 	}
 }
 
@@ -701,24 +726,24 @@ func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 
 func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
-		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AwsDefaultRegion, envvar.AwsAlternateRegion)
 	}
 
 	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
-		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
+		t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.AwsAlternateRegion, testAccGetAlternateRegionPartition(), envvar.AwsDefaultRegion, testAccGetPartition())
 	}
 
 	if regions >= 3 {
 		if testAccGetRegion() == testAccGetThirdRegion() {
-			t.Fatal("AWS_DEFAULT_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AwsDefaultRegion, envvar.AwsThirdRegion)
 		}
 
 		if testAccGetAlternateRegion() == testAccGetThirdRegion() {
-			t.Fatal("AWS_ALTERNATE_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AwsAlternateRegion, envvar.AwsThirdRegion)
 		}
 
 		if testAccGetPartition() != testAccGetThirdRegionPartition() {
-			t.Fatalf("AWS_THIRD_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetThirdRegionPartition(), testAccGetPartition())
+			t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.AwsThirdRegion, testAccGetThirdRegionPartition(), envvar.AwsDefaultRegion, testAccGetPartition())
 		}
 	}
 
@@ -732,7 +757,7 @@ func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
 // testAccRegionPreCheck checks that the test region is the specified region.
 func testAccRegionPreCheck(t *testing.T, region string) {
 	if testAccGetRegion() != region {
-		t.Skipf("skipping tests; AWS_DEFAULT_REGION (%s) does not equal %s", testAccGetRegion(), region)
+		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AwsDefaultRegion, testAccGetRegion(), region)
 	}
 }
 
@@ -798,12 +823,6 @@ func testAccPreCheckIamServiceLinkedRole(t *testing.T, pathPrefix string) {
 	}
 }
 
-func testAccEnvironmentVariableSetPreCheck(variable string, t *testing.T) {
-	if os.Getenv(variable) == "" {
-		t.Skipf("skipping tests; environment variable %s must be set", variable)
-	}
-}
-
 func testAccAlternateAccountProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -812,7 +831,7 @@ provider "awsalternate" {
   profile    = %[2]q
   secret_key = %[3]q
 }
-`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+`, os.Getenv(envvar.AwsAlternateAccessKeyId), os.Getenv(envvar.AwsAlternateProfile), os.Getenv(envvar.AwsAlternateSecretAccessKey))
 }
 
 func testAccAlternateAccountAlternateRegionProviderConfig() string {
@@ -824,7 +843,7 @@ provider "awsalternate" {
   region     = %[3]q
   secret_key = %[4]q
 }
-`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+`, os.Getenv(envvar.AwsAlternateAccessKeyId), os.Getenv(envvar.AwsAlternateProfile), testAccGetAlternateRegion(), os.Getenv(envvar.AwsAlternateSecretAccessKey))
 }
 
 // When testing needs to distinguish a second region and second account in the same region
@@ -848,7 +867,7 @@ provider "awsalternateaccountsameregion" {
 provider "awssameaccountalternateregion" {
   region = %[3]q
 }
-`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+`, os.Getenv(envvar.AwsAlternateAccessKeyId), os.Getenv(envvar.AwsAlternateProfile), testAccGetAlternateRegion(), os.Getenv(envvar.AwsAlternateSecretAccessKey))
 }
 
 // Deprecated: Use testAccMultipleRegionProviderConfig instead
@@ -1037,6 +1056,9 @@ func testAccPreCheckSkipError(err error) bool {
 		return true
 	}
 	if isAWSErr(err, "InvalidInputException", "Unknown operation") {
+		return true
+	}
+	if isAWSErr(err, "InvalidAction", "is not valid") {
 		return true
 	}
 	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
@@ -1246,6 +1268,27 @@ func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSProvider_Region_AwsC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-iso-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "c2s.ic.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.ic.c2s"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 	var providers []*schema.Provider
 
@@ -1259,6 +1302,7 @@ func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
 					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1279,6 +1323,7 @@ func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
 				),
 				PlanOnly: true,
 			},
@@ -1299,6 +1344,28 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "com.amazonaws"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Region_AwsSC2S(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-isob-east-1"), // lintignore:AWSAT003
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "sc2s.sgov.gov"),
+					testAccCheckAWSProviderPartition(&providers, "aws-iso-b"),
+					testAccCheckAWSProviderReverseDnsPrefix(&providers, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
 			},
@@ -1567,6 +1634,28 @@ func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPar
 	}
 }
 
+func testAccCheckAWSProviderReverseDnsPrefix(providers *[]*schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerReverseDnsPrefix := provider.Meta().(*AWSClient).reverseDnsPrefix
+
+			if providerReverseDnsPrefix != expectedReverseDnsPrefix {
+				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)
+			}
+		}
+
+		return nil
+	}
+}
+
 // testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets checks that the test region has either
 // - The EC2-Classic platform available, or
 // - A default VPC with default subnets.
@@ -1814,10 +1903,7 @@ data "aws_arn" "test" {
 }
 
 func testAccAssumeRoleARNPreCheck(t *testing.T) {
-	v := os.Getenv("TF_ACC_ASSUME_ROLE_ARN")
-	if v == "" {
-		t.Skip("skipping tests; TF_ACC_ASSUME_ROLE_ARN must be set")
-	}
+	envvar.TestSkipIfEmpty(t, envvar.TfAccAssumeRoleArn, "Amazon Resource Name (ARN) of existing IAM Role to assume for testing restricted permissions")
 }
 
 func testAccProviderConfigAssumeRolePolicy(policy string) string {
@@ -1829,7 +1915,7 @@ provider "aws" {
     policy   = %q
   }
 }
-`, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
+`, os.Getenv(envvar.TfAccAssumeRoleArn), policy)
 }
 
 const testAccCheckAWSProviderConfigAssumeRoleEmpty = `

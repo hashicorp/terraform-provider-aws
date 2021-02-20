@@ -40,6 +40,34 @@ func TestAccAWSFmsPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSFmsPolicy_cloudfrontDistribution(t *testing.T) {
+	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
+	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFmsPolicyConfig_cloudfrontDistribution(fmsPolicyName, wafRuleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsFmsPolicyExists("aws_fms_policy.test"),
+					testAccMatchResourceAttrRegionalARN("aws_fms_policy.test", "arn", "fms", regexp.MustCompile(`policy/`)),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "name", fmsPolicyName),
+					resource.TestCheckResourceAttr("aws_fms_policy.test", "security_service_policy_data.#", "1"),
+				),
+			},
+			{
+				ResourceName:            "aws_fms_policy.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_update_token", "delete_all_policy_resources"},
+			},
+		},
+	})
+}
+
 func TestAccAWSFmsPolicy_includeMap(t *testing.T) {
 	fmsPolicyName := fmt.Sprintf("tf-fms-%s", acctest.RandString(5))
 	wafRuleGroupName := fmt.Sprintf("tf-waf-rg-%s", acctest.RandString(5))
@@ -192,6 +220,32 @@ resource "aws_wafregional_rule_group" "test" {
   name        = "%[2]s"
 }
 `, name, group)
+}
+
+func testAccFmsPolicyConfig_cloudfrontDistribution(name string, group string) string {
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(name),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(name),
+		fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = "%[1]s"
+  remediation_enabled   = false
+  resource_type         = "AWS::CloudFront::Distribution"
+
+  security_service_policy_data {
+    type                 = "WAFV2"
+    managed_service_data = "{\"type\":\"WAFV2\",\"preProcessRuleGroups\":[{\"ruleGroupArn\":null,\"overrideAction\":{\"type\":\"NONE\"},\"managedRuleGroupIdentifier\":{\"version\":null,\"vendorName\":\"AWS\",\"managedRuleGroupName\":\"AWSManagedRulesAmazonIpReputationList\"},\"ruleGroupType\":\"ManagedRuleGroup\",\"excludeRules\":[]}],\"postProcessRuleGroups\":[],\"defaultAction\":{\"type\":\"ALLOW\"},\"overrideCustomerWebACLAssociation\":false,\"loggingConfiguration\":{\"logDestinationConfigs\":[\"${aws_kinesis_firehose_delivery_stream.test.arn}\"],\"redactedFields\":[{\"redactedFieldType\":\"SingleHeader\",\"redactedFieldValue\":\"Cookies\"}]}}"
+  }
+}
+
+
+resource "aws_wafregional_rule_group" "test" {
+  metric_name = "MyTest"
+  name        = "%[2]s"
+}
+`, name, group),
+	)
 }
 
 func testAccFmsPolicyConfig_updated(name string, group string) string {
