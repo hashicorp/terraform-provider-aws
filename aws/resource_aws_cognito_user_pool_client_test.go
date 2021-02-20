@@ -275,6 +275,41 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	userPoolName := acctest.RandString(10)
+	clientName := acctest.RandString(10)
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckAWSPinpointApp(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfigAnalyticsWithArnConfig(userPoolName, clientName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", "aws_pinpoint_app.test", "arn"),
+					testAccCheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 	var client cognitoidentityprovider.UserPoolClientType
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
@@ -553,6 +588,19 @@ resource "aws_cognito_user_pool_client" "test" {
     external_id      = "%[1]s"
     role_arn         = aws_iam_role.test.arn
     user_data_shared = true
+  }
+}
+`, clientName)
+}
+
+func testAccAWSCognitoUserPoolClientConfigAnalyticsWithArnConfig(userPoolName, clientName string) string {
+	return testAccAWSCognitoUserPoolClientConfigAnalyticsConfigBase(userPoolName, clientName) + fmt.Sprintf(`
+resource "aws_cognito_user_pool_client" "test" {
+  name         = "%[1]s"
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  analytics_configuration {
+    application_arn = aws_pinpoint_app.test.arn
   }
 }
 `, clientName)

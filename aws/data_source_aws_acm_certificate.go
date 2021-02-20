@@ -91,7 +91,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing certificates: %q", err)
+		return fmt.Errorf("Error listing certificates: %w", err)
 	}
 
 	if len(arns) == 0 {
@@ -119,7 +119,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Describing ACM Certificate: %s", input)
 		output, err := conn.DescribeCertificate(input)
 		if err != nil {
-			return fmt.Errorf("Error describing ACM certificate: %q", err)
+			return fmt.Errorf("Error describing ACM certificate: %w", err)
 		}
 		certificate := output.Certificate
 
@@ -174,11 +174,11 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for ACM Certificate (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

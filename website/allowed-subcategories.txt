@@ -10,6 +10,7 @@ Application Autoscaling
 Athena
 Autoscaling
 Autoscaling Plans
+Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch
 Budgets
@@ -51,6 +52,7 @@ Elastic Beanstalk
 Elastic Load Balancing (ELB Classic)
 Elastic Load Balancing v2 (ALB/NLB)
 Elastic Map Reduce (EMR)
+Elastic Map Reduce Containers
 Elastic Transcoder
 ElasticSearch
 EventBridge (CloudWatch Events)

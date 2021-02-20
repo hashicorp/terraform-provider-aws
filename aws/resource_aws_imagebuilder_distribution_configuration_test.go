@@ -585,6 +585,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name        = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 }
@@ -605,10 +609,18 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.alternate.name
   }
 }
@@ -821,6 +833,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 }
@@ -835,6 +851,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 
@@ -853,6 +873,10 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
   name = %[1]q
 
   distribution {
+    ami_distribution_configuration {
+      name = "{{ imagebuilder:buildDate }}"
+    }
+
     region = data.aws_region.current.name
   }
 
