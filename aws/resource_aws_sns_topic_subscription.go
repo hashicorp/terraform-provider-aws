@@ -84,6 +84,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 					"application",
 					"email-json",
 					"email",
+					"firehose",
 					"http",
 					"https",
 					"lambda",
