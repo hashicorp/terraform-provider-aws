@@ -28,6 +28,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -133,6 +134,42 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_EngineVersion(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationEngineVersion(rName, "Athena engine version 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version", "Athena engine version 1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationEngineVersion(rName, "Athena engine version 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version", "Athena engine version 2"),
 				),
 			},
 		},
@@ -606,6 +643,18 @@ resource "aws_athena_workgroup" "test" {
   }
 }
 `, rName, enforceWorkgroupConfiguration)
+}
+
+func testAccAthenaWorkGroupConfigConfigurationEngineVersion(rName, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    engine_version = %[2]q
+  }
+}
+`, rName, engineVersion)
 }
 
 func testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName string, publishCloudwatchMetricsEnabled bool) string {
