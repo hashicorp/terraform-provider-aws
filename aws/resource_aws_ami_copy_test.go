@@ -411,9 +411,9 @@ resource "aws_ami" "test" {
 }
 
 resource "aws_ami_copy" "test" {
-  name              = "%s-copy"
-  source_ami_id     = aws_ami.test.id
-  source_ami_region = data.aws_region.current.name
+  name                    = "%s-copy"
+  source_ami_id           = aws_ami.test.id
+  source_ami_region       = data.aws_region.current.name
   destination_outpost_arn = data.aws_outposts_outpost.test.arn
 }
 `, rName, rName)
