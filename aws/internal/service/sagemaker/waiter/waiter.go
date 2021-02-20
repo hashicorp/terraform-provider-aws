@@ -8,19 +8,21 @@ import (
 )
 
 const (
-	NotebookInstanceInServiceTimeout = 10 * time.Minute
-	NotebookInstanceStoppedTimeout   = 10 * time.Minute
-	NotebookInstanceDeletedTimeout   = 10 * time.Minute
-	ImageCreatedTimeout              = 10 * time.Minute
-	ImageDeletedTimeout              = 10 * time.Minute
-	ImageVersionCreatedTimeout       = 10 * time.Minute
-	ImageVersionDeletedTimeout       = 10 * time.Minute
-	DomainInServiceTimeout           = 10 * time.Minute
-	DomainDeletedTimeout             = 10 * time.Minute
-	FeatureGroupCreatedTimeout       = 10 * time.Minute
-	FeatureGroupDeletedTimeout       = 10 * time.Minute
-	UserProfileInServiceTimeout      = 10 * time.Minute
-	UserProfileDeletedTimeout        = 10 * time.Minute
+	NotebookInstanceInServiceTimeout  = 10 * time.Minute
+	NotebookInstanceStoppedTimeout    = 10 * time.Minute
+	NotebookInstanceDeletedTimeout    = 10 * time.Minute
+	ModelPackageGroupCompletedTimeout = 10 * time.Minute
+	ModelPackageGroupDeletedTimeout   = 10 * time.Minute
+	ImageCreatedTimeout               = 10 * time.Minute
+	ImageDeletedTimeout               = 10 * time.Minute
+	ImageVersionCreatedTimeout        = 10 * time.Minute
+	ImageVersionDeletedTimeout        = 10 * time.Minute
+	DomainInServiceTimeout            = 10 * time.Minute
+	DomainDeletedTimeout              = 10 * time.Minute
+	FeatureGroupCreatedTimeout        = 10 * time.Minute
+	FeatureGroupDeletedTimeout        = 10 * time.Minute
+	UserProfileInServiceTimeout       = 10 * time.Minute
+	UserProfileDeletedTimeout         = 10 * time.Minute
 )
 
 // NotebookInstanceInService waits for a NotebookInstance to return InService
@@ -81,6 +83,47 @@ func NotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string) (*s
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ModelPackageGroupCompleted waits for a ModelPackageGroup to return Created
+func ModelPackageGroupCompleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.ModelPackageGroupStatusPending,
+			sagemaker.ModelPackageGroupStatusInProgress,
+		},
+		Target:  []string{sagemaker.ModelPackageGroupStatusCompleted},
+		Refresh: ModelPackageGroupStatus(conn, name),
+		Timeout: ModelPackageGroupCompletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeModelPackageGroupOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ModelPackageGroupDeleted waits for a ModelPackageGroup to return Created
+func ModelPackageGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.ModelPackageGroupStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: ModelPackageGroupStatus(conn, name),
+		Timeout: ModelPackageGroupDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeModelPackageGroupOutput); ok {
 		return output, err
 	}
 

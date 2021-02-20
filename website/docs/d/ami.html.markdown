@@ -123,5 +123,8 @@ interpolation.
     * `tags.#.value` - The value of the tag.
 * `virtualization_type` - The type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
+* `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
+* `platform_details` - The platform details associated with the billing code of the AMI.
+* `ena_support` - Specifies whether enhanced networking with ENA is enabled.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html

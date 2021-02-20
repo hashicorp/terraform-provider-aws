@@ -78,7 +78,7 @@ The following arguments are supported:
 
 * `default_value` - (Required) The default value for the event
 * `dimension_name` - (Required) The name for the dimension
-* `value_source` - (Required) The source for the value. It can be either `"messageTag"` or `"emailHeader"`
+* `value_source` - (Required) The source for the value. May be any of `"messageTag"`, `"emailHeader"` or `"linkTag"`.
 
 ### kinesis_destination Argument Reference
 
@@ -88,6 +88,13 @@ The following arguments are supported:
 ### sns_destination Argument Reference
 
 * `topic_arn` - (Required) The ARN of the SNS topic
+
+## Attributes Reference
+
+In addition to the arguments, which are exported, the following attributes are exported:
+
+* `id` - The SES event destination name.
+* `arn` - The SES event destination ARN.
 
 ## Import
 

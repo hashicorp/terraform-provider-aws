@@ -3,7 +3,7 @@ name: Terraform Provider Checks
 on:
   push:
     branches:
-      - master
+      - main
       - 'release/**'
   pull_request:
     paths:

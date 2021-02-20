@@ -194,6 +194,39 @@ func TestAccAWSLB_LoadBalancerType_Gateway(t *testing.T) {
 	})
 }
 
+func TestAccAWSLB_IPv6SubnetMapping(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLBDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBConfig_IPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
+						"ipv6_address": regexp.MustCompile("[a-f0-6]+:[a-f0-6:]+"),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"drop_invalid_header_fields",
+					"enable_http2",
+					"idle_timeout",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSLB_LoadBalancerType_Gateway_EnableCrossZoneLoadBalancing(t *testing.T) {
 	var conf elbv2.LoadBalancer
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1952,6 +1985,57 @@ resource "aws_lb" "test" {
   subnet_mapping {
     subnet_id = aws_subnet.test.id
   }
+}
+`, rName))
+}
+
+func testAccAWSLBConfig_IPv6(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.10.10.0/25"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  name                       = %[1]q
+  load_balancer_type         = "network"
+  enable_deletion_protection = false
+
+  subnet_mapping {
+    subnet_id    = aws_subnet.test.id
+    ipv6_address = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16), 5)
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_ipv6address"
+  }
+
+  depends_on = [aws_internet_gateway.gw]
 }
 `, rName))
 }
