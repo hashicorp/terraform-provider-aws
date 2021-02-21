@@ -176,7 +176,7 @@ resource "aws_autoscaling_group" "example" {
 
 ### Mixed Instances Policy with Instance level LaunchTemplateSpecification Overrides
 
-When using a diverse instance set, some instance types might require a launch template with configuration values unique to that instance type such as a different AMI (Graviton), different EBS configuration.
+When using a diverse instance set, some instance types might require a launch template with configuration values unique to that instance type such as a different AMI (Graviton2), architecture specific user data script, different EBS configuration, or different networking configuration.
 
 ```hcl
 resource "aws_launch_template" "example" {
