@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_globalaccelerator_accelerator: Allow update of flow log attribute for active flow logs
+```
