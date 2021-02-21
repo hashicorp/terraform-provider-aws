@@ -17,6 +17,10 @@ func dataSourceAwsS3BucketPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -25,11 +29,19 @@ func dataSourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).s3conn
 
 	bucketName := d.Get("bucket").(string)
+
+	// fails to get policy without this part
+	_, err := conn.HeadBucket(&s3.HeadBucketInput{
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		return fmt.Errorf("bucket not found: %s", err)
+	}
+
 	fmt.Println("bucketName:", bucketName)
 	input := &s3.GetBucketPolicyInput{
 		Bucket: aws.String(bucketName),
 	}
-
 	log.Printf("[DEBUG] Reading S3 bucket policy: %s", input)
 	output, err := conn.GetBucketPolicy(input)
 	fmt.Printf("output:%v\n", output)
