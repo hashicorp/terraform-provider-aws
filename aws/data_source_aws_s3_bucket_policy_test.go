@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -25,7 +26,7 @@ func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 				Config: testAccAWSDataSourceS3BucketPolicyConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketPolicyExists("data.aws_s3_bucket_policy.policy"),
-					resource.TestCheckResourceAttrPair("data.aws_s3_bucket_policy.policy", "policy", "aws_s3_bucket_policy.bucket", "policy"),
+					testAccCheckAWSS3BucketPolicyPolicyMatch("data.aws_s3_bucket_policy.policy", "policy", "aws_s3_bucket_policy.bucket", "policy"),
 					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
 					//testAccCheckS3BucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", bucketName),
 					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
@@ -39,6 +40,45 @@ func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 
 func testAccCheckAWSS3BucketPolicyExists(n string) resource.TestCheckFunc {
 	return testAccCheckAWSS3BucketPolicyExistsWithProvider(n, func() *schema.Provider { return testAccProvider })
+}
+
+func testAccCheckAWSS3BucketPolicyPolicyMatch(resource1, attr1, resource2, attr2 string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resource1]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource1)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+		policy1, ok := rs.Primary.Attributes[attr1]
+		if !ok {
+			return fmt.Errorf("Attribute %q not found for %q", attr1, resource1)
+		}
+
+		rs, ok = s.RootModule().Resources[resource2]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource2)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+		policy2, ok := rs.Primary.Attributes[attr2]
+		if !ok {
+			return fmt.Errorf("Attribute %q not found for %q", attr2, resource2)
+		}
+
+		areEquivalent, err := awspolicy.PoliciesAreEquivalent(policy1, policy2)
+		if err != nil {
+			return fmt.Errorf("Comparing AWS Policies failed: %s", err)
+		}
+
+		if !areEquivalent {
+			return fmt.Errorf("AWS policies differ.\npolicy1: %s\npolicy2: %s", policy1, policy2)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSS3BucketPolicyExistsWithProvider(n string, providerF func() *schema.Provider) resource.TestCheckFunc {
