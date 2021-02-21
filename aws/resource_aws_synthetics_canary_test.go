@@ -108,6 +108,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 				),
 			},
 			{
@@ -139,6 +140,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
 					testAccCheckAwsSyntheticsCanaryIsUpdated(&conf1, &conf2),
 				),
 			},
@@ -221,7 +223,50 @@ func TestAccAWSSyntheticsCanary_startCanary(t *testing.T) {
 					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf3),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf2, &conf3),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSyntheticsCanary_startCanary_codeChanges(t *testing.T) {
+	var conf1, conf2 synthetics.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryStartCanaryConfig(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf1),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary"},
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName, &conf2),
+					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
+					testAccCheckAwsSyntheticsCanaryIsStartedAfter(&conf1, &conf2),
 				),
 			},
 		},
@@ -821,6 +866,24 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
+  start_canary         = %[2]t
+  runtime_version      = "syn-1.0"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+}
+`, rName, state))
+}
+
+func testAccAWSSyntheticsCanaryStartCanaryZipUpdatedConfig(rName string, state bool) string {
+	return composeConfig(testAccAWSSyntheticsCanaryConfigBase(rName), fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
   runtime_version      = "syn-1.0"
 

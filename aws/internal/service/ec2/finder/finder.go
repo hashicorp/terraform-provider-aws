@@ -175,6 +175,41 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 	return TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
 }
 
+// VpcAttribute looks up a VPC attribute.
+func VpcAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) {
+	input := &ec2.DescribeVpcAttributeInput{
+		Attribute: aws.String(attribute),
+		VpcId:     aws.String(vpcID),
+	}
+
+	output, err := conn.DescribeVpcAttribute(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	switch attribute {
+	case ec2.VpcAttributeNameEnableDnsHostnames:
+		if output.EnableDnsHostnames == nil {
+			return nil, nil
+		}
+
+		return output.EnableDnsHostnames.Value, nil
+	case ec2.VpcAttributeNameEnableDnsSupport:
+		if output.EnableDnsSupport == nil {
+			return nil, nil
+		}
+
+		return output.EnableDnsSupport.Value, nil
+	}
+
+	return nil, fmt.Errorf("unimplemented VPC attribute: %s", attribute)
+}
+
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
 // Returns nil and potentially an error if no VPC peering connection is found.
 func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {

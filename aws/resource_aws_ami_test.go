@@ -53,6 +53,11 @@ func TestAccAWSAMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sriov_net_support", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "virtualization_type", "hvm"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
+					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
+					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
+					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -367,7 +372,8 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 
 		if len(resp.Images) > 0 {
 			state := resp.Images[0].State
-			return fmt.Errorf("AMI %s still exists in the state: %s.", *resp.Images[0].ImageId, *state)
+			return fmt.Errorf("AMI %s still exists in the state: %s.", aws.StringValue(resp.Images[0].ImageId),
+				aws.StringValue(state))
 		}
 	}
 	return nil

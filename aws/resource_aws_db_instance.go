@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -413,9 +415,10 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"username"},
 			},
 
 			"auto_minor_version_upgrade": {
@@ -529,6 +532,20 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if _, ok := diff.GetOk("snapshot_identifier"); ok {
+					switch strings.ToLower(diff.Get("engine").(string)) {
+					case "mysql", "postgres", "mariadb":
+						if _, ok := diff.GetOk("name"); ok {
+							return fmt.Errorf("name attribute is not supported with snapshot_identifier when engine is %s", diff.Get("engine").(string))
+						}
+					}
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -547,7 +564,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
-	// a database instance reboot to take affect. During resource creation,
+	// a database instance reboot to take effect. During resource creation,
 	// we expect everything to be in sync before returning completion.
 	var requiresRebootDbInstance bool
 
@@ -894,14 +911,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
-			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
-			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
-			switch strings.ToLower(d.Get("engine").(string)) {
-			case "mysql", "postgres", "mariadb":
-				// skip
-			default:
-				opts.DBName = aws.String(attr.(string))
-			}
+			opts.DBName = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {

@@ -99,8 +99,16 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				Set:           schema.HashString,
 				ConflictsWith: []string{"resource_type"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"AWS::ApiGateway::Stage", "AWS::ElasticLoadBalancingV2::LoadBalancer", "AWS::CloudFront::Distribution", "AWS::EC2::NetworkInterface", "AWS::EC2::Instance", "AWS::EC2::SecurityGroup"}, false),
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"AWS::ApiGateway::Stage",
+						"AWS::CloudFront::Distribution",
+						"AWS::EC2::NetworkInterface",
+						"AWS::EC2::Instance",
+						"AWS::EC2::SecurityGroup",
+						"AWS::EC2::VPC",
+						"AWS::ElasticLoadBalancingV2::LoadBalancer",
+					}, false),
 				},
 			},
 

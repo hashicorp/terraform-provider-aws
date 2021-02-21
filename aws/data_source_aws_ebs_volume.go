@@ -140,7 +140,7 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	arn := arn.ARN{
 		Partition: client.partition,
 		Region:    client.region,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		AccountID: client.accountid,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}

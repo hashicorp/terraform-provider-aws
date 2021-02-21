@@ -831,7 +831,7 @@ func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 			{
 				Config: testAccAWSLambdaConfigWithNilDeadLetterConfig(funcName, policyName, roleName, sgName),
 				ExpectError: regexp.MustCompile(
-					fmt.Sprintf("Nil dead_letter_config supplied for function: %s", funcName)),
+					fmt.Sprintf("nil dead_letter_config supplied for function: %s", funcName)),
 			},
 		},
 	})
@@ -2528,6 +2528,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
+  publish       = true
 }
 `, imageID, funcName)
 }

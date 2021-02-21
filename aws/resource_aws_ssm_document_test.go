@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,6 +36,39 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_Name(t *testing.T) {
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
 			},
 		},
 	})
@@ -316,16 +348,13 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 	rInt2 := acctest.RandInt()
 	resourceName := "aws_ssm_document.test"
 
-	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
-	defer os.Remove(source)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt),
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
@@ -338,7 +367,7 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"attachments_source"}, // This doesn't work because the API doesn't provide attachments info directly
 			},
 			{
-				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt2),
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, rInt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Package"),
@@ -497,6 +526,26 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_disappears(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmDocument(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -952,7 +1001,7 @@ DOC
 `, rName))
 }
 
-func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
+func testAccAWSSSMDocumentTypePackageConfig(rName string, rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
   name = "ssm_profile-%[1]s"
@@ -980,7 +1029,36 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+}
 
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets",
+        "s3:GetObjectVersion",
+        "s3:GetBucketAcl",
+        "s3:GetObject",
+        "s3:GetObjectACL",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}/*",
+        "arn:${data.aws_partition.current.partition}:s3:::${aws_s3_bucket.test.id}"
+      ]
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_s3_bucket" "test" {
@@ -990,7 +1068,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_object" "test" {
   bucket       = aws_s3_bucket.test.bucket
   key          = "test.zip"
-  source       = %[3]q
+  source       = "test-fixtures/ssm-doc-acc-test.zip"
   content_type = "binary/octet-stream"
 }
 
@@ -1000,7 +1078,7 @@ resource "aws_ssm_document" "test" {
 
   attachments_source {
     key    = "SourceUrl"
-    values = ["s3://${aws_s3_bucket.test.bucket}/test.zip"]
+    values = ["s3://${aws_s3_bucket_object.test.bucket}"]
   }
 
   content = <<DOC
@@ -1012,7 +1090,7 @@ resource "aws_ssm_document" "test" {
   "files": {
     "test.zip": {
       "checksums": {
-        "sha256": "thisistwentycharactersatleast"
+        "sha256": "${filesha256("test-fixtures/ssm-doc-acc-test.zip")}"
       }
     }
   },
@@ -1020,7 +1098,7 @@ resource "aws_ssm_document" "test" {
     "amazon": {
       "_any": {
         "x86_64": {
-          "file": "test.zip"
+          "file": "${aws_s3_bucket_object.test.key}"
         }
       }
     }
@@ -1028,8 +1106,9 @@ resource "aws_ssm_document" "test" {
 }
 DOC
 
+  depends_on = [aws_iam_role_policy.test]
 }
-`, rName, rInt, source)
+`, rName, rInt)
 }
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
