@@ -25,7 +25,7 @@ func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 				Config: testAccAWSDataSourceS3BucketPolicyConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketPolicyExists("data.aws_s3_bucket_policy.policy"),
-					resource.TestCheckResourceAttrPair("data.aws_s3_bucket_policy.policy", "policy", "aws_s3_bucket_policy.policy", "policy"),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket_policy.policy", "policy", "aws_s3_bucket_policy.bucket", "policy"),
 					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
 					//testAccCheckS3BucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", bucketName),
 					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
@@ -82,28 +82,28 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_policy" "bucket" {
-  bucket = aws_s3_bucket.bucket.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "MYBUCKETPOLICY"
-    Statement = [
-      {
-        Sid       = "IPAllow"
-        Effect    = "Deny"
-        Principal = "*"
-        Action    = "s3:*"
-        Resource = [
-          aws_s3_bucket.bucket.arn,
-          "${aws_s3_bucket.bucket.arn}/*",
-        ]
-        Condition = {
-          IpAddress = {
-            "aws:SourceIp" = "8.8.8.8/32"
-          }
-        }
-      },
+  bucket = aws_s3_bucket.bucket.bucket
+  policy = data.aws_iam_policy_document.policy.json
+}
+
+data "aws_iam_policy_document" "policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:*",
     ]
-  })
+
+    resources = [
+      aws_s3_bucket.bucket.arn,
+      "${aws_s3_bucket.bucket.arn}/*",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
 }
 
 data "aws_s3_bucket_policy" "policy" {
