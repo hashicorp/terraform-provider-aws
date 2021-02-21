@@ -80,14 +80,36 @@ func AcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *glo
 }
 
 // EndpointGroupByARN returns the endpoint group corresponding to the specified ARN.
+// Returns NotFoundError if no endpoint group is found.
 func EndpointGroupByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
 	input := &globalaccelerator.DescribeEndpointGroupInput{
 		EndpointGroupArn: aws.String(arn),
 	}
 
+	return EndpointGroup(conn, input)
+}
+
+// EndpointGroup returns the endpoint group corresponding to the specified input.
+// Returns NotFoundError if no endpoint group is found.
+func EndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeEndpointGroupInput) (*globalaccelerator.EndpointGroup, error) {
 	output, err := conn.DescribeEndpointGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	if output == nil || output.EndpointGroup == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output.EndpointGroup, nil
