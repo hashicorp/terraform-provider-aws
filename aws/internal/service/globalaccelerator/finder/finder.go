@@ -114,3 +114,39 @@ func EndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globalaccel
 
 	return output.EndpointGroup, nil
 }
+
+// ListenerByARN returns the listener corresponding to the specified ARN.
+// Returns NotFoundError if no listener is found.
+func ListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+	input := &globalaccelerator.DescribeListenerInput{
+		ListenerArn: aws.String(arn),
+	}
+
+	return Listener(conn, input)
+}
+
+// Listener returns the listener corresponding to the specified input.
+// Returns NotFoundError if no listener is found.
+func Listener(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
+	output, err := conn.DescribeListener(input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Listener == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Listener, nil
+}

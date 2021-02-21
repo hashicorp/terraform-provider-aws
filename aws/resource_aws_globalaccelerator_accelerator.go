@@ -224,7 +224,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 
 		log.Printf("[DEBUG] Updating Global Accelerator Accelerator: %s", input)
 		if _, err := conn.UpdateAccelerator(input); err != nil {
-			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
+			return fmt.Errorf("error updating Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -287,8 +287,14 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 			Enabled:        aws.Bool(false),
 		}
 
-		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
-		if _, err := conn.UpdateAccelerator(input); err != nil {
+		log.Printf("[DEBUG] Updating Global Accelerator Accelerator: %s", input)
+		_, err := conn.UpdateAccelerator(input)
+
+		if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+			return nil
+		}
+
+		if err != nil {
 			return fmt.Errorf("error disabling Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
 
@@ -312,90 +318,6 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 		if err != nil {
 			return fmt.Errorf("error deleting Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
-	}
-
-	return nil
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		accelerator, err := resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn, acceleratorArn)
-
-		if err != nil {
-			log.Printf("Error retrieving Global Accelerator accelerator when waiting: %s", err)
-			return nil, "", err
-		}
-
-		if accelerator == nil {
-			return nil, "", nil
-		}
-
-		if accelerator.Status != nil {
-			log.Printf("[DEBUG] Global Accelerator accelerator (%s) status : %s", acceleratorArn, aws.StringValue(accelerator.Status))
-		}
-
-		return accelerator, aws.StringValue(accelerator.Status), nil
-	}
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) (*globalaccelerator.Accelerator, error) {
-	resp, err := conn.DescribeAccelerator(&globalaccelerator.DescribeAcceleratorInput{
-		AcceleratorArn: aws.String(acceleratorArn),
-	})
-
-	if err != nil {
-		if isAWSErr(err, globalaccelerator.ErrCodeAcceleratorNotFoundException, "") {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return resp.Accelerator, nil
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: timeout,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator accelerator (%s) availability", acceleratorArn)
-	_, err := stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator accelerator (%s) availability: %s", acceleratorArn, err)
-	}
-
-	return nil
-}
-
-func resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration, tfMap map[string]interface{}) error {
-	input := &globalaccelerator.UpdateAcceleratorAttributesInput{
-		AcceleratorArn: aws.String(arn),
-	}
-
-	if v, ok := tfMap["flow_logs_enabled"].(bool); ok {
-		input.FlowLogsEnabled = aws.Bool(v)
-	}
-
-	if v, ok := tfMap["flow_logs_s3_bucket"].(string); ok && v != "" {
-		input.FlowLogsS3Bucket = aws.String(v)
-	}
-
-	if v, ok := tfMap["flow_logs_s3_prefix"].(string); ok && v != "" {
-		input.FlowLogsS3Prefix = aws.String(v)
-	}
-
-	log.Printf("[DEBUG] Update Global Accelerator accelerator attributes: %s", input)
-
-	_, err := conn.UpdateAcceleratorAttributes(input)
-	if err != nil {
-		return fmt.Errorf("Error updating Global Accelerator accelerator attributes: %s", err)
-	}
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, arn, timeout)
-	if err != nil {
-		return err
 	}
 
 	return nil
