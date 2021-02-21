@@ -132,6 +132,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Creating Global Accelerator Accelerator: %s", input)
 	output, err := conn.CreateAccelerator(input)
+
 	if err != nil {
 		return fmt.Errorf("error creating Global Accelerator Accelerator (%s): %w", name, err)
 	}
@@ -146,6 +147,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 		input := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
+		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
 		if _, err := conn.UpdateAcceleratorAttributes(input); err != nil {
 			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 		}
@@ -210,34 +212,57 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 	conn := meta.(*AWSClient).globalacceleratorconn
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
-		opts := &globalaccelerator.UpdateAcceleratorInput{
+		input := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
 			Name:           aws.String(d.Get("name").(string)),
 			Enabled:        aws.Bool(d.Get("enabled").(bool)),
 		}
 
 		if v, ok := d.GetOk("ip_address_type"); ok {
-			opts.IpAddressType = aws.String(v.(string))
+			input.IpAddressType = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Update Global Accelerator accelerator: %s", opts)
-
-		_, err := conn.UpdateAccelerator(opts)
-		if err != nil {
-			return fmt.Errorf("Error updating Global Accelerator accelerator: %s", err)
+		log.Printf("[DEBUG] Updating Global Accelerator Accelerator: %s", input)
+		if _, err := conn.UpdateAccelerator(input); err != nil {
+			return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 		}
 
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return err
+		if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("attributes") {
-		if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			err := resourceAwsGlobalAcceleratorAcceleratorUpdateAttributes(conn, d.Id(), d.Timeout(schema.TimeoutUpdate), v.([]interface{})[0].(map[string]interface{}))
-			if err != nil {
-				return err
+		o, n := d.GetChange("attributes")
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
+			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
+				oInput := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
+				oInput.AcceleratorArn = aws.String(d.Id())
+				nInput := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
+				nInput.AcceleratorArn = aws.String(d.Id())
+
+				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
+				if aws.BoolValue(oInput.FlowLogsEnabled) && aws.BoolValue(nInput.FlowLogsEnabled) {
+					oInput.FlowLogsEnabled = aws.Bool(false)
+
+					log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", oInput)
+					if _, err := conn.UpdateAcceleratorAttributes(oInput); err != nil {
+						return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
+					}
+
+					if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
+					}
+				}
+
+				log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", nInput)
+				if _, err := conn.UpdateAcceleratorAttributes(nInput); err != nil {
+					return fmt.Errorf("error updating Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
+				}
+
+				if _, err := waiter.AcceleratorDeployed(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("error waiting for Global Accelerator Accelerator (%s) deployment: %w", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -262,9 +287,8 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 			Enabled:        aws.Bool(false),
 		}
 
-		log.Printf("[DEBUG] Disabling Global Accelerator Accelerator: %s", input)
-		_, err := conn.UpdateAccelerator(input)
-		if err != nil {
+		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
+		if _, err := conn.UpdateAccelerator(input); err != nil {
 			return fmt.Errorf("error disabling Global Accelerator Accelerator (%s): %w", d.Id(), err)
 		}
 

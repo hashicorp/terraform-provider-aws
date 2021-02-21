@@ -24,10 +24,6 @@ func init() {
 	})
 }
 
-//
-// TODO Hierarchy of sweepers.
-// TODO Lister?
-//
 func testSweepGlobalAcceleratorAccelerators(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
@@ -257,6 +253,11 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccGlobalAcceleratorAcceleratorConfigEnabled(newName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
@@ -265,9 +266,12 @@ func TestAccAwsGlobalAcceleratorAccelerator_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccGlobalAcceleratorAcceleratorConfigEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
 			},
 		},
 	})
@@ -284,7 +288,22 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName),
+				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, false, "flow-logs/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, true, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
@@ -294,9 +313,24 @@ func TestAccAwsGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, true, "flow-logs-updated/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs-updated/"),
+				),
+			},
+			{
+				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, false, "flow-logs/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", "flow-logs/"),
+				),
 			},
 		},
 	})
@@ -426,7 +460,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName, enabled)
 }
 
-func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string) string {
+func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -438,12 +472,12 @@ resource "aws_globalaccelerator_accelerator" "test" {
   enabled         = false
 
   attributes {
-    flow_logs_enabled   = true
+    flow_logs_enabled   = %[2]t
     flow_logs_s3_bucket = aws_s3_bucket.test.bucket
-    flow_logs_s3_prefix = "flow-logs/"
+    flow_logs_s3_prefix = %[3]q
   }
 }
-`, rName)
+`, rName, flowLogsEnabled, flowLogsPrefix)
 }
 
 func testAccGlobalAcceleratorAcceleratorConfigTags1(rName, tagKey1, tagValue1 string) string {
