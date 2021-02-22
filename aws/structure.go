@@ -1587,24 +1587,6 @@ func flattenDSVpcSettings(
 	return []map[string]interface{}{settings}
 }
 
-func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface{} {
-	envs := make(map[string]interface{})
-	en := make(map[string]string)
-
-	if lambdaEnv == nil {
-		return nil
-	}
-
-	for k, v := range lambdaEnv.Variables {
-		en[k] = *v
-	}
-	if len(en) > 0 {
-		envs["variables"] = en
-	}
-
-	return []interface{}{envs}
-}
-
 func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
 	if len(vDest) == 0 {
 		return nil
@@ -3987,24 +3969,23 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
 	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
 
-	attributes := []interface{}{}
-	for _, attrdef := range table.AttributeDefinitions {
-		attribute := map[string]string{
-			"name": *attrdef.AttributeName,
-			"type": *attrdef.AttributeType,
+	attributes := make([]interface{}, len(table.AttributeDefinitions))
+	for i, attrdef := range table.AttributeDefinitions {
+		attributes[i] = map[string]string{
+			"name": aws.StringValue(attrdef.AttributeName),
+			"type": aws.StringValue(attrdef.AttributeType),
 		}
-		attributes = append(attributes, attribute)
 	}
 
 	d.Set("attribute", attributes)
 	d.Set("name", table.TableName)
 
 	for _, attribute := range table.KeySchema {
-		if *attribute.KeyType == dynamodb.KeyTypeHash {
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
 			d.Set("hash_key", attribute.AttributeName)
 		}
 
-		if *attribute.KeyType == dynamodb.KeyTypeRange {
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
 			d.Set("range_key", attribute.AttributeName)
 		}
 	}
@@ -4012,19 +3993,18 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	lsiList := make([]map[string]interface{}, 0, len(table.LocalSecondaryIndexes))
 	for _, lsiObject := range table.LocalSecondaryIndexes {
 		lsi := map[string]interface{}{
-			"name":            *lsiObject.IndexName,
-			"projection_type": *lsiObject.Projection.ProjectionType,
+			"name":            aws.StringValue(lsiObject.IndexName),
+			"projection_type": aws.StringValue(lsiObject.Projection.ProjectionType),
 		}
 
 		for _, attribute := range lsiObject.KeySchema {
-
-			if *attribute.KeyType == dynamodb.KeyTypeRange {
-				lsi["range_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				lsi["range_key"] = aws.StringValue(attribute.AttributeName)
 			}
 		}
 		nkaList := make([]string, len(lsiObject.Projection.NonKeyAttributes))
-		for _, nka := range lsiObject.Projection.NonKeyAttributes {
-			nkaList = append(nkaList, *nka)
+		for i, nka := range lsiObject.Projection.NonKeyAttributes {
+			nkaList[i] = aws.StringValue(nka)
 		}
 		lsi["non_key_attributes"] = nkaList
 
@@ -4036,33 +4016,33 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
-	gsiList := make([]map[string]interface{}, 0, len(table.GlobalSecondaryIndexes))
-	for _, gsiObject := range table.GlobalSecondaryIndexes {
+	gsiList := make([]map[string]interface{}, len(table.GlobalSecondaryIndexes))
+	for i, gsiObject := range table.GlobalSecondaryIndexes {
 		gsi := map[string]interface{}{
-			"write_capacity": *gsiObject.ProvisionedThroughput.WriteCapacityUnits,
-			"read_capacity":  *gsiObject.ProvisionedThroughput.ReadCapacityUnits,
-			"name":           *gsiObject.IndexName,
+			"write_capacity": aws.Int64Value(gsiObject.ProvisionedThroughput.WriteCapacityUnits),
+			"read_capacity":  aws.Int64Value(gsiObject.ProvisionedThroughput.ReadCapacityUnits),
+			"name":           aws.StringValue(gsiObject.IndexName),
 		}
 
 		for _, attribute := range gsiObject.KeySchema {
-			if *attribute.KeyType == dynamodb.KeyTypeHash {
-				gsi["hash_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
+				gsi["hash_key"] = aws.StringValue(attribute.AttributeName)
 			}
 
-			if *attribute.KeyType == dynamodb.KeyTypeRange {
-				gsi["range_key"] = *attribute.AttributeName
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				gsi["range_key"] = aws.StringValue(attribute.AttributeName)
 			}
 		}
 
-		gsi["projection_type"] = *(gsiObject.Projection.ProjectionType)
+		gsi["projection_type"] = aws.StringValue(gsiObject.Projection.ProjectionType)
 
-		nonKeyAttrs := make([]string, 0, len(gsiObject.Projection.NonKeyAttributes))
-		for _, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
-			nonKeyAttrs = append(nonKeyAttrs, *nonKeyAttr)
+		nonKeyAttrs := make([]string, len(gsiObject.Projection.NonKeyAttributes))
+		for i, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
+			nonKeyAttrs[i] = aws.StringValue(nonKeyAttr)
 		}
 		gsi["non_key_attributes"] = nonKeyAttrs
 
-		gsiList = append(gsiList, gsi)
+		gsiList[i] = gsi
 	}
 
 	if table.StreamSpecification != nil {

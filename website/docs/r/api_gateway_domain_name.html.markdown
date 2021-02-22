@@ -40,6 +40,8 @@ from the validation resource where it will be available after the resource creat
 
 ## Example Usage
 
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+
 ### Edge Optimized (ACM Certificate)
 
 ```hcl

@@ -114,6 +114,11 @@ data "aws_pricing_product" "test" {
     field = "location"
     value = data.aws_region.current.description
   }
+
+  filters {
+    field = "productFamily"
+    value = "Compute Instance"
+  }
 }
 `)
 }

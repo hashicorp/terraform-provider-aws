@@ -111,7 +111,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Reading VPC Endpoint Service: %s", req)
 	resp, err := conn.DescribeVpcEndpointServices(req)
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", serviceName, err)
+		return fmt.Errorf("error reading VPC Endpoint Service (%s): %w", serviceName, err)
 	}
 
 	if resp == nil || (len(resp.ServiceNames) == 0 && len(resp.ServiceDetails) == 0) {
@@ -164,7 +164,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceId),
@@ -174,11 +174,11 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	err = d.Set("availability_zones", flattenStringSet(sd.AvailabilityZones))
 	if err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+		return fmt.Errorf("error setting availability_zones: %w", err)
 	}
 	err = d.Set("base_endpoint_dns_names", flattenStringSet(sd.BaseEndpointDnsNames))
 	if err != nil {
-		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
+		return fmt.Errorf("error setting base_endpoint_dns_names: %w", err)
 	}
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set("owner", sd.Owner)
@@ -188,7 +188,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
 	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 

@@ -34,7 +34,7 @@ resource "aws_api_gateway_rest_api_policy" "test" {
         "AWS": "*"
       },
       "Action": "execute-api:Invoke",
-      "Resource": "${aws_api_gateway_rest_api.test.arn}",
+      "Resource": "${aws_api_gateway_rest_api.test.execution_arn}",
       "Condition": {
         "IpAddress": {
           "aws:SourceIp": "123.123.123.123/32"

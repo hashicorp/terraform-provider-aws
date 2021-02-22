@@ -408,6 +408,7 @@ func (s *Schema) finalizeDiff(d *terraform.ResourceAttrDiff, customized bool) *t
 			if d.Old != "" && d.New == "" {
 				// This is a computed value with an old value set already,
 				// just let it go.
+				log.Println("[DEBUG] A computed value with the empty string as the new value and a non-empty old value was found. Interpreting the empty string as \"unset\" to align with legacy behavior.")
 				return nil
 			}
 		}
@@ -1061,13 +1062,18 @@ func (m schemaMap) diffList(
 			oldStr = ""
 		}
 
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+		finalizedAttr := countSchema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old: oldStr,
 				New: newStr,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[k+".#"] = finalizedAttr
+		} else {
+			delete(diff.Attributes, k+".#")
+		}
 	}
 
 	// Figure out the maximum
@@ -1167,13 +1173,18 @@ func (m schemaMap) diffMap(
 			oldStr = ""
 		}
 
-		diff.Attributes[k+".%"] = countSchema.finalizeDiff(
+		finalizedAttr := countSchema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old: oldStr,
 				New: newStr,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[k+".%"] = finalizedAttr
+		} else {
+			delete(diff.Attributes, k+".%")
+		}
 	}
 
 	// If the new map is nil and we're computed, then ignore it.
@@ -1190,22 +1201,28 @@ func (m schemaMap) diffMap(
 			continue
 		}
 
-		diff.Attributes[prefix+k] = schema.finalizeDiff(
+		finalizedAttr := schema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old: old,
 				New: v,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[prefix+k] = finalizedAttr
+		}
 	}
 	for k, v := range stateMap {
-		diff.Attributes[prefix+k] = schema.finalizeDiff(
+		finalizedAttr := schema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old:        v,
 				NewRemoved: true,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[prefix+k] = finalizedAttr
+		}
 	}
 
 	return nil
@@ -1277,26 +1294,32 @@ func (m schemaMap) diffSet(
 			countStr = ""
 		}
 
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+		finalizedAttr := countSchema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old:         countStr,
 				NewComputed: true,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[k+".#"] = finalizedAttr
+		}
 		return nil
 	}
 
 	// If the counts are not the same, then record that diff
 	changed := oldLen != newLen
 	if changed || all {
-		diff.Attributes[k+".#"] = countSchema.finalizeDiff(
+		finalizedAttr := countSchema.finalizeDiff(
 			&terraform.ResourceAttrDiff{
 				Old: oldStr,
 				New: newStr,
 			},
 			customized,
 		)
+		if finalizedAttr != nil {
+			diff.Attributes[k+".#"] = finalizedAttr
+		}
 	}
 
 	// Build the list of codes that will make up our set. This is the
@@ -1383,7 +1406,7 @@ func (m schemaMap) diffString(
 		return nil
 	}
 
-	diff.Attributes[k] = schema.finalizeDiff(
+	finalizedAttr := schema.finalizeDiff(
 		&terraform.ResourceAttrDiff{
 			Old:         os,
 			New:         ns,
@@ -1393,6 +1416,9 @@ func (m schemaMap) diffString(
 		},
 		customized,
 	)
+	if finalizedAttr != nil {
+		diff.Attributes[k] = finalizedAttr
+	}
 
 	return nil
 }
@@ -1447,7 +1473,8 @@ func (m schemaMap) validate(
 		if schema.Required {
 			return append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
-				Summary:       "Required attribute is not set",
+				Summary:       "Missing required argument",
+				Detail:        fmt.Sprintf("The argument %q is required, but no definition was found.", k),
 				AttributePath: path,
 			})
 		}
@@ -1458,7 +1485,8 @@ func (m schemaMap) validate(
 		// This is a computed-only field
 		return append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Computed attribute cannot be set",
+			Summary:       "Computed attributes cannot be set",
+			Detail:        fmt.Sprintf("Computed attributes cannot be set, but a value was set for %q.", k),
 			AttributePath: path,
 		})
 	}

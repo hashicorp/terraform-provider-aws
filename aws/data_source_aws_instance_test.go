@@ -533,6 +533,25 @@ func TestAccAWSInstanceDataSource_enclaveOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_blockDeviceTags(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_blockDeviceTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 var testAccInstanceDataSourceConfig = testAccLatestAmazonLinuxHvmEbsAmiConfig() + `
 resource "aws_instance" "test" {
@@ -1008,6 +1027,43 @@ resource "aws_instance" "test" {
 
   enclave_options {
     enabled = true
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName))
+}
+
+func testAccInstanceDataSourceConfig_blockDeviceTags(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name = %[1]q
+  }
+
+  ebs_block_device {
+    device_name = "/dev/xvdc"
+    volume_size = 10
+
+    tags = {
+      Name   = %[1]q
+      Factum = "SapereAude"
+    }
+  }
+
+  root_block_device {
+    tags = {
+      Name   = %[1]q
+      Factum = "VincitQuiSeVincit"
+    }
   }
 }
 

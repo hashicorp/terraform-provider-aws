@@ -3,7 +3,7 @@ name: Terraform Provider Checks
 on:
   push:
     branches:
-      - master
+      - main
       - 'release/**'
   pull_request:
     paths:
@@ -300,7 +300,7 @@ jobs:
       - name: goreleaser build
         uses: goreleaser/goreleaser-action@v2
         with:
-          args: build --parallelism 2 --snapshot --timeout 2h
+          args: build --snapshot --timeout 2h
 
   semgrep:
     runs-on: ubuntu-latest
