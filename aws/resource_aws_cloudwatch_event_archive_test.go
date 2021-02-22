@@ -272,7 +272,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 resource "aws_cloudwatch_event_archive" "test" {
   name             = %[1]q
   event_source_arn = aws_cloudwatch_event_bus.test.arn
-retention_days     = 1
+  retention_days   = 1
 }
 `, name)
 }
