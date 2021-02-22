@@ -128,7 +128,11 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 		}
 		d.Set("etag", aws.StringValue(resp.ETag))
 
-		originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
+		if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
+			return nil
+		}
+
+		originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
 		d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
 		d.Set("name", aws.StringValue(originRequestPolicy.Name))
 		d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))

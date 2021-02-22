@@ -501,8 +501,8 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("source_dest_check", instance.SourceDestCheck)
 	}
 
-	if instance.Monitoring != nil && instance.Monitoring.State != nil {
-		monitoringState := *instance.Monitoring.State
+	if instance.Monitoring != nil {
+		monitoringState := aws.StringValue(instance.Monitoring.State)
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
