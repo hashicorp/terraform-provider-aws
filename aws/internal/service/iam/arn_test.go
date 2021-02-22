@@ -31,8 +31,8 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		},
 		{
 			TestName:      "invalid ARN resource parts",
-			InputARN:      "arn:aws:iam:us-east-1:123456789012:instance-profile/test/name",
-			ExpectedError: regexp.MustCompile(`expected 2 resource parts`),
+			InputARN:      "arn:aws:iam:us-east-1:123456789012:name",
+			ExpectedError: regexp.MustCompile(`expected at least 2 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
@@ -42,6 +42,11 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:     "valid ARN",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name",
+			ExpectedName: "name",
+		},
+		{
+			TestName:     "valid ARN with multiple parts",
+			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name",
 			ExpectedName: "name",
 		},
 	}
