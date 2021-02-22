@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
 					resource.TestCheckResourceAttr(resourceName, "validity_length", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity_unit", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA256WITHRSA"),
@@ -73,6 +73,14 @@ func testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName string) resource
 
 func testAccAwsAcmpcaPrivateCertificateConfig_Required(csr string) string {
 	return fmt.Sprintf(`
+resource "aws_acmpca_private_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = "%[1]s"
+  signing_algorithm           = "SHA256WITHRSA"
+  validity_length             = 1
+  validity_unit               = "YEARS"
+}
+
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
@@ -86,12 +94,5 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 }
-
-resource "aws_acmpca_private_certificate" "test" {
-	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = "%[1]s"
-	signing_algorithm = "SHA256WITHRSA"
-	validity_length = 1
-	validity_unit = "YEARS"
-}`, csr)
+`, csr)
 }

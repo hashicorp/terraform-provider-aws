@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
@@ -50,17 +50,10 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 				StateFunc: normalizeCert,
 			},
 			"signing_algorithm": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					acmpca.SigningAlgorithmSha256withecdsa,
-					acmpca.SigningAlgorithmSha256withrsa,
-					acmpca.SigningAlgorithmSha384withecdsa,
-					acmpca.SigningAlgorithmSha384withrsa,
-					acmpca.SigningAlgorithmSha512withecdsa,
-					acmpca.SigningAlgorithmSha512withrsa,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.SigningAlgorithm_Values(), false),
 			},
 			"validity_length": {
 				Type:     schema.TypeInt,
@@ -68,16 +61,10 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"validity_unit": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					acmpca.ValidityPeriodTypeAbsolute,
-					acmpca.ValidityPeriodTypeDays,
-					acmpca.ValidityPeriodTypeEndDate,
-					acmpca.ValidityPeriodTypeMonths,
-					acmpca.ValidityPeriodTypeYears,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.ValidityPeriodType_Values(), false),
 			},
 			"template_arn": {
 				Type:     schema.TypeString,

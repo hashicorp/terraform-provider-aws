@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
@@ -52,30 +52,36 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 
 resource "aws_acmpca_private_certificate" "wrong" {
-	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = "%[1]s"
-	signing_algorithm = "SHA256WITHRSA"
-	validity_length = 1
-	validity_unit = "YEARS"
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = "%[1]s"
+  signing_algorithm           = "SHA256WITHRSA"
+  validity_length             = 1
+  validity_unit               = "YEARS"
 }
 
 resource "aws_acmpca_private_certificate" "test" {
-	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = "%[2]s"
-	signing_algorithm = "SHA256WITHRSA"
-	validity_length = 1
-	validity_unit = "YEARS"
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = "%[2]s"
+  signing_algorithm           = "SHA256WITHRSA"
+  validity_length             = 1
+  validity_unit               = "YEARS"
 }
 
 data "aws_acmpca_private_certificate" "test" {
-	arn = aws_acmpca_private_certificate.test.arn
-	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+  arn                       = aws_acmpca_private_certificate.test.arn
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 }`, csr1, csr2)
 }
 
 const testAccDataSourceAwsAcmpcaPrivateCertificateConfig_NonExistent = `
 data "aws_acmpca_private_certificate" "test" {
-	arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/does-not-exist/certificate/does-not-exist"
-	certificate_authority_arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/does-not-exist"
+  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
+  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 `
