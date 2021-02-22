@@ -511,7 +511,6 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 				Config: testAccAWSRolePolicyInlineConfig(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1}),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
@@ -521,7 +520,6 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 				Config: testAccAWSRolePolicyInlineConfigUpdate(rName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName2, policyName3}),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
@@ -530,7 +528,6 @@ func TestAccAWSIAMRole_policyBasicInline(t *testing.T) {
 				Config: testAccAWSRolePolicyInlineConfigUpdateDown(rName, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName3}),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
@@ -558,7 +555,6 @@ func TestAccAWSIAMRole_policyBasicInlineEmpty(t *testing.T) {
 				Config: testAccAWSRolePolicyEmptyInlineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{}),
 				),
 			},
 		},
@@ -582,7 +578,6 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 				Config: testAccAWSRolePolicyManagedConfig(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName1}),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
@@ -591,7 +586,6 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 				Config: testAccAWSRolePolicyManagedConfigUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName2, policyName3}),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
 				),
 			},
@@ -599,7 +593,6 @@ func TestAccAWSIAMRole_policyBasicManaged(t *testing.T) {
 				Config: testAccAWSRolePolicyManagedConfigUpdateDown(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName3}),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},
@@ -630,7 +623,6 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyDetachManagedPolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -638,7 +630,6 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_managedNonEmpty(t *testin
 				Config: testAccAWSRolePolicyManagedConfig(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName}),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},
@@ -664,7 +655,6 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -672,7 +662,6 @@ func TestAccAWSIAMRole_policyOutOfBandRemovalAddedBack_inlineNonEmpty(t *testing
 				Config: testAccAWSRolePolicyInlineConfig(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName}),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
 				),
 			},
@@ -699,7 +688,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, policyName2),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName1, policyName2}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -707,7 +695,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedNonEmpty(t *testing
 				Config: testAccAWSRolePolicyExtraManagedConfig(rName, policyName1, policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName1}),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},
@@ -734,7 +721,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName2),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1, policyName2}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -742,7 +728,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineNonEmpty(t *testing.
 				Config: testAccAWSRolePolicyInlineConfig(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1}),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
@@ -770,7 +755,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName1),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1}),
 				),
 			},
 			{
@@ -778,14 +762,12 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_inlineNonExistent(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName2),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1, policyName2}),
 				),
 			},
 			{
 				Config: testAccAWSRolePolicyNoInlineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName1, policyName2}),
 					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName1),
 					testAccCheckAWSRolePolicyRemoveInlinePolicy(&role, policyName2),
 				),
@@ -812,14 +794,12 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionIgnored_managedNonExistent(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName}),
 				),
 			},
 			{
 				Config: testAccAWSRolePolicyNoManagedConfig(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName}),
 					testAccCheckAWSRolePolicyDetachManagedPolicy(&role, policyName),
 				),
 			},
@@ -845,7 +825,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAddInlinePolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{policyName}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -853,7 +832,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_inlineEmpty(t *testing.T) 
 				Config: testAccAWSRolePolicyEmptyInlineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckInline(&role, rName, []string{}),
 				),
 			},
 		},
@@ -878,7 +856,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
 					testAccCheckAWSRolePolicyAttachManagedPolicy(&role, policyName),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{policyName}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -886,7 +863,6 @@ func TestAccAWSIAMRole_policyOutOfBandAdditionRemoved_managedEmpty(t *testing.T)
 				Config: testAccAWSRolePolicyEmptyManagedConfig(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRolePolicyCheckManaged(&role, rName, []string{}),
 				),
 			},
 		},
@@ -1029,63 +1005,6 @@ func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, ex
 	}
 }
 
-func testAccCheckAWSRolePolicyCheckInline(role *iam.GetRoleOutput, roleName string, inlinePolicies []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.Contains(*role.Role.RoleName, roleName) {
-			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
-
-		policyNames, err := readIamRolePolicyNames(conn, roleName)
-		if err != nil {
-			return fmt.Errorf("reading role (%s): %w", roleName, err)
-		}
-
-		var inlinePolicyList []string
-		for _, name := range policyNames {
-			inlinePolicyList = append(inlinePolicyList, aws.StringValue(name))
-		}
-
-		if !compareStringSlices(inlinePolicyList, inlinePolicies) {
-			return fmt.Errorf("inline policies did not match: %s (from AWS) to %s (expected)", strings.Join(inlinePolicyList, ","), strings.Join(inlinePolicies, ","))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSRolePolicyCheckManaged(role *iam.GetRoleOutput, roleName string, managedPolicies []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.Contains(*role.Role.RoleName, roleName) {
-			return fmt.Errorf("bad role: expected %s, got %s", roleName, *role.Role.RoleName)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
-
-		var managedPolicyList []string
-		input := &iam.ListAttachedRolePoliciesInput{
-			RoleName: aws.String(roleName),
-		}
-
-		err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
-			for _, v := range page.AttachedPolicies {
-				managedPolicyList = append(managedPolicyList, aws.StringValue(v.PolicyName))
-			}
-			return !lastPage
-		})
-		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return err
-		}
-
-		if !compareStringSlices(managedPolicyList, managedPolicies) {
-			return fmt.Errorf("managed policies did not match: %s (from AWS) to %s (expected)", strings.Join(managedPolicyList, ","), strings.Join(managedPolicies, ","))
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckAWSRolePolicyDetachManagedPolicy(role *iam.GetRoleOutput, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
@@ -1212,6 +1131,8 @@ func compareStringSlices(a []string, b []string) bool {
 
 func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name                 = "test-role-%s"
   path                 = "/"
@@ -1225,7 +1146,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1241,6 +1162,8 @@ EOF
 
 func testAccCheckIAMRoleConfig_PermissionsBoundary(rName, permissionsBoundary string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
@@ -1250,7 +1173,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1270,6 +1193,8 @@ EOF
 
 func testAccAWSIAMRoleConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "test-role-%s"
   path = "/"
@@ -1282,7 +1207,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1298,6 +1223,8 @@ EOF
 
 func testAccAWSIAMRoleConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
   description = "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"
@@ -1311,7 +1238,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1327,6 +1254,8 @@ EOF
 
 func testAccAWSIAMRoleConfigWithUpdatedDescription(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name        = "test-role-%s"
   description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"
@@ -1340,7 +1269,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1356,6 +1285,8 @@ EOF
 
 func testAccAWSIAMRolePrefixNameConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name_prefix = "test-role-%s"
   path        = "/"
@@ -1368,7 +1299,7 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "ec2.amazonaws.com"
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": [
@@ -1387,7 +1318,7 @@ func testAccAWSIAMRolePre(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "tf_old_name_%s"
+  name = "tf_old_name_%[1]s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1397,7 +1328,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1408,7 +1339,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
-  name = "role_update_test_%s"
+  name = "role_update_test_%[1]s"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1429,11 +1360,11 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%s"
+  name = "role_update_test_%[1]s"
   path = "/test/"
   role = aws_iam_role.test.name
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSIAMRolePost(rName string) string {
@@ -1441,7 +1372,7 @@ func testAccAWSIAMRolePost(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = "tf_new_name_%s"
+  name = "tf_new_name_%[1]s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1451,7 +1382,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1462,7 +1393,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "role_update_test" {
-  name = "role_update_test_%s"
+  name = "role_update_test_%[1]s"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1483,15 +1414,17 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%s"
+  name = "role_update_test_%[1]s"
   path = "/test/"
   role = aws_iam_role.test.name
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSIAMRoleConfig_badJson(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = "test-role-%s"
 
@@ -1502,7 +1435,7 @@ resource "aws_iam_role" "test" {
   {
     "Action": "sts:AssumeRole",
     "Principal": {
-    "Service": "ec2.amazonaws.com",
+    "Service": "ec2.${data.aws_partition.current.dns_suffix}",
     },
     "Effect": "Allow",
     "Sid": ""
@@ -1516,8 +1449,10 @@ POLICY
 
 func testAccAWSIAMRoleConfig_force_detach_policies(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy" "test" {
-  name = "tf-iam-role-policy-%s"
+  name = "tf-iam-role-policy-%[1]s"
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1537,7 +1472,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name        = "tf-iam-policy-%s"
+  name        = "tf-iam-policy-%[1]s"
   description = "A test policy"
 
   policy = <<EOF
@@ -1562,7 +1497,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name                  = "tf-iam-role-%s"
+  name                  = "tf-iam-role-%[1]s"
   force_detach_policies = true
 
   assume_role_policy = <<EOF
@@ -1572,7 +1507,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1581,11 +1516,13 @@ resource "aws_iam_role" "test" {
 }
 EOF
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSIAMRoleConfig_tags(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
 
@@ -1596,7 +1533,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1615,6 +1552,8 @@ EOF
 
 func testAccAWSIAMRoleConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
 
@@ -1625,7 +1564,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1643,6 +1582,8 @@ EOF
 
 func testAccAWSRolePolicyInlineConfig(roleName, policyName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1653,7 +1594,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1686,6 +1627,8 @@ EOF
 
 func testAccAWSRolePolicyInlineConfigUpdate(roleName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1696,7 +1639,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1748,6 +1691,8 @@ EOF
 
 func testAccAWSRolePolicyInlineConfigUpdateDown(roleName, policyName3 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1758,7 +1703,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1791,6 +1736,8 @@ EOF
 
 func testAccAWSRolePolicyManagedConfig(roleName, policyName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_policy" "test" {
   name = %[1]q
   path = "/tf-testing/"
@@ -1822,7 +1769,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1836,6 +1783,8 @@ EOF
 
 func testAccAWSRolePolicyManagedConfigUpdate(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_policy" "test" {
   name = %[1]q
   path = "/tf-testing/"
@@ -1907,7 +1856,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1921,6 +1870,8 @@ EOF
 
 func testAccAWSRolePolicyManagedConfigUpdateDown(roleName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_policy" "test" {
   name = %[1]q
   path = "/tf-testing/"
@@ -1992,7 +1943,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2006,6 +1957,8 @@ EOF
 
 func testAccAWSRolePolicyExtraManagedConfig(roleName, policyName1, policyName2 string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_policy" "test" {
   name = %[1]q
   path = "/tf-testing/"
@@ -2057,7 +2010,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2086,6 +2039,8 @@ func testAccAWSRolePolicyExtraInlineConfig() string {
 
 func testAccAWSRolePolicyNoInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -2096,7 +2051,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2110,6 +2065,8 @@ EOF
 
 func testAccAWSRolePolicyNoManagedConfig(roleName, policyName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -2120,7 +2077,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2154,6 +2111,8 @@ EOF
 
 func testAccAWSRolePolicyEmptyInlineConfig(roleName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -2164,7 +2123,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -2180,6 +2139,8 @@ EOF
 
 func testAccAWSRolePolicyEmptyManagedConfig(roleName, policyName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -2190,7 +2151,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""

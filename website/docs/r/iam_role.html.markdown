@@ -10,9 +10,9 @@ description: |-
 
 Provides an IAM role.
 
-~> *NOTE:* If policies are attached to the role via the [`aws_iam_policy_attachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the role `name` or `path`, the `force_detach_policies` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `DeleteConflict` error. The [`aws_iam_role_policy_attachment` resource (recommended)](/docs/providers/aws/r/iam_role_policy_attachment.html) does not have this requirement.
+~> **NOTE:** If policies are attached to the role via the [`aws_iam_policy_attachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the role `name` or `path`, the `force_detach_policies` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `DeleteConflict` error. The [`aws_iam_role_policy_attachment` resource (recommended)](/docs/providers/aws/r/iam_role_policy_attachment.html) does not have this requirement.
 
-~> *NOTE:* If you use this resource's `managed_policy_arns` argument or `inline_policy` configuration blocks, this resource will take over exclusive management of the role's respective policy types (e.g., both policy types if both arguments are used). These arguments are incompatible with other ways of managing a role's policies, such as [`aws_iam_policy_attachment`](/docs/providers/aws/r/iam_policy_attachment.html), [`aws_iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html), and [`aws_iam_role_policy`](/docs/providers/aws/r/iam_role_policy.html). If you attempt to manage a role's policies by multiple means, you will get resource cycling and/or errors.
+~> **NOTE:** If you use this resource's `managed_policy_arns` argument or `inline_policy` configuration blocks, this resource will take over exclusive management of the role's respective policy types (e.g., both policy types if both arguments are used). These arguments are incompatible with other ways of managing a role's policies, such as [`aws_iam_policy_attachment`](/docs/providers/aws/r/iam_policy_attachment.html), [`aws_iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html), and [`aws_iam_role_policy`](/docs/providers/aws/r/iam_role_policy.html). If you attempt to manage a role's policies by multiple means, you will get resource cycling and/or errors.
 
 ## Example Usage
 
@@ -197,8 +197,8 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the role.
 * `force_detach_policies` - (Optional) Whether to force detaching any policies the role has before destroying it. Defaults to `false`.
-* `inline_policy` - (Optional) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. Defined below.
-* `managed_policy_arns` - (Optional) Set of exclusive IAM managed policy ARNs to attach to the IAM role. When a configuration does not include this attribute, Terraform will ignore out-of-band policy attachments on the next `apply`. However, when you include it, Terraform will, on the next `apply`, align the role's policy attachments with this set by attaching or detaching managed policies. This includes detaching all out-of-band attachments when you include an empty set (i.e., `managed_policy_arns = []`).
+* `inline_policy` - (Optional) Configuration block defining an exclusive set of IAM inline policies associated with the IAM role. Defined below. If no blocks are configured, Terraform will ignore any managing any inline policies in this resource. Configuring one empty block (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies.
+* `managed_policy_arns` - (Optional) Set of exclusive IAM managed policy ARNs to attach to the IAM role. If this attribute is not configured, Terraform will ignore policy attachments to this resource. When configured, Terraform will align the role's managed policy attachments with this set by attaching or detaching managed policies. Configuring an empty set (i.e., `managed_policy_arns = []`) will cause Terraform to remove _all_ managed policy attachments.
 * `max_session_duration` - (Optional) Maximum session duration (in seconds) that you want to set for the specified role. If you do not specify a value for this setting, the default maximum of one hour is applied. This setting can have a value from 1 hour to 12 hours.
 * `name` - (Optional, Forces new resource) Friendly name of the role. If omitted, Terraform will assign a random, unique name. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
@@ -207,8 +207,6 @@ The following arguments are optional:
 * `tags` - Key-value mapping of tags for the IAM role
 
 ### inline_policy
-
-If the `inline_policy` configuration block is not used, Terraform will ignore the role's inline policy changes on the next `apply`. Using an empty `inline_policy` (i.e., `inline_policy {}`) will cause Terraform to remove _all_ inline policies that were added out-of-band on the next `apply`.
 
 This configuration block supports the following:
 

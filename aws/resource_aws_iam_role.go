@@ -118,9 +118,12 @@ func resourceAwsIamRole() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateIamRolePolicyName,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringIsNotEmpty,
+								validateIamRolePolicyName,
+							),
 						},
 						"policy": {
 							Type:             schema.TypeString,
@@ -275,15 +278,15 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	inlinePolicies, err := readIamInlinePolicies(*role.RoleName, meta)
+	inlinePolicies, err := readIamInlinePolicies(aws.StringValue(role.RoleName), meta)
 	if err != nil {
 		return fmt.Errorf("reading inline policies for IAM role %s, error: %s", d.Id(), err)
 	}
 	if err := d.Set("inline_policy", flattenIamInlinePolicies(inlinePolicies)); err != nil {
-		return fmt.Errorf("setting attribute_name: %w", err)
+		return fmt.Errorf("error setting inline_policy: %w", err)
 	}
 
-	managedPolicies, err := readIamRolePolicyAttachments(iamconn, *role.RoleName)
+	managedPolicies, err := readIamRolePolicyAttachments(iamconn, aws.StringValue(role.RoleName))
 	if err != nil {
 		return fmt.Errorf("reading managed policies for IAM role %s, error: %s", d.Id(), err)
 	}
@@ -393,7 +396,9 @@ func resourceAwsIamRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			policyNames = append(policyNames, aws.String(tfMap["name"].(string)))
+			if v, ok := tfMap["name"].(string); ok && v != "" {
+				policyNames = append(policyNames, aws.String(tfMap["name"].(string)))
+			}
 		}
 		if err := deleteIamRolePolicies(iamconn, roleName, policyNames); err != nil {
 			return fmt.Errorf("unable to delete inline policies: %w", err)
@@ -651,9 +656,15 @@ func expandIamInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.P
 	}
 
 	apiObject := &iam.PutRolePolicyInput{
-		RoleName:       aws.String(roleName),
-		PolicyName:     aws.String(tfMap["name"].(string)),
-		PolicyDocument: aws.String(tfMap["policy"].(string)),
+		RoleName: aws.String(roleName),
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.PolicyName = aws.String(v)
+	}
+
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
+		apiObject.PolicyDocument = aws.String(v)
 	}
 
 	return apiObject

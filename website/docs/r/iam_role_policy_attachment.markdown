@@ -12,6 +12,8 @@ Attaches a Managed IAM Policy to an IAM role
 
 ~> **NOTE:** The usage of this resource conflicts with the `aws_iam_policy_attachment` resource and will permanently show a difference if both are defined.
 
+~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role`](/docs/providers/aws/r/iam_role_policy_attachment.html) resource's `managed_policy_arns` argument. If you use the `aws_iam_role`.`managed_policy_arns` argument, the `aws_iam_role` resource will take over exclusive management of the role's managed policies. Attempting to manage a role's policies by multiple means will cause resource cycling and/or errors.
+
 ## Example Usage
 
 ```hcl

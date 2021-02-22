@@ -10,6 +10,8 @@ description: |-
 
 Provides an IAM role inline policy.
 
+~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role`](/docs/providers/aws/r/iam_role.html) resource's `inline_policy` argument. If you use `aws_iam_role`.`inline_policy` configuration blocks, the `aws_iam_role` resource will take over exclusive management of the role's inline policies. Attempting to manage a role's policies by multiple means will cause resource cycling and/or errors.
+
 ## Example Usage
 
 ```hcl
