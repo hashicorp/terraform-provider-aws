@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strings"
 	"testing"
 
@@ -1113,20 +1112,6 @@ func testAccCheckAWSRolePolicyRemoveInlinePolicy(role *iam.GetRoleOutput, inline
 		}
 		return nil
 	}
-}
-
-func compareStringSlices(a []string, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	sort.Strings(a)
-	sort.Strings(b)
-	for i := range b {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
