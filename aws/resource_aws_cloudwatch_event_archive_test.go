@@ -200,6 +200,36 @@ func testAccCheckCloudWatchArchiveExists(n string, v *events.DescribeArchiveOutp
 	}
 }
 
+func TestAccAWSCloudWatchArchive_retentionSetOnCreation(t *testing.T) {
+	var v1 events.DescribeArchiveOutput
+	archiveName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudwatch_event_archive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchArchiveDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchArchiveConfig_retentionOnCreation(archiveName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSCloudWatchArchiveConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
@@ -229,6 +259,20 @@ resource "aws_cloudwatch_event_archive" "test" {
   "source": ["company.team.service"]
 }
 PATTERN
+}
+`, name)
+}
+
+func testAccAWSCloudWatchArchiveConfig_retentionOnCreation(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_archive" "test" {
+  name             = %[1]q
+  event_source_arn = aws_cloudwatch_event_bus.test.arn
+retention_days     = 1
 }
 `, name)
 }
