@@ -35,9 +35,8 @@ func ApplicationDetail(conn *kinesisanalytics.KinesisAnalytics, input *kinesisan
 
 	if output == nil || output.ApplicationDetail == nil {
 		return nil, &resource.NotFoundError{
-			Message:      "Empty result",
-			LastRequest:  input,
-			LastResponse: output,
+			Message:     "Empty result",
+			LastRequest: input,
 		}
 	}
 

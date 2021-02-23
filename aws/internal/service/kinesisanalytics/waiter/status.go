@@ -8,22 +8,17 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-const (
-	applicationStatusNotFound = "NotFound"
-	applicationStatusUnknown  = "Unknown"
-)
-
 // ApplicationStatus fetches the ApplicationDetail and its Status
 func ApplicationStatus(conn *kinesisanalytics.KinesisAnalytics, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		applicationDetail, err := finder.ApplicationDetailByName(conn, name)
 
 		if tfresource.NotFound(err) {
-			return nil, applicationStatusNotFound, nil
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, applicationStatusUnknown, err
+			return nil, "", err
 		}
 
 		return applicationDetail, aws.StringValue(applicationDetail.ApplicationStatus), nil
