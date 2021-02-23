@@ -31,7 +31,7 @@ func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validity_length", "1"),
 					resource.TestCheckResourceAttr(resourceName, "validity_unit", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA256WITHRSA"),
-					resource.TestCheckResourceAttr(resourceName, "template_arn", "arn:aws:acm-pca:::template/EndEntityCertificate/V1"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "template_arn", "acm-pca", "template/EndEntityCertificate/V1"),
 				),
 			},
 		},
@@ -95,4 +95,33 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `, csr)
+}
+
+func TestValidateAcmPcaTemplateArn(t *testing.T) {
+	validNames := []string{
+		"arn:aws:acm-pca:::template/EndEntityCertificate/V1",                     // lintignore:AWSAT005
+		"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen0/V1",        // lintignore:AWSAT005
+		"arn:aws-us-gov:acm-pca:::template/EndEntityCertificate/V1",              // lintignore:AWSAT005
+		"arn:aws-us-gov:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", // lintignore:AWSAT005
+	}
+	for _, v := range validNames {
+		_, errors := validateAcmPcaTemplateArn(v, "template_arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ACM PCA ARN: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"arn",
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                       // lintignore:AWSAT005
+		"arn:aws:acm-pca:us-west-2::template/SubordinateCACertificate_PathLen0/V1", // lintignore:AWSAT003,AWSAT005
+		"arn:aws:acm-pca::123456789012:template/EndEntityCertificate/V1",           // lintignore:AWSAT005
+		"arn:aws:acm-pca:::not-a-template/SubordinateCACertificate_PathLen0/V1",    // lintignore:AWSAT005
+	}
+	for _, v := range invalidNames {
+		_, errors := validateAcmPcaTemplateArn(v, "template_arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ARN", v)
+		}
+	}
 }

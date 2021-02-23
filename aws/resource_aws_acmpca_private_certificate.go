@@ -5,9 +5,11 @@ import (
 	"encoding/pem"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,18 +69,10 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(acmpca.ValidityPeriodType_Values(), false),
 			},
 			"template_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"arn:aws:acm-pca:::template/EndEntityCertificate/V1",
-					"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen0/V1",
-					"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen1/V1",
-					"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen2/V1",
-					"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen3/V1",
-					"arn:aws:acm-pca:::template/RootCACertificate/V1",
-				}, false),
-				Default: "arn:aws:acm-pca:::template/EndEntityCertificate/V1",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAcmPcaTemplateArn,
 			},
 		},
 	}
@@ -178,4 +172,33 @@ func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta inte
 	}
 
 	return nil
+}
+
+func validateAcmPcaTemplateArn(v interface{}, k string) (ws []string, errors []error) {
+	wsARN, errorsARN := validateArn(v, k)
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+
+	if len(errors) == 0 {
+		value := v.(string)
+		parsedARN, _ := arn.Parse(value)
+
+		if parsedARN.Service != acmpca.ServiceName {
+			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: service must be \""+acmpca.ServiceName+"\", was %q)", k, value, parsedARN.Service))
+		}
+
+		if parsedARN.Region != "" {
+			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: region must be empty, was %q)", k, value, parsedARN.Region))
+		}
+
+		if parsedARN.AccountID != "" {
+			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: account ID must be empty, was %q)", k, value, parsedARN.AccountID))
+		}
+
+		if !strings.HasPrefix(parsedARN.Resource, "template/") {
+			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: expected resource to start with \"template/\", was %q)", k, value, parsedARN.Resource))
+		}
+	}
+
+	return ws, errors
 }
