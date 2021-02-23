@@ -219,7 +219,7 @@ resource/aws_example_thing: Add `not_broken` attribute
 
 The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines and examples for when a decision needs to be made to decide whether a change should have an entry.
 
-Pull requests that do not require a changelog should be marked with the `pr/no-changelog` label. This exempts them from the PR checking automation.
+Pull requests that do not require a changelog will be marked with the `pr/no-changelog` label to exempt them from the PR checking automation. This will be done during triage or as part of the review process by a maintainer.
 
 #### Changes that should have a CHANGELOG entry
 
