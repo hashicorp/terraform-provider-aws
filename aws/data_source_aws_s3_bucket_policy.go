@@ -49,8 +49,9 @@ func dataSourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("failed getting S3 bucket policy (%s): %w", bucketName, err)
 	}
 
-	fmt.Println("policy:", *output.Policy)
+	policy := *output.Policy
+	fmt.Println("policy:", policy)
 	d.SetId(bucketName)
-	d.Set("policy", *output.Policy)
+	d.Set("policy", policy)
 	return nil
 }
