@@ -1,4 +1,4 @@
-## 3.29.1 (Unreleased)
+## 3.29.1 (February 23, 2021)
 
 BUG FIXES:
 
