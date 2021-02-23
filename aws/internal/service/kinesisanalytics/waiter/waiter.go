@@ -10,35 +10,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-const (
-	ApplicationRunningTimeout = 5 * time.Minute
-)
-
 // ApplicationDeleted waits for an Application to return Deleted
 func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, timeout time.Duration) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalytics.ApplicationStatusDeleting},
+		Pending: []string{
+			kinesisanalytics.ApplicationStatusRunning,
+			kinesisanalytics.ApplicationStatusDeleting,
+		},
 		Target:  []string{},
 		Refresh: ApplicationStatus(conn, name),
 		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// ApplicationRunning waits for an Application to return Running
-func ApplicationRunning(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalytics.ApplicationStatusStarting},
-		Target:  []string{kinesisanalytics.ApplicationStatusRunning},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationRunningTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

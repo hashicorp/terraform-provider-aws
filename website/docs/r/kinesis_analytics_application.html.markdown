@@ -72,8 +72,7 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
-* `status` - (Optional) The status of the application. Set to `RUNNING` to start an application or `READY` to stop a running application.
-* `tags` - (Optional) Key-value map of tags for the Kinesis Analytics Application.
+* `tags` - Key-value map of tags for the Kinesis Analytics Application.
 
 ### CloudWatch Logging Options
 
@@ -100,9 +99,6 @@ See [Kinesis Stream](#kinesis-stream) below for more details.
 See [Parallelism](#parallelism) below for more details.
 * `processing_configuration` - (Optional) The Processing Configuration to transform records as they are received from the stream.
 See [Processing Configuration](#processing-configuration) below for more details.
-* `starting_position_configuration` - (Optional) The point at which the application reads from the streaming source.
-See [Starting Position Configuration](#starting-position-configuration) below for more details.
-This attribute is required to start the application.
 
 ### Outputs
 
@@ -191,14 +187,6 @@ The `lambda` block supports the following:
 * `resource_arn` - (Required) The ARN of the Lambda function.
 * `role_arn` - (Required) The ARN of the IAM Role used to access the Lambda function.
 
-#### Starting Position Configuration
-
-Describes the point at which the application reads from the streaming source.
-
-The `starting_position_configuration` block supports the following:
-
-* `starting_position` - (Optional) The starting position on the stream. Can be `NOW`, `TRIM_HORIZON` or `LAST_STOPPED_POINT`.
-
 #### Record Columns
 
 The Column mapping of each data element in the streaming source to the corresponding column in the in-application stream.
@@ -265,6 +253,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the Kinesis Analytics Appliation.
 * `create_timestamp` - The Timestamp when the application version was created.
 * `last_update_timestamp` - The Timestamp when the application was last updated.
+* `status` - The Status of the application.
 * `version` - The Version of the application.
 
 [1]: https://docs.aws.amazon.com/kinesisanalytics/latest/dev/what-is.html
