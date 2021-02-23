@@ -72,6 +72,7 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
+* `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application.
 * `tags` - Key-value map of tags for the Kinesis Analytics Application.
 
 ### CloudWatch Logging Options

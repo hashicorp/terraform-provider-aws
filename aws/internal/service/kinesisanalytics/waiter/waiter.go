@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	ApplicationReadyTimeout   = 5 * time.Minute
 	ApplicationRunningTimeout = 5 * time.Minute
 )
 
@@ -21,6 +22,24 @@ func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, ti
 		Target:  []string{},
 		Refresh: ApplicationStatus(conn, name),
 		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// ApplicationReady waits for an Application to return Ready
+func ApplicationReady(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalytics.ApplicationStatusStopping},
+		Target:  []string{kinesisanalytics.ApplicationStatusReady},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationReadyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
