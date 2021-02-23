@@ -284,12 +284,14 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrPublicRepositoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "catalog_data.0.logo_image_blob"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"catalog_data.0.logo_image_blob"},
 			},
 		},
 	})

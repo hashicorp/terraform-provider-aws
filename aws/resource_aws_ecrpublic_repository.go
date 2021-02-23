@@ -65,9 +65,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 						"logo_image_blob": {
 							Type:     schema.TypeString,
 							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return true
-							},
+							Computed: true,
 						},
 						"operating_systems": {
 							Type:     schema.TypeSet,
@@ -203,7 +201,14 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if catalogOut != nil {
-		d.Set("catalog_data", []interface{}{flattenEcrPublicRepositoryCatalogData(catalogOut)})
+		flatCatalogData := flattenEcrPublicRepositoryCatalogData(catalogOut)
+		if catalogData, ok := d.GetOk("catalog_data"); ok && len(catalogData.([]interface{})) > 0 && catalogData.([]interface{})[0] != nil {
+			catalogDataMap := catalogData.([]interface{})[0].(map[string]interface{})
+			if v, ok := catalogDataMap["logo_image_blob"].(string); ok && len(v) > 0 {
+				flatCatalogData["logo_image_blob"] = v
+			}
+		}
+		d.Set("catalog_data", []interface{}{flatCatalogData})
 	} else {
 		d.Set("catalog_data", nil)
 	}
