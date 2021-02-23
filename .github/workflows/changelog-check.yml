@@ -1,0 +1,38 @@
+on:
+  pull_request_target:
+    paths:
+      - 'aws/*'
+      - '!aws/*_test.go'  
+
+name: Changelog Check
+jobs:
+  changes:
+    if: "${{!contains(github.event.pull_request.labels.*.name, 'pr/no-changelog')}}"
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.changes.outputs.changelog }}    
+    steps:
+      - name: Check for changelog entry in diff
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            changelog:
+              - '.changelog/*.txt'
+  comment:
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo ${{needs.changes.outputs.changed}}
+    - if: needs.changes.outputs.changed != 'true' && github.event.action == 'opened'
+      uses: peter-evans/create-or-update-comment@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |-
+          🤔 Double check that this PR does not require a changelog entry in the `.changelog` directory. [Reference](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/pullrequest-submission-and-lifecycle.md#changelog-process)
+    - if: needs.changes.outputs.changed != 'true'
+      run: |
+          echo "changelog-check: No .changelog entry found in PR! See: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/pullrequest-submission-and-lifecycle.md#changelog-process"
+          exit 1
