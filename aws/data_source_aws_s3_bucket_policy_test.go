@@ -28,11 +28,6 @@ func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketPolicyExists("data.aws_s3_bucket_policy.policy"),
 					testAccCheckAWSS3BucketPolicyPolicyMatch("data.aws_s3_bucket_policy.policy", "policy", "aws_s3_bucket_policy.bucket", "policy"),
-					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
-					//testAccCheckS3BucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", bucketName),
-					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(bucketName, region)),
-					//resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
-					//resource.TestCheckNoResourceAttr("data.aws_s3_bucket.bucket", "website_endpoint"),
 				),
 			},
 		},
