@@ -8,14 +8,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAwsLightsailDomainDataSource_domain_name(t *testing.T) {
+func TestAccDataSourceAwsLightsailDomainDataSource(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_lightsail_domain.test"
 	dataSourceName := "data.aws_lightsail_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		Providers:         testAccProviders,
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsLightsailDomainDomainName(rInt),
