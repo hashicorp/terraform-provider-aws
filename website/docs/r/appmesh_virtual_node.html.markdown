@@ -202,7 +202,7 @@ The `client_policy` object supports the following:
 
 The `tls` object supports the following:
 
-* `enforced` - (Optional) Whether the policy is enforced. Default is `true`.
+* `enforce` - (Optional) Whether the policy is enforced. Default is `true`.
 * `ports` - (Optional) One or more ports that the policy is enforced for.
 * `validation` - (Required) The TLS validation context.
 
