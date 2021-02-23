@@ -42,8 +42,7 @@ func dataSourceAwsLightsailDomainRead(d *schema.ResourceData, meta interface{}) 
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "NotFoundException" {
 				log.Printf("[WARN] Lightsail Domain (%s) not found, removing from state", d.Get("domain_name"))
-				d.SetId("")
-				return nil
+				return fmt.Errorf("no matching Lightsail Domain found")
 			}
 			return err
 		}
