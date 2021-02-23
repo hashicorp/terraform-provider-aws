@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: Keep empty conditions ([#17752](https://github.com/hashicorp/terraform-provider-aws/issues/17752))
+* resource/aws_db_instance: Fix conflicting argument validation error ([#17755](https://github.com/hashicorp/terraform-provider-aws/issues/17755))
 * resource/aws_instance: Prevent error with `iam_instance_profile` containing additional forward slashes from path ([#17734](https://github.com/hashicorp/terraform-provider-aws/issues/17734))
 * resource/aws_lb_target_group_attachment: Retry InvalidTarget errors when creating ([#8538](https://github.com/hashicorp/terraform-provider-aws/issues/8538))
 * resource/aws_synthetics_canary: Fix Canary Update when in running state ([#17704](https://github.com/hashicorp/terraform-provider-aws/issues/17704))
