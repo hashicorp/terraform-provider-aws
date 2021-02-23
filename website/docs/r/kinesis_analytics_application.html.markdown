@@ -100,6 +100,8 @@ See [Kinesis Stream](#kinesis-stream) below for more details.
 See [Parallelism](#parallelism) below for more details.
 * `processing_configuration` - (Optional) The Processing Configuration to transform records as they are received from the stream.
 See [Processing Configuration](#processing-configuration) below for more details.
+* `starting_position_configuration` (Optional) The point at which the application starts processing records from the streaming source.
+See [Starting Position Configuration](#starting-position-configuration) below for more details.
 
 ### Outputs
 
@@ -187,6 +189,14 @@ The `lambda` block supports the following:
 
 * `resource_arn` - (Required) The ARN of the Lambda function.
 * `role_arn` - (Required) The ARN of the IAM Role used to access the Lambda function.
+
+#### Starting Position Configuration
+
+The point at which the application reads from the streaming source.
+
+The `starting_position_configuration` block supports the following:
+
+* `starting_position` - (Optional) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
 #### Record Columns
 

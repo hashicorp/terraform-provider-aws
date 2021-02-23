@@ -11,17 +11,19 @@ import (
 )
 
 const (
-	ApplicationReadyTimeout   = 5 * time.Minute
-	ApplicationRunningTimeout = 5 * time.Minute
+	ApplicationDeletedTimeout = 5 * time.Minute
+	ApplicationStartedTimeout = 5 * time.Minute
+	ApplicationStoppedTimeout = 5 * time.Minute
+	ApplicationUpdatedTimeout = 5 * time.Minute
 )
 
 // ApplicationDeleted waits for an Application to return Deleted
-func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, timeout time.Duration) (*kinesisanalytics.ApplicationDetail, error) {
+func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusDeleting},
 		Target:  []string{},
 		Refresh: ApplicationStatus(conn, name),
-		Timeout: timeout,
+		Timeout: ApplicationDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -33,31 +35,49 @@ func ApplicationDeleted(conn *kinesisanalytics.KinesisAnalytics, name string, ti
 	return nil, err
 }
 
-// ApplicationReady waits for an Application to return Ready
-func ApplicationReady(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalytics.ApplicationStatusStopping},
-		Target:  []string{kinesisanalytics.ApplicationStatusReady},
-		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationReadyTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// ApplicationRunning waits for an Application to return Running
-func ApplicationRunning(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+// ApplicationStarted waits for an Application to start
+func ApplicationStarted(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesisanalytics.ApplicationStatusStarting},
 		Target:  []string{kinesisanalytics.ApplicationStatusRunning},
 		Refresh: ApplicationStatus(conn, name),
-		Timeout: ApplicationRunningTimeout,
+		Timeout: ApplicationStartedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// ApplicationStopped waits for an Application to stop
+func ApplicationStopped(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalytics.ApplicationStatusStopping},
+		Target:  []string{kinesisanalytics.ApplicationStatusReady},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationStoppedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalytics.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// ApplicationUpdated waits for an Application to update
+func ApplicationUpdated(conn *kinesisanalytics.KinesisAnalytics, name string) (*kinesisanalytics.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalytics.ApplicationStatusUpdating},
+		Target:  []string{kinesisanalytics.ApplicationStatusReady, kinesisanalytics.ApplicationStatusRunning},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
