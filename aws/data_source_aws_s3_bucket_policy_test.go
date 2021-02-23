@@ -15,13 +15,14 @@ import (
 
 func TestAccDataSourceS3BucketPolicy_basic(t *testing.T) {
 	bucketName := acctest.RandomWithPrefix("tf-test-bucket")
-	//region := testAccGetRegion()
-	//hostedZoneID, _ := HostedZoneIDForRegion(region)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
+			{
+				// prepare resources which wil be fetched with data source
+				Config: testAccAWSDataSourceS3BucketPolicyConfigResources(bucketName),
+			},
 			{
 				Config: testAccAWSDataSourceS3BucketPolicyConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
@@ -83,7 +84,6 @@ func testAccCheckAWSS3BucketPolicyPolicyMatch(resource1, attr1, resource2, attr2
 
 func testAccCheckAWSS3BucketPolicyExistsWithProvider(n string, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		fmt.Println("s.RootModule().Resources:", s.RootModule().Resources)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("not found: %s", n)
@@ -111,7 +111,7 @@ func testAccCheckAWSS3BucketPolicyExistsWithProvider(n string, providerF func() 
 	}
 }
 
-func testAccAWSDataSourceS3BucketPolicyConfig_basic(bucketName string) string {
+func testAccAWSDataSourceS3BucketPolicyConfigResources(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
@@ -145,10 +145,15 @@ data "aws_iam_policy_document" "policy" {
     }
   }
 }
+`, bucketName)
+}
+
+func testAccAWSDataSourceS3BucketPolicyConfig_basic(bucketName string) string {
+	return fmt.Sprintf(`
+%s
 
 data "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.bucket.bucket
 }
-
-`, bucketName)
+`, testAccAWSDataSourceS3BucketPolicyConfigResources(bucketName))
 }
