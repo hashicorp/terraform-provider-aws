@@ -19,7 +19,6 @@ func dataSourceAwsLightsailDomain() *schema.Resource {
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
