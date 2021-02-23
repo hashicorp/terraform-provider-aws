@@ -140,7 +140,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventBusConfig(archiveName),
+				Config: testAccAWSCloudWatchArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchArchiveExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventArchive(), resourceName),
