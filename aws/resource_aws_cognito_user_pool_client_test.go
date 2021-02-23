@@ -937,7 +937,7 @@ func testAccAWSCognitoUserPoolClientConfig_UICustomizationInherited(rName, css s
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
-  
+
   ui_customization {
     css = %q
   }
@@ -962,7 +962,7 @@ func testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndConfigured
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
-  
+
   ui_customization {
     css = %q
   }
@@ -977,7 +977,7 @@ resource "aws_cognito_user_pool_client" "test" {
   name = %[1]q
 
   ui_customization {
-    css = aws_cognito_user_pool.test.ui_customization.0.css
+    css = aws_cognito_user_pool.test.ui_customization[0].css
   }
 
   # Refer to the aws_cognito_user_pool_domain resource's
@@ -991,7 +991,7 @@ func testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndOverridden
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
-  
+
   ui_customization {
     css = %[2]q
   }
