@@ -16,7 +16,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-// TODO Use sweeper dependencies, not nested calls.
 func init() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",

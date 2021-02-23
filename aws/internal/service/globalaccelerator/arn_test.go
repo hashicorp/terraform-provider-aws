@@ -92,8 +92,13 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 			ExpectedError: regexp.MustCompile(`expected at least 4 resource parts`),
 		},
 		{
-			TestName:    "valid ARN",
+			TestName:    "valid listener ARN",
 			InputARN:    "arn:aws:globalaccelerator::123456789012:accelerator/a-123/listener/l-456",
+			ExpectedARN: "arn:aws:globalaccelerator::123456789012:accelerator/a-123",
+		},
+		{
+			TestName:    "valid endpoint group ARN",
+			InputARN:    "arn:aws:globalaccelerator::123456789012:accelerator/a-123/listener/l-456/endpoint-group/eg-789",
 			ExpectedARN: "arn:aws:globalaccelerator::123456789012:accelerator/a-123",
 		},
 	}
