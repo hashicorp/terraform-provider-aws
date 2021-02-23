@@ -43,7 +43,7 @@ resource "aws_cognito_user_pool" "example" {
 ### Using Account Recovery Setting
 
 ```hcl
-resource "aws_cognito_user_pool" "test" {
+resource "aws_cognito_user_pool" "example" {
   name = "mypool"
 
   account_recovery_setting {
@@ -57,6 +57,25 @@ resource "aws_cognito_user_pool" "test" {
       priority = 2
     }
   }
+}
+```
+
+### Specifying UI Customization Settings for all clients (only applicable on resource updates)
+
+```hcl
+resource "aws_cognito_user_pool" "example" {
+  name = "mypool"
+
+  # ... other configuration ...
+  ui_customization {
+    css        = ".label-customizable {font-weight: 400;}"
+    image_file = filebase64("logo.png")
+  }
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain       = "example"
+  user_pool_id = aws_cognito_user_pool.example.id
 }
 ```
 
@@ -89,7 +108,7 @@ The following arguments are supported:
 * `user_pool_add_ons` - (Optional) Configuration block for [user pool add-ons](#user-pool-add-ons) to enable user pool advanced security mode features.
 * `verification_message_template` (Optional) - The [verification message templates](#verification-message-template) configuration.
 * `account_recovery_setting` (Optional) - The [account_recovery_setting](#account-recovery-setting) configuration.
-* `ui_customization` (Optional) - The uncustomized clients [UI Customization](#ui-customization).
+* `ui_customization` (Optional) - Configuration block for [UI customization](#ui-customization) information for a user pool's built-in app UI. To use this feature, the user pool must have a domain associated with it. Once configured, the UI customization will be used for every client that has no UI customization set previously. Removing this configuration forces new resource.
 
 #### Admin Create User Config
 
@@ -199,6 +218,11 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 * `advanced_security_mode` (Required) - The mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
 
+#### UI Customization
+
+* `css` (Optional) - The CSS values in the UI customization, provided as a String.
+* `image_file` (Optional) - The uploaded logo image in the UI customization, provided as a base64-encoded String. Drift detection is not possible for this argument.
+
 #### Verification Message Template
 
 * `default_email_option` (Optional) - The default email option. Must be either `CONFIRM_WITH_CODE` or `CONFIRM_WITH_LINK`. Defaults to `CONFIRM_WITH_CODE`.
@@ -214,11 +238,6 @@ The following arguments are required in the `software_token_mfa_configuration` c
     * `name` (Required) - Specifies the recovery method for a user. Can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` (Required) - A positive integer specifying priority of a method with 1 being the highest priority.
 
-#### UI Customization
-
-* `css` (Optional) - The customized CSS.
-* `image_file` (Optional) - The local image file path.
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -228,7 +247,10 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint` - The endpoint name of the user pool. Example format: cognito-idp.REGION.amazonaws.com/xxxx_yyyyy
 * `creation_date` - The date the user pool was created.
 * `last_modified_date` - The date the user pool was last modified.
-
+* `ui_customization` - The UI customization information for a user pool's built-in app UI.
+    * `css_version` - The CSS version number.
+    * `image_url` - The logo image URL for the UI customization.
+  
 ## Import
 
 Cognito User Pools can be imported using the `id`, e.g.

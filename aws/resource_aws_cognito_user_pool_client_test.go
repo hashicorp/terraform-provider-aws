@@ -30,6 +30,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", clientName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "0"),
 				),
 			},
 			{
@@ -161,28 +162,6 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"generate_secret"},
-			},
-		},
-	})
-}
-
-func TestAccAWSCognitoUserPoolClient_withUICustomization(t *testing.T) {
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
-	clientName := acctest.RandString(10)
-	css := ".label-customizable {font-weight: 400;}"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCognitoUserPoolClientConfig_withUICustomization(userPoolName, clientName, css),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "ui_customization.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "ui_customization.0.css", css),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool_client.client", "ui_customization.0.image_file"),
-				),
 			},
 		},
 	})
@@ -355,6 +334,225 @@ func TestAccAWSCognitoUserPoolClient_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_UICustomization_CSS(t *testing.T) {
+	var before, after cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	css := ".label-customizable {font-weight: 400;}"
+	cssUpdated := ".label-customizable {font-weight: 100;}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationCSS(rName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", css),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationCSS(rName, cssUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", cssUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				// Test removing the UICustomization settings, forcing new resource
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &after),
+					testAccCheckAWSCognitoUserPoolClientRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_UICustomization_ImageFile(t *testing.T) {
+	var before, after cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	filename := "testdata/service/cognitoidentityprovider/logo.png"
+	updatedFilename := "testdata/service/cognitoidentityprovider/logo_modified.png"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationImage(rName, filename),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "ui_customization.0.image_url"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ui_customization.0.image_file"},
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationImage(rName, updatedFilename),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "ui_customization.0.image_url"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ui_customization.0.image_file"},
+			},
+			{
+				// Test removing the UICustomization settings, forcing new resource
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &before),
+					testAccCheckAWSCognitoUserPoolClientRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_UICustomization_CSSandImageFile(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	css := ".label-customizable {font-weight: 400;}"
+	filename := "testdata/service/cognitoidentityprovider/logo.png"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationCSSAndImage(rName, css, filename),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", css),
+					resource.TestCheckResourceAttrSet(resourceName, "ui_customization.0.image_url"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ui_customization.0.image_file"},
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationCSS(rName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", css),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationImage(rName, filename),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "ui_customization.0.image_url"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ui_customization.0.image_file"},
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_UICustomization_InheritedFromUserPool(t *testing.T) {
+	var client cognitoidentityprovider.UserPoolClientType
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+	poolName := "aws_cognito_user_pool.test"
+
+	css := ".label-customizable {font-weight: 400;}"
+	cssUpdated := ".label-customizable {font-weight: 100;}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUserPoolDomain(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(poolName),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withUICustomizationCSS(rName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(poolName),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationInherited(rName, css),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(poolName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", css),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:   testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndConfigured(rName, css),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndOverridden(rName, css, cssUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(poolName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ui_customization.0.css", cssUpdated),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -452,6 +650,16 @@ func testAccCheckAWSCognitoUserPoolClientDisappears(client *cognitoidentityprovi
 		_, err := conn.DeleteUserPoolClient(params)
 
 		return err
+	}
+}
+
+func testAccCheckAWSCognitoUserPoolClientRecreated(before, after *cognitoidentityprovider.UserPoolClientType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(before.ClientId) == aws.StringValue(after.ClientId) {
+			return fmt.Errorf("Cognito User Pool Client not recreated")
+		}
+
+		return nil
 	}
 }
 
@@ -628,19 +836,182 @@ resource "aws_cognito_user_pool_client" "test" {
 `, clientName)
 }
 
-func testAccAWSCognitoUserPoolClientConfig_withUICustomization(userPoolName, clientName string, css string) string {
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationCSS(rName, css string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
-  name = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 
-resource "aws_cognito_user_pool_client" "client" {
-  name         = "%s"
-  user_pool_id = aws_cognito_user_pool.pool.id
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
   ui_customization {
-    css        = "%s"
-    image_file = "test-fixtures/logo.png"
+    css = %q
+  }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, css)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationImage(rName, filename string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  ui_customization {
+    image_file = filebase64(%q)
+  }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, filename)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationCSSAndImage(rName, css, filename string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  ui_customization {
+    css        = %q
+    image_file = filebase64(%q)
+  }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, css, filename)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationInherited(rName, css string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+  
+  ui_customization {
+    css = %q
   }
 }
-`, userPoolName, clientName, css)
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, css)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndConfigured(rName, css string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+  
+  ui_customization {
+    css = %q
+  }
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  ui_customization {
+    css = aws_cognito_user_pool.test.ui_customization.0.css
+  }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, css)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_UICustomizationInheritedAndOverridden(rName, css, cssUpdated string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+  
+  ui_customization {
+    css = %[2]q
+  }
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name = %[1]q
+
+  ui_customization {
+    css = %[3]q
+  }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure it is in an 'Active' state 
+  user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
+}
+`, rName, css, cssUpdated)
 }

@@ -1,14 +1,18 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -145,6 +149,7 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
 			"analytics_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -184,8 +189,40 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 				},
 			},
 
-			"ui_customization": cognitoUserPoolUICustomizationSchema(),
+			"ui_customization": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"css": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"css_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"image_file": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"image_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			// A "ui_customization" cannot be removed from a Cognito User Pool Client resource;
+			// thus, resource recreation is triggered on configuration block removal.
+			customdiff.ForceNewIfChange("ui_customization", func(_ context.Context, old, new, meta interface{}) bool {
+				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+			}),
+		),
 	}
 }
 
@@ -263,8 +300,23 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
 
-	if err = cognitoUserPoolUICustomizationSet(d, conn); err != nil {
-		return fmt.Errorf("Error setting Cognito User Pool Client UI Customization: %s", err)
+	if v, ok := d.GetOk("ui_customization"); ok {
+		input, err := expandCognitoUserPoolUICustomizationInput(v.([]interface{}))
+
+		if err != nil {
+			return fmt.Errorf("error setting Cognito User Pool Client (%s) UI customization: %w", d.Id(), err)
+		}
+
+		if input != nil {
+			input.ClientId = aws.String(d.Id())
+			input.UserPoolId = aws.String(d.Get("user_pool_id").(string))
+
+			_, err := conn.SetUICustomization(input)
+
+			if err != nil {
+				return fmt.Errorf("error setting Cognito User Pool Client (%s) UI customization: %w", d.Id(), err)
+			}
+		}
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)
@@ -312,14 +364,26 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error setting analytics_configuration: %s", err)
 	}
 
-	getUICustomizationOutput, err := cognitoUserPoolUICustomizationGet(d, conn)
+	// Retrieve UICustomization of the User Pool the Client belongs to;
+	// expect to receive an InvalidParameterException if there is no associated Domain
+	uiCustomization, err := finder.CognitoUserPoolUICustomization(conn, resp.UserPoolClient.UserPoolId, aws.String(d.Id()))
 
-	if err != nil {
-		return fmt.Errorf("Error reading Cognito User Pool Client UI Customization: %s", err)
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Cognito User Pool Client (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if err := d.Set("ui_customization", flattenCognitoUserPoolUICustomization(getUICustomizationOutput.UICustomization)); err != nil {
-		return fmt.Errorf("Failed setting ui_customization: %s", err)
+	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "There has to be an existing domain associated with this user pool") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error getting Cognito User Pool Client (%s) UI customization: %w", d.Id(), err)
+	}
+
+	if err := d.Set("ui_customization", flattenCognitoUserPoolUICustomization(d, uiCustomization)); err != nil {
+		return fmt.Errorf("error setting ui_customization: %w", err)
 	}
 
 	return nil
@@ -396,8 +460,25 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error updating Cognito User Pool Client: %s", err)
 	}
 
-	if err = cognitoUserPoolUICustomizationSet(d, conn); err != nil {
-		return fmt.Errorf("Error updating User Pool Client UI Customization: %s", err)
+	if d.HasChange("ui_customization") {
+		if v, ok := d.GetOk("ui_customization"); ok {
+			input, err := expandCognitoUserPoolUICustomizationInput(v.([]interface{}))
+
+			if err != nil {
+				return fmt.Errorf("error updating Cognito User Pool Client (%s) UI customization: %w", d.Id(), err)
+			}
+
+			if input != nil {
+				input.ClientId = aws.String(d.Id())
+				input.UserPoolId = aws.String(d.Get("user_pool_id").(string))
+
+				_, err := conn.SetUICustomization(input)
+
+				if err != nil {
+					return fmt.Errorf("error updating Cognito User Pool Client (%s) UI customization: %w", d.Id(), err)
+				}
+			}
+		}
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)

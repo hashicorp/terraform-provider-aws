@@ -3158,28 +3158,6 @@ func flattenCognitoUserPoolVerificationMessageTemplate(s *cognitoidentityprovide
 	return []map[string]interface{}{}
 }
 
-func flattenCognitoUserPoolUICustomization(s *cognitoidentityprovider.UICustomizationType) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if s == nil {
-		return nil
-	}
-
-	if s.CSS != nil {
-		m["css"] = *s.CSS
-	}
-
-	if s.ImageUrl != nil {
-		m["image_file"] = *s.ImageUrl
-	}
-
-	if len(m) > 0 {
-		return []map[string]interface{}{m}
-	}
-
-	return []map[string]interface{}{}
-}
-
 func sliceContainsMap(l []interface{}, m map[string]interface{}) (int, bool) {
 	for i, t := range l {
 		if reflect.DeepEqual(m, t.(map[string]interface{})) {

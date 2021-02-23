@@ -110,26 +110,29 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 ```
 
-### Create a user pool client with UI customization
+### Create a user pool client with UI customization settings
 
 ```hcl
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
 
-data "template_file" "custom_css" {
-  template = file("files/custom.css")
+resource "aws_cognito_user_pool_domain" "domain" {
+  domain       = "example"
+  user_pool_id = aws_cognito_user_pool.pool.id
 }
 
 resource "aws_cognito_user_pool_client" "client" {
   name = "client"
 
-  user_pool_id = aws_cognito_user_pool.pool.id
-
   ui_customization {
-    css        = data.template_file.custom_css.rendered
-    image_file = "files/logo.png"
+    css        = ".label-customizable {font-weight: 400;}"
+    image_file = filebase64("logo.png")
   }
+
+  # Refer to the aws_cognito_user_pool_domain resource's
+  # user_pool_id attribute to ensure the domain is 'Active'
+  user_pool_id = aws_cognito_user_pool_domain.domain.user_pool_id
 }
 ```
 
@@ -153,7 +156,7 @@ The following arguments are supported:
 * `user_pool_id` - (Required) The user pool the client belongs to.
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 * `analytics_configuration` - (Optional) The Amazon Pinpoint analytics configuration for collecting metrics for this user pool.
-* `ui_customization` (Optional) - The [UI Customization](#ui-customization).
+* `ui_customization` (Optional) - Configuration block for [UI customization](#ui-customization) information for the user pool's built-in app UI. To use this feature, the user pool the client belongs to must have a domain associated with it. If UI customization settings are configured within the [`aws_cognito_user pool` resource](cognito_user_pool.markdown), this must be configured to prevent plan-time differences. Removing this configuration forces new resource.
 
 ### Analytics Configuration
 
@@ -167,16 +170,19 @@ Either `application_arn` or `application_id` is required.
 
 #### UI Customization
 
-* `css` (Optional) - The customized CSS.
-* `image_file` (Optional) - The local image file path.
-  
+* `css` (Optional) - The CSS values in the UI customization, provided as a String.
+* `image_file` (Optional) - The uploaded logo image in the UI customization, provided as a base64-encoded String. Drift detection is not possible for this argument.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the user pool client.
 * `client_secret` - The client secret of the user pool client.
-
+* `ui_customization` - The UI customization information for the user pool's built-in app UI.
+    * `css_version` - The CSS version number.
+    * `image_url` - The logo image URL for the UI customization.
+  
 ## Import
 
 Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.
