@@ -166,8 +166,7 @@ func buildCreateArchiveInputStruct(d *schema.ResourceData) (*events.CreateArchiv
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
-		retentionInDays := int64(v.(int))
-		input.RetentionDays = aws.Int64(retentionInDays)
+		input.RetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	return &input, nil
@@ -191,8 +190,7 @@ func buildUpdateArchiveInputStruct(d *schema.ResourceData) (*events.UpdateArchiv
 	}
 
 	if v, ok := d.GetOk("retention_days"); ok {
-		retentionInDays := int64(v.(int))
-		input.RetentionDays = aws.Int64(retentionInDays)
+		input.RetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	return &input, nil
