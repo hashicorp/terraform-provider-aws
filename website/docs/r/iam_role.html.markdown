@@ -77,20 +77,16 @@ resource "aws_iam_role" "example" {
   inline_policy {
     name = "my_inline_policy"
 
-    policy = <<EOF
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ],
-  "Version": "2012-10-17"
-}
-EOF
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["ec2:Describe*"]
+          Effect   = "Allow"
+          Resource = "*"
+        },
+      ]
+    })
   }
 
   inline_policy {
@@ -135,41 +131,31 @@ resource "aws_iam_role" "example" {
 resource "aws_iam_policy" "policy_one" {
   name = "policy-618033"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["ec2:Describe*"]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_iam_policy" "policy_two" {
   name = "policy-381966"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListAllMyBuckets",
-        "s3:ListBucket",
-        "s3:HeadBucket"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = ["s3:ListAllMyBuckets", "s3:ListBucket", "s3:HeadBucket"]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 ```
 
