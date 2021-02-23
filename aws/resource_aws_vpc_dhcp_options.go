@@ -195,7 +195,7 @@ func resourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) err
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(opts.OwnerId),
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()
 
