@@ -4575,6 +4575,8 @@ resource "aws_db_instance" "mysql_restore" {
 
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   allocated_storage       = 20
+  username                = "root"
+  password                = "password"
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = "5.6.41"
   backup_retention_period = 0
