@@ -46,7 +46,7 @@ func TestAccDataSourceAWSLightsailInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAWSLightsailInstance_disapear(t *testing.T) {
+func TestAccDataSourceAWSLightsailInstance_disappear(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-data-test-lightsail-%d", acctest.RandInt())
 
