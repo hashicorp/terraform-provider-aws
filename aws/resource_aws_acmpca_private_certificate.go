@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -86,11 +87,13 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
-		TemplateArn:             aws.String(d.Get("template_arn").(string)),
 		Validity: &acmpca.Validity{
 			Type:  aws.String(d.Get("validity_unit").(string)),
 			Value: aws.Int64(int64(d.Get("validity_length").(int))),
 		},
+	}
+	if v, ok := d.Get("template_arn").(string); ok && v != "" {
+		input.TemplateArn = aws.String(v)
 	}
 
 	log.Printf("[DEBUG] ACMPCA Issue Certificate: %s", input)
@@ -159,16 +162,16 @@ func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta inte
 		CertificateSerial:       aws.String(fmt.Sprintf("%x", cert.SerialNumber)),
 		RevocationReason:        aws.String(acmpca.RevocationReasonUnspecified),
 	}
-
-	log.Printf("[DEBUG] Revoking ACMPCA Certificate: %s", input)
 	_, err = conn.RevokeCertificate(input)
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestAlreadyProcessedException) ||
+		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestInProgressException) ||
+		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidRequestException, "Self-signed certificate can not be revoked") {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") ||
-			isAWSErr(err, acmpca.ErrCodeRequestAlreadyProcessedException, "") ||
-			isAWSErr(err, acmpca.ErrCodeRequestInProgressException, "") {
-			return nil
-		}
-		return fmt.Errorf("error revoking ACMPCA Certificate: %s", err)
+		return fmt.Errorf("error revoking ACM PCA Certificate: %s", err)
 	}
 
 	return nil
