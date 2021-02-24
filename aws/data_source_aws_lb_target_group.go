@@ -154,6 +154,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				},
 			},
 
+			"preserve_client_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": tagsSchemaComputed(),
 		},
 	}

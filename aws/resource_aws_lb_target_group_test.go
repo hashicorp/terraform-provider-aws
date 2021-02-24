@@ -1334,6 +1334,33 @@ func TestAccAWSLBTargetGroup_stickinessInvalidALB(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
+	var conf elbv2.TargetGroup
+	resourceName := "aws_lb_target_group.test"
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_preserveClientIP(targetGroupName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "true"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfig_preserveClientIP(targetGroupName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2412,4 +2439,31 @@ resource "aws_vpc" "test" {
   }
 }
 `, protocol, stickyType, enabled)
+}
+
+func testAccAWSLBTargetGroupConfig_preserveClientIP(targetGroupName string, preserveClientIP bool) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = "%s"
+  port     = 443
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  deregistration_delay = 200
+  slow_start           = 0
+
+  preserve_client_ip = %t
+
+  tags = {
+    Name = "TestAccAWSLBTargetGroup_basic"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-basic"
+  }
+}`, targetGroupName, preserveClientIP)
 }
