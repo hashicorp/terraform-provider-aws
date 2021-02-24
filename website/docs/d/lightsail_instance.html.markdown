@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the Lightsail instance (matches `name`).
 * `availability_zone` - The Availability Zone in which your instance resides.
-* `blueprint_id` - The ID for a virtual private server image. 
+* `blueprint_id` - The ID for a virtual private server image.
 * `bundle_id` - The bundle of specification information.
 * `key_pair_name` - The name of your key pair.
 * `user_data` - launch script to configure server with additional user data
