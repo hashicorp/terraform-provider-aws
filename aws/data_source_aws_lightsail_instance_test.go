@@ -150,29 +150,28 @@ func testAccDataSourceCheckAWSLightsailInstanceDestroy(s *terraform.State) error
 func testAccDataSourceAWSLightsailInstanceConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-	state = "available"
-
-	filter {
-		name   = "opt-in-status"
-		values = ["opt-in-not-required"]
-	}
+  state = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_instance" "lightsail_instance_test" {
-	name              = "%s"
-	availability_zone = data.aws_availability_zones.available.names[0]
-	blueprint_id      = "amazon_linux"
-	bundle_id         = "nano_1_0"
+  name              = "%s"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
 
-	tags = {
-		Name       = "tf-test"
-		KeyOnlyTag = ""
-		ExtraName  = "tf-test"
-	}
+  tags = {
+    Name       = "tf-test"
+    KeyOnlyTag = ""
+    ExtraName  = "tf-test"
+  }
 }
 
 data "aws_lightsail_instance" "lightsail_instance_test" {
-	name = aws_lightsail_instance.lightsail_instance_test.id
+  name = aws_lightsail_instance.lightsail_instance_test.id
 }
 `, lightsailName)
 }

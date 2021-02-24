@@ -19,7 +19,7 @@ for more information.
 ```hcl
 # Create a new GitLab Lightsail Instance
 data "aws_lightsail_instance" "gitlab_test" {
-  name              = "custom_gitlab"
+  name = "custom_gitlab"
 }
 ```
 
