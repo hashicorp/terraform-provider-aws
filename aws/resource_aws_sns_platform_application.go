@@ -49,6 +49,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
+				StateFunc: hashSum,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -78,6 +79,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				StateFunc: hashSum,
 			},
 			"success_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -336,4 +338,8 @@ func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
 		return fmt.Errorf("platform_principal is required when platform = %s", platform)
 	}
 	return nil
+}
+
+func hashSum(contents interface{}) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
 }
