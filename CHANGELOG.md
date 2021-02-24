@@ -1,5 +1,19 @@
 ## 3.30.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_apigatewayv2_api` ([#13883](https://github.com/hashicorp/terraform-provider-aws/issues/13883))
+* **New Data Source:** `aws_apigatewayv2_apis` ([#13883](https://github.com/hashicorp/terraform-provider-aws/issues/13883))
+* **New Resource:** `aws_ecrpublic_repository` ([#16865](https://github.com/hashicorp/terraform-provider-aws/issues/16865))
+
+ENHANCEMENTS:
+
+* resource/aws_dms_certificate: Add `tags` argument ([#17163](https://github.com/hashicorp/terraform-provider-aws/issues/17163))
+
+BUG FIXES:
+
+* resource/aws_backup_plan: `backup_options` and `resource_type` attributes in `advanced_backup_setting` configuration block are both required ([#17692](https://github.com/hashicorp/terraform-provider-aws/issues/17692))
+
 ## 3.29.1 (February 23, 2021)
 
 ENHANCEMENTS:
