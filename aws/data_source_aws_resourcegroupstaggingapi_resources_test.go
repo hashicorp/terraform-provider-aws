@@ -28,7 +28,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_basic(t *testing.T) {
 
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	resourceName := "aws_lambda_function.test"
+	resourceName := "aws_api_gateway_rest_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +38,6 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *tes
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesTagKeyFilterConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
 					}),
@@ -70,7 +69,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_compliance(t *testing
 
 func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	resourceName := "aws_lambda_function.test"
+	resourceName := "aws_api_gateway_rest_api.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +79,28 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeFiltersConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
+						"tags.Key": rName,
+					}),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "resource_tag_mapping_list.*.resource_arn", resourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_arn_list(t *testing.T) {
+	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	resourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceARNListConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
 					}),
@@ -96,13 +116,9 @@ data "aws_resourcegroupstaggingapi_resources" "test" {}
 `
 
 func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesTagKeyFilterConfig(rName string) string {
-	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
 
   tags = {
     Key = %[1]q
@@ -114,25 +130,41 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
     key = "Key"
   }
 
-  depends_on = [aws_lambda_function.test]
+  depends_on = [aws_api_gateway_rest_api.test]
 }
 `, rName)
 }
 
 func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeFiltersConfig(rName string) string {
-	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  tags = {
+    Key = %[1]q
+  }
 }
 
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  resource_type_filters = ["lambda"]
+  resource_type_filters = ["apigateway"]
 
-  depends_on = [aws_lambda_function.test]
+  depends_on = [aws_api_gateway_rest_api.test]
+}
+`, rName)
+}
+
+func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceARNListConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  tags = {
+    Key = %[1]q
+  }
+}
+
+data "aws_resourcegroupstaggingapi_resources" "test" {
+  resource_arn_list = [aws_api_gateway_rest_api.test.arn]
 }
 `, rName)
 }

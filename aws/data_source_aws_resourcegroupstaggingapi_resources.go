@@ -22,11 +22,18 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"resource_arn_list": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"tag_filters"},
+			},
 			"resource_type_filters": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 100,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				MaxItems:      100,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"resource_arn_list"},
 			},
 			"tag_filters": {
 				Type:     schema.TypeList,
@@ -97,6 +104,10 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("exclude_compliant_resources"); ok {
 		input.ExcludeCompliantResources = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("resource_arn_list"); ok && v.(*schema.Set).Len() > 0 {
+		input.ResourceARNList = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag_filters"); ok {
