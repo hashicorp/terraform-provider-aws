@@ -1,0 +1,3 @@
+```release-note:data-source
+aws_resourcegroupstaggingapi_resources
+```
