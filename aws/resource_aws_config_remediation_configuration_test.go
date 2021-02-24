@@ -29,6 +29,7 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists(resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "automatic", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
@@ -193,6 +194,7 @@ resource "aws_config_remediation_configuration" "test" {
   config_rule_name = aws_config_config_rule.test.name
 
   resource_type  = "AWS::S3::Bucket"
+  automatic      = true
   target_id      = "AWS-EnableS3BucketEncryption"
   target_type    = "SSM_DOCUMENT"
   target_version = "1"

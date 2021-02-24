@@ -35,6 +35,11 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -138,6 +143,12 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 	name := d.Get("config_rule_name").(string)
 	remediationConfigurationInput := configservice.RemediationConfiguration{
 		ConfigRuleName: aws.String(name),
+	}
+
+	if v, ok := d.GetOk("automatic"); ok && v.(bool) {
+		remediationConfigurationInput.Automatic = aws.Bool(true)
+		remediationConfigurationInput.MaximumAutomaticAttempts = aws.Int64(5)
+		remediationConfigurationInput.RetryAttemptSeconds = aws.Int64(60)
 	}
 
 	if v, ok := d.GetOk("parameter"); ok {
