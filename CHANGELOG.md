@@ -2,6 +2,10 @@
 
 ## 3.29.1 (February 23, 2021)
 
+ENHANCEMENTS:
+
+* resource/aws_iam_role: Add `inline_policy` and `managed_policy_arns` arguments to support exclusive policy management ([#5904](https://github.com/hashicorp/terraform-provider-aws/issues/5904))
+
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: Keep empty conditions ([#17752](https://github.com/hashicorp/terraform-provider-aws/issues/17752))
