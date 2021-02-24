@@ -92,6 +92,12 @@ func resourceAwsCloudWatchEventArchiveRead(d *schema.ResourceData, meta interfac
 
 	out, err := conn.DescribeArchive(input)
 
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] CloudWatch Events archive (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading CloudWatch Events archive: %w", err)
 	}

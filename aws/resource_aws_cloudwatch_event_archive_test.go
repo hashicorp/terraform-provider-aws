@@ -143,7 +143,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventArchiveExists(resourceName, &v),
-					//testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventArchive(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
