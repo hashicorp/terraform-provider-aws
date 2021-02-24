@@ -103,15 +103,15 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority: %s", describeCertificateAuthorityInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %s", describeCertificateAuthorityInput)
 
 	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(describeCertificateAuthorityInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority: %w", err)
+		return fmt.Errorf("error reading ACM PCA Certificate Authority: %w", err)
 	}
 
 	if describeCertificateAuthorityOutput.CertificateAuthority == nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority: not found")
+		return fmt.Errorf("error reading ACM PCA Certificate Authority: not found")
 	}
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
@@ -131,14 +131,14 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
 
 	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(getCertificateAuthorityCertificateInput)
 	if err != nil {
 		// Returned when in PENDING_CERTIFICATE status
 		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
 		if !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
-			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate: %w", err)
+			return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate: %w", err)
 		}
 	}
 
@@ -153,11 +153,11 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %w", err)
+		return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate Signing Request: %w", err)
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -168,7 +168,7 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 	tags, err := keyvaluetags.AcmpcaListTags(conn, certificateAuthorityArn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

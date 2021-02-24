@@ -96,10 +96,10 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 		input.TemplateArn = aws.String(v)
 	}
 
-	log.Printf("[DEBUG] ACMPCA Issue Certificate: %s", input)
+	log.Printf("[DEBUG] ACM PCA Issue Certificate: %s", input)
 	output, err := conn.IssueCertificate(input)
 	if err != nil {
-		return fmt.Errorf("error issuing ACMPCA Certificate: %s", err)
+		return fmt.Errorf("error issuing ACM PCA Certificate: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
@@ -111,7 +111,7 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 
 	err = conn.WaitUntilCertificateIssued(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error waiting for ACMPCA to issue Certificate %q, error: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for ACM PCA to issue Certificate %q, error: %s", d.Id(), err)
 	}
 
 	return resourceAwsAcmpcaPrivateCertificateRead(d, meta)
@@ -125,16 +125,16 @@ func resourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta interf
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate: %s", getCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
 		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACMPCA Certificate %q not found - removing from state", d.Id())
+			log.Printf("[WARN] ACM PCA Certificate %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading ACMPCA Certificate: %s", err)
+		return fmt.Errorf("error reading ACM PCA Certificate: %s", err)
 	}
 
 	d.Set("arn", d.Id())
@@ -154,7 +154,7 @@ func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta inte
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return fmt.Errorf("Failed to parse ACMPCA Certificate: %s", err)
+		return fmt.Errorf("Failed to parse ACM PCA Certificate: %s", err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{

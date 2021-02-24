@@ -45,11 +45,11 @@ func dataSourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta inte
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate: %s", getCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate: %s", err)
+		return fmt.Errorf("error reading ACM PCA Certificate: %s", err)
 	}
 
 	d.SetId(certificateArn)

@@ -122,7 +122,7 @@ func testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName string) resource
 		}
 
 		if output == nil || output.Certificate == nil {
-			return fmt.Errorf("ACMPCA Certificate %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("ACM PCA Certificate %q does not exist", rs.Primary.ID)
 		}
 
 		return nil
