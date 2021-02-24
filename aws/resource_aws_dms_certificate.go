@@ -114,11 +114,11 @@ func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) err
 	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Certificate (%s): %s", d.Get("certificate_arn").(string), err)
+		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -132,7 +132,7 @@ func resourceAwsDmsCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Certificate (%s) tags: %s", arn, err)
+			return fmt.Errorf("error updating DMS Certificate (%s) tags: %w", arn, err)
 		}
 	}
 
