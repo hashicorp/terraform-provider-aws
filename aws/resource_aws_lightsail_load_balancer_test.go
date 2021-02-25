@@ -88,6 +88,7 @@ func TestAccAWSLightsailLoadBalancer_basic(t *testing.T) {
 					testAccCheckAWSLightsailLoadBalancerExists("aws_lightsail_load_balancer.lightsail_load_balancer_test", &loadBalancer),
 					resource.TestCheckResourceAttrSet("aws_lightsail_load_balancer.lightsail_load_balancer_test", "health_check_path"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_load_balancer.lightsail_load_balancer_test", "instance_port"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_load_balancer.lightsail_load_balancer_test", "dns_name"),
 					resource.TestCheckResourceAttr("aws_lightsail_load_balancer.lightsail_load_balancer_test", "tags.%", "0"),
 				),
 			},
@@ -271,7 +272,6 @@ func testAccAWSLightsailLoadBalancerConfig_basic(lightsailLoadBalancerName strin
 provider "aws" {
   region = "us-east-1"
 }
-
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
   name               = "%s"
   health_check_path  = "/"
@@ -285,7 +285,6 @@ func testAccAWSLightsailLoadBalancerConfig_tags1(lightsailLoadBalancerName strin
 provider "aws" {
   region = "us-east-1"
 }
-
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
   name               = "%s"
   health_check_path  = "/"
@@ -302,7 +301,6 @@ func testAccAWSLightsailLoadBalancerConfig_tags2(lightsailLoadBalancerName strin
 provider "aws" {
   region = "us-east-1"
 }
-
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
   name               = "%s"
   health_check_path  = "/"

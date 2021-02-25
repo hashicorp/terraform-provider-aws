@@ -141,6 +141,7 @@ func resourceAwsLightsailLoadBalancerRead(d *schema.ResourceData, meta interface
 	d.Set("name", resp.LoadBalancer.Name)
 	d.Set("protocol", resp.LoadBalancer.Protocol)
 	d.Set("public_ports", resp.LoadBalancer.PublicPorts)
+	d.Set("dns_name", resp.LoadBalancer.DnsName)
 
 	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(resp.LoadBalancer.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -189,7 +190,7 @@ func resourceAwsLightsailLoadBalancerUpdate(d *schema.ResourceData, meta interfa
 			AttributeValue:   aws.String(d.Get("health_check_path").(string)),
 			LoadBalancerName: aws.String(d.Get("name").(string)),
 		})
-		d.SetPartial("health_check_path")
+		d.Set("health_check_path", d.Get("health_check_path").(string))
 		if err != nil {
 			return err
 		}
