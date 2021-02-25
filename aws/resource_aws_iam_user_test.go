@@ -2,8 +2,8 @@ package aws
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -765,7 +765,7 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
-		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")
+		sshKey, err := os.ReadFile("./test-fixtures/public-ssh-key.pub")
 		if err != nil {
 			return fmt.Errorf("error reading SSH fixture: %s", err)
 		}
@@ -790,7 +790,7 @@ func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutpu
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		signingCertificate, err := ioutil.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
+		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {
 			return fmt.Errorf("error reading signing certificate fixture: %s", err)
 		}

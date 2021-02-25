@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"time"
 
@@ -1223,7 +1223,7 @@ func loadFileContent(v string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileContent, err := ioutil.ReadFile(filename)
+	fileContent, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
