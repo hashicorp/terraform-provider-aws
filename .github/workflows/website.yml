@@ -16,9 +16,6 @@ on:
       - website/docs/**
       - tools/go.mod
 
-env:
-  GO111MODULE: on
-
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest

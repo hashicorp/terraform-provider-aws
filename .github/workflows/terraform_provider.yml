@@ -27,7 +27,6 @@ on:
 
 env:
   AWS_DEFAULT_REGION: us-west-2
-  GO111MODULE: on
   TERRAFORM_VERSION: "0.12.25"
 
 jobs:
