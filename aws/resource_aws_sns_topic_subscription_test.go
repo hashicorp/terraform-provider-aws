@@ -721,6 +721,8 @@ resource "aws_api_gateway_integration_response" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "iam_for_lambda" {
   name = %[1]q
 
@@ -731,7 +733,7 @@ resource "aws_iam_role" "iam_for_lambda" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -765,7 +767,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
-  principal     = "apigateway.amazonaws.com"
+  principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
   source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
 }
 
@@ -845,6 +847,8 @@ resource "aws_api_gateway_integration_response" "test" {
   }
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "iam_for_lambda" {
   name = %[1]q
 
@@ -855,7 +859,7 @@ resource "aws_iam_role" "iam_for_lambda" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -889,7 +893,7 @@ resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.arn
-  principal     = "apigateway.amazonaws.com"
+  principal     = "apigateway.${data.aws_partition.current.dns_suffix}"
   source_arn    = "${aws_api_gateway_deployment.test.execution_arn}/*"
 }
 
@@ -919,7 +923,7 @@ resource "aws_iam_role" "invocation_role" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "apigateway.amazonaws.com"
+        "Service": "apigateway.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -1025,6 +1029,8 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "private"
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "firehose_role" {
   name = %[1]q
 
@@ -1035,7 +1041,7 @@ resource "aws_iam_role" "firehose_role" {
   {
 	"Action": "sts:AssumeRole",
 	"Principal": {
-	  "Service": ["sns.amazonaws.com","firehose.amazonaws.com"]
+	  "Service": ["sns.${data.aws_partition.current.dns_suffix}","firehose.${data.aws_partition.current.dns_suffix}"]
 	},
 	"Effect": "Allow",
 	"Sid": ""
