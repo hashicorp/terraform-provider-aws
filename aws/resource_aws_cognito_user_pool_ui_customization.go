@@ -163,7 +163,7 @@ func resourceAwsCognitoUserPoolUICustomizationDelete(d *schema.ResourceData, met
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	output, err := conn.SetUICustomization(input)
+	_, err = conn.SetUICustomization(input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		return nil
@@ -173,43 +173,7 @@ func resourceAwsCognitoUserPoolUICustomizationDelete(d *schema.ResourceData, met
 		return fmt.Errorf("error deleting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %w", userPoolId, clientId, err)
 	}
 
-	if output == nil || output.UICustomization == nil {
-		return nil
-	}
-
-	if cognitoUserPoolUICustomizationExists(output.UICustomization) {
-		return fmt.Errorf("error deleting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): still exists", userPoolId, clientId)
-	}
-
 	return nil
-}
-
-// cognitoUserPoolUICustomizationExists validates the API object such that
-// we define resource existence when the object is non-nil and
-// at least one of the object's fields are non-nil with the exception of CSSVersion
-// which remains as an artifact even after UI customization removal
-func cognitoUserPoolUICustomizationExists(ui *cognitoidentityprovider.UICustomizationType) bool {
-	if ui == nil {
-		return false
-	}
-
-	if ui.CSS != nil {
-		return true
-	}
-
-	if ui.CreationDate != nil {
-		return true
-	}
-
-	if ui.ImageUrl != nil {
-		return true
-	}
-
-	if ui.LastModifiedDate != nil {
-		return true
-	}
-
-	return false
 }
 
 func parseCognitoUserPoolUICustomizationID(id string) (string, string, error) {

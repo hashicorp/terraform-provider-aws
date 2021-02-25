@@ -511,7 +511,7 @@ func testAccCheckAWSCognitoUserPoolUICustomizationDestroy(s *terraform.State) er
 			return err
 		}
 
-		if cognitoUserPoolUICustomizationExists(output) {
+		if testAccAWSCognitoUserPoolUICustomizationExists(output) {
 			return fmt.Errorf("Cognito User Pool UI Customization (UserPoolId: %s, ClientId: %s) still exists", userPoolId, clientId)
 		}
 	}
@@ -619,21 +619,21 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 func testAccAWSCognitoUserPoolUICustomizationConfig_Client_CSS(rName, css string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
- name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
- domain       = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_client" "test" {
- name         = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_ui_customization" "test" {
-  client_id = aws_cognito_user_pool_client.test.id  
+  client_id = aws_cognito_user_pool_client.test.id
   css       = %q
 
   # Refer to the aws_cognito_user_pool_domain resource's
@@ -646,25 +646,25 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 func testAccAWSCognitoUserPoolUICustomizationConfig_Client_Image(rName, filename string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
- name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
- domain       = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_client" "test" {
- name         = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_ui_customization" "test" {
-  client_id  = aws_cognito_user_pool_client.test.id  
+  client_id  = aws_cognito_user_pool_client.test.id
   image_file = filebase64(%q)
 
   # Refer to the aws_cognito_user_pool_domain resource's
-  # user_pool_id attribute to ensure it is in an 'Active' state 
+  # user_pool_id attribute to ensure it is in an 'Active' state
   user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
 }
 `, rName, filename)
@@ -673,34 +673,62 @@ resource "aws_cognito_user_pool_ui_customization" "test" {
 func testAccAWSCognitoUserPoolUICustomizationConfig_ClientAndAllCustomizations_CSS(rName, allCSS, clientCSS string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
- name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
- domain       = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_client" "test" {
- name         = %[1]q
- user_pool_id = aws_cognito_user_pool.test.id
+  name         = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 
 resource "aws_cognito_user_pool_ui_customization" "ui_all" {
   css = %q
 
   # Refer to the aws_cognito_user_pool_domain resource's
-  # user_pool_id attribute to ensure it is in an 'Active' state 
+  # user_pool_id attribute to ensure it is in an 'Active' state
   user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
 }
 
 resource "aws_cognito_user_pool_ui_customization" "ui_client" {
-  client_id  = aws_cognito_user_pool_client.test.id  
-  css        = %q
+  client_id = aws_cognito_user_pool_client.test.id
+  css       = %q
 
   # Refer to the aws_cognito_user_pool_domain resource's
-  # user_pool_id attribute to ensure it is in an 'Active' state 
+  # user_pool_id attribute to ensure it is in an 'Active' state
   user_pool_id = aws_cognito_user_pool_domain.test.user_pool_id
 }
 `, rName, allCSS, clientCSS)
+}
+
+// testAccAWSCognitoUserPoolUICustomizationExists validates the API object such that
+// we define resource existence when the object is non-nil and
+// at least one of the object's fields are non-nil with the exception of CSSVersion
+// which remains as an artifact even after UI customization removal
+func testAccAWSCognitoUserPoolUICustomizationExists(ui *cognitoidentityprovider.UICustomizationType) bool {
+	if ui == nil {
+		return false
+	}
+
+	if ui.CSS != nil {
+		return true
+	}
+
+	if ui.CreationDate != nil {
+		return true
+	}
+
+	if ui.ImageUrl != nil {
+		return true
+	}
+
+	if ui.LastModifiedDate != nil {
+		return true
+	}
+
+	return false
 }
