@@ -27,7 +27,9 @@ var serviceNames = []string{
 	"appstream",
 	"appsync",
 	"athena",
+	"autoscaling",
 	"backup",
+	"batch",
 	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
@@ -35,9 +37,11 @@ var serviceNames = []string{
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
+	"codeartifact",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarconnections",
 	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
@@ -92,6 +96,7 @@ var serviceNames = []string{
 	"mediastore",
 	"mq",
 	"neptune",
+	"networkfirewall",
 	"networkmanager",
 	"opsworks",
 	"organizations",
@@ -107,10 +112,13 @@ var serviceNames = []string{
 	"sagemaker",
 	"secretsmanager",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
+	"signer",
 	"sns",
 	"sqs",
 	"ssm",
+	"ssoadmin",
 	"storagegateway",
 	"swf",
 	"synthetics",
@@ -118,7 +126,9 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
+	"worklink",
 	"workspaces",
+	"xray",
 }
 
 type TemplateData struct {
@@ -139,9 +149,11 @@ func main() {
 		"TagInputCustomValue":             keyvaluetags.ServiceTagInputCustomValue,
 		"TagInputIdentifierField":         keyvaluetags.ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": keyvaluetags.ServiceTagInputIdentifierRequiresSlice,
-		"TagInputResourceTypeField":       keyvaluetags.ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               keyvaluetags.ServiceTagInputTagsField,
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
+		"TagResourceTypeField":            keyvaluetags.ServiceTagResourceTypeField,
+		"TagTypeAdditionalBoolFields":     keyvaluetags.ServiceTagTypeAdditionalBoolFields,
+		"TagTypeIdentifierField":          keyvaluetags.ServiceTagTypeIdentifierField,
 		"Title":                           strings.Title,
 		"UntagFunction":                   keyvaluetags.ServiceUntagFunction,
 		"UntagInputCustomValue":           keyvaluetags.ServiceUntagInputCustomValue,
@@ -202,9 +214,15 @@ import (
 // {{ . | Title }}UpdateTags updates {{ . }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if . | TagInputResourceTypeField }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
+{{- if  . | TagTypeAdditionalBoolFields }}
+func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, oldTagsSet interface{}, newTagsSet interface{}) error {
+	oldTags := {{ . | Title }}KeyValueTags(oldTagsSet, identifier{{ if . | TagResourceTypeField }}, resourceType{{ end }})
+	newTags := {{ . | Title }}KeyValueTags(newTagsSet, identifier{{ if . | TagResourceTypeField }}, resourceType{{ end }})
+{{- else }}
+func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
+{{- end }}
 	{{- if eq (. | TagFunction) (. | UntagFunction) }}
 	removedTags := oldTags.Removed(newTags)
 	updatedTags := oldTags.Updated(newTags)
@@ -215,13 +233,15 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	}
 
 	input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
+		{{- if not ( . | TagTypeIdentifierField ) }}
 		{{- if . | TagInputIdentifierRequiresSlice }}
 		{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 		{{- else }}
 		{{ . | TagInputIdentifierField }}:   aws.String(identifier),
 		{{- end }}
-		{{- if . | TagInputResourceTypeField }}
-		{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+		{{- if . | TagResourceTypeField }}
+		{{ . | TagResourceTypeField }}:      aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 	}
 
@@ -254,13 +274,15 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		for _, removedTags := range removedTags.Chunks({{ . | TagFunctionBatchSize }}) {
 		{{- end }}
 		input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
+			{{- if not ( . | TagTypeIdentifierField ) }}
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 			{{- else }}
 			{{ . | TagInputIdentifierField }}:   aws.String(identifier),
 			{{- end }}
-			{{- if . | TagInputResourceTypeField }}
-			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+			{{- if . | TagResourceTypeField }}
+			{{ . | TagResourceTypeField }}: aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- if . | UntagInputRequiresTagType }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
@@ -288,18 +310,20 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		for _, updatedTags := range updatedTags.Chunks({{ . | TagFunctionBatchSize }}) {
 		{{- end }}
 		input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
+			{{- if not ( . | TagTypeIdentifierField ) }}
 			{{- if . | TagInputIdentifierRequiresSlice }}
-			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+			{{ . | TagInputIdentifierField }}: aws.StringSlice([]string{identifier}),
 			{{- else }}
-			{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+			{{ . | TagInputIdentifierField }}: aws.String(identifier),
 			{{- end }}
-			{{- if . | TagInputResourceTypeField }}
-			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+			{{- if . | TagResourceTypeField }}
+			{{ . | TagResourceTypeField }}:    aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- if . | TagInputCustomValue }}
-			{{ . | TagInputTagsField }}:         {{ . | TagInputCustomValue }},
+			{{ . | TagInputTagsField }}:       {{ . | TagInputCustomValue }},
 			{{- else }}
-			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{ . | TagInputTagsField }}:       updatedTags.IgnoreAws().{{ . | Title }}Tags(),
 			{{- end }}
 		}
 
