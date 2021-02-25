@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceAwsAcmpcaPrivateCertificate() *schema.Resource {
+func dataSourceAwsAcmpcaCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsAcmpcaPrivateCertificateRead,
+		Read: dataSourceAwsAcmpcaCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -36,7 +36,7 @@ func dataSourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 	certificateArn := d.Get("arn").(string)
 
@@ -49,7 +49,7 @@ func dataSourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta inte
 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate: %s", err)
+		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", certificateArn, err)
 	}
 
 	d.SetId(certificateArn)

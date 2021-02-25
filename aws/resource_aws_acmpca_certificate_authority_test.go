@@ -671,11 +671,11 @@ resource "aws_acmpca_certificate_authority" "test" {
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 
-  certificate       = aws_acmpca_private_certificate.test.certificate
-  certificate_chain = aws_acmpca_private_certificate.test.certificate_chain
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "test" {
+resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"

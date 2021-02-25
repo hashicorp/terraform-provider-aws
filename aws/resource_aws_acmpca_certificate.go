@@ -17,11 +17,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
+func resourceAwsAcmpcaCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsAcmpcaPrivateCertificateCreate,
-		Read:   resourceAwsAcmpcaPrivateCertificateRead,
-		Delete: resourceAwsAcmpcaPrivateCertificateRevoke,
+		Create: resourceAwsAcmpcaCertificateCreate,
+		Read:   resourceAwsAcmpcaCertificateRead,
+		Delete: resourceAwsAcmpcaCertificateRevoke,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
@@ -78,7 +78,7 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 	}
 }
 
-func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
 	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
@@ -128,10 +128,10 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityArn, d.Id(), err)
 	}
 
-	return resourceAwsAcmpcaPrivateCertificateRead(d, meta)
+	return resourceAwsAcmpcaCertificateRead(d, meta)
 }
 
-func resourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
 	getCertificateInput := &acmpca.GetCertificateInput{
@@ -158,7 +158,7 @@ func resourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))

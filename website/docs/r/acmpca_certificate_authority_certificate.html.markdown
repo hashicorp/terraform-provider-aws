@@ -18,11 +18,11 @@ Associates a certificate with an AWS Certificate Manager Private Certificate Aut
 resource "aws_acmpca_certificate_authority_certificate" "example" {
   certificate_authority_arn = aws_acmpca_certificate_authority.example.arn
 
-  certificate       = aws_acmpca_private_certificate.example.certificate
-  certificate_chain = aws_acmpca_private_certificate.example.certificate_chain
+  certificate       = aws_acmpca_certificate.example.certificate
+  certificate_chain = aws_acmpca_certificate.example.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "example" {
+resource "aws_acmpca_certificate" "example" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
   certificate_signing_request = aws_acmpca_certificate_authority.example.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
@@ -57,11 +57,11 @@ Note that the certificate for the subordinate certificate authority must be issu
 resource "aws_acmpca_certificate_authority_certificate" "subordinate" {
   certificate_authority_arn = aws_acmpca_certificate_authority.subordinate.arn
 
-  certificate       = aws_acmpca_private_certificate.subordinate.certificate
-  certificate_chain = aws_acmpca_private_certificate.subordinate.certificate_chain
+  certificate       = aws_acmpca_certificate.subordinate.certificate
+  certificate_chain = aws_acmpca_certificate.subordinate.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "subordinate" {
+resource "aws_acmpca_certificate" "subordinate" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
   certificate_signing_request = aws_acmpca_certificate_authority.subordinate.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
@@ -93,7 +93,7 @@ resource "aws_acmpca_certificate_authority_certificate" "root" {
   # ...
 }
 
-resource "aws_acmpca_private_certificate" "root" {
+resource "aws_acmpca_certificate" "root" {
   # ...
 }
 

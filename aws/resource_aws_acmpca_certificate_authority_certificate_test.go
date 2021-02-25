@@ -27,8 +27,8 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_private_certificate.test", "certificate"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_private_certificate.test", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
 			},
 		},
@@ -50,8 +50,8 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_private_certificate.test", "certificate"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_private_certificate.test", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
 			},
 		},
@@ -86,11 +86,11 @@ func testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(rName string) string
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 
-  certificate       = aws_acmpca_private_certificate.test.certificate
-  certificate_chain = aws_acmpca_private_certificate.test.certificate_chain
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "test" {
+resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
@@ -124,11 +124,11 @@ func testAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(rName string)
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
 
-  certificate       = aws_acmpca_private_certificate.test.certificate
-  certificate_chain = aws_acmpca_private_certificate.test.certificate_chain
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "test" {
+resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
@@ -170,11 +170,11 @@ resource "aws_acmpca_certificate_authority" "root" {
 resource "aws_acmpca_certificate_authority_certificate" "root" {
   certificate_authority_arn = aws_acmpca_certificate_authority.root.arn
 
-  certificate       = aws_acmpca_private_certificate.root.certificate
-  certificate_chain = aws_acmpca_private_certificate.root.certificate_chain
+  certificate       = aws_acmpca_certificate.root.certificate
+  certificate_chain = aws_acmpca_certificate.root.certificate_chain
 }
 
-resource "aws_acmpca_private_certificate" "root" {
+resource "aws_acmpca_certificate" "root" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
   certificate_signing_request = aws_acmpca_certificate_authority.root.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"

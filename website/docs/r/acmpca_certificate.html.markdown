@@ -1,21 +1,21 @@
 ---
 subcategory: "ACM PCA"
 layout: "aws"
-page_title: "AWS: aws_acmpca_private_certificate"
+page_title: "AWS: aws_acmpca_certificate"
 description: |-
-  Provides a resource to manage AWS Certificate Manager Private Certificate Issuing
+  Provides a resource to issue a certificate using AWS Certificate Manager Private Certificate Authority (ACM PCA)
 ---
 
-# Resource: aws_acmpca_private_certificate
+# Resource: aws_acmpca_certificate
 
-Provides a resource to manage AWS Certificate Manager Private Certificate Issuing (ACM PCA Certificate Issuing). It is to be used when signing a certificate that was generated outside AWS and have `aws_acmpca_certificate_authority` as the CA.
+Provides a resource to issue a certificate using AWS Certificate Manager Private Certificate Authority (ACM PCA).
 
 ## Example Usage
 
 ### Basic
 
 ```terraform
-resource "aws_acmpca_private_certificate" "example" {
+resource "aws_acmpca_certificate" "example" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
   certificate_signing_request = tls_cert_request.csr.cert_request_pem
   signing_algorithm           = "SHA256WITHRSA"
@@ -67,16 +67,16 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the certificate.
-* `certificate` - Certificate PEM.
-* `certificate_chain` - Certificate chain that includes any intermediate certificates and chains up to root CA that you used to sign your private certificate.
+* `certificate` - The PEM-encoded certificate value.
+* `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
 ## Timeouts
 
-`aws_acmpca_private_certificate` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+`aws_acmpca_certificate` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
 * `create` - (Default `5m`) How long to wait for a certificate authority to issue a certificate.
 
 ## Import
 
-`aws_acmpca_private_certificate` can not be imported at this time.
+`aws_acmpca_certificate` can not be imported at this time.

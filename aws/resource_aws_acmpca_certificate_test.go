@@ -8,25 +8,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
+func TestAccAwsAcmpcaCertificate_Basic(t *testing.T) {
 	t.Skip("Non-root certificates not yet supported")
 
-	resourceName := "aws_acmpca_private_certificate.test"
+	resourceName := "aws_acmpca_certificate.test"
 	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAcmpcaPrivateCertificateDestroy,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaPrivateCertificateConfig_Basic(tlsPemEscapeNewlines(csr)),
+				Config: testAccAwsAcmpcaCertificateConfig_Basic(tlsPemEscapeNewlines(csr)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName),
+					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
@@ -41,19 +42,20 @@ func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsAcmpcaPrivateCertificate_RootCertificate(t *testing.T) {
-	resourceName := "aws_acmpca_private_certificate.test"
+func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAcmpcaPrivateCertificateDestroy,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaPrivateCertificateConfig_RootCertificate(),
+				Config: testAccAwsAcmpcaCertificateConfig_RootCertificate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName),
+					testAccCheckAwsAcmpcaCertificateExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
@@ -69,11 +71,11 @@ func TestAccAwsAcmpcaPrivateCertificate_RootCertificate(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAcmpcaPrivateCertificateDestroy(s *terraform.State) error {
+func testAccCheckAwsAcmpcaCertificateDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).acmpcaconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_private_certificate" {
+		if rs.Type != "aws_acmpca_certificate" {
 			continue
 		}
 
@@ -102,7 +104,7 @@ func testAccCheckAwsAcmpcaPrivateCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAwsAcmpcaCertificateExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -130,9 +132,9 @@ func testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName string) resource
 }
 
 // nolint:unused
-func testAccAwsAcmpcaPrivateCertificateConfig_Basic(csr string) string {
+func testAccAwsAcmpcaCertificateConfig_Basic(csr string) string {
 	return fmt.Sprintf(`
-resource "aws_acmpca_private_certificate" "test" {
+resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = "%[1]s"
   signing_algorithm           = "SHA256WITHRSA"
@@ -156,9 +158,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, csr)
 }
 
-func testAccAwsAcmpcaPrivateCertificateConfig_RootCertificate() string {
-	return `
-resource "aws_acmpca_private_certificate" "test" {
+func testAccAwsAcmpcaCertificateConfig_RootCertificate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate" "test" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
@@ -178,13 +180,13 @@ resource "aws_acmpca_certificate_authority" "test" {
     signing_algorithm = "SHA512WITHRSA"
 
     subject {
-      common_name = "terraformtesting.com"
+      common_name = "%[1]s.com"
     }
   }
 }
 
 data "aws_partition" "current" {}
-`
+`, rName)
 }
 
 func TestValidateAcmPcaTemplateArn(t *testing.T) {
