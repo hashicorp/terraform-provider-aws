@@ -4,11 +4,14 @@ FEATURES:
 
 * **New Data Source:** `aws_apigatewayv2_api` ([#13883](https://github.com/hashicorp/terraform-provider-aws/issues/13883))
 * **New Data Source:** `aws_apigatewayv2_apis` ([#13883](https://github.com/hashicorp/terraform-provider-aws/issues/13883))
+* **New Resource:** `aws_cognito_user_pool_ui_customization` ([#8114](https://github.com/hashicorp/terraform-provider-aws/issues/8114))
 * **New Resource:** `aws_ecrpublic_repository` ([#16865](https://github.com/hashicorp/terraform-provider-aws/issues/16865))
 
 ENHANCEMENTS:
 
+* provider: Add validation for `role_arn`, `policy_arns`, and `policy` ([#12642](https://github.com/hashicorp/terraform-provider-aws/issues/12642))
 * resource/aws_dms_certificate: Add `tags` argument ([#17163](https://github.com/hashicorp/terraform-provider-aws/issues/17163))
+* resource/aws_gamelift_build: Support all valid operating system values ([#17764](https://github.com/hashicorp/terraform-provider-aws/issues/17764))
 
 BUG FIXES:
 
