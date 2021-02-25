@@ -194,6 +194,31 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
+												"launch_template_specification": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"launch_template_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"launch_template_name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"version": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Default:  "$Default",
+															},
+														},
+													},
+												},
 												"weighted_capacity": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -1678,6 +1703,10 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 		launchTemplateOverrides.InstanceType = aws.String(v.(string))
 	}
 
+	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
+		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
+	}
+
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
 		launchTemplateOverrides.WeightedCapacity = aws.String(v.(string))
 	}
@@ -1769,8 +1798,9 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 			continue
 		}
 		m := map[string]interface{}{
-			"instance_type":     aws.StringValue(launchTemplateOverride.InstanceType),
-			"weighted_capacity": aws.StringValue(launchTemplateOverride.WeightedCapacity),
+			"instance_type":                 aws.StringValue(launchTemplateOverride.InstanceType),
+			"launch_template_specification": flattenAutoScalingLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
+			"weighted_capacity":             aws.StringValue(launchTemplateOverride.WeightedCapacity),
 		}
 		l[i] = m
 	}
