@@ -134,7 +134,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 
 	d.SetId(meta.(*AWSClient).partition)
 
-	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings, meta)); err != nil {
 		return fmt.Errorf("error setting resource tag mapping list: %w", err)
 	}
 
@@ -159,13 +159,14 @@ func expandAwsResourceGroupsTaggingAPITagFilters(filters []interface{}) []*resou
 	return result
 }
 
-func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
+func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping, meta interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         keyvaluetags.ResourcegroupstaggingapiKeyValueTags(i.Tags).IgnoreAws().Map(),
+			"tags":         keyvaluetags.ResourcegroupstaggingapiKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
