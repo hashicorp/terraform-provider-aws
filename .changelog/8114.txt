@@ -1,7 +1,3 @@
-```release-note:enhancement
-resource/aws_cognito_user_pool: Add `ui_customization` argument
-```
-
-```release-note:enhancement
-resource/aws_cognito_user_pool_client: Add `ui_customization` argument
+```release-note:new-resource
+aws_cognito_user_pool_ui_customization
 ```

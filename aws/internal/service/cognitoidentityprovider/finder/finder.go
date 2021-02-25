@@ -3,18 +3,16 @@ package finder
 import (
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
-// CognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId, if provided.
+// CognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
 // Returns nil if no UI Customization is found.
-func CognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId *string) (*cognitoidentityprovider.UICustomizationType, error) {
+func CognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
 	input := &cognitoidentityprovider.GetUICustomizationInput{
-		UserPoolId: userPoolId,
-	}
-
-	if clientId != nil {
-		input.ClientId = clientId
+		ClientId:   aws.String(clientId),
+		UserPoolId: aws.String(userPoolId),
 	}
 
 	output, err := conn.GetUICustomization(input)
@@ -29,7 +27,6 @@ func CognitoUserPoolUICustomization(conn *cognitoidentityprovider.CognitoIdentit
 
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil
-	// to prevent non-empty plans of an empty ui_customization block
 	if reflect.DeepEqual(output.UICustomization, &cognitoidentityprovider.UICustomizationType{}) {
 		return nil, nil
 	}

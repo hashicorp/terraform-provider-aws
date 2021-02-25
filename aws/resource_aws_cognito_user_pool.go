@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,13 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cognitoidentityprovider/finder"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -567,41 +562,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
-			"ui_customization": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"css": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"css_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"image_file": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"image_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			// A "ui_customization" cannot be removed from a Cognito User Pool resource;
-			// thus, resource recreation is triggered on configuration block removal
-			customdiff.ForceNewIfChange("ui_customization", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
-			}),
-		),
 	}
 }
 
@@ -973,25 +934,6 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting software_token_mfa_configuration: %w", err)
 	}
 
-	// Retrieve UICustomization iff the User Pool is associated with a Domain
-	if resp.UserPool.Domain != nil {
-		uiCustomization, err := finder.CognitoUserPoolUICustomization(conn, resp.UserPool.Id, nil)
-
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito User Pool (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Cognito User Pool (%s) UI customization: %w", d.Id(), err)
-		}
-
-		if err := d.Set("ui_customization", flattenCognitoUserPoolUICustomization(d, uiCustomization)); err != nil {
-			return fmt.Errorf("error setting ui_customization: %w", err)
-		}
-	}
-
 	return nil
 }
 
@@ -1252,26 +1194,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChange("ui_customization") {
-		if v, ok := d.GetOk("ui_customization"); ok {
-			input, err := expandCognitoUserPoolUICustomizationInput(v.([]interface{}))
-
-			if err != nil {
-				return fmt.Errorf("error updating Cognito User pool (%s) UI customization: %w", d.Id(), err)
-			}
-
-			if input != nil {
-				input.UserPoolId = aws.String(d.Id())
-
-				_, err := conn.SetUICustomization(input)
-
-				if err != nil {
-					return fmt.Errorf("error updating Cognito User pool (%s) UI customization: %w", d.Id(), err)
-				}
-			}
-		}
-	}
-
 	return resourceAwsCognitoUserPoolRead(d, meta)
 }
 
@@ -1390,33 +1312,6 @@ func expandCognitoUserPoolAccountRecoverySettingConfig(config map[string]interfa
 	return configs
 }
 
-func expandCognitoUserPoolUICustomizationInput(l []interface{}) (*cognitoidentityprovider.SetUICustomizationInput, error) {
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-
-	tfMap, ok := l[0].(map[string]interface{})
-	if !ok {
-		return nil, nil
-	}
-
-	input := &cognitoidentityprovider.SetUICustomizationInput{}
-
-	if v, ok := tfMap["css"].(string); ok && v != "" {
-		input.CSS = aws.String(v)
-	}
-
-	if v, ok := tfMap["image_file"].(string); ok && v != "" {
-		imgFile, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			return nil, err
-		}
-		input.ImageFile = imgFile
-	}
-
-	return input, nil
-}
-
 func flattenCognitoUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
 	if config == nil {
 		return nil
@@ -1437,31 +1332,4 @@ func flattenCognitoUserPoolAccountRecoverySettingConfig(config *cognitoidentityp
 	settings["recovery_mechanism"] = mechanisms
 
 	return []interface{}{settings}
-}
-
-func flattenCognitoUserPoolUICustomization(d *schema.ResourceData, ui *cognitoidentityprovider.UICustomizationType) []interface{} {
-	if ui == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"css":         aws.StringValue(ui.CSS),
-		"css_version": aws.StringValue(ui.CSSVersion),
-		"image_url":   aws.StringValue(ui.ImageUrl),
-	}
-
-	if ui.ImageUrl != nil {
-		// repopulate image_file content from state, if available,
-		// else, the value will be overwritten
-		if v, ok := d.GetOk("ui_customization"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap, ok := v.([]interface{})[0].(map[string]interface{})
-			if ok {
-				if imgFile, ok := tfMap["image_file"].(string); ok {
-					m["image_file"] = imgFile
-				}
-			}
-		}
-	}
-
-	return []interface{}{m}
 }
