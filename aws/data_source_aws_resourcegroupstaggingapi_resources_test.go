@@ -175,9 +175,3 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
   exclude_compliant_resources = false
 }
 `
-
-const testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeConfig = `
-data "aws_resourcegroupstaggingapi_resources" "test" {
-  resource_type_filters = ["ec2:instance"]
-}
-`
