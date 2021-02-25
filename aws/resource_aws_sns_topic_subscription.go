@@ -246,15 +246,15 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("subscription_role_arn") {
 		protocol := d.Get("protocol").(string)
-		subscription_role_arn := d.Get("subscription_role_arn").(string)
-		if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
+		subscriptionRoleARN := d.Get("subscription_role_arn").(string)
+		if strings.Contains(protocol, "firehose") && subscriptionRoleARN == "" {
 			return fmt.Errorf("protocol firehose must contain subscription_role_arn!")
 		}
-		if !strings.Contains(protocol, "firehose") && subscription_role_arn != "" {
+		if !strings.Contains(protocol, "firehose") && subscriptionRoleARN != "" {
 			return fmt.Errorf("only protocol firehose supports subscription_role_arn!")
 		}
 
-		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscription_role_arn); err != nil {
+		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscriptionRoleARN); err != nil {
 			return err
 		}
 	}
@@ -287,33 +287,33 @@ func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interfac
 
 // Assembles supplied attributes into a single map - empty/default values are excluded from the map
 func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]*string) {
-	delivery_policy := d.Get("delivery_policy").(string)
-	filter_policy := d.Get("filter_policy").(string)
-	raw_message_delivery := d.Get("raw_message_delivery").(bool)
-	redrive_policy := d.Get("redrive_policy").(string)
-	subscription_role_arn := d.Get("subscription_role_arn").(string)
+	deliveryPolicy := d.Get("delivery_policy").(string)
+	filterPolicy := d.Get("filter_policy").(string)
+	rawMessageDelivery := d.Get("raw_message_delivery").(bool)
+	redrivePolicy := d.Get("redrive_policy").(string)
+	subscriptionRoleARN := d.Get("subscription_role_arn").(string)
 
 	// Collect attributes if available
 	attributes := map[string]*string{}
 
-	if delivery_policy != "" {
-		attributes["DeliveryPolicy"] = aws.String(delivery_policy)
+	if deliveryPolicy != "" {
+		attributes["DeliveryPolicy"] = aws.String(deliveryPolicy)
 	}
 
-	if filter_policy != "" {
-		attributes["FilterPolicy"] = aws.String(filter_policy)
+	if filterPolicy != "" {
+		attributes["FilterPolicy"] = aws.String(filterPolicy)
 	}
 
-	if raw_message_delivery {
-		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", raw_message_delivery))
+	if rawMessageDelivery {
+		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", rawMessageDelivery))
 	}
 
-	if subscription_role_arn != "" {
-		attributes["SubscriptionRoleArn"] = aws.String(subscription_role_arn)
+	if subscriptionRoleARN != "" {
+		attributes["SubscriptionRoleArn"] = aws.String(subscriptionRoleARN)
 	}
 
-	if redrive_policy != "" {
-		attributes["RedrivePolicy"] = aws.String(redrive_policy)
+	if redrivePolicy != "" {
+		attributes["RedrivePolicy"] = aws.String(redrivePolicy)
 	}
 
 	return attributes
