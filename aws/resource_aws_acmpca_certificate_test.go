@@ -42,6 +42,36 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 	})
 }
 
+func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate.test"
+	rootCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.root"
+	subordinateCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", rootCertificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_signing_request", subordinateCertificateAuthorityResourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttr(resourceName, "validity_length", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validity_unit", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA512WITHRSA"),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/SubordinateCACertificate_PathLen0/V1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
@@ -155,6 +185,69 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = "%[1]s.com"
     }
   }
+}
+
+data "aws_partition" "current" {}
+`, rName)
+}
+
+func testAccAwsAcmpcaCertificateConfig_SubordinateCertificate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/SubordinateCACertificate_PathLen0/V1"
+
+  validity_length = 1
+  validity_unit   = "YEARS"
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "SUBORDINATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_2048"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "sub.%[1]s.com"
+    }
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "root" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+
+resource "aws_acmpca_certificate_authority_certificate" "root" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.root.arn
+
+  certificate       = aws_acmpca_certificate.root.certificate
+  certificate_chain = aws_acmpca_certificate.root.certificate_chain
+}
+
+resource "aws_acmpca_certificate" "root" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.root.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity_length = 2
+  validity_unit   = "YEARS"
 }
 
 data "aws_partition" "current" {}
