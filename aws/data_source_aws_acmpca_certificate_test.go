@@ -20,7 +20,7 @@ func TestAccDataSourceAwsAcmpcaCertificate_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
+				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
 			},
 			{
 				Config: testAccDataSourceAwsAcmpcaCertificateConfig_ARN(rName),

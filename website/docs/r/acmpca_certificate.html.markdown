@@ -70,13 +70,6 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate` - The PEM-encoded certificate value.
 * `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
-## Timeouts
-
-`aws_acmpca_certificate` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
-
-* `create` - (Default `5m`) How long to wait for a certificate authority to issue a certificate.
-
 ## Import
 
 `aws_acmpca_certificate` can not be imported at this time.

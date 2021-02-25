@@ -46,10 +46,9 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"certificate_signing_request": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: normalizeCert,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"signing_algorithm": {
 				Type:         schema.TypeString,
@@ -144,7 +143,7 @@ func resourceAwsAcmpcaCertificateRead(d *schema.ResourceData, meta interface{}) 
 	certificateOutput, err := conn.GetCertificate(getCertificateInput)
 	if err != nil {
 		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACM PCA Certificate %q not found - removing from state", d.Id())
+			log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -163,12 +162,12 @@ func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
-		log.Printf("[WARN] Failed to parse certificate %q", d.Id())
+		log.Printf("[WARN] Failed to parse ACM PCA Certificate (%s)", d.Id())
 		return nil
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return fmt.Errorf("Failed to parse ACM PCA Certificate: %s", err)
+		return fmt.Errorf("Failed to parse ACM PCA Certificate (%s): %w", d.Id(), err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{
@@ -185,7 +184,7 @@ func resourceAwsAcmpcaCertificateRevoke(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error revoking ACM PCA Certificate: %s", err)
+		return fmt.Errorf("error revoking ACM PCA Certificate (%s): %w", d.Id(), err)
 	}
 
 	return nil

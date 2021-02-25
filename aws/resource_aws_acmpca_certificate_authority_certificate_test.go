@@ -35,6 +35,39 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 	})
 }
 
+func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) {
+	var v acmpca.GetCertificateAuthorityCertificateOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate_authority_certificate.test"
+	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
+				),
+			},
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityCertificateExists(updatedResourceName, &v),
+					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
+					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate", "aws_acmpca_certificate.updated", "certificate"),
+					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_chain", "aws_acmpca_certificate.updated", "certificate_chain"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -91,6 +124,44 @@ resource "aws_acmpca_certificate_authority_certificate" "test" {
 }
 
 resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity_length = 1
+  validity_unit   = "YEARS"
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName)
+}
+
+func testAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority_certificate" "updated" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.updated.certificate
+  certificate_chain = aws_acmpca_certificate.updated.certificate_chain
+}
+
+resource "aws_acmpca_certificate" "updated" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"

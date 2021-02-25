@@ -13,35 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsAcmpcaCertificate_Basic(t *testing.T) {
-	t.Skip("Non-root certificates not yet supported")
-
-	resourceName := "aws_acmpca_certificate.test"
-	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsAcmpcaCertificateConfig_Basic(tlsPemEscapeNewlines(csr)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsAcmpcaCertificateExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
-					resource.TestCheckResourceAttr(resourceName, "validity_length", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validity_unit", "YEARS"),
-					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA256WITHRSA"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/EndEntityCertificate/V1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate.test"
@@ -65,6 +36,34 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validity_unit", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA512WITHRSA"),
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/RootCACertificate/V1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate.test"
+	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(rName, tlsPemEscapeNewlines(csr)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", csr),
+					resource.TestCheckResourceAttr(resourceName, "validity_length", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validity_unit", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA256WITHRSA"),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/EndEntityCertificate/V1"),
 				),
 			},
 		},
@@ -131,33 +130,6 @@ func testAccCheckAwsAcmpcaCertificateExists(resourceName string) resource.TestCh
 	}
 }
 
-// nolint:unused
-func testAccAwsAcmpcaCertificateConfig_Basic(csr string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate" "test" {
-  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
-  certificate_signing_request = "%[1]s"
-  signing_algorithm           = "SHA256WITHRSA"
-  validity_length             = 1
-  validity_unit               = "YEARS"
-}
-
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  type                            = "ROOT"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = "terraformtesting.com"
-    }
-  }
-}
-`, csr)
-}
-
 func testAccAwsAcmpcaCertificateConfig_RootCertificate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate" "test" {
@@ -187,6 +159,55 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 data "aws_partition" "current" {}
 `, rName)
+}
+
+func testAccAwsAcmpcaCertificateConfig_EndEntityCertificate(rName, csr string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+  certificate_signing_request = "%[2]s"
+  signing_algorithm           = "SHA256WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/EndEntityCertificate/V1"
+
+  validity_length             = 1
+  validity_unit               = "DAYS"
+}
+
+resource "aws_acmpca_certificate_authority" "root" {
+	permanent_deletion_time_in_days = 7
+	type                            = "ROOT"
+  
+	certificate_authority_configuration {
+	  key_algorithm     = "RSA_4096"
+	  signing_algorithm = "SHA512WITHRSA"
+  
+	  subject {
+		common_name = "%[1]s.com"
+	  }
+	}
+  }
+  
+  resource "aws_acmpca_certificate_authority_certificate" "root" {
+	certificate_authority_arn = aws_acmpca_certificate_authority.root.arn
+  
+	certificate       = aws_acmpca_certificate.root.certificate
+	certificate_chain = aws_acmpca_certificate.root.certificate_chain
+  }
+  
+  resource "aws_acmpca_certificate" "root" {
+	certificate_authority_arn   = aws_acmpca_certificate_authority.root.arn
+	certificate_signing_request = aws_acmpca_certificate_authority.root.certificate_signing_request
+	signing_algorithm           = "SHA512WITHRSA"
+  
+	template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+  
+	validity_length = 2
+	validity_unit   = "YEARS"
+  }
+  
+  data "aws_partition" "current" {}
+  `, rName, csr)
 }
 
 func TestValidateAcmPcaTemplateArn(t *testing.T) {
