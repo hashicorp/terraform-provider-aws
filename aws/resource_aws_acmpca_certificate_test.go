@@ -38,6 +38,18 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/RootCACertificate/V1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_signing_request",
+					"signing_algorithm",
+					"template_arn",
+					"validity_length",
+					"validity_unit",
+				},
+			},
 		},
 	})
 }
@@ -68,6 +80,18 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/SubordinateCACertificate_PathLen0/V1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_signing_request",
+					"signing_algorithm",
+					"template_arn",
+					"validity_length",
+					"validity_unit",
+				},
+			},
 		},
 	})
 }
@@ -95,6 +119,18 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm", "SHA256WITHRSA"),
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "template_arn", "acm-pca", "template/EndEntityCertificate/V1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_signing_request",
+					"signing_algorithm",
+					"template_arn",
+					"validity_length",
+					"validity_unit",
+				},
 			},
 		},
 	})

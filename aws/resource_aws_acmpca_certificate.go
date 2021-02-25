@@ -5,6 +5,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,8 +23,19 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 		Create: resourceAwsAcmpcaCertificateCreate,
 		Read:   resourceAwsAcmpcaCertificateRead,
 		Delete: resourceAwsAcmpcaCertificateRevoke,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
+				authorityArn := re.FindString(d.Id())
+				if authorityArn == "" {
+					return nil, fmt.Errorf("Unexpected format for ID (%q), expected ACM PCA Certificate ARN", d.Id())
+				}
+
+				d.Set("certificate_authority_arn", authorityArn)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
