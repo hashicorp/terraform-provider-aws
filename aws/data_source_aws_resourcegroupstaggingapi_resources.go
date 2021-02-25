@@ -26,7 +26,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"tag_filters"},
+				ConflictsWith: []string{"filter"},
 			},
 			"resource_type_filters": {
 				Type:          schema.TypeSet,
@@ -35,7 +35,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"resource_arn_list"},
 			},
-			"tag_filters": {
+			"filter": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 50,
@@ -110,7 +110,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 		input.ResourceARNList = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("tag_filters"); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.TagFilters = expandAwsResourceGroupsTaggingAPITagFilters(v.([]interface{}))
 	}
 

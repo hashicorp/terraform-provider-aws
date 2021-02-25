@@ -126,7 +126,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  tag_filters {
+  filter {
     key = "Key"
   }
 

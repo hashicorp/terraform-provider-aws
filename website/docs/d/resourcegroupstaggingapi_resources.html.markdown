@@ -22,7 +22,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {}
 
 ```hcl
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  tag_filters {
+  filter {
     key    = "tag-key"
     values = ["tag-value-1", "tag-value-2"]
   }
@@ -50,10 +50,10 @@ The following arguments are supported:
 
 ### Tag Filters
 
-A `tag_filters` block supports the following arguments:
+A `filter` block supports the following arguments:
 
-If you do specify `tag_filters`, the response returns only those resources that are currently associated with the specified tag.
-If you don't specify a `tag_filters`, the response includes all resources that were ever associated with tags. Resources that currently don't have associated tags are shown with an empty tag set.
+If you do specify `filter`, the response returns only those resources that are currently associated with the specified tag.
+If you don't specify a `filter`, the response includes all resources that were ever associated with tags. Resources that currently don't have associated tags are shown with an empty tag set.
 
 * `key` - (Required) One part of a key-value pair that makes up a tag.
 * `values` - (Optional) The optional part of a key-value pair that make up a tag.
