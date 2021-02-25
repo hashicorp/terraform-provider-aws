@@ -195,6 +195,7 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 	d.Set("owner_id", attributes["Owner"])
 	d.Set("protocol", attributes["Protocol"])
 	d.Set("redrive_policy", attributes["RedrivePolicy"])
+	d.Set("subscription_role_arn", attributes["SubscriptionRoleArn"])
 	d.Set("topic_arn", attributes["TopicArn"])
 
 	d.Set("confirmation_was_authenticated", false)
@@ -247,10 +248,10 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		protocol := d.Get("protocol").(string)
 		subscription_role_arn := d.Get("subscription_role_arn").(string)
 		if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
-			return fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
+			return fmt.Errorf("protocol firehose must contain subscription_role_arn!")
 		}
 		if !strings.Contains(protocol, "firehose") && subscription_role_arn != "" {
-			return fmt.Errorf("Only protocol firehose supports subscription_role_arn!")
+			return fmt.Errorf("only protocol firehose supports subscription_role_arn!")
 		}
 
 		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscription_role_arn); err != nil {
