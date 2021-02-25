@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -463,21 +464,34 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
-	input := &acmpca.DeleteCertificateAuthorityInput{
+	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
+	updateInput := &acmpca.UpdateCertificateAuthorityInput{
+		CertificateAuthorityArn: aws.String(d.Id()),
+		Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+	}
+	_, err := conn.UpdateCertificateAuthority(updateInput)
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+	if err != nil && !tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority must be in the ACTIVE or DISABLED state to be updated") {
+		return fmt.Errorf("error setting ACM PCA Certificate Authority (%s) to DISABLED status before deleting: %w", d.Id(), err)
+	}
+
+	deleteInput := &acmpca.DeleteCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
 	if v, exists := d.GetOk("permanent_deletion_time_in_days"); exists {
-		input.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
+		deleteInput.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Deleting ACM PCA Certificate Authority: %s", input)
-	_, err := conn.DeleteCertificateAuthority(input)
+	log.Printf("[DEBUG] Deleting ACM PCA Certificate Authority: %s", deleteInput)
+	_, err = conn.DeleteCertificateAuthority(deleteInput)
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting ACM PCA Certificate Authority: %s", err)
+		return fmt.Errorf("error deleting ACM PCA Certificate Authority (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -14,7 +14,15 @@ Provides a resource to manage AWS Certificate Manager Private Certificate Issuin
 
 ### Basic
 
-```hcl
+```terraform
+resource "aws_acmpca_private_certificate" "example" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
+  certificate_signing_request = tls_cert_request.csr.cert_request_pem
+  signing_algorithm           = "SHA256WITHRSA"
+  validity_length             = 1
+  validity_unit               = "YEARS"
+}
+
 resource "aws_acmpca_certificate_authority" "example" {
   private_certificate_configuration {
     key_algorithm     = "RSA_4096"
@@ -40,14 +48,6 @@ resource "tls_cert_request" "csr" {
     common_name = "example"
   }
 }
-
-resource "aws_acmpca_private_certificate" "example" {
-  certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
-  certificate_signing_request = tls_cert_request.csr.cert_request_pem
-  signing_algorithm           = "SHA256WITHRSA"
-  validity_length             = 1
-  validity_unit               = "YEARS"
-}
 ```
 
 ## Argument Reference
@@ -66,7 +66,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Amazon Resource Name (ARN) of the certificate.
 * `arn` - Amazon Resource Name (ARN) of the certificate.
 * `certificate` - Certificate PEM.
 * `certificate_chain` - Certificate chain that includes any intermediate certificates and chains up to root CA that you used to sign your private certificate.

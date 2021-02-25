@@ -196,6 +196,31 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	})
 }
 
+func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
+	var certificateAuthority acmpca.CertificateAuthority
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_acmpca_certificate_authority.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName, &certificateAuthority),
+					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					// Since the status of the CA is changed by importing the certificate in
+					// aws_acmpca_certificate_authority_certificate, the value of `status` is no longer accurate
+					// resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusActive),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_CustomCname(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -625,6 +650,44 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `, enabled, certificateAuthorityType, rName)
+}
+
+func testAccAwsAcmpcaCertificateAuthorityConfig_WithRootCertificate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_private_certificate.test.certificate
+  certificate_chain = aws_acmpca_private_certificate.test.certificate_chain
+}
+
+resource "aws_acmpca_private_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity_length = 1
+  validity_unit   = "YEARS"
+}
+
+data "aws_partition" "current" {}
+`, rName)
 }
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Required = `

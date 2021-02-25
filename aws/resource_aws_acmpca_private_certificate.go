@@ -25,7 +25,6 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
-		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -82,8 +81,9 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
+	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
+		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
@@ -96,10 +96,24 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 		input.TemplateArn = aws.String(v)
 	}
 
-	log.Printf("[DEBUG] ACM PCA Issue Certificate: %s", input)
-	output, err := conn.IssueCertificate(input)
+	var output *acmpca.IssueCertificateOutput
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.IssueCertificate(input)
+		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.IssueCertificate(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate: %s", err)
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
@@ -111,7 +125,7 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 
 	err = conn.WaitUntilCertificateIssued(getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error waiting for ACM PCA to issue Certificate %q, error: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityArn, d.Id(), err)
 	}
 
 	return resourceAwsAcmpcaPrivateCertificateRead(d, meta)

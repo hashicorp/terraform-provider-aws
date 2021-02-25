@@ -163,10 +163,10 @@ resource "aws_acmpca_private_certificate" "test" {
   certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
   signing_algorithm           = "SHA512WITHRSA"
 
-  template_arn                = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
-  
-  validity_length             = 1
-  validity_unit               = "YEARS"
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity_length = 1
+  validity_unit   = "YEARS"
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
