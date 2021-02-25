@@ -397,7 +397,7 @@ func TestAccAWSSNSTopicSubscription_email(t *testing.T) {
 func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic_subscription.test_subscription"
-	ri := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -405,33 +405,16 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(ri, 1),
+				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("terraform-test-topic-%d:.+", ri))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "firehose"),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test_topic", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "subscription_role_arn", "aws_iam_role.firehose_role", "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"confirmation_timeout_in_minutes",
-					"endpoint_auto_confirms",
-				},
-			},
-			// Test attribute update
-			{
-				Config: testAccAWSSNSTopicSubscriptionConfig_firehose(ri, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicSubscriptionExists(resourceName, attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "subscription_role_arn", "aws_iam_role.firehose_role", "arn"),
 				),
 			},
@@ -1017,10 +1000,10 @@ resource "aws_sns_topic_subscription" "test_subscription" {
 `, rName)
 }
 
-func testAccAWSSNSTopicSubscriptionConfig_firehose(i, n int) string {
+func testAccAWSSNSTopicSubscriptionConfig_firehose(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-  name = "terraform-test-topic-%d"
+  name = %[1]q
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
@@ -1030,12 +1013,12 @@ resource "aws_sns_topic_subscription" "test_subscription" {
   subscription_role_arn = aws_iam_role.firehose_role.arn
 }
 resource "aws_s3_bucket" "bucket" {
-  bucket = "tf-test-bucket-%d"
+  bucket = %[1]q
   acl    = "private"
 }
 
 resource "aws_iam_role" "firehose_role" {
-  name = "tf-test-firehose-role-%d-%d"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -1055,7 +1038,7 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  name        = "tf-test-firehose-stream-%d"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -1063,5 +1046,5 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     bucket_arn = aws_s3_bucket.bucket.arn
   }
 }
-`, i, i, n, i, i)
+`, rName)
 }
