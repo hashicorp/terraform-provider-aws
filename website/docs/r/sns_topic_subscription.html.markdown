@@ -231,6 +231,7 @@ The following arguments are required:
 
 * `endpoint` - (Required) Endpoint to send data to. The contents vary with the protocol. See details below.
 * `protocol` - (Required) Protocol to use. Valid values are: `sqs`, `sms`, `lambda`, `firehose`, and `application`. Protocols `email`, `email-json`, `http` and `https` are also valid but partially supported. See details below.
+* `subscription_role_arn` - (Required if `protocol` is `firehose`) ARN of the IAM role to publish to Kinesis Data Firehose delivery stream. Refer to [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-firehose-as-subscriber.html).
 * `topic_arn` - (Required) ARN of the SNS topic to subscribe to.
 
 The following arguments are optional:
@@ -247,10 +248,11 @@ The following arguments are optional:
 Supported values for `protocol` include:
 
 * `application` - Delivers JSON-encoded messages. `endpoint` is the endpoint ARN of a mobile app and device.
-* `firehose` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon Kinesis Data Firehose delivery stream.
+* `firehose` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon Kinesis Data Firehose delivery stream (e.g.,
+`arn:aws:firehose:us-east-1:123456789012:deliverystream/ticketUploadStream`).
 * `lambda` - Delivers JSON-encoded messages. `endpoint` is the ARN of an AWS Lambda function.
 * `sms` - Delivers text messages via SMS. `endpoint` is the phone number of an SMS-enabled device.
-* `sqs` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon SQS queue (e.g., `arn:aws:sqs:us-west-2:432981146916:terraform-queue-too`).
+* `sqs` - Delivers JSON-encoded messages. `endpoint` is the ARN of an Amazon SQS queue (e.g., `arn:aws:sqs:us-west-2:123456789012:terraform-queue-too`).
 
 Partially supported values for `protocol` include:
 

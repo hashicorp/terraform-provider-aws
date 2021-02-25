@@ -103,6 +103,10 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
+			"subscription_role_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"topic_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -239,6 +243,21 @@ func resourceAwsSnsTopicSubscriptionUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if d.HasChange("subscription_role_arn") {
+		protocol := d.Get("protocol").(string)
+		subscription_role_arn := d.Get("subscription_role_arn").(string)
+		if strings.Contains(protocol, "firehose") && subscription_role_arn == "" {
+			return fmt.Errorf("Protocol firehose must contain subscription_role_arn!")
+		}
+		if !strings.Contains(protocol, "firehose") && subscription_role_arn != "" {
+			return fmt.Errorf("Only protocol firehose supports subscription_role_arn!")
+		}
+
+		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "SubscriptionRoleArn", subscription_role_arn); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("redrive_policy") {
 		if err := snsSubscriptionAttributeUpdate(conn, d.Id(), "RedrivePolicy", d.Get("redrive_policy").(string)); err != nil {
 			return err
@@ -271,6 +290,7 @@ func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]
 	filter_policy := d.Get("filter_policy").(string)
 	raw_message_delivery := d.Get("raw_message_delivery").(bool)
 	redrive_policy := d.Get("redrive_policy").(string)
+	subscription_role_arn := d.Get("subscription_role_arn").(string)
 
 	// Collect attributes if available
 	attributes := map[string]*string{}
@@ -285,6 +305,10 @@ func expandSNSSubscriptionAttributes(d *schema.ResourceData) (output map[string]
 
 	if raw_message_delivery {
 		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", raw_message_delivery))
+	}
+
+	if subscription_role_arn != "" {
+		attributes["SubscriptionRoleArn"] = aws.String(subscription_role_arn)
 	}
 
 	if redrive_policy != "" {
