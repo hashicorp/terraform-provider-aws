@@ -97,7 +97,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if len(filteredBaselines) < 1 {
+	if len(filteredBaselines) < 1 || filteredBaselines[0] == nil {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
@@ -105,7 +105,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria")
 	}
 
-	baseline := *filteredBaselines[0]
+	baseline := filteredBaselines[0]
 
 	d.SetId(aws.StringValue(baseline.BaselineId))
 	d.Set("name", baseline.BaselineName)
