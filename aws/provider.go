@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/mutexkv"
 )
@@ -1456,20 +1457,25 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "Unique identifier that might be required for assuming a role in another account.",
 				},
 				"policy": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					ValidateFunc: validation.StringIsJSON,
 				},
 				"policy_arns": {
 					Type:        schema.TypeSet,
 					Optional:    true,
 					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
-					Elem:        &schema.Schema{Type: schema.TypeString},
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validateArn,
+					},
 				},
 				"role_arn": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					ValidateFunc: validateArn,
 				},
 				"session_name": {
 					Type:        schema.TypeString,
