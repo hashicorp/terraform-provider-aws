@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -25,9 +24,10 @@ func init() {
 func testSweepEfsAccessPoints(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).efsconn
+	var sweeperErrs *multierror.Error
 
 	var errors error
 	input := &efs.DescribeFileSystemsInput{}
@@ -36,7 +36,6 @@ func testSweepEfsAccessPoints(region string) error {
 			id := aws.StringValue(filesystem.FileSystemId)
 			log.Printf("[INFO] Deleting access points for EFS File System: %s", id)
 
-			var errors error
 			input := &efs.DescribeAccessPointsInput{
 				FileSystemId: filesystem.FileSystemId,
 			}
@@ -56,17 +55,14 @@ func testSweepEfsAccessPoints(region string) error {
 					id := aws.StringValue(AccessPoint.AccessPointId)
 
 					log.Printf("[INFO] Deleting EFS access point: %s", id)
-					_, err := conn.DeleteAccessPoint(&efs.DeleteAccessPointInput{
-						AccessPointId: AccessPoint.AccessPointId,
-					})
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EFS access point %q: %w", id, err))
-						continue
-					}
+					r := resourceAwsEfsAccessPoint()
+					d := r.Data(nil)
+					d.SetId(id)
+					err := r.Delete(d, client)
 
-					err = waitForDeleteEfsAccessPoint(conn, id, 10*time.Minute)
 					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS access point %q to delete: %w", id, err))
+						log.Printf("[ERROR] %s", err)
+						sweeperErrs = multierror.Append(sweeperErrs, err)
 						continue
 					}
 				}
@@ -83,7 +79,7 @@ func testSweepEfsAccessPoints(region string) error {
 		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
-	return errors
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEFSAccessPoint_basic(t *testing.T) {
@@ -350,9 +346,9 @@ func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointD
 			return err
 		}
 
-		if *mt.AccessPoints[0].AccessPointId != fs.Primary.ID {
-			return fmt.Errorf("access point ID mismatch: %q != %q",
-				*mt.AccessPoints[0].AccessPointId, fs.Primary.ID)
+		apId := aws.StringValue(mt.AccessPoints[0].AccessPointId)
+		if apId != fs.Primary.ID {
+			return fmt.Errorf("access point ID mismatch: %q != %q", apId, fs.Primary.ID)
 		}
 
 		*mount = *mt.AccessPoints[0]

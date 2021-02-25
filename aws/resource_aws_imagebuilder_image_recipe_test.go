@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfimagebuilder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/imagebuilder"
 )
 
 func init() {
@@ -326,7 +327,7 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeSize(t *test
 	})
 }
 
-func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeType(t *testing.T) {
+func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp2(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_imagebuilder_image_recipe.test"
 
@@ -342,6 +343,34 @@ func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeType(t *test
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
 						"ebs.0.volume_type": imagebuilder.EbsVolumeTypeGp2,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsImageBuilderImageRecipe_BlockDeviceMapping_Ebs_VolumeTypeGp3(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_imagebuilder_image_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsImageBuilderImageRecipeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsImageBuilderImageRecipeConfigBlockDeviceMappingEbsVolumeType(rName, tfimagebuilder.EbsVolumeTypeGp3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsImageBuilderImageRecipeExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
+						"ebs.0.volume_type": tfimagebuilder.EbsVolumeTypeGp3,
 					}),
 				),
 			},

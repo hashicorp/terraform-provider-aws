@@ -1833,11 +1833,21 @@ resource "aws_iam_role_policy" "firehose" {
       "Sid": "GlueAccess",
       "Effect": "Allow",
       "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
         "glue:GetTableVersions"
       ],
       "Resource": [
         "*"
       ]
+    },
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
     }
   ]
 }
@@ -2226,6 +2236,16 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = %[1]q
@@ -2259,7 +2279,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName, enabled)
 }
@@ -2279,6 +2299,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2313,7 +2343,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2350,6 +2380,16 @@ resource "aws_glue_catalog_table" "test" {
   }
 }
 
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
+  }
+}
+
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "extended_s3"
   name        = %[1]q
@@ -2381,7 +2421,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2401,6 +2441,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2435,7 +2485,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }
@@ -2455,6 +2505,16 @@ resource "aws_glue_catalog_table" "test" {
       name = "test"
       type = "string"
     }
+  }
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["ALL"]
+  principal   = aws_iam_role.firehose.arn
+
+  table {
+    database_name = aws_glue_catalog_database.test.name
+    name          = aws_glue_catalog_table.test.name
   }
 }
 
@@ -2489,7 +2549,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 
-  depends_on = [aws_iam_role_policy.firehose]
+  depends_on = [aws_iam_role_policy.firehose, aws_lakeformation_permissions.test]
 }
 `, rName)
 }

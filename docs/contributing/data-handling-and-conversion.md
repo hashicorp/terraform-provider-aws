@@ -40,7 +40,7 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
 
 ## Data Conversions in Terraform Providers
 
-Before getting into highly specifc documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
+Before getting into highly specific documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
 
 There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into a applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/master/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
 
@@ -289,7 +289,9 @@ if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
 To write:
 
 ```go
-d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeName))
+if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeName)); err != nil {
+    return fmt.Errorf("error setting attribute_name: %w", err)
+}
 ```
 
 ### Root TypeList of Resource and AWS Structure
@@ -308,7 +310,9 @@ To write (_likely to have helper function introduced soon_):
 
 ```go
 if output.Thing.AttributeName != nil {
-    d.Set("attribute_name", []interface{}{flattenServiceStructure(output.Thing.AttributeName)})
+    if err := d.Set("attribute_name", []interface{}{flattenServiceStructure(output.Thing.AttributeName)}); err != nil {
+        return fmt.Errorf("error setting attribute_name: %w", err)
+    }
 } else {
     d.Set("attribute_name", nil)
 }
@@ -365,7 +369,9 @@ if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
 To write:
 
 ```go
-d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeNames))
+if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeNames)); err != nil {
+    return fmt.Errorf("error setting attribute_name: %w", err)
+}
 ```
 
 ### Root TypeSet of TypeString and AWS List of String
@@ -605,7 +611,7 @@ To read:
 ```go
 input := service.ExampleOperationInput{}
 
-if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}; ok && len(v) > 0 {
+if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
     apiObject.NestedAttributeName = stringMapToPointers(v)
 }
 ```

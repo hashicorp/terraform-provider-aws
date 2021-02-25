@@ -1,13 +1,3 @@
-# Build customization
-builds:
-  - binary: terraform-provider-aws
-    goos:
-      - windows
-      - darwin
-      - linux
-    goarch:
-      - amd64
-
 # Archive customization
 archives:
   - format: zip
@@ -19,3 +9,20 @@ archives:
 
     files:
       - nothing.*
+# Build customization
+builds:
+  - binary: terraform-provider-aws
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X version.ProviderVersion={{.Version}}
+    mod_timestamp: '{{ .CommitTimestamp }}'
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+env:
+  - CGO_ENABLED=0

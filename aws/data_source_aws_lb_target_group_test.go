@@ -26,6 +26,7 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
 					resource.TestCheckResourceAttr(resourceNameArn, "port", "8080"),
 					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceNameArn, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_algorithm_type"),
 					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
