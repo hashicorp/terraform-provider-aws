@@ -275,7 +275,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(networkAcl.OwnerId),
 		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
 	}.String()
 
