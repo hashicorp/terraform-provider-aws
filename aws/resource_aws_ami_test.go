@@ -179,7 +179,7 @@ func TestAccEC2AMI_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMI_EphemeralBlockDevices(t *testing.T) {
+func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"
@@ -239,7 +239,7 @@ func TestAccEC2AMI_EphemeralBlockDevices(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMI_Gp3BlockDevice(t *testing.T) {
+func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 	var ami ec2.Image
 	resourceName := "aws_ami.test"
 	snapshotResourceName := "aws_ebs_snapshot.test"

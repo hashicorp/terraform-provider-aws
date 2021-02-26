@@ -158,7 +158,7 @@ func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMIDataSource_Gp3BlockDevice(t *testing.T) {
+func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 	resourceName := "aws_ami.test"
 	datasourceName := "data.aws_ami.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")

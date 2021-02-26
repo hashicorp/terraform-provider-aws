@@ -39,7 +39,7 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMICopy_Description(t *testing.T) {
+func TestAccEC2AMICopy_description(t *testing.T) {
 	var image ec2.Image
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
@@ -67,7 +67,7 @@ func TestAccEC2AMICopy_Description(t *testing.T) {
 	})
 }
 
-func TestAccEC2AMICopy_EnaSupport(t *testing.T) {
+func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 	var image ec2.Image
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ami_copy.test"
