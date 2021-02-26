@@ -182,7 +182,8 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
-		if v := d.Get("throughput").(int); v > 0 {
+		// Throughput is valid only for gp3 volumes.
+		if v := d.Get("throughput").(int); v > 0 && d.Get("type").(string) == ec2.VolumeTypeGp3 {
 			params.Throughput = aws.Int64(int64(v))
 		}
 
@@ -272,7 +273,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 	}
 	d.Set("arn", arn.String())
 	d.Set("availability_zone", volume.AvailabilityZone)

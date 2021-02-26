@@ -11,9 +11,6 @@ on:
       - CHANGELOG.md
   pull_request_target:
 
-env:
-  GO111MODULE: on
-
 jobs:
   changes:
     if: github.event_name == 'pull_request_target' && !contains(fromJSON('["anGie44", "bflad", "breathingdust", "gdavison", "maryelizbeth", "YakDriver"]'), github.actor)

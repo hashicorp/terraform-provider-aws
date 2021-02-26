@@ -44,6 +44,48 @@ data "aws_iam_policy_document" "example" {
 }
 ```
 
+### Using Custom Images
+
+```hcl
+resource "aws_sagemaker_image" "test" {
+  image_name = "example"
+  role_arn   = aws_iam_role.test.arn
+}
+
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = "example"
+
+  kernel_gateway_image_config {
+    kernel_spec {
+      name = "example"
+    }
+  }
+}
+
+resource "aws_sagemaker_image_version" "test" {
+  image_name = aws_sagemaker_image.test.id
+  base_image = "base-image"
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = "example"
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = [aws_subnet.test.id]
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    kernel_gateway_app_settings {
+      custom_image {
+        app_image_config_name = aws_sagemaker_app_image_config.test.app_image_config_name
+        image_name            = aws_sagemaker_image_version.test.image_name
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -87,8 +129,8 @@ The following arguments are supported:
 
 ##### Default Resource Spec
 
-* `instance_type` - (Optional) The instance type.
-* `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+* `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [Sagemaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
+* `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
 
 ##### Custom Image
 

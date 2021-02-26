@@ -64,7 +64,7 @@ func TestCheckResourceAttrNameFromPrefix(resourceName string, attributeName stri
 		attributeMatch, err := regexp.Compile(nameRegexpPattern)
 
 		if err != nil {
-			return fmt.Errorf("Unable to compile name regexp (%s): %s", nameRegexpPattern, err)
+			return fmt.Errorf("Unable to compile name regexp (%s): %w", nameRegexpPattern, err)
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)

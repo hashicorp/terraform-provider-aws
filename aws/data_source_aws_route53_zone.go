@@ -97,7 +97,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 		resp, err := conn.ListHostedZones(req)
 
 		if err != nil {
-			return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", err)
+			return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", err)
 		}
 		for _, hostedZone := range resp.HostedZones {
 			hostedZoneId := cleanZoneID(aws.StringValue(hostedZone.Id))
@@ -113,7 +113,7 @@ func dataSourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) erro
 
 					respHostedZone, errHostedZone := conn.GetHostedZone(reqHostedZone)
 					if errHostedZone != nil {
-						return fmt.Errorf("Error finding Route 53 Hosted Zone: %v", errHostedZone)
+						return fmt.Errorf("Error finding Route 53 Hosted Zone: %w", errHostedZone)
 					}
 					// we go through all VPCs
 					for _, vpc := range respHostedZone.VPCs {

@@ -112,14 +112,14 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && GO111MODULE=on go install .
-	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
-	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
-	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
-	cd tools && GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd awsproviderlint && go install .
+	cd tools && go install github.com/bflad/tfproviderdocs
+	cd tools && go install github.com/client9/misspell/cmd/misspell
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install github.com/katbyte/terrafmt
+	cd tools && go install github.com/terraform-linters/tflint
+	cd tools && go install github.com/pavius/impi/cmd/impi
+	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

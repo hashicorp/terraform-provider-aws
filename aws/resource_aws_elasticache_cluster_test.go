@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -36,7 +37,12 @@ func testSweepElasticacheClusters(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	err = conn.DescribeCacheClustersPages(&elasticache.DescribeCacheClustersInput{}, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
+	var sweeperErrs *multierror.Error
+
+	input := &elasticache.DescribeCacheClustersInput{
+		ShowCacheClustersNotInReplicationGroups: aws.Bool(true),
+	}
+	err = conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, isLast bool) bool {
 		if len(page.CacheClusters) == 0 {
 			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
 			return false
@@ -49,22 +55,25 @@ func testSweepElasticacheClusters(region string) error {
 			err := deleteElasticacheCacheCluster(conn, id, "")
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
 			}
 			_, err = waiter.CacheClusterDeleted(conn, id, waiter.CacheClusterDeletedTimeout)
 			if err != nil {
 				log.Printf("[ERROR] Failed waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", id, err)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))
 			}
 		}
 		return !isLast
 	})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping ElastiCache Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ElastiCache Clusters: %s", err)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache Cluster sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error retrieving ElastiCache Clusters: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSElasticacheCluster_Engine_Memcached(t *testing.T) {

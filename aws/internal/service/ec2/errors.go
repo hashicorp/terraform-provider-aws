@@ -32,12 +32,20 @@ const (
 )
 
 const (
+	ErrCodeInvalidInstanceIDNotFound = "InvalidInstanceID.NotFound"
+)
+
+const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
 
 const (
 	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
+)
+
+const (
+	ErrCodeInvalidVpcIDNotFound = "InvalidVpcID.NotFound"
 )
 
 const (
