@@ -23,6 +23,12 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
 				),
+			}, {
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+				ImportStateIdPrefix:     fmt.Sprintf("%s_", queryName),
 			},
 		},
 	})
