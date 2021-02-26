@@ -174,6 +174,31 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	})
 }
 
+func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
+	resourceName := "aws_kms_grant.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsGrant_AsymmetricKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsGrantExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
+			},
+		},
+	})
+}
+
 func TestAccAWSKmsGrant_disappears(t *testing.T) {
 	resourceName := "aws_kms_grant.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -326,4 +351,41 @@ resource "aws_kms_grant" "test" {
   operations        = [%[2]s]
 }
 `, rName, operations)
+}
+
+func testAccAWSKmsGrant_AsymmetricKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_grant" "test" {
+  name              = "%[1]s"
+  key_id            = aws_kms_key.test.key_id
+  grantee_principal = aws_iam_role.test.arn
+  operations        = ["GetPublicKey", "Sign", "Verify"]
+}
+
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test key %[1]s"
+  deletion_window_in_days = 7
+
+  key_usage                = "SIGN_VERIFY"
+  customer_master_key_spec = "RSA_2048"
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+`, rName)
 }
