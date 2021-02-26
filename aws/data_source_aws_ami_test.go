@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
+func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 	resourceName := "data.aws_ami.nat_ami"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -60,7 +60,7 @@ func TestAccAWSAmiDataSource_natInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
+func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 	resourceName := "data.aws_ami.windows_ami"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -103,7 +103,7 @@ func TestAccAWSAmiDataSource_windowsInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
+func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 	resourceName := "data.aws_ami.amzn-ami-minimal-hvm-instance-store"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -142,7 +142,7 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
+func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -158,7 +158,7 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_Gp3BlockDevice(t *testing.T) {
+func TestAccEC2AMIDataSource_Gp3BlockDevice(t *testing.T) {
 	resourceName := "aws_ami.test"
 	datasourceName := "data.aws_ami.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
