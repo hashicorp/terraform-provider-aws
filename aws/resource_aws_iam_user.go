@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -42,9 +42,12 @@ func resourceAwsIamUser() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsIamUserName,
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
+				),
 			},
 			"path": {
 				Type:     schema.TypeString,
@@ -77,13 +80,12 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 		UserName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("permissions_boundary"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("permissions_boundary"); ok {
 		request.PermissionsBoundary = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		tags := tagsFromMapIAM(v.(map[string]interface{}))
-		request.Tags = tags
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		request.Tags = keyvaluetags.New(v).IgnoreAws().IamTags()
 	}
 
 	log.Println("[DEBUG] Create IAM User request:", request)
@@ -99,6 +101,7 @@ func resourceAwsIamUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &iam.GetUserInput{
 		UserName: aws.String(d.Id()),
@@ -127,7 +130,8 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.User.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.User.UserId)
-	if err := d.Set("tags", tagsToMapIAM(output.User.Tags)); err != nil {
+
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(output.User.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -137,7 +141,7 @@ func resourceAwsIamUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -184,31 +188,10 @@ func resourceAwsIamUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("tags") {
-		// Reset all tags to empty set
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		c, r := diffTagsIAM(tagsFromMapIAM(o), tagsFromMapIAM(n))
+		o, n := d.GetChange("tags")
 
-		if len(r) > 0 {
-			_, err := iamconn.UntagUser(&iam.UntagUserInput{
-				UserName: aws.String(d.Id()),
-				TagKeys:  tagKeysIam(r),
-			})
-			if err != nil {
-				return fmt.Errorf("error deleting IAM user tags: %s", err)
-			}
-		}
-
-		if len(c) > 0 {
-			input := &iam.TagUserInput{
-				UserName: aws.String(d.Id()),
-				Tags:     c,
-			}
-			_, err := iamconn.TagUser(input)
-			if err != nil {
-				return fmt.Errorf("error update IAM user tags: %s", err)
-			}
+		if err := keyvaluetags.IamUserUpdateTags(iamconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating IAM User (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -244,6 +227,10 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		if err := deleteAwsIamUserLoginProfile(iamconn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
 		}
+
+		if err := deleteAwsIamUserSigningCertificates(iamconn, d.Id()); err != nil {
+			return fmt.Errorf("error removing IAM User (%s) signing certificate: %s", d.Id(), err)
+		}
 	}
 
 	deleteUserInput := &iam.DeleteUserInput{
@@ -262,16 +249,6 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func validateAwsIamUserName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs allowed in %q: %q",
-			k, value))
-	}
-	return
 }
 
 func deleteAwsIamUserGroupMemberships(conn *iam.IAM, username string) error {
@@ -451,6 +428,36 @@ func deleteAwsIamUserAccessKeys(svc *iam.IAM, username string) error {
 		})
 		if err != nil {
 			return fmt.Errorf("Error deleting access key %s: %s", k, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteAwsIamUserSigningCertificates(svc *iam.IAM, userName string) error {
+	var certificateIDList []string
+
+	listInput := &iam.ListSigningCertificatesInput{
+		UserName: aws.String(userName),
+	}
+	err := svc.ListSigningCertificatesPages(listInput,
+		func(page *iam.ListSigningCertificatesOutput, lastPage bool) bool {
+			for _, c := range page.Certificates {
+				certificateIDList = append(certificateIDList, aws.StringValue(c.CertificateId))
+			}
+			return !lastPage
+		})
+	if err != nil {
+		return fmt.Errorf("Error removing signing certificates of user %s: %s", userName, err)
+	}
+
+	for _, c := range certificateIDList {
+		_, err := svc.DeleteSigningCertificate(&iam.DeleteSigningCertificateInput{
+			CertificateId: aws.String(c),
+			UserName:      aws.String(userName),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting signing certificate %s: %s", c, err)
 		}
 	}
 

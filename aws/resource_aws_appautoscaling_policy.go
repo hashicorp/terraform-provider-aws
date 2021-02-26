@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
-
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -98,54 +97,6 @@ func resourceAwsAppautoscalingPolicy() *schema.Resource {
 									},
 								},
 							},
-						},
-					},
-				},
-			},
-			"alarms": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"adjustment_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `step_scaling_policy_configuration` configuration block `adjustment_type` argument instead",
-			},
-			"cooldown": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Use `step_scaling_policy_configuration` configuration block `cooldown` argument instead",
-			},
-			"metric_aggregation_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `step_scaling_policy_configuration` configuration block `metric_aggregation_type` argument instead",
-			},
-			"min_adjustment_magnitude": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Removed:  "Use `step_scaling_policy_configuration` configuration block `min_adjustment_magnitude` argument instead",
-			},
-			"step_adjustment": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Removed:  "Use `step_scaling_policy_configuration` configuration block `step_adjustment` configuration block instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"metric_interval_lower_bound": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"metric_interval_upper_bound": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"scaling_adjustment": {
-							Type:     schema.TypeInt,
-							Required: true,
 						},
 					},
 				},
@@ -330,7 +281,7 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("resource_id", p.ResourceId)
 	d.Set("scalable_dimension", p.ScalableDimension)
 	d.Set("service_namespace", p.ServiceNamespace)
-	d.Set("alarms", p.Alarms)
+
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
 		return fmt.Errorf("error setting step_scaling_policy_configuration: %s", err)
 	}
@@ -448,9 +399,16 @@ func validateAppautoscalingPolicyImportInput(id string) ([]string, error) {
 	switch idParts[0] {
 	case "dynamodb":
 		serviceNamespace = idParts[0]
-		resourceId = strings.Join(idParts[1:3], "/")
-		scalableDimension = idParts[3]
-		policyName = strings.Join(idParts[4:], "/")
+
+		dimensionIx := 3
+		// DynamoDB resource ID can be "/table/tableName" or "/table/tableName/index/indexName"
+		if idParts[dimensionIx] == "index" {
+			dimensionIx = 5
+		}
+
+		resourceId = strings.Join(idParts[1:dimensionIx], "/")
+		scalableDimension = idParts[dimensionIx]
+		policyName = strings.Join(idParts[dimensionIx+1:], "/")
 	default:
 		serviceNamespace = idParts[0]
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")

@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
@@ -52,6 +52,13 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceNameAccepter, "accept_status", "active"),
 				),
 			},
+			{
+				Config:                  testAccAwsVPCPeeringConnectionAccepterConfigSameRegionSameAccount(rName),
+				ResourceName:            resourceNameAccepter,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auto_accept"},
+			},
 		},
 	})
 }
@@ -68,10 +75,9 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,6 +97,13 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testin
 					resource.TestCheckResourceAttr(resourceNameAccepter, "accept_status", "active"),
 				),
 			},
+			{
+				Config:                  testAccAwsVPCPeeringConnectionAccepterConfigDifferentRegionSameAccount(rName),
+				ResourceName:            resourceNameAccepter,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auto_accept"},
+			},
 		},
 	})
 }
@@ -109,7 +122,7 @@ func TestAccAWSVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testin
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,11 +156,10 @@ func TestAccAWSVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccAwsVPCPeeringConnectionAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,10 +204,10 @@ resource "aws_vpc" "peer" {
   }
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id      = "${aws_vpc.main.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
   auto_accept = false
 
   tags = {
@@ -203,9 +215,9 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -226,7 +238,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -235,10 +247,10 @@ resource "aws_vpc" "peer" {
   }
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id      = "${aws_vpc.main.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
   peer_region = %[2]q
   auto_accept = false
 
@@ -247,11 +259,11 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
-// Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -272,7 +284,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -282,14 +294,14 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id        = "${aws_vpc.main.id}"
-  peer_vpc_id   = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
   peer_region   = %[2]q
   auto_accept   = false
 
@@ -298,11 +310,11 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
- // Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {
@@ -323,7 +335,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   cidr_block = "10.1.0.0/16"
 
@@ -333,14 +345,14 @@ resource "aws_vpc" "peer" {
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
-// Requester's side of the connection.
+# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "main" {
-  vpc_id        = "${aws_vpc.main.id}"
-  peer_vpc_id   = "${aws_vpc.peer.id}"
-  peer_owner_id = "${data.aws_caller_identity.peer.account_id}"
+  vpc_id        = aws_vpc.main.id
+  peer_vpc_id   = aws_vpc.peer.id
+  peer_owner_id = data.aws_caller_identity.peer.account_id
   peer_region   = %[2]q
   auto_accept   = false
 
@@ -349,11 +361,11 @@ resource "aws_vpc_peering_connection" "main" {
   }
 }
 
- // Accepter's side of the connection.
+# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.main.id}"
+  vpc_peering_connection_id = aws_vpc_peering_connection.main.id
   auto_accept               = true
 
   tags = {

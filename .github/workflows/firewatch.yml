@@ -1,0 +1,25 @@
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+name: Firewatch
+jobs:
+  FirewatchJob:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Firewatch
+      uses: breathingdust/firewatch@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        alert_threshold: 10
+        issue_age_months: 3
+        slack_token: 1
+        slack_channel: 1
+    - name: UploadArtifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: firewatch
+        path: firewatch.data
+        if-no-files-found: error
+        retention-days: 1

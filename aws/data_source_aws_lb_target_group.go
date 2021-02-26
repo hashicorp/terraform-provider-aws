@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsLbTargetGroup() *schema.Resource {
@@ -40,6 +40,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"protocol_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -65,6 +70,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"load_balancing_algorithm_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"target_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,7 +83,6 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 			"stickiness": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -95,7 +104,6 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 			"health_check": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -167,7 +175,7 @@ func dataSourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading Load Balancer Target Group: %s", describeTgOpts)
 	describeResp, err := elbconn.DescribeTargetGroups(describeTgOpts)
 	if err != nil {
-		return fmt.Errorf("Error retrieving LB Target Group: %s", err)
+		return fmt.Errorf("Error retrieving LB Target Group: %w", err)
 	}
 	if len(describeResp.TargetGroups) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(describeResp.TargetGroups))
