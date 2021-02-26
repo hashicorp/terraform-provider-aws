@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func awsCloudWatchQueryDefinition() *schema.Resource {
+func resourceAwsCloudWatchQueryDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAwsCloudWatchQueryDefinitionCreate,
 		ReadContext:   resourceAwsCloudWatchQueryDefinitionRead,
