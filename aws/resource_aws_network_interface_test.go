@@ -969,12 +969,12 @@ resource "aws_network_interface" "test" {
 func testAccAWSENIConfigPrivateIpList(testConfig privateIpListTestConfigData, rName string) string {
 	var config strings.Builder
 
-	config.WriteString(`
-resource "aws_network_interface" "test" {
+	config.WriteString(fmt.Sprintf(`
+%s "aws_network_interface" "test" {
   subnet_id          = aws_subnet.test.id
   security_groups    = [aws_security_group.test.id]
   description        = "Managed by Terraform"
-`)
+`, "resource"))
 
 	if len(testConfig.private_ips) > 0 {
 		config.WriteString("  private_ips = [\n")

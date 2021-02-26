@@ -296,7 +296,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Groups = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("private_ip_list_enabled"); ok && v.(bool) {
+	if d.Get("private_ip_list_enabled").(bool) {
 		if v, ok := d.GetOk("private_ip_list"); ok && len(v.([]interface{})) > 0 {
 			request.PrivateIpAddresses = expandPrivateIPAddresses(v.([]interface{}))
 		}
@@ -352,7 +352,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error waiting for Network Interface (%s) creation: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("private_ip_list_enabled"); ok && !v.(bool) {
+	if !d.Get("private_ip_list_enabled").(bool) {
 		// add more ips to match the count
 		if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
 			total_private_ips := v.(*schema.Set).Len()

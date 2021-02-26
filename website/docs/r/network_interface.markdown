@@ -71,8 +71,11 @@ By default, private IPs are managed through the `private_ips` and `private_ips_c
 In order to manage the private Ips as a sequentially ordered list instead, configure `private_ip_list_enabled` to `true` and use `private_ip_list` to manage the IPs. This will disable the `private_ips` and `private_ips_count` settings, which must be removed from the config file but are still exported. Note that changing the first address of `private_ip_list`, which is the primary, always requires a new interface.
 
 If you are managing a specific set or list of Ips, instead of just using `private_ips_count`, here is a workflow for also leveraging `private_ips_count` to have AWS automatically assign additional IP addresses:
-* Comment out any settings for `private_ips`, `private_ip_list`, and `private_ip_list_enabled`
-* Increase to the desired `private_ips_count`. Note that this count is for the number of secondaries. The primary is not included in this count.
+* Comment out these settings:
+    * `private_ips`
+    * `private_ip_list`
+    * `private_ip_list_enabled`
+* Set the desired `private_ips_count`. Note that this count is for the number of secondaries. The primary is not included in this count.
 * Apply to assign the extra Ips
 * Remove `private_ips_count` and restore your settings from the first step
 * Add the new Ips to your current settings
