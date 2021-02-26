@@ -6,17 +6,25 @@ FEATURES:
 * **New Data Source:** `aws_apigatewayv2_apis` ([#13883](https://github.com/hashicorp/terraform-provider-aws/issues/13883))
 * **New Resource:** `aws_cognito_user_pool_ui_customization` ([#8114](https://github.com/hashicorp/terraform-provider-aws/issues/8114))
 * **New Resource:** `aws_ecrpublic_repository` ([#16865](https://github.com/hashicorp/terraform-provider-aws/issues/16865))
+* **New Resource:** `aws_sagemaker_app` ([#17251](https://github.com/hashicorp/terraform-provider-aws/issues/17251))
 
 ENHANCEMENTS:
 
 * provider: Add validation for `role_arn`, `policy_arns`, and `policy` ([#12642](https://github.com/hashicorp/terraform-provider-aws/issues/12642))
+* resource/aws_autoscaling_group: Added support Auto Scaling groups with multiple launch templates using a mixed instances policy ([#16325](https://github.com/hashicorp/terraform-provider-aws/issues/16325))
 * resource/aws_dms_certificate: Add `tags` argument ([#17163](https://github.com/hashicorp/terraform-provider-aws/issues/17163))
 * resource/aws_gamelift_build: Support all valid operating system values ([#17764](https://github.com/hashicorp/terraform-provider-aws/issues/17764))
+* resource/aws_sagemaker_domain: Make `default_resource_spec` optional for the `tensor_board_app_settings`, `jupyter_server_app_settings` and `kernel_gateway_app_settings` config blocks. ([#17251](https://github.com/hashicorp/terraform-provider-aws/issues/17251))
+* resource/aws_sns_topic_subscription: Add `email`, `email-json`, and `firehose` to protocol values. Add `subscription_role_arn` argument for Firehose support. Add `confirmation_was_authenticated`, `owner_id`, and `pending_confirmation` attributes. ([#14923](https://github.com/hashicorp/terraform-provider-aws/issues/14923))
 
 BUG FIXES:
 
 * provider: Underlying Terraform Plugin SDK update to ensure data source errors include configuration source (file and line) ([#17801](https://github.com/hashicorp/terraform-provider-aws/issues/17801))
 * resource/aws_backup_plan: `backup_options` and `resource_type` attributes in `advanced_backup_setting` configuration block are both required ([#17692](https://github.com/hashicorp/terraform-provider-aws/issues/17692))
+* resource/aws_glue_trigger: Support starting ON_DEMAND triggers via `enabled` flag. ([#17488](https://github.com/hashicorp/terraform-provider-aws/issues/17488))
+* resource/aws_sagemaker_domain: Wait for update to finish. ([#17251](https://github.com/hashicorp/terraform-provider-aws/issues/17251))
+* resource/aws_sagemaker_user_profile: Wait for update to finish. ([#17251](https://github.com/hashicorp/terraform-provider-aws/issues/17251))
+* resource/aws_sns_topic_subscription: Fix to avoid `delivery_policy` always showing diff. ([#14255](https://github.com/hashicorp/terraform-provider-aws/issues/14255))
 
 ## 3.29.1 (February 23, 2021)
 
