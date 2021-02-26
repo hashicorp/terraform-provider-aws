@@ -88,12 +88,12 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 
 resource "aws_iam_role" "lambda_role" {
   name               = "%s"
-  assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.lambda_role.name}"
+  role       = aws_iam_role.lambda_role.name
 }
 `, roleName)
 }
@@ -105,7 +105,7 @@ resource "aws_lambda_function" "lambda" {
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
 
@@ -117,7 +117,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
+  function_name = aws_lambda_function.lambda.function_name
 
   input = <<JSON
 {
@@ -136,7 +136,7 @@ resource "aws_lambda_function" "lambda" {
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
   publish       = true
@@ -149,8 +149,8 @@ resource "aws_lambda_function" "lambda" {
 }
 
 resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
-  qualifier     = "${aws_lambda_function.lambda.version}"
+  function_name = aws_lambda_function.lambda.function_name
+  qualifier     = aws_lambda_function.lambda.version
 
   input = <<JSON
 {
@@ -169,7 +169,7 @@ resource "aws_lambda_function" "lambda" {
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
-  role          = "${aws_iam_role.lambda_role.arn}"
+  role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
   runtime       = "nodejs12.x"
   publish       = true
@@ -182,7 +182,7 @@ resource "aws_lambda_function" "lambda" {
 }
 
 resource "aws_lambda_invocation" "invocation_test" {
-  function_name = "${aws_lambda_function.lambda.function_name}"
+  function_name = aws_lambda_function.lambda.function_name
 
   input = <<JSON
 {
