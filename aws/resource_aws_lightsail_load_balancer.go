@@ -118,6 +118,8 @@ func resourceAwsLightsailLoadBalancerCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsLightsailLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.GetLoadBalancer(&lightsail.GetLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
@@ -143,7 +145,7 @@ func resourceAwsLightsailLoadBalancerRead(d *schema.ResourceData, meta interface
 	d.Set("public_ports", resp.LoadBalancer.PublicPorts)
 	d.Set("dns_name", resp.LoadBalancer.DnsName)
 
-	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(resp.LoadBalancer.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(resp.LoadBalancer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
