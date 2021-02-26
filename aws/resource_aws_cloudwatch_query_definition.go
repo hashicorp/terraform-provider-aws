@@ -84,9 +84,9 @@ func resourceAwsCloudWatchQueryDefinitionRead(c context.Context, d *schema.Resou
 	empty := ""
 	query := &cloudwatchlogs.QueryDefinition{
 		QueryDefinitionId: nil,
-		LogGroupNames: make([]*string, 0),
-		Name: &empty,
-		QueryString: &empty,
+		LogGroupNames:     make([]*string, 0),
+		Name:              &empty,
+		QueryString:       &empty,
 	}
 
 	// disappears case
