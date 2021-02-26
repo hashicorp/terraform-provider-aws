@@ -16,9 +16,9 @@ Creates a Lightsail load balancer resource.
 
 ```hcl
 resource "aws_lightsail_load_balancer" "load_balancer_test" {
-  name               = "test-load-balancer"
-  health_check_path  = "/"
-  instance_port      = "80"
+  name              = "test-load-balancer"
+  health_check_path = "/"
+  instance_port     = "80"
   tags = {
     foo = "bar"
   }
