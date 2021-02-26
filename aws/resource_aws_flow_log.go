@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -38,10 +38,6 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"log_group_name"},
 				ValidateFunc:  validateArn,
-				StateFunc: func(arn interface{}) string {
-					// aws_cloudwatch_log_group arn attribute references contain a trailing `:*`, which breaks functionality
-					return strings.TrimSuffix(arn.(string), ":*")
-				},
 			},
 
 			"log_destination_type": {
@@ -244,7 +240,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),

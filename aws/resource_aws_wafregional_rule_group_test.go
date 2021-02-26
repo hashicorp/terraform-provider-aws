@@ -9,10 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -71,7 +70,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +84,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
 					computeWafActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
 						"type":          waf.WafRuleTypeRegular,
@@ -110,7 +109,7 @@ func TestAccAWSWafRegionalRuleGroup_tags(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -160,7 +159,7 @@ func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -198,7 +197,7 @@ func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -226,7 +225,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -238,7 +237,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					computeWafActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "50",
 						"type":          waf.WafRuleTypeRegular,
@@ -254,7 +253,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule1),
 					computeWafActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "10",
 						"type":          waf.WafRuleTypeRegular,
@@ -262,7 +261,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test2", &rule2),
 					computeWafActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "COUNT",
 						"priority":      "1",
 						"type":          waf.WafRuleTypeRegular,
@@ -270,7 +269,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test3", &rule3),
 					computeWafActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type": "BLOCK",
 						"priority":      "15",
 						"type":          waf.WafRuleTypeRegular,
@@ -292,7 +291,7 @@ func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -428,7 +427,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 }
 `, ruleName, groupName)
@@ -451,7 +450,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   tags = {
@@ -478,7 +477,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 50
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   tags = {
@@ -516,7 +515,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 10
-    rule_id  = "${aws_wafregional_rule.test.id}"
+    rule_id  = aws_wafregional_rule.test.id
   }
 
   activated_rule {
@@ -525,7 +524,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 1
-    rule_id  = "${aws_wafregional_rule.test2.id}"
+    rule_id  = aws_wafregional_rule.test2.id
   }
 
   activated_rule {
@@ -534,7 +533,7 @@ resource "aws_wafregional_rule_group" "test" {
     }
 
     priority = 15
-    rule_id  = "${aws_wafregional_rule.test3.id}"
+    rule_id  = aws_wafregional_rule.test3.id
   }
 }
 `, ruleName1, ruleName2, ruleName3, groupName)

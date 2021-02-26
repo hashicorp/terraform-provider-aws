@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSSsmPatchBaselineDataSource_existingBaseline(t *testing.T) {
@@ -51,9 +51,9 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 func testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline() string {
 	return `
 data "aws_ssm_patch_baseline" "test_existing" {
-	owner            = "AWS"
-	name_prefix	     = "AWS-"
-	operating_system = "CENTOS"
+  owner            = "AWS"
+  name_prefix      = "AWS-"
+  operating_system = "CENTOS"
 }
 `
 }
@@ -62,23 +62,23 @@ data "aws_ssm_patch_baseline" "test_existing" {
 func testAccCheckAwsSsmPatchBaselineDataSourceConfig_newBaseline(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test_new" {
-	name             = "%s"
-	operating_system = "AMAZON_LINUX_2"
-	description      = "Test"
+  name             = "%s"
+  operating_system = "AMAZON_LINUX_2"
+  description      = "Test"
 
-	approval_rule {
-		approve_after_days = 5
-		patch_filter {
-			key    = "CLASSIFICATION"
-			values = ["*"]
-		}
-	}
+  approval_rule {
+    approve_after_days = 5
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["*"]
+    }
+  }
 }
 
 data "aws_ssm_patch_baseline" "test_new" {
-	owner            = "Self"
-	name_prefix      = "${aws_ssm_patch_baseline.test_new.name}"
-	operating_system = "AMAZON_LINUX_2"
+  owner            = "Self"
+  name_prefix      = aws_ssm_patch_baseline.test_new.name
+  operating_system = "AMAZON_LINUX_2"
 }
 `, name)
 }

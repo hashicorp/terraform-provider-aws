@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsWafRegionalWebAcl_basic(t *testing.T) {
@@ -15,7 +16,7 @@ func TestAccDataSourceAwsWafRegionalWebAcl_basic(t *testing.T) {
 	datasourceName := "data.aws_wafregional_web_acl.web_acl"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -38,13 +39,14 @@ func testAccDataSourceAwsWafRegionalWebAclConfig_Name(name string) string {
 resource "aws_wafregional_web_acl" "web_acl" {
   name        = %[1]q
   metric_name = "tfWebACL"
+
   default_action {
     type = "ALLOW"
   }
 }
 
 data "aws_wafregional_web_acl" "web_acl" {
-  name = "${aws_wafregional_web_acl.web_acl.name}"
+  name = aws_wafregional_web_acl.web_acl.name
 }
 `, name)
 }

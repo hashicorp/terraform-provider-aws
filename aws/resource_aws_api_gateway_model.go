@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsApiGatewayModel() *schema.Resource {
@@ -103,7 +103,7 @@ func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error creating API Gateway Model: %s", err)
 	}
 
-	d.SetId(*model.Id)
+	d.SetId(aws.StringValue(model.Id))
 
 	return nil
 }

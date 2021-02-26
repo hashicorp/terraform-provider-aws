@@ -31,7 +31,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 ```hcl
 resource "aws_secretsmanager_secret" "rotation-example" {
   name                = "rotation-example"
-  rotation_lambda_arn = "${aws_lambda_function.example.arn}"
+  rotation_lambda_arn = aws_lambda_function.example.arn
 
   rotation_rules {
     automatically_after_days = 7
@@ -57,7 +57,9 @@ The following arguments are supported:
 
 * `automatically_after_days` - (Required) Specifies the number of days between automatic scheduled rotations of the secret.
 
-## Attribute Reference
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.

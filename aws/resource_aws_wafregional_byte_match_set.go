@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
@@ -87,7 +87,7 @@ func resourceAwsWafRegionalByteMatchSetCreate(d *schema.ResourceData, meta inter
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
-	d.SetId(*resp.ByteMatchSet.ByteMatchSetId)
+	d.SetId(aws.StringValue(resp.ByteMatchSet.ByteMatchSetId))
 
 	return resourceAwsWafRegionalByteMatchSetUpdate(d, meta)
 }

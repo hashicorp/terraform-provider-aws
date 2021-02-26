@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsLambdaInvocation() *schema.Resource {
@@ -23,7 +23,7 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "$LATEST",
+				Default:  LambdaFunctionVersionLatest,
 			},
 
 			"input": {

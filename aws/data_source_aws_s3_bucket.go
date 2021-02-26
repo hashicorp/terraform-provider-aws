@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsS3Bucket() *schema.Resource {
@@ -67,7 +67,7 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.HeadBucket(input)
 
 	if err != nil {
-		return fmt.Errorf("Failed getting S3 bucket: %s Bucket: %q", err, bucket)
+		return fmt.Errorf("Failed getting S3 bucket (%s): %w", bucket, err)
 	}
 
 	d.SetId(bucket)
@@ -81,7 +81,7 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = bucketLocation(meta.(*AWSClient), d, bucket)
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket location: %s", err)
+		return fmt.Errorf("error getting S3 Bucket location: %w", err)
 	}
 
 	regionalDomainName, err := BucketRegionalDomainName(bucket, d.Get("region").(string))
@@ -95,7 +95,17 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 func bucketLocation(client *AWSClient, d *schema.ResourceData, bucket string) error {
 	region, err := s3manager.GetBucketRegionWithClient(context.Background(), client.s3conn, bucket, func(r *request.Request) {
-		r.Config.S3ForcePathStyle = aws.Bool(false)
+		// By default, GetBucketRegion forces virtual host addressing, which
+		// is not compatible with many non-AWS implementations. Instead, pass
+		// the provider s3_force_path_style configuration, which defaults to
+		// false, but allows override.
+		r.Config.S3ForcePathStyle = client.s3conn.Config.S3ForcePathStyle
+
+		// By default, GetBucketRegion uses anonymous credentials when doing
+		// a HEAD request to get the bucket region. This breaks in aws-cn regions
+		// when the account doesn't have an ICP license to host public content.
+		// Use the current credentials when getting the bucket region.
+		r.Config.Credentials = client.s3conn.Config.Credentials
 	})
 	if err != nil {
 		return err

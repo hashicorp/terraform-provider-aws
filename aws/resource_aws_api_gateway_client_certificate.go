@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -63,7 +63,7 @@ func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta i
 		return fmt.Errorf("Failed to generate client certificate: %s", err)
 	}
 
-	d.SetId(*out.ClientCertificateId)
+	d.SetId(aws.StringValue(out.ClientCertificateId))
 
 	return resourceAwsApiGatewayClientCertificateRead(d, meta)
 }

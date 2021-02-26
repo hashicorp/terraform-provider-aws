@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
@@ -25,6 +25,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "throughput", resourceName, "throughput"),
 				),
 			},
 		},
@@ -66,20 +67,12 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsEbsVolumeDataSourceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 40
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 40
+
   tags = {
     Name = "External Volume"
   }
@@ -87,31 +80,25 @@ resource "aws_ebs_volume" "test" {
 
 data "aws_ebs_volume" "test" {
   most_recent = true
+
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["External Volume"]
   }
+
   filter {
-    name = "volume-type"
-    values = ["${aws_ebs_volume.test.type}"]
+    name   = "volume-type"
+    values = [aws_ebs_volume.test.type]
   }
 }
 `
 
-const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type = "gp2"
-  size = 10
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 10
+
   tags = {
     Name = "External Volume 1"
   }
@@ -119,17 +106,20 @@ resource "aws_ebs_volume" "test" {
 
 data "aws_ebs_volume" "test" {
   most_recent = true
+
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["External Volume 1"]
   }
+
   filter {
-    name = "size"
-    values = ["${aws_ebs_volume.test.size}"]
+    name   = "size"
+    values = [aws_ebs_volume.test.size]
   }
+
   filter {
-    name = "volume-type"
-    values = ["${aws_ebs_volume.test.type}"]
+    name   = "volume-type"
+    values = [aws_ebs_volume.test.type]
   }
 }
 `

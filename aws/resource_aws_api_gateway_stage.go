@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -46,10 +46,6 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 						"destination_arn": {
 							Type:     schema.TypeString,
 							Required: true,
-							StateFunc: func(arn interface{}) string {
-								// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
-								return strings.TrimSuffix(arn.(string), ":*")
-							},
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -356,10 +352,9 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		if len(accessLogSettings) == 1 {
 			operations = append(operations,
 				&apigateway.PatchOperation{
-					Op:   aws.String(apigateway.OpReplace),
-					Path: aws.String("/accessLogSettings/destinationArn"),
-					// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
-					Value: aws.String(strings.TrimSuffix(d.Get("access_log_settings.0.destination_arn").(string), ":*")),
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/accessLogSettings/destinationArn"),
+					Value: aws.String(d.Get("access_log_settings.0.destination_arn").(string)),
 				}, &apigateway.PatchOperation{
 					Op:    aws.String(apigateway.OpReplace),
 					Path:  aws.String("/accessLogSettings/format"),

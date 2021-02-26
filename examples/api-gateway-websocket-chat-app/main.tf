@@ -206,7 +206,6 @@ resource "aws_iam_role" "OnConnectRole" {
   }]
 }
 EOT
-
 }
 
 resource "aws_iam_role_policy_attachment" "OnConnectRoleDynamoDBCrudPolicyAttachment" {

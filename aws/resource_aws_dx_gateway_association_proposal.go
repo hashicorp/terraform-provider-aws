@@ -1,13 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
@@ -22,7 +23,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
-			customdiff.ForceNewIf("allowed_prefixes", func(d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				conn := meta.(*AWSClient).dxconn
 
 				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())

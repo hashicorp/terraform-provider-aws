@@ -54,7 +54,7 @@ resource "tls_private_key" "example" {
 
 resource "tls_self_signed_cert" "example" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
+  private_key_pem = tls_private_key.example.private_key_pem
 
   subject {
     common_name  = "example.com"
@@ -71,8 +71,8 @@ resource "tls_self_signed_cert" "example" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+  private_key      = tls_private_key.example.private_key_pem
+  certificate_body = tls_self_signed_cert.example.cert_pem
 }
 ```
 
@@ -142,7 +142,7 @@ Domain validation objects export the following attributes:
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
 
-[1]: /docs/configuration/resources.html#lifecycle
+[1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 
 ## Import
 

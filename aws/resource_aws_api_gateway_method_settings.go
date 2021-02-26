@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsApiGatewayMethodSettings() *schema.Resource {
@@ -52,6 +54,11 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"OFF",
+								"ERROR",
+								"INFO",
+							}, false),
 						},
 						"data_trace_enabled": {
 							Type:     schema.TypeBool,
@@ -91,6 +98,11 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 						"unauthorized_cache_control_header_strategy": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								apigateway.UnauthorizedCacheControlHeaderStrategyFailWith403,
+								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithResponseHeader,
+								apigateway.UnauthorizedCacheControlHeaderStrategySucceedWithoutResponseHeader,
+							}, false),
 							Computed: true,
 						},
 					},
@@ -101,6 +113,10 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 }
 
 func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []interface{} {
+	if settings == nil {
+		return nil
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"metrics_enabled":                            settings.MetricsEnabled,
@@ -120,32 +136,34 @@ func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []in
 func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
 
-	log.Printf("[DEBUG] Reading API Gateway Method Settings %s", d.Id())
-	input := apigateway.GetStageInput{
+	input := &apigateway.GetStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
-	stage, err := conn.GetStage(&input)
-	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] API Gateway Stage (%s) not found, removing method settings", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+
+	stage, err := conn.GetStage(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
+
+	if err != nil {
+		return fmt.Errorf("error getting API Gateway Stage Method Settings (%s): %w", d.Id(), err)
+	}
 
 	methodPath := d.Get("method_path").(string)
 	settings, ok := stage.MethodSettings[methodPath]
-	if !ok {
-		log.Printf("[WARN] API Gateway Method Settings for %q not found, removing", methodPath)
+
+	if !d.IsNewResource() && !ok {
+		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err := d.Set("settings", flattenAwsApiGatewayMethodSettings(settings)); err != nil {
-		return fmt.Errorf("error setting settings: %s", err)
+		return fmt.Errorf("error setting settings: %w", err)
 	}
 
 	return nil
@@ -201,13 +219,15 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.caching_enabled").(bool))),
 		})
 	}
-	if d.HasChange("settings.0.cache_ttl_in_seconds") {
+
+	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.cache_ttl_in_seconds").(int))),
+			Value: aws.String(fmt.Sprintf("%d", v.(int))),
 		})
 	}
+
 	if d.HasChange("settings.0.cache_data_encrypted") {
 		ops = append(ops, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
@@ -238,9 +258,11 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 		PatchOperations: ops,
 	}
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
+
 	_, err := conn.UpdateStage(&input)
+
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
 	}
 
 	d.SetId(restApiId + "-" + stageName + "-" + methodPath)
@@ -250,9 +272,8 @@ func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta inte
 
 func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
-	log.Printf("[DEBUG] Deleting API Gateway Method Settings: %s", d.Id())
 
-	input := apigateway.UpdateStageInput{
+	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 		PatchOperations: []*apigateway.PatchOperation{
@@ -262,10 +283,20 @@ func resourceAwsApiGatewayMethodSettingsDelete(d *schema.ResourceData, meta inte
 			},
 		},
 	}
-	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
-	_, err := conn.UpdateStage(&input)
+
+	_, err := conn.UpdateStage(input)
+
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil
+	}
+
+	// BadRequestException: Cannot remove method setting */* because there is no method setting for this method
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "no method setting for this method") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
+		return fmt.Errorf("error deleting API Gateway Stage Method Settings (%s): %w", d.Id(), err)
 	}
 
 	return nil
