@@ -2,9 +2,11 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func awsCloudWatchQueryDefinition() *schema.Resource {
@@ -13,7 +15,9 @@ func awsCloudWatchQueryDefinition() *schema.Resource {
 		ReadContext:   resourceAwsCloudWatchQueryDefinitionRead,
 		UpdateContext: resourceAwsCloudWatchQueryDefinitionUpdate,
 		DeleteContext: resourceAwsCloudWatchQueryDefinitionDelete,
-		Importer:      nil,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceAwsCloudWatchQueryDefinitionImport,
+		},
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -81,39 +85,28 @@ func resourceAwsCloudWatchQueryDefinitionRead(c context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
-	empty := ""
-	query := &cloudwatchlogs.QueryDefinition{
-		QueryDefinitionId: nil,
-		LogGroupNames:     make([]*string, 0),
-		Name:              &empty,
-		QueryString:       &empty,
+	for _, qd := range qdResp.QueryDefinitions {
+		if *qd.QueryDefinitionId == d.Id() {
+			if err := d.Set("name", *qd.Name); err != nil {
+				return diag.FromErr(err)
+			}
+			if err := d.Set("query", *qd.QueryString); err != nil {
+				return diag.FromErr(err)
+			}
+
+			var logGroups []string
+			for _, lg := range qd.LogGroupNames {
+				logGroups = append(logGroups, *lg)
+			}
+			if err := d.Set("log_groups", logGroups); err != nil {
+				return diag.FromErr(err)
+			}
+			return nil
+		}
 	}
 
 	// disappears case
-	if len(qdResp.QueryDefinitions) != 1 {
-		d.SetId("")
-		return nil
-	}
-
-	query = qdResp.QueryDefinitions[0]
-	var logGroups []string
-
-	for _, lg := range query.LogGroupNames {
-		logGroups = append(logGroups, *lg)
-	}
-
-	if err := d.Set("name", *query.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("query", *query.QueryString); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("log_groups", logGroups); err != nil {
-		return diag.FromErr(err)
-	}
-
+	d.SetId("")
 	return nil
 }
 
@@ -140,4 +133,24 @@ func resourceAwsCloudWatchQueryDefinitionDelete(c context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 	return nil
+}
+
+func resourceAwsCloudWatchQueryDefinitionImport(c context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	name, id, err := parseImportFields(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("name", name)
+	d.SetId(id)
+	return []*schema.ResourceData{d}, nil
+}
+
+func parseImportFields(id string) (string, string, error) {
+	tokens := strings.Split(id, "_")
+	if len(tokens) != 2 || tokens[0] == "" || tokens[1] == "" {
+		return "", "", fmt.Errorf(`failed parsing resource ID: did not contain the correct number of fields for import`)
+	}
+
+	return tokens[0], tokens[1], nil
 }
