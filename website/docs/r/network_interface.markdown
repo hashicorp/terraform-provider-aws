@@ -37,8 +37,8 @@ The following arguments are supported:
 * `private_ip_list_enable` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default false.
 * `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
 * `ipv6_address_count` - (Optional) The number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6_addresses_list` - (Optional) List of private IPs to assign to the ENI in sequential order.
-* `ipv6_addresses_list_enable` - (Optional) Whether `ipv6_addreses_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_addresses_count` become read-only. Default false.
+* `ipv6_address_list` - (Optional) List of private IPs to assign to the ENI in sequential order.
+* `ipv6_address_list_enable` - (Optional) Whether `ipv6_addreses_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_addresses_count` become read-only. Default false.
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `attachment` - (Optional) Block to define the attachment of the ENI. Documented below.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
