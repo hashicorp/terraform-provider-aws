@@ -81,7 +81,21 @@ func resourceAwsCloudWatchQueryDefinitionRead(c context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
-	query := qdResp.QueryDefinitions[0]
+	empty := ""
+	query := &cloudwatchlogs.QueryDefinition{
+		QueryDefinitionId: nil,
+		LogGroupNames: make([]*string, 0),
+		Name: &empty,
+		QueryString: &empty,
+	}
+
+	// disappears case
+	if len(qdResp.QueryDefinitions) != 1 {
+		d.SetId("")
+		return nil
+	}
+
+	query = qdResp.QueryDefinitions[0]
 	var logGroups []string
 
 	for _, lg := range query.LogGroupNames {
