@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
 )
 
 func resourceAwsEcsCapacityProvider() *schema.Resource {
@@ -62,6 +63,13 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"instance_warmup_period": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 10000),
+									},
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -132,6 +140,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: []*string{aws.String(d.Id())},
@@ -158,10 +167,16 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
+	if aws.StringValue(provider.Status) == ecs.CapacityProviderStatusInactive {
+		log.Printf("[WARN] ECS Capacity Provider (%s) is INACTIVE, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("arn", provider.CapacityProviderArn)
 	d.Set("name", provider.Name)
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(provider.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(provider.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -187,8 +202,22 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	// Reference: https://github.com/aws/containers-roadmap/issues/632
-	log.Printf("[WARN] delete is not yet implemented for ECS capacity providers")
+	conn := meta.(*AWSClient).ecsconn
+
+	input := &ecs.DeleteCapacityProviderInput{
+		CapacityProvider: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteCapacityProvider(input)
+
+	if err != nil {
+		return fmt.Errorf("error deleting ECS Capacity Provider (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.CapacityProviderInactive(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for ECS Capacity Provider (%s) to delete: %w", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -226,6 +255,9 @@ func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGrou
 		ms := v[0].(map[string]interface{})
 		managedScaling := ecs.ManagedScaling{}
 
+		if val, ok := ms["instance_warmup_period"].(int); ok && val != 0 {
+			managedScaling.InstanceWarmupPeriod = aws.Int64(int64(val))
+		}
 		if val, ok := ms["maximum_scaling_step_size"].(int); ok && val != 0 {
 			managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
 		}
@@ -257,6 +289,7 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 
 	if provider.ManagedScaling != nil {
 		m := map[string]interface{}{
+			"instance_warmup_period":    aws.Int64Value(provider.ManagedScaling.InstanceWarmupPeriod),
 			"maximum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize),
 			"minimum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize),
 			"status":                    aws.StringValue(provider.ManagedScaling.Status),

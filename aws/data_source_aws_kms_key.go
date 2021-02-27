@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsKmsKey() *schema.Resource {
@@ -63,6 +63,10 @@ func dataSourceAwsKmsKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"customer_master_key_spec": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"origin": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -88,7 +92,7 @@ func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	output, err := conn.DescribeKey(input)
 	if err != nil {
-		return fmt.Errorf("error while describing key [%s]: %s", keyId, err)
+		return fmt.Errorf("error while describing key [%s]: %w", keyId, err)
 	}
 	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 	d.Set("arn", output.KeyMetadata.Arn)
@@ -103,6 +107,7 @@ func dataSourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_manager", output.KeyMetadata.KeyManager)
 	d.Set("key_state", output.KeyMetadata.KeyState)
 	d.Set("key_usage", output.KeyMetadata.KeyUsage)
+	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
 	d.Set("origin", output.KeyMetadata.Origin)
 	if output.KeyMetadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(output.KeyMetadata.ValidTo).Format(time.RFC3339))

@@ -269,26 +269,20 @@ func testAccCheckAWSLightsailLoadBalancerDestroy(s *terraform.State) error {
 
 func testAccAWSLightsailLoadBalancerConfig_basic(lightsailLoadBalancerName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
-  name               = "%s"
-  health_check_path  = "/"
-  instance_port      = "80"
+  name              = "%s"
+  health_check_path = "/"
+  instance_port     = "80"
 }
 `, lightsailLoadBalancerName)
 }
 
 func testAccAWSLightsailLoadBalancerConfig_tags1(lightsailLoadBalancerName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
-  name               = "%s"
-  health_check_path  = "/"
-  instance_port      = "80"
+  name              = "%s"
+  health_check_path = "/"
+  instance_port     = "80"
   tags = {
     Name = "tf-test"
   }
@@ -298,15 +292,12 @@ resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
 
 func testAccAWSLightsailLoadBalancerConfig_tags2(lightsailLoadBalancerName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_load_balancer" "lightsail_load_balancer_test" {
-  name               = "%s"
-  health_check_path  = "/"
-  instance_port      = "80"
+  name              = "%s"
+  health_check_path = "/"
+  instance_port     = "80"
   tags = {
-    Name      = "tf-test",
+    Name      = "tf-test"
     ExtraName = "tf-test"
   }
 }
