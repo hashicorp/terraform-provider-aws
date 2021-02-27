@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/mutexkv"
 )
@@ -176,6 +177,8 @@ func Provider() *schema.Provider {
 			"aws_api_gateway_resource":                       dataSourceAwsApiGatewayResource(),
 			"aws_api_gateway_rest_api":                       dataSourceAwsApiGatewayRestApi(),
 			"aws_api_gateway_vpc_link":                       dataSourceAwsApiGatewayVpcLink(),
+			"aws_apigatewayv2_api":                           dataSourceAwsApiGatewayV2Api(),
+			"aws_apigatewayv2_apis":                          dataSourceAwsApiGatewayV2Apis(),
 			"aws_arn":                                        dataSourceAwsArn(),
 			"aws_autoscaling_group":                          dataSourceAwsAutoscalingGroup(),
 			"aws_autoscaling_groups":                         dataSourceAwsAutoscalingGroups(),
@@ -522,13 +525,14 @@ func Provider() *schema.Provider {
 			"aws_cognito_identity_pool":                               resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":              resourceAwsCognitoIdentityPoolRolesAttachment(),
 			"aws_cognito_identity_provider":                           resourceAwsCognitoIdentityProvider(),
+			"aws_cognito_resource_server":                             resourceAwsCognitoResourceServer(),
 			"aws_cognito_user_group":                                  resourceAwsCognitoUserGroup(),
 			"aws_cognito_user_pool":                                   resourceAwsCognitoUserPool(),
 			"aws_cognito_user_pool_client":                            resourceAwsCognitoUserPoolClient(),
 			"aws_cognito_user_pool_domain":                            resourceAwsCognitoUserPoolDomain(),
+			"aws_cognito_user_pool_ui_customization":                  resourceAwsCognitoUserPoolUICustomization(),
 			"aws_cloudhsm_v2_cluster":                                 resourceAwsCloudHsmV2Cluster(),
 			"aws_cloudhsm_v2_hsm":                                     resourceAwsCloudHsmV2Hsm(),
-			"aws_cognito_resource_server":                             resourceAwsCognitoResourceServer(),
 			"aws_cloudwatch_composite_alarm":                          resourceAwsCloudWatchCompositeAlarm(),
 			"aws_cloudwatch_metric_alarm":                             resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                                resourceAwsCloudWatchDashboard(),
@@ -641,6 +645,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment":                  resourceAwsEc2TransitGatewayVpcAttachment(),
 			"aws_ec2_transit_gateway_vpc_attachment_accepter":         resourceAwsEc2TransitGatewayVpcAttachmentAccepter(),
 			"aws_ecr_lifecycle_policy":                                resourceAwsEcrLifecyclePolicy(),
+			"aws_ecrpublic_repository":                                resourceAwsEcrPublicRepository(),
 			"aws_ecr_repository":                                      resourceAwsEcrRepository(),
 			"aws_ecr_repository_policy":                               resourceAwsEcrRepositoryPolicy(),
 			"aws_ecs_capacity_provider":                               resourceAwsEcsCapacityProvider(),
@@ -893,6 +898,7 @@ func Provider() *schema.Provider {
 			"aws_route_table":                                         resourceAwsRouteTable(),
 			"aws_default_route_table":                                 resourceAwsDefaultRouteTable(),
 			"aws_route_table_association":                             resourceAwsRouteTableAssociation(),
+			"aws_sagemaker_app":                                       resourceAwsSagemakerApp(),
 			"aws_sagemaker_app_image_config":                          resourceAwsSagemakerAppImageConfig(),
 			"aws_sagemaker_code_repository":                           resourceAwsSagemakerCodeRepository(),
 			"aws_sagemaker_domain":                                    resourceAwsSagemakerDomain(),
@@ -1455,20 +1461,25 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "Unique identifier that might be required for assuming a role in another account.",
 				},
 				"policy": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+					ValidateFunc: validation.StringIsJSON,
 				},
 				"policy_arns": {
 					Type:        schema.TypeSet,
 					Optional:    true,
 					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
-					Elem:        &schema.Schema{Type: schema.TypeString},
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validateArn,
+					},
 				},
 				"role_arn": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+					ValidateFunc: validateArn,
 				},
 				"session_name": {
 					Type:        schema.TypeString,

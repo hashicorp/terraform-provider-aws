@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_elasticache_global_replication_group
 
-Provides an ElastiCache Global Replication Group resource, which manage a replication between 2 or more redis replication group in different regions.
+Provides an ElastiCache Global Replication Group resource, which manage a replication between 2 or more redis replication group in different regions. For more information, see the [ElastiCache User Guide](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Redis-Global-Datastore.html).
 
 ## Example Usage
 

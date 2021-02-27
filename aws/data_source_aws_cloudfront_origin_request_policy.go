@@ -126,9 +126,14 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %w", d.Id(), err)
 		}
+
+		if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
+			return nil
+		}
+
 		d.Set("etag", aws.StringValue(resp.ETag))
 
-		originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
+		originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
 		d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
 		d.Set("name", aws.StringValue(originRequestPolicy.Name))
 		d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))

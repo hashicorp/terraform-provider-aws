@@ -25,7 +25,7 @@ resource "aws_sns_topic" "topic" {
     "Version":"2012-10-17",
     "Statement":[{
         "Effect": "Allow",
-        "Principal": {"AWS":"*"},
+        "Principal": { "Service": "s3.amazonaws.com" },
         "Action": "SNS:Publish",
         "Resource": "arn:aws:sns:*:*:s3-event-notification-topic",
         "Condition":{

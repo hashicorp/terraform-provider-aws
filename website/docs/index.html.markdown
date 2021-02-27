@@ -241,6 +241,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
     - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
     - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
+    - [`aws_apigatewayv2_api` data source](/docs/providers/aws/d/apigatewayv2_api.html)
     - [`aws_apigatewayv2_api` resource](/docs/providers/aws/r/apigatewayv2_api.html)
     - [`aws_apigatewayv2_stage` resource](/docs/providers/aws/r/apigatewayv2_stage.html)
     - [`aws_athena_workgroup` resource](/docs/providers/aws/r/athena_workgroup.html)
