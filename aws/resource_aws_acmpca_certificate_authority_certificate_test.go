@@ -130,8 +130,10 @@ resource "aws_acmpca_certificate" "test" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
-  validity_length = 1
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
@@ -168,8 +170,10 @@ resource "aws_acmpca_certificate" "updated" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
-  validity_length = 1
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
@@ -206,8 +210,10 @@ resource "aws_acmpca_certificate" "test" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/SubordinateCACertificate_PathLen0/V1"
 
-  validity_length = 1
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
@@ -252,8 +258,10 @@ resource "aws_acmpca_certificate" "root" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
-  validity_length = 2
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 2
+  }
 }
 
 data "aws_partition" "current" {}

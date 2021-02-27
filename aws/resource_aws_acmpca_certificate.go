@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/waiter"
 )
 
 func resourceAwsAcmpcaCertificate() *schema.Resource {
@@ -68,16 +70,28 @@ func resourceAwsAcmpcaCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(acmpca.SigningAlgorithm_Values(), false),
 			},
-			"validity_length": {
-				Type:     schema.TypeInt,
+			"validity": {
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
-			},
-			"validity_unit": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(acmpca.ValidityPeriodType_Values(), false),
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(acmpca.ValidityPeriodType_Values(), false),
+						},
+						"value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateTypeStringIsDateOrPositiveInt,
+						},
+					},
+				},
 			},
 			"template_arn": {
 				Type:         schema.TypeString,
@@ -98,17 +112,19 @@ func resourceAwsAcmpcaCertificateCreate(d *schema.ResourceData, meta interface{}
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(resource.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
-		Validity: &acmpca.Validity{
-			Type:  aws.String(d.Get("validity_unit").(string)),
-			Value: aws.Int64(int64(d.Get("validity_length").(int))),
-		},
 	}
+	validity, err := expandAcmpcaValidity(d.Get("validity").([]interface{}))
+	if err != nil {
+		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+	}
+	input.Validity = validity
+
 	if v, ok := d.Get("template_arn").(string); ok && v != "" {
 		input.TemplateArn = aws.String(v)
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.CertificateAuthorityActiveTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.IssueCertificate(input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
@@ -229,4 +245,37 @@ func validateAcmPcaTemplateArn(v interface{}, k string) (ws []string, errors []e
 	}
 
 	return ws, errors
+}
+
+func expandAcmpcaValidity(l []interface{}) (*acmpca.Validity, error) {
+	if len(l) == 0 {
+		return nil, nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	valueType := m["type"].(string)
+	result := &acmpca.Validity{
+		Type: aws.String(valueType),
+	}
+
+	i, err := expandAcmpcaValidityValue(valueType, m["value"].(string))
+	if err != nil {
+		return nil, fmt.Errorf("error parsing value %q: %w", m["value"].(string), err)
+	}
+	result.Value = aws.Int64(i)
+
+	return result, nil
+}
+
+func expandAcmpcaValidityValue(valueType, v string) (int64, error) {
+	if valueType == acmpca.ValidityPeriodTypeEndDate {
+		date, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return 0, err
+		}
+		v = date.UTC().Format("20060102150405") // YYYYMMDDHHMMSS
+	}
+
+	return strconv.ParseInt(v, 10, 64)
 }

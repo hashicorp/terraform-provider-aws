@@ -29,8 +29,10 @@ resource "aws_acmpca_certificate" "example" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
 
-  validity_length = 1
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
@@ -68,8 +70,10 @@ resource "aws_acmpca_certificate" "subordinate" {
 
   template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/SubordinateCACertificate_PathLen0/V1"
 
-  validity_length = 1
-  validity_unit   = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "subordinate" {

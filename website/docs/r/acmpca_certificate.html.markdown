@@ -19,8 +19,10 @@ resource "aws_acmpca_certificate" "example" {
   certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
   certificate_signing_request = tls_cert_request.csr.cert_request_pem
   signing_algorithm           = "SHA256WITHRSA"
-  validity_length             = 1
-  validity_unit               = "YEARS"
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
@@ -57,9 +59,13 @@ The following arguments are supported:
 * `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
 * `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`
-* `validity_length` - (Required) Used with `validity_unit` as the number to apply with the unit
-* `validity_unit` - (Required) The unit of time for certificate validity. Cannot be set to a value higher than the validity of the Certficate Authority. Valid values: `DAYS`, `MONTHS`, `YEARS`, `ABSOLUTE`, `END_DATE`.
+* `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
 * `template_arn` - (Optional) The template to use when issuing a certificate. See [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/userguide/UsingTemplates.html) for more information.
+
+### validity block
+
+* `type` - (Required) Determines how `value` is interpreted. Valid values: `DAYS`, `MONTHS`, `YEARS`, `ABSOLUTE`, `END_DATE`.
+* `value` - (Required) If `type` is `DAYS`, `MONTHS`, or `YEARS`, the relative time until the certificate expires. If `type` is `ABSOLUTE`, the date in seconds since the Unix epoch. If `type` is `END_DATE`, the  date in RFC 3339 format.
 
 
 ## Attribute Reference
