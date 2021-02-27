@@ -22,6 +22,7 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
+					resource.TestCheckResourceAttr(resourceName, "name", queryName),
 				),
 			}, {
 				ResourceName:            resourceName,
@@ -50,6 +51,33 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 					testAccCheckAWSCloudWatchQueryDefinitionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchQueryDefinition_update(t *testing.T) {
+	resourceName := "aws_cloudwatch_query_definition.query"
+	queryName := "test"
+	updatedQueryName := "test-update"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy(resourceName, queryName),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
+					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+				),
+			}, {
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(updatedQueryName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, updatedQueryName),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedQueryName),
+				),
 			},
 		},
 	})
