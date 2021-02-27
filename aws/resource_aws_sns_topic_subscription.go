@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sns/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sns/waiter"
 )
 
@@ -104,13 +105,15 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"subscription_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"topic_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
@@ -168,22 +171,27 @@ func resourceAwsSnsTopicSubscriptionRead(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Loading subscription %s", d.Id())
 
-	output, err := conn.GetSubscriptionAttributes(&sns.GetSubscriptionAttributesInput{
-		SubscriptionArn: aws.String(d.Id()),
-	})
+	input := &sns.ListSubscriptionsByTopicInput{
+		TopicArn: aws.String(d.Get("topic_arn").(string)),
+	}
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, sns.ErrCodeResourceNotFoundException) || tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException)) {
-		log.Printf("[WARN] SNS subscription attributes (%s) not found, removing from state", d.Id())
+	_, err := conn.ListSubscriptionsByTopic(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		log.Printf("[WARN] SNS Topic Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	output, err := finder.SubscriptionByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("getting SNS subscription attributes (%s): %w", d.Id(), err)
 	}
 
-	if output == nil || output.Attributes == nil || len(output.Attributes) == 0 {
-		return fmt.Errorf("getting SNS subscription attributes (%s): empty response", d.Id())
+	if output == nil {
+		log.Printf("[WARN] SNS subscription attributes (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	attributes := output.Attributes
@@ -280,6 +288,13 @@ func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interfac
 		log.Printf("[WARN] Removing unconfirmed SNS topic subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if _, err := waiter.SubscriptionDeleted(conn, d.Id()); err != nil {
+		if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+			return nil
+		}
+		return fmt.Errorf("error waiting for SNS topic subscription (%s) deletion: %w", d.Id(), err)
 	}
 
 	return err
