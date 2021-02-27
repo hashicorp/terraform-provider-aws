@@ -1,0 +1,19 @@
+```release-note:bug
+r/sagemaker_app: Add missing `sagemaker_image_version_arn` property in Resource Spec
+```
+
+```release-note:bug
+r/sagemaker_domain: Do not require `execution_role` in Default User Settings
+```
+
+```release-note:bug
+r/sagemaker_domain: Add missing `sagemaker_image_version_arn` property in Resource Spec
+```
+
+```release-note:bug
+r/sagemaker_user_profile: Do not require `execution_role` in User Settings
+```
+
+```release-note:bug
+r/sagemaker_user_profile: Add missing `sagemaker_image_version_arn` property in Resource Spec
+```

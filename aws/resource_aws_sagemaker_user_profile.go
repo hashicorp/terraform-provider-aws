@@ -69,7 +69,7 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 						},
 						"execution_role": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validateArn,
 						},
 						"sharing_settings": {
@@ -116,6 +116,11 @@ func resourceAwsSagemakerUserProfile() *schema.Resource {
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validateArn,
