@@ -18,6 +18,10 @@ func resourceAwsAcmpcaCertificateAuthorityCertificate() *schema.Resource {
 		Read:   resourceAwsAcmpcaCertificateAuthorityCertificateRead,
 		Delete: schema.Noop,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"certificate": {
 				Type:         schema.TypeString,
@@ -77,6 +81,7 @@ func resourceAwsAcmpcaCertificateAuthorityCertificateRead(d *schema.ResourceData
 		return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate (%s): %w", d.Id(), err)
 	}
 
+	d.Set("certificate_authority_arn", d.Id())
 	d.Set("certificate", aws.StringValue(output.Certificate))
 	d.Set("certificate_chain", aws.StringValue(output.CertificateChain))
 

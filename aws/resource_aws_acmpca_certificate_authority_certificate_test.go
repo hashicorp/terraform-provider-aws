@@ -31,6 +31,11 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -86,6 +91,11 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
