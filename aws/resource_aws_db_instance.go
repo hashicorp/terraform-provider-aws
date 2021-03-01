@@ -130,6 +130,10 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"customer_owned_ip_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1005,6 +1009,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
+		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+			opts.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
+		}
+
 		log.Printf("[DEBUG] DB Instance restore from snapshot configuration: %s", opts)
 		_, err := conn.RestoreDBInstanceFromDBSnapshot(&opts)
 
@@ -1106,6 +1114,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 				input.VpcSecurityGroupIds = expandStringSet(v.(*schema.Set))
+			}
+
+			if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+				input.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
 			}
 
 			log.Printf("[DEBUG] DB Instance restore to point in time configuration: %s", input)
@@ -1254,6 +1266,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("performance_insights_retention_period"); ok {
 			opts.PerformanceInsightsRetentionPeriod = aws.Int64(int64(attr.(int)))
+		}
+
+		if attr, ok := d.GetOk("customer_owned_ip_enabled"); ok {
+			opts.EnableCustomerOwnedIp = aws.Bool(attr.(bool))
 		}
 
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
@@ -1474,6 +1490,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
+
+	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 
 	return nil
 }
@@ -1714,6 +1732,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
 		}
 
+		requestUpdate = true
+	}
+
+	if d.HasChange("customer_owned_ip_enabled") {
+		req.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
 		requestUpdate = true
 	}
 
