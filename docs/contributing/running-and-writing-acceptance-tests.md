@@ -1295,9 +1295,9 @@ resource "aws_subnet" "test" {
 }
 ```
 
-#### Hardcoded Versions
+#### Hardcoded Database Versions
 
-- [ ] __Uses Version Data Sources__: Hardcoded versions, e.g. RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
+- [ ] __Uses Database Version Data Sources__: Hardcoded database versions, e.g. RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
     - [`aws_rds_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/rds_engine_version.html),
     - [`aws_docdb_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/docdb_engine_version.html), and
     - [`aws_neptune_engine_version` data source](https://www.terraform.io/docs/providers/aws/d/neptune_engine_version.html).
