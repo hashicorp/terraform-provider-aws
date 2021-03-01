@@ -308,11 +308,11 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error reading ACM Ccertificate (%s): %w", d.Id(), err))
+			return resource.NonRetryableError(fmt.Errorf("error reading ACM Certificate (%s): %w", d.Id(), err))
 		}
 
 		if resp == nil || resp.Certificate == nil {
-			return resource.NonRetryableError(fmt.Errorf("error describing ACM Certificate (%s): empty response", d.Id()))
+			return resource.NonRetryableError(fmt.Errorf("error reading ACM Certificate (%s): empty response", d.Id()))
 		}
 
 		if !d.IsNewResource() && aws.StringValue(resp.Certificate.Status) == acm.CertificateStatusValidationTimedOut {
