@@ -13,6 +13,8 @@ import (
 const (
 	ChangeTimeout = 30 * time.Minute
 
+	HostedZoneDnssecStatusTimeout = 5 * time.Minute
+
 	KeySigningKeyStatusTimeout = 5 * time.Minute
 )
 
@@ -29,6 +31,38 @@ func ChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.Ch
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*route53.ChangeInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func HostedZoneDnssecStatusUpdated(conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Target:     []string{status},
+		Refresh:    HostedZoneDnssecStatus(conn, hostedZoneID),
+		MinTimeout: 5 * time.Second,
+		Timeout:    HostedZoneDnssecStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*route53.DNSSECStatus); ok {
+		if err != nil && output != nil && output.ServeSignature != nil && output.StatusMessage != nil {
+			newErr := fmt.Errorf("%s: %s", aws.StringValue(output.ServeSignature), aws.StringValue(output.StatusMessage))
+
+			switch e := err.(type) {
+			case *resource.TimeoutError:
+				if e.LastError == nil {
+					e.LastError = newErr
+				}
+			case *resource.UnexpectedStateError:
+				if e.LastError == nil {
+					e.LastError = newErr
+				}
+			}
+		}
+
 		return output, err
 	}
 
