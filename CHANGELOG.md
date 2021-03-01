@@ -1,5 +1,9 @@
 ## 3.31.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_route53_hosted_zone_dnssec` ([#pending](https://github.com/hashicorp/terraform-provider-aws/issues/pending))
+
 ## 3.30.0 (February 26, 2021)
 
 FEATURES:
