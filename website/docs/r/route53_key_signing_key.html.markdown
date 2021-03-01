@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_route53_key_signing_key
 
-Manages an Route 53 Key Signing Key. To manage Domain Name System Security Extensions (DNSSEC) for a Hosted Zone, see the [`aws_route53_hosted_zone_dnssec` resource](route53_hosted_zone_dnssec.html). For more information about managing DNSSEC in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
+Manages a Route 53 Key Signing Key. To manage Domain Name System Security Extensions (DNSSEC) for a Hosted Zone, see the [`aws_route53_hosted_zone_dnssec` resource](route53_hosted_zone_dnssec.html). For more information about managing DNSSEC in Route 53, see the [Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec.html).
 
 ## Example Usage
 
