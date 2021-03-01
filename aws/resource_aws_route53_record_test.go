@@ -366,12 +366,11 @@ func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheckSkipRoute53(t),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"zone_id"}, // just for this test
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckRoute53RecordDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipRoute53(t),
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53RecordConfigDS,
@@ -383,7 +382,7 @@ func TestAccAWSRoute53Record_dsSupport(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight", "zone_id"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 		},
 	})
@@ -1470,7 +1469,7 @@ resource "aws_route53_zone" "main" {
 }
 
 resource "aws_route53_record" "default" {
-  zone_id = "/hostedzone/${aws_route53_zone.main.zone_id}"
+  zone_id = aws_route53_zone.main.zone_id
   name    = "test"
   type    = "DS"
   ttl     = "30"
