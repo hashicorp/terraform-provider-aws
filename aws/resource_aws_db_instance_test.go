@@ -7648,7 +7648,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rInt int, coipEnabled bool) string {
+func testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -7660,7 +7660,7 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.128.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-db-instance-coip-%[1]d"
+    Name = %[1]q
   }
 }
 
@@ -7671,16 +7671,16 @@ resource "aws_subnet" "foo" {
   outpost_arn       = data.aws_outposts_outpost.test.arn
 
   tags = {
-    Name = "tf-acc-db-instance-coip-%[1]d"
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "foo" {
-  name       = "foo-db-subnet-group-%[1]d"
+  name       = %[1]q
   subnet_ids = [aws_subnet.foo.id]
 
   tags = {
-    Name = "tf-dbsubnet-group-coip-%[1]d"
+    Name = %[1]q
   }
 }
 
@@ -7694,19 +7694,20 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 }
 
 data "aws_rds_engine_version" "test" {
-  engine  = "mysql"
-  version = "8.0.17"
+  engine             = "mysql"
+  preferred_versions = ["8.0.17", "8.0.19", "8.0.20", "8.0.21"]
 }
 
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.m5.large", "db.m5.xlarge", "db.r5.large"]
+  preferred_instance_classes = ["db.m5.large", "db.m5.xlarge", "db.r5.large", "db.r5.xlarge"]
 }
 
 resource "aws_db_instance" "test" {
+  identifier                = %[1]q
   allocated_storage         = 20
-  backup_retention_period   = 1
+  backup_retention_period   = %[3]d
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class            = data.aws_rds_orderable_db_instance.test.instance_class
@@ -7718,57 +7719,44 @@ resource "aws_db_instance" "test" {
   db_subnet_group_name      = aws_db_subnet_group.foo.name
   storage_encrypted         = true
   customer_owned_ip_enabled = %[2]t
-
-  timeouts {
-    create = "180m"
-    update = "180m"
-  }
 }
-`, rInt, coipEnabled)
+`, rName, coipEnabled, backupRetentionPeriod)
 }
 
-func testAccAWSDBInstanceConfig_CoipEnabled_RestorePointInTime(sourceCoipEnabled bool, targetCoipEnabled bool) string {
+func testAccAWSDBInstanceConfig_CoipEnabled_RestorePointInTime(rName string, sourceCoipEnabled bool, targetCoipEnabled bool) string {
 	return composeConfig(
-		testAccAWSDBInstanceConfig_Outpost_CoipEnabled(acctest.RandInt(), sourceCoipEnabled),
+		testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, sourceCoipEnabled, 1),
 		fmt.Sprintf(`
 resource "aws_db_instance" "restore" {
-  identifier     = "tf-acc-test-point-in-time-restore-%[1]d"
+  identifier     = "%[1]s-restore"
   instance_class = aws_db_instance.test.instance_class
   restore_to_point_in_time {
     source_db_instance_identifier = aws_db_instance.test.identifier
     use_latest_restorable_time    = true
   }
+  storage_encrypted         = true
   skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_instance.test.db_subnet_group_name
   customer_owned_ip_enabled = %[2]t
-
-  timeouts {
-    create = "180m"
-    update = "180m"
-  }
 }
-`, acctest.RandInt(), targetCoipEnabled))
+`, rName, targetCoipEnabled))
 }
 
 func testAccAWSDBInstanceConfig_CoipEnabled_SnapshotIdentifier(rName string, sourceCoipEnabled bool, targetCoipEnabled bool) string {
-	return composeConfig(testAccAWSDBInstanceConfig_Outpost_CoipEnabled(acctest.RandInt(), sourceCoipEnabled), fmt.Sprintf(`
+	return composeConfig(testAccAWSDBInstanceConfig_Outpost_CoipEnabled(rName, sourceCoipEnabled, 1), fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = aws_db_instance.test.id
   db_snapshot_identifier = %[1]q
 }
 
-resource "aws_db_instance" "target" {
+resource "aws_db_instance" "restore" {
   customer_owned_ip_enabled = %[2]t
   db_subnet_group_name      = aws_db_subnet_group.foo.name
   storage_encrypted         = true
-  identifier                = %[1]q
+  identifier                = "%[1]s-restore"
   instance_class            = aws_db_instance.test.instance_class
   snapshot_identifier       = aws_db_snapshot.test.id
   skip_final_snapshot       = true
-
-  timeouts {
-    create = "180m"
-    update = "180m"
-  }
 }
 `, rName, targetCoipEnabled))
 }
