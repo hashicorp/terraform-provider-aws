@@ -7,6 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
+	"log"
 	"strings"
 )
 
@@ -79,40 +81,29 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 func resourceAwsCloudWatchQueryDefinitionRead(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 	name := d.Get("name").(string)
-	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{
-		QueryDefinitionNamePrefix: aws.String(name),
-	}
+	id := d.Id()
 
-	qdResp, err := conn.DescribeQueryDefinitions(input)
+	result, err := finder.QueryDefinition(conn, name, id)
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	for _, qd := range qdResp.QueryDefinitions {
-		if *qd.QueryDefinitionId == d.Id() {
-			if err := d.Set("name", *qd.Name); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("query", *qd.QueryString); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set("query_definition_id", *qd.QueryDefinitionId); err != nil {
-				return diag.FromErr(err)
-			}
-
-			var logGroups []string
-			for _, lg := range qd.LogGroupNames {
-				logGroups = append(logGroups, *lg)
-			}
-			if err := d.Set("log_groups", logGroups); err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+	if result == nil {
+		log.Printf("[WARN] cloudwatch query definition (%s) not found, removing from state", d.Id())
+		d.SetId("")
+	} else {
+		if err := d.Set("query", aws.StringValue(result.QueryString)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("query_definition_id", aws.StringValue(result.QueryDefinitionId)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("log_groups", aws.StringValueSlice(result.LogGroupNames)); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 
-	// disappears case
-	d.SetId("")
 	return nil
 }
 
