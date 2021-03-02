@@ -654,12 +654,12 @@ func testAccAWSSSMMaintenanceWindowTaskConfigDescription(rName string, descripti
 		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ssm_maintenance_window_task" "test" {
-  description      = %[1]q
-  max_concurrency  = 2
-  max_errors       = 1
-  task_arn         = "AWS-RunShellScript"
-  task_type        = "RUN_COMMAND"
-  window_id        = aws_ssm_maintenance_window.test.id
+  description     = %[1]q
+  max_concurrency = 2
+  max_errors      = 1
+  task_arn        = "AWS-RunShellScript"
+  task_type       = "RUN_COMMAND"
+  window_id       = aws_ssm_maintenance_window.test.id
 
   targets {
     key    = "WindowTargetIds"
