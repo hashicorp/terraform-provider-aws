@@ -1,8 +1,10 @@
 package aws
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 
@@ -60,4 +62,8 @@ func appendUniqueString(slice []string, elem string) []string {
 		}
 	}
 	return append(slice, elem)
+}
+
+func hashSum(contents interface{}) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
 }

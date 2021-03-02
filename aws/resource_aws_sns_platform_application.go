@@ -340,6 +340,3 @@ func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func hashSum(contents interface{}) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
-}
