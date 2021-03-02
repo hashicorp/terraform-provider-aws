@@ -128,6 +128,52 @@ func TestAccAWSNeptuneClusterParameterGroup_Description(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17870
+func TestAccAWSNeptuneClusterParameterGroup_NamePrefix_Parameter(t *testing.T) {
+	var v neptune.DBClusterParameterGroup
+
+	resourceName := "aws_neptune_cluster_parameter_group.test"
+	prefix := "tf-acc-test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNeptuneClusterParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_NamePrefix_Parameter(prefix, "neptune_enable_audit_log", "1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "neptune_enable_audit_log",
+						"value":        "1",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
+			{
+				Config: testAccAWSNeptuneClusterParameterGroupConfig_NamePrefix_Parameter(prefix, "neptune_enable_audit_log", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNeptuneClusterParameterGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "neptune_enable_audit_log",
+						"value":        "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSNeptuneClusterParameterGroup_Parameter(t *testing.T) {
 	var v neptune.DBClusterParameterGroup
 
@@ -324,6 +370,20 @@ resource "aws_neptune_cluster_parameter_group" "test" {
   }
 }
 `, name, pName, pValue)
+}
+
+func testAccAWSNeptuneClusterParameterGroupConfig_NamePrefix_Parameter(namePrefix, pName, pValue string) string {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "test" {
+  family      = "neptune1"
+  name_prefix = %q
+
+  parameter {
+    name  = %q
+    value = %q
+  }
+}
+`, namePrefix, pName, pValue)
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig_Tags(name, tKey, tValue string) string {
