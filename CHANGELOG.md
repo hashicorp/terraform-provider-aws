@@ -2,7 +2,15 @@
 
 FEATURES:
 
-* **New Resource:** `aws_route53_hosted_zone_dnssec` ([#pending](https://github.com/hashicorp/terraform-provider-aws/issues/pending))
+* **New Resource:** `aws_route53_hosted_zone_dnssec` ([#17474](https://github.com/hashicorp/terraform-provider-aws/issues/17474))
+
+ENHANCEMENTS:
+
+* resource/aws_route53_record: Support `DS` value for `type` argument ([#17040](https://github.com/hashicorp/terraform-provider-aws/issues/17040))
+
+BUG FIXES:
+
+* resource/aws_neptune_cluster_parameter_group: Correctly update resource by `id` ([#17872](https://github.com/hashicorp/terraform-provider-aws/issues/17872))
 
 ## 3.30.0 (February 26, 2021)
 
