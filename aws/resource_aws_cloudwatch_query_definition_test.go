@@ -6,11 +6,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchlogs/finder"
 	"testing"
 )
 
 func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
-	resourceName := "aws_cloudwatch_query_definition.query"
+	ident := "basic"
+	resourceName := fmt.Sprintf("aws_cloudwatch_query_definition.%s", ident)
 	queryName := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -19,7 +21,7 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy(resourceName, queryName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName),
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName, ident),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "name", queryName),
@@ -36,8 +38,9 @@ func TestAccAWSCloudWatchQueryDefinition_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
-	resourceName := "aws_cloudwatch_query_definition.query"
-	queryName := "test"
+	ident := "disappears"
+	resourceName := fmt.Sprintf("aws_cloudwatch_query_definition.%s", ident)
+	queryName := "test-disappears"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -45,7 +48,7 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy(resourceName, queryName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName),
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName, ident),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
 					testAccCheckAWSCloudWatchQueryDefinitionDisappears(resourceName),
@@ -57,8 +60,9 @@ func TestAccAWSCloudWatchQueryDefinition_disappears(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchQueryDefinition_update(t *testing.T) {
-	resourceName := "aws_cloudwatch_query_definition.query"
-	queryName := "test"
+	ident := "update"
+	resourceName := fmt.Sprintf("aws_cloudwatch_query_definition.%s", ident)
+	queryName := "testupdate"
 	updatedQueryName := "test-update"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,13 +71,13 @@ func TestAccAWSCloudWatchQueryDefinition_update(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy(resourceName, queryName),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName),
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(queryName, ident),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "name", queryName),
 				),
 			}, {
-				Config: testAccAWSCloudWatchQueryDefinitionConfig(updatedQueryName),
+				Config: testAccAWSCloudWatchQueryDefinitionConfig(updatedQueryName, ident),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, updatedQueryName),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedQueryName),
@@ -107,20 +111,19 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName, qName string) resourc
 		if !ok {
 			return fmt.Errorf("Not found: %s", rName)
 		}
-
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
-		params := &cloudwatchlogs.DescribeQueryDefinitionsInput{QueryDefinitionNamePrefix: aws.String(qName)}
-		resp, err := conn.DescribeQueryDefinitions(params)
+
+		result, err := finder.QueryDefinition(conn, qName, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.QueryDefinitions) != 1 {
-			return fmt.Errorf("expected 1 query result, got %d", len(resp.QueryDefinitions))
+		if result == nil {
+			return fmt.Errorf("query with name %s, id %s not found", qName, rs.Primary.ID)
 		}
 
-		if got, want := *resp.QueryDefinitions[0].QueryDefinitionId, rs.Primary.ID; got != want {
+		if got, want := aws.StringValue(result.QueryDefinitionId), rs.Primary.ID; got != want {
 			return fmt.Errorf("want query id: %s, got %s", want, got)
 		}
 
@@ -128,9 +131,9 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName, qName string) resourc
 	}
 }
 
-func testAccAWSCloudWatchQueryDefinitionConfig(name string) string {
+func testAccAWSCloudWatchQueryDefinitionConfig(name, ident string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_query_definition" "query" {
+resource "aws_cloudwatch_query_definition" "%s" {
 	name = "%s"
     log_groups = []
 	query = <<EOF
@@ -139,7 +142,7 @@ fields @timestamp, @message
 | limit 20
 EOF
 }
-`, name)
+`, ident, name)
 }
 
 func testAccCheckAWSCloudWatchQueryDefinitionDestroy(rName, qName string) resource.TestCheckFunc {
@@ -151,15 +154,13 @@ func testAccCheckAWSCloudWatchQueryDefinitionDestroy(rName, qName string) resour
 			return fmt.Errorf("resource %s not found in state", rName)
 		}
 
-		params := &cloudwatchlogs.DescribeQueryDefinitionsInput{QueryDefinitionNamePrefix: aws.String(qName)}
-		resp, err := conn.DescribeQueryDefinitions(params)
-
+		result, err := finder.QueryDefinition(conn, qName, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.QueryDefinitions) != 0 {
-			return fmt.Errorf("query definition still exists: %s", rs.Primary.ID)
+		if result != nil {
+			return fmt.Errorf("query definition %s - %s still exists", qName, rs.Primary.ID)
 		}
 
 		return nil
