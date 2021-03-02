@@ -192,6 +192,8 @@ The `lambda` block supports the following:
 
 #### Starting Position Configuration
 
+~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+
 The point at which the application reads from the streaming source.
 
 The `starting_position_configuration` block supports the following:
