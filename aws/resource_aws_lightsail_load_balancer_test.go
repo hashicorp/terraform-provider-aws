@@ -142,7 +142,7 @@ func TestAccAWSLightsailLoadBalancer_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailLoadBalancer_Path(t *testing.T) {
+func TestAccAWSLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
 	var lb lightsail.LoadBalancer
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_load_balancer.test"
@@ -153,7 +153,7 @@ func TestAccAWSLightsailLoadBalancer_Path(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLightsailLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailLoadBalancerConfigPath(rName, "/"),
+				Config: testAccAWSLightsailLoadBalancerConfigHealthCheckPath(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -165,7 +165,7 @@ func TestAccAWSLightsailLoadBalancer_Path(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLightsailLoadBalancerConfigPath(rName, "/healthcheck"),
+				Config: testAccAWSLightsailLoadBalancerConfigHealthCheckPath(rName, "/healthcheck"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/healthcheck"),
@@ -312,7 +312,7 @@ resource "aws_lightsail_load_balancer" "test" {
 `, rName)
 }
 
-func testAccAWSLightsailLoadBalancerConfigPath(rName string, rPath string) string {
+func testAccAWSLightsailLoadBalancerConfigHealthCheckPath(rName string, rPath string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_load_balancer" "test" {
   name              = %[1]q
