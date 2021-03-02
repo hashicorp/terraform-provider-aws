@@ -99,6 +99,11 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://accounts.google.com/.well-known/openid-configuration"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

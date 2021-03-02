@@ -22,9 +22,10 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 		ReadContext:   resourceAwsEksIdentityProviderConfigRead,
 		DeleteContext: resourceAwsEksIdentityProviderConfigDelete,
 
-		// TODO - Not sure if I can enable importing?
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
-		// TODO - AWS is suggesting it can take 15-20 minutes to associate an identity provider with EKS. Seeing `context deadline exceeded`.
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(25 * time.Minute),
 			Delete: schema.DefaultTimeout(25 * time.Minute),
