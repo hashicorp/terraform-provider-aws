@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -15,7 +17,7 @@ func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.S
 			OperationId: oid,
 		}
 
-		oidValue := *oid
+		oidValue := aws.StringValue(oid)
 		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", oidValue)
 
 		output, err := conn.GetOperation(input)
