@@ -150,10 +150,22 @@ func resourceAwsCloudWatchQueryDefinitionImport(c context.Context, d *schema.Res
 }
 
 func parseImportFields(id string) (string, string, error) {
-	tokens := strings.Split(id, "_")
-	if len(tokens) != 2 || tokens[0] == "" || tokens[1] == "" {
-		return "", "", fmt.Errorf(`failed parsing resource ID: did not contain the correct number of fields for import`)
+	// having underscores in the query name is valid. The last occurrence of the underscore should separate the ID
+	// from the name of the query.
+	malformed := "resource ID did not contain correct number of fields for import"
+	lastUnd := strings.LastIndexByte(id, '_')
+
+	// if there isn't an underscore, the import is malformed.
+	if lastUnd < 0 {
+		return "", "", fmt.Errorf(malformed)
 	}
 
-	return tokens[0], tokens[1], nil
+	name, qId := id[0:lastUnd], id[lastUnd+1:]
+
+	// If either name or ID are the empty string, the import is malformed.
+	if name == "" || qId == "" {
+		return "", "", fmt.Errorf(malformed)
+	}
+
+	return name, qId, nil
 }
