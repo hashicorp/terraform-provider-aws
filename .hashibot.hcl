@@ -1581,11 +1581,6 @@ behavior "pull_request_path_labeler" "service_labels" {
   }
 }
 
-behavior "regexp_issue_labeler" "panic_label" {
-    regexp = "panic:"
-    labels = ["crash", "bug"]
-}
-
 behavior "remove_labels_on_reply" "remove_stale" {
     labels = ["waiting-response", "stale"]
     only_non_maintainers = true
