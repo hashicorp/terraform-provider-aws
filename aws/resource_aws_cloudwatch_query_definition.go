@@ -52,7 +52,9 @@ func resourceAwsCloudWatchQueryDefinitionCreate(c context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 	d.SetId(*r.QueryDefinitionId)
-	d.Set("query_definition_id", *r.QueryDefinitionId)
+	if err := d.Set("query_definition_id", aws.StringValue(r.QueryDefinitionId)); err != nil {
+		return diag.FromErr(err)
+	}
 	return resourceAwsCloudWatchQueryDefinitionRead(c, d, meta)
 }
 
@@ -131,8 +133,8 @@ func resourceAwsCloudWatchQueryDefinitionDelete(c context.Context, d *schema.Res
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 	queryId := d.Get("query_definition_id").(string)
 
-	parms := &cloudwatchlogs.DeleteQueryDefinitionInput{QueryDefinitionId: aws.String(queryId)}
-	_, err := conn.DeleteQueryDefinition(parms)
+	params := &cloudwatchlogs.DeleteQueryDefinitionInput{QueryDefinitionId: aws.String(queryId)}
+	_, err := conn.DeleteQueryDefinition(params)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -145,7 +147,10 @@ func resourceAwsCloudWatchQueryDefinitionImport(c context.Context, d *schema.Res
 		return nil, err
 	}
 
-	d.Set("name", name)
+	if err := d.Set("name", name); err != nil {
+		return nil, err
+	}
+
 	d.SetId(id)
 	return []*schema.ResourceData{d}, nil
 }
@@ -163,7 +168,7 @@ func parseImportFields(id string) (string, string, error) {
 
 	name, qId := id[0:lastUnd], id[lastUnd+1:]
 
-	// If either name or ID are the empty string, the import is malformed.
+	// if either name or ID are the empty string, the import is malformed.
 	if name == "" || qId == "" {
 		return "", "", fmt.Errorf(malformed)
 	}
