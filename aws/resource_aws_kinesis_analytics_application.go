@@ -788,6 +788,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					return fmt.Errorf("error adding Kinesis Analytics Application (%s) CloudWatch logging option: %w", d.Id(), err)
 				}
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId += 1
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing CloudWatch logging options.
@@ -807,6 +811,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 				if err != nil {
 					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) CloudWatch logging option: %w", d.Id(), err)
+				}
+
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
 				}
 
 				currentApplicationVersionId += 1
@@ -854,6 +862,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					return fmt.Errorf("error adding Kinesis Analytics Application (%s) input: %w", d.Id(), err)
 				}
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId += 1
 			} else if len(n.([]interface{})) == 0 {
 				// The existing input cannot be deleted.
@@ -887,6 +899,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 							return fmt.Errorf("error adding Kinesis Analytics Application (%s) input processing configuration: %w", d.Id(), err)
 						}
 
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
+						}
+
 						currentApplicationVersionId += 1
 					} else if len(n.([]interface{})) == 0 {
 						// Delete existing input processing configuration.
@@ -904,6 +920,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 						if err != nil {
 							return fmt.Errorf("error deleting Kinesis Analytics Application (%s) input processing configuration: %w", d.Id(), err)
+						}
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
 						}
 
 						currentApplicationVersionId += 1
@@ -962,6 +982,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) output: %w", d.Id(), err)
 				}
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId += 1
 			}
 
@@ -981,6 +1005,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 				if err != nil {
 					return fmt.Errorf("error adding Kinesis Analytics Application (%s) output: %w", d.Id(), err)
+				}
+
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
 				}
 
 				currentApplicationVersionId += 1
@@ -1008,6 +1036,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					return fmt.Errorf("error adding Kinesis Analytics Application (%s) reference data source: %w", d.Id(), err)
 				}
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId += 1
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing reference data source.
@@ -1027,6 +1059,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 				if err != nil {
 					return fmt.Errorf("error deleting Kinesis Analytics Application (%s) reference data source: %w", d.Id(), err)
+				}
+
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to update: %w", d.Id(), err)
 				}
 
 				currentApplicationVersionId += 1
