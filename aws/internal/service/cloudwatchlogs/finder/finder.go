@@ -9,7 +9,7 @@ import (
 func QueryDefinition(conn *cloudwatchlogs.CloudWatchLogs, qName, qId string) (*cloudwatchlogs.QueryDefinition, error) {
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{
 		QueryDefinitionNamePrefix: aws.String(qName),
-		MaxResults: aws.Int64(10),
+		MaxResults:                aws.Int64(10),
 	}
 
 	var result *cloudwatchlogs.QueryDefinition
