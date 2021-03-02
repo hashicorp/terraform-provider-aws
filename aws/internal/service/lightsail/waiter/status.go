@@ -14,7 +14,9 @@ func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.S
 		input := &lightsail.GetOperationInput{
 			OperationId: oid,
 		}
-		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", &oid)
+
+		oidValue := *oid
+		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", oidValue)
 
 		output, err := conn.GetOperation(input)
 
@@ -23,10 +25,10 @@ func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.S
 		}
 
 		if output.Operation == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", &oid)
+			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", oidValue)
 		}
 
-		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", &oid, *output.Operation.Status)
+		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", oidValue, *output.Operation.Status)
 		return output, *output.Operation.Status, nil
 	}
 }
