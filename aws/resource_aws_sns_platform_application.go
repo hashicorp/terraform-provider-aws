@@ -339,4 +339,3 @@ func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
 	}
 	return nil
 }
-
