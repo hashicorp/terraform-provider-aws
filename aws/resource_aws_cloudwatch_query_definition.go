@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -62,14 +63,14 @@ func getAwsCloudWatchQueryDefinitionInput(d *schema.ResourceData) *cloudwatchlog
 
 	for _, group := range logGroups {
 		l := group.(string)
-		lgs = append(lgs, &l)
+		lgs = append(lgs, aws.String(l))
 	}
 
 	query := d.Get("query").(string)
 	return &cloudwatchlogs.PutQueryDefinitionInput{
-		Name:          &name,
+		Name:          aws.String(name),
 		LogGroupNames: lgs,
-		QueryString:   &query,
+		QueryString:   aws.String(query),
 	}
 }
 
@@ -77,7 +78,7 @@ func resourceAwsCloudWatchQueryDefinitionRead(c context.Context, d *schema.Resou
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{
-		QueryDefinitionNamePrefix: &name,
+		QueryDefinitionNamePrefix: aws.String(name),
 	}
 
 	qdResp, err := conn.DescribeQueryDefinitions(input)
@@ -118,7 +119,7 @@ func resourceAwsCloudWatchQueryDefinitionUpdate(c context.Context, d *schema.Res
 	queryId := d.Get("query_definition_id").(string)
 
 	parms := getAwsCloudWatchQueryDefinitionInput(d)
-	parms.QueryDefinitionId = &queryId
+	parms.QueryDefinitionId = aws.String(queryId)
 	_, err := conn.PutQueryDefinition(parms)
 	if err != nil {
 		return diag.FromErr(err)
@@ -130,7 +131,7 @@ func resourceAwsCloudWatchQueryDefinitionDelete(c context.Context, d *schema.Res
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 	queryId := d.Get("query_definition_id").(string)
 
-	parms := &cloudwatchlogs.DeleteQueryDefinitionInput{QueryDefinitionId: &queryId}
+	parms := &cloudwatchlogs.DeleteQueryDefinitionInput{QueryDefinitionId: aws.String(queryId)}
 	_, err := conn.DeleteQueryDefinition(parms)
 	if err != nil {
 		return diag.FromErr(err)
