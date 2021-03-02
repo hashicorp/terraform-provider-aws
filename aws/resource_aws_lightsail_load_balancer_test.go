@@ -6,7 +6,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -73,8 +72,8 @@ func testSweepLightsailLoadBalancers(region string) error {
 }
 
 func TestAccAWSLightsailLoadBalancer_basic(t *testing.T) {
-	var loadBalancer lightsail.LoadBalancer
-	lightsailLoadBalancerName := acctest.RandomWithPrefix("tf-acc-test")
+	var lb lightsail.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_load_balancer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,25 +83,29 @@ func TestAccAWSLightsailLoadBalancer_basic(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLightsailLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_basic(lightsailLoadBalancerName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &loadBalancer),
-					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
+				Config: testAccAWSLightsailLoadBalancerConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "instance_port", "80"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSLightsailLoadBalancer_Name(t *testing.T) {
-	var conf lightsail.LoadBalancer
-	lightsailName := acctest.RandomWithPrefix("tf-acc-test")
-	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
-	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", lightsailName)
-	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", lightsailName)
+	var lb lightsail.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	lightsailNameWithSpaces := fmt.Sprint(rName, "string with spaces")
+	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", rName)
+	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", rName)
 	resourceName := "aws_lightsail_load_balancer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -112,25 +115,25 @@ func TestAccAWSLightsailLoadBalancer_Name(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLightsailLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLightsailLoadBalancerConfig_basic(lightsailNameWithSpaces),
+				Config:      testAccAWSLightsailLoadBalancerConfigBasic(lightsailNameWithSpaces),
 				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
 			},
 			{
-				Config:      testAccAWSLightsailLoadBalancerConfig_basic(lightsailNameWithStartingDigit),
+				Config:      testAccAWSLightsailLoadBalancerConfigBasic(lightsailNameWithStartingDigit),
 				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
 			},
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_basic(lightsailName),
+				Config: testAccAWSLightsailLoadBalancerConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &conf),
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
 					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
 				),
 			},
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_basic(lightsailNameWithUnderscore),
+				Config: testAccAWSLightsailLoadBalancerConfigBasic(lightsailNameWithUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &conf),
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
 					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
 				),
@@ -139,9 +142,42 @@ func TestAccAWSLightsailLoadBalancer_Name(t *testing.T) {
 	})
 }
 
+func TestAccAWSLightsailLoadBalancer_Path(t *testing.T) {
+	var lb lightsail.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lightsail_load_balancer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLightsailLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLightsailLoadBalancerConfigPath(rName, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLightsailLoadBalancerConfigPath(rName, "/healthcheck"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
+					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/healthcheck"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLightsailLoadBalancer_Tags(t *testing.T) {
-	var conf lightsail.LoadBalancer
-	lightsailLoadBalancerName := acctest.RandomWithPrefix("tf-acc-test")
+	var lb1, lb2, lb3 lightsail.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_load_balancer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,21 +187,33 @@ func TestAccAWSLightsailLoadBalancer_Tags(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLightsailLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_tags1(lightsailLoadBalancerName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
+				Config: testAccAWSLightsailLoadBalancerConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_tags2(lightsailLoadBalancerName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "health_check_path"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_port"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLightsailLoadBalancerConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailLoadBalancerConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -201,27 +249,10 @@ func testAccCheckAWSLightsailLoadBalancerExists(n string, res *lightsail.LoadBal
 	}
 }
 
-func TestAccAWSLightsailLoadBalancer_disappear(t *testing.T) {
-	var conf lightsail.LoadBalancer
-	lightsailLoadBalancerName := acctest.RandomWithPrefix("tf-acc-test")
+func TestAccAWSLightsailLoadBalancer_disappears(t *testing.T) {
+	var lb lightsail.LoadBalancer
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lightsail_load_balancer.test"
-
-	testDestroy := func(*terraform.State) error {
-		// reach out and DELETE the Load Balancer
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
-		_, err := conn.DeleteLoadBalancer(&lightsail.DeleteLoadBalancerInput{
-			LoadBalancerName: aws.String(lightsailLoadBalancerName),
-		})
-
-		if err != nil {
-			return fmt.Errorf("error deleting Lightsail Load Balancer in disappear test")
-		}
-
-		// sleep 7 seconds to give it time, so we don't have to poll
-		time.Sleep(7 * time.Second)
-
-		return nil
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
@@ -229,10 +260,10 @@ func TestAccAWSLightsailLoadBalancer_disappear(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLightsailLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailLoadBalancerConfig_basic(lightsailLoadBalancerName),
+				Config: testAccAWSLightsailLoadBalancerConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &conf),
-					testDestroy,
+					testAccCheckAWSLightsailLoadBalancerExists(resourceName, &lb),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsLightsailLoadBalancer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -271,39 +302,49 @@ func testAccCheckAWSLightsailLoadBalancerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSLightsailLoadBalancerConfig_basic(lightsailLoadBalancerName string) string {
+func testAccAWSLightsailLoadBalancerConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_load_balancer" "test" {
-  name              = "%s"
+  name              = %[1]q
   health_check_path = "/"
   instance_port     = "80"
 }
-`, lightsailLoadBalancerName)
+`, rName)
 }
 
-func testAccAWSLightsailLoadBalancerConfig_tags1(lightsailLoadBalancerName string) string {
+func testAccAWSLightsailLoadBalancerConfigPath(rName string, rPath string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_load_balancer" "test" {
-  name              = "%s"
+  name              = %[1]q
+  health_check_path = %[2]q
+  instance_port     = "80"
+}
+`, rName, rPath)
+}
+
+func testAccAWSLightsailLoadBalancerConfigTags1(rName string, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_load_balancer" "test" {
+  name              = %[1]q
   health_check_path = "/"
   instance_port     = "80"
   tags = {
-    Name = "tf-test"
+    %[2]q = %[3]q
   }
 }
-`, lightsailLoadBalancerName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSLightsailLoadBalancerConfig_tags2(lightsailLoadBalancerName string) string {
+func testAccAWSLightsailLoadBalancerConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_load_balancer" "test" {
-  name              = "%s"
+  name              = %[1]q
   health_check_path = "/"
   instance_port     = "80"
   tags = {
-    Name      = "tf-test"
-    ExtraName = "tf-test"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, lightsailLoadBalancerName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

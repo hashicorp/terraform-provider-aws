@@ -28,7 +28,7 @@ const (
 )
 
 // OperationCreated waits for an Operation to return Succeeded or Compleated
-func OperationCreated(conn *lightsail.Lightsail, oid string) (*lightsail.GetOperationOutput, error) {
+func OperationCreated(conn *lightsail.Lightsail, oid *string) (*lightsail.GetOperationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{OperationStatusStarted},
 		Target:     []string{OperationStatusCompleted, OperationStatusSucceeded},

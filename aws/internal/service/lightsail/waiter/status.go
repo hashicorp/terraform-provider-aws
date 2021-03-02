@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // LightsailOperationStatus is a method to check the status of a Lightsail Operation
-func LightsailOperationStatus(conn *lightsail.Lightsail, oid string) resource.StateRefreshFunc {
+func LightsailOperationStatus(conn *lightsail.Lightsail, oid *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetOperationInput{
-			OperationId: aws.String(oid),
+			OperationId: oid,
 		}
 		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", &oid)
 
