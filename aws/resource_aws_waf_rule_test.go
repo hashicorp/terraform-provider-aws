@@ -505,7 +505,7 @@ func testAccPreCheckAWSWaf(t *testing.T) {
 func testAccAWSWafRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -515,8 +515,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.ipset.id
@@ -524,13 +524,13 @@ resource "aws_waf_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -540,8 +540,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.ipset.id
@@ -549,13 +549,13 @@ resource "aws_waf_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -564,7 +564,7 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_byte_match_set" "set" {
-  name = "%s"
+  name = %[1]q
 
   byte_match_tuples {
     text_transformation   = "NONE"
@@ -579,8 +579,8 @@ resource "aws_waf_byte_match_set" "set" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_byte_match_set.set.id
@@ -588,22 +588,22 @@ resource "aws_waf_rule" "wafrule" {
     type    = "ByteMatch"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
-`, name, name)
+`, name)
 }
 
 func testAccAWSWafRuleConfig_geoMatchSetPredicate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -612,8 +612,8 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_geo_match_set.geo_match_set.id
@@ -621,13 +621,13 @@ resource "aws_waf_rule" "wafrule" {
     type    = "GeoMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRuleConfigTags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -637,8 +637,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.ipset.id
@@ -650,13 +650,13 @@ resource "aws_waf_rule" "wafrule" {
     %q = %q
   }
 }
-`, rName, rName, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value)
 }
 
 func testAccAWSWafRuleConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -666,8 +666,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.ipset.id
@@ -680,5 +680,5 @@ resource "aws_waf_rule" "wafrule" {
     %q = %q
   }
 }
-`, rName, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

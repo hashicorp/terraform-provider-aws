@@ -8,9 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
 )
 
 func init() {
@@ -23,94 +25,68 @@ func init() {
 func testSweepWafWebAcls(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).wafconn
 
+	var sweeperErrs *multierror.Error
+
 	input := &waf.ListWebACLsInput{}
 
-	for {
-		output, err := conn.ListWebACLs(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
-			return nil
+	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error listing WAF Regional Web ACLs: %s", err)
-		}
-
-		for _, webACL := range output.WebACLs {
-			deleteInput := &waf.DeleteWebACLInput{
-				WebACLId: webACL.WebACLId,
+		for _, webACL := range page.WebACLs {
+			if webACL == nil {
+				continue
 			}
+
 			id := aws.StringValue(webACL.WebACLId)
-			wr := newWafRetryer(conn)
 
-			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-				deleteInput.ChangeToken = token
-				log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-				return conn.DeleteWebACL(deleteInput)
-			})
+			r := resourceAwsWafWebAcl()
+			d := r.Data(nil)
+			d.SetId(id)
 
-			if isAWSErr(err, waf.ErrCodeNonEmptyEntityException, "") {
-				getWebACLInput := &waf.GetWebACLInput{
-					WebACLId: webACL.WebACLId,
-				}
-
-				getWebACLOutput, getWebACLErr := conn.GetWebACL(getWebACLInput)
-
-				if getWebACLErr != nil {
-					return fmt.Errorf("error getting WAF Regional Web ACL (%s): %s", id, getWebACLErr)
-				}
-
-				var updates []*waf.WebACLUpdate
-				updateWebACLInput := &waf.UpdateWebACLInput{
-					DefaultAction: getWebACLOutput.WebACL.DefaultAction,
-					Updates:       updates,
-					WebACLId:      webACL.WebACLId,
-				}
-
-				for _, rule := range getWebACLOutput.WebACL.Rules {
-					update := &waf.WebACLUpdate{
-						Action:        aws.String(waf.ChangeActionDelete),
-						ActivatedRule: rule,
-					}
-
-					updateWebACLInput.Updates = append(updateWebACLInput.Updates, update)
-				}
-
-				_, updateWebACLErr := wr.RetryWithToken(func(token *string) (interface{}, error) {
-					updateWebACLInput.ChangeToken = token
-					log.Printf("[INFO] Removing Rules from WAF Regional Web ACL: %s", id)
-					return conn.UpdateWebACL(updateWebACLInput)
-				})
-
-				if updateWebACLErr != nil {
-					return fmt.Errorf("error removing rules from WAF Regional Web ACL (%s): %s", id, updateWebACLErr)
-				}
-
-				_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-					deleteInput.ChangeToken = token
-					log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-					return conn.DeleteWebACL(deleteInput)
-				})
-			}
+			// Need to Read first to fill in rules argument
+			err := r.Read(d, client)
 
 			if err != nil {
-				return fmt.Errorf("error deleting WAF Regional Web ACL (%s): %s", id, err)
+				sweeperErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			// In case it was already deleted
+			if d.Id() == "" {
+				continue
+			}
+
+			err = r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting WAF Web ACL (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
-		if aws.StringValue(output.NextMarker) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextMarker = output.NextMarker
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	return nil
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Web ACLs: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSWafWebAcl_basic(t *testing.T) {
@@ -481,33 +457,33 @@ func testAccCheckAWSWafWebAclExists(n string, v *waf.WebACL) resource.TestCheckF
 func testAccAWSWafWebAclConfig_Required(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
   }
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccAWSWafWebAclConfig_DefaultAction(rName, defaultAction string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = %q
   }
 }
-`, rName, rName, defaultAction)
+`, rName, defaultAction)
 }
 
 func testAccAWSWafWebAclConfig_Rules_Single_Rule(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "test" {
-  name = %q
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -516,8 +492,8 @@ resource "aws_waf_ipset" "test" {
 }
 
 resource "aws_waf_rule" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.test.id
@@ -527,8 +503,8 @@ resource "aws_waf_rule" "test" {
 }
 
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -543,19 +519,19 @@ resource "aws_waf_web_acl" "test" {
     }
   }
 }
-`, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSWafWebAclConfig_Rules_Single_RuleGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -571,13 +547,13 @@ resource "aws_waf_web_acl" "test" {
     }
   }
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSWafWebAclConfig_Rules_Multiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "test" {
-  name = %q
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -586,8 +562,8 @@ resource "aws_waf_ipset" "test" {
 }
 
 resource "aws_waf_rule" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   predicates {
     data_id = aws_waf_ipset.test.id
@@ -597,13 +573,13 @@ resource "aws_waf_rule" "test" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 }
 
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -628,7 +604,7 @@ resource "aws_waf_web_acl" "test" {
     }
   }
 }
-`, rName, rName, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSWafWebAclConfig_Logging(rName string) string {
@@ -772,8 +748,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccAWSWafWebAclConfigTags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -783,14 +759,14 @@ resource "aws_waf_web_acl" "test" {
     %q = %q
   }
 }
-`, rName, rName, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value)
 }
 
 func testAccAWSWafWebAclConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+  metric_name = %[1]q
+  name        = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -801,5 +777,5 @@ resource "aws_waf_web_acl" "test" {
     %q = %q
   }
 }
-`, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
