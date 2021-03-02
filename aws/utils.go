@@ -1,8 +1,10 @@
 package aws
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"sort"
@@ -85,4 +87,8 @@ func StringSlicesEqual(s1, s2 []*string) bool {
 	v2 := aws.StringValueSlice(s2)
 
 	return reflect.DeepEqual(v1, v2)
+}
+
+func hashSum(contents interface{}) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
 }
