@@ -12,7 +12,7 @@ import (
 func LightsailOperationStatus(conn *lightsail.Lightsail, oid string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lightsail.GetOperationInput{
-			OperationId: oid,
+			OperationId: aws.String(oid),
 		}
 		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", &oid)
 

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"time"
 
-	"./aws/internal/service/lightsail/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lightsail/waiter"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"

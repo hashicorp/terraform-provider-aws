@@ -40,7 +40,7 @@ func OperationCreated(conn *lightsail.Lightsail, oid string) (*lightsail.GetOper
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*glue.GetOperationOutput); ok {
+	if output, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return output, err
 	}
 
