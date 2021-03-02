@@ -197,19 +197,12 @@ func resourceAwsEksIdentityProviderConfigDelete(ctx context.Context, d *schema.R
 
 	_, err = conn.DisassociateIdentityProviderConfigWithContext(ctx, input)
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	// TODO - Is checking for the exception message too brittle?
+	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") ||
+		isAWSErr(err, eks.ErrCodeInvalidRequestException, "Identity provider config is not associated with cluster") {
 		return nil
 	}
 
-	// TODO - if we timeout on the association whilst acc testing this will fail with:
-	// {
-	//   RespMetadata: {
-	//     StatusCode: 400,
-	// 	   RequestID: "abf3f851-04e7-4d66-867e-f871897efbb3"
-	//   },
-	//   ClusterName: "tf-acc-test-387064423719985885",
-	// 	 Message_: "Identity provider config is not associated with cluster tf-acc-test-387064423719985885"
-	// }
 	if err != nil {
 		return diag.Errorf("error disassociating EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}

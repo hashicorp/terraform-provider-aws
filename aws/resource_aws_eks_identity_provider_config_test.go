@@ -108,6 +108,28 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
+	var config eks.IdentityProviderConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_identity_provider_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					testAccCheckAWSEksIdentityProviderConfigDisappears(rName, &config),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEksIdentityProviderConfigExists(resourceName string, config *eks.IdentityProviderConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -195,6 +217,29 @@ func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSEksIdentityProviderConfigDisappears(clusterName string, config *eks.IdentityProviderConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).eksconn
+
+		input := &eks.DisassociateIdentityProviderConfigInput{
+			ClusterName:            aws.String(clusterName),
+			IdentityProviderConfig: config,
+		}
+
+		_, err := conn.DisassociateIdentityProviderConfig(input)
+
+		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return waitForEksIdentityProviderConfigDisassociation(context.Background(), conn, clusterName, config, 25*time.Minute)
+	}
 }
 
 func testAccAWSEksIdentityProviderConfigBase(rName string) string {
