@@ -53,7 +53,7 @@ func resourceAwsCloudWatchQueryDefinitionCreate(c context.Context, d *schema.Res
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(*r.QueryDefinitionId)
+	d.SetId(aws.StringValue(r.QueryDefinitionId))
 	if err := d.Set("query_definition_id", aws.StringValue(r.QueryDefinitionId)); err != nil {
 		return diag.FromErr(err)
 	}
