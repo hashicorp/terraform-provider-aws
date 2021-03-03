@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
+func TestAccEC2EBSSnapshotIdsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -23,7 +23,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
+func TestAccEC2EBSSnapshotIdsDataSource_sorted(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,7 +54,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
+func TestAccEC2EBSSnapshotIdsDataSource_empty(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

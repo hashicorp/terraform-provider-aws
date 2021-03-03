@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSEBSSnapshot_basic(t *testing.T) {
+func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
@@ -40,7 +40,7 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshot_tags(t *testing.T) {
+func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
@@ -84,7 +84,7 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
+func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
@@ -110,7 +110,7 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
+func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -137,7 +137,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	})
 }
 
-func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
+func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
