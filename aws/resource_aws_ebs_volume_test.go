@@ -218,7 +218,7 @@ func TestAccEC2EBSVolume_updateType(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_updateIops_io1(t *testing.T) {
+func TestAccEC2EBSVolume_updateIOPS_io1(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
@@ -254,7 +254,7 @@ func TestAccEC2EBSVolume_updateIops_io1(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_updateIops_io2(t *testing.T) {
+func TestAccEC2EBSVolume_updateIOPS_io2(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
@@ -322,7 +322,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSVolume_noIops(t *testing.T) {
+func TestAccEC2EBSVolume_noIOPS(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
 
@@ -349,7 +349,7 @@ func TestAccEC2EBSVolume_noIops(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-func TestAccEC2EBSVolume_invalidIopsForType(t *testing.T) {
+func TestAccEC2EBSVolume_invalidIOPSForType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
