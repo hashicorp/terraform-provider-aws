@@ -114,6 +114,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,

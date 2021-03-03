@@ -3,6 +3,7 @@ package aws
 import (
 	"bytes"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"log"
 	"strings"
 	"time"
@@ -132,6 +133,11 @@ func resourceAwsRouteTable() *schema.Resource {
 					},
 				},
 				Set: resourceAwsRouteTableHash,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"owner_id": {
@@ -269,7 +275,16 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("owner_id", rt.OwnerId)
+	ownerID := aws.StringValue(rt.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 
 	return nil
 }
