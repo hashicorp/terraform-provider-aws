@@ -2,8 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -105,9 +103,9 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", sortDataSourceBrokers(aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringSaslScram))
-	d.Set("bootstrap_brokers_tls", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringTls))
+	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringTls)))
 	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
 	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
 	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
@@ -116,15 +114,9 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("zookeeper_connect_string", aws.StringValue(cluster.ZookeeperConnectString))
+	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 
 	return nil
-}
-
-func sortDataSourceBrokers(s string) string {
-	splitBootstrapBrokers := strings.Split(s, ",")
-	sort.Strings(splitBootstrapBrokers)
-	return strings.Join(splitBootstrapBrokers, ",")
 }
