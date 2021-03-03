@@ -71,6 +71,8 @@ The following arguments are supported:
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
   keybase username in the form `keybase:some_person_that_exists`, for use
   in the `encrypted_secret` output attribute.
+* `kms_key` - (Optional) KMS CMK key id, alias or ARN, for use in the `encrypted_secret` output attribute. Does nothing if `pgp_key` set.
+* `kms_context` - (Optional) KMS encryption context for symmetric encryption, same context should be provided to decrypt data later.
 * `status` - (Optional) The access key status to apply. Defaults to `Active`.
 Valid values are `Active` and `Inactive`.
 
@@ -94,4 +96,4 @@ IAM Access Keys can be imported using the identifier, e.g.
 $ terraform import aws_iam_access_key.example AKIA1234567890
 ```
 
-Resource attributes such as `encrypted_secret`, `key_fingerprint`, `pgp_key`, `secret`, and `ses_smtp_password_v4` are not available for imported resources as this information cannot be read from the IAM API.
+Resource attributes such as `encrypted_secret`, `key_fingerprint`, `pgp_key`, `kms_key`, `secret`, and `ses_smtp_password_v4` are not available for imported resources as this information cannot be read from the IAM API.

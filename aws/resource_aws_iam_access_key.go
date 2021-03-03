@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/encryption"
@@ -79,6 +80,17 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
+			"kms_key": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
+			"kms_context": {
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
+				Optional: true,
+			},
 			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -130,6 +142,24 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_secret", encrypted)
+	} else if v, ok := d.GetOk("kms_key"); ok {
+		kmsKey := v.(string)
+		kmsClient := meta.(*AWSClient).kmsconn
+
+		req := kms.EncryptInput{
+			KeyId:     &kmsKey,
+			Plaintext: []byte(*createResp.AccessKey.SecretAccessKey),
+		}
+		if ec := d.Get("context"); ec != nil {
+			req.EncryptionContext = stringMapToPointers(ec.(map[string]interface{}))
+		}
+
+		encrypted, err := kmsClient.Encrypt(&req)
+		if err != nil {
+			return err
+		}
+
+		d.Set("encrypted_secret", base64Encode(encrypted.CiphertextBlob))
 	} else {
 		if err := d.Set("secret", createResp.AccessKey.SecretAccessKey); err != nil {
 			return err
