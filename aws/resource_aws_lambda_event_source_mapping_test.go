@@ -737,10 +737,11 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfigMsk(rName),
+				Config: testAccAWSLambdaEventSourceMappingConfigMsk(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckNoResourceAttr(resourceName, "starting_position"),
@@ -753,6 +754,19 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigMsk(rName, "9999"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
+					testAccCheckAWSLambdaEventSourceMappingAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					resource.TestCheckNoResourceAttr(resourceName, "starting_position"),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
+				),
 			},
 		},
 	})
@@ -1665,7 +1679,11 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, batchWindow))
 }
 
-func testAccAWSLambdaEventSourceMappingConfigMsk(rName string) string {
+func testAccAWSLambdaEventSourceMappingConfigMsk(rName, batchSize string) string {
+	if batchSize == "" {
+		batchSize = "null"
+	}
+
 	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -1773,7 +1791,7 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size       = 100
+  batch_size       = %[2]s
   event_source_arn = aws_msk_cluster.test.arn
   enabled          = true
   function_name    = aws_lambda_function.test.arn
@@ -1781,5 +1799,5 @@ resource "aws_lambda_event_source_mapping" "test" {
 
   depends_on = [aws_iam_policy_attachment.test]
 }
-`, rName))
+`, rName, batchSize))
 }

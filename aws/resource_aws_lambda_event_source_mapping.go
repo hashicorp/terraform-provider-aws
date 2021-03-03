@@ -86,7 +86,8 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 						return false
 					}
 					switch eventSourceARN.Service {
-					case dynamodb.ServiceName, kinesis.ServiceName:
+					// kafka.ServiceName is "Kafka".
+					case dynamodb.ServiceName, kinesis.ServiceName, "kafka":
 						if old == "100" {
 							return true
 						}
@@ -188,58 +189,57 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 // CreateEventSourceMapping in the API / SDK
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
+	eventSourceARN := d.Get("event_source_arn").(string)
 
-	functionName := d.Get("function_name").(string)
-	eventSourceArn := d.Get("event_source_arn").(string)
-
-	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
-
-	params := &lambda.CreateEventSourceMappingInput{
-		EventSourceArn: aws.String(eventSourceArn),
-		FunctionName:   aws.String(functionName),
+	input := &lambda.CreateEventSourceMappingInput{
 		Enabled:        aws.Bool(d.Get("enabled").(bool)),
+		EventSourceArn: aws.String(eventSourceARN),
+		FunctionName:   aws.String(d.Get("function_name").(string)),
 	}
 
-	if batchSize, ok := d.GetOk("batch_size"); ok {
-		params.BatchSize = aws.Int64(int64(batchSize.(int)))
+	if v, ok := d.GetOk("batch_size"); ok {
+		input.BatchSize = aws.Int64(int64(v.(int)))
 	}
 
-	if batchWindow, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
-		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(batchWindow.(int)))
+	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
+		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	if startingPosition, ok := d.GetOk("starting_position"); ok {
-		params.StartingPosition = aws.String(startingPosition.(string))
+	if v, ok := d.GetOk("starting_position"); ok {
+		input.StartingPosition = aws.String(v.(string))
 	}
 
-	if startingPositionTimestamp, ok := d.GetOk("starting_position_timestamp"); ok {
-		t, _ := time.Parse(time.RFC3339, startingPositionTimestamp.(string))
-		params.StartingPositionTimestamp = aws.Time(t)
+	if v, ok := d.GetOk("starting_position_timestamp"); ok {
+		t, _ := time.Parse(time.RFC3339, v.(string))
+
+		input.StartingPositionTimestamp = aws.Time(t)
 	}
 
-	if topics, ok := d.GetOk("topics"); ok && topics.(*schema.Set).Len() > 0 {
-		params.Topics = expandStringSet(topics.(*schema.Set))
+	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
+		input.Topics = expandStringSet(v.(*schema.Set))
 	}
 
-	if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
-		params.ParallelizationFactor = aws.Int64(int64(parallelizationFactor.(int)))
+	if v, ok := d.GetOk("parallelization_factor"); ok {
+		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
 	}
 
-	if maximumRetryAttempts, ok := d.GetOkExists("maximum_retry_attempts"); ok {
-		params.MaximumRetryAttempts = aws.Int64(int64(maximumRetryAttempts.(int)))
+	if v, ok := d.GetOkExists("maximum_retry_attempts"); ok {
+		input.MaximumRetryAttempts = aws.Int64(int64(v.(int)))
 	}
 
-	if maximumRecordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-		params.MaximumRecordAgeInSeconds = aws.Int64(int64(maximumRecordAgeInSeconds.(int)))
+	if v, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
+		input.MaximumRecordAgeInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
-		params.BisectBatchOnFunctionError = aws.Bool(bisectBatchOnFunctionError.(bool))
+	if v, ok := d.GetOk("bisect_batch_on_function_error"); ok {
+		input.BisectBatchOnFunctionError = aws.Bool(v.(bool))
 	}
 
 	if vDest, ok := d.GetOk("destination_config"); ok {
-		params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
+		input.DestinationConfig = expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}))
 	}
+
+	log.Printf("[DEBUG] Creating Lambda Event Source Mapping: %s", input)
 
 	// IAM profiles and roles can take some time to propagate in AWS:
 	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -251,7 +251,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
+		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				if awserr.Code() == "InvalidParameterValueException" {
@@ -263,10 +263,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
+		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", d.Id(), err)
+		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", eventSourceARN, err)
 	}
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
@@ -373,42 +373,48 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
 
-	params := &lambda.UpdateEventSourceMappingInput{
-		UUID:                           aws.String(d.Id()),
-		BatchSize:                      aws.Int64(int64(d.Get("batch_size").(int))),
-		FunctionName:                   aws.String(d.Get("function_name").(string)),
-		Enabled:                        aws.Bool(d.Get("enabled").(bool)),
-		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int))),
+	input := &lambda.UpdateEventSourceMappingInput{
+		UUID: aws.String(d.Id()),
 	}
 
-	// AWS API will fail if this parameter is set (even as default value) for sqs event source.  Ideally this should be implemented in GO SDK or AWS API itself.
-	eventSourceArn, err := arn.Parse(d.Get("event_source_arn").(string))
-	if err != nil {
-		return fmt.Errorf("Error updating event source mapping: %s", err)
+	if d.HasChange("batch_size") {
+		input.BatchSize = aws.Int64(int64(d.Get("batch_size").(int)))
 	}
 
-	if eventSourceArn.Service != "sqs" {
-		if parallelizationFactor, ok := d.GetOk("parallelization_factor"); ok {
-			params.SetParallelizationFactor(int64(parallelizationFactor.(int)))
-		}
-
-		if maximumRetryAttempts, ok := d.GetOkExists("maximum_retry_attempts"); ok {
-			params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
-		}
-
-		params.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
-
-		if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
-			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
-		}
-
-		if vDest, ok := d.GetOk("destination_config"); ok {
-			params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
-		}
+	if d.HasChange("bisect_batch_on_function_error") {
+		input.BisectBatchOnFunctionError = aws.Bool(d.Get("bisect_batch_on_function_error").(bool))
 	}
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.UpdateEventSourceMapping(params)
+	if d.HasChange("destination_config") {
+		input.DestinationConfig = expandLambdaEventSourceMappingDestinationConfig(d.Get("destination_config").([]interface{}))
+	}
+
+	if d.HasChange("enabled") {
+		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+	}
+
+	if d.HasChange("function_name") {
+		input.FunctionName = aws.String(d.Get("function_name").(string))
+	}
+
+	if d.HasChange("maximum_batching_window_in_seconds") {
+		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
+	}
+
+	if d.HasChange("maximum_record_age_in_seconds") {
+		input.MaximumRecordAgeInSeconds = aws.Int64(int64(d.Get("maximum_record_age_in_seconds").(int)))
+	}
+
+	if d.HasChange("maximum_retry_attempts") {
+		input.MaximumRetryAttempts = aws.Int64(int64(d.Get("maximum_retry_attempts").(int)))
+	}
+
+	if d.HasChange("parallelization_factor") {
+		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.UpdateEventSourceMapping(input)
 		if err != nil {
 			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||
 				isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
@@ -420,7 +426,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateEventSourceMapping(params)
+		_, err = conn.UpdateEventSourceMapping(input)
 	}
 	if err != nil {
 		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
