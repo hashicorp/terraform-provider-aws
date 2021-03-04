@@ -660,20 +660,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		ClusterIdentifier: aws.String(d.Id()),
 	}
 
-	// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
-	// items to be sent over
-	if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
-		req.ClusterType = aws.String(d.Get("cluster_type").(string))
-		req.NodeType = aws.String(d.Get("node_type").(string))
-		if v := d.Get("number_of_nodes").(int); v > 1 {
-			req.ClusterType = aws.String("multi-node")
-			req.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
-		} else {
-			req.ClusterType = aws.String("single-node")
-		}
-		requestUpdate = true
-	}
-
 	if d.HasChange("cluster_security_groups") {
 		req.ClusterSecurityGroups = expandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		requestUpdate = true
@@ -732,6 +718,16 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	if d.Get("encrypted").(bool) && d.HasChange("kms_key_id") {
 		req.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
 		requestUpdate = true
+	}
+
+	// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
+	// items to be sent over
+	if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
+		log.Printf("[INFO] Resizing Redshift Cluster: %s", d.Id())
+		err := resizeRedshiftCluster(d, conn)
+		if err != nil {
+			return err
+		}
 	}
 
 	if requestUpdate {
@@ -825,6 +821,26 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceAwsRedshiftClusterRead(d, meta)
+}
+
+func resizeRedshiftCluster(d *schema.ResourceData, conn *redshift.Redshift) error {
+	params := &redshift.ResizeClusterInput{
+		ClusterIdentifier: aws.String(d.Id()),
+	}
+
+	params.ClusterType = aws.String(d.Get("cluster_type").(string))
+	params.NodeType = aws.String(d.Get("node_type").(string))
+	if v := d.Get("number_of_nodes").(int); v > 1 {
+		params.ClusterType = aws.String("multi-node")
+		params.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
+	} else {
+		params.ClusterType = aws.String("single-node")
+	}
+	log.Printf("[DEBUG] Redshift Cluster Resizing options: %s", params)
+	if _, err := conn.ResizeCluster(params); err != nil {
+		return fmt.Errorf("error resizing Redshift Cluster (%s): %s", d.Id(), err)
+	}
+	return nil
 }
 
 func enableRedshiftClusterLogging(d *schema.ResourceData, conn *redshift.Redshift) error {
