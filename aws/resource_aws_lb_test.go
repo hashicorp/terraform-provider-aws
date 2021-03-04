@@ -1513,7 +1513,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1669,7 +1669,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1738,7 +1738,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -1805,7 +1805,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2194,7 +2194,7 @@ resource "aws_alb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2261,7 +2261,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2327,7 +2327,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2407,7 +2407,7 @@ output "lb_name" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2482,7 +2482,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2550,7 +2550,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2779,7 +2779,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
@@ -2822,7 +2822,7 @@ resource "aws_lb" "lb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "alb_test" {
