@@ -62,7 +62,7 @@ func resourceAwsSagemakerApp() *schema.Resource {
 						"instance_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+							ValidateFunc: validation.StringInSlice(append(sagemaker.AppInstanceType_Values(), ""), false),
 						},
 						"sagemaker_image_arn": {
 							Type:         schema.TypeString,
