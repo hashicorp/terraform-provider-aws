@@ -98,6 +98,7 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.SetId(aws.StringValue(response.Policy.Arn))
+
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		request.Tags = keyvaluetags.New(v).IgnoreAws().IamTags()
 	}

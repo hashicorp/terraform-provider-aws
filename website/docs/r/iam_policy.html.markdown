@@ -32,6 +32,9 @@ resource "aws_iam_policy" "policy" {
       },
     ]
   })
+  tags = {
+    tag-key = "tag-value"
+  }
 }
 ```
 
@@ -45,6 +48,7 @@ The following arguments are supported:
 * `path` - (Optional, default "/") Path in which to create the policy.
   See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
+* `tags`- (Optional) Key-value mapping of tags for the IAM Policy
 
 ## Attributes Reference
 
