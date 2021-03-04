@@ -34,7 +34,7 @@ func TestAccDataSourceCloudHsmV2Cluster_basic(t *testing.T) {
 var testAccCheckCloudHsmV2ClusterDataSourceConfig = testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 resource "aws_vpc" "cloudhsm_v2_test_vpc" {
