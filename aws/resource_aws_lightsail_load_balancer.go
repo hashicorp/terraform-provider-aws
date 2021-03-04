@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lightsail/waiter"
 )
 
 func resourceAwsLightsailLoadBalancer() *schema.Resource {
@@ -98,19 +98,9 @@ func resourceAwsLightsailLoadBalancerCreate(d *schema.ResourceData, meta interfa
 	op := resp.Operations[0]
 	d.SetId(d.Get("name").(string))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailLoadBalancerOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
+	_, err = waiter.OperationCreated(conn, op.Id)
 	if err != nil {
-		// We don't return an error here because the Create call succeeded
-		log.Printf("[ERR] Error waiting for load balancer (%s) to become ready: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for load balancer (%s) to become ready: %s", d.Id(), err)
 	}
 
 	return resourceAwsLightsailLoadBalancerRead(d, meta)
@@ -124,6 +114,8 @@ func resourceAwsLightsailLoadBalancerRead(d *schema.ResourceData, meta interface
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
+	lb := resp.LoadBalancer
+
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "NotFoundException" {
@@ -136,16 +128,16 @@ func resourceAwsLightsailLoadBalancerRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	d.Set("arn", resp.LoadBalancer.Arn)
-	d.Set("created_at", resp.LoadBalancer.CreatedAt.Format(time.RFC3339))
-	d.Set("health_check_path", resp.LoadBalancer.HealthCheckPath)
-	d.Set("instance_port", resp.LoadBalancer.InstancePort)
-	d.Set("name", resp.LoadBalancer.Name)
-	d.Set("protocol", resp.LoadBalancer.Protocol)
-	d.Set("public_ports", resp.LoadBalancer.PublicPorts)
-	d.Set("dns_name", resp.LoadBalancer.DnsName)
+	d.Set("arn", lb.Arn)
+	d.Set("created_at", lb.CreatedAt.Format(time.RFC3339))
+	d.Set("health_check_path", lb.HealthCheckPath)
+	d.Set("instance_port", lb.InstancePort)
+	d.Set("name", lb.Name)
+	d.Set("protocol", lb.Protocol)
+	d.Set("public_ports", lb.PublicPorts)
+	d.Set("dns_name", lb.DnsName)
 
-	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(resp.LoadBalancer.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(lb.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -164,20 +156,9 @@ func resourceAwsLightsailLoadBalancerDelete(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"Started"},
-		Target:     []string{"Completed", "Succeeded"},
-		Refresh:    resourceAwsLightsailLoadBalancerOperationRefreshFunc(op.Id, meta),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
+	_, err = waiter.OperationCreated(conn, op.Id)
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for load balancer (%s) to become destroyed: %s",
-			d.Id(), err)
+		return fmt.Errorf("Error waiting for load balancer (%s) to become destroyed: %s", d.Id(), err)
 	}
 
 	return err
@@ -207,33 +188,4 @@ func resourceAwsLightsailLoadBalancerUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	return resourceAwsLightsailLoadBalancerRead(d, meta)
-}
-
-// method to check the status of an Operation, which is returned from
-// Create/Delete methods.
-// Status's are an aws.OperationStatus enum:
-// - NotStarted
-// - Started
-// - Failed
-// - Completed
-// - Succeeded (not documented?)
-func resourceAwsLightsailLoadBalancerOperationRefreshFunc(
-	oid *string, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).lightsailconn
-		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", *oid)
-		o, err := conn.GetOperation(&lightsail.GetOperationInput{
-			OperationId: oid,
-		})
-		if err != nil {
-			return o, "FAILED", err
-		}
-
-		if o.Operation == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", *oid)
-		}
-
-		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", *oid, *o.Operation.Status)
-		return o, *o.Operation.Status, nil
-	}
 }
