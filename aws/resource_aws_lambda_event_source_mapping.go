@@ -457,5 +457,9 @@ func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
+	if _, err := waiter.EventSourceMappingDelete(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
+	}
+
 	return nil
 }

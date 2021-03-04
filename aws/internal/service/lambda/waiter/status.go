@@ -10,6 +10,7 @@ import (
 
 const (
 	EventSourceMappingStateCreating  = "Creating"
+	EventSourceMappingStateDeleting  = "Deleting"
 	EventSourceMappingStateDisabled  = "Disabled"
 	EventSourceMappingStateDisabling = "Disabling"
 	EventSourceMappingStateEnabled   = "Enabled"
