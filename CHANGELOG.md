@@ -6,6 +6,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_msk_cluster: Orders `bootstrap_brokers`, `bootstrap_brokers_sasl_scram`, `bootstrap_brokers_tls`, and `zookeeper_connect_string` ([#17579](https://github.com/hashicorp/terraform-provider-aws/issues/17579))
+* resource/aws_msk_cluster: Orders `bootstrap_brokers`, `bootstrap_brokers_sasl_scram`, `bootstrap_brokers_tls`, and `zookeeper_connect_string` ([#17579](https://github.com/hashicorp/terraform-provider-aws/issues/17579))
 * resource/aws_route53_record: Support `DS` value for `type` argument ([#17040](https://github.com/hashicorp/terraform-provider-aws/issues/17040))
 
 BUG FIXES:
