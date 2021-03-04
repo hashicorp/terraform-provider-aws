@@ -30,7 +30,7 @@ const (
 	AwsAlternateAccessKeyId = "AWS_ALTERNATE_ACCESS_KEY_ID"
 
 	// For tests using an alternate AWS account, the equivalent of AWS_PROFILE for that account
-	AwsAlternateProfile = "AWS_PROFILE"
+	AwsAlternateProfile = "AWS_ALTERNATE_PROFILE"
 
 	// For tests using an alternate AWS region, the equivalent of AWS_DEFAULT_REGION for that account
 	AwsAlternateRegion = "AWS_ALTERNATE_REGION"

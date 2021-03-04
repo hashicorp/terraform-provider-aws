@@ -17,7 +17,7 @@ const (
 	ReplicationGroupStatusSnapshotting = "snapshotting"
 )
 
-// ReplicationGroupStatus fetches the ReplicationGroup and its Status
+// ReplicationGroupStatus fetches the Replication Group and its Status
 func ReplicationGroupStatus(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		rg, err := finder.ReplicationGroupByID(conn, replicationGroupID)
@@ -32,7 +32,7 @@ func ReplicationGroupStatus(conn *elasticache.ElastiCache, replicationGroupID st
 	}
 }
 
-// ReplicationGroupMemberClustersStatus fetches the ReplicationGroup's Member Clusters and either "available" or the first non-"available" status.
+// ReplicationGroupMemberClustersStatus fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
 func ReplicationGroupMemberClustersStatus(conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -68,7 +68,7 @@ const (
 	CacheClusterStatusSnapshotting          = "snapshotting"
 )
 
-// CacheClusterStatus fetches the CacheCluster and its Status
+// CacheClusterStatus fetches the Cache Cluster and its Status
 func CacheClusterStatus(conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		c, err := finder.CacheClusterByID(conn, cacheClusterID)
@@ -80,5 +80,29 @@ func CacheClusterStatus(conn *elasticache.ElastiCache, cacheClusterID string) re
 		}
 
 		return c, aws.StringValue(c.CacheClusterStatus), nil
+	}
+}
+
+const (
+	GlobalReplicationGroupStatusAvailable   = "available"
+	GlobalReplicationGroupStatusCreating    = "creating"
+	GlobalReplicationGroupStatusModifying   = "modifying"
+	GlobalReplicationGroupStatusPrimaryOnly = "primary-only"
+	GlobalReplicationGroupStatusDeleting    = "deleting"
+	GlobalReplicationGroupStatusDeleted     = "deleted"
+)
+
+// GlobalReplicationGroupStatus fetches the Global Replication Group and its Status
+func GlobalReplicationGroupStatus(conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		grg, err := finder.GlobalReplicationGroupByID(conn, globalReplicationGroupID)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return grg, aws.StringValue(grg.Status), nil
 	}
 }

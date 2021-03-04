@@ -359,7 +359,7 @@ function ExampleThingUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.HasChange("attribute") {
 		// ... AWS Go SDK logic to update attribute ...
 
-		if err := waiter.ThingAttributeUpdated(conn, d.Id(), d.Get("attribute").(string)); err != nil {
+		if _, err := waiter.ThingAttributeUpdated(conn, d.Id(), d.Get("attribute").(string)); err != nil {
 			return fmt.Errorf("error waiting for Example Thing (%s) attribute update: %w", d.Id(), err)
 		}
 	}
@@ -466,7 +466,7 @@ func ThingDeleted(conn *example.Example, id string) (*example.Thing, error) {
 function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to create resource ...
 
-	if err := waiter.ThingCreated(conn, d.Id()); err != nil {
+	if _, err := waiter.ThingCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Example Thing (%s) creation: %w", d.Id(), err)
 	}
 
@@ -476,7 +476,7 @@ function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
 function ExampleThingDelete(d *schema.ResourceData, meta interface{}) error {
 	// ... AWS Go SDK logic to delete resource ...
 
-	if err := waiter.ThingDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.ThingDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Example Thing (%s) deletion: %w", d.Id(), err)
 	}
 

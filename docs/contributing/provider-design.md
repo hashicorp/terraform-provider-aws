@@ -9,6 +9,9 @@ The Terraform AWS Provider follows the guidelines established in the [HashiCorp 
 - [Resource Type Considerations](#resource-type-considerations)
     - [Authorization and Acceptance Resources](#authorization-and-acceptance-resources)
     - [Cross-Service Functionality](#cross-service-functionality)
+    - [Data Sources](#data-sources)
+        - [Plural Data Sources](#plural-data-sources)
+        - [Singular Data Sources](#singular-data-sources)
     - [IAM Resource-Based Policy Resources](#iam-resource-based-policy-resources)
     - [Managing Resource Running State](#managing-resource-running-state)
     - [Task Execution and Waiter Resources](#task-execution-and-waiter-resources)
@@ -80,6 +83,20 @@ The rationale behind this design decision includes the following:
 * Unexpected changes to the AWS service internals for the cross-service implementations. Given that this functionality is not part of the primary service API, these details can change over time and may not be considered as a breaking change by the service team for an API upgrade.
 
 A poignant real-world example of the last point involved a Lambda resource. The resource helped clean up extra resources (ENIs) due to a common misconfiguration. Practitioners found the functionality helpful since the issue was hard to diagnose. Years later, AWS updated the Lambda API. Immediately, practitioners reported that Terraform executions were failing. Downgrading the provider was not possible since many configurations depended on recent releases. For environments running many versions behind, forcing an upgrade with the fix would likely cause unrelated and unexpected changes. In the end, HashiCorp and AWS performed a large-scale outreach to help upgrade and fixing the misconfigurations. Provider maintainers and practitioners lost considerable time.
+
+### Data Sources
+
+A separate class of Terraform resource types are [data sources](https://www.terraform.io/docs/language/data-sources/). These are typically intended as a configuration method to lookup or fetch data in a read-only manner. Data sources should not have side effects on the remote system.
+
+When discussing data sources, they are typically classified by the intended number of return objects or data. Singular data sources represent a one-to-one lookup or data operation. Plural data sources represent a one-to-many operation.
+
+#### Plural Data Sources
+
+These data sources are intended to return zero, one, or many results, usually associated with a managed resource type. Typically results are a set unless ordering guarantees are provided by the remote system. These should be named with a plural suffix (e.g. `s` or `es`) and should not include any specific attribute in the naming (e.g. prefer `aws_ec2_transit_gateways` instead of `aws_ec2_transit_gateway_ids`).
+
+#### Singular Data Sources
+
+These data sources are intended to return one result or an error. These should not include any specific attribute in the naming (e.g. prefer `aws_ec2_transit_gateway` instead of `aws_ec2_transit_gateway_id`).
 
 ### IAM Resource-Based Policy Resources
 

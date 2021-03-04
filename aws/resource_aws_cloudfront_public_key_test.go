@@ -14,6 +14,7 @@ import (
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -23,11 +24,37 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
 					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontPublicKey_disappears(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_public_key.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontPublicKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -35,6 +62,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 
 func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-")
+	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -44,9 +72,17 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontPublicKeyConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "name", startsWithPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
@@ -54,6 +90,7 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 
 func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -63,14 +100,19 @@ func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontPublicKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCloudFrontPublicKeyConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
+					testAccCheckCloudFrontPublicKeyExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key1"),
 				),
 			},

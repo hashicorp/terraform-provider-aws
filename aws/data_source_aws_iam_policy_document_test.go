@@ -312,6 +312,7 @@ data "aws_iam_policy_document" "test" {
       variable = "s3:prefix"
       values = [
         "home/",
+        "",
         "home/&{aws:username}/",
       ]
     }
@@ -393,8 +394,9 @@ func testAccAWSIAMPolicyDocumentExpectedJSON() string {
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "home/${aws:username}/",
-            "home/"
+            "home/",
+            "",
+            "home/${aws:username}/"
           ]
         }
       }
@@ -560,8 +562,8 @@ func testAccAWSIAMPolicyDocumentSourceExpectedJSON() string {
       "Condition": {
         "StringLike": {
           "s3:prefix": [
-            "home/${aws:username}/",
-            "home/"
+            "home/",
+            "home/${aws:username}/"
           ]
         }
       }

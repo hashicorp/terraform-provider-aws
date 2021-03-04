@@ -983,6 +983,16 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+func expandStringListKeepEmpty(configured []interface{}) []*string {
+	vs := make([]*string, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(string); ok {
+			vs = append(vs, aws.String(val))
+		}
+	}
+	return vs
+}
+
 // Takes the result of flatmap.Expand for an array of int64
 // and returns a []*int64
 func expandInt64List(configured []interface{}) []*int64 {

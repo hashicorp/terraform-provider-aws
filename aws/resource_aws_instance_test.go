@@ -513,6 +513,10 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 				return fmt.Errorf("block device doesn't exist: /dev/sdf")
 			}
 
+			if _, ok := blockDevices["/dev/sdg"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/sdg")
+			}
+
 			return nil
 		}
 	}
@@ -534,7 +538,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"device_name": "/dev/sdb",
 						"volume_size": "9",
@@ -554,6 +558,13 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"volume_size": "10",
 						"volume_type": "gp3",
 						"throughput":  "300",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdg",
+						"volume_size": "10",
+						"volume_type": "gp3",
+						"throughput":  "300",
+						"iops":        "4000",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexp.MustCompile("vol-[a-z0-9]+"),
@@ -1303,6 +1314,32 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testCheckInstanceProfile(),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17719
+func TestAccAWSInstance_withIamInstanceProfilePath(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigWithInstanceProfilePath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
 				),
 			},
 			{
@@ -3796,6 +3833,71 @@ resource "aws_instance" "test" {
 `, size, delete, volumeType, throughput))
 }
 
+func TestAccAWSInstance_GP3RootBlockDevice(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	testCheck := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			// Map out the block devices by name, which should be unique.
+			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			for _, blockDevice := range v.BlockDeviceMappings {
+				blockDevices[*blockDevice.DeviceName] = blockDevice
+			}
+
+			// Check if the root block device exists.
+			if _, ok := blockDevices["/dev/xvda"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/xvda")
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigGP3RootBlockDevice(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", "300"),
+					testCheck(),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccInstanceConfigGP3RootBlockDevice() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.medium"
+
+  root_block_device {
+    volume_size = 10
+    volume_type = "gp3"
+    throughput  = 300
+    iops        = 4000
+  }
+}
+`)
+}
+
 const testAccAwsEc2InstanceAmiWithEbsRootVolume = `
 data "aws_ami" "ami" {
   owners      = ["amazon"]
@@ -3869,6 +3971,14 @@ resource "aws_instance" "test" {
     volume_size = 10
     volume_type = "gp3"
     throughput  = 300
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdg"
+    volume_size = 10
+    volume_type = "gp3"
+    throughput  = 300
+    iops        = 4000
   }
 
 }
@@ -4575,6 +4685,52 @@ EOF
 
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_instance" "test" {
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = "t2.small"
+  iam_instance_profile = aws_iam_instance_profile.test.name
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfigWithInstanceProfilePath(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  path = "/test/"
   role = aws_iam_role.test.name
 }
 

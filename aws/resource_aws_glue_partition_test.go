@@ -137,6 +137,28 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSGluePartition_disappears_table(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	parValue := acctest.RandString(10)
+	resourceName := "aws_glue_partition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGluePartitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGluePartitionBasicConfig(rName, parValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGluePartitionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogTable(), "aws_glue_catalog_table.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckGluePartitionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).glueconn
 

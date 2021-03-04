@@ -48,7 +48,28 @@ rules:
           metavariable: '$Y'
           regex: '^"github.com/aws/aws-sdk-go/service/[^/]+"$'
     severity: WARNING
-  
+
+  - id: prefer-aws-go-sdk-pointer-conversion-assignment
+    languages: [go]
+    message: Prefer AWS Go SDK pointer conversion functions for dereferencing during assignment, e.g. aws.StringValue()
+    paths:
+      exclude:
+        - aws/cloudfront_distribution_configuration_structure.go
+        - aws/data_source_aws_route_table.go
+        - aws/opsworks_layers.go
+        - aws/resource*
+        - aws/structure.go
+        - aws/waf_helpers.go
+        - aws/internal/generators/
+        - aws/internal/keyvaluetags/
+        - awsproviderlint/vendor/
+      include:
+        - aws/
+    patterns:
+      - pattern: '$LHS = *$RHS'
+      - pattern-not: '*$LHS2 = *$RHS'
+    severity: WARNING
+
   - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
     fix: d.SetId(aws.StringValue($VALUE))
     languages: [go]

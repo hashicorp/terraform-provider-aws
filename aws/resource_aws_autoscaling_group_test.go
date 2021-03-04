@@ -2166,6 +2166,48 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Ins
 	})
 }
 
+func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
+					resource.TestCheckNoResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.launch_template_specification.#"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t4g.micro"),
+					resource.TestCheckResourceAttrPair(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.launch_template_specification.0.launch_template_id", "aws_launch_template.testarm", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(t *testing.T) {
 	var group autoscaling.Group
 	resourceName := "aws_autoscaling_group.test"
@@ -3938,6 +3980,26 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
+func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Arm_Base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "testarm" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-arm64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "testarm" {
+  image_id      = data.aws_ami.testarm.id
+  instance_type = "t4g.micro"
+  name          = %q
+}
+`, rName)
+}
+
 func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy(rName string) string {
 	return testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Base(rName) +
 		fmt.Sprintf(`
@@ -4274,6 +4336,39 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, instanceType)
+}
+
+func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_InstanceType_With_LaunchTemplateSpecification(rName, rName2 string) string {
+	return testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Base(rName) +
+		testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Arm_Base(rName2) +
+		fmt.Sprintf(`
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.test.id
+      }
+
+      override {
+        instance_type = "t2.micro"
+      }
+      override {
+        instance_type = "t4g.micro"
+        launch_template_specification {
+          launch_template_id = aws_launch_template.testarm.id
+        }
+      }
+    }
+  }
+}
+`, rName)
 }
 
 func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(rName string) string {

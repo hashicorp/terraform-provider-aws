@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -195,23 +194,31 @@ func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		conn := meta.(*AWSClient).mqconn
 		brokerName := d.Get("broker_name").(string)
-		var nextToken string
-		for {
-			out, err := conn.ListBrokers(&mq.ListBrokersInput{NextToken: aws.String(nextToken)})
-			if err != nil {
-				return errors.New("Failed to list mq brokers")
+
+		input := &mq.ListBrokersInput{}
+
+		err := conn.ListBrokersPages(input, func(page *mq.ListBrokersResponse, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
-			for _, broker := range out.BrokerSummaries {
-				if aws.StringValue(broker.BrokerName) == brokerName {
-					brokerId := aws.StringValue(broker.BrokerId)
-					d.Set("broker_id", brokerId)
-					d.SetId(brokerId)
+
+			for _, brokerSummary := range page.BrokerSummaries {
+				if brokerSummary == nil {
+					continue
+				}
+
+				if aws.StringValue(brokerSummary.BrokerName) == brokerName {
+					d.Set("broker_id", brokerSummary.BrokerId)
+					d.SetId(aws.StringValue(brokerSummary.BrokerId))
+					return false
 				}
 			}
-			if out.NextToken == nil {
-				break
-			}
-			nextToken = *out.NextToken
+
+			return !lastPage
+		})
+
+		if err != nil {
+			return fmt.Errorf("error listing MQ Brokers: %w", err)
 		}
 
 		if d.Id() == "" {

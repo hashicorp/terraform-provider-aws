@@ -188,7 +188,7 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 	}
 	d.Set("peer_region", pcx.AccepterVpcInfo.Region)
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pcx.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	if pcx.AccepterVpcInfo.PeeringOptions != nil {
