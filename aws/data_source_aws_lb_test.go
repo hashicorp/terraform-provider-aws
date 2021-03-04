@@ -159,7 +159,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -314,7 +314,7 @@ resource "aws_alb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
