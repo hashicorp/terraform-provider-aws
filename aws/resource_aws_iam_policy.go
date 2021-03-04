@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIamPolicy() *schema.Resource {
@@ -67,6 +68,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -96,6 +98,9 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.SetId(aws.StringValue(response.Policy.Arn))
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		request.Tags = keyvaluetags.New(v).IgnoreAws().IamTags()
+	}
 
 	return resourceAwsIamPolicyRead(d, meta)
 }
@@ -147,6 +152,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", getPolicyResponse.Policy.Description)
 	d.Set("name", getPolicyResponse.Policy.PolicyName)
 	d.Set("path", getPolicyResponse.Policy.Path)
+	d.Set("tags", getPolicyResponse.Policy.Tags)
 
 	// Retrieve policy
 
