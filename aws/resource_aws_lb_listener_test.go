@@ -221,6 +221,7 @@ func TestAccAWSLBListener_LoadBalancerArn_GatewayLoadBalancer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheckSkipELBV2(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
@@ -337,6 +338,7 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheckSkipELBV2(t),
 		IDRefreshName: "aws_lb_listener.test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
@@ -457,6 +459,14 @@ func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccErrorCheckSkipELBV2(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"ValidationError: Type must be one of: 'application, network'",
+		"ValidationError: Protocol 'GENEVE' must be one of",
+		"ValidationError: Action type 'authenticate-cognito' must be one",
+	)
 }
 
 func testAccCheckAWSLBListenerDefaultActionOrderDisappears(listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
