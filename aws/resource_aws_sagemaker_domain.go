@@ -136,6 +136,11 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validateArn,
 												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
 											},
 										},
 									},
@@ -161,6 +166,11 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
 												},
 												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+												"sagemaker_image_version_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validateArn,
