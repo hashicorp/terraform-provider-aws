@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_acm_certificate: Trigger resource recreation with `VALIDATION_TIMED_OUT` status ([#17869](https://github.com/hashicorp/terraform-provider-aws/issues/17869))
 * resource/aws_globalaccelerator_accelerator: Allow update of flow log attribute for active flow logs ([#17739](https://github.com/hashicorp/terraform-provider-aws/issues/17739))
 * resource/aws_kms_grant: Adds support for operations on asymmetric keys ([#17836](https://github.com/hashicorp/terraform-provider-aws/issues/17836))
 * resource/aws_neptune_cluster_instance: Add "storage-optimization" to Neptune cluster instance create/update pending states ([#17901](https://github.com/hashicorp/terraform-provider-aws/issues/17901))
