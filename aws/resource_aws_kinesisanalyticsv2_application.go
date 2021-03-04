@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -854,11 +856,12 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 
 func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	applicationName := d.Get("name").(string)
 
 	input := &kinesisanalyticsv2.CreateApplicationInput{
 		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
-		ApplicationName:          aws.String(d.Get("name").(string)),
+		ApplicationName:          aws.String(applicationName),
 		CloudWatchLoggingOptions: expandKinesisAnalyticsV2CloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
@@ -875,7 +878,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Analytics v2 Application: %w", err)
+		return fmt.Errorf("error creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
 	}
 
 	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
@@ -889,9 +892,9 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	application, err := finder.ApplicationByName(conn, d.Get("name").(string))
+	application, err := finder.ApplicationDetailByName(conn, d.Get("name").(string))
 
-	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -1374,7 +1377,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 		CreateTimestamp: aws.Time(createTimestamp),
 	})
 
-	if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -1382,7 +1385,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.ApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
+	_, err = waiter.ApplicationDeleted(conn, applicationName)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)

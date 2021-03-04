@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesisanalyticsv2/lister"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -41,7 +42,7 @@ func testSweepKinesisAnalyticsV2Application(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := finder.ApplicationByName(conn, name)
+			application, err := finder.ApplicationDetailByName(conn, name)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", arn, err)
@@ -2719,10 +2720,12 @@ func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error 
 			continue
 		}
 
-		_, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
-		if isAWSErr(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
+		_, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
@@ -2745,7 +2748,8 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, v *kinesisanalyti
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
 
-		application, err := finder.ApplicationByName(conn, rs.Primary.Attributes["name"])
+		application, err := finder.ApplicationDetailByName(conn, rs.Primary.Attributes["name"])
+
 		if err != nil {
 			return err
 		}
