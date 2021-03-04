@@ -7,15 +7,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -46,14 +48,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				},
 			},
 			"starting_position": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					lambda.EventSourcePositionAtTimestamp,
-					lambda.EventSourcePositionLatest,
-					lambda.EventSourcePositionTrimHorizon,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(lambda.EventSourcePosition_Values(), false),
 			},
 			"starting_position_timestamp": {
 				Type:         schema.TypeString,
@@ -189,20 +187,42 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 // CreateEventSourceMapping in the API / SDK
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
-	eventSourceARN := d.Get("event_source_arn").(string)
 
 	input := &lambda.CreateEventSourceMappingInput{
-		Enabled:        aws.Bool(d.Get("enabled").(bool)),
-		EventSourceArn: aws.String(eventSourceARN),
-		FunctionName:   aws.String(d.Get("function_name").(string)),
+		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+		FunctionName: aws.String(d.Get("function_name").(string)),
 	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
 		input.BatchSize = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("bisect_batch_on_function_error"); ok {
+		input.BisectBatchOnFunctionError = aws.Bool(v.(bool))
+	}
+
+	if vDest, ok := d.GetOk("destination_config"); ok {
+		input.DestinationConfig = expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("event_source_arn"); ok {
+		input.EventSourceArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
+		input.MaximumRecordAgeInSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOkExists("maximum_retry_attempts"); ok {
+		input.MaximumRetryAttempts = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("parallelization_factor"); ok {
+		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("starting_position"); ok {
@@ -219,25 +239,8 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		input.Topics = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("parallelization_factor"); ok {
-		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOkExists("maximum_retry_attempts"); ok {
-		input.MaximumRetryAttempts = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-		input.MaximumRecordAgeInSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("bisect_batch_on_function_error"); ok {
-		input.BisectBatchOnFunctionError = aws.Bool(v.(bool))
-	}
-
-	if vDest, ok := d.GetOk("destination_config"); ok {
-		input.DestinationConfig = expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}))
-	}
+	// When non-ARN targets are supported, set target to the non-nil value.
+	target := input.EventSourceArn
 
 	log.Printf("[DEBUG] Creating Lambda Event Source Mapping: %s", input)
 
@@ -252,21 +255,24 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "InvalidParameterValueException" {
-					return resource.RetryableError(awserr)
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+
+	if tfresource.TimedOut(err) {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 	}
+
 	if err != nil {
-		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", eventSourceARN, err)
+		return fmt.Errorf("error creating Lambda Event Source Mapping (%s): %w", aws.StringValue(target), err)
 	}
 
 	d.SetId(aws.StringValue(eventSourceMappingConfiguration.UUID))
@@ -283,21 +289,16 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	log.Printf("[DEBUG] Fetching Lambda event source mapping: %s", d.Id())
+	eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, d.Id())
 
-	params := &lambda.GetEventSourceMappingInput{
-		UUID: aws.String(d.Id()),
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[DEBUG] Lambda Event Source Mapping (%s) not found", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	eventSourceMappingConfiguration, err := conn.GetEventSourceMapping(params)
 	if err != nil {
-		if isAWSErr(err, "ResourceNotFoundException", "") {
-			log.Printf("[DEBUG] Lambda event source mapping (%s) not found", d.Id())
-			d.SetId("")
-
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
 
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
@@ -315,10 +316,10 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
 	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
 	if err := d.Set("destination_config", flattenLambdaEventSourceMappingDestinationConfig(eventSourceMappingConfiguration.DestinationConfig)); err != nil {
-		return fmt.Errorf("error setting destination_config: %s", err)
+		return fmt.Errorf("error setting destination_config: %w", err)
 	}
 	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
-		return fmt.Errorf("error setting topics: %s", err)
+		return fmt.Errorf("error setting topics: %w", err)
 	}
 
 	state := aws.StringValue(eventSourceMappingConfiguration.State)
@@ -329,38 +330,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	case waiter.EventSourceMappingStateDisabled, waiter.EventSourceMappingStateDisabling:
 		d.Set("enabled", false)
 	default:
-		log.Printf("[WARN] Lambda event source mapping is neither enabled nor disabled but %s", state)
-	}
-
-	return nil
-}
-
-// resourceAwsLambdaEventSourceMappingDelete maps to:
-// DeleteEventSourceMapping in the API / SDK
-func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
-
-	log.Printf("[INFO] Deleting Lambda event source mapping: %s", d.Id())
-
-	params := &lambda.DeleteEventSourceMappingInput{
-		UUID: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteEventSourceMapping(params)
-		if err != nil {
-			if isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteEventSourceMapping(params)
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Lambda event source mapping: %s", err)
+		log.Printf("[WARN] Lambda Event Source Mapping is neither enabled nor disabled but %s", state)
 	}
 
 	return nil
@@ -371,7 +341,7 @@ func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta inte
 func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
+	log.Printf("[DEBUG] Updating Lambda Event Source Mapping: %s", d.Id())
 
 	input := &lambda.UpdateEventSourceMappingInput{
 		UUID: aws.String(d.Id()),
@@ -415,19 +385,26 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(input)
-		if err != nil {
-			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||
-				isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
 
-				return resource.RetryableError(err)
-			}
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {
+			return resource.RetryableError(err)
+		}
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
-	if isResourceTimeoutError(err) {
+
+	if tfresource.TimedOut(err) {
 		_, err = conn.UpdateEventSourceMapping(input)
 	}
+
 	if err != nil {
 		return fmt.Errorf("error updating Lambda Event Source Mapping (%s): %w", d.Id(), err)
 	}
@@ -437,4 +414,48 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+}
+
+// resourceAwsLambdaEventSourceMappingDelete maps to:
+// DeleteEventSourceMapping in the API / SDK
+func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).lambdaconn
+
+	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
+
+	input := &lambda.DeleteEventSourceMappingInput{
+		UUID: aws.String(d.Id()),
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteEventSourceMapping(input)
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteEventSourceMapping(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }

@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
@@ -883,44 +885,44 @@ func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetEventSourceMapping(&lambda.GetEventSourceMappingInput{
-			UUID: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
-		if err == nil {
-			return fmt.Errorf("Lambda event source mapping was not deleted")
+		if tfresource.NotFound(err) {
+			continue
 		}
 
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Lambda Event Source Mapping %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 
 }
 
-func testAccCheckAwsLambdaEventSourceMappingExists(n string, mapping *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
+func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	// Wait for IAM role
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Lambda event source mapping not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Lambda event source mapping ID not set")
+			return fmt.Errorf("No Lambda Event Source Mapping is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
 
-		params := &lambda.GetEventSourceMappingInput{
-			UUID: aws.String(rs.Primary.ID),
-		}
+		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
-		getSourceMappingConfiguration, err := conn.GetEventSourceMapping(params)
 		if err != nil {
 			return err
 		}
 
-		*mapping = *getSourceMappingConfiguration
+		*v = *eventSourceMappingConfiguration
 
 		return nil
 	}
