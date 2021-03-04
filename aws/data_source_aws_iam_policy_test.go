@@ -24,11 +24,36 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_policy.test_policy", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
 	})
+}
 
+func TestAccAWSDataSourceIAMPolicy_tags(t *testing.T) {
+	resourceName := "data.aws_iam_policy.test"
+	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsDataSourceIamPolicyConfig(policyName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", policyName),
+					resource.TestCheckResourceAttr(resourceName, "description", "My test policy"),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_policy.test_policy", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
+				),
+			},
+		},
+	})
 }
 
 func testAccAwsDataSourceIamPolicyConfig(policyName string) string {
