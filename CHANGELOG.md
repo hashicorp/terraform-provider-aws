@@ -16,6 +16,7 @@ BUG FIXES:
 * resource/aws_globalaccelerator_accelerator: Allow update of flow log attribute for active flow logs ([#17739](https://github.com/hashicorp/terraform-provider-aws/issues/17739))
 * resource/aws_kms_grant: Adds support for operations on asymmetric keys ([#17836](https://github.com/hashicorp/terraform-provider-aws/issues/17836))
 * resource/aws_neptune_cluster_parameter_group: Correctly update resource by `id` ([#17872](https://github.com/hashicorp/terraform-provider-aws/issues/17872))
+* resource/aws_ssm_maintenance_window_task: Prevent `ValidationException` error on update when priority is not set or 0 ([#17885](https://github.com/hashicorp/terraform-provider-aws/issues/17885))
 
 ## 3.30.0 (February 26, 2021)
 
