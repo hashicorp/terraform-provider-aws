@@ -739,6 +739,7 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
+		Priority:       aws.Int64(int64(d.Get("priority").(int))),
 		WindowId:       aws.String(windowID),
 		WindowTaskId:   aws.String(d.Id()),
 		MaxConcurrency: aws.String(d.Get("max_concurrency").(string)),
@@ -758,10 +759,6 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("priority"); ok {
-		params.Priority = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
