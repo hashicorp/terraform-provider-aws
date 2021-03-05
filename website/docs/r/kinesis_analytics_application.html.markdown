@@ -72,7 +72,8 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
-* `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application.
+* `start_application` - (Optional) Whether to start or stop the Kinesis Analytics Application. To start an application, an input with a defined `starting_position` must be configured.
+To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
 * `tags` - Key-value map of tags for the Kinesis Analytics Application.
 
 ### CloudWatch Logging Options
@@ -192,13 +193,11 @@ The `lambda` block supports the following:
 
 #### Starting Position Configuration
 
-~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
-
 The point at which the application reads from the streaming source.
 
 The `starting_position_configuration` block supports the following:
 
-* `starting_position` - (Optional) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
+* `starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
 #### Record Columns
 
