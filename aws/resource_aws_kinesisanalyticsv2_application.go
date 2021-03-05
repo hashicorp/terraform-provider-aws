@@ -893,6 +893,42 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
 
+	if _, ok := d.GetOk("start_application"); ok {
+		var inputStartingPosition string
+
+		if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]interface{})
+
+					if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+						tfMap := v[0].(map[string]interface{})
+
+						if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
+							inputStartingPosition = v
+						}
+					}
+				}
+			}
+		}
+
+		application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+		if err != nil {
+			return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		}
+
+		err = kinesisAnalyticsV2StartApplication(conn, application, inputStartingPosition)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
@@ -2530,6 +2566,14 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 				}
 
 				mInput["input_processing_configuration"] = []interface{}{mInputProcessingConfiguration}
+			}
+
+			if inputStartingPositionConfiguration := inputDescription.InputStartingPositionConfiguration; inputStartingPositionConfiguration != nil {
+				mInputStartingPositionConfiguration := map[string]interface{}{
+					"input_starting_position": aws.StringValue(inputStartingPositionConfiguration.InputStartingPosition),
+				}
+
+				mInput["input_starting_position_configuration"] = []interface{}{mInputStartingPositionConfiguration}
 			}
 
 			if kinesisFirehoseInputDescription := inputDescription.KinesisFirehoseInputDescription; kinesisFirehoseInputDescription != nil {
