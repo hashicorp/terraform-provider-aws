@@ -336,6 +336,54 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
+// resourceAwsLambdaEventSourceMappingDelete maps to:
+// DeleteEventSourceMapping in the API / SDK
+func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).lambdaconn
+
+	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
+
+	input := &lambda.DeleteEventSourceMappingInput{
+		UUID: aws.String(d.Id()),
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteEventSourceMapping(input)
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.DeleteEventSourceMapping(input)
+	}
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
+	}
+
+	if _, err := waiter.EventSourceMappingDelete(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
 // resourceAwsLambdaEventSourceMappingUpdate maps to:
 // UpdateEventSourceMapping in the API / SDK
 func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -414,52 +462,4 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
-}
-
-// resourceAwsLambdaEventSourceMappingDelete maps to:
-// DeleteEventSourceMapping in the API / SDK
-func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
-
-	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
-
-	input := &lambda.DeleteEventSourceMappingInput{
-		UUID: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteEventSourceMapping(input)
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteEventSourceMapping(input)
-	}
-
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting Lambda Event Source Mapping (%s): %w", d.Id(), err)
-	}
-
-	if _, err := waiter.EventSourceMappingDelete(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Lambda Event Source Mapping (%s) to delete: %w", d.Id(), err)
-	}
-
-	return nil
 }
