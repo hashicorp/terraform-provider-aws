@@ -1242,11 +1242,6 @@ func kinesisAnalyticsStopApplication(conn *kinesisanalytics.KinesisAnalytics, ap
 		return nil
 	}
 
-	if status := aws.StringValue(application.ApplicationStatus); status != kinesisanalytics.ApplicationStatusRunning {
-		log.Printf("[DEBUG] Kinesis Analytics Application (%s) has status %s, ignoring stop application request", applicationARN, status)
-		return nil
-	}
-
 	input := &kinesisanalytics.StopApplicationInput{
 		ApplicationName: aws.String(applicationName),
 	}
