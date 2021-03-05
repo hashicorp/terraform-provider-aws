@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -44,8 +45,8 @@ func testAccCheckDataSourceAwsEBSDefaultKmsKey(n string) resource.TestCheckFunc 
 
 		attr := rs.Primary.Attributes["key_arn"]
 
-		if attr != *actual.KmsKeyId {
-			return fmt.Errorf("EBS default KMS key is not the expected value (%v)", actual.KmsKeyId)
+		if attr != aws.StringValue(actual.KmsKeyId) {
+			return fmt.Errorf("EBS default KMS key is not the expected value (%s)", aws.StringValue(actual.KmsKeyId))
 		}
 
 		return nil

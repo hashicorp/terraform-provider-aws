@@ -43,7 +43,7 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading KMS Alias: %s", params)
 	err := conn.ListAliasesPages(params, func(page *kms.ListAliasesOutput, lastPage bool) bool {
 		for _, entity := range page.Aliases {
-			if *entity.AliasName == target {
+			if aws.StringValue(entity.AliasName) == target {
 				alias = entity
 				return false
 			}

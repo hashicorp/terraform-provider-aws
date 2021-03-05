@@ -82,7 +82,7 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 	var filteredBaselines []*ssm.PatchBaselineIdentity
 	if v, ok := d.GetOk("operating_system"); ok {
 		for _, baseline := range resp.BaselineIdentities {
-			if v.(string) == *baseline.OperatingSystem {
+			if v.(string) == aws.StringValue(baseline.OperatingSystem) {
 				filteredBaselines = append(filteredBaselines, baseline)
 			}
 		}

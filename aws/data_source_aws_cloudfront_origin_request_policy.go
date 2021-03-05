@@ -153,7 +153,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d *schema.ResourceData
 	}
 
 	for _, policySummary := range resp.OriginRequestPolicyList.Items {
-		if *policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name == d.Get("name").(string) {
+		if aws.StringValue(policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name) == d.Get("name").(string) {
 			originRequestPolicy = policySummary.OriginRequestPolicy
 			break
 		}
