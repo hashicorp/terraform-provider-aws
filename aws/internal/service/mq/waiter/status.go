@@ -7,24 +7,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	BrokerNotFoundStatus = "NotFound"
-)
-
 func BrokerStatus(conn *mq.MQ, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &mq.DescribeBrokerInput{
+		output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 			BrokerId: aws.String(id),
-		}
+		})
 
-		output, err := conn.DescribeBroker(input)
-
-		if err != nil && tfawserr.ErrCodeEquals(err, "NotFoundException") {
-			return nil, BrokerNotFoundStatus, nil
+		if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, aws.StringValue(output.BrokerState), err
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
 		}
 
 		return output, aws.StringValue(output.BrokerState), nil

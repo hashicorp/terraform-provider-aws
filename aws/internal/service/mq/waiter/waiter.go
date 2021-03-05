@@ -39,7 +39,7 @@ func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 			mq.BrokerStateRebootInProgress,
 			mq.BrokerStateDeletionInProgress,
 		},
-		Target:  []string{BrokerNotFoundStatus},
+		Target:  []string{},
 		Timeout: BrokerDeleteTimeout,
 		Refresh: BrokerStatus(conn, id),
 	}
