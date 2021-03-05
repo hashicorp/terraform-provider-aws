@@ -35,17 +35,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `oidc`
+  * `groups_claim` - The JWT claim that the provider will use to return groups.
+  * `groups_prefix` - A prefix that is prepended to group claims e.g. `oidc:`.
+  * `required_claims` - The key value pairs that describe required claims in the identity token.
+  * `username_claim` - The JWT claim that the provider will use as the username.
+  * `username_prefix` - A prefix that is prepended to username claims.
 * `tags` - (Optional) Key-value map of resource tags.
-
-### selector Configuration Block
-
-The following arguments are required:
-
-* `namespace` - (Required) Kubernetes namespace for selection.
-
-The following arguments are optional:
-
-* `labels` - (Optional) Key-value map of Kubernetes labels for selection.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
@@ -62,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.
+EKS Identity Provider Configuration can be imported using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`), e.g.
 
 ```
 $ terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config

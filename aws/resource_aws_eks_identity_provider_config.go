@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"strings"
 	"time"
@@ -38,7 +40,6 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			// TODO - Do I set ForceNew here to true as it doesn't look like you can update a identity provider config
 			"oidc": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -48,6 +49,18 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 						"client_id": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"groups_claim": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"groups_prefix": {
+							Type:         schema.TypeString,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.NoZeroValues,
 						},
@@ -63,14 +76,50 @@ func resourceAwsEksIdentityProviderConfig() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
 						},
+						"required_claims": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							ValidateDiagFunc: all(
+								validation.MapKeyLenBetween(1, 63),
+								validation.MapValueLenBetween(1, 253),
+							),
+							Elem: &schema.Schema{
+								Type:     schema.TypeString,
+								ForceNew: true,
+							},
+						},
+						"username_claim": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"username_prefix": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 					},
 				},
 			},
+			"tags": tagsSchemaForceNew(),
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+	}
+}
+
+func all(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, k cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		for _, validator := range validators {
+			diags = append(diags, validator(i, k)...)
+		}
+		return diags
 	}
 }
 
@@ -89,9 +138,9 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 		Oidc:               oidcRequest,
 	}
 
-	//if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-	//	input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
-	//}
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
+	}
 
 	_, err := conn.AssociateIdentityProviderConfig(input)
 	if err != nil {
@@ -119,7 +168,7 @@ func resourceAwsEksIdentityProviderConfigCreate(ctx context.Context, d *schema.R
 
 func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).eksconn
-	//ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	clusterName, configName, err := resourceAwsEksIdentityProviderConfigParseId(d.Id())
 	if err != nil {
@@ -154,7 +203,6 @@ func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.Res
 		return nil
 	}
 
-	// TODO - Do I need the nil check here?
 	if config.Oidc == nil {
 		log.Printf("[WARN] EKS OIDC Identity Provider Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -169,9 +217,9 @@ func resourceAwsEksIdentityProviderConfigRead(ctx context.Context, d *schema.Res
 
 	d.Set("status", config.Oidc.Status)
 
-	//if err := d.Set("tags", keyvaluetags.EksKeyValueTags(fargateProfile.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-	//	return fmt.Errorf("error setting tags: %s", err)
-	//}
+	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(config.Oidc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -229,14 +277,12 @@ func refreshEksIdentityProviderConfigStatus(conn *eks.EKS, clusterName string, c
 
 		identityProviderConfig := output.IdentityProviderConfig
 
-		// TODO: not sure about the use of StringValue here.
 		if identityProviderConfig == nil {
 			return identityProviderConfig, "", fmt.Errorf("EKS Identity Provider Config (%s:%s) missing", clusterName, aws.StringValue(config.Name))
 		}
 
 		oidc := identityProviderConfig.Oidc
 
-		// TODO: Should I be checking for nil on OIDC here too?
 		if oidc == nil {
 			return identityProviderConfig, "", fmt.Errorf("EKS OIDC Identity Provider Config (%s:%s) missing", clusterName, aws.StringValue(config.Name))
 		}
@@ -288,6 +334,26 @@ func expandEksOidcIdentityProviderConfigRequest(l []interface{}) (string, *eks.O
 		IssuerUrl:                  aws.String(m["issuer_url"].(string)),
 	}
 
+	if v, ok := m["groups_claim"].(string); ok && v != "" {
+		oidcIdentityProviderConfigRequest.GroupsClaim = aws.String(v)
+	}
+
+	if v, ok := m["groups_prefix"].(string); ok && v != "" {
+		oidcIdentityProviderConfigRequest.GroupsPrefix = aws.String(v)
+	}
+
+	if v, ok := m["required_claims"].(map[string]interface{}); ok && len(v) > 0 {
+		oidcIdentityProviderConfigRequest.RequiredClaims = stringMapToPointers(v)
+	}
+
+	if v, ok := m["username_claim"].(string); ok && v != "" {
+		oidcIdentityProviderConfigRequest.UsernameClaim = aws.String(v)
+	}
+
+	if v, ok := m["username_prefix"].(string); ok && v != "" {
+		oidcIdentityProviderConfigRequest.UsernamePrefix = aws.String(v)
+	}
+
 	return configName, oidcIdentityProviderConfigRequest
 }
 
@@ -298,8 +364,13 @@ func flattenEksOidcIdentityProviderConfig(config *eks.OidcIdentityProviderConfig
 
 	m := map[string]interface{}{
 		"client_id":                     aws.StringValue(config.ClientId),
+		"groups_claim":                  aws.StringValue(config.GroupsClaim),
+		"groups_prefix":                 aws.StringValue(config.GroupsPrefix),
 		"identity_provider_config_name": aws.StringValue(config.IdentityProviderConfigName),
 		"issuer_url":                    aws.StringValue(config.IssuerUrl),
+		"required_claims":               aws.StringValueMap(config.RequiredClaims),
+		"username_claim":                aws.StringValue(config.UsernameClaim),
+		"username_prefix":               aws.StringValue(config.UsernamePrefix),
 	}
 
 	return []map[string]interface{}{m}

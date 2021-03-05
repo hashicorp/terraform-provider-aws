@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -89,14 +90,20 @@ func TestAccAWSEksIdentityProviderConfig_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config:      testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, "http://accounts.google.com/.well-known/openid-configuration"),
+				ExpectError: regexp.MustCompile(`expected .* to have a url with schema of: "https", got http://accounts.google.com/.well-known/openid-configuration`),
+			},
+			{
 				Config: testAccAWSEksIdentityProviderConfigProviderConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "test-url.apps.googleusercontent.com"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://accounts.google.com/.well-known/openid-configuration"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -125,6 +132,126 @@ func TestAccAWSEksIdentityProviderConfig_disappears(t *testing.T) {
 					testAccCheckAWSEksIdentityProviderConfigDisappears(rName, &config),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksIdentityProviderConfig_Oidc_Group(t *testing.T) {
+	var config eks.IdentityProviderConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_identity_provider_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, "groups", "oidc:"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksIdentityProviderConfig_Oidc_Username(t *testing.T) {
+	var config eks.IdentityProviderConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_identity_provider_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, "email", "-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(t *testing.T) {
+	var config eks.IdentityProviderConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_identity_provider_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "4qkvw9k2RbpSO6wgCbynY10T6Rc2n89PQblyi6bZ5VhfpMr6V7FVvrA12FiJxarh", "valueOne", "keyTwo", "valueTwo"),
+				ExpectError: regexp.MustCompile("Bad map key length"),
+			},
+			{
+				Config:      testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "keyOne", "bUUUiuIXeFGw0M2VwiCVjR8oIIavv0PF49Ba6yNwOOC7IcoLawczSeb6MpEIhqtXKcf9aogW4uc4smLGvdTQ8uTTkVFvQTPyWXQ3F0uZP02YyoSw0d9MZ7laGRjpXSph9oFE2UlT5IyRaXIsTwl1qvItvVXLN40Pd3PDyPa6de4nlYcRNy6YIikZz2P1QUSYuvMGSJxGUzhTKYRUniolIt1vjHsXt3MAsaJtCcWz0tjLWalvG27pQ3Gl5Cs7K1", "keyTwo", "valueTwo"),
+				ExpectError: regexp.MustCompile("Bad map value length"),
+			},
+			{
+				Config: testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksIdentityProviderConfig_Tags(t *testing.T) {
+	var config eks.IdentityProviderConfig
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_identity_provider_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEksIdentityProviderConfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksIdentityProviderConfig_Tags(rName, "keyOne", "valueOne", "keyTwo", "valueTwo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksIdentityProviderConfigExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.keyOne", "valueOne"),
+					resource.TestCheckResourceAttr(resourceName, "tags.keyTwo", "valueTwo"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -183,7 +310,6 @@ func testAccCheckAWSEksIdentityProviderConfigExists(resourceName string, config 
 	}
 }
 
-// TODO - still needs some work
 func testAccCheckAWSEksIdentityProviderConfigDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).eksconn
 
@@ -323,4 +449,81 @@ resource "aws_eks_identity_provider_config" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, issuerUrl string) string {
+	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  oidc {
+    client_id = "test-url.apps.googleusercontent.com"
+    identity_provider_config_name = %[1]q
+    issuer_url = %[2]q
+  }
+}
+`, rName, issuerUrl)
+}
+
+func testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, groupsClaim, groupsPrefix string) string {
+	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  oidc {
+    client_id = "test-url.apps.googleusercontent.com"
+	groups_claim = %[2]q
+	groups_prefix = %[3]q
+    identity_provider_config_name = %[1]q
+    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+  }
+}
+`, rName, groupsClaim, groupsPrefix)
+}
+
+func testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, usernameClaim, usernamePrefix string) string {
+	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  oidc {
+    client_id = "test-url.apps.googleusercontent.com"
+    identity_provider_config_name = %[1]q
+    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+	username_claim = %[2]q
+	username_prefix = %[3]q
+  }
+}
+`, rName, usernameClaim, usernamePrefix)
+}
+
+func testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
+	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  oidc {
+    client_id = "test-url.apps.googleusercontent.com"
+    identity_provider_config_name = %[1]q
+    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+	required_claims = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
+  }
+}
+`, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo)
+}
+
+func testAccAWSEksIdentityProviderConfig_Tags(rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo string) string {
+	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_identity_provider_config" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  oidc {
+    client_id = "test-url.apps.googleusercontent.com"
+    identity_provider_config_name = %[1]q
+    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo)
 }
