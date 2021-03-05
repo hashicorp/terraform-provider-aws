@@ -42,7 +42,7 @@ func resourceAwsMqBroker() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
+				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), false),
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,

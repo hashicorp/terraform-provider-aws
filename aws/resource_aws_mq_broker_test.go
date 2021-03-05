@@ -249,7 +249,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", mq.AuthenticationStrategySimple),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", brokerName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
@@ -942,7 +942,7 @@ resource "aws_mq_broker" "test" {
   engine_version          = "5.15.0"
   host_instance_type      = "mq.t2.micro"
   security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "SIMPLE"
+  authentication_strategy = "simple"
   storage_type            = "EFS"
 
   logs {
