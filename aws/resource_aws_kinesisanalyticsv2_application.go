@@ -438,12 +438,15 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 
 												"input_starting_position_configuration": {
 													Type:     schema.TypeList,
+													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"input_starting_position": {
-																Type:     schema.TypeString,
-																Computed: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																Computed:     true,
+																ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.InputStartingPosition_Values(), false),
 															},
 														},
 													},
@@ -837,6 +840,11 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateArn,
+			},
+
+			"start_application": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"status": {
@@ -1409,6 +1417,73 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	d.Set("name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, application *kinesisanalyticsv2.ApplicationDetail, inputStartingPosition string) error {
+	applicationARN := aws.StringValue(application.ApplicationARN)
+	applicationName := aws.StringValue(application.ApplicationName)
+
+	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusReady; actual != expected {
+		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be started if it's in the %s state", applicationARN, actual, expected)
+		return nil
+	}
+
+	if len(application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions) == 0 {
+		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has no input description", applicationARN)
+		return nil
+	}
+
+	input := &kinesisanalyticsv2.StartApplicationInput{
+		ApplicationName: aws.String(applicationName),
+		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{
+			SqlRunConfigurations: []*kinesisanalyticsv2.SqlRunConfiguration{{
+				InputId:                            application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId,
+				InputStartingPositionConfiguration: &kinesisanalyticsv2.InputStartingPositionConfiguration{},
+			}},
+		},
+	}
+
+	if inputStartingPosition != "" {
+		input.RunConfiguration.SqlRunConfigurations[0].InputStartingPositionConfiguration.InputStartingPosition = aws.String(inputStartingPosition)
+	}
+
+	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
+
+	if _, err := conn.StartApplication(input); err != nil {
+		return fmt.Errorf("error starting Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	}
+
+	if _, err := waiter.ApplicationStarted(conn, applicationName); err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to start: %w", applicationARN, err)
+	}
+
+	return nil
+}
+
+func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, application *kinesisanalyticsv2.ApplicationDetail) error {
+	applicationARN := aws.StringValue(application.ApplicationARN)
+	applicationName := aws.StringValue(application.ApplicationName)
+
+	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual != expected {
+		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be stopped if it's in the %s state", applicationARN, actual, expected)
+		return nil
+	}
+
+	input := &kinesisanalyticsv2.StopApplicationInput{
+		ApplicationName: aws.String(applicationName),
+	}
+
+	log.Printf("[DEBUG] Stopping Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
+
+	if _, err := conn.StopApplication(input); err != nil {
+		return fmt.Errorf("error stopping Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	}
+
+	if _, err := waiter.ApplicationStopped(conn, applicationName); err != nil {
+		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to stop: %w", applicationARN, err)
+	}
+
+	return nil
 }
 
 func expandKinesisAnalyticsV2ApplicationConfiguration(vApplicationConfiguration []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {

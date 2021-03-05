@@ -35,6 +35,60 @@ func ApplicationDeleted(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string
 	return nil, err
 }
 
+// ApplicationStarted waits for an Application to start
+func ApplicationStarted(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalyticsv2.ApplicationStatusStarting},
+		Target:  []string{kinesisanalyticsv2.ApplicationStatusRunning},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationStartedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// ApplicationStopped waits for an Application to stop
+func ApplicationStopped(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalyticsv2.ApplicationStatusStopping},
+		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationStoppedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// ApplicationUpdated waits for an Application to return Deleted
+func ApplicationUpdated(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{kinesisanalyticsv2.ApplicationStatusUpdating},
+		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady, kinesisanalyticsv2.ApplicationStatusRunning},
+		Refresh: ApplicationStatus(conn, name),
+		Timeout: ApplicationUpdatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*kinesisanalyticsv2.ApplicationDetail); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
 // IAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
 func IAMPropagation(f func() (interface{}, error)) (interface{}, error) {

@@ -261,6 +261,7 @@ The following arguments are supported:
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
+* `start_application` - (Optional) Whether to start or stop the application.
 * `tags` - (Optional) A map of tags to assign to the application.
 
 The `application_configuration` object supports the following:
@@ -343,6 +344,7 @@ The `input` object supports the following:
 * `input_parallelism` - (Optional) Describes the number of in-application streams to create.
 * `input_processing_configuration` - (Optional) The input processing configuration for the input.
 An input processor transforms records as they are received from the stream, before the application's SQL code executes.
+* `input_starting_position_configuration` (Optional) The point at which the application starts processing records from the streaming source.
 * `kinesis_firehose_input` - (Optional) If the streaming source is a [Kinesis Data Firehose delivery stream](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html), identifies the delivery stream's ARN.
 * `kinesis_streams_input` - (Optional) If the streaming source is a [Kinesis data stream](/docs/providers/aws/r/kinesis_stream.html), identifies the stream's Amazon Resource Name (ARN).
 
@@ -388,6 +390,12 @@ The `csv_mapping_parameters` object supports the following:
 The `json_mapping_parameters` object supports the following:
 
 * `record_row_path` - (Required) The path to the top-level parent that contains the records.
+
+The `input_starting_position_configuration` object supports the following:
+
+~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+
+* `input_starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
 The `kinesis_firehose_input` object supports the following:
 
