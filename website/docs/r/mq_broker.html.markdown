@@ -57,7 +57,7 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ACTIVEMQ` only. Detailed below.
-* `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
+* `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
 * `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.

@@ -34,6 +34,16 @@ func resourceAwsMqBroker() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"authentication_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
+			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -66,15 +76,11 @@ func resourceAwsMqBroker() *schema.Resource {
 				},
 			},
 			"deployment_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  mq.DeploymentModeSingleInstance,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					mq.DeploymentModeSingleInstance,
-					mq.DeploymentModeActiveStandbyMultiAz,
-					mq.DeploymentModeClusterMultiAz,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      mq.DeploymentModeSingleInstance,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(mq.DeploymentMode_Values(), true),
 			},
 			"encryption_options": {
 				Type:             schema.TypeList,
@@ -101,13 +107,10 @@ func resourceAwsMqBroker() *schema.Resource {
 				},
 			},
 			"engine_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					mq.EngineTypeActivemq,
-					mq.EngineTypeRabbitmq,
-				}, true),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), true),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -118,6 +121,27 @@ func resourceAwsMqBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"instances": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"console_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"endpoints": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"logs": {
 				Type:     schema.TypeList,
@@ -152,17 +176,9 @@ func resourceAwsMqBroker() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day_of_week": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								mq.DayOfWeekSunday,
-								mq.DayOfWeekMonday,
-								mq.DayOfWeekTuesday,
-								mq.DayOfWeekWednesday,
-								mq.DayOfWeekThursday,
-								mq.DayOfWeekFriday,
-								mq.DayOfWeekSaturday,
-							}, true),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(mq.DayOfWeek_Values(), true),
 						},
 						"time_of_day": {
 							Type:     schema.TypeString,
@@ -186,6 +202,11 @@ func resourceAwsMqBroker() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -193,10 +214,7 @@ func resourceAwsMqBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags": tagsSchema(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -242,28 +260,6 @@ func resourceAwsMqBroker() *schema.Resource {
 					},
 				},
 			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"console_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"endpoints": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -281,12 +277,14 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		EngineType:              aws.String(d.Get("engine_type").(string)),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		SecurityGroups:          expandStringSet(d.Get("security_groups").(*schema.Set)),
-		Users:                   expandMqUsers(d.Get("user").(*schema.Set).List()),
 		Logs:                    expandMqLogs(d.Get("logs").([]interface{})),
+		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		Users:                   expandMqUsers(d.Get("user").(*schema.Set).List()),
 	}
 
+	if v, ok := d.GetOk("authentication_strategy"); ok {
+		input.AuthenticationStrategy = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("configuration"); ok {
 		input.Configuration = expandMqConfigurationId(v.([]interface{}))
 	}
@@ -295,6 +293,12 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		input.SecurityGroups = expandStringSet(d.Get("security_groups").(*schema.Set))
+	}
+	if v, ok := d.GetOk("storage_type"); ok {
+		input.StorageType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = expandStringSet(v.(*schema.Set))
@@ -361,36 +365,31 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("auto_minor_version_upgrade", out.AutoMinorVersionUpgrade)
 	d.Set("arn", out.BrokerArn)
-	d.Set("instances", flattenMqBrokerInstances(out.BrokerInstances))
+	d.Set("authentication_strategy", out.AuthenticationStrategy)
+	d.Set("auto_minor_version_upgrade", out.AutoMinorVersionUpgrade)
 	d.Set("broker_name", out.BrokerName)
 	d.Set("deployment_mode", out.DeploymentMode)
-
-	if err := d.Set("encryption_options", flattenMqEncryptionOptions(out.EncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting encryption_options: %s", err)
-	}
-
 	d.Set("engine_type", out.EngineType)
 	d.Set("engine_version", out.EngineVersion)
 	d.Set("host_instance_type", out.HostInstanceType)
+	d.Set("instances", flattenMqBrokerInstances(out.BrokerInstances))
 	d.Set("publicly_accessible", out.PubliclyAccessible)
-	err = d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(out.MaintenanceWindowStartTime))
-	if err != nil {
-		return err
-	}
 	d.Set("security_groups", aws.StringValueSlice(out.SecurityGroups))
+	d.Set("storage_type", out.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(out.SubnetIds))
 
-	if err := d.Set("logs", flattenMqLogs(out.Logs)); err != nil {
-		return fmt.Errorf("error setting logs: %s", err)
+	if err := d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current)); err != nil {
+		return fmt.Errorf("error setting configuration: %w", err)
 	}
-
-	if out.Configurations != nil {
-		err = d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current))
-		if err != nil {
-			return err
-		}
+	if err := d.Set("encryption_options", flattenMqEncryptionOptions(out.EncryptionOptions)); err != nil {
+		return fmt.Errorf("error setting encryption_options: %w", err)
+	}
+	if err := d.Set("logs", flattenMqLogs(out.Logs)); err != nil {
+		return fmt.Errorf("error setting logs: %w", err)
+	}
+	if err := d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(out.MaintenanceWindowStartTime)); err != nil {
+		return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
 	}
 
 	rawUsers := make([]*mq.User, len(out.Users))
@@ -410,13 +409,11 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	users := flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())
-	if err = d.Set("user", users); err != nil {
-		return err
+	if err := d.Set("user", flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
+		return fmt.Errorf("error setting user: %w", err)
 	}
-
 	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -433,7 +430,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			SecurityGroups: expandStringSet(d.Get("security_groups").(*schema.Set)),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) security groups: %s", d.Id(), err)
+			return fmt.Errorf("error updating MQ Broker (%s) security groups: %w", d.Id(), err)
 		}
 	}
 
@@ -444,7 +441,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) configuration: %s", d.Id(), err)
+			return fmt.Errorf("error updating MQ Broker (%s) configuration: %w", d.Id(), err)
 		}
 		requiresReboot = true
 	}
@@ -458,7 +455,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
 			o.(*schema.Set).List(), n.(*schema.Set).List())
 		if err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) user: %s", d.Id(), err)
+			return fmt.Errorf("error updating MQ Broker (%s) user: %w", d.Id(), err)
 		}
 
 		if usersUpdated {
@@ -471,7 +468,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			BrokerId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return fmt.Errorf("error rebooting MQ Broker (%s): %s", d.Id(), err)
+			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
 		stateConf := resource.StateChangeConf{
@@ -502,7 +499,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.MqUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
