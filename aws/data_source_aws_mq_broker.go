@@ -13,6 +13,18 @@ func dataSourceAwsMqBroker() *schema.Resource {
 		Read: dataSourceAwsmQBrokerRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"authentication_strategy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"broker_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -24,14 +36,6 @@ func dataSourceAwsMqBroker() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
-			},
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -90,14 +94,14 @@ func dataSourceAwsMqBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -153,6 +157,10 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"storage_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"subnet_ids": {

@@ -269,7 +269,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", mq.BrokerStorageTypeEbs),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", mq.BrokerStorageTypeEfs),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
@@ -943,7 +943,7 @@ resource "aws_mq_broker" "test" {
   host_instance_type      = "mq.t2.micro"
   security_groups         = [aws_security_group.test.id]
   authentication_strategy = "SIMPLE"
-  storage_type            = "EBS"
+  storage_type            = "EFS"
 
   logs {
     general = true
