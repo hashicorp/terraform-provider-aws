@@ -267,6 +267,46 @@ func TestAccAWSAppautoscalingScheduledAction_Schedule_CronExpression_Timezone(t 
 	})
 }
 
+func TestAccAWSAppautoscalingScheduledAction_Schedule_CronExpression_StartEndTimeTimezone(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cron := "cron(0 17 * * ? *)"
+	scheduleTimezone := "Etc/GMT+9"                                    // Z-09:00 (IANA and RFC3339 have inverted signs)
+	startTimezone, _ := time.LoadLocation("Antarctica/DumontDUrville") // Z+10:00
+	endTimezone, _ := time.LoadLocation("America/Vancouver")           // Z-08:00
+	startTime := time.Now().AddDate(0, 0, 2).In(startTimezone)
+	startTimeUtc := startTime.UTC()
+	endTime := time.Now().AddDate(0, 0, 8).In(endTimezone)
+	endTimeUtc := endTime.UTC()
+	resourceName := "aws_appautoscaling_scheduled_action.test"
+	autoscalingTargetResourceName := "aws_appautoscaling_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppautoscalingScheduledActionConfig_ScheduleWithTimezone(rName, cron, scheduleTimezone, startTime.Format(time.RFC3339), endTime.Format(time.RFC3339)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsAppautoscalingScheduledActionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", autoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", autoscalingTargetResourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", autoscalingTargetResourceName, "scalable_dimension"),
+					resource.TestCheckResourceAttr(resourceName, "schedule", cron),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, "timezone", scheduleTimezone),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "start_time", startTimeUtc.Format(time.RFC3339)),
+					resource.TestCheckResourceAttr(resourceName, "end_time", endTimeUtc.Format(time.RFC3339)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAppautoscalingScheduledAction_Schedule_RateExpression_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rate := "rate(1 day)"

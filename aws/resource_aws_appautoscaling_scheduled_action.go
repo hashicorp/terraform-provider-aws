@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
@@ -63,17 +64,21 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			// The AWS API normalizes start_time and end_time to UTC. Uses
+			// suppressEquivalentTime to allow any timezone to be used.
 			"start_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateUTCTimestamp,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.IsRFC3339Time,
+				DiffSuppressFunc: suppressEquivalentTime,
 			},
 			"end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateUTCTimestamp,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.IsRFC3339Time,
+				DiffSuppressFunc: suppressEquivalentTime,
 			},
 			"timezone": {
 				Type:     schema.TypeString,
