@@ -186,7 +186,7 @@ func resourceAwsMqBroker() *schema.Resource {
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
+				Optional: true,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
