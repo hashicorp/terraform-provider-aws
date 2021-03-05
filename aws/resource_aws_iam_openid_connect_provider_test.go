@@ -143,7 +143,7 @@ func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
 		}
 
 		if out != nil {
-			return fmt.Errorf("Found IAM OpenID Connect Provider, expected none: %s", out)
+			return fmt.Errorf("Found IAM OpenID Connect Provider, expected none: %w", out)
 		}
 	}
 
