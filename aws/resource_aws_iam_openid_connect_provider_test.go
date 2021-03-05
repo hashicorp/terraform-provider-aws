@@ -2,14 +2,62 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_iam_openid_connect_provider", &resource.Sweeper{
+		Name: "aws_iam_openid_connect_provider",
+		F:    testSweepIamOpenIDConnectProvider,
+	})
+}
+
+func testSweepIamOpenIDConnectProvider(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).iamconn
+
+	var sweeperErrs *multierror.Error
+
+	out, err := conn.ListOpenIDConnectProviders(&iam.ListOpenIDConnectProvidersInput{})
+
+	for _, oidcProvider := range out.OpenIDConnectProviderList {
+		arn := aws.StringValue(oidcProvider.Arn)
+
+		r := resourceAwsIamOpenIDConnectProvider()
+		d := r.Data(nil)
+		d.SetId(arn)
+		err := r.Delete(d, client)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting IAM OIDC Provider (%s): %w", arn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM OIDC Provider sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM OIDC Providers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 	rString := acctest.RandString(5)
