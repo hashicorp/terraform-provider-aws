@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -392,19 +393,19 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 		BrokerId: aws.String(d.Id()),
 	})
+
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "NotFoundException") || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
+		log.Printf("[WARN] MQ broker (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] MQ Broker %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		// API docs say a 404 can also return a 403
-		if isAWSErr(err, mq.ErrCodeForbiddenException, "Forbidden") {
-			log.Printf("[WARN] MQ Broker %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading MQ broker (%s): %w", d.Id(), err)
+	}
+
+	if output == nil {
+		return fmt.Errorf("empty response while reading MQ broker (%s)", d.Id())
 	}
 
 	d.Set("arn", output.BrokerArn)
@@ -421,7 +422,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("storage_type", output.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
-	if output.Configurations.Current != nil {
+	if output.Configurations != nil && output.Configurations.Current != nil {
 		if err := d.Set("configuration", flattenMqConfigurationId(output.Configurations.Current)); err != nil {
 			return fmt.Errorf("error setting configuration: %w", err)
 		}
