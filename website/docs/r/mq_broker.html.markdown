@@ -47,24 +47,25 @@ resource "aws_mq_broker" "example" {
 The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
-* `engine_type` - (Required) Type of broker engine. Valid values are `ACTIVEMQ` and `RABBITMQ`.
+* `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t2.micro`, `mq.m4.large`.
-* `user` - (Required) Configuration block for broker users. For `engine_type` of `RABBITMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
+* `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 The following arguments are optional:
 
 * `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `SIMPLE` and `LDAP`. `LDAP` is not supported for `engine_type` `RABBITMQ`.
+* `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
-* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ACTIVEMQ` only. Detailed below.
+* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` only. Detailed below.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
+* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below.
 * `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
-* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ACTIVEMQ`, the valid values are `EFS` and `EBS`. For `engine_type` of `RABBITMQ`, only `EBS` is supported.
+* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`. For `engine_type` `RabbitMQ`, only `EBS` is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker.
 
@@ -82,11 +83,27 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
 * `use_aws_owned_key` - (Optional) Whether to enable an AWS-owned KMS CMK that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS-managed CMK aliased to `aws/mq` in your account.
 
+### ldap_server_metadata
+
+The following arguments are optional:
+
+* `hosts` - (Optional) List of a fully qualified domain name of the LDAP server and an optional failover server.
+* `role_base` - (Optional) Fully qualified name of the directory to search for a user’s groups.
+* `role_name` - (Optional) Specifies the LDAP attribute that identifies the group name attribute in the object returned from the group membership query.
+* `role_search_matching` - (Optional) Search criteria for groups.
+* `role_search_subtree` - (Optional) Whether the directory search scope is the entire sub-tree.
+* `service_account_password` - (Optional) Service account password.
+* `service_account_username` - (Optional) Service account username.
+* `user_base` - (Optional) Fully qualified name of the directory where you want to search for users.
+* `user_role_name` - (Optional) Specifies the name of the LDAP attribute for the user group membership.
+* `user_search_matching` - (Optional) Search criteria for users.
+* `user_search_subtree` - (Optional) Whether the directory search scope is the entire sub-tree.
+
 ### logs
 
 The following arguments are optional:
 
-* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engine_type` of `ACTIVEMQ`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
+* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engine_type` of `ActiveMQ`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
 * `general` - (Optional) Enables general logging via CloudWatch. Defaults to `false`.
 
 ### maintenance_window_start_time
@@ -102,7 +119,7 @@ The following arguments are required:
 ### user
 
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
-* `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ACTIVEMQ` only.
+* `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ActiveMQ` only.
 * `password` - (Required) Password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
 * `username` - (Required) Username of the user.
 
