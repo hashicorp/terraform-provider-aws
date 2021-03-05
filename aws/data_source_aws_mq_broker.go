@@ -13,6 +13,18 @@ func dataSourceAwsMqBroker() *schema.Resource {
 		Read: dataSourceAwsmQBrokerRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"authentication_strategy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"broker_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -24,14 +36,6 @@ func dataSourceAwsMqBroker() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
-			},
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -90,14 +94,67 @@ func dataSourceAwsMqBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ldap_server_metadata": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hosts": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"role_base": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_search_matching": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_search_subtree": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"service_account_password": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account_username": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_base": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_role_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_search_matching": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_search_subtree": {
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 					},
 				},
@@ -153,6 +210,10 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"storage_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"subnet_ids": {
