@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -67,6 +68,7 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -86,12 +88,13 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 	request := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 		Path:                aws.String(d.Get("path").(string)),
+		Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IamTags(),
 	}
 
 	var err error
 	response, err := conn.CreateInstanceProfile(request)
 	if err == nil {
-		err = instanceProfileReadResult(d, response.InstanceProfile)
+		err = instanceProfileReadResult(d, response.InstanceProfile, meta)
 	}
 	if err != nil {
 		return fmt.Errorf("creating IAM instance profile %s: %w", name, err)
@@ -186,6 +189,14 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.IamInstanceProfileUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for IAM Instance Profile (%s): %w", d.Id(), err)
+		}
+	}
+
 	return nil
 }
 
@@ -225,7 +236,7 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return instanceProfileReadResult(d, instanceProfile)
+	return instanceProfileReadResult(d, instanceProfile, meta)
 }
 
 func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
@@ -249,7 +260,9 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile) error {
+func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	d.SetId(aws.StringValue(result.InstanceProfileName))
 	if err := d.Set("name", result.InstanceProfileName); err != nil {
 		return err
@@ -267,6 +280,10 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 
 	if result.Roles != nil && len(result.Roles) > 0 {
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
+	}
+
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(result.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
