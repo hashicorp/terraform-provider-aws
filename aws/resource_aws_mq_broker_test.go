@@ -3,12 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -95,11 +98,27 @@ func testSweepMqBrokers(region string) error {
 	}
 	log.Printf("[DEBUG] %d MQ brokers found", len(resp.BrokerSummaries))
 
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(resp.BrokerSummaries), func(i, j int) {
+		resp.BrokerSummaries[i], resp.BrokerSummaries[j] = resp.BrokerSummaries[j], resp.BrokerSummaries[i]
+	})
+
 	for _, bs := range resp.BrokerSummaries {
-		log.Printf("[INFO] Deleting MQ broker %s", *bs.BrokerId)
+		log.Printf("[INFO] Deleting MQ broker %s", aws.StringValue(bs.BrokerId))
 		_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
 			BrokerId: bs.BrokerId,
 		})
+		if tfawserr.ErrMessageContains(err, mq.ErrCodeBadRequestException, "while in state [CREATION_IN_PROGRESS") {
+			log.Printf("[WARN] Broker in state CREATION_IN_PROGRESS and must complete creation before deletion")
+			if _, err = waiter.BrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
+				return err
+			}
+
+			log.Printf("[WARN] Retrying deletion of broker %s", aws.StringValue(bs.BrokerId))
+			_, err = conn.DeleteBroker(&mq.DeleteBrokerInput{
+				BrokerId: bs.BrokerId,
+			})
+		}
 		if err != nil {
 			return err
 		}
