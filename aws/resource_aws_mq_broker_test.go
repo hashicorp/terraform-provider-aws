@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mq/waiter"
 )
 
 func init() {
@@ -102,8 +103,7 @@ func testSweepMqBrokers(region string) error {
 		if err != nil {
 			return err
 		}
-		err = waitForMqBrokerDeletion(conn, *bs.BrokerId)
-		if err != nil {
+		if _, err = waiter.BrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
 			return err
 		}
 	}

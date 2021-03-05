@@ -6,7 +6,6 @@ import (
 	"log"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -556,27 +555,8 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		stateConf := resource.StateChangeConf{
-			Pending: []string{
-				mq.BrokerStateRunning,
-				mq.BrokerStateRebootInProgress,
-			},
-			Target:  []string{mq.BrokerStateRunning},
-			Timeout: 30 * time.Minute,
-			Refresh: func() (interface{}, string, error) {
-				out, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-					BrokerId: aws.String(d.Id()),
-				})
-				if err != nil {
-					return 42, "", err
-				}
-
-				return out, *out.BrokerState, nil
-			},
-		}
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return err
+		if _, err := waiter.BrokerRebooted(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
 
@@ -602,7 +582,11 @@ func resourceAwsMqBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return waitForMqBrokerDeletion(conn, d.Id())
+	if _, err := waiter.BrokerDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsMqUserHash(v interface{}) int {
@@ -623,33 +607,6 @@ func resourceAwsMqUserHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["username"].(string)))
 
 	return hashcode.String(buf.String())
-}
-
-func waitForMqBrokerDeletion(conn *mq.MQ, id string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mq.BrokerStateRunning,
-			mq.BrokerStateRebootInProgress,
-			mq.BrokerStateDeletionInProgress,
-		},
-		Target:  []string{""},
-		Timeout: 30 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-				BrokerId: aws.String(id),
-			})
-			if err != nil {
-				if isAWSErr(err, "NotFoundException", "") {
-					return 42, "", nil
-				}
-				return 42, "", err
-			}
-
-			return out, *out.BrokerState, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
 }
 
 func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {

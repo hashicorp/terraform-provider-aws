@@ -9,6 +9,8 @@ import (
 
 const (
 	BrokerCreateTimeout = 30 * time.Minute
+	BrokerDeleteTimeout = 30 * time.Minute
+	BrokerRebootTimeout = 30 * time.Minute
 )
 
 func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
@@ -19,6 +21,44 @@ func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 		},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: BrokerCreateTimeout,
+		Refresh: BrokerStatus(conn, id),
+	}
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{
+			mq.BrokerStateRunning,
+			mq.BrokerStateRebootInProgress,
+			mq.BrokerStateDeletionInProgress,
+		},
+		Target:  []string{BrokerNotFoundStatus},
+		Timeout: BrokerDeleteTimeout,
+		Refresh: BrokerStatus(conn, id),
+	}
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func BrokerRebooted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{
+			mq.BrokerStateRebootInProgress,
+		},
+		Target:  []string{mq.BrokerStateRunning},
+		Timeout: BrokerRebootTimeout,
 		Refresh: BrokerStatus(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
