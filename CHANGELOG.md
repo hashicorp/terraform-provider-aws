@@ -1,5 +1,9 @@
 ## 3.32.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_storagegateway_upload_buffer: Replace `Provider produced inconsistent result after apply` with actual error message ([#17880](https://github.com/hashicorp/terraform-provider-aws/issues/17880))
+
 ## 3.31.0 (March 04, 2021)
 
 FEATURES:
