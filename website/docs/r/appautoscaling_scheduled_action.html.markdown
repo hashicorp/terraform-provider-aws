@@ -71,10 +71,10 @@ The following arguments are supported:
 * `resource_id` - (Required) The identifier of the resource associated with the scheduled action. Documentation can be found in the parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_PutScheduledAction.html#ApplicationAutoScaling-PutScheduledAction-request-ResourceId)
 * `scalable_dimension` - (Optional) The scalable dimension. Documentation can be found in the parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_PutScheduledAction.html#ApplicationAutoScaling-PutScheduledAction-request-ScalableDimension) Example: ecs:service:DesiredCount
 * `scalable_target_action` - (Optional) The new minimum and maximum capacity. You can set both values or just one. See [below](#scalable-target-action-arguments)
-* `schedule` - (Optional) The schedule for this action. The following formats are supported: At expressions - at(yyyy-mm-ddThh:mm:ss), Rate expressions - rate(valueunit), Cron expressions - cron(fields). In UTC. Documentation can be found in the parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_PutScheduledAction.html#ApplicationAutoScaling-PutScheduledAction-request-Schedule)
-* `start_time` - (Optional) The date and time for the scheduled action to start. Specify the following format: 2006-01-02T15:04:05Z
-* `end_time` - (Optional) The date and time for the scheduled action to end. Specify the following format: 2006-01-02T15:04:05Z
-* `timezone` - (Optional) The time zone used when setting a scheduled action by using an at or cron expression. Default is UTC.
+* `schedule` - (Optional) The schedule for this action. The following formats are supported: At expressions - at(yyyy-mm-ddThh:mm:ss), Rate expressions - rate(valueunit), Cron expressions - cron(fields). Times for at expressions and cron expressions are evaluated using the time zone configured in `timezone`. Documentation can be found in the parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_PutScheduledAction.html#ApplicationAutoScaling-PutScheduledAction-request-Schedule)
+* `start_time` - (Optional) The date and time for the scheduled action to start in UTC. Specify the following format: 2006-01-02T15:04:05Z.
+* `end_time` - (Optional) The date and time for the scheduled action to end in UTC. Specify the following format: 2006-01-02T15:04:05Z.
+* `timezone` - (Optional) The time zone used when setting a scheduled action by using an at or cron expression. Valid values are the [canonical names of the IANA time zones supported by Joda-Time](https://www.joda.org/joda-time/timezones.html), such as `Etc/GMT+9` or `Pacific/Tahiti`. Default is `UTC`.
 
 ### Scalable Target Action Arguments
 
