@@ -299,12 +299,12 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 func testAccAWSInstanceProfilePrefixNameConfig(rName string) string {
-	return testAccAwsIamInstanceProfileBaseConfig(rName) + fmt.Sprintf(`
+	return testAccAwsIamInstanceProfileBaseConfig(rName) + `
 resource "aws_iam_instance_profile" "test" {
   name_prefix = "test-"
   role        = aws_iam_role.test.name
 }
-`)
+`
 }
 
 func testAccAwsIamInstanceProfileConfigTags1(rName, tagKey1, tagValue1 string) string {
