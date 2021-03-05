@@ -44,70 +44,78 @@ resource "aws_mq_broker" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `apply_immediately` - (Optional) Specifies whether any broker modifications
-  are applied immediately, or during the next maintenance window. Default is `false`.
-* `auto_minor_version_upgrade` - (Optional) Enables automatic upgrades to new minor versions for brokers, as Apache releases the versions.
-* `broker_name` - (Required) The name of the broker.
-* `configuration` - (Optional) Configuration of the broker. See below. (Applies to `ActiveMQ` only)
-* `deployment_mode` - (Optional) The deployment mode of the broker. Supported: `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Defaults to `SINGLE_INSTANCE`.
-* `encryption_options` - (Optional) Configuration block containing encryption options. See below.
-* `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) The version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
-* `host_instance_type` - (Required) The broker's instance type. e.g. `mq.t2.micro` or `mq.m4.large`
+* `broker_name` - (Required) Name of the broker.
+* `engine_type` - (Required) Type of broker engine. Valid values are `ACTIVEMQ` and `RABBITMQ`.
+* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
+* `host_instance_type` - (Required) Broker's instance type. For example, `mq.t2.micro`, `mq.m4.large`.
+* `user` - (Required) Configuration block for broker users. For `engine_type` of `RABBITMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
+
+The following arguments are optional:
+
+* `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
+* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ACTIVEMQ` only. Detailed below.
+* `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
+* `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
+* `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
+* `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
-* `security_groups` - (Required) The list of security group IDs assigned to the broker.
-* `subnet_ids` - (Optional) The list of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires two subnets.
-* `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
-* `logs` - (Optional) Logging configuration of the broker. See below. (Applies to `ActiveMQ` only)
-* `user` - (Optional) The list of all broker usernames for the specified broker. See below. RabbitMQ users can only be specified in the creation of the resource. Updates to users can only be in the RabbitMQ UI.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `security_groups` - (Optional) List of security group IDs assigned to the broker.
+* `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
+* `tags` - (Optional) Map of tags to assign to the broker.
 
-### Nested Fields
+### configuration
 
-#### `configuration`
+The following arguments are optional:
 
 * `id` - (Optional) The Configuration ID.
 * `revision` - (Optional) Revision of the Configuration.
 
-#### `encryption_options`
+### encryption_options
 
-* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS managed CMKs or customer managed CMKs are in use, this value must be configured.
-* `use_aws_owned_key` - (Optional) Boolean to enable an AWS owned Key Management Service (KMS) Customer Master Key (CMK) that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS managed Customer Master Key (CMK) aliased to `aws/mq` in your account.
+The following arguments are optional:
 
-#### `maintenance_window_start_time`
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS-managed CMKs or customer-managed CMKs are in use, this value must be configured.
+* `use_aws_owned_key` - (Optional) Whether to enable an AWS-owned KMS CMK that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS-managed CMK aliased to `aws/mq` in your account.
 
-* `day_of_week` - (Required) The day of the week. e.g. `MONDAY`, `TUESDAY`, or `WEDNESDAY`
-* `time_of_day` - (Required) The time, in 24-hour format. e.g. `02:00`
-* `time_zone` - (Required) The time zone, UTC by default, in either the Country/City format, or the UTC offset format. e.g. `CET`
+### logs
 
-~> **NOTE:** AWS currently does not support updating the maintenance window beyond resource creation.
+The following arguments are optional:
 
-### `logs`
-
+* `audit` - (Optional) Enables audit logging. Auditing is only possible for `engine_type` of `ACTIVEMQ`. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
 * `general` - (Optional) Enables general logging via CloudWatch. Defaults to `false`.
-* `audit` - (Optional) Enables audit logging. User management action made using JMX or the ActiveMQ Web Console is logged. Defaults to `false`.
 
-#### `user`
+### maintenance_window_start_time
 
-* `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. (Applies to `ActiveMQ` only)
-* `groups` - (Optional) The list of groups (20 maximum) to which the ActiveMQ user belongs. (Applies to `ActiveMQ` only)
-* `password` - (Required) The password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
-* `username` - (Required) The username of the user.
+The following arguments are required:
 
-~> **NOTE:** AWS currently does not support updating the RabbitMQ users beyond resource creation. Updates to users can only be in the RabbitMQ UI.
+* `day_of_week` - (Required) Day of the week, e.g. `MONDAY`, `TUESDAY`, or `WEDNESDAY`.
+* `time_of_day` - (Required) Time, in 24-hour format, e.g. `02:00`.
+* `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g. `CET`.
+
+~> **NOTE:** Amazon MQ currently does not support updating the maintenance window. Changes to the maintenance window start time will force a new broker to be created.
+
+### user
+
+* `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
+* `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ACTIVEMQ` only.
+* `password` - (Required) Password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
+* `username` - (Required) Username of the user.
+
+~> **NOTE:** AWS currently does not support updating RabbitMQ users. Updates to users can only be in the RabbitMQ UI.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique ID that Amazon MQ generates for the broker.
-* `arn` - The ARN of the broker.
-* `instances` - A list of information about allocated brokers (both active & standby).
+* `arn` - ARN of the broker.
+* `id` - Unique ID that Amazon MQ generates for the broker.
+* `instances` - List of information about allocated brokers (both active & standby).
     * `instances.0.console_url` - The URL of the broker's [ActiveMQ Web Console](http://activemq.apache.org/web-console.html).
-    * `instances.0.ip_address` - The IP Address of the broker.
-    * `instances.0.endpoints` - The broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
+    * `instances.0.ip_address` - IP Address of the broker.
+    * `instances.0.endpoints` - Broker's wire-level protocol endpoints in the following order & format referenceable e.g. as `instances.0.endpoints.0` (SSL):
         * For `ActiveMQ`:
             * `ssl://broker-id.mq.us-west-2.amazonaws.com:61617`
             * `amqp+ssl://broker-id.mq.us-west-2.amazonaws.com:5671`
