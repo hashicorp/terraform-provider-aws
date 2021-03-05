@@ -393,7 +393,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		BrokerId: aws.String(d.Id()),
 	})
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "NotFoundException") || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
 		log.Printf("[WARN] MQ broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
