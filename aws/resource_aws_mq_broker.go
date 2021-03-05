@@ -135,12 +135,10 @@ func resourceAwsMqBroker() *schema.Resource {
 						"general": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 						"audit": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -878,9 +876,14 @@ func flattenMqLogs(logs *mq.LogsSummary) []interface{} {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"general": aws.BoolValue(logs.General),
-		"audit":   aws.BoolValue(logs.Audit),
+	m := map[string]interface{}{}
+
+	if logs.General != nil {
+		m["general"] = aws.BoolValue(logs.General)
+	}
+
+	if logs.Audit != nil {
+		m["audit"] = aws.BoolValue(logs.Audit)
 	}
 
 	return []interface{}{m}
@@ -893,9 +896,14 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 
 	m := l[0].(map[string]interface{})
 
-	logs := &mq.Logs{
-		Audit:   aws.Bool(m["audit"].(bool)),
-		General: aws.Bool(m["general"].(bool)),
+	logs := &mq.Logs{}
+
+	if v, ok := m["general"]; ok {
+		logs.General = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["audit"]; ok {
+		logs.Audit = aws.Bool(v.(bool))
 	}
 
 	return logs
