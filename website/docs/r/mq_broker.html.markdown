@@ -55,6 +55,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `SIMPLE` and `LDAP`. `LDAP` is not supported for `engine_type` `RABBITMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ACTIVEMQ` only. Detailed below.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
@@ -63,6 +64,7 @@ The following arguments are optional:
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
+* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ACTIVEMQ`, the valid values are `EFS` and `EBS`. For `engine_type` of `RABBITMQ`, only `EBS` is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker.
 
