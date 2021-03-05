@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 
@@ -72,7 +73,11 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 		request.CertificatePem = aws.String(pem.(string))
 	}
 	if walletSet {
-		request.CertificateWallet = []byte(wallet.(string))
+		byteArray, err := base64.StdEncoding.DecodeString(wallet.(string))
+		if err != nil {
+			return fmt.Errorf("certificate_wallet is not a valid base64-encoded string")
+		}
+		request.CertificateWallet = byteArray
 	}
 
 	log.Println("[DEBUG] DMS import certificate:", request)
