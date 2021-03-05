@@ -249,6 +249,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", mq.AuthenticationStrategySimple),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", brokerName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
@@ -268,6 +269,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", mq.BrokerStorageTypeEbs),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
@@ -931,15 +933,17 @@ func testAccPreCheckAWSMq(t *testing.T) {
 func testAccMqBrokerConfig(sgName, brokerName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = "%s"
-  engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
-  host_instance_type = "mq.t2.micro"
-  security_groups    = [aws_security_group.test.id]
+  broker_name             = %[1]q
+  engine_type             = "ActiveMQ"
+  engine_version          = "5.15.0"
+  host_instance_type      = "mq.t2.micro"
+  security_groups         = [aws_security_group.test.id]
+  authentication_strategy = "SIMPLE"
+  storage_type            = "EBS"
 
   logs {
     general = true
