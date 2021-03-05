@@ -16,6 +16,7 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mq/waiter"
 )
 
 func resourceAwsMqBroker() *schema.Resource {
@@ -41,8 +42,8 @@ func resourceAwsMqBroker() *schema.Resource {
 			"authentication_strategy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), false),
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
@@ -143,6 +144,60 @@ func resourceAwsMqBroker() *schema.Resource {
 					},
 				},
 			},
+			"ldap_server_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hosts": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"role_base": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_search_matching": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"role_search_subtree": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"service_account_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"service_account_username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_base": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_role_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_search_matching": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_search_subtree": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"logs": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -205,7 +260,8 @@ func resourceAwsMqBroker() *schema.Resource {
 			"storage_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), true),
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
@@ -277,7 +333,6 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		EngineType:              aws.String(d.Get("engine_type").(string)),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
-		Logs:                    expandMqLogs(d.Get("logs").([]interface{})),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		Users:                   expandMqUsers(d.Get("user").(*schema.Set).List()),
 	}
@@ -290,6 +345,12 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 {
+		input.Logs = expandMqLogs(d.Get("logs").([]interface{}))
+	}
+	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
@@ -316,27 +377,8 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mq.BrokerStateCreationInProgress,
-			mq.BrokerStateRebootInProgress,
-		},
-		Target:  []string{mq.BrokerStateRunning},
-		Timeout: 30 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-				BrokerId: aws.String(d.Id()),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			return out, *out.BrokerState, nil
-		},
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if _, err := waiter.BrokerCreated(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsMqBrokerRead(d, meta)
@@ -347,7 +389,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MQ Broker: %s", d.Id())
-	out, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
+	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 		BrokerId: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -365,35 +407,62 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("arn", out.BrokerArn)
-	d.Set("authentication_strategy", out.AuthenticationStrategy)
-	d.Set("auto_minor_version_upgrade", out.AutoMinorVersionUpgrade)
-	d.Set("broker_name", out.BrokerName)
-	d.Set("deployment_mode", out.DeploymentMode)
-	d.Set("engine_type", out.EngineType)
-	d.Set("engine_version", out.EngineVersion)
-	d.Set("host_instance_type", out.HostInstanceType)
-	d.Set("instances", flattenMqBrokerInstances(out.BrokerInstances))
-	d.Set("publicly_accessible", out.PubliclyAccessible)
-	d.Set("security_groups", aws.StringValueSlice(out.SecurityGroups))
-	d.Set("storage_type", out.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(out.SubnetIds))
+	d.Set("arn", output.BrokerArn)
+	d.Set("authentication_strategy", output.AuthenticationStrategy)
+	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
+	d.Set("broker_name", output.BrokerName)
+	d.Set("deployment_mode", output.DeploymentMode)
+	d.Set("engine_type", output.EngineType)
+	d.Set("engine_version", output.EngineVersion)
+	d.Set("host_instance_type", output.HostInstanceType)
+	d.Set("instances", flattenMqBrokerInstances(output.BrokerInstances))
+	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set("storage_type", output.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
 
-	if err := d.Set("configuration", flattenMqConfigurationId(out.Configurations.Current)); err != nil {
-		return fmt.Errorf("error setting configuration: %w", err)
-	}
-	if err := d.Set("encryption_options", flattenMqEncryptionOptions(out.EncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting encryption_options: %w", err)
-	}
-	if err := d.Set("logs", flattenMqLogs(out.Logs)); err != nil {
-		return fmt.Errorf("error setting logs: %w", err)
-	}
-	if err := d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(out.MaintenanceWindowStartTime)); err != nil {
-		return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
+	if output.Configurations.Current != nil {
+		if err := d.Set("configuration", flattenMqConfigurationId(output.Configurations.Current)); err != nil {
+			return fmt.Errorf("error setting configuration: %w", err)
+		}
+	} else {
+		d.Set("configuration", nil)
 	}
 
-	rawUsers := make([]*mq.User, len(out.Users))
-	for i, u := range out.Users {
+	if output.EncryptionOptions != nil {
+		if err := d.Set("encryption_options", flattenMqEncryptionOptions(output.EncryptionOptions)); err != nil {
+			return fmt.Errorf("error setting encryption_options: %w", err)
+		}
+	} else {
+		d.Set("encryption_options", nil)
+	}
+
+	if output.LdapServerMetadata != nil {
+		if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata)); err != nil {
+			return fmt.Errorf("error setting lda_server_metadata: %w", err)
+		}
+	} else {
+		d.Set("ldap_server_metadata", nil)
+	}
+
+	if output.Logs != nil {
+		if err := d.Set("logs", flattenMqLogs(output.Logs)); err != nil {
+			return fmt.Errorf("error setting logs: %w", err)
+		}
+	} else {
+		d.Set("logs", nil)
+	}
+
+	if output.MaintenanceWindowStartTime != nil {
+		if err := d.Set("maintenance_window_start_time", flattenMqWeeklyStartTime(output.MaintenanceWindowStartTime)); err != nil {
+			return fmt.Errorf("error setting maintenance_window_start_time: %w", err)
+		}
+	} else {
+		d.Set("maintenance_window_start_time", nil)
+	}
+
+	rawUsers := make([]*mq.User, len(output.Users))
+	for i, u := range output.Users {
 		uOut, err := conn.DescribeUser(&mq.DescribeUserInput{
 			BrokerId: aws.String(d.Id()),
 			Username: u.Username,
@@ -412,7 +481,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("user", flattenMqUsers(rawUsers, d.Get("user").(*schema.Set).List())); err != nil {
 		return fmt.Errorf("error setting user: %w", err)
 	}
-	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
@@ -423,6 +492,21 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
 	requiresReboot := false
+
+	if d.HasChange("ldap_server_metadata") {
+		input := &mq.UpdateBrokerRequest{
+			BrokerId:           aws.String(d.Id()),
+			LdapServerMetadata: nil,
+		}
+
+		if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if _, err := conn.UpdateBroker(input); err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) LDAP server metadata: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
@@ -904,4 +988,89 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 	}
 
 	return logs
+}
+
+func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Hosts; v != nil {
+		tfMap["hosts"] = aws.StringValueSlice(v)
+	}
+	if v := apiObject.RoleBase; v != nil {
+		tfMap["role_base"] = aws.StringValue(v)
+	}
+	if v := apiObject.RoleName; v != nil {
+		tfMap["role_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.RoleSearchMatching; v != nil {
+		tfMap["role_search_matching"] = aws.StringValue(v)
+	}
+	if v := apiObject.RoleSearchSubtree; v != nil {
+		tfMap["role_search_subtree"] = aws.BoolValue(v)
+	}
+	if v := apiObject.ServiceAccountUsername; v != nil {
+		tfMap["service_account_username"] = aws.StringValue(v)
+	}
+	if v := apiObject.UserBase; v != nil {
+		tfMap["user_base"] = aws.StringValue(v)
+	}
+	if v := apiObject.UserRoleName; v != nil {
+		tfMap["user_role_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.UserSearchMatching; v != nil {
+		tfMap["user_search_matching"] = aws.StringValue(v)
+	}
+	if v := apiObject.UserSearchSubtree; v != nil {
+		tfMap["user_search_subtree"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func expandMQLDAPServerMetadata(tfMap map[string]interface{}) *mq.LdapServerMetadataInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &mq.LdapServerMetadataInput{}
+
+	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.Hosts = expandStringList(v.([]interface{}))
+	}
+	if v, ok := tfMap["role_base"].(string); ok && v != "" {
+		apiObject.RoleBase = aws.String(v)
+	}
+	if v, ok := tfMap["role_name"].(string); ok && v != "" {
+		apiObject.RoleName = aws.String(v)
+	}
+	if v, ok := tfMap["role_search_matching"].(string); ok && v != "" {
+		apiObject.RoleSearchMatching = aws.String(v)
+	}
+	if v, ok := tfMap["role_search_subtree"].(bool); ok {
+		apiObject.RoleSearchSubtree = aws.Bool(v)
+	}
+	if v, ok := tfMap["service_account_password"].(string); ok && v != "" {
+		apiObject.ServiceAccountPassword = aws.String(v)
+	}
+	if v, ok := tfMap["service_account_username"].(string); ok && v != "" {
+		apiObject.ServiceAccountUsername = aws.String(v)
+	}
+	if v, ok := tfMap["user_base"].(string); ok && v != "" {
+		apiObject.UserBase = aws.String(v)
+	}
+	if v, ok := tfMap["user_role_name"].(string); ok && v != "" {
+		apiObject.UserRoleName = aws.String(v)
+	}
+	if v, ok := tfMap["user_search_matching"].(string); ok && v != "" {
+		apiObject.UserSearchMatching = aws.String(v)
+	}
+	if v, ok := tfMap["user_search_subtree"].(bool); ok {
+		apiObject.UserSearchSubtree = aws.Bool(v)
+	}
+
+	return apiObject
 }

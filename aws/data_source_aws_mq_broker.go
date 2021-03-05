@@ -106,6 +106,59 @@ func dataSourceAwsMqBroker() *schema.Resource {
 					},
 				},
 			},
+			"ldap_server_metadata": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hosts": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"role_base": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_search_matching": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"role_search_subtree": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"service_account_password": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account_username": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_base": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_role_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_search_matching": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_search_subtree": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"logs": {
 				Type:     schema.TypeList,
 				Optional: true,
