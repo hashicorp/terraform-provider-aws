@@ -1009,6 +1009,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
 
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
+
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
 						// The existing input cannot be deleted.
@@ -1044,6 +1048,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 								output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
 
+								if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								}
+
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							} else if len(n.([]interface{})) == 0 {
 								// Delete existing input processing configuration.
@@ -1064,6 +1072,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 								}
 
 								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
+
+								if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								}
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 							}
@@ -1123,6 +1135,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationOutputOutput)
 
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
+
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					}
 
@@ -1145,6 +1161,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationOutputOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					}
@@ -1173,6 +1193,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput)
 
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
+
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
 						// Delete existing reference data source.
@@ -1195,6 +1219,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationReferenceDataSourceOutput)
+
+						if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else {
@@ -1233,6 +1261,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 					output := outputRaw.(*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput)
 
+					if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					}
+
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 				} else if len(n.([]interface{})) == 0 {
 					// Delete existing VPC configuration.
@@ -1255,6 +1287,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 					}
 
 					output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationVpcConfigurationOutput)
+
+					if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					}
 
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 				} else {
@@ -1297,6 +1333,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
 
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				}
+
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else if len(n.([]interface{})) == 0 {
 				// Delete existing CloudWatch logging options.
@@ -1319,6 +1359,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				}
 
 				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
+
+				if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				}
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 			} else {
@@ -1354,6 +1398,10 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			if err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+			}
+
+			if _, err := waiter.ApplicationUpdated(conn, applicationName); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
 			}
 		}
 	}
@@ -1428,6 +1476,7 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 		return nil
 	}
 
+	// TODO nil checks
 	if len(application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions) == 0 {
 		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has no input description", applicationARN)
 		return nil
