@@ -64,6 +64,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name of the file system.
 * `id` - The ID that identifies the file system (e.g. fs-ccfc0d65).
 * `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
+* `owner_id` - The AWS account that created the file system. If the file system was createdby an IAM user, the parent account to which the user belongs is the owner.
+* `number_of_mount_targets` - The current number of mount targets that the file system has.
 
 ## Import
 
