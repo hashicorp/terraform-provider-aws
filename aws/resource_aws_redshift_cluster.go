@@ -826,17 +826,40 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 func resizeRedshiftCluster(d *schema.ResourceData, conn *redshift.Redshift) error {
 	params := &redshift.ResizeClusterInput{
 		ClusterIdentifier: aws.String(d.Id()),
+		ClusterType:       aws.String(d.Get("cluster_type").(string)),
+		NodeType:          aws.String(d.Get("node_type").(string)),
+		Classic:           aws.Bool(true),
 	}
 
-	params.ClusterType = aws.String(d.Get("cluster_type").(string))
-	params.NodeType = aws.String(d.Get("node_type").(string))
+	describeParams := &redshift.DescribeNodeConfigurationOptionsInput{
+		ActionType:        aws.String("resize-cluster"),
+		ClusterIdentifier: aws.String(d.Id()),
+	}
+
 	if v := d.Get("number_of_nodes").(int); v > 1 {
 		params.ClusterType = aws.String("multi-node")
 		params.NumberOfNodes = aws.Int64(int64(d.Get("number_of_nodes").(int)))
+
+		nodeOptions, err := conn.DescribeNodeConfigurationOptions(describeParams)
+
+		if err != nil {
+			if regexp.MustCompile("snapshot").MatchString(err.Error()) {
+				log.Printf("[WARN] Error updating snapshot. Using classic resize instead. A cluster snapshot is required for an elastic resize.")
+			}
+		} else {
+			for _, s := range nodeOptions.NodeConfigurationOptionList {
+				if int64(d.Get("number_of_nodes").(int)) == *s.NumberOfNodes && d.Get("node_type") == *s.NodeType {
+					params.Classic = aws.Bool(false)
+				}
+			}
+
+		}
 	} else {
 		params.ClusterType = aws.String("single-node")
+		log.Printf("[WARN] Elastic resize to a single-node cluster not supported. Using classic resize instead.")
 	}
 	log.Printf("[DEBUG] Redshift Cluster Resizing options: %s", params)
+
 	if _, err := conn.ResizeCluster(params); err != nil {
 		return fmt.Errorf("error resizing Redshift Cluster (%s): %s", d.Id(), err)
 	}
