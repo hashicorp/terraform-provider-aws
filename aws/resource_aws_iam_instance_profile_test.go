@@ -2,15 +2,63 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_iam_instance_profile", &resource.Sweeper{
+		Name: "aws_iam_instance_profile",
+		F:    testSweepIamInstanceProfile,
+	})
+}
+
+func testSweepIamInstanceProfile(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).iamconn
+
+	var sweeperErrs *multierror.Error
+
+	out, err := conn.ListInstanceProfiles(&iam.ListInstanceProfilesInput{})
+
+	for _, instanceProfile := range out.InstanceProfiles {
+		name := aws.StringValue(instanceProfile.InstanceProfileName)
+
+		r := resourceAwsIamInstanceProfile()
+		d := r.Data(nil)
+		d.SetId(name)
+		err := r.Delete(d, client)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting IAM Instance Profile (%s): %w", name, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping IAM Instance Profile sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing IAM Instance Profiles: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
