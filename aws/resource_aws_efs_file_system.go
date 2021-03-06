@@ -102,6 +102,26 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"size_in_bytes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"value": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"value_in_ia": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"value_in_standard": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -279,6 +299,10 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
+	if err := d.Set("size_in_bytes", flattenEfsFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
+		return fmt.Errorf("error setting size_in_bytes: %w", err)
+	}
+
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
@@ -367,4 +391,24 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 	}
 
 	return apiObjects
+}
+
+func flattenEfsFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{} {
+	if sizeInBytes == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"value": aws.Int64Value(sizeInBytes.Value),
+	}
+
+	if sizeInBytes.ValueInIA != nil {
+		m["value_in_ia"] = aws.Int64Value(sizeInBytes.ValueInIA)
+	}
+
+	if sizeInBytes.ValueInStandard != nil {
+		m["value_in_standard"] = aws.Int64Value(sizeInBytes.ValueInStandard)
+	}
+
+	return []interface{}{m}
 }
