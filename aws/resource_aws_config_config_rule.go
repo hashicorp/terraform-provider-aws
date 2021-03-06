@@ -6,14 +6,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsConfigConfigRule() *schema.Resource {
@@ -49,7 +49,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"input_parameters": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 			},
 			"maximum_execution_frequency": {
 				Type:         schema.TypeString,
@@ -136,6 +136,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -162,6 +163,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
+		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ConfigserviceTags(),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -179,19 +181,31 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutConfigRule(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating AWSConfig rule: %s", err)
 	}
 
 	d.SetId(name)
 
 	log.Printf("[DEBUG] AWSConfig config rule %q created", name)
 
+	if !d.IsNewResource() && d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Config Config Rule (%s) tags: %s", d.Get("arn").(string), err)
+		}
+	}
+
 	return resourceAwsConfigConfigRuleRead(d, meta)
 }
 
 func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeConfigRules(&configservice.DescribeConfigRulesInput{
 		ConfigRuleNames: []*string{aws.String(d.Id())},
@@ -233,6 +247,16 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("source", flattenConfigRuleSource(rule.Source))
 
+	tags, err := keyvaluetags.ConfigserviceListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Config Config Rule (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -242,10 +266,11 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting AWS Config config rule %q", name)
+	input := &configservice.DeleteConfigRuleInput{
+		ConfigRuleName: aws.String(name),
+	}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteConfigRule(&configservice.DeleteConfigRuleInput{
-			ConfigRuleName: aws.String(name),
-		})
+		_, err := conn.DeleteConfigRule(input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {
 				return resource.RetryableError(err)
@@ -254,6 +279,9 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteConfigRule(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Deleting Config Rule failed: %s", err)
 	}

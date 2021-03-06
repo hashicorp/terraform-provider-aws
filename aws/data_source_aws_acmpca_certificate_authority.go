@@ -3,10 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -93,6 +96,7 @@ func dataSourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 
 func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	certificateAuthorityArn := d.Get("arn").(string)
 
 	describeCertificateAuthorityInput := &acmpca.DescribeCertificateAuthorityInput{
@@ -103,7 +107,7 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 
 	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(describeCertificateAuthorityInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority: %s", err)
+		return fmt.Errorf("error reading ACMPCA Certificate Authority: %w", err)
 	}
 
 	if describeCertificateAuthorityOutput.CertificateAuthority == nil {
@@ -112,11 +116,11 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
 	d.Set("arn", certificateAuthority.Arn)
-	d.Set("not_after", certificateAuthority.NotAfter)
-	d.Set("not_before", certificateAuthority.NotBefore)
+	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
+	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 
 	if err := d.Set("revocation_configuration", flattenAcmpcaRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("serial", certificateAuthority.Serial)
@@ -133,8 +137,8 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 	if err != nil {
 		// Returned when in PENDING_CERTIFICATE status
 		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
-			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate: %s", err)
+		if !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
+			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate: %w", err)
 		}
 	}
 
@@ -153,7 +157,7 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %s", err)
+		return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %w", err)
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -161,13 +165,14 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := listAcmpcaTags(conn, certificateAuthorityArn)
+	tags, err := keyvaluetags.AcmpcaListTags(conn, certificateAuthorityArn)
+
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority %q tags: %s", certificateAuthorityArn, err)
+		return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
 	}
 
-	if err := d.Set("tags", tagsToMapACMPCA(tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.SetId(certificateAuthorityArn)

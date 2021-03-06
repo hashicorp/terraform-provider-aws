@@ -6,10 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const neptuneClusterParameterGroupMaxParamsBulkEdit = 20
@@ -89,7 +90,7 @@ func resourceAwsNeptuneClusterParameterGroup() *schema.Resource {
 
 func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -107,39 +108,47 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 		Tags:                        tags,
 	}
 
-	log.Printf("[DEBUG] Create Neptune Cluster Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateDBClusterParameterGroup(&createOpts)
+	_, err := conn.CreateDBClusterParameterGroup(&createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Neptune Cluster Parameter Group: %s", err)
+		return fmt.Errorf("error creating Neptune Cluster Parameter Group (%s): %w", groupName, err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
-	log.Printf("[INFO] Neptune Cluster Parameter Group ID: %s", d.Id())
 
-	d.Set("arn", resp.DBClusterParameterGroup.DBClusterParameterGroupArn)
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+		err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), expandNeptuneParameters(v.(*schema.Set).List()))
+		if err != nil {
+			return fmt.Errorf("error modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		}
+	}
 
-	return resourceAwsNeptuneClusterParameterGroupUpdate(d, meta)
+	return resourceAwsNeptuneClusterParameterGroupRead(d, meta)
 }
 
 func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
 
 	describeResp, err := conn.DescribeDBClusterParameterGroups(&describeOpts)
-	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
-			log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
+		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if len(describeResp.DBClusterParameterGroups) == 0 {
+	if err != nil {
+		return fmt.Errorf("error reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+	}
+
+	if describeResp == nil || len(describeResp.DBClusterParameterGroups) == 0 {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading Neptune Cluster Parameter Group (%s): not found", d.Id())
+		}
+
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -163,18 +172,17 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 	}
 
 	if err := d.Set("parameter", flattenNeptuneParameters(describeParametersResp.Parameters)); err != nil {
-		return fmt.Errorf("error setting neptune parameter: %s", err)
+		return fmt.Errorf("error setting neptune parameter: %w", err)
 	}
 
-	resp, err := conn.ListTagsForResource(&neptune.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
+
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+		return fmt.Errorf("error listing tags for Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapNeptune(resp.TagList)); err != nil {
-		return fmt.Errorf("error setting neptune tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -182,8 +190,6 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 
 func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-
-	d.Partial(true)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -197,45 +203,23 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters, err := expandNeptuneParameters(ns.Difference(os).List())
-		if err != nil {
-			return err
-		}
+		parameters := expandNeptuneParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				var paramsToModify []*neptune.Parameter
-				if len(parameters) <= neptuneClusterParameterGroupMaxParamsBulkEdit {
-					paramsToModify, parameters = parameters[:], nil
-				} else {
-					paramsToModify, parameters = parameters[:neptuneClusterParameterGroupMaxParamsBulkEdit], parameters[neptuneClusterParameterGroupMaxParamsBulkEdit:]
-				}
-				parameterGroupName := d.Get("name").(string)
-				modifyOpts := neptune.ModifyDBClusterParameterGroupInput{
-					DBClusterParameterGroupName: aws.String(parameterGroupName),
-					Parameters:                  paramsToModify,
-				}
-
-				log.Printf("[DEBUG] Modify Neptune Cluster Parameter Group: %s", modifyOpts)
-				_, err = conn.ModifyDBClusterParameterGroup(&modifyOpts)
-				if err != nil {
-					return fmt.Errorf("Error modifying Neptune Cluster Parameter Group: %s", err)
-				}
+			err := modifyNeptuneClusterParameterGroupParameters(conn, d.Id(), parameters)
+			if err != nil {
+				return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
 			}
-			d.SetPartial("parameter")
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if err := setTagsNeptune(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) tags: %w", d.Id(), err)
+		}
+	}
 
 	return resourceAwsNeptuneClusterParameterGroupRead(d, meta)
 }
@@ -247,13 +231,37 @@ func resourceAwsNeptuneClusterParameterGroupDelete(d *schema.ResourceData, meta 
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Neptune Cluster Parameter Group: %s", d.Id())
 	_, err := conn.DeleteDBClusterParameterGroup(&input)
 	if err != nil {
-		if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func modifyNeptuneClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+	// We can only modify 20 parameters at a time, so walk them until
+	// we've got them all.
+	for parameters != nil {
+		var paramsToModify []*neptune.Parameter
+		if len(parameters) <= neptuneClusterParameterGroupMaxParamsBulkEdit {
+			paramsToModify, parameters = parameters[:], nil
+		} else {
+			paramsToModify, parameters = parameters[:neptuneClusterParameterGroupMaxParamsBulkEdit], parameters[neptuneClusterParameterGroupMaxParamsBulkEdit:]
+		}
+
+		modifyOpts := neptune.ModifyDBClusterParameterGroupInput{
+			DBClusterParameterGroupName: aws.String(name),
+			Parameters:                  paramsToModify,
+		}
+
+		_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

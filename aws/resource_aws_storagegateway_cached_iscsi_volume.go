@@ -6,18 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsStorageGatewayCachedIscsiVolumeCreate,
 		Read:   resourceAwsStorageGatewayCachedIscsiVolumeRead,
+		Update: resourceAwsStorageGatewayCachedIscsiVolumeUpdate,
 		Delete: resourceAwsStorageGatewayCachedIscsiVolumeDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -85,6 +86,19 @@ func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"tags": tagsSchema(),
+			"kms_encrypted": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"kms_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+				RequiredWith: []string{"kms_encrypted"},
+			},
 		},
 	}
 }
@@ -98,6 +112,7 @@ func resourceAwsStorageGatewayCachedIscsiVolumeCreate(d *schema.ResourceData, me
 		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
 	if v, ok := d.GetOk("snapshot_id"); ok {
@@ -106,6 +121,14 @@ func resourceAwsStorageGatewayCachedIscsiVolumeCreate(d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("source_volume_arn"); ok {
 		input.SourceVolumeARN = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key"); ok {
+		input.KMSKey = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_encrypted"); ok {
+		input.KMSEncrypted = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway cached iSCSI volume: %s", input)
@@ -119,8 +142,22 @@ func resourceAwsStorageGatewayCachedIscsiVolumeCreate(d *schema.ResourceData, me
 	return resourceAwsStorageGatewayCachedIscsiVolumeRead(d, meta)
 }
 
+func resourceAwsStorageGatewayCachedIscsiVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).storagegatewayconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	return resourceAwsStorageGatewayCachedIscsiVolumeRead(d, meta)
+}
+
 func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeCachediSCSIVolumesInput{
 		VolumeARNs: []*string{aws.String(d.Id())},
@@ -130,7 +167,7 @@ func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta
 	output, err := conn.DescribeCachediSCSIVolumes(input)
 
 	if err != nil {
-		if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
+		if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") || isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway cached iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -146,11 +183,26 @@ func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta
 
 	volume := output.CachediSCSIVolumes[0]
 
-	d.Set("arn", aws.StringValue(volume.VolumeARN))
+	arn := aws.StringValue(volume.VolumeARN)
+	d.Set("arn", arn)
 	d.Set("snapshot_id", aws.StringValue(volume.SourceSnapshotId))
-	d.Set("volume_arn", aws.StringValue(volume.VolumeARN))
+	d.Set("volume_arn", arn)
 	d.Set("volume_id", aws.StringValue(volume.VolumeId))
 	d.Set("volume_size_in_bytes", int(aws.Int64Value(volume.VolumeSizeInBytes)))
+	d.Set("kms_key", volume.KMSKey)
+	if volume.KMSKey != nil {
+		d.Set("kms_encrypted", true)
+	} else {
+		d.Set("kms_encrypted", false)
+	}
+
+	tags, err := keyvaluetags.StoragegatewayListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	if volume.VolumeiSCSIAttributes != nil {
 		d.Set("chap_enabled", aws.BoolValue(volume.VolumeiSCSIAttributes.ChapEnabled))
@@ -195,6 +247,12 @@ func resourceAwsStorageGatewayCachedIscsiVolumeDelete(d *schema.ResourceData, me
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVolume(input)
+	}
+	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
 	}

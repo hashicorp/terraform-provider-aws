@@ -8,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 )
-
-const awsAppautoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	return &schema.Resource{
@@ -50,20 +50,16 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_capacity": {
-							// Use TypeString to allow an "unspecified" value,
-							// since TypeInt only has allows numbers with 0 as default.
-							Type:         schema.TypeString,
+							Type:         nullable.TypeNullableInt,
 							Optional:     true,
 							ForceNew:     false,
-							ValidateFunc: validateTypeStringNullableInteger,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 						},
 						"min_capacity": {
-							// Use TypeString to allow an "unspecified" value,
-							// since TypeInt only has allows numbers with 0 as default.
-							Type:         schema.TypeString,
+							Type:         nullable.TypeNullableInt,
 							Optional:     true,
 							ForceNew:     false,
-							ValidateFunc: validateTypeStringNullableInteger,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 						},
 					},
 				},
@@ -73,15 +69,27 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			// The AWS API normalizes start_time and end_time to UTC. Uses
+			// suppressEquivalentTime to allow any timezone to be used.
 			"start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				ValidateFunc:     validation.IsRFC3339Time,
+				DiffSuppressFunc: suppressEquivalentTime,
 			},
 			"end_time": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				ValidateFunc:     validation.IsRFC3339Time,
+				DiffSuppressFunc: suppressEquivalentTime,
+			},
+			"timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
+				Default:  "UTC",
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -98,6 +106,7 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		ScheduledActionName: aws.String(d.Get("name").(string)),
 		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
+		Timezone:            aws.String(d.Get("timezone").(string)),
 	}
 	if v, ok := d.GetOk("scalable_dimension"); ok {
 		input.ScalableDimension = aws.String(v.(string))
@@ -125,16 +134,16 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		input.ScalableTargetAction = sta
 	}
 	if v, ok := d.GetOk("start_time"); ok {
-		t, err := time.Parse(awsAppautoscalingScheduleTimeLayout, v.(string))
+		t, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action Start Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action Start Time: %w", err)
 		}
 		input.StartTime = aws.Time(t)
 	}
 	if v, ok := d.GetOk("end_time"); ok {
-		t, err := time.Parse(awsAppautoscalingScheduleTimeLayout, v.(string))
+		t, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action End Time: %s", err.Error())
+			return fmt.Errorf("Error Parsing Appautoscaling Scheduled Action End Time: %w", err)
 		}
 		input.EndTime = aws.Time(t)
 	}
@@ -149,9 +158,12 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScheduledAction(input)
+	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error putting scheduled action: %w", err)
 	}
 
 	d.SetId(d.Get("name").(string) + "-" + d.Get("service_namespace").(string) + "-" + d.Get("resource_id").(string))
@@ -163,35 +175,51 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 
 	saName := d.Get("name").(string)
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
+		ResourceId:           aws.String(d.Get("resource_id").(string)),
 		ScheduledActionNames: []*string{aws.String(saName)},
 		ServiceNamespace:     aws.String(d.Get("service_namespace").(string)),
-		ResourceId:           aws.String(d.Get("resource_id").(string)),
 	}
 	resp, err := conn.DescribeScheduledActions(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing Application Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
+	}
+	if resp == nil {
+		return fmt.Errorf("error describing Application Auto Scaling Scheduled Action (%s): empty response", d.Id())
 	}
 
-	if len(resp.ScheduledActions) < 1 {
+	var scheduledAction *applicationautoscaling.ScheduledAction
+
+	for _, sa := range resp.ScheduledActions {
+		if sa == nil {
+			continue
+		}
+
+		if aws.StringValue(sa.ScheduledActionName) == saName {
+			scheduledAction = sa
+			break
+		}
+	}
+
+	if scheduledAction == nil {
 		log.Printf("[WARN] Application Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if len(resp.ScheduledActions) != 1 {
-		return fmt.Errorf("Expected 1 scheduled action under %s, found %d", saName, len(resp.ScheduledActions))
-	}
-	sa := resp.ScheduledActions[0]
-	if *sa.ScheduledActionName != saName {
-		return fmt.Errorf("Scheduled Action (%s) not found", saName)
+
+	if err := d.Set("scalable_target_action", flattenScalableTargetActionConfiguration(scheduledAction.ScalableTargetAction)); err != nil {
+		return fmt.Errorf("error setting scalable_target_action: %w", err)
 	}
 
-	if err := d.Set("scalable_target_action", flattenScalableTargetActionConfiguration(sa.ScalableTargetAction)); err != nil {
-		return fmt.Errorf("error setting scalable_target_action: %s", err)
+	d.Set("schedule", scheduledAction.Schedule)
+	if scheduledAction.StartTime != nil {
+		d.Set("start_time", scheduledAction.StartTime.Format(time.RFC3339))
 	}
-	d.Set("schedule", sa.Schedule)
-	d.Set("start_time", sa.StartTime)
-	d.Set("end_time", sa.EndTime)
-	d.Set("arn", sa.ScheduledActionARN)
+	if scheduledAction.EndTime != nil {
+		d.Set("end_time", scheduledAction.EndTime.Format(time.RFC3339))
+	}
+	d.Set("timezone", scheduledAction.Timezone)
+	d.Set("arn", scheduledAction.ScheduledActionARN)
+
 	return nil
 }
 
@@ -225,6 +253,7 @@ func flattenScalableTargetActionConfiguration(cfg *applicationautoscaling.Scalab
 
 	m := make(map[string]interface{})
 	if cfg.MaxCapacity != nil {
+		// TODO: add parser for nullable
 		m["max_capacity"] = strconv.FormatInt(aws.Int64Value(cfg.MaxCapacity), 10)
 	}
 	if cfg.MinCapacity != nil {

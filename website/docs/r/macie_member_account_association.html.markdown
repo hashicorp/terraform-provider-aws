@@ -1,12 +1,14 @@
 ---
+subcategory: "Macie Classic"
 layout: "aws"
 page_title: "AWS: aws_macie_member_account_association"
-sidebar_current: "docs-aws-macie-member-account-association"
 description: |-
   Associates an AWS account with Amazon Macie as a member account.
 ---
 
 # Resource: aws_macie_member_account_association
+
+~> **NOTE:** This resource interacts with [Amazon Macie Classic](https://docs.aws.amazon.com/macie/latest/userguide/what-is-macie.html). Macie Classic cannot be activated in new accounts. See the [FAQ](https://aws.amazon.com/macie/classic-faqs/) for more details.
 
 Associates an AWS account with Amazon Macie as a member account.
 

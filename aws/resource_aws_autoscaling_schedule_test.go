@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
@@ -267,144 +267,188 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(
 }
 
 func testAccAWSAutoscalingScheduleConfig(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    min_size = 0
-    max_size = 1
-    desired_capacity = 0
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  min_size               = 0
+  max_size               = 1
+  desired_capacity       = 0
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    min_size = 0
-    max_size = 1
-    desired_capacity = 0
-    recurrence = "0 8 * * *"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r)
+  scheduled_action_name  = "foobar"
+  min_size               = 0
+  max_size               = 1
+  desired_capacity       = 0
+  recurrence             = "0 8 * * *"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r)
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    max_size = 0
-    min_size = 0
-    desired_capacity = 0
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  max_size               = 0
+  min_size               = 0
+  desired_capacity       = 0
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_launch_configuration" "foobar" {
-    name = "%s"
-    image_id = "ami-21f78e11"
-    instance_type = "t1.micro"
+  name          = "%s"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t1.micro"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_autoscaling_group" "foobar" {
-    availability_zones = ["us-west-2a"]
-    name = "%s"
-    max_size = 1
-    min_size = 1
-    health_check_grace_period = 300
-    health_check_type = "ELB"
-    force_delete = true
-    termination_policies = ["OldestInstance"]
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-    tag {
-        key = "Foo"
-        value = "foo-bar"
-        propagate_at_launch = true
-    }
+  availability_zones        = [data.aws_availability_zones.available.names[1]]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = aws_launch_configuration.foobar.name
+
+  tag {
+    key                 = "Foo"
+    value               = "foo-bar"
+    propagate_at_launch = true
+  }
 }
 
 resource "aws_autoscaling_schedule" "foobar" {
-    scheduled_action_name = "foobar"
-    max_size = 3
-    min_size = 1
-    desired_capacity = -1
-    start_time = "%s"
-    end_time = "%s"
-    autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+  scheduled_action_name  = "foobar"
+  max_size               = 3
+  min_size               = 1
+  desired_capacity       = -1
+  start_time             = "%s"
+  end_time               = "%s"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
+}
+`, r, r, start, end)
 }

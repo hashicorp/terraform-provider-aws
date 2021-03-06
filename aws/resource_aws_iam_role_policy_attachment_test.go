@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
@@ -221,137 +221,145 @@ func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(resourceName string) res
 
 func testAccAWSRolePolicyAttachConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "ec2.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy.arn}"
-	}`, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRolePolicyAttachConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": "sts:AssumeRole",
-			"Principal": {
-				"Service": "ec2.amazonaws.com"
-			},
-			"Effect": "Allow",
-			"Sid": ""
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy2" {
-			name = "tf-acctest2-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy2" {
+  name        = "tf-acctest2-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy3" {
-			name = "tf-acctest3-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy3" {
+  name        = "tf-acctest3-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Action": [
-				"iam:ChangePassword"
-			],
-			"Resource": "*",
-			"Effect": "Allow"
-		}
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "iam:ChangePassword"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy2.arn}"
-	}
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy2.arn
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach2" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy3.arn}"
-	}`, rInt, rInt, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach2" {
+  role       = aws_iam_role.role.name
+  policy_arn = aws_iam_policy.policy3.arn
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSIAMRolePolicyAttachmentConfig(rName string) string {
@@ -380,7 +388,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
-  role       = "${aws_iam_role.test.name}"
+  role       = aws_iam_role.test.name
 }
 `, rName)
 }

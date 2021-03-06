@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsDxGateway() *schema.Resource {
@@ -18,7 +18,7 @@ func resourceAwsDxGateway() *schema.Resource {
 		Read:   resourceAwsDxGatewayRead,
 		Delete: resourceAwsDxGatewayDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsDxGatewayImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{

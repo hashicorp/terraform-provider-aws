@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
-page_title: "AWS: ses_receipt_rule"
-sidebar_current: "docs-aws-resource-ses-receipt-rule"
+page_title: "AWS: aws_ses_receipt_rule"
 description: |-
   Provides an SES receipt rule resource
 ---
@@ -99,6 +99,13 @@ WorkMail actions support the following:
 * `organization_arn` - (Required) The ARN of the WorkMail organization
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+
+## Attributes Reference
+
+In addition to the arguments, which are exported, the following attributes are exported:
+
+* `id` - The SES receipt rule name.
+* `arn` - The SES receipt rule ARN.
 
 ## Import
 

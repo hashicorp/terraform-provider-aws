@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc"
-sidebar_current: "docs-aws-resource-vpc"
 description: |-
   Provides a VPC resource.
 ---
@@ -25,7 +25,7 @@ Basic usage with tags:
 ```hcl
 resource "aws_vpc" "main" {
   cidr_block       = "10.0.0.0/16"
-  instance_tenancy = "dedicated"
+  instance_tenancy = "default"
 
   tags = {
     Name = "main"
@@ -38,7 +38,8 @@ resource "aws_vpc" "main" {
 The following arguments are supported:
 
 * `cidr_block` - (Required) The CIDR block for the VPC.
-* `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC
+* `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which
+  makes your instances shared on the host. Using either of the other options (`dedicated` or `host`) costs at least $2/hr.
 * `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults true.
 * `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false.
 * `enable_classiclink` - (Optional) A boolean flag to enable/disable ClassicLink
@@ -49,7 +50,7 @@ The following arguments are supported:
 * `assign_generated_ipv6_cidr_block` - (Optional) Requests an Amazon-provided IPv6 CIDR
 block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or
 the size of the CIDR block. Default is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
@@ -64,7 +65,7 @@ In addition to all arguments above, the following attributes are exported:
 * `enable_classiclink` - Whether or not the VPC has Classiclink enabled
 * `main_route_table_id` - The ID of the main route table associated with
      this VPC. Note that you can change a VPC's main route table by using an
-     [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_assoc.html).
+     [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html).
 * `default_network_acl_id` - The ID of the network ACL created by default on VPC creation
 * `default_security_group_id` - The ID of the security group created by default on VPC creation
 * `default_route_table_id` - The ID of the route table created by default on VPC creation

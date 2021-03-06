@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"sort"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestExpandS3MetricsFilter(t *testing.T) {
@@ -287,6 +287,32 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11813
+// Disallow Empty filter block
+func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
+	var conf s3.MetricsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_metric.test"
+
+	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
+	metricName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+				),
+				ExpectError: regexp.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
@@ -604,12 +630,25 @@ resource "aws_s3_bucket" "bucket" {
 `, name)
 }
 
+func testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_s3_bucket_metric" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  name   = "%s"
+
+  filter {}
+}
+`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)
+}
+
 func testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, prefix string) string {
 	return fmt.Sprintf(`
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -624,7 +663,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndMultipleTags(bucketName, 
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -644,7 +683,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterPrefixAndSingleTag(bucketName, met
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -663,7 +702,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterMultipleTags(bucketName, metricNam
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -681,7 +720,7 @@ func testAccAWSS3BucketMetricsConfigWithFilterSingleTag(bucketName, metricName, 
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 
   filter {
@@ -698,7 +737,7 @@ func testAccAWSS3BucketMetricsConfigWithoutFilter(bucketName, metricName string)
 %s
 
 resource "aws_s3_bucket_metric" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = aws_s3_bucket.bucket.id
   name   = "%s"
 }
 `, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)

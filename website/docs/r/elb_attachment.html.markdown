@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb_attachment"
-sidebar_current: "docs-aws-resource-elb-attachment"
 description: |-
   Provides an Elastic Load Balancer Attachment resource.
 ---
@@ -22,8 +22,8 @@ conflict and will overwrite attachments.
 ```hcl
 # Create a new load balancer attachment
 resource "aws_elb_attachment" "baz" {
-  elb      = "${aws_elb.bar.id}"
-  instance = "${aws_instance.foo.id}"
+  elb      = aws_elb.bar.id
+  instance = aws_instance.foo.id
 }
 ```
 

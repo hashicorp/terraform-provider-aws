@@ -1,12 +1,11 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsMqBroker() *schema.Resource {
@@ -37,7 +36,6 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			"configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -54,6 +52,22 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			"deployment_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"encryption_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"use_aws_owned_key": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"engine_type": {
 				Type:     schema.TypeString,
@@ -114,7 +128,6 @@ func dataSourceAwsMqBroker() *schema.Resource {
 			},
 			"maintenance_window_start_time": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -181,23 +194,31 @@ func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		conn := meta.(*AWSClient).mqconn
 		brokerName := d.Get("broker_name").(string)
-		var nextToken string
-		for {
-			out, err := conn.ListBrokers(&mq.ListBrokersInput{NextToken: aws.String(nextToken)})
-			if err != nil {
-				return errors.New("Failed to list mq brokers")
+
+		input := &mq.ListBrokersInput{}
+
+		err := conn.ListBrokersPages(input, func(page *mq.ListBrokersResponse, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
-			for _, broker := range out.BrokerSummaries {
-				if aws.StringValue(broker.BrokerName) == brokerName {
-					brokerId := aws.StringValue(broker.BrokerId)
-					d.Set("broker_id", brokerId)
-					d.SetId(brokerId)
+
+			for _, brokerSummary := range page.BrokerSummaries {
+				if brokerSummary == nil {
+					continue
+				}
+
+				if aws.StringValue(brokerSummary.BrokerName) == brokerName {
+					d.Set("broker_id", brokerSummary.BrokerId)
+					d.SetId(aws.StringValue(brokerSummary.BrokerId))
+					return false
 				}
 			}
-			if out.NextToken == nil {
-				break
-			}
-			nextToken = *out.NextToken
+
+			return !lastPage
+		})
+
+		if err != nil {
+			return fmt.Errorf("error listing MQ Brokers: %w", err)
 		}
 
 		if d.Id() == "" {

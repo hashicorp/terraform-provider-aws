@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlb-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
+	resourceName := "data.aws_lb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -19,55 +21,59 @@ func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAWSLBTargetGroupConfigBasic(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "name", targetGroupName),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_arn", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_arn", "arn_suffix"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "port", "8080"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_arn", "vpc_id"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_arn", "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(resourceNameArn, "name", targetGroupName),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "arn"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
+					resource.TestCheckResourceAttr(resourceNameArn, "port", "8080"),
+					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceNameArn, "protocol_version", "HTTP1"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceNameArn, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.matcher", "200-299"),
 
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "name", targetGroupName),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_name", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_name", "arn_suffix"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "port", "8080"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet("data.aws_lb_target_group.alb_tg_test_with_name", "vpc_id"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "slow_start", "0"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_lb_target_group.alb_tg_test_with_name", "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn_suffix"),
+					resource.TestCheckResourceAttr(resourceName, "port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
-	lbName := fmt.Sprintf("testlb-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+func TestAccDataSourceAWSLBTargetGroup_BackwardsCompatibility(t *testing.T) {
+	lbName := fmt.Sprintf("testlb-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
+	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -76,46 +82,46 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 			{
 				Config: testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "name", targetGroupName),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_arn", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_arn", "arn_suffix"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "port", "8080"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_arn", "vpc_id"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "slow_start", "0"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "stickiness.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_arn", "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(resourceNameArn, "name", targetGroupName),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "arn"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "arn_suffix"),
+					resource.TestCheckResourceAttr(resourceNameArn, "port", "8080"),
+					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceNameArn, "protocol", "HTTP"),
+					resource.TestCheckResourceAttrSet(resourceNameArn, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceNameArn, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(resourceNameArn, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceNameArn, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceNameArn, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceNameArn, "health_check.0.matcher", "200-299"),
 
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "name", targetGroupName),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_name", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_name", "arn_suffix"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "port", "8080"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet("data.aws_alb_target_group.alb_tg_test_with_name", "vpc_id"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "slow_start", "0"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "stickiness.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr("data.aws_alb_target_group.alb_tg_test_with_name", "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn_suffix"),
+					resource.TestCheckResourceAttr(resourceName, "port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccDataSourceAWSALBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 				),
 			},
 		},
@@ -123,24 +129,25 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBasic(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -149,20 +156,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -172,10 +179,17 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -187,10 +201,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-data-source-target-group-basic"
@@ -200,7 +214,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -222,33 +236,35 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_lb_target_group" "alb_tg_test_with_arn" {
-	arn = "${aws_lb_target_group.test.arn}"
+  arn = aws_lb_target_group.test.arn
 }
 
 data "aws_lb_target_group" "alb_tg_test_with_name" {
-	name = "${aws_lb_target_group.test.name}"
-}`, lbName, targetGroupName)
+  name = aws_lb_target_group.test.name
+}
+`, lbName, targetGroupName)
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_listener" "front_end" {
-   load_balancer_arn = "${aws_alb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+	return fmt.Sprintf(`
+resource "aws_alb_listener" "front_end" {
+  load_balancer_arn = aws_alb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_alb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = aws_alb_target_group.test.id
+    type             = "forward"
+  }
 }
 
 resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -257,20 +273,20 @@ resource "aws_alb" "alb_test" {
 }
 
 resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -280,10 +296,17 @@ resource "aws_alb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -295,10 +318,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-data-source-target-group-bc"
@@ -308,7 +331,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -330,10 +353,11 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_alb_target_group" "alb_tg_test_with_arn" {
-	arn = "${aws_alb_target_group.test.arn}"
+  arn = aws_alb_target_group.test.arn
 }
 
 data "aws_alb_target_group" "alb_tg_test_with_name" {
-	name = "${aws_alb_target_group.test.name}"
-}`, lbName, targetGroupName)
+  name = aws_alb_target_group.test.name
+}
+`, lbName, targetGroupName)
 }

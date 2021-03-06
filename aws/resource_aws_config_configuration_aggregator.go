@@ -1,16 +1,17 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsConfigConfigurationAggregator() *schema.Resource {
@@ -27,10 +28,10 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
 			// All fields are ForceNew or Computed w/out Optional, Update is superfluous
-			customdiff.ForceNewIfChange("account_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("account_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			customdiff.ForceNewIfChange("organization_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
 		),
@@ -106,6 +107,7 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -117,6 +119,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 
 	req := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(name),
+		Tags:                        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ConfigserviceTags(),
 	}
 
 	account_aggregation_sources := d.Get("account_aggregation_source").([]interface{})
@@ -136,11 +139,21 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 
 	d.SetId(strings.ToLower(name))
 
+	if !d.IsNewResource() && d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.ConfigserviceUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Config Configuration Aggregator (%s) tags: %s", d.Get("arn").(string), err)
+		}
+	}
+
 	return resourceAwsConfigConfigurationAggregatorRead(d, meta)
 }
 
 func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
 	}
@@ -171,6 +184,16 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 
 	if err := d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
+	}
+
+	tags, err := keyvaluetags.ConfigserviceListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Config Configuration Aggregator (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb"
-sidebar_current: "docs-aws-datasource-elb"
 description: |-
   Provides a classic Elastic Load Balancer data source.
 ---
@@ -20,12 +20,12 @@ with it, etc.
 
 ```hcl
 variable "lb_name" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_elb" "test" {
-  name = "${var.lb_name}"
+  name = var.lb_name
 }
 ```
 

@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"time"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
@@ -60,7 +61,7 @@ func resourceAwsCloudFrontOriginAccessIdentityCreate(d *schema.ResourceData, met
 	if err != nil {
 		return err
 	}
-	d.SetId(*resp.CloudFrontOriginAccessIdentity.Id)
+	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
 	return resourceAwsCloudFrontOriginAccessIdentityRead(d, meta)
 }
 
@@ -72,13 +73,18 @@ func resourceAwsCloudFrontOriginAccessIdentityRead(d *schema.ResourceData, meta 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if err != nil {
+		if isAWSErr(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity, "") {
+			log.Printf("[WARN] CloudFront Origin Access Identity (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
 	// Update attributes from DistributionConfig
 	flattenOriginAccessIdentityConfig(d, resp.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig)
 	// Update other attributes outside of DistributionConfig
-	d.SetId(*resp.CloudFrontOriginAccessIdentity.Id)
+	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
 	d.Set("etag", resp.ETag)
 	d.Set("s3_canonical_user_id", resp.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 	d.Set("cloudfront_access_identity_path", fmt.Sprintf("origin-access-identity/cloudfront/%s", *resp.CloudFrontOriginAccessIdentity.Id))
@@ -125,7 +131,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		originAccessIdentityConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
+		originAccessIdentityConfig.CallerReference = aws.String(resource.UniqueId())
 	} else {
 		originAccessIdentityConfig.CallerReference = aws.String(v.(string))
 	}

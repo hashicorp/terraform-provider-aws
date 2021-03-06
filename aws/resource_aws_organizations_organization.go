@@ -1,15 +1,17 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const organizationsPolicyTypeStatusDisabled = "DISABLED"
@@ -23,6 +25,13 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource
+				return old.(string) == organizations.OrganizationFeatureSetAll && new.(string) == organizations.OrganizationFeatureSetConsolidatedBilling
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -64,6 +73,38 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 							Computed: true,
 						},
 						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"non_master_accounts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -110,21 +151,15 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						organizations.PolicyTypeServiceControlPolicy,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
 				},
 			},
 			"feature_set": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  organizations.OrganizationFeatureSetAll,
-				ValidateFunc: validation.StringInSlice([]string{
-					organizations.OrganizationFeatureSetAll,
-					organizations.OrganizationFeatureSetConsolidatedBilling,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      organizations.OrganizationFeatureSetAll,
+				ValidateFunc: validation.StringInSlice(organizations.OrganizationFeatureSet_Values(), true),
 			},
 		},
 	}
@@ -144,7 +179,7 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 	}
 
 	org := resp.Organization
-	d.SetId(*org.Id)
+	d.SetId(aws.StringValue(org.Id))
 
 	awsServiceAccessPrincipals := d.Get("aws_service_access_principals").(*schema.Set).List()
 	for _, principalRaw := range awsServiceAccessPrincipals {
@@ -208,8 +243,16 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
 	var accounts []*organizations.Account
+	var nonMasterAccounts []*organizations.Account
 	err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
-		accounts = append(accounts, page.Accounts...)
+		for _, account := range page.Accounts {
+			if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
+				nonMasterAccounts = append(nonMasterAccounts, account)
+			}
+
+			accounts = append(accounts, account)
+		}
+
 		return !lastPage
 	})
 	if err != nil {
@@ -235,6 +278,10 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
+
+	if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
+		return fmt.Errorf("error setting non_master_accounts: %s", err)
+	}
 
 	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
 		return fmt.Errorf("error setting roots: %s", err)
@@ -353,6 +400,12 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("feature_set") {
+		if _, err := conn.EnableAllFeatures(&organizations.EnableAllFeaturesInput{}); err != nil {
+			return fmt.Errorf("error enabling all features in Organization (%s): %w", d.Id(), err)
+		}
+	}
+
 	return resourceAwsOrganizationsOrganizationRead(d, meta)
 }
 
@@ -376,10 +429,11 @@ func flattenOrganizationsAccounts(accounts []*organizations.Account) []map[strin
 	var result []map[string]interface{}
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
-			"arn":   aws.StringValue(account.Arn),
-			"email": aws.StringValue(account.Email),
-			"id":    aws.StringValue(account.Id),
-			"name":  aws.StringValue(account.Name),
+			"arn":    aws.StringValue(account.Arn),
+			"email":  aws.StringValue(account.Email),
+			"id":     aws.StringValue(account.Id),
+			"name":   aws.StringValue(account.Name),
+			"status": aws.StringValue(account.Status),
 		})
 	}
 	return result

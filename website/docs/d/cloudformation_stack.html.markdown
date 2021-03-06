@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
-sidebar_current: "docs-aws-datasource-cloudformation-stack"
 description: |-
     Provides metadata of a CloudFormation stack (e.g. outputs)
 ---
@@ -20,8 +20,8 @@ data "aws_cloudformation_stack" "network" {
 
 resource "aws_instance" "web" {
   ami           = "ami-abb07bcb"
-  instance_type = "t1.micro"
-  subnet_id     = "${data.aws_cloudformation_stack.network.outputs["SubnetId"]}"
+  instance_type = "t2.micro"
+  subnet_id     = data.aws_cloudformation_stack.network.outputs["SubnetId"]
 
   tags = {
     Name = "HelloWorld"

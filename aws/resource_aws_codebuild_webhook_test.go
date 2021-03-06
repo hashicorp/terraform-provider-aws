@@ -2,14 +2,15 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
@@ -156,6 +157,67 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
+						{
+							{
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PUSH"),
+								ExcludeMatchedPattern: aws.Bool(false),
+							},
+							{
+								Type:                  aws.String("HEAD_REF"),
+								Pattern:               aws.String("refs/heads/master"),
+								ExcludeMatchedPattern: aws.Bool(true),
+							},
+						},
+						{
+							{
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PULL_REQUEST_UPDATED"),
+								ExcludeMatchedPattern: aws.Bool(false),
+							},
+						},
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
+func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedFilters [][]*codebuild.WebhookFilter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if webhook == nil {
+			return fmt.Errorf("webhook missing")
+		}
+
+		if !reflect.DeepEqual(webhook.FilterGroups, expectedFilters) {
+			return fmt.Errorf("expected webhook filter configuration (%v), got: %v", expectedFilters, webhook.FilterGroups)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
 
@@ -223,7 +285,7 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName string) string {
 	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName) + `
 resource "aws_codebuild_webhook" "test" {
-  project_name = "${aws_codebuild_project.test.name}"
+  project_name = aws_codebuild_project.test.name
 }
 `)
 }
@@ -231,7 +293,7 @@ resource "aws_codebuild_webhook" "test" {
 func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
 	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
 resource "aws_codebuild_webhook" "test" {
-  project_name = "${aws_codebuild_project.test.name}"
+  project_name = aws_codebuild_project.test.name
 }
 `)
 }
@@ -240,7 +302,7 @@ func testAccAWSCodeBuildWebhookConfig_GitHubEnterprise(rName string, branchFilte
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = "%s"
-  service_role = "${aws_iam_role.test.arn}"
+  service_role = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -259,7 +321,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 resource "aws_codebuild_webhook" "test" {
-  project_name  = "${aws_codebuild_project.test.name}"
+  project_name  = aws_codebuild_project.test.name
   branch_filter = "%s"
 }
 `, rName, branchFilter)
@@ -269,7 +331,35 @@ func testAccAWSCodeBuildWebhookConfig_BranchFilter(rName, branchFilter string) s
 	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
 resource "aws_codebuild_webhook" "test" {
   branch_filter = "%s"
-  project_name  = "${aws_codebuild_project.test.name}"
+  project_name  = aws_codebuild_project.test.name
 }
 `, branchFilter)
+}
+
+func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+resource "aws_codebuild_webhook" "test" {
+  project_name = aws_codebuild_project.test.name
+
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PUSH"
+    }
+
+    filter {
+      type                    = "HEAD_REF"
+      pattern                 = "refs/heads/master"
+      exclude_matched_pattern = true
+    }
+  }
+
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PULL_REQUEST_UPDATED"
+    }
+  }
+}
+`)
 }

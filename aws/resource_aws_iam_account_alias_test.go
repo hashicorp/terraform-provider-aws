@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSIAMAccountAlias(t *testing.T) {
+func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Basic": {
 			"basic": testAccAWSIAMAccountAlias_basic_with_datasource,
@@ -162,13 +162,15 @@ resource "aws_iam_account_alias" "test" {
 }
 
 data "aws_iam_account_alias" "current" {
-  depends_on = ["aws_iam_account_alias.test"]
-}`, rstring)
+  depends_on = [aws_iam_account_alias.test]
+}
+`, rstring)
 }
 
 func testAccAWSIAMAccountAliasConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = "terraform-%s-alias"
-}`, rstring)
+}
+`, rstring)
 }
