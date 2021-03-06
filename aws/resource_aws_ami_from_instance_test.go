@@ -33,6 +33,7 @@ func TestAccAWSAMIFromInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -73,6 +74,28 @@ func TestAccAWSAMIFromInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAMIFromInstance_disappears(t *testing.T) {
+	var image ec2.Image
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ami_from_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAMIFromInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAMIFromInstanceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAMIFromInstanceExists(resourceName, &image),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmiFromInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
