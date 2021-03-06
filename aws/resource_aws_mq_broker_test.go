@@ -867,6 +867,40 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
+	var broker mq.DescribeBrokerResponse
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+			{
+				Config: testAccMqBrokerEngineVersionUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.9"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSMqBroker_disappears(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
 	rName := acctest.RandomWithPrefix("tf-acc-test")
