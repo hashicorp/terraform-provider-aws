@@ -20,11 +20,11 @@ const (
 )
 
 // AccessPointCreated waits for an Operation to return Success
-func AccessPointCreated(conn *efs.EFS, fileSystemID string) (*efs.AccessPointDescription, error) {
+func AccessPointCreated(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateCreating},
 		Target:  []string{efs.LifeCycleStateAvailable},
-		Refresh: AccessPointLifeCycleState(conn, fileSystemID),
+		Refresh: AccessPointLifeCycleState(conn, accessPointId),
 		Timeout: AccessPointCreatedTimeout,
 	}
 
@@ -38,11 +38,11 @@ func AccessPointCreated(conn *efs.EFS, fileSystemID string) (*efs.AccessPointDes
 }
 
 // AccessPointDelete waits for an Access Point to return Deleted
-func AccessPointDeleted(conn *efs.EFS, fileSystemID string) (*efs.AccessPointDescription, error) {
+func AccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
 		Target:  []string{},
-		Refresh: AccessPointLifeCycleState(conn, fileSystemID),
+		Refresh: AccessPointLifeCycleState(conn, accessPointId),
 		Timeout: AccessPointDeletedTimeout,
 	}
 
