@@ -345,7 +345,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DeploymentMode = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 {
-		input.Logs = expandMqLogs(d.Get("logs").([]interface{}))
+		input.Logs = expandMqLogs(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
@@ -354,7 +354,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = expandStringSet(d.Get("security_groups").(*schema.Set))
+		input.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
@@ -895,13 +895,13 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	for i, instance := range instances {
 		m := make(map[string]interface{})
 		if instance.ConsoleURL != nil {
-			m["console_url"] = *instance.ConsoleURL
+			m["console_url"] = aws.StringValue(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
 		}
 		if instance.IpAddress != nil {
-			m["ip_address"] = *instance.IpAddress
+			m["ip_address"] = aws.StringValue(instance.IpAddress)
 		}
 		l[i] = m
 	}
