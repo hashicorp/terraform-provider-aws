@@ -117,6 +117,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique Server Certificate name
 * `name` - The name of the Server Certificate
 * `arn` - The Amazon Resource Name (ARN) specifying the server certificate.
+* `tags` - Key-value mapping of tags for the server certificate.
 
 ## Import
 

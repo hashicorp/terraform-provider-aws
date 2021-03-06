@@ -80,3 +80,38 @@ func IamUserUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{},
 
 	return nil
 }
+
+// IamServerCertificateUpdateTags updates IAM Server Certificate tags.
+// The identifier is the Server Certificate name.
+func IamServerCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &iam.UntagServerCertificateInput{
+			ServerCertificateName: aws.String(identifier),
+			TagKeys:               aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagServerCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &iam.TagServerCertificateInput{
+			ServerCertificateName: aws.String(identifier),
+			Tags:                  updatedTags.IgnoreAws().IamTags(),
+		}
+
+		_, err := conn.TagServerCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
