@@ -177,8 +177,8 @@ func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.IamServerCertificateUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
+		if err := keyvaluetags.IamServerCertificateUpdateTags(conn, d.Get("name").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Get("name").(string), err)
 		}
 	}
 
