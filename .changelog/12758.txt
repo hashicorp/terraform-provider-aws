@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_mq_broker: Support updating broker
+resource/aws_mq_broker: Support updating broker engine version
 ```
