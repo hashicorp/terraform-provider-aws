@@ -982,9 +982,9 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 
 func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
-		applicationName := d.Get("name").(string)
 		currentApplicationVersionId := int64(d.Get("version_id").(int))
 		updateApplication := false
 
@@ -1447,6 +1447,50 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
+		}
+	}
+
+	if d.HasChange("start_application") {
+		application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+		if err != nil {
+			return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		}
+
+		if _, ok := d.GetOk("start_application"); ok {
+			var inputStartingPosition string
+
+			if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+
+				if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]interface{})
+
+					if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+						tfMap := v[0].(map[string]interface{})
+
+						if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+							tfMap := v[0].(map[string]interface{})
+
+							if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
+								inputStartingPosition = v
+							}
+						}
+					}
+				}
+			}
+
+			err = kinesisAnalyticsV2StartApplication(conn, application, inputStartingPosition)
+
+			if err != nil {
+				return err
+			}
+		} else {
+			err = kinesisAnalyticsV2StopApplication(conn, application)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
