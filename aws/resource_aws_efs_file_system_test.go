@@ -33,7 +33,6 @@ func testSweepEfsFileSystems(region string) error {
 	conn := client.(*AWSClient).efsconn
 	var sweeperErrs *multierror.Error
 
-	var errors error
 	input := &efs.DescribeFileSystemsInput{}
 	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		for _, filesystem := range page.FileSystems {
@@ -55,7 +54,7 @@ func testSweepEfsFileSystems(region string) error {
 		return true
 	})
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
