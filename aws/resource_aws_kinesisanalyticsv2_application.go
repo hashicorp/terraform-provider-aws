@@ -268,6 +268,55 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 
+						"run_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"application_restore_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"application_restore_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationRestoreType_Values(), false),
+												},
+
+												"snapshot_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+
+									"flink_run_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"allow_non_restored_state": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
 						"sql_application_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -2572,6 +2621,29 @@ func flattenKinesisAnalyticsV2ApplicationConfigurationDescription(applicationCon
 		}
 
 		mApplicationConfiguration["flink_application_configuration"] = []interface{}{mFlinkApplicationConfiguration}
+	}
+
+	if runConfigurationDescription := applicationConfigurationDescription.RunConfigurationDescription; runConfigurationDescription != nil {
+		mRunConfiguration := map[string]interface{}{}
+
+		if applicationRestoreConfigurationDescription := runConfigurationDescription.ApplicationRestoreConfigurationDescription; applicationRestoreConfigurationDescription != nil {
+			mApplicationRestoreConfiguration := map[string]interface{}{
+				"application_restore_type": aws.StringValue(applicationRestoreConfigurationDescription.ApplicationRestoreType),
+				"snapshot_name":            aws.StringValue(applicationRestoreConfigurationDescription.SnapshotName),
+			}
+
+			mRunConfiguration["application_restore_configuration"] = []interface{}{mApplicationRestoreConfiguration}
+		}
+
+		if flinkRunConfigurationDescription := runConfigurationDescription.FlinkRunConfigurationDescription; flinkRunConfigurationDescription != nil {
+			mFlinkRunConfiguration := map[string]interface{}{
+				"allow_non_restored_state": aws.BoolValue(flinkRunConfigurationDescription.AllowNonRestoredState),
+			}
+
+			mRunConfiguration["flink_run_configuration"] = []interface{}{mFlinkRunConfiguration}
+		}
+
+		mApplicationConfiguration["run_configuration"] = []interface{}{mRunConfiguration}
 	}
 
 	if sqlApplicationConfigurationDescription := applicationConfigurationDescription.SqlApplicationConfigurationDescription; sqlApplicationConfigurationDescription != nil {

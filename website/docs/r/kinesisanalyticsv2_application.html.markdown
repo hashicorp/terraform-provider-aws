@@ -270,6 +270,7 @@ The `application_configuration` object supports the following:
 * `application_snapshot_configuration` - (Optional) Describes whether snapshots are enabled for a Flink-based application.
 * `environment_properties` - (Optional) Describes execution properties for a Flink-based application.
 * `flink_application_configuration` - (Optional) The configuration of a Flink-based application.
+* `run_configuration` - (Optional) Describes the starting properties for a Flink-based application.
 * `sql_application_configuration` - (Optional) The configuration of a SQL-based application.
 * `vpc_configuration` - (Optional) The VPC configuration of a Flink-based application.
 
@@ -330,6 +331,20 @@ The `parallelism_configuration` object supports the following:
 * `auto_scaling_enabled` - (Optional) Describes whether the Kinesis Data Analytics service can increase the parallelism of the application in response to increased throughput.
 * `parallelism` - (Optional) Describes the initial number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform.
 * `parallelism_per_kpu` - (Optional) Describes the number of parallel tasks that a Flink-based Kinesis Data Analytics application can perform per Kinesis Processing Unit (KPU) used by the application.
+
+The `run_configuration` object supports the following:
+
+* `application_restore_configuration` - (Optional) The restore behavior of a restarting application.
+* `flink_run_configuration` - (Optional) The starting parameters for a Flink-based Kinesis Data Analytics application.
+
+The `application_restore_configuration` object supports the following:
+
+* `application_restore_type` - (Required) Specifies how the application should be restored. Valid values: `RESTORE_FROM_CUSTOM_SNAPSHOT`, `RESTORE_FROM_LATEST_SNAPSHOT`, `SKIP_RESTORE_FROM_SNAPSHOT`.
+* `snapshot_name` - (Optional) The identifier of an existing snapshot of application state to use to restart an application. The application uses this value if `RESTORE_FROM_CUSTOM_SNAPSHOT` is specified for `application_restore_type`.
+
+The `flink_run_configuration` object supports the following:
+
+* `allow_non_restored_state` - (Optional) When restoring from a snapshot, specifies whether the runtime is allowed to skip a state that cannot be mapped to the new program. Default is `false`.
 
 The `sql_application_configuration` object supports the following:
 
