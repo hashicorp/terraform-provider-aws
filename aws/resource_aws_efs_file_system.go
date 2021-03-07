@@ -338,7 +338,7 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 		if isAWSErr(err, efs.ErrCodeFileSystemNotFound, "") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for EFS access point (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for EFS file system (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
