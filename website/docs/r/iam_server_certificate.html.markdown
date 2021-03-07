@@ -118,7 +118,8 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - The name of the Server Certificate
 * `arn` - The Amazon Resource Name (ARN) specifying the server certificate.
 * `tags` - Key-value mapping of tags for the server certificate.
-
+* `expiration` - The date on which the certificate is set to expire.
+* `upload_date` - The date when the server certificate was uploaded.
 ## Import
 
 IAM Server Certificates can be imported using the `name`, e.g.
