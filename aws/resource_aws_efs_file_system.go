@@ -306,7 +306,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
-		FileSystemId: fs.FileSystemId,
+		FileSystemId: aws.String(d.Id()),
 	})
 	if err != nil {
 		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %w",
