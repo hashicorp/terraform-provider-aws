@@ -16,8 +16,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_iam_instance_profile", &resource.Sweeper{
-		Name: "aws_iam_instance_profile",
-		F:    testSweepIamInstanceProfile,
+		Name:         "aws_iam_instance_profile",
+		F:            testSweepIamInstanceProfile,
+		Dependencies: []string{"aws_iam_role"},
 	})
 }
 
