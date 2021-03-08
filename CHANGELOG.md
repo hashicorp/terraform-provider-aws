@@ -1,5 +1,11 @@
 ## 3.32.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_appautoscaling_scheduled_action: Adds `timezone` support ([#17689](https://github.com/hashicorp/terraform-provider-aws/issues/17689))
+* resource/aws_appautoscaling_scheduled_action: Allows any timezone to be specified for `start_time` and `end_time` ([#17689](https://github.com/hashicorp/terraform-provider-aws/issues/17689))
+* resource/aws_mq_broker: Add RabbitMQ as option for `engine_type`, and new arguments `authentication_strategy`, `ldap_server_metadata`, and `storage_type`. Improve handling of eventual consistency. ([#16108](https://github.com/hashicorp/terraform-provider-aws/issues/16108))
+
 BUG FIXES:
 
 * resource/aws_storagegateway_upload_buffer: Replace `Provider produced inconsistent result after apply` with actual error message ([#17880](https://github.com/hashicorp/terraform-provider-aws/issues/17880))
