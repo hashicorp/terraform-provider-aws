@@ -390,6 +390,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfig(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
+		ErrorCheck:   testAccErrorCheckSkipCognito(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -442,6 +443,7 @@ func TestAccAWSCognitoUserPoolClient_analyticsConfigWithArn(t *testing.T) {
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckAWSPinpointApp(t)
 		},
+		ErrorCheck:   testAccErrorCheckSkipCognito(t),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -509,6 +511,12 @@ func TestAccAWSCognitoUserPoolClient_disappears_userPool(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccErrorCheckSkipCognito(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"The integration with Pinpoint is not supported",
+	)
 }
 
 func testAccAWSCognitoUserPoolClientImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
