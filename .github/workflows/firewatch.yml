@@ -6,6 +6,7 @@ on:
 name: Firewatch
 jobs:
   FirewatchJob:
+    if: github.repository_owner == 'hashicorp'
     runs-on: ubuntu-latest
     steps:
     - name: Firewatch
