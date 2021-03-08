@@ -1269,6 +1269,81 @@ func TestAccAWSProvider_IgnoreTags_Keys_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccProvider_DefaultTags_EmptyConfigurationBlock(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfigDefaultTagsEmptyConfigurationBlock(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_DefaultTags_Tags_None(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfigDefaultTags_Tags0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_DefaultTags_Tags_One(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfigDefaultTags_Tags1("test", "value"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{"test": "value"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_DefaultTags_Tags_Multiple(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfigDefaultTags_Tags2("test1", "value1", "test2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(&providers, map[string]string{
+						"test1": "value1",
+						"test2": "value2",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSProvider_Region_AwsC2S(t *testing.T) {
 	var providers []*schema.Provider
 
@@ -1613,6 +1688,69 @@ func testAccCheckAWSProviderIgnoreTagsKeys(providers *[]*schema.Provider, expect
 	}
 }
 
+func testAccCheckProviderDefaultTags_Tags(providers *[]*schema.Provider, expectedTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provider.Meta().(*AWSClient)
+			defaultTagsConfig := providerClient.DefaultTagsConfig
+
+			if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
+				if len(expectedTags) != 0 {
+					return fmt.Errorf("expected keys (%d) length, got: 0", len(expectedTags))
+				}
+
+				continue
+			}
+
+			actualTags := defaultTagsConfig.Tags
+
+			if len(actualTags) != len(expectedTags) {
+				return fmt.Errorf("expected tags (%d) length, got: %d", len(expectedTags), len(actualTags))
+			}
+
+			for _, expectedElement := range expectedTags {
+				var found bool
+
+				for _, actualElement := range actualTags {
+					if *actualElement.Value == expectedElement {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("expected tags element, but was missing: %s", expectedElement)
+				}
+			}
+
+			for _, actualElement := range actualTags {
+				var found bool
+
+				for _, expectedElement := range expectedTags {
+					if *actualElement.Value == expectedElement {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("unexpected tags element: %s", actualElement)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPartition string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -1711,7 +1849,9 @@ func testAccDefaultSubnetCount(t *testing.T) int {
 
 func testAccAWSProviderConfigEndpoints(endpoints string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
@@ -1722,19 +1862,14 @@ provider "aws" {
     %[1]s
   }
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, endpoints)
+`, endpoints))
 }
 
 func testAccAWSProviderConfigIgnoreTagsEmptyConfigurationBlock() string {
 	//lintignore:AT004
-	return `
+	return composeConfig(
+		testAccProviderConfigBase,
+		`
 provider "aws" {
   ignore_tags {}
 
@@ -1743,38 +1878,28 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`
+`)
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeyPrefixes0() string {
 	//lintignore:AT004
-	return `
+	return composeConfig(
+		testAccProviderConfigBase,
+		`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`
+`)
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeyPrefixes1(tagPrefix1 string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q]
@@ -1785,19 +1910,14 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, tagPrefix1)
+`, tagPrefix1))
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeyPrefixes2(tagPrefix1, tagPrefix2 string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     key_prefixes = [%[1]q, %[2]q]
@@ -1808,38 +1928,28 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, tagPrefix1, tagPrefix2)
+`, tagPrefix1, tagPrefix2))
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeys0() string {
 	//lintignore:AT004
-	return `
+	return composeConfig(
+		testAccProviderConfigBase,
+		`
 provider "aws" {
   skip_credentials_validation = true
   skip_get_ec2_platforms      = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`
+`)
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeys1(tag1 string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q]
@@ -1850,19 +1960,14 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, tag1)
+`, tag1))
 }
 
 func testAccAWSProviderConfigIgnoreTagsKeys2(tag1, tag2 string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   ignore_tags {
     keys = [%[1]q, %[2]q]
@@ -1873,19 +1978,14 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, tag1, tag2)
+`, tag1, tag2))
 }
 
 func testAccAWSProviderConfigRegion(region string) string {
 	//lintignore:AT004
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
 provider "aws" {
   region                      = %[1]q
   skip_credentials_validation = true
@@ -1893,14 +1993,7 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 }
-
-data "aws_partition" "provider_test" {}
-
-# Required to initialize the provider
-data "aws_arn" "test" {
-  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
-}
-`, region)
+`, region))
 }
 
 func testAccAssumeRoleARNPreCheck(t *testing.T) {
@@ -1927,6 +2020,86 @@ provider "aws" {
 
 data "aws_caller_identity" "current" {}
 ` //lintignore:AT004
+
+const testAccProviderConfigBase = `
+data "aws_partition" "provider_test" {}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:${data.aws_partition.provider_test.partition}:s3:::test"
+}
+`
+
+func testAccProviderConfigDefaultTagsEmptyConfigurationBlock() string {
+	//lintignore:AT004
+	return composeConfig(
+		testAccProviderConfigBase,
+		`
+provider "aws" {
+  default_tags {}
+
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+`)
+}
+
+func testAccProviderConfigDefaultTags_Tags0() string {
+	//lintignore:AT004
+	return composeConfig(
+		testAccProviderConfigBase,
+		`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+`)
+}
+
+func testAccProviderConfigDefaultTags_Tags1(tag1, value1 string) string {
+	//lintignore:AT004
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      %q = %q
+    }
+  }
+
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+`, tag1, value1))
+}
+
+func testAccProviderConfigDefaultTags_Tags2(tag1, value1, tag2, value2 string) string {
+	//lintignore:AT004
+	return composeConfig(
+		testAccProviderConfigBase,
+		fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      %q = %q
+      %q = %q
+    }
+  }
+
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+`, tag1, value1, tag2, value2))
+}
 
 func testCheckResourceAttrIsSortedCsv(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
