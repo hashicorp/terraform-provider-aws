@@ -3,16 +3,17 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"log"
-	"regexp"
-	"testing"
-	"time"
 )
 
 func init() {
@@ -441,11 +442,11 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksIdentityProviderConfigProviderConfigName(rName string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
+    client_id                     = "test-url.apps.googleusercontent.com"
     identity_provider_config_name = %[1]q
-    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
   }
 }
 `, rName)
@@ -454,11 +455,11 @@ resource "aws_eks_identity_provider_config" "test" {
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_IssuerUrl(rName, issuerUrl string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
+    client_id                     = "test-url.apps.googleusercontent.com"
     identity_provider_config_name = %[1]q
-    issuer_url = %[2]q
+    issuer_url                    = %[2]q
   }
 }
 `, rName, issuerUrl)
@@ -467,13 +468,13 @@ resource "aws_eks_identity_provider_config" "test" {
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_Groups(rName, groupsClaim, groupsPrefix string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
-	groups_claim = %[2]q
-	groups_prefix = %[3]q
+    client_id                     = "test-url.apps.googleusercontent.com"
+    groups_claim                  = %[2]q
+    groups_prefix                 = %[3]q
     identity_provider_config_name = %[1]q
-    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
   }
 }
 `, rName, groupsClaim, groupsPrefix)
@@ -482,13 +483,13 @@ resource "aws_eks_identity_provider_config" "test" {
 func testAccAWSEksIdentityProviderConfigProvider_Oidc_Username(rName, usernameClaim, usernamePrefix string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
+    client_id                     = "test-url.apps.googleusercontent.com"
     identity_provider_config_name = %[1]q
-    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
-	username_claim = %[2]q
-	username_prefix = %[3]q
+    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    username_claim                = %[2]q
+    username_prefix               = %[3]q
   }
 }
 `, rName, usernameClaim, usernamePrefix)
@@ -497,15 +498,15 @@ resource "aws_eks_identity_provider_config" "test" {
 func testAccAWSEksIdentityProviderConfig_Oidc_RequiredClaims(rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
+    client_id                     = "test-url.apps.googleusercontent.com"
     identity_provider_config_name = %[1]q
-    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
-	required_claims = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
+    required_claims = {
+      %[2]q = %[3]q
+      %[4]q = %[5]q
+    }
   }
 }
 `, rName, claimsKeyOne, claimsValueOne, claimsKeyTwo, claimsValueTwo)
@@ -514,11 +515,11 @@ resource "aws_eks_identity_provider_config" "test" {
 func testAccAWSEksIdentityProviderConfig_Tags(rName, tagsKeyOne, tagsValueOne, tagsKeyTwo, tagsValueTwo string) string {
 	return testAccAWSEksIdentityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_identity_provider_config" "test" {
-  cluster_name           = aws_eks_cluster.test.name
+  cluster_name = aws_eks_cluster.test.name
   oidc {
-    client_id = "test-url.apps.googleusercontent.com"
+    client_id                     = "test-url.apps.googleusercontent.com"
     identity_provider_config_name = %[1]q
-    issuer_url = "https://accounts.google.com/.well-known/openid-configuration"
+    issuer_url                    = "https://accounts.google.com/.well-known/openid-configuration"
   }
   tags = {
     %[2]q = %[3]q
