@@ -128,6 +128,23 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"configuration_set": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"email_sending_account": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
+							}, false),
+						},
+						"from_email_address": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"reply_to_email_address": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -141,23 +158,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
-						},
-						"from_email_address": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"email_sending_account": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
-								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
-							}, false),
-						},
-						"configuration_set": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
