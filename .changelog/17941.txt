@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Add `default_tags` argument (in public preview, see note above)
+```
