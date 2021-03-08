@@ -41,21 +41,15 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 				ForceNew: true,
 			},
 			"client_affinity": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  globalaccelerator.ClientAffinityNone,
-				ValidateFunc: validation.StringInSlice([]string{
-					globalaccelerator.ClientAffinityNone,
-					globalaccelerator.ClientAffinitySourceIp,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      globalaccelerator.ClientAffinityNone,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.ClientAffinity_Values(), false),
 			},
 			"protocol": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					globalaccelerator.ProtocolTcp,
-					globalaccelerator.ProtocolUdp,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.Protocol_Values(), false),
 			},
 			"port_range": {
 				Type:     schema.TypeSet,
@@ -67,12 +61,12 @@ func resourceAwsGlobalAcceleratorListener() *schema.Resource {
 						"from_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IsPortNumber,
 						},
 						"to_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 65535),
+							ValidateFunc: validation.IsPortNumber,
 						},
 					},
 				},
@@ -97,7 +91,7 @@ func resourceAwsGlobalAcceleratorListenerCreate(d *schema.ResourceData, meta int
 
 	resp, err := conn.CreateListener(opts)
 	if err != nil {
-		return fmt.Errorf("Error creating Global Accelerator listener: %s", err)
+		return fmt.Errorf("error creating Global Accelerator listener: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
@@ -135,7 +129,7 @@ func resourceAwsGlobalAcceleratorListenerRead(d *schema.ResourceData, meta inter
 	d.Set("client_affinity", listener.ClientAffinity)
 	d.Set("protocol", listener.Protocol)
 	if err := d.Set("port_range", resourceAwsGlobalAcceleratorListenerFlattenPortRanges(listener.PortRanges)); err != nil {
-		return fmt.Errorf("error setting port_range: %s", err)
+		return fmt.Errorf("error setting port_range: %w", err)
 	}
 
 	return nil
