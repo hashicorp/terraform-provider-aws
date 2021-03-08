@@ -3,7 +3,7 @@ package aws
 import (
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"reflect"
@@ -343,7 +343,7 @@ func TestAccAWSS3BucketObject_updateSameFile(t *testing.T) {
 	defer os.Remove(filename)
 
 	rewriteFile := func(*terraform.State) error {
-		if err := ioutil.WriteFile(filename, []byte(changingData), 0644); err != nil {
+		if err := os.WriteFile(filename, []byte(changingData), 0644); err != nil {
 			os.Remove(filename)
 			t.Fatal(err)
 		}
@@ -1266,7 +1266,7 @@ func testAccCheckAWSS3BucketObjectExists(n string, obj *s3.GetObjectOutput) reso
 
 func testAccCheckAWSS3BucketObjectBody(obj *s3.GetObjectOutput, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		body, err := ioutil.ReadAll(obj.Body)
+		body, err := io.ReadAll(obj.Body)
 		if err != nil {
 			return fmt.Errorf("failed to read body: %s", err)
 		}
@@ -1367,13 +1367,13 @@ func testAccCheckAWSS3BucketObjectSSE(n, expectedSSE string) resource.TestCheckF
 }
 
 func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
-	tmpFile, err := ioutil.TempFile("", "tf-acc-s3-obj")
+	tmpFile, err := os.CreateTemp("", "tf-acc-s3-obj")
 	if err != nil {
 		t.Fatal(err)
 	}
 	filename := tmpFile.Name()
 
-	err = ioutil.WriteFile(filename, []byte(data), 0644)
+	err = os.WriteFile(filename, []byte(data), 0644)
 	if err != nil {
 		os.Remove(filename)
 		t.Fatal(err)
