@@ -14,11 +14,11 @@ Manages an EKS Identity Provider Configuration.
 
 ```hcl
 resource "aws_eks_identity_provider_config" "example" {
-  cluster_name           = aws_eks_cluster.example.name
+  cluster_name = aws_eks_cluster.example.name
   oidc {
-    client_id = "your client_id"
+    client_id                     = "your client_id"
     identity_provider_config_name = "example"
-    issuer_url = "your issuer_url"
+    issuer_url                    = "your issuer_url"
   }
 }
 ```
@@ -29,18 +29,18 @@ The following arguments are required:
 
 * `cluster_name` – Name of the EKS Cluster.
 * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
-  * `client_id` – Client ID for the OpenID Connect identity provider.
-  * `identity_provider_config_name` – The name of the identity provider config.
-  * `issuer_url` - Issuer URL for the OpenID Connect identity provider.
+    * `client_id` – Client ID for the OpenID Connect identity provider.
+    * `identity_provider_config_name` – The name of the identity provider config.
+    * `issuer_url` - Issuer URL for the OpenID Connect identity provider.
 
 The following arguments are optional:
 
 * `oidc`
-  * `groups_claim` - The JWT claim that the provider will use to return groups.
-  * `groups_prefix` - A prefix that is prepended to group claims e.g. `oidc:`.
-  * `required_claims` - The key value pairs that describe required claims in the identity token.
-  * `username_claim` - The JWT claim that the provider will use as the username.
-  * `username_prefix` - A prefix that is prepended to username claims.
+    * `groups_claim` - The JWT claim that the provider will use to return groups.
+    * `groups_prefix` - A prefix that is prepended to group claims e.g. `oidc:`.
+    * `required_claims` - The key value pairs that describe required claims in the identity token.
+    * `username_claim` - The JWT claim that the provider will use as the username.
+    * `username_prefix` - A prefix that is prepended to username claims.
 * `tags` - (Optional) Key-value map of resource tags.
 
 ## Attributes Reference
