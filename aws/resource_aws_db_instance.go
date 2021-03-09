@@ -346,6 +346,14 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"replica_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"mounted",
+					"open-read-only",
+				}, false),
+			},
 			"replicas": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -656,6 +664,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("ca_cert_identifier"); ok {
 			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr, ok := d.GetOk("replica_mode"); ok {
+			opts.ReplicaMode = aws.String(attr.(string))
 			requiresModifyDbInstance = true
 		}
 
@@ -1491,6 +1504,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting replicas attribute: %#v, error: %#v", replicas, err)
 	}
 
+	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
@@ -1745,6 +1759,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("customer_owned_ip_enabled") {
 		req.EnableCustomerOwnedIp = aws.Bool(d.Get("customer_owned_ip_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("replica_mode") {
+		req.ReplicaMode = aws.String(d.Get("replica_mode").(string))
 		requestUpdate = true
 	}
 
