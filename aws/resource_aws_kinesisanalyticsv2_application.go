@@ -309,6 +309,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									},
 								},
 							},
+							ConflictsWith: []string{"application_configuration.0.sql_application_configuration"},
 						},
 
 						"sql_application_configuration": {
@@ -777,6 +778,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 								"application_configuration.0.application_snapshot_configuration",
 								"application_configuration.0.environment_properties",
 								"application_configuration.0.flink_application_configuration",
+								"application_configuration.0.run_configuration",
 								"application_configuration.0.vpc_configuration",
 							},
 						},
@@ -937,37 +939,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
 
 	if _, ok := d.GetOk("start_application"); ok {
-		var inputStartingPosition string
-
-		if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			tfMap := v.([]interface{})[0].(map[string]interface{})
-
-			if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-				tfMap := v[0].(map[string]interface{})
-
-				if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					tfMap := v[0].(map[string]interface{})
-
-					if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-						tfMap := v[0].(map[string]interface{})
-
-						if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
-							inputStartingPosition = v
-						}
-					}
-				}
-			}
-		}
-
-		application, err := finder.ApplicationDetailByName(conn, applicationName)
-
-		if err != nil {
-			return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
-		}
-
-		err = kinesisAnalyticsV2StartApplication(conn, application, inputStartingPosition)
-
-		if err != nil {
+		if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
 			return err
 		}
 	}
@@ -1494,44 +1466,12 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("start_application") {
-		application, err := finder.ApplicationDetailByName(conn, applicationName)
-
-		if err != nil {
-			return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
-		}
-
 		if _, ok := d.GetOk("start_application"); ok {
-			var inputStartingPosition string
-
-			if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
-
-				if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-					tfMap := v[0].(map[string]interface{})
-
-					if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-						tfMap := v[0].(map[string]interface{})
-
-						if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-							tfMap := v[0].(map[string]interface{})
-
-							if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
-								inputStartingPosition = v
-							}
-						}
-					}
-				}
-			}
-
-			err = kinesisAnalyticsV2StartApplication(conn, application, inputStartingPosition)
-
-			if err != nil {
+			if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
 				return err
 			}
 		} else {
-			err = kinesisAnalyticsV2StopApplication(conn, application)
-
-			if err != nil {
+			if err := kinesisAnalyticsV2StopApplication(conn, expandKinesisAnalyticsV2StopApplicationInput(d)); err != nil {
 				return err
 			}
 		}
@@ -1590,9 +1530,16 @@ func resourceAwsKinesisAnalyticsV2ApplicationImport(d *schema.ResourceData, meta
 	return []*schema.ResourceData{d}, nil
 }
 
-func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, application *kinesisanalyticsv2.ApplicationDetail, inputStartingPosition string) error {
+func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput) error {
+	applicationName := aws.StringValue(input.ApplicationName)
+
+	application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+	}
+
 	applicationARN := aws.StringValue(application.ApplicationARN)
-	applicationName := aws.StringValue(application.ApplicationName)
 
 	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusReady; actual != expected {
 		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be started if it's in the %s state", applicationARN, actual, expected)
@@ -1605,19 +1552,7 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 		return nil
 	}
 
-	input := &kinesisanalyticsv2.StartApplicationInput{
-		ApplicationName: aws.String(applicationName),
-		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{
-			SqlRunConfigurations: []*kinesisanalyticsv2.SqlRunConfiguration{{
-				InputId:                            application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId,
-				InputStartingPositionConfiguration: &kinesisanalyticsv2.InputStartingPositionConfiguration{},
-			}},
-		},
-	}
-
-	if inputStartingPosition != "" {
-		input.RunConfiguration.SqlRunConfigurations[0].InputStartingPositionConfiguration.InputStartingPosition = aws.String(inputStartingPosition)
-	}
+	input.RunConfiguration.SqlRunConfigurations[0].InputId = application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId
 
 	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
@@ -1632,17 +1567,20 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 	return nil
 }
 
-func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, application *kinesisanalyticsv2.ApplicationDetail) error {
+func kinesisAnalyticsV2StopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput) error {
+	applicationName := aws.StringValue(input.ApplicationName)
+
+	application, err := finder.ApplicationDetailByName(conn, applicationName)
+
+	if err != nil {
+		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+	}
+
 	applicationARN := aws.StringValue(application.ApplicationARN)
-	applicationName := aws.StringValue(application.ApplicationName)
 
 	if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual != expected {
 		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has status %s. An application can only be stopped if it's in the %s state", applicationARN, actual, expected)
 		return nil
-	}
-
-	input := &kinesisanalyticsv2.StopApplicationInput{
-		ApplicationName: aws.String(applicationName),
 	}
 
 	log.Printf("[DEBUG] Stopping Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
@@ -2871,4 +2809,73 @@ func flattenKinesisAnalyticsV2SourceSchema(sourceSchema *kinesisanalyticsv2.Sour
 	}
 
 	return []interface{}{mSourceSchema}
+}
+
+func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StartApplicationInput {
+	apiObject := &kinesisanalyticsv2.StartApplicationInput{
+		ApplicationName:  aws.String(d.Get("name").(string)),
+		RunConfiguration: &kinesisanalyticsv2.RunConfiguration{},
+	}
+
+	if v, ok := d.GetOk("application_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := tfMap["sql_application_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["input"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["input_starting_position_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+					tfMap := v[0].(map[string]interface{})
+
+					if v, ok := tfMap["input_starting_position"].(string); ok && v != "" {
+						apiObject.RunConfiguration.SqlRunConfigurations = []*kinesisanalyticsv2.SqlRunConfiguration{{
+							InputStartingPositionConfiguration: &kinesisanalyticsv2.InputStartingPositionConfiguration{
+								InputStartingPosition: aws.String(v),
+							},
+						}}
+					}
+				}
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("run_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := tfMap["application_restore_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			apiObject.RunConfiguration.ApplicationRestoreConfiguration = &kinesisanalyticsv2.ApplicationRestoreConfiguration{}
+
+			if v, ok := tfMap["application_restore_type"].(string); ok && v != "" {
+				apiObject.RunConfiguration.ApplicationRestoreConfiguration.ApplicationRestoreType = aws.String(v)
+			}
+
+			if v, ok := tfMap["snapshot_name"].(string); ok && v != "" {
+				apiObject.RunConfiguration.ApplicationRestoreConfiguration.SnapshotName = aws.String(v)
+			}
+		}
+
+		if v, ok := tfMap["flink_run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["allow_non_restored_state"].(bool); ok {
+				apiObject.RunConfiguration.FlinkRunConfiguration = &kinesisanalyticsv2.FlinkRunConfiguration{
+					AllowNonRestoredState: aws.Bool(v),
+				}
+			}
+		}
+	}
+
+	return apiObject
+}
+
+func expandKinesisAnalyticsV2StopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
+	apiObject := &kinesisanalyticsv2.StopApplicationInput{
+		ApplicationName: aws.String(d.Get("name").(string)),
+	}
+
+	return apiObject
 }
