@@ -10,8 +10,6 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
-      # To allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
-      - pattern-not: func TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_disappears(t *testing.T) { ... }
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
