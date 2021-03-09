@@ -660,7 +660,7 @@ func testAccCheckGameliftGameServerGroupExists(resourceName string) resource.Tes
 
 func testAccGameliftGameServerGroupIamConfig(rName string, name string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_partition" %[2]q {}
 
 resource "aws_iam_role" %[2]q {
   assume_role_policy = <<-EOF
@@ -685,7 +685,7 @@ resource "aws_iam_role" %[2]q {
 }
 
 resource "aws_iam_role_policy_attachment" %[2]q {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
+  policy_arn = "arn:${data.aws_partition.%[2]s.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
   role = aws_iam_role.%[2]s.name
 }
 `, rName, name)
@@ -695,7 +695,7 @@ func testAccGameliftGameServerGroupLaunchTemplateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   image_id = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  name = %[1]q
+  name     = %[1]q
 }
 `, rName)
 }
@@ -704,7 +704,7 @@ func testAccGameliftGameServerGroupInstanceTypeOfferingsConfig() string {
 	return `
 data "aws_ec2_instance_type_offerings" "available" {
   filter {
-    name = "instance-type"
+    name   = "instance-type"
     values = ["c5a.large", "c5a.2xlarge", "c5.large", "c5.2xlarge", "m4.large", "m4.2xlarge", "m5a.large", "m5a.2xlarge", "m5.large", "m5.2xlarge"]
   }
 }
@@ -826,7 +826,7 @@ func testAccGameliftGameServerGroupConfigBalancingStrategy(rName string, balanci
 		testAccGameliftGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
 resource "aws_gamelift_game_server_group" "test" {
-  balancing_strategy = %[2]q
+  balancing_strategy     = %[2]q
   game_server_group_name = %[1]q
 
   dynamic "instance_definition" {
@@ -892,7 +892,7 @@ resource "aws_gamelift_game_server_group" "test" {
   game_server_group_name = %[1]q
 
   dynamic "instance_definition" {
-	for_each = slice(tolist(data.aws_ec2_instance_type_offerings.available.instance_types), 0, %[2]d)
+    for_each = slice(tolist(data.aws_ec2_instance_type_offerings.available.instance_types), 0, %[2]d)
 
     content {
       instance_type = instance_definition.value
@@ -923,7 +923,7 @@ resource "aws_gamelift_game_server_group" "test" {
   game_server_group_name = %[1]q
 
   dynamic "instance_definition" {
-	for_each = slice(tolist(data.aws_ec2_instance_type_offerings.available.instance_types), 0, 2)
+    for_each = slice(tolist(data.aws_ec2_instance_type_offerings.available.instance_types), 0, 2)
 
     content {
       instance_type = instance_definition.value
@@ -1093,7 +1093,7 @@ resource "aws_gamelift_game_server_group" "test" {
   max_size = 2
   min_size = %[2]s
   role_arn = aws_iam_role.test.arn
-  
+
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, minSize))
@@ -1180,7 +1180,7 @@ resource "aws_gamelift_game_server_group" "test" {
     for_each = data.aws_ec2_instance_type_offerings.available.instance_types
 
     content {
-	  instance_type = instance_definition.key
+      instance_type = instance_definition.key
     }
   }
 
@@ -1219,7 +1219,7 @@ resource "aws_gamelift_game_server_group" "test" {
     for_each = data.aws_ec2_instance_type_offerings.available.instance_types
 
     content {
-	  instance_type = instance_definition.key
+      instance_type = instance_definition.key
     }
   }
 
@@ -1227,9 +1227,9 @@ resource "aws_gamelift_game_server_group" "test" {
     id = aws_launch_template.test.id
   }
 
-  max_size = 1
-  min_size = 1
-  role_arn = aws_iam_role.test.arn
+  max_size    = 1
+  min_size    = 1
+  role_arn    = aws_iam_role.test.arn
   vpc_subnets = slice(tolist(data.aws_subnet_ids.test.ids), 0, %[2]d)
 
   depends_on = [aws_iam_role_policy_attachment.test]
