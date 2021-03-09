@@ -328,7 +328,7 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 	resp, err := conn.CreateUserPoolClient(params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User Pool Client: %s", err)
+		return fmt.Errorf("error creating Cognito User Pool Client (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
@@ -377,7 +377,7 @@ func resourceAwsCognitoUserPoolClientRead(d *schema.ResourceData, meta interface
 	d.Set("supported_identity_providers", flattenStringSet(userPoolClient.SupportedIdentityProviders))
 
 	if err := d.Set("analytics_configuration", flattenAwsCognitoUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
-		return fmt.Errorf("error setting analytics_configuration: %s", err)
+		return fmt.Errorf("error setting analytics_configuration: %w", err)
 	}
 
 	if err := d.Set("token_validity_units", flattenAwsCognitoUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
@@ -467,7 +467,7 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	_, err := conn.UpdateUserPoolClient(params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito User Pool Client: %s", err)
+		return fmt.Errorf("error updating Cognito User Pool Client (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)
@@ -486,7 +486,7 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 	_, err := conn.DeleteUserPoolClient(params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Cognito User Pool Client: %s", err)
+		return fmt.Errorf("error deleting Cognito User Pool Client (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -494,7 +494,7 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 
 func resourceAwsCognitoUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
 	}
 	userPoolId := strings.Split(d.Id(), "/")[0]
 	clientId := strings.Split(d.Id(), "/")[1]
