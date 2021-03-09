@@ -110,7 +110,7 @@ The following arguments are optional:
 ### device_configuration
 
 * `challenge_required_on_new_device` - (Optional) Whether a challenge is required on a new device. Only applicable to a new device.
-* `device_only_remembered_on_user_prompt` - (Optional) Whether a device is only remembered on user prompt.
+* `device_only_remembered_on_user_prompt` - (Optional) Whether a device is only remembered on user prompt. `false` equates to "Always" remember, `true` is "User Opt In," and not using a `device_configuration` block is "No."
 
 ### email_configuration
 
