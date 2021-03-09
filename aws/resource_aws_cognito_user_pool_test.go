@@ -1618,7 +1618,7 @@ resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
   email_configuration {
-    email_sending_account  = "COGNITO_DEFAULT"
+    email_sending_account = "COGNITO_DEFAULT"
   }
 }
 `, rName)
