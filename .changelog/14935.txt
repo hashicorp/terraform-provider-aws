@@ -5,3 +5,7 @@ resource/aws_cognito_user_pool_client: Add plan time validation for `name`, `def
 ```release-note:enhancement
 resource/aws_cognito_user_pool_client: Add support for `access_token_validity` and `id_token_validity`, `token_validity_units`
 ```
+
+```release-note:enhancement
+resource/aws_cognito_user_pool: Add support for `configuration_set` in `email_configuration`
+```
