@@ -94,7 +94,7 @@ The following arguments are optional:
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
-* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`. When `ebs` storage type is defined, only the `mq.m5` broker instance type family is supported. For `engine_type` `RabbitMQ`, only `EBS` is supported.
+* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
 * `tags` - (Optional) Map of tags to assign to the broker.
 
