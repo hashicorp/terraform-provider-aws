@@ -44,7 +44,9 @@ resource "aws_mq_broker" "example" {
 }
 ```
 
-### Broker with EBS storage (high throughput optimized only on ActiveMQ engine type)
+### High-throughput Optimized Example
+
+This example shows the use of EBS storage for high-throughput optimized performance.
 
 ```hcl
 resource "aws_mq_broker" "example" {
