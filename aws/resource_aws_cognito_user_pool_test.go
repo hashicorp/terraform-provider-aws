@@ -1642,7 +1642,7 @@ resource "aws_cognito_user_pool" "test" {
     source_arn             = %[3]q
     from_email_address     = %[4]q
     email_sending_account  = %[5]q
-	configuration_set      = aws_ses_configuration_set.test.name
+    configuration_set      = aws_ses_configuration_set.test.name
   }
 }
 `, rName, email, arn, from, account)
