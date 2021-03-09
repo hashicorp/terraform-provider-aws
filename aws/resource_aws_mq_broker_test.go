@@ -278,7 +278,6 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
