@@ -492,7 +492,7 @@ func testAccCheckAWSKmsExternalKeyDisappears(key *kms.KeyMetadata) resource.Test
 
 func testAccCheckAWSKmsExternalKeyNotRecreated(i, j *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationDate) != aws.TimeValue(j.CreationDate) {
+		if !aws.TimeValue(i.CreationDate).Equal(aws.TimeValue(j.CreationDate)) {
 			return fmt.Errorf("KMS External Key recreated")
 		}
 
@@ -502,7 +502,7 @@ func testAccCheckAWSKmsExternalKeyNotRecreated(i, j *kms.KeyMetadata) resource.T
 
 func testAccCheckAWSKmsExternalKeyRecreated(i, j *kms.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationDate) == aws.TimeValue(j.CreationDate) {
+		if aws.TimeValue(i.CreationDate).Equal(aws.TimeValue(j.CreationDate)) {
 			return fmt.Errorf("KMS External Key not recreated")
 		}
 

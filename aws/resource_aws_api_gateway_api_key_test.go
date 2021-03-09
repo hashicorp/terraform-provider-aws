@@ -269,7 +269,7 @@ func testAccCheckAWSAPIGatewayApiKeyDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayApiKeyNotRecreated(i, j *apigateway.ApiKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate) != aws.TimeValue(j.CreatedDate) {
+		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway API Key recreated")
 		}
 

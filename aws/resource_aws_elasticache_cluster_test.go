@@ -767,7 +767,7 @@ func testAccCheckAWSElasticacheClusterReplicationGroupIDAttribute(cluster *elast
 
 func testAccCheckAWSElasticacheClusterNotRecreated(i, j *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CacheClusterCreateTime) != aws.TimeValue(j.CacheClusterCreateTime) {
+		if !aws.TimeValue(i.CacheClusterCreateTime).Equal(aws.TimeValue(j.CacheClusterCreateTime)) {
 			return errors.New("ElastiCache Cluster was recreated")
 		}
 
@@ -777,7 +777,7 @@ func testAccCheckAWSElasticacheClusterNotRecreated(i, j *elasticache.CacheCluste
 
 func testAccCheckAWSElasticacheClusterRecreated(i, j *elasticache.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CacheClusterCreateTime) == aws.TimeValue(j.CacheClusterCreateTime) {
+		if aws.TimeValue(i.CacheClusterCreateTime).Equal(aws.TimeValue(j.CacheClusterCreateTime)) {
 			return errors.New("ElastiCache Cluster was not recreated")
 		}
 
