@@ -12,9 +12,6 @@ on:
       - scripts/validate-terraform.sh
       - tools/go.mod
 
-env:
-  GO111MODULE: on
-
 jobs:
   terrafmt:
     runs-on: ubuntu-latest

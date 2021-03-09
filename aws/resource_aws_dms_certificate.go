@@ -8,12 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDmsCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDmsCertificateCreate,
 		Read:   resourceAwsDmsCertificateRead,
+		Update: resourceAwsDmsCertificateUpdate,
 		Delete: resourceAwsDmsCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -43,6 +45,7 @@ func resourceAwsDmsCertificate() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -52,6 +55,7 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 	request := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(d.Get("certificate_id").(string)),
+		Tags:                  keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatabasemigrationserviceTags(),
 	}
 
 	pem, pemSet := d.GetOk("certificate_pem")
@@ -84,6 +88,7 @@ func resourceAwsDmsCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
 		Filters: []*dms.Filter{
@@ -101,7 +106,37 @@ func resourceAwsDmsCertificateRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	return resourceAwsDmsCertificateSetState(d, response.Certificates[0])
+	err = resourceAwsDmsCertificateSetState(d, response.Certificates[0])
+	if err != nil {
+		return err
+	}
+
+	tags, err := keyvaluetags.DatabasemigrationserviceListTags(conn, d.Get("certificate_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	return nil
+}
+
+func resourceAwsDmsCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).dmsconn
+
+	if d.HasChange("tags") {
+		arn := d.Get("certificate_arn").(string)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DMS Certificate (%s) tags: %w", arn, err)
+		}
+	}
+
+	return resourceAwsDmsCertificateRead(d, meta)
 }
 
 func resourceAwsDmsCertificateDelete(d *schema.ResourceData, meta interface{}) error {

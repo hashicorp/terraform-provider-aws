@@ -46,14 +46,12 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 		}
 
 		for _, config := range output.AppImageConfigs {
+
 			name := aws.StringValue(config.AppImageConfigName)
-			input := &sagemaker.DeleteAppImageConfigInput{
-				AppImageConfigName: aws.String(name),
-			}
-
-			log.Printf("[INFO] Deleting SageMaker App Image Config: %s", name)
-			_, err := conn.DeleteAppImageConfig(input)
-
+			r := resourceAwsSagemakerAppImageConfig()
+			d := r.Data(nil)
+			d.SetId(name)
+			err = r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)

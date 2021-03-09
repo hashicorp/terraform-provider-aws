@@ -3,7 +3,6 @@ package aws
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -1895,7 +1894,7 @@ func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error 
 			return err
 		}
 
-		fileContent, err := ioutil.ReadFile(source)
+		fileContent, err := os.ReadFile(source)
 		if err != nil {
 			return err
 		}
@@ -1915,7 +1914,7 @@ func testAccCreateZipFromFiles(files map[string]string, zipFile *os.File) error 
 }
 
 func createTempFile(prefix string) (string, *os.File, error) {
-	f, err := ioutil.TempFile(os.TempDir(), prefix)
+	f, err := os.CreateTemp(os.TempDir(), prefix)
 	if err != nil {
 		return "", nil, err
 	}

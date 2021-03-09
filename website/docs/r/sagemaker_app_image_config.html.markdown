@@ -48,7 +48,6 @@ The following arguments are supported:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
-* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Kernel Gateway Image Config
 

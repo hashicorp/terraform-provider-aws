@@ -72,22 +72,18 @@ interpolation.
 
 * `arn` - The ARN of the AMI.
 * `architecture` - The OS architecture of the AMI (ie: `i386` or `x86_64`).
-* `block_device_mappings` - The block device mappings of the AMI.
-    * `block_device_mappings.#.device_name` - The physical name of the device.
-    * `block_device_mappings.#.ebs.delete_on_termination` - `true` if the EBS volume
-    will be deleted on termination.
-    * `block_device_mappings.#.ebs.encrypted` - `true` if the EBS volume
-    is encrypted.
-    * `block_device_mappings.#.ebs.iops` - `0` if the EBS volume is
-    not a provisioned IOPS image, otherwise the supported IOPS count.
-    * `block_device_mappings.#.ebs.snapshot_id` - The ID of the snapshot.
-    * `block_device_mappings.#.ebs.volume_size` - The size of the volume, in GiB.
-    * `block_device_mappings.#.ebs.throughput` - The throughput that the EBS volume supports, in MiB/s.
-    * `block_device_mappings.#.ebs.volume_type` - The volume type.
-    * `block_device_mappings.#.no_device` - Suppresses the specified device
-    included in the block device mapping of the AMI.
-    * `block_device_mappings.#.virtual_name` - The virtual device name (for
-    instance stores).
+* `block_device_mappings` - Set of objects with block device mappings of the AMI.
+    * `device_name` - The physical name of the device.
+    * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g. `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g. `ebs[0].volume_size`).
+        * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
+        * `encrypted` - `true` if the EBS volume is encrypted.
+        * `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
+        * `snapshot_id` - The ID of the snapshot.
+        * `volume_size` - The size of the volume, in GiB.
+        * `throughput` - The throughput that the EBS volume supports, in MiB/s.
+        * `volume_type` - The volume type.
+    * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
+    * `virtual_name` - The virtual device name (for instance stores).
 * `creation_date` - The date and time the image was created.
 * `description` - The description of the AMI that was provided during image
   creation.

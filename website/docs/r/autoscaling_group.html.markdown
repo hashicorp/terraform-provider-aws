@@ -174,6 +174,51 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
+### Mixed Instances Policy with Instance level LaunchTemplateSpecification Overrides
+
+When using a diverse instance set, some instance types might require a launch template with configuration values unique to that instance type such as a different AMI (Graviton2), architecture specific user data script, different EBS configuration, or different networking configuration.
+
+```hcl
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
+}
+
+resource "aws_launch_template" "example2" {
+  name_prefix = "example2"
+  image_id    = data.aws_ami.example2.id
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.example.id
+      }
+
+      override {
+        instance_type     = "c4.large"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type = "c6g.large"
+        launch_template_specification {
+          launch_template_id = aws_launch_template.example2.id
+        }
+        weighted_capacity = "2"
+      }
+    }
+  }
+}
+```
+
 ### Interpolated tags
 
 ```hcl
@@ -378,6 +423,7 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
 * `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
 
 ### tag and tags

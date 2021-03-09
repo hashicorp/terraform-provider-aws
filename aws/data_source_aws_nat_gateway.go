@@ -130,7 +130,7 @@ func dataSourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for _, address := range ngw.NatGatewayAddresses {
-		if *address.AllocationId != "" {
+		if aws.StringValue(address.AllocationId) != "" {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)

@@ -341,61 +341,52 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).syntheticsconn
 
-	input := &synthetics.UpdateCanaryInput{
-		Name: aws.String(d.Id()),
-	}
-
-	updateFlag := false
-
-	if d.HasChange("vpc_config") {
-		input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(d.Get("vpc_config").([]interface{}))
-		updateFlag = true
-	}
-
-	if d.HasChange("runtime_version") {
-		input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
-		updateFlag = true
-	}
-
-	if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
-		code, err := expandAwsSyntheticsCanaryCode(d)
-		if err != nil {
-			return err
+	if d.HasChangesExcept("tags", "start_canary") {
+		input := &synthetics.UpdateCanaryInput{
+			Name: aws.String(d.Id()),
 		}
-		input.Code = code
-		updateFlag = true
-	}
 
-	if d.HasChange("run_config") {
-		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(d.Get("run_config").([]interface{}))
-		updateFlag = true
-	}
+		if d.HasChange("vpc_config") {
+			input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(d.Get("vpc_config").([]interface{}))
+		}
 
-	if d.HasChange("schedule") {
-		input.Schedule = expandAwsSyntheticsCanarySchedule(d.Get("schedule").([]interface{}))
-		updateFlag = true
-	}
+		if d.HasChange("runtime_version") {
+			input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
+		}
 
-	if d.HasChange("success_retention_period") {
-		_, n := d.GetChange("success_retention_period")
-		input.SuccessRetentionPeriodInDays = aws.Int64(int64(n.(int)))
-		updateFlag = true
-	}
+		if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
+			code, err := expandAwsSyntheticsCanaryCode(d)
+			if err != nil {
+				return err
+			}
+			input.Code = code
+		}
 
-	if d.HasChange("failure_retention_period") {
-		_, n := d.GetChange("failure_retention_period")
-		input.FailureRetentionPeriodInDays = aws.Int64(int64(n.(int)))
-		updateFlag = true
-	}
+		if d.HasChange("run_config") {
+			input.RunConfig = expandAwsSyntheticsCanaryRunConfig(d.Get("run_config").([]interface{}))
+		}
 
-	if d.HasChange("execution_role_arn") {
-		_, n := d.GetChange("execution_role_arn")
-		input.ExecutionRoleArn = aws.String(n.(string))
-		updateFlag = true
-	}
+		if d.HasChange("schedule") {
+			input.Schedule = expandAwsSyntheticsCanarySchedule(d.Get("schedule").([]interface{}))
+		}
 
-	if updateFlag {
-		if status := d.Get("status"); status.(string) == synthetics.CanaryStateRunning {
+		if d.HasChange("success_retention_period") {
+			_, n := d.GetChange("success_retention_period")
+			input.SuccessRetentionPeriodInDays = aws.Int64(int64(n.(int)))
+		}
+
+		if d.HasChange("failure_retention_period") {
+			_, n := d.GetChange("failure_retention_period")
+			input.FailureRetentionPeriodInDays = aws.Int64(int64(n.(int)))
+		}
+
+		if d.HasChange("execution_role_arn") {
+			_, n := d.GetChange("execution_role_arn")
+			input.ExecutionRoleArn = aws.String(n.(string))
+		}
+
+		status := d.Get("status").(string)
+		if status == synthetics.CanaryStateRunning {
 			if err := syntheticsStopCanary(d.Id(), conn); err != nil {
 				return err
 			}
@@ -406,22 +397,36 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("error updating Synthetics Canary: %w", err)
 		}
 
-		if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Synthetics Canary (%s) updating: %w", d.Id(), err)
+		if status != synthetics.CanaryStateReady {
+			if _, err := waiter.CanaryStopped(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for Synthetics Canary (%s) to be stopped: %w", d.Id(), err)
+			}
+		} else {
+			if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
+				return fmt.Errorf("error waiting for Synthetics Canary (%s) updating: %w", d.Id(), err)
+			}
 		}
-	}
 
-	status := d.Get("status")
-	if v := d.Get("start_canary"); v.(bool) {
-		if status.(string) != synthetics.CanaryStateRunning {
+		if v := d.Get("start_canary"); v.(bool) {
 			if err := syntheticsStartCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
-	} else {
-		if status.(string) == synthetics.CanaryStateRunning {
-			if err := syntheticsStopCanary(d.Id(), conn); err != nil {
-				return err
+	}
+
+	if d.HasChange("start_canary") {
+		status := d.Get("status").(string)
+		if v := d.Get("start_canary"); v.(bool) {
+			if status != synthetics.CanaryStateRunning {
+				if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+					return err
+				}
+			}
+		} else {
+			if status == synthetics.CanaryStateRunning {
+				if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+					return err
+				}
 			}
 		}
 	}

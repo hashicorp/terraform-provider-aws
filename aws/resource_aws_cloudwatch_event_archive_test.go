@@ -70,7 +70,7 @@ func testSweepCloudWatchEventArchives(region string) error {
 	return nil
 }
 
-func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
+func TestAccAWSCloudWatchEventArchive_basic(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	archiveName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_archive.test"
@@ -78,12 +78,12 @@ func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchArchiveDestroy,
+		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchArchiveConfig(archiveName),
+				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
+					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
@@ -100,7 +100,7 @@ func TestAccAWSCloudWatchArchive_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchArchive_update(t *testing.T) {
+func TestAccAWSCloudWatchEventArchive_update(t *testing.T) {
 	var v1 events.DescribeArchiveOutput
 	resourceName := "aws_cloudwatch_event_archive.test"
 	archiveName := acctest.RandomWithPrefix("tf-acc-test")
@@ -108,18 +108,18 @@ func TestAccAWSCloudWatchArchive_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchArchiveDestroy,
+		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchArchiveConfig(archiveName),
+				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
+					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchArchiveConfig_updateAttributes(archiveName),
+				Config: testAccAWSCloudWatchEventArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchArchiveExists(resourceName, &v1),
+					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					testAccCheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
@@ -137,12 +137,12 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventBusConfig(archiveName),
+				Config: testAccAWSCloudWatchEventArchiveConfig(archiveName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchArchiveExists(resourceName, &v),
+					testAccCheckCloudWatchEventArchiveExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventArchive(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -151,7 +151,7 @@ func TestAccAWSCloudWatchEventArchive_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSCloudWatchArchiveDestroy(s *terraform.State) error {
+func testAccCheckAWSCloudWatchEventArchiveDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -173,7 +173,7 @@ func testAccCheckAWSCloudWatchArchiveDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckCloudWatchArchiveExists(n string, v *events.DescribeArchiveOutput) resource.TestCheckFunc {
+func testAccCheckCloudWatchEventArchiveExists(n string, v *events.DescribeArchiveOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -200,7 +200,37 @@ func testAccCheckCloudWatchArchiveExists(n string, v *events.DescribeArchiveOutp
 	}
 }
 
-func testAccAWSCloudWatchArchiveConfig(name string) string {
+func TestAccAWSCloudWatchEventArchive_retentionSetOnCreation(t *testing.T) {
+	var v1 events.DescribeArchiveOutput
+	archiveName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudwatch_event_archive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventArchiveDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventArchiveConfig_retentionOnCreation(archiveName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventArchiveExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAWSCloudWatchEventArchiveConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -213,7 +243,7 @@ resource "aws_cloudwatch_event_archive" "test" {
 `, name)
 }
 
-func testAccAWSCloudWatchArchiveConfig_updateAttributes(name string) string {
+func testAccAWSCloudWatchEventArchiveConfig_updateAttributes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -229,6 +259,20 @@ resource "aws_cloudwatch_event_archive" "test" {
   "source": ["company.team.service"]
 }
 PATTERN
+}
+`, name)
+}
+
+func testAccAWSCloudWatchEventArchiveConfig_retentionOnCreation(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_archive" "test" {
+  name             = %[1]q
+  event_source_arn = aws_cloudwatch_event_bus.test.arn
+  retention_days   = 1
 }
 `, name)
 }
