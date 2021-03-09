@@ -1202,7 +1202,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			_, err = conn.UpdateUserPool(params)
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating Cognito User pool: %s", err)
+			return fmt.Errorf("error updating Cognito User pool (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1221,7 +1221,7 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.DeleteUserPool(params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting user pool: %s", err)
+		return fmt.Errorf("error deleting Cognito user pool (%s): %w", d.Id(), err)
 	}
 
 	return nil
