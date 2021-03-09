@@ -21,7 +21,7 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ## Example Usage
 
-### Broker with EFS storage
+### Basic Example
 
 ```hcl
 resource "aws_mq_broker" "example" {
