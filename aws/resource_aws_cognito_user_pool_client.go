@@ -25,74 +25,10 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPoolClient.html
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
-						"must satisfy regular expression pattern: `[\\w\\s+=,.@-]+`"),
-				),
-			},
-
-			"client_secret": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-
-			"generate_secret": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"user_pool_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"explicit_auth_flows": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.ExplicitAuthFlowsType_Values(), false),
-				},
-			},
-
-			"read_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-
-			"write_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-
-			"refresh_token_validity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      30,
-				ValidateFunc: validation.IntBetween(0, 3650),
-			},
 			"access_token_validity": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"id_token_validity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-
 			"allowed_oauth_flows": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -102,12 +38,10 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.OAuthFlowType_Values(), false),
 				},
 			},
-
 			"allowed_oauth_flows_user_pool_client": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"allowed_oauth_scopes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -120,7 +54,44 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					// Constraints seem like to be designed for custom scopes which are not supported yet?
 				},
 			},
-
+			"analytics_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"application_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
+						},
+						"application_arn": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
+							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
+							ValidateFunc:  validateArn,
+						},
+						"external_id": {
+							Type:          schema.TypeString,
+							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
+							Optional:      true,
+						},
+						"role_arn": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
+							ValidateFunc:  validateArn,
+						},
+						"user_data_shared": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"callback_urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -134,7 +105,11 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					),
 				},
 			},
-
+			"client_secret": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 			"default_redirect_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -144,7 +119,23 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 						"must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+`"),
 				),
 			},
-
+			"explicit_auth_flows": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.ExplicitAuthFlowsType_Values(), false),
+				},
+			},
+			"generate_secret": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"id_token_validity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"logout_urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -158,14 +149,34 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					),
 				},
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`[\w\s+=,.@-]+`),
+						"must satisfy regular expression pattern: `[\\w\\s+=,.@-]+`"),
+				),
+			},
 			"prevent_user_existence_errors": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.PreventUserExistenceErrorTypes_Values(), false),
 			},
-
+			"read_attributes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"refresh_token_validity": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      30,
+				ValidateFunc: validation.IntBetween(0, 3650),
+			},
 			"supported_identity_providers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -205,42 +216,16 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 					},
 				},
 			},
-			"analytics_configuration": {
-				Type:     schema.TypeList,
+			"user_pool_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"write_attributes": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"application_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ExactlyOneOf: []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
-						},
-						"application_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ExactlyOneOf:  []string{"analytics_configuration.0.application_id", "analytics_configuration.0.application_arn"},
-							ConflictsWith: []string{"analytics_configuration.0.external_id", "analytics_configuration.0.role_arn"},
-							ValidateFunc:  validateArn,
-						},
-						"external_id": {
-							Type:          schema.TypeString,
-							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							Optional:      true,
-						},
-						"role_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"analytics_configuration.0.application_arn"},
-							ValidateFunc:  validateArn,
-						},
-						"user_data_shared": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 		},
