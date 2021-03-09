@@ -926,7 +926,7 @@ resource "aws_gamelift_game_server_group" "test" {
     for_each = slice(tolist(data.aws_ec2_instance_type_offerings.available.instance_types), 0, 2)
 
     content {
-      instance_type = instance_definition.value
+      instance_type     = instance_definition.value
       weighted_capacity = %[2]q
     }
   }
@@ -1024,7 +1024,7 @@ resource "aws_gamelift_game_server_group" "test" {
   }
 
   launch_template {
-    id = aws_launch_template.test.id
+    id      = aws_launch_template.test.id
     version = 1
   }
 
@@ -1142,7 +1142,7 @@ func testAccGameliftGameServerGroupConfigGameServerProtectionPolicy(rName string
 		testAccGameliftGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
 resource "aws_gamelift_game_server_group" "test" {
-  game_server_group_name = %[1]q
+  game_server_group_name        = %[1]q
   game_server_protection_policy = %[2]q
 
   dynamic "instance_definition" {
