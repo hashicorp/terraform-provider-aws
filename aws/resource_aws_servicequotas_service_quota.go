@@ -34,9 +34,10 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 				Computed: true,
 			},
 			"quota_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateServiceQuotasServiceQuotaQuotaCode,
 			},
 			"quota_name": {
 				Type:     schema.TypeString,
@@ -51,9 +52,10 @@ func resourceAwsServiceQuotasServiceQuota() *schema.Resource {
 				Computed: true,
 			},
 			"service_code": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateServiceQuotasServiceQuotaServiceCode,
 			},
 			"service_name": {
 				Type:     schema.TypeString,
