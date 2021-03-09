@@ -27,6 +27,33 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateUserPool.html
 		Schema: map[string]*schema.Schema{
+			"account_recovery_setting": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recovery_mechanism": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
+									},
+									"priority": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"admin_create_user_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -65,44 +92,32 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"alias_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.AliasAttributeTypeEmail,
-						cognitoidentityprovider.AliasAttributeTypePhoneNumber,
-						cognitoidentityprovider.AliasAttributeTypePreferredUsername,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AliasAttributeType_Values(), false),
 				},
 				ConflictsWith: []string{"username_attributes"},
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_verified_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.VerifiedAttributeTypePhoneNumber,
-						cognitoidentityprovider.VerifiedAttributeTypeEmail,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
 				},
 			},
-
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"device_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -120,7 +135,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"email_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -133,13 +147,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional: true,
 						},
 						"email_sending_account": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
-								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.EmailSendingAccountType_Values(), false),
 						},
 						"from_email_address": {
 							Type:     schema.TypeString,
@@ -162,7 +173,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"email_verification_subject": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -170,7 +180,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
 				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
-
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -178,12 +187,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"lambda_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -244,29 +251,21 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"last_modified_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"mfa_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  cognitoidentityprovider.UserPoolMfaTypeOff,
-				ValidateFunc: validation.StringInSlice([]string{
-					cognitoidentityprovider.UserPoolMfaTypeOff,
-					cognitoidentityprovider.UserPoolMfaTypeOn,
-					cognitoidentityprovider.UserPoolMfaTypeOptional,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
+				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.UserPoolMfaType_Values(), false),
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"password_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -303,7 +302,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"schema": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -313,15 +311,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentityprovider.AttributeDataTypeString,
-								cognitoidentityprovider.AttributeDataTypeNumber,
-								cognitoidentityprovider.AttributeDataTypeDateTime,
-								cognitoidentityprovider.AttributeDataTypeBoolean,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AttributeDataType_Values(), false),
 						},
 						"developer_only_attribute": {
 							Type:     schema.TypeBool,
@@ -387,13 +380,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateCognitoUserPoolSmsAuthenticationMessage,
 			},
-
 			"sms_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -413,7 +404,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"sms_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -421,7 +411,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
-
 			"software_token_mfa_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -436,23 +425,17 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"tags": tagsSchema(),
-
 			"username_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cognitoidentityprovider.UsernameAttributeTypeEmail,
-						cognitoidentityprovider.UsernameAttributeTypePhoneNumber,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.UsernameAttributeType_Values(), false),
 				},
 				ConflictsWith: []string{"alias_attributes"},
 			},
-
 			"username_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -467,7 +450,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-
 			"user_pool_add_ons": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -475,18 +457,13 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advanced_security_mode": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
-								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
-								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
 						},
 					},
 				},
 			},
-
 			"verification_message_template": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -495,13 +472,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_email_option": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
-							ValidateFunc: validation.StringInSlice([]string{
-								cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithLink,
-								cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
+							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DefaultEmailOptionType_Values(), false),
 						},
 						"email_message": {
 							Type:          schema.TypeString,
@@ -535,33 +509,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Computed:      true,
 							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
 							ConflictsWith: []string{"sms_verification_message"},
-						},
-					},
-				},
-			},
-			"account_recovery_setting": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recovery_mechanism": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
-									},
-									"priority": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
 						},
 					},
 				},
