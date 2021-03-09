@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/finder"
 )
 
 // AccessPointLifeCycleState fetches the Access Point and its LifecycleState
@@ -26,6 +27,23 @@ func AccessPointLifeCycleState(conn *efs.EFS, accessPointId string) resource.Sta
 		mt := output.AccessPoints[0]
 
 		return mt, aws.StringValue(mt.LifeCycleState), nil
+	}
+}
+
+// FileSystemBackupPolicyStatus fetches the EFS Backup Policy status
+func FileSystemBackupPolicyStatus(conn *efs.EFS, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		bp, err := finder.FileSystemBackupPolicyById(conn, id)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if bp == nil {
+			return nil, "", nil
+		}
+
+		return bp, aws.StringValue(bp.Status), nil
 	}
 }
 

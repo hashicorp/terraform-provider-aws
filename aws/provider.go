@@ -714,6 +714,7 @@ func Provider() *schema.Provider {
 			"aws_ecs_task_definition":                                 resourceAwsEcsTaskDefinition(),
 			"aws_efs_access_point":                                    resourceAwsEfsAccessPoint(),
 			"aws_efs_file_system":                                     resourceAwsEfsFileSystem(),
+			"aws_efs_file_system_backup_policy":                       resourceAwsEfsFileSystemBackupPolicy(),
 			"aws_efs_file_system_policy":                              resourceAwsEfsFileSystemPolicy(),
 			"aws_efs_mount_target":                                    resourceAwsEfsMountTarget(),
 			"aws_egress_only_internet_gateway":                        resourceAwsEgressOnlyInternetGateway(),

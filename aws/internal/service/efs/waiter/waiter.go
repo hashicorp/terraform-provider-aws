@@ -17,6 +17,10 @@ const (
 	FileSystemDeletedTimeout        = 10 * time.Minute
 	FileSystemDeletedDelayTimeout   = 2 * time.Second
 	FileSystemDeletedMinTimeout     = 3 * time.Second
+
+	// Maximum amount of time to wait for an EFS Backup policy operation
+	FileSystemBackupPolicyCreatedTimeout = 10 * time.Minute
+	FileSystemBackupPolicyDeletedTimeout = 10 * time.Minute
 )
 
 // AccessPointCreated waits for an Operation to return Success
@@ -37,7 +41,7 @@ func AccessPointCreated(conn *efs.EFS, accessPointId string) (*efs.AccessPointDe
 	return nil, err
 }
 
-// AccessPointDelete waits for an Access Point to return Deleted
+// AccessPointDeleted waits for an Access Point to return Deleted
 func AccessPointDeleted(conn *efs.EFS, accessPointId string) (*efs.AccessPointDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting, efs.LifeCycleStateDeleted},
@@ -89,6 +93,42 @@ func FileSystemDeleted(conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescr
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*efs.FileSystemDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FileSystemBackupPolicyCreated waits for a EFS Backup Policy creation
+func FileSystemBackupPolicyCreated(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.StatusEnabling},
+		Target:  []string{efs.StatusEnabled},
+		Refresh: FileSystemBackupPolicyStatus(conn, id),
+		Timeout: FileSystemBackupPolicyCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.BackupPolicy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// FileSystemBackupPolicyDeleted waits for a EFS Backup Policy deletion
+func FileSystemBackupPolicyDeleted(conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{efs.StatusDisabling},
+		Target:  []string{efs.StatusDisabled},
+		Refresh: FileSystemBackupPolicyStatus(conn, id),
+		Timeout: FileSystemBackupPolicyDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*efs.BackupPolicy); ok {
 		return output, err
 	}
 
