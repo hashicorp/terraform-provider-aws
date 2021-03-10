@@ -989,6 +989,10 @@ func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) []inter
 }
 
 func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
 	apiObject := &mq.LdapServerMetadataInput{}
 
 	tfMap := tfList[0].(map[string]interface{})
