@@ -16,7 +16,7 @@ Provides an AppConfig Application resource.
 
 ```hcl
 resource "aws_appconfig_application" "test" {
-  name = "test-application-tf"
+  name        = "test-application-tf"
   description = "Test AppConfig Application"
   tags = {
     Type = "AppConfig Application"
