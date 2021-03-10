@@ -1013,7 +1013,7 @@ func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
-	return expandStringList(configured.List())
+	return expandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-expandStringList-with-List
 }
 
 // Takes the result of schema.Set of strings and returns a []*int64
@@ -1033,7 +1033,7 @@ func flattenStringList(list []*string) []interface{} {
 }
 
 func flattenStringSet(list []*string) *schema.Set {
-	return schema.NewSet(schema.HashString, flattenStringList(list))
+	return schema.NewSet(schema.HashString, flattenStringList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-flattenStringList
 }
 
 // hashStringCaseInsensitive hashes strings in a case insensitive manner.
