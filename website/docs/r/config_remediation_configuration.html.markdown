@@ -69,6 +69,12 @@ You must select either a dynamic value or a static value.
 * `resource_value` - (Optional) The value is dynamic and changes at run-time.
 * `static_value` - (Optional) The value is static and does not change at run-time.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the Config Remediation Configuration.
+
 ## Import
 
 Remediation Configurations can be imported using the name config_rule_name, e.g.

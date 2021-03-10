@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-No extra attributes are exported.
+No additional attributes are exported.
 
 ## Import
 

@@ -104,6 +104,10 @@ The following arguments are supported:
 * `require_authorization_for_cache_control` - (Optional) Specifies whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) Specifies how to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.

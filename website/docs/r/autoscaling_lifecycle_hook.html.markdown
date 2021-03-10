@@ -69,6 +69,10 @@ The following arguments are supported:
 * `notification_target_arn` - (Optional) The ARN of the notification target that Auto Scaling will use to notify you when an instance is in the transition state for the lifecycle hook. This ARN target can be either an SQS queue or an SNS topic.
 * `role_arn` - (Optional) The ARN of the IAM role that allows the Auto Scaling group to publish to the specified notification target.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 AutoScaling Lifecycle Hooks can be imported using the role autoscaling_group_name and name separated by `/`.

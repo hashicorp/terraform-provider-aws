@@ -64,6 +64,10 @@ The following arguments are supported:
 * `precedence` - (Optional) The precedence of the user group.
 * `role_arn` - (Optional) The ARN of the IAM role to be associated with the user group.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.
