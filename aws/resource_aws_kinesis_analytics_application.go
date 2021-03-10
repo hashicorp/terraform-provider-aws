@@ -432,7 +432,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"record_format_type": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.StringInSlice(kinesisanalytics.RecordFormatType_Values(), false),
 									},
 								},
