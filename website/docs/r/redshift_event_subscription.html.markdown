@@ -59,9 +59,9 @@ The following arguments are supported:
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
-## Attributes
+## Attributes Reference
 
-The following additional atttributes are provided:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription

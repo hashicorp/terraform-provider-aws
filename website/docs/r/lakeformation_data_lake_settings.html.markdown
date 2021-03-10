@@ -68,4 +68,4 @@ The following arguments are optional:
 
 ## Attributes Reference
 
-In addition to all arguments above, no attributes are exported.
+No additional attributes are exported.

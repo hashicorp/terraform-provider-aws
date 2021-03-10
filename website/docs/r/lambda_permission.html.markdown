@@ -198,6 +198,10 @@ EOF
 [1]: https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-an-aws-lambda-function.html#use-aws-cli
 [2]: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Lambda permission statements can be imported using function_name/statement_id, with an optional qualifier, e.g.

@@ -279,7 +279,7 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 
 ## Attributes Reference
 
-In addition to arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.

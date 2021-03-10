@@ -45,8 +45,9 @@ The `policies` block supports the following argument:
 
 * `untrusted_artifact_on_deployment` - (Required) Code signing configuration policy for deployment validation failure. If you set the policy to Enforce, Lambda blocks the deployment request if code-signing validation checks fail. If you set the policy to Warn, Lambda allows the deployment and creates a CloudWatch log. Valid values: `Warn`, `Enforce`. Default value: `Warn`.
 
-
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.
