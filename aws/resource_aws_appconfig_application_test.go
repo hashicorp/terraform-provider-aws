@@ -191,8 +191,8 @@ func testAccCheckAWSAppConfigApplicationARN(resourceName string, application *ap
 func testAccAWSAppConfigApplicationName(rName, rDesc string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
-	name        = %[1]q
-	description = %[2]q
+  name        = %[1]q
+  description = %[2]q
 }
 `, rName, rDesc)
 }
