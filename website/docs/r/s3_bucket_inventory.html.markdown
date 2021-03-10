@@ -120,6 +120,10 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.

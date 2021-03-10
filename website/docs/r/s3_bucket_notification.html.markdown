@@ -329,6 +329,10 @@ The `lambda_function` notification configuration supports the following:
 * `filter_prefix` - (Optional) Specifies object key name prefix.
 * `filter_suffix` - (Optional) Specifies object key name suffix.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 S3 bucket notification can be imported using the `bucket`, e.g.

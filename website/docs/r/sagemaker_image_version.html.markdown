@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the Image.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Image Version.

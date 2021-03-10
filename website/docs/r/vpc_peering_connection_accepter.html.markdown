@@ -89,7 +89,7 @@ from your statefile and management, **but will not destroy the VPC Peering Conne
 
 ## Attributes Reference
 
-All of the argument attributes except `auto_accept` are also exported as result attributes.
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.

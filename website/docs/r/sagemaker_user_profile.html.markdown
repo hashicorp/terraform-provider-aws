@@ -73,12 +73,11 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The user profile Amazon Resource Name (ARN).
 * `arn` - The user profile Amazon Resource Name (ARN).
 * `home_efs_file_system_uid` - The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
-
 
 ## Import
 

@@ -79,6 +79,10 @@ The following arguments are supported:
 * `prefix` - (Optional) Prefix for the bucket.
 * `sync_format` - (Optional) A supported sync format. Only JsonSerDe is currently supported. Defaults to JsonSerDe.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 SSM resource data sync can be imported using the `name`, e.g.

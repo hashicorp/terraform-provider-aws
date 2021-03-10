@@ -30,6 +30,10 @@ The following arguments are supported:
 * `identity` - (Required) The identity for which the Amazon SNS topic will be set. You can specify an identity by using its name or by using its Amazon Resource Name (ARN).
 * `include_original_headers` - (Optional) Whether SES should include original email headers in SNS notifications of this type. *false* by default.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Identity Notification Topics can be imported using ID of the record. The ID is made up as IDENTITY|TYPE where IDENTITY is the SES Identity and TYPE is the Notification Type.
