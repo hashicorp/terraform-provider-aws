@@ -2365,7 +2365,7 @@ func testAccCheckAWSClusterExistsWithProvider(n string, v *rds.DBCluster, provid
 
 func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime) == aws.TimeValue(j.ClusterCreateTime) {
+		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
 			return errors.New("RDS Cluster was not recreated")
 		}
 

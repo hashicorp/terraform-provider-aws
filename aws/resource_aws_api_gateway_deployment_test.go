@@ -331,7 +331,7 @@ func testAccCheckAWSAPIGatewayDeploymentDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayDeploymentNotRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate) != aws.TimeValue(j.CreatedDate) {
+		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment recreated")
 		}
 
@@ -341,7 +341,7 @@ func testAccCheckAWSAPIGatewayDeploymentNotRecreated(i, j *apigateway.Deployment
 
 func testAccCheckAWSAPIGatewayDeploymentRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate) == aws.TimeValue(j.CreatedDate) {
+		if aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment not recreated")
 		}
 

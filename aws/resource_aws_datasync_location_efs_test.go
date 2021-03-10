@@ -276,7 +276,7 @@ func testAccCheckAWSDataSyncLocationEfsDisappears(location *datasync.DescribeLoc
 
 func testAccCheckAWSDataSyncLocationEfsNotRecreated(i, j *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
+		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
 			return errors.New("DataSync Location EFS was recreated")
 		}
 

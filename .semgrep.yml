@@ -221,3 +221,29 @@ rules:
               $X, $Y := $ERR.(*resource.NotFoundError)
           - pattern-not-inside: func isResourceNotFoundError(err error) bool { ... }
     severity: WARNING
+
+  - id: time-equality
+    languages: [go]
+    message: Use time.Equal() instead of ==
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: |
+            aws.TimeValue($X) == $Y
+        - pattern: |
+            aws.TimeValue($X) != $Y
+        - pattern: |
+            ($X : time.Time) == $Y
+        - pattern: |
+            ($X : time.Time) != $Y
+        - pattern: |
+            $X == aws.TimeValue($Y)
+        - pattern: |
+            $X != aws.TimeValue($Y)
+        - pattern: |
+            $X == ($Y : time.Time)
+        - pattern: |
+            $X != ($Y : time.Time)
+    severity: WARNING

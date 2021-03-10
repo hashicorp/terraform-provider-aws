@@ -275,7 +275,7 @@ func testAccCheckAWSDataSyncAgentDisappears(agent *datasync.DescribeAgentOutput)
 
 func testAccCheckAWSDataSyncAgentNotRecreated(i, j *datasync.DescribeAgentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
+		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
 			return errors.New("DataSync Agent was recreated")
 		}
 
