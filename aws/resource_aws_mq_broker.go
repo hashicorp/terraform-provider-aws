@@ -348,7 +348,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Logs = expandMqLogs(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
+		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
@@ -498,7 +498,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
+			input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 		}
 
 		if _, err := conn.UpdateBroker(input); err != nil {
@@ -947,7 +947,7 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 	return logs
 }
 
-func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[string]interface{} {
+func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -985,15 +985,13 @@ func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[str
 		tfMap["user_search_subtree"] = aws.BoolValue(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func expandMQLDAPServerMetadata(tfMap map[string]interface{}) *mq.LdapServerMetadataInput {
-	if tfMap == nil {
-		return nil
-	}
-
+func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
 	apiObject := &mq.LdapServerMetadataInput{}
+
+	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.Hosts = expandStringList(v.([]interface{}))

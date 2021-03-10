@@ -1082,49 +1082,11 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqBrokerConfig_ldap(rName),
+				Config: testAccMqBrokerConfig_ldap(rName, "anyusername"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
-					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
-					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.0", "my.ldap.server-1.com"),
@@ -1133,8 +1095,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_name", "role.name"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_matching", "role.search.matching"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_subtree", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_password", "supersecret"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_username", "admin"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_username", "anyusername"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_base", "user.base"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_role_name", "user.role.name"),
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_matching", "user.search.matching"),
@@ -1142,10 +1103,25 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user", "ldap_server_metadata"},
+				Config: testAccMqBrokerConfig_ldap(rName, "totoro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.0", "my.ldap.server-1.com"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.1", "my.ldap.server-2.com"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_base", "role.base"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_name", "role.name"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_matching", "role.search.matching"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_subtree", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_username", "totoro"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_base", "user.base"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_role_name", "user.role.name"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_matching", "user.search.matching"),
+					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_subtree", "true"),
+				),
 			},
 		},
 	})
@@ -1785,7 +1761,7 @@ resource "aws_mq_broker" "test" {
 `, rName)
 }
 
-func testAccMqBrokerConfig_ldap(rName string) string {
+func testAccMqBrokerConfig_ldap(rName, ldapUsername string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -1816,12 +1792,12 @@ resource "aws_mq_broker" "test" {
     role_search_matching     = "role.search.matching"
     role_search_subtree      = true
     service_account_password = "supersecret"
-    service_account_username = "admin"
+    service_account_username = %[2]q
     user_base                = "user.base"
     user_role_name           = "user.role.name"
     user_search_matching     = "user.search.matching"
     user_search_subtree      = true
   }
 }
-`, rName)
+`, rName, ldapUsername)
 }
