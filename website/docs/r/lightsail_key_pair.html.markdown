@@ -14,7 +14,9 @@ Lightsail.
 
 ~> **Note:** Lightsail is currently only supported in a limited number of AWS Regions, please see ["Regions and Availability Zones in Amazon Lightsail"](https://lightsail.aws.amazon.com/ls/docs/overview/article/understanding-regions-and-availability-zones-in-amazon-lightsail) for more details
 
-## Example Usage, creating a new Key Pair
+## Example Usage
+
+### Create New Key Pair
 
 ```hcl
 # Create a new Lightsail Key Pair
@@ -23,7 +25,7 @@ resource "aws_lightsail_key_pair" "lg_key_pair" {
 }
 ```
 
-## Create new Key Pair, encrypting the private key with a PGP Key
+### Create New Key Pair with PGP Encrypted Private Key
 
 ```hcl
 resource "aws_lightsail_key_pair" "lg_key_pair" {
@@ -32,7 +34,7 @@ resource "aws_lightsail_key_pair" "lg_key_pair" {
 }
 ```
 
-## Import an existing public key
+### Existing Public Key Import
 
 ```hcl
 resource "aws_lightsail_key_pair" "lg_key_pair" {

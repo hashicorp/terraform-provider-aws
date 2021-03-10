@@ -28,7 +28,7 @@ which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
 
 ## Example Usage
 
-### Certificate creation
+### Create Certificate
 
 ```hcl
 resource "aws_acm_certificate" "cert" {
@@ -45,7 +45,7 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
-### Importing an existing certificate
+### Existing Certificate Body Import
 
 ```hcl
 resource "tls_private_key" "example" {

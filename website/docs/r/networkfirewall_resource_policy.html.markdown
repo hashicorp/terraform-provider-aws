@@ -69,7 +69,7 @@ The following arguments are supported:
 
 * `resource_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the rule group or firewall policy.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attribute is exported:
 

@@ -11,7 +11,9 @@ description: |-
 Attaches a load balancer policy to an ELB Listener.
 
 
-## Example Usage for Custom Policy
+## Example Usage
+
+### Custom Policy
 
 ```hcl
 resource "aws_elb" "wu-tang" {
@@ -59,7 +61,7 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 
 This example shows how to customize the TLS settings of an HTTPS listener.
 
-## Example Usage for AWS Predefined Security Policy
+### AWS Predefined Security Policy
 
 ```hcl
 resource "aws_elb" "wu-tang" {

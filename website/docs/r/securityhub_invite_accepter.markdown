@@ -6,7 +6,7 @@ description: |-
   Accepts a Security Hub invitation.
 ---
 
-# aws_securityhub_invite_accepter
+# Resource: aws_securityhub_invite_accepter
 
 -> **Note:** AWS accounts can only be associated with a single Security Hub master account. Destroying this resource will disassociate the member account from the master account.
 
