@@ -937,6 +937,8 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
 
 	d.SetId(aws.StringValue(output.ApplicationDetail.ApplicationARN))
+	// CreateTimestamp is required for deletion, so persist to state now in case of subsequent errors and destroy being called without refresh.
+	d.Set("create_timestamp", aws.TimeValue(output.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 
 	if _, ok := d.GetOk("start_application"); ok {
 		if err := kinesisAnalyticsV2StartApplication(conn, expandKinesisAnalyticsV2StartApplicationInput(d)); err != nil {
@@ -1546,13 +1548,15 @@ func kinesisAnalyticsV2StartApplication(conn *kinesisanalyticsv2.KinesisAnalytic
 		return nil
 	}
 
-	// TODO nil checks
-	if len(application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions) == 0 {
-		log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has no input description", applicationARN)
-		return nil
-	}
+	if len(input.RunConfiguration.SqlRunConfigurations) > 0 {
+		if application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil &&
+			len(application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions) == 0 {
+			log.Printf("[DEBUG] Kinesis Analytics v2 Application (%s) has no input description", applicationARN)
+			return nil
+		}
 
-	input.RunConfiguration.SqlRunConfigurations[0].InputId = application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId
+		input.RunConfiguration.SqlRunConfigurations[0].InputId = application.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions[0].InputId
+	}
 
 	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
