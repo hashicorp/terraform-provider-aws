@@ -322,8 +322,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 
 func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
-	sgName := fmt.Sprintf("tf-acc-test-ebs-%s", acctest.RandString(5))
-	brokerName := fmt.Sprintf("tf-acc-test-ebs-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -332,11 +331,11 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMqBrokerEBSConfig(sgName, brokerName),
+				Config: testAccMqBrokerEBSConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttr(resourceName, "broker_name", brokerName),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
 					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
@@ -1051,14 +1050,14 @@ resource "aws_mq_broker" "test" {
 `, rName)
 }
 
-func testAccMqBrokerEBSConfig(sgName, brokerName string) string {
+func testAccMqBrokerEBSConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name        = "%s"
+  broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.9"
   storage_type       = "ebs"
@@ -1074,7 +1073,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
   }
 }
-`, sgName, brokerName)
+`, rName)
 }
 
 func testAccMqBrokerEngineVersionUpdateConfig(rName string) string {
