@@ -40,6 +40,9 @@ func CertificateAuthorityCertificateByARN(conn *acmpca.ACMPCA, arn string) (*acm
 			LastRequest: input,
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
 
 	if output == nil {
 		return nil, &resource.NotFoundError{
