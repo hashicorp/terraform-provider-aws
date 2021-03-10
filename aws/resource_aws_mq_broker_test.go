@@ -1009,11 +1009,15 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 
 func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1065,11 +1069,15 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 
 func TestAccAWSMqBroker_ldap(t *testing.T) {
 	var broker mq.DescribeBrokerResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1802,17 +1810,17 @@ resource "aws_mq_broker" "test" {
   authentication_strategy = "ldap"
 
   ldap_server_metadata {
-    hosts = ["my.ldap.server-1.com", "my.ldap.server-2.com"]
-    role_base = "role.base"
-    role_name = "role.name"
-    role_search_matching = "role.search.matching"
-    role_search_subtree = true
+    hosts                    = ["my.ldap.server-1.com", "my.ldap.server-2.com"]
+    role_base                = "role.base"
+    role_name                = "role.name"
+    role_search_matching     = "role.search.matching"
+    role_search_subtree      = true
     service_account_password = "supersecret"
     service_account_username = "admin"
-    user_base = "user.base"
-    user_role_name = "user.role.name"
-    user_search_matching = "user.search.matching"
-    user_search_subtree = true
+    user_base                = "user.base"
+    user_role_name           = "user.role.name"
+    user_search_matching     = "user.search.matching"
+    user_search_subtree      = true
   }
 }
 `, rName)
