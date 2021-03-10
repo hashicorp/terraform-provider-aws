@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_spot_fleet_request: Add plan time validation `instance_type`
+```
+
+```release-note:enhancement
+resource/aws_spot_fleet_request: Add `on_demand_allocation_strategy`, `on_demand_max_total_price`, and `on_demand_target_capacity` arguments
+```
