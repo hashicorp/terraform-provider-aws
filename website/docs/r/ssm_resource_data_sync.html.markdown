@@ -12,7 +12,7 @@ Provides a SSM resource data sync.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "hoge" {
   bucket = "tf-test-bucket-1234"
 }

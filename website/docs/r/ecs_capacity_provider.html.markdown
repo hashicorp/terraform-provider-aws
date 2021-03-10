@@ -14,7 +14,7 @@ Provides an ECS cluster capacity provider. More information can be found on the 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_autoscaling_group" "test" {
   # ... other configuration, including potentially other tags ...
 

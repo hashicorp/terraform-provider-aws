@@ -35,7 +35,7 @@ for more information.
 
 To create a single shard primary with single read replica:
 
-```hcl
+```terraform
 resource "aws_elasticache_replication_group" "example" {
   automatic_failover_enabled    = true
   availability_zones            = ["us-west-2a", "us-west-2b"]
@@ -53,7 +53,7 @@ You have two options for adjusting the number of replicas:
 * Adjusting `number_cache_clusters` directly. This will attempt to automatically add or remove replicas, but provides no granular control (e.g. preferred availability zone, cache cluster ID) for the added or removed replicas. This also currently expects cache cluster IDs in the form of `replication_group_id-00#`.
 * Otherwise for fine grained control of the underlying cache clusters, they can be added or removed with the [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html) and its `replication_group_id` attribute. In this situation, you will need to utilize the [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to prevent perpetual differences during Terraform plan with the `number_cache_cluster` attribute.
 
-```hcl
+```terraform
 resource "aws_elasticache_replication_group" "example" {
   automatic_failover_enabled    = true
   availability_zones            = ["us-west-2a", "us-west-2b"]
@@ -81,7 +81,7 @@ resource "aws_elasticache_cluster" "replica" {
 
 To create two shards with a primary and a single read replica each:
 
-```hcl
+```terraform
 resource "aws_elasticache_replication_group" "baz" {
   replication_group_id          = "tf-redis-cluster"
   replication_group_description = "test description"

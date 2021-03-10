@@ -16,7 +16,7 @@ Provides an VPC subnet resource.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
@@ -32,7 +32,7 @@ resource "aws_subnet" "main" {
 When managing subnets in one of a VPC's secondary CIDR blocks created using a [`aws_vpc_ipv4_cidr_block_association`](vpc_ipv4_cidr_block_association.html)
 resource, it is recommended to reference that resource's `vpc_id` attribute to ensure correct dependency ordering.
 
-```hcl
+```terraform
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "172.2.0.0/16"

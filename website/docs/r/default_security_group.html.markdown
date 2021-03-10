@@ -24,7 +24,7 @@ For more information about default security groups, see the AWS documentation on
 
 The following config gives the default security group the same rules that AWS provides by default but under management by Terraform. This means that any ingress or egress rules added or changed will be detected as drift.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -52,7 +52,7 @@ resource "aws_default_security_group" "default" {
 
 The following denies all Egress traffic by omitting any `egress` rules, while including the default `ingress` rule to allow all traffic.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }

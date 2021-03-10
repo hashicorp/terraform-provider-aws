@@ -14,7 +14,7 @@ For information about Lambda code signing configurations and how to use them, se
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_code_signing_config" "new_csc" {
   allowed_publishers {
     signing_profile_version_arns = [

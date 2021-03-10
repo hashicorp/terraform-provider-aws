@@ -12,7 +12,7 @@ Provides an AWS Backup plan resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_backup_plan" "example" {
   name = "tf_example_backup_plan"
 

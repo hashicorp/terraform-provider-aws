@@ -12,7 +12,7 @@ Provides a Single Sign-On (SSO) Account Assignment resource
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 data "aws_ssoadmin_permission_set" "example" {

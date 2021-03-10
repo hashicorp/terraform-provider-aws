@@ -12,7 +12,7 @@ Provides a resource for copying an S3 object.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_object_copy" "test" {
   bucket = "destination_bucket"
   key    = "destination_key"

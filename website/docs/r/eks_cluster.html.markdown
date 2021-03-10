@@ -14,7 +14,7 @@ Manages an EKS Cluster.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_eks_cluster" "example" {
   name     = "example"
   role_arn = aws_iam_role.example.arn
@@ -42,7 +42,7 @@ output "kubeconfig-certificate-authority-data" {
 
 ### Example IAM Role for EKS Cluster
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "eks-cluster-example"
 
@@ -81,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSVPCResourceControlle
 
 -> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with EKS automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
-```hcl
+```terraform
 variable "cluster_name" {
   default = "example"
   type    = string
@@ -110,7 +110,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For more information about this feature, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
 
-```hcl
+```terraform
 resource "aws_eks_cluster" "example" {
   # ... other configuration ...
 }

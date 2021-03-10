@@ -14,7 +14,7 @@ Provides an SSM Parameter resource.
 
 To store a basic string parameter:
 
-```hcl
+```terraform
 resource "aws_ssm_parameter" "foo" {
   name  = "foo"
   type  = "String"
@@ -24,7 +24,7 @@ resource "aws_ssm_parameter" "foo" {
 
 To store an encrypted string using the default SSM KMS key:
 
-```hcl
+```terraform
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   storage_type         = "gp2"

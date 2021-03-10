@@ -19,7 +19,7 @@ conflict and will overwrite attachments.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new load balancer attachment
 resource "aws_elb_attachment" "baz" {
   elb      = aws_elb.bar.id

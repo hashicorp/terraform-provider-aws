@@ -18,7 +18,7 @@ of them is specified.
 
 Basic usage using `approved_patches` only
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "production" {
   name             = "patch-baseline"
   approved_patches = ["KB123456"]
@@ -27,7 +27,7 @@ resource "aws_ssm_patch_baseline" "production" {
 
 Advanced usage, specifying patch filters
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "production" {
   name             = "patch-baseline"
   description      = "Patch Baseline Description"
@@ -82,7 +82,7 @@ resource "aws_ssm_patch_baseline" "production" {
 
 Advanced usage, specifying Microsoft application and Windows patch rules
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "windows_os_apps" {
   name             = "WindowsOSAndMicrosoftApps"
   description      = "Patch both Windows and Microsoft apps"
@@ -121,7 +121,7 @@ resource "aws_ssm_patch_baseline" "windows_os_apps" {
 
 Advanced usage, specifying alternate patch source repository
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "al_2017_09" {
   name             = "Amazon-Linux-2017.09"
   description      = "My patch repository for Amazon Linux 2017.09"

@@ -13,7 +13,7 @@ Provides a Step Function State Machine resource
 ## Example Usage
 ### Basic (Standard Workflow)
 
-```hcl
+```terraform
 # ...
 
 resource "aws_sfn_state_machine" "sfn_state_machine" {
@@ -38,7 +38,7 @@ EOF
 
 ### Basic (Express Workflow)
 
-```hcl
+```terraform
 # ...
 
 resource "aws_sfn_state_machine" "sfn_state_machine" {
@@ -66,7 +66,7 @@ EOF
 
 ~> *NOTE:* See the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) for more information about enabling Step Function logging.
 
-```hcl
+```terraform
 # ...
 
 resource "aws_sfn_state_machine" "sfn_state_machine" {

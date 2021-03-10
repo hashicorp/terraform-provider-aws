@@ -14,7 +14,7 @@ Provides details about an Image Builder Image.
 
 ### Latest
 
-```hcl
+```terraform
 data "aws_imagebuilder_image" "example" {
   arn = "arn:aws:imagebuilder:us-west-2:aws:image/amazon-linux-2-x86/x.x.x"
 }

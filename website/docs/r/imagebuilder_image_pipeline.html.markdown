@@ -12,7 +12,7 @@ Manages an Image Builder Image Pipeline.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_imagebuilder_image_pipeline" "example" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.example.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.example.arn

@@ -12,7 +12,7 @@ description: |-
 
 The following example below creates a CloudFront cache policy.
 
-```hcl
+```terraform
 data "aws_cloudfront_cache_policy" "example" {
   name = "example-policy"
 }

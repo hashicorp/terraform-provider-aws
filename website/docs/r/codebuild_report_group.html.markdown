@@ -12,7 +12,7 @@ Provides a CodeBuild Report Groups Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kms_key" "example" {
   description             = "my test kms key"
   deletion_window_in_days = 7

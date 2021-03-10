@@ -16,7 +16,7 @@ Manages an AWS Storage Gateway file, tape, or volume gateway in the provider reg
 
 ### File Gateway
 
-```hcl
+```terraform
 resource "aws_storagegateway_gateway" "example" {
   gateway_ip_address = "1.2.3.4"
   gateway_name       = "example"
@@ -27,7 +27,7 @@ resource "aws_storagegateway_gateway" "example" {
 
 ### Tape Gateway
 
-```hcl
+```terraform
 resource "aws_storagegateway_gateway" "example" {
   gateway_ip_address  = "1.2.3.4"
   gateway_name        = "example"
@@ -40,7 +40,7 @@ resource "aws_storagegateway_gateway" "example" {
 
 ### Volume Gateway (Cached)
 
-```hcl
+```terraform
 resource "aws_storagegateway_gateway" "example" {
   gateway_ip_address = "1.2.3.4"
   gateway_name       = "example"
@@ -51,7 +51,7 @@ resource "aws_storagegateway_gateway" "example" {
 
 ### Volume Gateway (Stored)
 
-```hcl
+```terraform
 resource "aws_storagegateway_gateway" "example" {
   gateway_ip_address = "1.2.3.4"
   gateway_name       = "example"
@@ -130,7 +130,7 @@ $ terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-
 Certain resource arguments, like `gateway_ip_address` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.
 
 
-```hcl
+```terraform
 resource "aws_storagegateway_gateway" "example" {
   # ... other configuration ...
 

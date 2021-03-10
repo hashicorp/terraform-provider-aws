@@ -12,7 +12,7 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 }
@@ -20,7 +20,7 @@ resource "aws_ses_configuration_set" "test" {
 
 ### Require TLS Connections
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 

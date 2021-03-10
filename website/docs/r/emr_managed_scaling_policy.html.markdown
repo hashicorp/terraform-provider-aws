@@ -12,7 +12,7 @@ Provides a Managed Scaling policy for EMR Cluster. With Amazon EMR versions 5.30
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_emr_cluster" "sample" {
   name          = "emr-sample-cluster"
   release_label = "emr-5.30.0"

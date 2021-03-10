@@ -14,7 +14,7 @@ Provides an SSM Maintenance Window Task resource
 
 ### Automation Tasks
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency = 2
   max_errors      = 1
@@ -43,7 +43,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ### Lambda Tasks
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency = 2
   max_errors      = 1
@@ -68,7 +68,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ### Run Command Tasks
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency = 2
   max_errors      = 1
@@ -106,7 +106,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ### Step Function Tasks
 
-```hcl
+```terraform
 resource "aws_ssm_maintenance_window_task" "example" {
   max_concurrency = 2
   max_errors      = 1

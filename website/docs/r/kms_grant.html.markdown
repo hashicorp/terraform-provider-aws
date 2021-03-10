@@ -12,7 +12,7 @@ Provides a resource-based access control mechanism for a KMS customer master key
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kms_key" "a" {}
 
 resource "aws_iam_role" "a" {

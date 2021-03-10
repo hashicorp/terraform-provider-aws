@@ -14,7 +14,7 @@ Provides a Sagemaker App resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_app" "example" {
   domain_id         = aws_sagemaker_domain.example.id
   user_profile_name = aws_sagemaker_user_profile.example.user_profile_name

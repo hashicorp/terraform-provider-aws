@@ -14,7 +14,7 @@ Attaches a Managed IAM Policy to an IAM group
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group" "group" {
   name = "test-group"
 }

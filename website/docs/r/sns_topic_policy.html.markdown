@@ -14,7 +14,7 @@ Provides an SNS topic policy resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_sns_topic" "test" {
   name = "my-topic-with-policy"
 }

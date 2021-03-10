@@ -12,7 +12,7 @@ Provides a DMS (Data Migration Service) event subscription resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dms_event_subscription" "example" {
   enabled          = true
   event_categories = ["creation", "failure"]

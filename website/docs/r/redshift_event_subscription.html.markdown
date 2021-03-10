@@ -12,7 +12,7 @@ Provides a Redshift event subscription resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_cluster" "default" {
   cluster_identifier = "default"
   database_name      = "default"

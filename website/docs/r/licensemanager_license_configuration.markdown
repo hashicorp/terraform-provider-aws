@@ -14,7 +14,7 @@ Provides a License Manager license configuration resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_licensemanager_license_configuration" "example" {
   name                     = "Example"
   description              = "Example"

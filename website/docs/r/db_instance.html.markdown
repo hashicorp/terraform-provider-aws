@@ -38,7 +38,7 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"
@@ -56,7 +56,7 @@ resource "aws_db_instance" "default" {
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
 
-```hcl
+```terraform
 resource "aws_db_instance" "example" {
   # ... other configuration ...
 
@@ -225,7 +225,7 @@ The `restore_to_point_in_time` block supports the following arguments:
 
 Full details on the core parameters and impacts are in the API Docs: [RestoreDBInstanceFromS3](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromS3.html).  Sample
 
-```hcl
+```terraform
 resource "aws_db_instance" "db" {
   s3_import {
     source_engine         = "mysql"

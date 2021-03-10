@@ -14,7 +14,7 @@ Manages a Route53 Hosted Zone. For managing Domain Name System Security Extensio
 
 ### Public Zone
 
-```hcl
+```terraform
 resource "aws_route53_zone" "primary" {
   name = "example.com"
 }
@@ -26,7 +26,7 @@ For use in subdomains, note that you need to create a
 `aws_route53_record` of type `NS` as well as the subdomain
 zone.
 
-```hcl
+```terraform
 resource "aws_route53_zone" "main" {
   name = "example.com"
 }
@@ -54,7 +54,7 @@ resource "aws_route53_record" "dev-ns" {
 
 ~> **NOTE:** Private zones require at least one VPC association at all times.
 
-```hcl
+```terraform
 resource "aws_route53_zone" "private" {
   name = "example.com"
 

@@ -16,7 +16,7 @@ Provides a Load Balancer resource.
 
 ### Application Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -40,7 +40,7 @@ resource "aws_lb" "test" {
 
 ### Network Load Balancer
 
-```hcl
+```terraform
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
@@ -57,7 +57,7 @@ resource "aws_lb" "test" {
 
 ### Specifying Elastic IPs
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"
@@ -76,7 +76,7 @@ resource "aws_lb" "example" {
 
 ### Specifying private IP addresses for an internal-facing load balancer
 
-```hcl
+```terraform
 resource "aws_lb" "example" {
   name               = "example"
   load_balancer_type = "network"

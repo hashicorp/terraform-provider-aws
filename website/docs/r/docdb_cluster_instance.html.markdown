@@ -19,7 +19,7 @@ Cluster, or you may specify different Cluster Instance resources with various
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_docdb_cluster_instance" "cluster_instances" {
   count              = 2
   identifier         = "docdb-cluster-demo-${count.index}"

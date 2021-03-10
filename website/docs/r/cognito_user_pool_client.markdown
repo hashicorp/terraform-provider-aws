@@ -14,7 +14,7 @@ Provides a Cognito User Pool Client resource.
 
 ### Create a basic user pool client
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
@@ -28,7 +28,7 @@ resource "aws_cognito_user_pool_client" "client" {
 
 ### Create a user pool client with no SRP authentication
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "pool" {
   name = "pool"
 }
@@ -45,7 +45,7 @@ resource "aws_cognito_user_pool_client" "client" {
 
 ### Create a user pool client with pinpoint analytics
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 resource "aws_cognito_user_pool" "test" {

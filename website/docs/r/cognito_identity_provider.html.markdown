@@ -13,7 +13,7 @@ Provides a Cognito User Identity Provider resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   name                     = "example-pool"
   auto_verified_attributes = ["email"]

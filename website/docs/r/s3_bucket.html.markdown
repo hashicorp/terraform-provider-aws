@@ -16,7 +16,7 @@ Provides a S3 bucket resource.
 
 ### Private Bucket w/ Tags
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
   acl    = "private"
@@ -30,7 +30,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Static Website Hosting
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
   acl    = "public-read"
@@ -56,7 +56,7 @@ EOF
 
 ### Using CORS
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "s3-website-test.hashicorp.com"
   acl    = "public-read"
@@ -73,7 +73,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Using versioning
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
   acl    = "private"
@@ -86,7 +86,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Enable Logging
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "my-tf-log-bucket"
   acl    = "log-delivery-write"
@@ -105,7 +105,7 @@ resource "aws_s3_bucket" "b" {
 
 ### Using object lifecycle
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "bucket" {
   bucket = "my-bucket"
   acl    = "private"
@@ -178,7 +178,7 @@ resource "aws_s3_bucket" "versioning_bucket" {
 
 ### Using replication configuration
 
-```hcl
+```terraform
 provider "aws" {
   region = "eu-west-1"
 }
@@ -289,7 +289,7 @@ resource "aws_s3_bucket" "bucket" {
 
 ### Enable Default Server Side Encryption
 
-```hcl
+```terraform
 resource "aws_kms_key" "mykey" {
   description             = "This key is used to encrypt bucket objects"
   deletion_window_in_days = 10
@@ -311,7 +311,7 @@ resource "aws_s3_bucket" "mybucket" {
 
 ### Using ACL policy grants
 
-```hcl
+```terraform
 data "aws_canonical_user_id" "current_user" {}
 
 resource "aws_s3_bucket" "bucket" {

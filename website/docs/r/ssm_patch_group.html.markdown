@@ -12,7 +12,7 @@ Provides an SSM Patch Group resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "production" {
   name             = "patch-baseline"
   approved_patches = ["KB123456"]

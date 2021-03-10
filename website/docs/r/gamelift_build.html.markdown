@@ -12,7 +12,7 @@ Provides an Gamelift Build resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_gamelift_build" "test" {
   name             = "example-build"
   operating_system = "WINDOWS_2012"

@@ -12,7 +12,7 @@ Provides a Pinpoint Event Stream resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_event_stream" "stream" {
   application_id         = aws_pinpoint_app.app.application_id
   destination_stream_arn = aws_kinesis_stream.test_stream.arn

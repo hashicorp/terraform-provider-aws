@@ -12,7 +12,7 @@ Provides an EC2 Capacity Reservation. This allows you to reserve capacity for yo
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_capacity_reservation" "default" {
   instance_type     = "t2.micro"
   instance_platform = "Linux/UNIX"

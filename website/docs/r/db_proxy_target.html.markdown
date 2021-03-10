@@ -12,7 +12,7 @@ Provides an RDS DB proxy target resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_proxy" "example" {
   name                   = "example"
   debug_logging          = false

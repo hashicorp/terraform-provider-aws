@@ -32,7 +32,7 @@ for more information.
 
 ### Memcached Cluster
 
-```hcl
+```terraform
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "memcached"
@@ -45,7 +45,7 @@ resource "aws_elasticache_cluster" "example" {
 
 ### Redis Instance
 
-```hcl
+```terraform
 resource "aws_elasticache_cluster" "example" {
   cluster_id           = "cluster-example"
   engine               = "redis"
@@ -61,7 +61,7 @@ resource "aws_elasticache_cluster" "example" {
 
 These inherit their settings from the replication group.
 
-```hcl
+```terraform
 resource "aws_elasticache_cluster" "replica" {
   cluster_id           = "cluster-example"
   replication_group_id = aws_elasticache_replication_group.example.id

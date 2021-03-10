@@ -16,7 +16,7 @@ Grants permissions to the principal to access metadata in the Data Catalog and d
 
 ### Grant Permissions For A Lake Formation S3 Resource
 
-```hcl
+```terraform
 resource "aws_lakeformation_permissions" "test" {
   principal   = aws_iam_role.workflow_role.arn
   permissions = ["ALL"]
@@ -29,7 +29,7 @@ resource "aws_lakeformation_permissions" "test" {
 
 ### Grant Permissions For A Glue Catalog Database
 
-```hcl
+```terraform
 resource "aws_lakeformation_permissions" "test" {
   role        = aws_iam_role.workflow_role.arn
   permissions = ["CREATE_TABLE", "ALTER", "DROP"]

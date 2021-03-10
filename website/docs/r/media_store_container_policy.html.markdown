@@ -12,7 +12,7 @@ Provides a MediaStore Container Policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}

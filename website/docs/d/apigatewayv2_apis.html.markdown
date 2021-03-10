@@ -12,7 +12,7 @@ Provides details about multiple Amazon API Gateway Version 2 APIs.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_apigatewayv2_apis" "example" {
   protocol_type = "HTTP"
 }

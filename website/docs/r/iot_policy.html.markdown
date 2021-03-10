@@ -12,7 +12,7 @@ Provides an IoT policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_policy" "pubsub" {
   name = "PubSubToAnyTopic"
 

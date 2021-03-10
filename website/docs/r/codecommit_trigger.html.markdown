@@ -12,7 +12,7 @@ Provides a CodeCommit Trigger Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codecommit_repository" "test" {
   repository_name = "test"
 }

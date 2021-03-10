@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_snapshot_schedule" "default" {
   identifier = "tf-redshift-snapshot-schedule"
   definitions = [

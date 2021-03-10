@@ -12,7 +12,7 @@ Manages an AWS Storage Gateway Tape Pool.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_storagegateway_tape_pool" "example" {
   pool_name     = "example"
   storage_class = "GLACIER"

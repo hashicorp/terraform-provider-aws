@@ -12,7 +12,7 @@ Creates a Signer Signing Profile Permission. That is, a cross-account permission
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_signer_signing_profile" "prod_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
   name_prefix = "prod_sp_"

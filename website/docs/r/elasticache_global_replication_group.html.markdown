@@ -16,7 +16,7 @@ Provides an ElastiCache Global Replication Group resource, which manage a replic
 
 To create a single shard primary with single read replica:
 
-```hcl
+```terraform
 resource "aws_elasticache_global_replication_group" "replication_group" {
   global_replication_group_id_suffix = "example"
   primary_replication_group_id       = aws_elasticache_replication_group.primary.id
