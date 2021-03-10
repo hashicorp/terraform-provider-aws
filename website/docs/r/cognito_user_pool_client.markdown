@@ -155,7 +155,7 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `id_token` - (Optional) Time unit in for the value in `id_token_validity`, defaults to `hours`.
 * `refresh_token` - (Optional) Time unit in for the value in `refresh_token_validity`, defaults to `days`.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
