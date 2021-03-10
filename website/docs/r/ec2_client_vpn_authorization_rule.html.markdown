@@ -31,6 +31,10 @@ The following arguments are supported:
 * `authorize_all_groups` - (Optional) Indicates whether the authorization rule grants access to all clients. One of `access_group_id` or `authorize_all_groups` must be set.
 * `description` - (Optional) A brief description of the authorization rule.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 AWS Client VPN authorization rules can be imported using the endpoint ID and target network CIDR. If there is a specific group name that is included as well. All values are separated by a `,`.

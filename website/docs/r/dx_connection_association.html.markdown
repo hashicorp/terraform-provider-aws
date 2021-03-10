@@ -37,3 +37,7 @@ The following arguments are supported:
 
 * `connection_id` - (Required) The ID of the connection.
 * `lag_id` - (Required) The ID of the LAG with which to associate the connection.
+
+## Attributes Reference
+
+No additional attributes are exported.

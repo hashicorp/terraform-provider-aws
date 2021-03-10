@@ -38,6 +38,10 @@ The following arguments are supported:
 * `group`  (Required) - The group the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 IAM group policy attachments can be imported using the group name and policy arn separated by `/`.

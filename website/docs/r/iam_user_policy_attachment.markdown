@@ -38,6 +38,10 @@ The following arguments are supported:
 * `user`        (Required) - The user the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 IAM user policy attachments can be imported using the user name and policy arn separated by `/`.

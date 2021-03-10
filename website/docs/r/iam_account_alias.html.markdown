@@ -26,6 +26,10 @@ The following arguments are supported:
 
 * `account_alias` - (Required) The account alias
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 The current Account Alias can be imported using the `account_alias`, e.g.
