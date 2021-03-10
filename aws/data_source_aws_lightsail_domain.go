@@ -48,10 +48,12 @@ func dataSourceAwsLightsailDomainRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	d.Set("arn", resp.Domain.Arn)
-	d.Set("domain_name", resp.Domain.Name)
+	domain := resp.Domain
+
+	d.Set("arn", domain.Arn)
+	d.Set("domain_name", domain.Name)
 	d.SetId(d.Get("domain_name").(string))
-	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(resp.Domain.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(domain.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
