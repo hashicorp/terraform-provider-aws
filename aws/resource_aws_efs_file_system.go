@@ -213,7 +213,7 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateFileSystem(input)
 		if err != nil {
-			return fmt.Errorf("error updating EFS File System %q: %w", d.Id(), err)
+			return fmt.Errorf("error updating EFS file system (%s): %w", d.Id(), err)
 		}
 
 		if _, err := waiter.FileSystemAvailable(conn, d.Id()); err != nil {
