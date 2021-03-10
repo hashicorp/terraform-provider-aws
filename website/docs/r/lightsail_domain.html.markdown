@@ -21,6 +21,9 @@ this parameter to manage the DNS records for that domain.
 ```hcl
 resource "aws_lightsail_domain" "domain_test" {
   domain_name = "mydomain.com"
+  tags = {
+    foo = "bar"
+  }
 }
 ```
 
@@ -36,3 +39,4 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name used for this domain
 * `arn` - The ARN of the Lightsail domain
+* `tags` - A map of tags assigned to the resource.
