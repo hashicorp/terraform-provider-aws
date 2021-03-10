@@ -38,7 +38,7 @@ func TestAccAWSLightsailDomain_serial(t *testing.T) {
 
 func testAccAWSLightsailDomain_basic(t *testing.T) {
 	var domain lightsail.Domain
-	rName := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test.com")
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.Test(t, resource.TestCase{
@@ -58,7 +58,7 @@ func testAccAWSLightsailDomain_basic(t *testing.T) {
 
 func testAccAWSLightsailDomain_disappears(t *testing.T) {
 	var domain lightsail.Domain
-	rName := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test.com")
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.Test(t, resource.TestCase{
@@ -108,8 +108,8 @@ func testAccCheckAWSLightsailDomainExists(n string, domain *lightsail.Domain) re
 
 func testAccAWSLightsailDomain_DomainName(t *testing.T) {
 	var domain1, domain2 lightsail.Domain
-	rName := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(5))
-	rName2 := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test.com")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test.com")
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.Test(t, resource.TestCase{
@@ -134,7 +134,7 @@ func testAccAWSLightsailDomain_DomainName(t *testing.T) {
 
 func testAccAWSLightsailDomain_Tags(t *testing.T) {
 	var domain1, domain2, domain3 lightsail.Domain
-	rName := fmt.Sprintf("tf-acc-test-%s.com", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test.com")
 	resourceName := "aws_lightsail_domain.test"
 
 	resource.Test(t, resource.TestCase{
