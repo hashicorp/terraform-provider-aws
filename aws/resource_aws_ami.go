@@ -383,7 +383,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		state = *image.State
+		state = aws.StringValue(image.State)
 	}
 
 	if state == ec2.ImageStateDeregistered {
