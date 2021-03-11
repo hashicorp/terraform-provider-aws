@@ -1079,6 +1079,7 @@ func testAccErrorCheckSkipRoute53(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"Operations related to PublicDNS",
 		"Regional control plane current does not support",
+		"NoSuchHostedZone: The specified hosted zone",
 	)
 }
 
