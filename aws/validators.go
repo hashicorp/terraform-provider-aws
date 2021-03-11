@@ -2484,3 +2484,8 @@ func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFu
 		return warnings, errors
 	}
 }
+
+var validateTypeStringIsDateOrPositiveInt = validation.Any(
+	validation.IsRFC3339Time,
+	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
+)

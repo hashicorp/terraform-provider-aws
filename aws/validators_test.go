@@ -3308,3 +3308,32 @@ func TestValidateUTCTimestamp(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateTypeStringIsDateOrInt(t *testing.T) {
+	validT := []string{
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05-07:00",
+		"1234",
+		"0",
+	}
+
+	for _, f := range validT {
+		_, errors := validateTypeStringIsDateOrPositiveInt(f, "parameter")
+		if len(errors) > 0 {
+			t.Fatalf("expected the value %q to be either RFC 3339 or positive integer, got error %q", f, errors)
+		}
+	}
+
+	invalidT := []string{
+		"2018-03-01T00:00:00", // No time zone
+		"ABC",
+		"-789",
+	}
+
+	for _, f := range invalidT {
+		_, errors := validateTypeStringIsDateOrPositiveInt(f, "parameter")
+		if len(errors) == 0 {
+			t.Fatalf("expected the value %q to fail validation", f)
+		}
+	}
+}
