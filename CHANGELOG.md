@@ -16,6 +16,8 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool_client: Add plan time validation for `name`, `default_redirect_uri`, `supported_identity_providers` ([#14935](https://github.com/hashicorp/terraform-provider-aws/issues/14935))
 * resource/aws_cognito_user_pool_client: Add support for `access_token_validity` and `id_token_validity`, `token_validity_units` ([#14935](https://github.com/hashicorp/terraform-provider-aws/issues/14935))
 * resource/aws_db_instance: Allow `snapshot_identifier` to be removed from configuration without resource recreation ([#18013](https://github.com/hashicorp/terraform-provider-aws/issues/18013))
+* resource/aws_kinesis_analytics_application: Add `start_application` attribute ([#17784](https://github.com/hashicorp/terraform-provider-aws/issues/17784))
+* resource/aws_kinesis_analytics_application: `starting_position_configuration` can be specified when starting an application ([#17784](https://github.com/hashicorp/terraform-provider-aws/issues/17784))
 * resource/aws_mq_broker: Add RabbitMQ as option for `engine_type`, and new arguments `authentication_strategy`, `ldap_server_metadata`, and `storage_type`. Improve handling of eventual consistency. ([#16108](https://github.com/hashicorp/terraform-provider-aws/issues/16108))
 * resource/aws_mq_broker: Support updating broker engine version without recreating broker ([#12758](https://github.com/hashicorp/terraform-provider-aws/issues/12758))
 
