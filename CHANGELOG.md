@@ -1,5 +1,11 @@
 ## 3.32.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_acmpca_certificate` ([#10213](https://github.com/hashicorp/terraform-provider-aws/issues/10213))
+* **New Resource:** `aws_acmpca_certificate` ([#10213](https://github.com/hashicorp/terraform-provider-aws/issues/10213))
+* **New Resource:** `aws_acmpca_certificate_authority_certificate` ([#17850](https://github.com/hashicorp/terraform-provider-aws/issues/17850))
+
 ENHANCEMENTS:
 
 * resource/aws_appautoscaling_scheduled_action: Adds `timezone` support ([#17689](https://github.com/hashicorp/terraform-provider-aws/issues/17689))
