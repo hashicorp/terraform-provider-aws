@@ -439,8 +439,12 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output.LdapServerMetadata != nil {
-		if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata)); err != nil {
-			return fmt.Errorf("error setting lda_server_metadata: %w", err)
+		password := ""
+		if v, ok := d.GetOk("ldap_server_metadata.0.service_account_password"); ok {
+			password = v.(string)
+		}
+		if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+			return fmt.Errorf("error setting ldap_server_metadata: %w", err)
 		}
 	} else {
 		d.Set("ldap_server_metadata", nil)
@@ -950,7 +954,7 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 	return logs
 }
 
-func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) []interface{} {
+func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -971,6 +975,9 @@ func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) []inter
 	}
 	if v := apiObject.RoleSearchSubtree; v != nil {
 		tfMap["role_search_subtree"] = aws.BoolValue(v)
+	}
+	if password != "" {
+		tfMap["service_account_password"] = password
 	}
 	if v := apiObject.ServiceAccountUsername; v != nil {
 		tfMap["service_account_username"] = aws.StringValue(v)
