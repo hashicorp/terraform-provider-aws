@@ -1047,7 +1047,7 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 	serviceErrorCheckFuncs[endpointID] = f
 }
 
-func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckFunc {
+func testAccErrorCheck(t *testing.T, endpointID string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
 			return err
@@ -1058,7 +1058,7 @@ func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckF
 			err = ef(err)
 		}
 
-		if testAccErrorCheck(err) {
+		if testAccErrorCheckCommon(err) {
 			t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
 		}
 
@@ -1066,7 +1066,7 @@ func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckF
 	}
 }
 
-func testAccErrorCheck(err error) bool {
+func testAccErrorCheckCommon(err error) bool {
 	if strings.Contains(err.Error(), "is not supported in this region") {
 		return true
 	}
