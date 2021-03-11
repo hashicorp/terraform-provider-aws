@@ -1176,6 +1176,34 @@ func TestAccAWSDBInstance_SnapshotIdentifier(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_SnapshotIdentifierRemoved(t *testing.T) {
+	var dbInstance1, dbInstance2 rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+				),
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifierRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance2),
+					testAccCheckAWSDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_SnapshotIdentifier_AllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
@@ -2701,6 +2729,15 @@ func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSDBInstanceNotRecreated(instance1, instance2 *rds.DBInstance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(instance1.InstanceCreateTime).Equal(aws.TimeValue(instance2.InstanceCreateTime)) {
+			return fmt.Errorf("database instance was recreated. expected: %s, got: %s", instance1.InstanceCreateTime, instance2.InstanceCreateTime)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestCheckFunc {
@@ -6067,6 +6104,35 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   snapshot_identifier = aws_db_snapshot.test.id
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifierRemoved(rName string) string {
+	return composeConfig(testAccAWSDBInstanceConfig_orderableClassMariadb(), fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  identifier          = "%[1]s-source"
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
 }
 `, rName))
