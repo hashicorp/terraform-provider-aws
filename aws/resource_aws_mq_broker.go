@@ -146,7 +146,6 @@ func resourceAwsMqBroker() *schema.Resource {
 			"ldap_server_metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -172,8 +171,9 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional: true,
 						},
 						"service_account_password": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"service_account_username": {
 							Type:     schema.TypeString,
