@@ -192,7 +192,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentExists(n string, vApiId *string, v *ap
 
 func testAccCheckAWSAPIGatewayV2DeploymentNotRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate) != aws.TimeValue(j.CreatedDate) {
+		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway V2 Deployment recreated")
 		}
 
@@ -202,7 +202,7 @@ func testAccCheckAWSAPIGatewayV2DeploymentNotRecreated(i, j *apigatewayv2.GetDep
 
 func testAccCheckAWSAPIGatewayV2DeploymentRecreated(i, j *apigatewayv2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate) == aws.TimeValue(j.CreatedDate) {
+		if aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway V2 Deployment not recreated")
 		}
 

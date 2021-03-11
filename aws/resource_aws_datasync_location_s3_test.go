@@ -253,7 +253,7 @@ func testAccCheckAWSDataSyncLocationS3Disappears(location *datasync.DescribeLoca
 
 func testAccCheckAWSDataSyncLocationS3NotRecreated(i, j *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
+		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
 			return errors.New("DataSync Location S3 was recreated")
 		}
 

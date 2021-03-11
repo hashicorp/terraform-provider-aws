@@ -1204,7 +1204,7 @@ func testAccCheckAWSEc2FleetDisappears(fleet *ec2.FleetData) resource.TestCheckF
 
 func testAccCheckAWSEc2FleetNotRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreateTime) != aws.TimeValue(j.CreateTime) {
+		if !aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
 			return errors.New("EC2 Fleet was recreated")
 		}
 
@@ -1214,7 +1214,7 @@ func testAccCheckAWSEc2FleetNotRecreated(i, j *ec2.FleetData) resource.TestCheck
 
 func testAccCheckAWSEc2FleetRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreateTime) == aws.TimeValue(j.CreateTime) {
+		if aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
 			return errors.New("EC2 Fleet was not recreated")
 		}
 

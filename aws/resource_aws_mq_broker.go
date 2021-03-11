@@ -116,7 +116,6 @@ func resourceAwsMqBroker() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"host_instance_type": {
 				Type:     schema.TypeString,
@@ -299,7 +298,6 @@ func resourceAwsMqBroker() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
-							Set:      schema.HashString,
 							Optional: true,
 						},
 						"password": {
@@ -347,7 +345,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DeploymentMode = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 {
-		input.Logs = expandMqLogs(d.Get("logs").([]interface{}))
+		input.Logs = expandMqLogs(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
@@ -356,7 +354,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = expandStringSet(d.Get("security_groups").(*schema.Set))
+		input.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
@@ -518,11 +516,12 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("configuration", "logs") {
+	if d.HasChanges("configuration", "logs", "engine_version") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandMqConfigurationId(d.Get("configuration").([]interface{})),
 			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
+			EngineVersion: aws.String(d.Get("engine_version").(string)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) configuration: %w", d.Id(), err)
@@ -896,13 +895,13 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	for i, instance := range instances {
 		m := make(map[string]interface{})
 		if instance.ConsoleURL != nil {
-			m["console_url"] = *instance.ConsoleURL
+			m["console_url"] = aws.StringValue(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
 		}
 		if instance.IpAddress != nil {
-			m["ip_address"] = *instance.IpAddress
+			m["ip_address"] = aws.StringValue(instance.IpAddress)
 		}
 		l[i] = m
 	}
