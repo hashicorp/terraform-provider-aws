@@ -139,7 +139,7 @@ func testAccAwsSsoAdminRoleGroupAttachmentConfig(permissionSetName, groupName st
 data "aws_ssoadmin_role" "test" {
   permission_set_name = aws_ssoadmin_permission_set.test.name
   depends_on = [
-	aws_ssoadmin_account_assignment.grouptest
+    aws_ssoadmin_account_assignment.grouptest
   ]
 }
 `)
@@ -153,7 +153,7 @@ func testAccAwsSsoAdminRoleUserAttachmentConfig(permissionSetName, userName stri
 data "aws_ssoadmin_role" "test" {
   permission_set_name = aws_ssoadmin_permission_set.test.name
   depends_on = [
-	aws_ssoadmin_account_assignment.usertest
+    aws_ssoadmin_account_assignment.usertest
   ]
 }
 `)
@@ -168,8 +168,8 @@ func testAccAwsSsoAdminRoleUserAndGroupAttachmentsConfig(permissionSetName, grou
 data "aws_ssoadmin_role" "test" {
   permission_set_name = aws_ssoadmin_permission_set.test.name
   depends_on = [
-	aws_ssoadmin_account_assignment.grouptest,
-	aws_ssoadmin_account_assignment.usertest
+    aws_ssoadmin_account_assignment.grouptest,
+    aws_ssoadmin_account_assignment.usertest
   ]
 }
 `)
