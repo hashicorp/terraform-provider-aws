@@ -2733,7 +2733,7 @@ func testAccCheckAWSDBInstanceNoSnapshot(s *terraform.State) error {
 
 func testAccCheckAWSDBInstanceNotRecreated(instance1, instance2 *rds.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(instance1.InstanceCreateTime) != aws.TimeValue(instance2.InstanceCreateTime) {
+		if !aws.TimeValue(instance1.InstanceCreateTime).Equal(aws.TimeValue(instance2.InstanceCreateTime)) {
 			return fmt.Errorf("database instance was recreated. expected: %s, got: %s", instance1.InstanceCreateTime, instance2.InstanceCreateTime)
 		}
 		return nil
