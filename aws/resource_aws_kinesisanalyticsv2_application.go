@@ -271,18 +271,21 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						"run_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"application_restore_configuration": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"application_restore_type": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationRestoreType_Values(), false),
 												},
 
@@ -297,12 +300,14 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									"flink_run_configuration": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"allow_non_restored_state": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},
