@@ -24,3 +24,20 @@ func ApplicationStatus(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string)
 		return applicationDetail, aws.StringValue(applicationDetail.ApplicationStatus), nil
 	}
 }
+
+// SnapshotDetailsStatus fetches the SnapshotDetails and its Status
+func SnapshotDetailsStatus(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationName, snapshotName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		snapshotDetails, err := finder.SnapshotDetailsByApplicationAndSnapshotNames(conn, applicationName, snapshotName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return snapshotDetails, aws.StringValue(snapshotDetails.SnapshotStatus), nil
+	}
+}
