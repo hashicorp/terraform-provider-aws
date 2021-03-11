@@ -1268,6 +1268,10 @@ func resourceAwsCognitoUserPoolDelete(d *schema.ResourceData, meta interface{}) 
 }
 
 func expandCognitoSmsConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
 	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &cognitoidentityprovider.SmsConfigurationType{}
