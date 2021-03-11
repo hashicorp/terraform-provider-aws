@@ -1067,15 +1067,11 @@ func testAccErrorCheck(t *testing.T, endpointID string) resource.ErrorCheckFunc 
 }
 
 func testAccErrorCheckCommon(err error) bool {
-	if strings.Contains(err.Error(), "is not supported in this region") {
+	if strings.Contains(err.Error(), "is not supported in this") {
 		return true
 	}
 
-	if strings.Contains(err.Error(), "is currently not supported in this region") {
-		return true
-	}
-
-	if strings.Contains(err.Error(), "is not supported in this partition") {
+	if strings.Contains(err.Error(), "is currently not supported") {
 		return true
 	}
 
