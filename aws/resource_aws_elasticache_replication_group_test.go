@@ -2501,11 +2501,17 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccAWSElasticacheReplicationGroupConfig_Validation_GlobalReplicationGroupIdAndNodeType(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(2),
+		testAccElasticacheVpcBaseWithProvider(rName, "test", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAwsAlternate),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
+  provider = aws
+
   replication_group_id          = "%[1]s-s"
   replication_group_description = "secondary"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.test.name
 
   node_type = "cache.m5.large"
 
@@ -2524,6 +2530,8 @@ resource "aws_elasticache_replication_group" "primary" {
 
   replication_group_id          = "%[1]s-p"
   replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   node_type = "cache.m5.large"
 
@@ -2537,11 +2545,15 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccAWSElasticacheReplicationGroupConfig_GlobalReplicationGroupId_Basic(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(2),
+		testAccElasticacheVpcBaseWithProvider(rName, "test", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAwsAlternate),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s-s"
   replication_group_description = "secondary"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.test.name
 
   number_cache_clusters = 1
 }
@@ -2558,6 +2570,8 @@ resource "aws_elasticache_replication_group" "primary" {
 
   replication_group_id          = "%[1]s-p"
   replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   node_type = "cache.m5.large"
 

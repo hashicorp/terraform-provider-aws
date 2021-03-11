@@ -332,6 +332,9 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "alternate", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -345,6 +348,8 @@ resource "aws_elasticache_replication_group" "primary" {
 
   replication_group_id          = "%[1]s-p"
   replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   node_type = "cache.m5.large"
 
@@ -360,6 +365,8 @@ resource "aws_elasticache_replication_group" "alternate" {
   replication_group_description = "alternate"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
+  subnet_group_name = aws_elasticache_subnet_group.alternate.name
+
   number_cache_clusters = 1
 }
 
@@ -370,6 +377,8 @@ resource "aws_elasticache_replication_group" "third" {
   replication_group_description = "third"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
+  subnet_group_name = aws_elasticache_subnet_group.third.name
+
   number_cache_clusters = 1
 }
 `, rName))
@@ -378,6 +387,9 @@ resource "aws_elasticache_replication_group" "third" {
 func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -391,6 +403,8 @@ resource "aws_elasticache_replication_group" "primary" {
 
   replication_group_id          = "%[1]s-p"
   replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   node_type = "cache.m5.large"
 
@@ -406,6 +420,8 @@ resource "aws_elasticache_replication_group" "secondary" {
   replication_group_description = "alternate"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
+  subnet_group_name = aws_elasticache_subnet_group.secondary.name
+
   number_cache_clusters = 1
 }
 `, rName))
@@ -414,6 +430,9 @@ resource "aws_elasticache_replication_group" "secondary" {
 func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
 		fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   provider = aws
@@ -427,6 +446,8 @@ resource "aws_elasticache_replication_group" "primary" {
 
   replication_group_id          = "%[1]s-p"
   replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
 
   node_type = "cache.m5.large"
 
@@ -442,7 +463,60 @@ resource "aws_elasticache_replication_group" "third" {
   replication_group_description = "third"
   global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
 
+  subnet_group_name = aws_elasticache_subnet_group.third.name
+
   number_cache_clusters = 1
 }
 `, rName))
+}
+
+func testAccElasticacheVpcBaseWithProvider(rName, name, provider string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
+		fmt.Sprintf(`
+resource "aws_vpc" "%[1]s" {
+  provider = %[2]s
+
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "%[1]s" {
+  provider = %[2]s
+	
+  vpc_id            = aws_vpc.%[1]s.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.%[1]s.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "%[1]s" {
+  provider = %[2]s
+	
+  name        = %[3]q
+  description = "tf-test-cache-subnet-group-descr"
+
+  subnet_ids = [
+    aws_subnet.%[1]s.id,
+  ]
+}
+`, name, provider, rName),
+	)
+}
+
+func testAccAvailableAZsNoOptInConfigWithProvider(name, provider string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "%[1]s" {
+  provider = %[2]s
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, name, provider)
 }
