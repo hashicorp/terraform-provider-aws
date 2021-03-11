@@ -511,6 +511,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, err := conn.UpdateBroker(input); err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) LDAP server metadata: %w", d.Id(), err)
 		}
+		requiresReboot = true
 	}
 
 	if d.HasChange("security_groups") {

@@ -1768,6 +1768,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
+  apply_immediately  = true
   broker_name        = %[1]q
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
