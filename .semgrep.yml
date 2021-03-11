@@ -212,6 +212,12 @@ rules:
               var $CAST *resource.NotFoundError
               ...
               errors.As($ERR, &$CAST)
+          - pattern-not-inside: |
+              var $CAST *resource.NotFoundError
+              ...
+              errors.As($ERR, &$CAST)
+              ...
+              $CAST.$FIELD
         - patterns:
           - pattern: |
               $X, $Y := $ERR.(*resource.NotFoundError)

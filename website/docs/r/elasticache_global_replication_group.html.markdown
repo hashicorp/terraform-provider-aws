@@ -8,27 +8,38 @@ description: |-
 
 # Resource: aws_elasticache_global_replication_group
 
-Provides an ElastiCache Global Replication Group resource, which manage a replication between 2 or more redis replication group in different regions. For more information, see the [ElastiCache User Guide](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Redis-Global-Datastore.html).
+Provides an ElastiCache Global Replication Group resource, which manages replication between two or more Replication Groups in different regions. For more information, see the [ElastiCache User Guide](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Redis-Global-Datastore.html).
 
 ## Example Usage
 
-### Global replication group with a single instance redis replication group
+### Global replication group with one secondary replication group
 
-To create a single shard primary with single read replica:
+The global replication group depends on the primary group existing. Secondary replication groups depend on the global replication group. Terraform dependency management will handle this transparently using resource value references.
 
 ```hcl
-resource "aws_elasticache_global_replication_group" "replication_group" {
+resource "aws_elasticache_global_replication_group" "example" {
   global_replication_group_id_suffix = "example"
   primary_replication_group_id       = aws_elasticache_replication_group.primary.id
 }
 
 resource "aws_elasticache_replication_group" "primary" {
-  replication_group_id          = "example"
-  replication_group_description = "test example"
+  replication_group_id          = "example-primary"
+  replication_group_description = "primary replication group"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = "cache.m5.large"
+  engine         = "redis"
+  engine_version = "5.0.6"
+  node_type      = "cache.m5.large"
+
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = aws.other_region
+
+  replication_group_id          = "example-secondary"
+  replication_group_description = "secondary replication group"
+  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+
   number_cache_clusters = 1
 }
 ```
