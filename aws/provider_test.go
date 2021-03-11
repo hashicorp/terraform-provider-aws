@@ -1058,7 +1058,7 @@ func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckF
 			err = ef(err)
 		}
 
-		if testAccErrorCheckSkipError(err) {
+		if testAccErrorCheck(err) {
 			t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
 		}
 
@@ -1066,7 +1066,7 @@ func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckF
 	}
 }
 
-func testAccErrorCheckSkipError(err error) bool {
+func testAccErrorCheck(err error) bool {
 	if strings.Contains(err.Error(), "is not supported in this region") {
 		return true
 	}
