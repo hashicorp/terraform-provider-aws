@@ -1036,6 +1036,68 @@ func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) r
 	}
 }
 
+type ServiceErrorCheckFunc func(*testing.T) resource.ErrorCheckFunc
+
+var serviceErrorCheckFuncs map[string]ServiceErrorCheckFunc
+
+func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
+	if serviceErrorCheckFuncs == nil {
+		serviceErrorCheckFuncs = make(map[string]ServiceErrorCheckFunc)
+	}
+	serviceErrorCheckFuncs[endpointID] = f
+}
+
+func testAccErrorCheckSkip(t *testing.T, endpointID string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
+		}
+
+		if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
+			ef := f(t)
+			err = ef(err)
+		}
+
+		if testAccErrorCheckSkipError(err) {
+			t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+		}
+
+		return err
+	}
+}
+
+func testAccErrorCheckSkipError(err error) bool {
+	if strings.Contains(err.Error(), "is not supported in this region") {
+		return true
+	}
+
+	if strings.Contains(err.Error(), "is currently not supported in this region") {
+		return true
+	}
+
+	if strings.Contains(err.Error(), "is not supported in this partition") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+
+	return false
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
