@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-const applicationSnapshotIDSeparator = ","
+const applicationSnapshotIDSeparator = "/"
 
 func ApplicationSnapshotCreateID(applicationName, snapshotName string) string {
 	parts := []string{applicationName, snapshotName}

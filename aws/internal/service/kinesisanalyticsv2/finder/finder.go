@@ -84,7 +84,5 @@ func SnapshotDetails(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesis
 		}
 	}
 
-	// TODO kinesisanalyticsv2.SnapshotStatusFailed
-
 	return output.SnapshotDetails, nil
 }
