@@ -146,6 +146,7 @@ func resourceAwsMqBroker() *schema.Resource {
 			"ldap_server_metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -327,7 +328,6 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(requestId),
-		EncryptionOptions:       expandMqEncryptionOptions(d.Get("encryption_options").([]interface{})),
 		EngineType:              aws.String(d.Get("engine_type").(string)),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -338,19 +338,22 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandMqConfigurationId(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionOptions = expandMqEncryptionOptions(d.Get("encryption_options").([]interface{}))
+	}
+	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Logs = expandMqLogs(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("maintenance_window_start_time"); ok {
+	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
