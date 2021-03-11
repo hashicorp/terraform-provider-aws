@@ -195,7 +195,7 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-    ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
@@ -648,7 +648,7 @@ func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"Error message specific to the service that indicates unsupported features",
 		"You can include from one to many portions of error messages",
-    "Be careful to not inadvertently capture errors that should not be skipped",
+		"Be careful to not inadvertently capture errors that should not be skipped",
 	)
 }
 ```
