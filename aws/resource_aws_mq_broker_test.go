@@ -1102,27 +1102,6 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_subtree", "true"),
 				),
 			},
-			{
-				Config: testAccMqBrokerConfig_ldap(rName, "totoro"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.0", "my.ldap.server-1.com"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.hosts.1", "my.ldap.server-2.com"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_base", "role.base"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_name", "role.name"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_matching", "role.search.matching"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.role_search_subtree", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.service_account_username", "totoro"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_base", "user.base"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_role_name", "user.role.name"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_matching", "user.search.matching"),
-					resource.TestCheckResourceAttr(resourceName, "ldap_server_metadata.0.user_search_subtree", "true"),
-				),
-			},
 		},
 	})
 }
@@ -1768,12 +1747,13 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately  = true
-  broker_name        = %[1]q
-  engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
-  host_instance_type = "mq.t2.micro"
-  security_groups    = [aws_security_group.test.id]
+  apply_immediately       = true
+  authentication_strategy = "ldap"
+  broker_name             = %[1]q
+  engine_type             = "ActiveMQ"
+  engine_version          = "5.15.0"
+  host_instance_type      = "mq.t2.micro"
+  security_groups         = [aws_security_group.test.id]
 
   logs {
     general = true
@@ -1783,8 +1763,6 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
-
-  authentication_strategy = "ldap"
 
   ldap_server_metadata {
     hosts                    = ["my.ldap.server-1.com", "my.ldap.server-2.com"]

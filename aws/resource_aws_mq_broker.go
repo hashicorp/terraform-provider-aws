@@ -146,6 +146,7 @@ func resourceAwsMqBroker() *schema.Resource {
 			"ldap_server_metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -497,22 +498,6 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
 	requiresReboot := false
-
-	if d.HasChange("ldap_server_metadata") {
-		input := &mq.UpdateBrokerRequest{
-			BrokerId:           aws.String(d.Id()),
-			LdapServerMetadata: nil,
-		}
-
-		if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
-		}
-
-		if _, err := conn.UpdateBroker(input); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) LDAP server metadata: %w", d.Id(), err)
-		}
-		requiresReboot = true
-	}
 
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
