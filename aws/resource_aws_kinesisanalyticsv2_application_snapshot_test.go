@@ -45,6 +45,28 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 	var v kinesisanalyticsv2.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2ApplicationSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *testing.T) {
+	var v kinesisanalyticsv2.SnapshotDetails
+	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -57,29 +79,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2ApplicationSnapshot(), applicationResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *testing.T) {
-	var v kinesisanalyticsv2.SnapshotDetails
-	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisAnalyticsV2Application(), applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,14 +151,13 @@ resource "aws_s3_bucket_object" "test" {
   source = "test-fixtures/aws-kinesis-analytics-java-apps-1.0.jar"
 }
 
-# The stream names are hard-coded into the application.
 resource "aws_kinesis_stream" "input" {
-  name        = "ExampleInputStream"
+  name        = "%[1]s-input"
   shard_count = 1
 }
 
 resource "aws_kinesis_stream" "output" {
-  name        = "ExampleOutputStream"
+  name        = "%[1]s-output"
   shard_count = 1
 }
 
@@ -185,20 +184,28 @@ resource "aws_kinesisanalyticsv2_application" "test" {
 
     environment_properties {
       property_group {
-        property_group_id = "ProducerConfigProperties"
+        property_group_id = "ConsumerConfigProperties"
 
         property_map = {
           "flink.inputstream.initpos" = "LATEST"
           "aws.region"                = data.aws_region.current.name
-          "AggregationEnabled"        = "false"
+          "InputStreamName"           = aws_kinesis_stream.input.name
+        }
+      }
+
+      property_group {
+        property_group_id = "ProducerConfigProperties"
+
+        property_map = {
+          "aws.region"         = data.aws_region.current.name
+          "AggregationEnabled" = "false"
+          "OutputStreamName"   = aws_kinesis_stream.output.name
         }
       }
     }
   }
 
   start_application = true
-
-  depends_on = [aws_kinesis_stream.input, aws_kinesis_stream.output]
 }
 
 resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
