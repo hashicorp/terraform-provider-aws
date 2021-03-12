@@ -147,8 +147,8 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.bucket
-  key    = "aws-kinesis-analytics-java-apps-1.0.jar"
-  source = "test-fixtures/aws-kinesis-analytics-java-apps-1.0.jar"
+  key    = "flink-app.jar"
+  source = "test-fixtures/flink-app.jar"
 }
 
 resource "aws_kinesis_stream" "input" {
