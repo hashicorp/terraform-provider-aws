@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -272,6 +274,12 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			Delete: schema.DefaultTimeout(waiter.ReplicationGroupDefaultDeletedTimeout),
 			Update: schema.DefaultTimeout(waiter.ReplicationGroupDefaultUpdatedTimeout),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("number_cache_clusters") || diff.HasChange("cluster_mode.0.num_node_groups")
+			}),
+		),
 	}
 }
 
