@@ -138,8 +138,30 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 func testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseFlinkApplication(rName),
 		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "aws-kinesis-analytics-java-apps-1.0.jar"
+  source = "test-fixtures/aws-kinesis-analytics-java-apps-1.0.jar"
+}
+
+# The stream names are hard-coded into the application.
+resource "aws_kinesis_stream" "input" {
+  name        = "ExampleInputStream"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "output" {
+  name        = "ExampleOutputStream"
+  shard_count = 1
+}
+
 resource "aws_kinesisanalyticsv2_application" "test" {
   name                   = %[1]q
   runtime_environment    = "FLINK-1_11"
@@ -150,7 +172,7 @@ resource "aws_kinesisanalyticsv2_application" "test" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test[0].key
+          file_key   = aws_s3_bucket_object.test.key
         }
       }
 
@@ -160,9 +182,23 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     application_snapshot_configuration {
       snapshots_enabled = true
     }
+
+    environment_properties {
+      property_group {
+        property_group_id = "ProducerConfigProperties"
+
+        property_map = {
+          "flink.inputstream.initpos" = "LATEST"
+          "aws.region"                = data.aws_region.current.name
+          "AggregationEnabled"        = "false"
+        }
+      }
+    }
   }
 
   start_application = true
+
+  depends_on = [aws_kinesis_stream.input, aws_kinesis_stream.output]
 }
 
 resource "aws_kinesisanalyticsv2_application_snapshot" "test" {

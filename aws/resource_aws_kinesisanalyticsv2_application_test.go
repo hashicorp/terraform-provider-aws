@@ -3769,7 +3769,12 @@ resource "aws_iam_policy" "test" {
       "Effect": "Allow",
       "Action": ["s3:*"],
       "Resource": ["*"]
-    }
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["kinesis:*"],
+      "Resource": ["*"]
+	}
   ]
 }
 EOF
