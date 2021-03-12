@@ -2848,31 +2848,31 @@ func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kine
 				}
 			}
 		}
-	}
 
-	if v, ok := d.GetOk("run_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := tfMap["application_restore_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			tfMap := v[0].(map[string]interface{})
 
-			apiObject.RunConfiguration.ApplicationRestoreConfiguration = &kinesisanalyticsv2.ApplicationRestoreConfiguration{}
+			if v, ok := tfMap["application_restore_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
 
-			if v, ok := tfMap["application_restore_type"].(string); ok && v != "" {
-				apiObject.RunConfiguration.ApplicationRestoreConfiguration.ApplicationRestoreType = aws.String(v)
+				apiObject.RunConfiguration.ApplicationRestoreConfiguration = &kinesisanalyticsv2.ApplicationRestoreConfiguration{}
+
+				if v, ok := tfMap["application_restore_type"].(string); ok && v != "" {
+					apiObject.RunConfiguration.ApplicationRestoreConfiguration.ApplicationRestoreType = aws.String(v)
+				}
+
+				if v, ok := tfMap["snapshot_name"].(string); ok && v != "" {
+					apiObject.RunConfiguration.ApplicationRestoreConfiguration.SnapshotName = aws.String(v)
+				}
 			}
 
-			if v, ok := tfMap["snapshot_name"].(string); ok && v != "" {
-				apiObject.RunConfiguration.ApplicationRestoreConfiguration.SnapshotName = aws.String(v)
-			}
-		}
+			if v, ok := tfMap["flink_run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
 
-		if v, ok := tfMap["flink_run_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			tfMap := v[0].(map[string]interface{})
-
-			if v, ok := tfMap["allow_non_restored_state"].(bool); ok {
-				apiObject.RunConfiguration.FlinkRunConfiguration = &kinesisanalyticsv2.FlinkRunConfiguration{
-					AllowNonRestoredState: aws.Bool(v),
+				if v, ok := tfMap["allow_non_restored_state"].(bool); ok {
+					apiObject.RunConfiguration.FlinkRunConfiguration = &kinesisanalyticsv2.FlinkRunConfiguration{
+						AllowNonRestoredState: aws.Bool(v),
+					}
 				}
 			}
 		}

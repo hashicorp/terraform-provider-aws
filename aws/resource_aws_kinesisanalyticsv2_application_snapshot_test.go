@@ -138,76 +138,8 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 func testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
+		testAccKinesisAnalyticsV2ApplicationConfigBaseSnapshotableFlinkApplication(rName, "true", "SKIP_RESTORE_FROM_SNAPSHOT", ""),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "flink-app.jar"
-  source = "test-fixtures/flink-app.jar"
-}
-
-resource "aws_kinesis_stream" "input" {
-  name        = "%[1]s-input"
-  shard_count = 1
-}
-
-resource "aws_kinesis_stream" "output" {
-  name        = "%[1]s-output"
-  shard_count = 1
-}
-
-resource "aws_kinesisanalyticsv2_application" "test" {
-  name                   = %[1]q
-  runtime_environment    = "FLINK-1_11"
-  service_execution_role = aws_iam_role.test[0].arn
-
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        s3_content_location {
-          bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
-        }
-      }
-
-      code_content_type = "ZIPFILE"
-    }
-
-    application_snapshot_configuration {
-      snapshots_enabled = true
-    }
-
-    environment_properties {
-      property_group {
-        property_group_id = "ConsumerConfigProperties"
-
-        property_map = {
-          "flink.inputstream.initpos" = "LATEST"
-          "aws.region"                = data.aws_region.current.name
-          "InputStreamName"           = aws_kinesis_stream.input.name
-        }
-      }
-
-      property_group {
-        property_group_id = "ProducerConfigProperties"
-
-        property_map = {
-          "aws.region"         = data.aws_region.current.name
-          "AggregationEnabled" = "false"
-          "OutputStreamName"   = aws_kinesis_stream.output.name
-        }
-      }
-    }
-  }
-
-  start_application = true
-}
-
 resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
   application_name = aws_kinesisanalyticsv2_application.test.name
   snapshot_name    = %[1]q
