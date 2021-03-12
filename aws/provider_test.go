@@ -1047,15 +1047,17 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 	serviceErrorCheckFuncs[endpointID] = f
 }
 
-func testAccErrorCheck(t *testing.T, endpointID string) resource.ErrorCheckFunc {
+func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
 			return err
 		}
 
-		if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
-			ef := f(t)
-			err = ef(err)
+		for _, endpointID := range endpointIDs {
+			if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
+				ef := f(t)
+				err = ef(err)
+			}
 		}
 
 		if testAccErrorCheckCommon(err) {
