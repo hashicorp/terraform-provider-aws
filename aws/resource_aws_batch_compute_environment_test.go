@@ -316,6 +316,40 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_EC2_to_Fargate(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2Fargate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_ComputeResources_DesiredVcpus_Computed(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_batch_compute_environment.ec2"
@@ -981,6 +1015,29 @@ resource "aws_batch_compute_environment" "ec2" {
     tags = {
       Key1 = "Value1"
     }
+  }
+
+  service_role = aws_iam_role.aws_batch_service_role.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
+}
+`, rInt)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigEC2Fargate(rInt int) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name = "tf_acc_test_%d"
+
+  compute_resources {
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test_acc.id
+    ]
+    subnets = [
+      aws_subnet.test_acc.id
+    ]
+    type = "FARGATE"
   }
 
   service_role = aws_iam_role.aws_batch_service_role.arn
