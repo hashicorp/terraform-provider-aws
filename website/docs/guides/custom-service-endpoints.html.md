@@ -65,6 +65,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>appstream</code></li>
   <li><code>appsync</code></li>
   <li><code>athena</code></li>
+  <li><code>auditmanager</code></li>
   <li><code>autoscaling</code></li>
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>

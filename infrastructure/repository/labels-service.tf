@@ -22,6 +22,7 @@ variable "service_labels" {
     "appstream",
     "appsync",
     "athena",
+    "auditmanager",
     "autoscaling",
     "autoscalingplans",
     "backup",
