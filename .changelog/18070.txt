@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_mq_configuration: Add missing `authentication_strategy` option to be able to add ldap authentication options
+```
