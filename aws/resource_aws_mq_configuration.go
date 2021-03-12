@@ -42,6 +42,12 @@ func resourceAwsMqConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"authentication_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
+			},
 			"data": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -87,6 +93,9 @@ func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) 
 		Name:          aws.String(d.Get("name").(string)),
 	}
 
+	if v, ok := d.GetOk("authentication_strategy"); ok {
+		input.AuthenticationStrategy = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("tags"); ok {
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().MqTags()
 	}
@@ -121,6 +130,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Set("arn", out.Arn)
+	d.Set("authentication_strategy", out.AuthenticationStrategy)
 	d.Set("description", out.LatestRevision.Description)
 	d.Set("engine_type", out.EngineType)
 	d.Set("engine_version", out.EngineVersion)

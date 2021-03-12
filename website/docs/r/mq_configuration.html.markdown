@@ -45,6 +45,7 @@ The following arguments are supported:
 * `engine_type` - (Required) The type of broker engine.
 * `engine_version` - (Required) The version of the broker engine.
 * `name` - (Required) The name of the configuration
+* `authentication_strategy` - (Optional) The authentication strategy associated with the configuration. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference

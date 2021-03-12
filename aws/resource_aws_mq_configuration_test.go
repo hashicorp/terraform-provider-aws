@@ -27,6 +27,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -70,6 +71,37 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqConfigurationExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", configurationName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
+	configurationName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_mq_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqConfigurationWithLdapDataConfig(configurationName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqConfigurationExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
@@ -176,6 +208,7 @@ resource "aws_mq_configuration" "test" {
   name           = "%s"
   engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+  authentication_strategy = "simple"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -226,6 +259,34 @@ resource "aws_mq_configuration" "test" {
             <tempDestinationAuthorizationEntry admin="tempDestinationAdmins" read="tempDestinationAdmins" write="tempDestinationAdmins"/>
           </tempDestinationAuthorizationEntry>
         </authorizationMap>
+      </map>
+    </authorizationPlugin>
+    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
+    <statisticsBrokerPlugin/>
+    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>
+  </plugins>
+</broker>
+DATA
+}
+`, configurationName)
+}
+
+func testAccMqConfigurationWithLdapDataConfig(configurationName string) string {
+	return fmt.Sprintf(`
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
+  engine_version = "5.15.0"
+  authentication_strategy = "ldap"
+
+  data = <<DATA
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<broker xmlns="http://activemq.apache.org/schema/core">
+  <plugins>
+    <authorizationPlugin>
+      <map>
+        <cachedLDAPAuthorizationMap legacyGroupMapping="false" queueSearchBase="ou=Queue,ou=Destination,ou=ActiveMQ,dc=example,dc=org" refreshInterval="0" tempSearchBase="ou=Temp,ou=Destination,ou=ActiveMQ,dc=example,dc=org" topicSearchBase="ou=Topic,ou=Destination,ou=ActiveMQ,dc=example,dc=org"/>
       </map>
     </authorizationPlugin>
     <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
