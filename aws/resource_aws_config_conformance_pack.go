@@ -171,6 +171,14 @@ func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
+func flattenConformancePackInputParameters(parameters []*configservice.ConformancePackInputParameter) (m map[string]string) {
+	m = make(map[string]string)
+	for _, p := range parameters {
+		m[*p.ParameterName] = *p.ParameterValue
+	}
+	return
+}
+
 func resourceAwsConfigConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
 
