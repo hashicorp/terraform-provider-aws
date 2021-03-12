@@ -138,7 +138,7 @@ func testAccCheckKinesisAnalyticsV2ApplicationSnapshotExists(n string, v *kinesi
 func testAccKinesisAnalyticsV2ApplicationSnapshotConfig(rName string) string {
 	return composeConfig(
 		testAccKinesisAnalyticsV2ApplicationConfigBaseServiceExecutionIamRole(rName),
-		testAccKinesisAnalyticsV2ApplicationConfigBaseSnapshotableFlinkApplication(rName, "true", "SKIP_RESTORE_FROM_SNAPSHOT", ""),
+		testAccKinesisAnalyticsV2ApplicationConfigSnapshotableFlinkApplication(rName, "true", "SKIP_RESTORE_FROM_SNAPSHOT", ""),
 		fmt.Sprintf(`
 resource "aws_kinesisanalyticsv2_application_snapshot" "test" {
   application_name = aws_kinesisanalyticsv2_application.test.name
