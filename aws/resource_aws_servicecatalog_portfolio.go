@@ -170,9 +170,19 @@ func resourceAwsServiceCatalogPortfolioDelete(d *schema.ResourceData, meta inter
 	input.Id = aws.String(d.Id())
 
 	log.Printf("[DEBUG] Delete Service Catalog Portfolio: %#v", input)
-	_, err := conn.DeletePortfolio(&input)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeletePortfolio(&input)
+		if err != nil {
+			if isAWSErr(err, servicecatalog.ErrCodeResourceInUseException, "") {
+				// delay and retry, other things eg associations might still be getting deleted
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("Deleting Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Deleting Service Catalog Portfolio '%s' failed: %s", *input.Id, err)
 	}
 	return nil
 }
