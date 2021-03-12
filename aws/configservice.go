@@ -178,20 +178,20 @@ func configWaitForOrganizationRuleStatusUpdateSuccessful(conn *configservice.Con
 	return err
 }
 
-func configDescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
-	input := &configservice.DescribeConformancePacksInput{
-		ConformancePackNames: []*string{aws.String(name)},
+func configDescribeOrganizationConformancePack(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePack, error) {
+	input := &configservice.DescribeOrganizationConformancePacksInput{
+		OrganizationConformancePackNames: []*string{aws.String(name)},
 	}
 
 	for {
-		output, err := conn.DescribeConformancePacks(input)
+		output, err := conn.DescribeOrganizationConformancePacks(input)
 
 		if err != nil {
 			return nil, err
 		}
 
-		for _, pack := range output.ConformancePackDetails {
-			if aws.StringValue(pack.ConformancePackName) == name {
+		for _, pack := range output.OrganizationConformancePacks {
+			if aws.StringValue(pack.OrganizationConformancePackName) == name {
 				return pack, nil
 			}
 		}
@@ -206,20 +206,20 @@ func configDescribeConformancePack(conn *configservice.ConfigService, name strin
 	return nil, nil
 }
 
-func configDescribeConformancePackStatus(conn *configservice.ConfigService, name string) (*configservice.ConformancePackStatusDetail, error) {
-	input := &configservice.DescribeConformancePackStatusInput{
-		ConformancePackNames: []*string{aws.String(name)},
+func configDescribeOrganizationConformancePackStatus(conn *configservice.ConfigService, name string) (*configservice.OrganizationConformancePackStatus, error) {
+	input := &configservice.DescribeOrganizationConformancePackStatusesInput{
+		OrganizationConformancePackNames: []*string{aws.String(name)},
 	}
 
 	for {
-		output, err := conn.DescribeConformancePackStatus(input)
+		output, err := conn.DescribeOrganizationConformancePackStatuses(input)
 
 		if err != nil {
 			return nil, err
 		}
 
-		for _, status := range output.ConformancePackStatusDetails {
-			if aws.StringValue(status.ConformancePackName) == name {
+		for _, status := range output.OrganizationConformancePackStatuses {
+			if aws.StringValue(status.OrganizationConformancePackName) == name {
 				return status, nil
 			}
 		}
@@ -232,6 +232,30 @@ func configDescribeConformancePackStatus(conn *configservice.ConfigService, name
 	}
 
 	return nil, nil
+}
+
+func configDescribeOrganizationConformancePackDetailedStatus(conn *configservice.ConfigService, name string) ([]*configservice.OrganizationConformancePackDetailedStatus, error) {
+	input := &configservice.GetOrganizationConformancePackDetailedStatusInput{
+		OrganizationConformancePackName: aws.String(name),
+	}
+	var ret []*configservice.OrganizationConformancePackDetailedStatus
+	for {
+		output, err := conn.GetOrganizationConformancePackDetailedStatus(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		ret = append(ret, output.OrganizationConformancePackDetailedStatuses...)
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return ret, nil
 }
 
 func expandConfigConformancePackParameters(m map[string]interface{}) (params []*configservice.ConformancePackInputParameter) {

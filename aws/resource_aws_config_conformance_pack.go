@@ -122,6 +122,16 @@ func resourceAwsConfigConformancePackPut(d *schema.ResourceData, meta interface{
 	return resourceAwsConfigConformancePackRead(d, meta)
 }
 
+func expandConfigConformancePackParameters(m map[string]interface{}) (params []*configservice.ConformancePackInputParameter) {
+	for k, v := range m {
+		params = append(params, &configservice.ConformancePackInputParameter{
+			ParameterName:  aws.String(k),
+			ParameterValue: aws.String(v.(string)),
+		})
+	}
+	return
+}
+
 func refreshConformancePackStatus(d *schema.ResourceData, conn *configservice.ConfigService) func() (interface{}, string, error) {
 	return func() (interface{}, string, error) {
 		out, err := conn.DescribeConformancePackStatus(&configservice.DescribeConformancePackStatusInput{
@@ -191,6 +201,14 @@ func resourceAwsConfigConformancePackRead(d *schema.ResourceData, meta interface
 	}
 
 	return nil
+}
+
+func flattenConformancePackInputParameters(parameters []*configservice.ConformancePackInputParameter) (m map[string]string) {
+	m = make(map[string]string)
+	for _, p := range parameters {
+		m[*p.ParameterName] = *p.ParameterValue
+	}
+	return
 }
 
 func resourceAwsConfigConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
