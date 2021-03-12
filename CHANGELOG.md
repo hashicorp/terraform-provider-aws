@@ -1,4 +1,4 @@
-## 3.32.0 (Unreleased)
+## 3.32.0 (March 12, 2021)
 
 FEATURES:
 
