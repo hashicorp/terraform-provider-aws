@@ -42,8 +42,10 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.concurrent_execution_rate_percentage", strconv.Itoa(rExecPct)),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.error_percentage", strconv.Itoa(rErrorPct)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
+						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
+						"error_percentage":                     strconv.Itoa(rErrorPct),
+					}),
 				),
 			},
 			{
@@ -157,8 +159,10 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.concurrent_execution_rate_percentage", strconv.Itoa(rExecPct)),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.error_percentage", strconv.Itoa(rErrorPct)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
+						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
+						"error_percentage":                     strconv.Itoa(rErrorPct),
+					}),
 				),
 			},
 			{
@@ -171,8 +175,10 @@ func testAccConfigRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(uAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(uSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.concurrent_execution_rate_percentage", strconv.Itoa(uExecPct)),
-					resource.TestCheckTypeSetElemAttr(resourceName, "execution_controls.*.ssm_controls.*.error_percentage", strconv.Itoa(uErrorPct)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
+						"concurrent_execution_rate_percentage": strconv.Itoa(uExecPct),
+						"error_percentage":                     strconv.Itoa(uErrorPct),
+					}),
 				),
 			},
 		},
@@ -256,7 +262,6 @@ resource "aws_config_remediation_configuration" "test" {
   automatic = %[8]s
   maximum_automatic_attempts = %[4]d
   retry_attempt_seconds = %[5]d
-  created_by_service = "%[1]s-service-%[3]d"
   execution_controls {
     ssm_controls {
       concurrent_execution_rate_percentage = %[6]d
