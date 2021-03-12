@@ -204,10 +204,10 @@ func testAccCheckAwsMqConfigurationExists(name string) resource.TestCheckFunc {
 func testAccMqConfigurationConfig(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description    = "TfAccTest MQ Configuration"
-  name           = "%s"
-  engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  description             = "TfAccTest MQ Configuration"
+  name                    = "%s"
+  engine_type             = "ActiveMQ"
+  engine_version          = "5.15.0"
   authentication_strategy = "simple"
 
   data = <<DATA
@@ -274,10 +274,10 @@ DATA
 func testAccMqConfigurationWithLdapDataConfig(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description    = "TfAccTest MQ Configuration"
-  name           = "%s"
-  engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  description             = "TfAccTest MQ Configuration"
+  name                    = "%s"
+  engine_type             = "ActiveMQ"
+  engine_version          = "5.15.0"
   authentication_strategy = "ldap"
 
   data = <<DATA
