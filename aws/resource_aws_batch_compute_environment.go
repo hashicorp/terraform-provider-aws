@@ -466,7 +466,10 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 			}
 
 			input.ComputeResources.MaxvCpus = aws.Int64(int64(computeResource["max_vcpus"].(int)))
-			input.ComputeResources.MinvCpus = aws.Int64(int64(computeResource["min_vcpus"].(int)))
+			computeResourceType := computeResource["type"].(string)
+			if computeResourceType == batch.CRTypeEc2 || computeResourceType == batch.CRTypeSpot {
+				input.ComputeResources.MinvCpus = aws.Int64(int64(computeResource["min_vcpus"].(int)))
+			}
 		}
 
 		log.Printf("[DEBUG] Update compute environment %s.\n", input)
