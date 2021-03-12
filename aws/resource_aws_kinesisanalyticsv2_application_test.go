@@ -3805,6 +3805,93 @@ resource "aws_s3_bucket_object" "test" {
 `, rName)
 }
 
+func testAccKinesisAnalyticsV2ApplicationConfigBaseSnapshotableFlinkApplication(rName, startApplication, applicationRestoreType, snapshotName string) string {
+	if startApplication == "" {
+		startApplication = "null"
+	}
+	if snapshotName == "" {
+		snapshotName = "null"
+	}
+
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "flink-app.jar"
+  source = "test-fixtures/flink-app.jar"
+}
+
+resource "aws_kinesis_stream" "input" {
+  name        = "%[1]s-input"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "output" {
+  name        = "%[1]s-output"
+  shard_count = 1
+}
+
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = "FLINK-1_11"
+  service_execution_role = aws_iam_role.test[0].arn
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        s3_content_location {
+          bucket_arn = aws_s3_bucket.test.arn
+          file_key   = aws_s3_bucket_object.test.key
+        }
+      }
+
+      code_content_type = "ZIPFILE"
+    }
+
+    application_snapshot_configuration {
+      snapshots_enabled = true
+    }
+
+    environment_properties {
+      property_group {
+        property_group_id = "ConsumerConfigProperties"
+
+        property_map = {
+          "flink.inputstream.initpos" = "LATEST"
+          "aws.region"                = data.aws_region.current.name
+          "InputStreamName"           = aws_kinesis_stream.input.name
+        }
+      }
+
+      property_group {
+        property_group_id = "ProducerConfigProperties"
+
+        property_map = {
+          "aws.region"         = data.aws_region.current.name
+          "AggregationEnabled" = "false"
+          "OutputStreamName"   = aws_kinesis_stream.output.name
+        }
+      }
+    }
+
+    run_configuration {
+      application_restore_configuration {
+        application_restore_type = %[3]q
+        snapshot_name            = %[4]s
+      }
+    }
+  }
+
+  start_application = %[2]s
+}
+`, rName, startApplication, applicationRestoreType, snapshotName)
+}
+
 func testAccKinesisAnalyticsV2ApplicationConfigBaseSQLApplication(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -4366,93 +4453,6 @@ resource "aws_kinesisanalyticsv2_application" "test" {
   }
 }
 `, rName))
-}
-
-func testAccKinesisAnalyticsV2ApplicationConfigSnapshotableFlinkApplication(rName, startApplication, applicationRestoreType, snapshotName string) string {
-	if startApplication == "" {
-		startApplication = "null"
-	}
-	if snapshotName == "" {
-		snapshotName = "null"
-	}
-
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "flink-app.jar"
-  source = "test-fixtures/flink-app.jar"
-}
-
-resource "aws_kinesis_stream" "input" {
-  name        = "%[1]s-input"
-  shard_count = 1
-}
-
-resource "aws_kinesis_stream" "output" {
-  name        = "%[1]s-output"
-  shard_count = 1
-}
-
-resource "aws_kinesisanalyticsv2_application" "test" {
-  name                   = %[1]q
-  runtime_environment    = "FLINK-1_11"
-  service_execution_role = aws_iam_role.test[0].arn
-
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        s3_content_location {
-          bucket_arn = aws_s3_bucket.test.arn
-          file_key   = aws_s3_bucket_object.test.key
-        }
-      }
-
-      code_content_type = "ZIPFILE"
-    }
-
-    application_snapshot_configuration {
-      snapshots_enabled = true
-    }
-
-    environment_properties {
-      property_group {
-        property_group_id = "ConsumerConfigProperties"
-
-        property_map = {
-          "flink.inputstream.initpos" = "LATEST"
-          "aws.region"                = data.aws_region.current.name
-          "InputStreamName"           = aws_kinesis_stream.input.name
-        }
-      }
-
-      property_group {
-        property_group_id = "ProducerConfigProperties"
-
-        property_map = {
-          "aws.region"         = data.aws_region.current.name
-          "AggregationEnabled" = "false"
-          "OutputStreamName"   = aws_kinesis_stream.output.name
-        }
-      }
-    }
-
-    run_configuration {
-      application_restore_configuration {
-        application_restore_type = %[3]q
-        snapshot_name            = %[4]s
-      }
-    }
-  }
-
-  start_application = %[2]s
-}
-`, rName, startApplication, applicationRestoreType, snapshotName)
 }
 
 func testAccKinesisAnalyticsV2ApplicationConfigSQLApplicationConfigurationNotSpecified(rName string) string {
