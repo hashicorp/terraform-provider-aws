@@ -18,7 +18,7 @@ func dataSourceAwsSnsTopic() *schema.Resource {
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
-					validNamePattern := "^[A-Za-z0-9_-]+$"
+					validNamePattern := "^[A-Za-z0-9_-]+(\\.fifo)?$"
 					validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
 					if !validName || nameMatchErr != nil {
 						errors = append(errors, fmt.Errorf(
