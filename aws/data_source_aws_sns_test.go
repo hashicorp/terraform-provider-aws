@@ -62,8 +62,17 @@ resource "aws_sns_topic" "tf_wrong2" {
   name = "wrong2"
 }
 
+# Can't work until fifo support is added
+#resource "aws_sns_topic" "tf_test_with_dot" {
+#  name = "tf_test.fifo"
+#}
+
 data "aws_sns_topic" "by_name" {
   name = aws_sns_topic.tf_test.name
   depends_on = [aws_sns_topic.tf_test]
+}
+
+data "aws_sns_topic" "by_name_with_dot" {
+  name = "tf_test.fifo"
 }
 `
