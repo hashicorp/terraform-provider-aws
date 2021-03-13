@@ -123,7 +123,8 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 2678000),
-			}},
+			},
+		},
 	}
 }
 
