@@ -19,6 +19,12 @@ func TestAccDataSourceAwsSnsTopic_basic(t *testing.T) {
 					testAccDataSourceAwsSnsTopicCheck("data.aws_sns_topic.by_name"),
 				),
 			},
+			{
+				Config: testAccDataSourceAwsSnsTopicConfigFifo,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsSnsTopicCheckFifo("data.aws_sns_topic.by_name_fifo"),
+				),
+			},
 		},
 	})
 }
@@ -49,6 +55,36 @@ func testAccDataSourceAwsSnsTopicCheck(name string) resource.TestCheckFunc {
 	}
 }
 
+func testAccDataSourceAwsSnsTopicCheckFifo(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("root module has no resource called %s", name)
+		}
+		//snsTopicRs, ok := s.RootModule().Resources["aws_sns_topic.tf_test_fifo"]
+		//if !ok {
+		//	return fmt.Errorf("can't find aws_sns_topic.tf_test_fifo in state")
+		//}
+		//attr := rs.Primary.Attributes
+
+		//if attr["name"] != snsTopicRs.Primary.Attributes["name"] {
+		//	return fmt.Errorf(
+		//		"name is %s; want %s",
+		//		attr["name"],
+		//		snsTopicRs.Primary.Attributes["name"],
+		//	)
+		//}
+		if rs.Primary.Attributes["name"] != "tf_test.fifo" {
+			return fmt.Errorf(
+				"name is %s; want %s",
+				rs.Primary.Attributes["name"],
+				"tf_test.fifo")
+		}
+
+		return nil
+	}
+}
+
 const testAccDataSourceAwsSnsTopicConfig = `
 resource "aws_sns_topic" "tf_wrong1" {
   name = "wrong1"
@@ -62,17 +98,19 @@ resource "aws_sns_topic" "tf_wrong2" {
   name = "wrong2"
 }
 
-# Can't work until fifo support is added
-#resource "aws_sns_topic" "tf_test_with_dot" {
-#  name = "tf_test.fifo"
-#}
-
 data "aws_sns_topic" "by_name" {
   name = aws_sns_topic.tf_test.name
   depends_on = [aws_sns_topic.tf_test]
 }
+`
 
-data "aws_sns_topic" "by_name_with_dot" {
+const testAccDataSourceAwsSnsTopicConfigFifo = `
+# Can't work until fifo support is added
+#resource "aws_sns_topic" "tf_test_fifo" {
+#  name = "tf_test.fifo"
+#}
+
+data "aws_sns_topic" "by_name_fifo" {
   name = "tf_test.fifo"
 }
 `
