@@ -404,7 +404,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB File Share Visibility", input)
 		_, err := conn.UpdateSMBFileShareVisibility(input)
 		if err != nil {
-			return fmt.Errorf("error setting SMB File Share Visibility: %w", err)
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s) SMB file share visibility: %w", d.Id(), err)
 		}
 	}
 
@@ -642,7 +642,7 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB File Share Visibility", input)
 		_, err := conn.UpdateSMBFileShareVisibility(input)
 		if err != nil {
-			return fmt.Errorf("error updating SMB File Share Visibility: %w", err)
+			return fmt.Errorf("error updating Storage Gateway Gateway (%s) SMB file share visibility: %w", d.Id(), err)
 		}
 	}
 
