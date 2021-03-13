@@ -19,6 +19,15 @@ func TestAccDataSourceAwsSnsTopic_basic(t *testing.T) {
 					testAccDataSourceAwsSnsTopicCheck("data.aws_sns_topic.by_name"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsSnsTopic_fifo(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSnsTopicConfigFifo,
 				Check: resource.ComposeTestCheckFunc(
