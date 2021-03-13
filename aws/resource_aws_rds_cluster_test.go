@@ -1525,7 +1525,6 @@ func TestAccAWSRDSCluster_Port(t *testing.T) {
 				Config: testAccAWSClusterConfig_Port(rInt, 2345),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
-					testAccCheckAWSClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
 				),
 			},
