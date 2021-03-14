@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	awsAccountIDRegexpInternalPattern = `(aws|\d{12})`
-	awsPartitionRegexpInternalPattern = `aws(-[a-z]+)*`
-	awsRegionRegexpInternalPattern    = `[a-z]{2}(-[a-z]+)+-\d`
+	awsAccountIDRegexpInternalPattern   = `(aws|\d{12})`
+	awsPartitionRegexpInternalPattern   = `aws(-[a-z]+)*`
+	awsRegionRegexpInternalPattern      = `[a-z]{2}(-[a-z]+)+-\d`
 	awsSessionNameRegexpInternalPattern = `[\w+=,.@-]*`
 )
 
