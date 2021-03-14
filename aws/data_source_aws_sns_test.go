@@ -2,6 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"log"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -29,13 +32,30 @@ func TestAccDataSourceAwsSnsTopic_fifo(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSnsTopicConfigFifo,
+				PreConfig: testAccDataSourceAwsSnsTopicCreateFifo,
+				Config:    testAccDataSourceAwsSnsTopicConfigFifo,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSnsTopicCheckFifo("data.aws_sns_topic.by_name_fifo"),
 				),
 			},
 		},
 	})
+}
+
+func testAccDataSourceAwsSnsTopicCreateFifo() {
+	conn := testAccProvider.Meta().(*AWSClient).snsconn
+	params := &sns.CreateTopicInput{
+		Name: aws.String("tf_test.fifo"),
+		Attributes: map[string]*string{
+			"FifoTopic": aws.String("true"),
+		},
+	}
+	_, err := conn.CreateTopic(params)
+	if err != nil {
+		log.Printf("[INFO] Failed to create topic %s", err)
+	} else {
+		log.Printf("[INFO] Created FIFO SNS Topic")
+	}
 }
 
 func testAccDataSourceAwsSnsTopicCheck(name string) resource.TestCheckFunc {
