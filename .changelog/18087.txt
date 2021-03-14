@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sns_topic: Allow getting info for FIFO SNS topics with .fifo suffix in the name
+```
