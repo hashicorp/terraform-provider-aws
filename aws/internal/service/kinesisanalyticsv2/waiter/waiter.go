@@ -59,7 +59,7 @@ func ApplicationStarted(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string
 // ApplicationStopped waits for an Application to stop
 func ApplicationStopped(conn *kinesisanalyticsv2.KinesisAnalyticsV2, name string) (*kinesisanalyticsv2.ApplicationDetail, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{kinesisanalyticsv2.ApplicationStatusStopping},
+		Pending: []string{kinesisanalyticsv2.ApplicationStatusForceStopping, kinesisanalyticsv2.ApplicationStatusStopping},
 		Target:  []string{kinesisanalyticsv2.ApplicationStatusReady},
 		Refresh: ApplicationStatus(conn, name),
 		Timeout: ApplicationStoppedTimeout,

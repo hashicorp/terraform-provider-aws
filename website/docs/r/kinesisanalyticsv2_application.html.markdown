@@ -261,6 +261,7 @@ The following arguments are supported:
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
+* `force_stop` - (Optional) Whether to force stop an unresponsive Flink-based application.
 * `start_application` - (Optional) Whether to start or stop the application.
 * `tags` - (Optional) A map of tags to assign to the application.
 

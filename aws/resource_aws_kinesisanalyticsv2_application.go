@@ -864,6 +864,11 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"force_stop": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"last_update_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -2884,6 +2889,10 @@ func expandKinesisAnalyticsV2StartApplicationInput(d *schema.ResourceData) *kine
 func expandKinesisAnalyticsV2StopApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.StopApplicationInput {
 	apiObject := &kinesisanalyticsv2.StopApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),
+	}
+
+	if v, ok := d.GetOk("force_stop"); ok {
+		apiObject.Force = aws.Bool(v.(bool))
 	}
 
 	return apiObject
