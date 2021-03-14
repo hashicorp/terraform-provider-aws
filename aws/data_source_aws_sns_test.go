@@ -42,6 +42,7 @@ func TestAccDataSourceAwsSnsTopic_fifo(t *testing.T) {
 	})
 }
 
+// TODO: Replace this function with terraform config once FIFO SNS is supported
 func testAccDataSourceAwsSnsTopicCreateFifo() {
 	conn := testAccProvider.Meta().(*AWSClient).snsconn
 	params := &sns.CreateTopicInput{
