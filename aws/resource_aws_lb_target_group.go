@@ -142,8 +142,9 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie", // Only for ALBs
-								"source_ip", // Only for NLBs
+								"lb_cookie",  // Only for ALBs
+								"app_cookie", // Only for ALBs
+								"source_ip",  // Only for NLBs
 							}, false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								switch d.Get("protocol").(string) {
@@ -167,6 +168,33 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 									return true
 								}
 								return false
+							},
+						},
+						"app_cookie": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("protocol").(string) {
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+									return true
+								}
+								return false
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cookie_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"duration_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      86400,
+										ValidateFunc: validation.IntBetween(0, 604800),
+									},
+								},
 							},
 						},
 					},
@@ -450,7 +478,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			if len(stickinessBlocks) == 1 {
 				stickiness := stickinessBlocks[0].(map[string]interface{})
 
-				if !stickiness["enabled"].(bool) && stickiness["type"].(string) == "lb_cookie" && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
+				if !stickiness["enabled"].(bool) && (stickiness["type"].(string) == "lb_cookie" || stickiness["type"].(string) == "app_cookie") && d.Get("protocol").(string) != elbv2.ProtocolEnumHttp && d.Get("protocol").(string) != elbv2.ProtocolEnumHttps {
 					log.Printf("[WARN] invalid configuration, this will fail in a future version: stickiness enabled %v, protocol %s, type %s", stickiness["enabled"].(bool), d.Get("protocol").(string), stickiness["type"].(string))
 				} else {
 					attrs = append(attrs,
@@ -465,11 +493,25 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 					switch d.Get("protocol").(string) {
 					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							})
+						if stickiness["type"].(string) == "lb_cookie" {
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+								})
+						} else {
+							appCookie := stickiness["app_cookie"].(map[string]interface{})
+							attrs = append(attrs,
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+									Value: aws.String(fmt.Sprintf("%d", appCookie["duration_seconds"].(int))),
+								},
+								&elbv2.TargetGroupAttribute{
+									Key:   aws.String("stickiness.app_cookie.cookie_name"),
+									Value: aws.String(appCookie["cookie_name"].(string)),
+								})
+						}
+
 					}
 				}
 			} else if len(stickinessBlocks) == 0 {
@@ -689,6 +731,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 
 func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elbv2.TargetGroupAttribute) error {
 	stickinessMap := map[string]interface{}{}
+	appStickinessMap := map[string]interface{}{}
 	for _, attr := range attributes {
 		switch aws.StringValue(attr.Key) {
 		case "stickiness.enabled":
@@ -711,13 +754,25 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 				return fmt.Errorf("Error converting deregistration_delay.timeout_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("deregistration_delay", timeout)
+		case "stickiness.app_cookie.cookie_name":
+			appStickinessMap["cookie_name"] = aws.StringValue(attr.Value)
+		case "stickiness.app_cookie.duration_seconds":
+			duration, err := strconv.Atoi(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting stickiness.app_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+			}
+			appStickinessMap["duration_seconds"] = duration
 		}
+	}
+	if len(appStickinessMap) > 0 {
+		stickinessMap["app_cookie"] = appStickinessMap
 	}
 
 	setStickyMap := []interface{}{}
 	if len(stickinessMap) > 0 {
 		setStickyMap = []interface{}{stickinessMap}
 	}
+
 	if err := d.Set("stickiness", setStickyMap); err != nil {
 		return err
 	}

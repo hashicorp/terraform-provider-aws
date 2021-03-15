@@ -92,6 +92,22 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"app_cookie": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cookie_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"duration_seconds": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
