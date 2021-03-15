@@ -1242,8 +1242,9 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "private"
+  acl           = "private"
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_iam_role" "firehose_role" {
