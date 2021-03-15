@@ -41,6 +41,7 @@ func TestAccAWSAppmesh_serial(t *testing.T) {
 			"listenerConnectionPool": testAccAwsAppmeshVirtualGateway_ListenerConnectionPool,
 			"listenerHealthChecks":   testAccAwsAppmeshVirtualGateway_ListenerHealthChecks,
 			"listenerTls":            testAccAwsAppmeshVirtualGateway_ListenerTls,
+			"listenerValidation":     testAccAwsAppmeshVirtualGateway_ListenerValidation,
 			"logging":                testAccAwsAppmeshVirtualGateway_Logging,
 			"tags":                   testAccAwsAppmeshVirtualGateway_Tags,
 		},
