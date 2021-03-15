@@ -138,7 +138,7 @@ func resourceAwsVpc() *schema.Resource {
 func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	tags := keyvaluetags.MergeConfigTags(defaultTagsConfig, d.Get("tags").(map[string]interface{}))
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the VPC
 	createOpts := &ec2.CreateVpcInput{

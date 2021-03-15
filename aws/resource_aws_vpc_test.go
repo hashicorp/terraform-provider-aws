@@ -171,7 +171,7 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -188,7 +188,7 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -201,7 +201,7 @@ func TestAccAWSVpc_defaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -237,7 +237,7 @@ func TestAccAWSVpc_defaultTags_updateToProviderOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("key1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -268,7 +268,7 @@ func TestAccAWSVpc_defaultTags_updateToResourceOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("key1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
 					testAccVpcConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -309,7 +309,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -328,7 +328,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccAWSVPCConfigTags2("resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -344,7 +344,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_nonOverlappingTag(t *testing.
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
 					testAccAWSVPCConfigTags1("resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -372,7 +372,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -389,7 +389,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
 					testAccAWSVPCConfigTags2("overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -404,7 +404,7 @@ func TestAccAWSVpc_defaultTags_providerAndResource_overlappingTag(t *testing.T) 
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccAWSVPCConfigTags1("overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -429,11 +429,47 @@ func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
 					testAccAWSVPCConfigTags1("overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSVPCConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
+					testAccAWSVPCConfigTags1("key1", "value1"),
+				),
+				PlanOnly: true,
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
+					testAccAWSVPCConfigTags1("key1", "value1"),
+				),
+				PlanOnly: true,
 			},
 		},
 	})

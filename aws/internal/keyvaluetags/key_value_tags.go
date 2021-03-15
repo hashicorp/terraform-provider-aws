@@ -55,30 +55,34 @@ func (tags KeyValueTags) IgnoreAws() KeyValueTags {
 	return result
 }
 
-// Merge calls keyvaluetags.Merge() on the given DefaultConfig.Tags, if any,
-// with KeyValueTags provided as an argument, overriding the value
-// of any tag with a matching key.
-func (config *DefaultConfig) Merge(tags KeyValueTags) KeyValueTags {
-	if len(config.Tags) == 0 {
+// MergeTags returns the result of keyvaluetags.Merge() on the given
+// DefaultConfig.Tags with KeyValueTags provided as an argument,
+// overriding the value of any tag with a matching key.
+func (dc *DefaultConfig) MergeTags(tags KeyValueTags) KeyValueTags {
+	if dc == nil || dc.Tags == nil {
 		return tags
 	}
 
-	return config.Tags.Merge(tags)
+	return dc.Tags.Merge(tags)
 }
 
 // TagsEqual returns true if the given configuration's Tags
 // are equal to those passed in as an argument;
 // otherwise returns false
-func (config *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
-	if len(config.Tags) == 0 {
-		return len(tags) == 0
+func (dc *DefaultConfig) TagsEqual(tags KeyValueTags) bool {
+	if dc == nil || dc.Tags == nil {
+		return tags == nil
 	}
 
-	if len(tags) == 0 {
+	if tags == nil {
 		return false
 	}
 
-	return config.Tags.ContainsAll(tags)
+	if len(tags) == 0 {
+		return len(dc.Tags) == 0
+	}
+
+	return dc.Tags.ContainsAll(tags)
 }
 
 // IgnoreConfig returns any tags not removed by a given configuration.
@@ -437,15 +441,15 @@ func (tags KeyValueTags) Hash() int {
 // however, if all tags present in the DefaultConfig object are equivalent to those
 // in the given KeyValueTags, then the KeyValueTags are returned, effectively
 // bypassing the need to remove differing tags.
-func (tags KeyValueTags) RemoveDefaultConfig(config *DefaultConfig) KeyValueTags {
-	if config == nil || len(config.Tags) == 0 {
+func (tags KeyValueTags) RemoveDefaultConfig(dc *DefaultConfig) KeyValueTags {
+	if dc == nil || dc.Tags == nil {
 		return tags
 	}
 
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if defaultVal, ok := config.Tags[k]; !ok || !v.Equal(defaultVal) {
+		if defaultVal, ok := dc.Tags[k]; !ok || !v.Equal(defaultVal) {
 			result[k] = v
 		}
 	}
@@ -485,30 +489,6 @@ func (tags KeyValueTags) UrlEncode() string {
 	}
 
 	return values.Encode()
-}
-
-// MergeConfigTags creates KeyValueTags by merging KeyValueTags nested in
-// a configuration object with those represented as a map[string]interface{}.
-// Currently only supports the DefaultConfig type when passed to the interface{} argument.
-func MergeConfigTags(config interface{}, tags map[string]interface{}) KeyValueTags {
-	kvTags := New(tags)
-
-	if config == nil {
-		return kvTags
-	}
-
-	var result KeyValueTags
-
-	switch t := config.(type) {
-	case *DefaultConfig:
-		if t == nil || len(t.Tags) == 0 {
-			result = kvTags
-		} else {
-			result = t.Merge(kvTags)
-		}
-	}
-
-	return result
 }
 
 // New creates KeyValueTags from common Terraform Provider SDK types.

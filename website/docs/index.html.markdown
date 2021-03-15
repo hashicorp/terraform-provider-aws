@@ -218,7 +218,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   
 * `default_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.**
 Map of tags to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations).
-This is designed to replace redundant per-resource `tags` configurations. At this time, tags defined within this configuration block can be overridden with new values, but not ignored with the `ignore_changes` argument of a [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html). To override tag values defined within this configuration block, use the `tags` argument within a resource to configure new tag values for matching keys.
+This is designed to replace redundant per-resource `tags` configurations. At this time, tags defined within this configuration block can be overridden with new values, but not excluded from specific resources. To override tag values defined within this configuration block, use the `tags` argument within a resource to configure new tag values for matching keys.
 See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments.
 This functionality is only supported in the following resources:
     - `aws_subnet`

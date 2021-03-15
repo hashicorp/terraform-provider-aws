@@ -215,7 +215,7 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -232,7 +232,7 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -245,7 +245,7 @@ func TestAccAWSSubnet_defaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -282,7 +282,7 @@ func TestAccAWSSubnet_defaultTags_updateToProviderOnly(t *testing.T) {
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("key1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -314,7 +314,7 @@ func TestAccAWSSubnet_defaultTags_updateToResourceOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("key1", "value1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("key1", "value1"),
 					testAccSubnetConfig,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -356,7 +356,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -375,7 +375,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccSubnetTagsConfig2(rName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -391,7 +391,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_nonOverlappingTag(t *testi
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags1("providerkey2", "providervalue2"),
 					testAccSubnetTagsConfig1(rName, "resourcekey3", "resourcevalue3"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -420,7 +420,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -437,7 +437,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+					testAccAWSProviderConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
 					testAccSubnetTagsConfig2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -452,7 +452,7 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_overlappingTag(t *testing.
 			},
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
 					testAccSubnetTagsConfig1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -478,11 +478,48 @@ func TestAccAWSSubnet_defaultTags_providerAndResource_duplicateTag(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
+					testAccAWSProviderConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
 					testAccSubnetTagsConfig1(rName, "overlapkey", "overlapvalue"),
 				),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
+			},
+		},
+	})
+}
+
+func TestAccAWSSubnet_defaultAndIgnoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					testAccCheckSubnetUpdateTags(&subnet, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
+					testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				),
+				PlanOnly: true,
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
+					testAccSubnetTagsConfig1(rName, "key1", "value1"),
+				),
+				PlanOnly: true,
 			},
 		},
 	})

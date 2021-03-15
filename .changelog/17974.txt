@@ -3,6 +3,10 @@ provider: New `default_tags` argument as a public preview for applying tags acro
 ```
 
 ```release-note:enhancement
+provider: Add `default_tags` argument (in public preview, see note above)
+
+
+```release-note:enhancement
 aws_subnet: Support provider-wide default tags (in public preview, see note above)
 ```
 

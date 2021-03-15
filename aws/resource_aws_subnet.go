@@ -126,7 +126,7 @@ func resourceAwsSubnet() *schema.Resource {
 func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	tags := keyvaluetags.MergeConfigTags(defaultTagsConfig, d.Get("tags").(map[string]interface{}))
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateSubnetInput{
 		AvailabilityZone:   aws.String(d.Get("availability_zone").(string)),
