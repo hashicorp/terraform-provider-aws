@@ -43,7 +43,7 @@ func resourceAwsGlobalAcceleratorAccelerator() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
+					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
