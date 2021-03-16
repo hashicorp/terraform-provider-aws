@@ -594,7 +594,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{"spec.0.listener.0.tls.0.certificate.0.acm", "spec.0.listener.0.tls.0.certificate.0.file"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
 															},
 
 															"file": {
@@ -617,7 +621,31 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{"spec.0.listener.0.tls.0.certificate.0.acm", "spec.0.listener.0.tls.0.certificate.0.file"},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
+															},
+
+															"sds": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"secret_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+																ExactlyOneOf: []string{
+																	"spec.0.listener.0.tls.0.certificate.0.acm",
+																	"spec.0.listener.0.tls.0.certificate.0.file",
+																	"spec.0.listener.0.tls.0.certificate.0.sds",
+																},
 															},
 														},
 													},
@@ -627,6 +655,93 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),
+												},
+
+												"validation": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"subject_alternative_names": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"match": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 1,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"exact": {
+																						Type:     schema.TypeSet,
+																						Required: true,
+																						Elem:     &schema.Schema{Type: schema.TypeString},
+																						Set:      schema.HashString,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+
+															"trust": {
+																Type:     schema.TypeList,
+																Required: true,
+																MinItems: 1,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"file": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MinItems: 0,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"certificate_chain": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 255),
+																					},
+																				},
+																			},
+																			ExactlyOneOf: []string{
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
+																			},
+																		},
+
+																		"sds": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MinItems: 0,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"secret_name": {
+																						Type:         schema.TypeString,
+																						Required:     true,
+																						ValidateFunc: validation.StringLenBetween(1, 255),
+																					},
+																				},
+																			},
+																			ExactlyOneOf: []string{
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
+																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -771,6 +886,53 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"certificate": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 0,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"file": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"certificate_chain": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+
+													"private_key": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringLenBetween(1, 255),
+													},
+												},
+											},
+										},
+
+										"sds": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"secret_name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+
 							"enforce": {
 								Type:     schema.TypeBool,
 								Optional: true,
@@ -791,6 +953,33 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"subject_alternative_names": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 0,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"match": {
+														Type:     schema.TypeList,
+														Required: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"exact": {
+																	Type:     schema.TypeSet,
+																	Required: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																	Set:      schema.HashString,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+
 										"trust": {
 											Type:     schema.TypeList,
 											Required: true,
@@ -823,6 +1012,22 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"certificate_chain": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringLenBetween(1, 255),
+																},
+															},
+														},
+													},
+
+													"sds": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 0,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"secret_name": {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
