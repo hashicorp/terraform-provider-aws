@@ -221,6 +221,7 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_repository_endpoint":           dataSourceAwsCodeArtifactRepositoryEndpoint(),
 			"aws_cognito_user_pools":                         dataSourceAwsCognitoUserPools(),
 			"aws_codecommit_repository":                      dataSourceAwsCodeCommitRepository(),
+			"aws_codestarconnections_connection":             dataSourceAwsCodeStarConnectionsConnection(),
 			"aws_cur_report_definition":                      dataSourceAwsCurReportDefinition(),
 			"aws_db_cluster_snapshot":                        dataSourceAwsDbClusterSnapshot(),
 			"aws_db_event_categories":                        dataSourceAwsDbEventCategories(),
