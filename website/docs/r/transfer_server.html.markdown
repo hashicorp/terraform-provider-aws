@@ -10,6 +10,7 @@ description: |-
 
 Provides a AWS Transfer Server resource.
 
+## Example Usage
 
 ```hcl
 resource "aws_transfer_server" "example" {

@@ -10,7 +10,9 @@ description: |-
 
 Provides an SSM Maintenance Window Target resource
 
-## Instance Target Example Usage
+## Example Usage
+
+### Instance Target
 
 ```hcl
 resource "aws_ssm_maintenance_window" "window" {
@@ -33,7 +35,7 @@ resource "aws_ssm_maintenance_window_target" "target1" {
 }
 ```
 
-## Resource Group Target Example Usage
+### Resource Group Target
 
 ```hcl
 resource "aws_ssm_maintenance_window" "window" {

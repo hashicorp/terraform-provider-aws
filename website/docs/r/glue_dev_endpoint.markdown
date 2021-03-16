@@ -6,7 +6,7 @@ description: |-
   Provides a Glue Development Endpoint resource.
 ---
 
-# aws_glue_dev_endpoint
+# Resource: aws_glue_dev_endpoint
 
 Provides a Glue Development Endpoint resource.
 

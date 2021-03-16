@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic MapReduce Cluster Instance Fleet
 ---
 
-# aws_emr_instance_fleet
+# Resource: aws_emr_instance_fleet
 
 Provides an Elastic MapReduce Cluster Instance Fleet configuration.
 See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/emr/) for more information.
