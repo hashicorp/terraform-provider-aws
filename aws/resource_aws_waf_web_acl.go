@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -50,7 +51,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 			},
 			"logging_configuration": {
 				Type:     schema.TypeList,
@@ -126,14 +127,10 @@ func resourceAwsWafWebAcl() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  waf.WafRuleTypeRegular,
-							ValidateFunc: validation.StringInSlice([]string{
-								waf.WafRuleTypeRegular,
-								waf.WafRuleTypeRateBased,
-								waf.WafRuleTypeGroup,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      waf.WafRuleTypeRegular,
+							ValidateFunc: validation.StringInSlice(waf.WafRuleType_Values(), false),
 						},
 						"rule_id": {
 							Type:     schema.TypeString,
@@ -166,9 +163,11 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 
 		return conn.CreateWebACL(params)
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating WAF Web ACL (%s): %w", d.Get("name").(string), err)
 	}
+
 	resp := out.(*waf.CreateWebACLOutput)
 	d.SetId(aws.StringValue(resp.WebACL.WebACLId))
 
@@ -186,7 +185,7 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if _, err := conn.PutLoggingConfiguration(input); err != nil {
-			return fmt.Errorf("error putting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+			return fmt.Errorf("error putting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -202,6 +201,7 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 			}
 			return conn.UpdateWebACL(req)
 		})
+
 		if err != nil {
 			return fmt.Errorf("error updating WAF Web ACL (%s): %w", d.Id(), err)
 		}
@@ -226,12 +226,12 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting WAF Web ACL (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading WAF Web ACL (%s): %w", d.Id(), err)
 	}
 
 	if resp == nil || resp.WebACL == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error getting WAF Web ACL (%s): not found", d.Id())
+			return fmt.Errorf("error reading WAF Web ACL (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] WAF Web ACL (%s) not found, removing from state", d.Id())
@@ -250,7 +250,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := keyvaluetags.WafListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", arn, err)
 	}
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
@@ -267,8 +267,8 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
-	if err != nil && !isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
-		return fmt.Errorf("error getting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return fmt.Errorf("error reading WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
 	}
 
 	if getLoggingConfigurationOutput != nil {
@@ -368,9 +368,14 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 
 		return conn.DeleteWebACL(req)
 	})
+
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			return nil
+		}
 		return fmt.Errorf("error deleting WAF Web ACL (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 

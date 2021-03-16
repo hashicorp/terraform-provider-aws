@@ -3,14 +3,22 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+)
+
+const (
+	WafRuleDeleteTimeout = 5 * time.Minute
 )
 
 func resourceAwsWafRule() *schema.Resource {
@@ -33,7 +41,7 @@ func resourceAwsWafRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateWafMetricName,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 			},
 			"predicates": {
 				Type:     schema.TypeSet,
@@ -52,7 +60,7 @@ func resourceAwsWafRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateWafPredicatesType(),
+							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
 						},
 					},
 				},
@@ -84,9 +92,11 @@ func resourceAwsWafRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return conn.CreateRule(params)
 	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating WAF Rule (%s): %w", d.Get("name").(string), err)
 	}
+
 	resp := out.(*waf.CreateRuleOutput)
 	d.SetId(aws.StringValue(resp.Rule.RuleId))
 
@@ -118,12 +128,12 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting WAF Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading WAF Rule (%s): %w", d.Id(), err)
 	}
 
 	if resp == nil || resp.Rule == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error getting WAF Rule (%s): not found", d.Id())
+			return fmt.Errorf("error reading WAF Rule (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
@@ -153,7 +163,7 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := keyvaluetags.WafListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("error listing tags for WAF Rule (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -204,23 +214,37 @@ func resourceAwsWafRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	wr := newWafRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteRuleInput{
-			ChangeToken: token,
-			RuleId:      aws.String(d.Id()),
+	err := resource.Retry(WafRuleDeleteTimeout, func() *resource.RetryError {
+		var err error
+		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.DeleteRuleInput{
+				ChangeToken: token,
+				RuleId:      aws.String(d.Id()),
+			}
+
+			return conn.DeleteRule(req)
+		})
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, waf.ErrCodeReferencedItemException) {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
 		}
 
-		output, err := conn.DeleteRule(req)
-
-		// Deleting a WAF Rule after being removed from a WAF WebACL
-		// can return a WAFReferencedItemException when attempted in quick succession;
-		// thus, we catch the error here and re-attempt
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeReferencedItemException) {
-			return output, nil
-		}
-
-		return output, err
+		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.DeleteRuleInput{
+				ChangeToken: token,
+				RuleId:      aws.String(d.Id()),
+			}
+
+			return conn.DeleteRule(req)
+		})
+	}
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
@@ -243,9 +267,6 @@ func updateWafRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) e
 
 		return conn.UpdateRule(req)
 	})
-	if err != nil {
-		return fmt.Errorf("error updating WAF Rule (%s): %w", id, err)
-	}
 
-	return nil
+	return err
 }

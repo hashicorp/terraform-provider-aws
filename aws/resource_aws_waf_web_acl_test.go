@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -309,7 +310,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 				Config: testAccAWSWafWebAclConfig_Required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
-					testAccCheckAWSWafWebAclDisappears(&webACL),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafWebAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -376,26 +377,6 @@ func TestAccAWSWafWebAcl_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSWafWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
-
-		wr := newWafRetryer(conn)
-
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			opts := &waf.DeleteWebACLInput{
-				ChangeToken: token,
-				WebACLId:    v.WebACLId,
-			}
-			return conn.DeleteWebACL(opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF ACL: %s", err)
-		}
-		return nil
-	}
-}
-
 func testAccCheckAWSWafWebAclDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_waf_web_acl" {
@@ -408,18 +389,17 @@ func testAccCheckAWSWafWebAclDestroy(s *terraform.State) error {
 				WebACLId: aws.String(rs.Primary.ID),
 			})
 
-		if err == nil {
-			if *resp.WebACL.WebACLId == rs.Primary.ID {
-				return fmt.Errorf("WebACL %s still exists", rs.Primary.ID)
-			}
-		}
-
-		// Return nil if the WebACL is already destroyed
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			continue
 		}
 
-		return err
+		if err != nil {
+			return fmt.Errorf("error reading WAF Web ACL (%s): %w", rs.Primary.ID, err)
+		}
+
+		if resp != nil && resp.WebACL != nil {
+			return fmt.Errorf("WAF Web ACL (%s) still exists", rs.Primary.ID)
+		}
 	}
 
 	return nil
