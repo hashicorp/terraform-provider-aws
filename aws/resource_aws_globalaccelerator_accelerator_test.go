@@ -439,7 +439,9 @@ resource "aws_globalaccelerator_accelerator" "test" {
 func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  acl           = "private"
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {
