@@ -62,6 +62,10 @@ The `filter` metric configuration supports the following:
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 S3 bucket metric configurations can be imported using `bucket:metric`, e.g.

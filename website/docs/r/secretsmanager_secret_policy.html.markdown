@@ -51,6 +51,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - Amazon Resource Name (ARN) of the secret.
 
 ## Import

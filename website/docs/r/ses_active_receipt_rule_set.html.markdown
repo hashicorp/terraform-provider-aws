@@ -26,7 +26,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.

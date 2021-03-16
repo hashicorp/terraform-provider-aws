@@ -32,4 +32,4 @@ The following arguments are required:
 
 ## Attributes Reference
 
-This resource does not export any additional attributes.
+No additional attributes are exported.
