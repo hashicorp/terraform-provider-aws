@@ -94,7 +94,7 @@ func TestAccAWSKmsKey_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 		},
 	})
@@ -169,7 +169,7 @@ func TestAccAWSKmsKey_policy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 			{
 				Config: testAccAWSKmsKey_removedPolicy(rName),
@@ -202,7 +202,7 @@ func TestAccAWSKmsKey_Policy_IamRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 		},
 	})
@@ -230,7 +230,7 @@ func TestAccAWSKmsKey_Policy_IamServiceLinkedRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 		},
 	})
@@ -260,7 +260,7 @@ func TestAccAWSKmsKey_isEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 			{
 				Config: testAccAWSKmsKey_disabled(rName),
@@ -306,7 +306,7 @@ func TestAccAWSKmsKey_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_check"},
 			},
 			{
 				Config: testAccAWSKmsKey(rName),
