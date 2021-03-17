@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -55,10 +56,10 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
-					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
 			},
 			{
@@ -68,18 +69,112 @@ func TestAccAWSSSMParameter_Tier(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, "Standard"),
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierStandard),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
-					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
 				),
 			},
 			{
-				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &parameter3),
-					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_Tier_IntelligentTieringToStandard(t *testing.T) {
+	var parameter ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierStandard),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_Tier_IntelligentTieringToAdvanced(t *testing.T) {
+	var parameter1, parameter2 ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierAdvanced),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierAdvanced),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, ssm.ParameterTierIntelligentTiering),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
+					resource.TestCheckResourceAttr(resourceName, "tier", ssm.ParameterTierStandard),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 		},
 	})
@@ -99,7 +194,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					testAccCheckAWSSSMParameterDisappears(&param),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmParameter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -476,20 +571,6 @@ func testAccCheckAWSSSMParameterExists(n string, param *ssm.Parameter) resource.
 	}
 }
 
-func testAccCheckAWSSSMParameterDisappears(param *ssm.Parameter) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
-
-		paramInput := &ssm.DeleteParameterInput{
-			Name: param.Name,
-		}
-
-		_, err := conn.DeleteParameter(paramInput)
-
-		return err
-	}
-}
-
 func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ssmconn
 
@@ -504,13 +585,21 @@ func testAccCheckAWSSSMParameterDestroy(s *terraform.State) error {
 			},
 		}
 
-		resp, _ := conn.GetParameters(paramInput)
+		resp, err := conn.GetParameters(paramInput)
 
-		if len(resp.Parameters) > 0 {
-			return fmt.Errorf("Expected AWS SSM Parameter to be gone, but was still found")
+		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) {
+			continue
 		}
 
-		return nil
+		if err != nil {
+			return fmt.Errorf("error reading SSM Parameter (%s): %w", rs.Primary.ID, err)
+		}
+
+		if resp == nil || len(resp.Parameters) == 0 {
+			continue
+		}
+
+		return fmt.Errorf("Expected AWS SSM Parameter to be gone, but was still found")
 	}
 
 	return nil
