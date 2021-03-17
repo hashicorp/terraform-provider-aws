@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go/service/auditmanager"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -219,6 +220,7 @@ type AWSClient struct {
 	appstreamconn                       *appstream.AppStream
 	appsyncconn                         *appsync.AppSync
 	athenaconn                          *athena.Athena
+	auditmanagerconn                    *auditmanager.AuditManager
 	autoscalingconn                     *autoscaling.AutoScaling
 	autoscalingplansconn                *autoscalingplans.AutoScalingPlans
 	backupconn                          *backup.Backup
@@ -462,6 +464,7 @@ func (c *Config) Client() (interface{}, error) {
 		appstreamconn:                       appstream.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appstream"])})),
 		appsyncconn:                         appsync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appsync"])})),
 		athenaconn:                          athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["athena"])})),
+		auditmanagerconn:                    auditmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["auditmanager"])})),
 		autoscalingconn:                     autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscaling"])})),
 		autoscalingplansconn:                autoscalingplans.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscalingplans"])})),
 		backupconn:                          backup.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["backup"])})),

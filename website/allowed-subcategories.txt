@@ -8,6 +8,7 @@ AppMesh
 AppSync
 Application Autoscaling
 Athena
+Audit Manager
 Autoscaling
 Autoscaling Plans
 Amazon Managed Service for Prometheus (AMP)

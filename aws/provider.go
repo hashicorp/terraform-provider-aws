@@ -1189,6 +1189,7 @@ func init() {
 		"appstream",
 		"appsync",
 		"athena",
+		"auditmanager",
 		"autoscaling",
 		"autoscalingplans",
 		"backup",
