@@ -114,4 +114,4 @@ The following arguments are optional:
 
 ## Attributes Reference
 
-In addition to the above arguments, no attributes are exported.
+No additional attributes are exported.

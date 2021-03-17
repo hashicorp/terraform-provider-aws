@@ -46,6 +46,10 @@ The following arguments are supported:
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want to attach to the target.
 * `target_id` - (Required) The unique identifier (ID) of the root, organizational unit, or account number that you want to attach the policy to.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_organizations_policy_attachment` can be imported by using the target ID and policy ID, e.g. with an account target

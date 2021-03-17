@@ -52,6 +52,10 @@ If you choose to use __Key credentials__ you will have to provide:
 * `token_key` - (Required) The `.p8` file that you download from your Apple developer account when you create an authentication key.
 * `token_key_id` - (Required) The ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Pinpoint APNs VoIP Channel can be imported using the `application-id`, e.g.

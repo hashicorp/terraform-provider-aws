@@ -40,6 +40,10 @@ The following arguments are supported:
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier.
 * `schedule_identifier` - (Required, Forces new resource) The snapshot schedule identifier.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Redshift Snapshot Schedule Association can be imported using the `<cluster-identifier>/<schedule-identifier>`, e.g.

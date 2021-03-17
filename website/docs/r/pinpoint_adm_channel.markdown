@@ -37,6 +37,10 @@ The following arguments are supported:
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Pinpoint ADM Channel can be imported using the `application-id`, e.g.

@@ -31,6 +31,12 @@ identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `force_destroy` - (Optional) Whether to destroy all associated clusters with this snapshot schedule on deletion. Must be enabled and applied before attempting deletion.
 * `tags` - (Optional) A map of tags to assign to the resource.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the Redshift Snapshot Schedule.
+
 ## Import
 
 Redshift Snapshot Schedule can be imported using the `identifier`, e.g.
