@@ -1036,6 +1036,76 @@ func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) r
 	}
 }
 
+type ServiceErrorCheckFunc func(*testing.T) resource.ErrorCheckFunc
+
+var serviceErrorCheckFuncs map[string]ServiceErrorCheckFunc
+
+func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
+	if serviceErrorCheckFuncs == nil {
+		serviceErrorCheckFuncs = make(map[string]ServiceErrorCheckFunc)
+	}
+
+	if _, ok := serviceErrorCheckFuncs[endpointID]; ok {
+		// already registered
+		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID)) //lintignore:R009
+	}
+
+	serviceErrorCheckFuncs[endpointID] = f
+}
+
+func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err == nil {
+			return err
+		}
+
+		for _, endpointID := range endpointIDs {
+			if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
+				ef := f(t)
+				err = ef(err)
+			}
+
+			if err == nil {
+				break
+			}
+		}
+
+		if testAccErrorCheckCommon(err) {
+			t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+		}
+
+		return err
+	}
+}
+
+func testAccErrorCheckCommon(err error) bool {
+	if strings.Contains(err.Error(), "is not supported in this") {
+		return true
+	}
+
+	if strings.Contains(err.Error(), "is currently not supported") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+		return true
+	}
+
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+
+	return false
+}
+
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
