@@ -594,38 +594,6 @@ func TestAccAWSCodeBuildProject_LogsConfig_S3Logs(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
-	var project codebuild.Project
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_codebuild_project.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSCodeBuildProjectConfig_Source_Auth(rName, "FAKERESOURCE1", "INVALID"),
-				ExpectError: regexp.MustCompile(`expected source.0.auth.0.type to be one of`),
-			},
-			{
-				Config: testAccAWSCodeBuildProjectConfig_Source_Auth(rName, "FAKERESOURCE1", "OAUTH"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.0.resource", "FAKERESOURCE1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.0.type", "OAUTH"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2833,35 +2801,6 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, status, location, encryptionDisabled))
-}
-
-func testAccAWSCodeBuildProjectConfig_Source_Auth(rName, authResource, authType string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
-resource "aws_codebuild_project" "test" {
-  name         = "%s"
-  service_role = aws_iam_role.test.arn
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
-  }
-
-  source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
-
-    auth {
-      resource = "%s"
-      type     = "%s"
-    }
-  }
-}
-`, rName, authResource, authType))
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName string, gitCloneDepth int) string {
