@@ -142,7 +142,7 @@ resource "aws_workspaces_ip_group" "example" {
 }
 ```
 
-## Arguments Reference
+## Argument Reference
 
 The following arguments are supported:
 

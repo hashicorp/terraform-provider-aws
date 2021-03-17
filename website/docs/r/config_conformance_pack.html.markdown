@@ -17,7 +17,9 @@ Sample Conformance Pack templates may be found in the
 successfully create or update. See also the
 [`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
 
-## Example Usage with Template Body
+## Example Usage
+
+### Template Body
 
 ```terraform
 resource "aws_config_conformance_pack" "example" {
@@ -46,7 +48,7 @@ EOT
 }
 ```
 
-## Example Usage with Template S3 URI
+### Template S3 URI
 
 ```terraform
 resource "aws_config_conformance_pack" "example" {

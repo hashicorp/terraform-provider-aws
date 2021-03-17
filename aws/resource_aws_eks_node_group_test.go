@@ -869,7 +869,7 @@ func testAccCheckAWSEksNodeGroupDisappears(nodeGroup *eks.Nodegroup) resource.Te
 
 func testAccCheckAWSEksNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedAt) != aws.TimeValue(j.CreatedAt) {
+		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("EKS Node Group (%s) was recreated", aws.StringValue(j.NodegroupName))
 		}
 
@@ -879,7 +879,7 @@ func testAccCheckAWSEksNodeGroupNotRecreated(i, j *eks.Nodegroup) resource.TestC
 
 func testAccCheckAWSEksNodeGroupRecreated(i, j *eks.Nodegroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedAt) == aws.TimeValue(j.CreatedAt) {
+		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
 			return fmt.Errorf("EKS Node Group (%s) was not recreated", aws.StringValue(j.NodegroupName))
 		}
 

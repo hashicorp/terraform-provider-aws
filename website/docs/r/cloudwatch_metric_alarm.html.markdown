@@ -238,12 +238,12 @@ The following values are supported: `ignore`, and `evaluate`.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the cloudwatch metric alarm.
-* `id` - The ID of the health check
+* `arn` - The ARN of the CloudWatch Metric Alarm.
+* `id` - The ID of the health check.
 
 ## Import
 
-Cloud Metric Alarms can be imported using the `alarm_name`, e.g.
+CloudWatch Metric Alarm can be imported using the `alarm_name`, e.g.
 
 ```
 $ terraform import aws_cloudwatch_metric_alarm.test alarm-12345

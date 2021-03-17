@@ -138,6 +138,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/athena" = [
       "aws_athena_",
     ],
+    "service/auditmanager" = [
+      "aws_auditmanager_",
+    ],
     "service/autoscaling" = [
       "aws_autoscaling_",
       "aws_launch_configuration",
@@ -739,6 +742,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/athena/**/*",
       "**/*_athena_*",
       "**/athena_*"
+    ]
+    "service/auditmanager" = [
+      "aws/internal/service/auditmanager/**/*",
+      "**/*_auditmanager_*",
+      "**/auditmanager_*"
     ]
     "service/autoscaling" = [
       "aws/internal/service/autoscaling/**/*",

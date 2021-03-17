@@ -93,7 +93,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.example"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -105,7 +105,7 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.r", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.example", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_config_configuration_aggregator.example"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
@@ -279,10 +279,12 @@ data "aws_caller_identity" "current" {
 
 func testAccAWSConfigConfigurationAggregatorConfig_organization(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["config.${data.aws_partition.current.dns_suffix}"]
+}
 
 resource "aws_config_configuration_aggregator" "example" {
-  depends_on = [aws_iam_role_policy_attachment.example]
+  depends_on = [aws_iam_role_policy_attachment.example, aws_organizations_organization.test]
 
   name = %[1]q
 

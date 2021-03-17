@@ -89,7 +89,7 @@ The following arguments are optional:
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` only. Detailed below.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
-* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below.
+* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
 * `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.

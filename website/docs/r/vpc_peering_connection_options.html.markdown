@@ -19,7 +19,9 @@ Using a VPC Peering Connection Options resource decouples management of the conn
 management of the VPC Peering Connection and allows options to be set correctly in cross-region and
 cross-account scenarios.
 
-Basic usage:
+## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_vpc" "foo" {
@@ -50,7 +52,7 @@ resource "aws_vpc_peering_connection_options" "foo" {
 }
 ```
 
-Basic cross-account usage:
+### Cross-Account Usage
 
 ```terraform
 provider "aws" {

@@ -253,7 +253,7 @@ func testAccCheckAWSDataSyncLocationSmbDisappears(location *datasync.DescribeLoc
 
 func testAccCheckAWSDataSyncLocationSmbNotRecreated(i, j *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreationTime) != aws.TimeValue(j.CreationTime) {
+		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
 			return errors.New("DataSync Location SMB was recreated")
 		}
 

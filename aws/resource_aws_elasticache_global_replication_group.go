@@ -115,9 +115,10 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 			// 	},
 			// },
 			"primary_replication_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateReplicationGroupID,
 			},
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,

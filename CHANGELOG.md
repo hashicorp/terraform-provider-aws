@@ -1,4 +1,29 @@
-## 3.32.0 (Unreleased)
+## 3.32.0 (March 12, 2021)
+
+ENHANCEMENTS:
+
+* resource/aws_ssm_parameter: Add support for `Intelligent-Tiering` ([#11967](https://github.com/hashicorp/terraform-provider-aws/issues/11967))
+
+BUG FIXES:
+
+* resource/aws_dms_certificate: Correctly base64 decode `certificate_wallet` value ([#17958](https://github.com/hashicorp/terraform-provider-aws/issues/17958))
+* resource/aws_globalaccelerator_accelerator: Correct length for `name` attribute validation ([#17985](https://github.com/hashicorp/terraform-provider-aws/issues/17985))
+* resource/aws_waf_rule: Fix rule deletion when still referenced by a WebACL ([#17876](https://github.com/hashicorp/terraform-provider-aws/issues/17876))
+
+## 3.32.0 (March 12, 2021)
+
+BUG FIXES:
+
+* resource/aws_globalaccelerator_accelerator: Correct length for `name` attribute validation ([#17985](https://github.com/hashicorp/terraform-provider-aws/issues/17985))
+* resource/aws_waf_rule: Fix rule deletion when still referenced by a WebACL ([#17876](https://github.com/hashicorp/terraform-provider-aws/issues/17876))
+
+## 3.32.0 (March 12, 2021)
+
+FEATURES:
+
+* **New Data Source:** `aws_acmpca_certificate` ([#10213](https://github.com/hashicorp/terraform-provider-aws/issues/10213))
+* **New Resource:** `aws_acmpca_certificate` ([#10213](https://github.com/hashicorp/terraform-provider-aws/issues/10213))
+* **New Resource:** `aws_acmpca_certificate_authority_certificate` ([#17850](https://github.com/hashicorp/terraform-provider-aws/issues/17850))
 
 ENHANCEMENTS:
 
@@ -9,7 +34,12 @@ ENHANCEMENTS:
 * resource/aws_cognito_user_pool: Add support for `configuration_set` in `email_configuration` ([#14935](https://github.com/hashicorp/terraform-provider-aws/issues/14935))
 * resource/aws_cognito_user_pool_client: Add plan time validation for `name`, `default_redirect_uri`, `supported_identity_providers` ([#14935](https://github.com/hashicorp/terraform-provider-aws/issues/14935))
 * resource/aws_cognito_user_pool_client: Add support for `access_token_validity` and `id_token_validity`, `token_validity_units` ([#14935](https://github.com/hashicorp/terraform-provider-aws/issues/14935))
+* resource/aws_db_instance: Allow `snapshot_identifier` to be removed from configuration without resource recreation ([#18013](https://github.com/hashicorp/terraform-provider-aws/issues/18013))
+* resource/aws_elasticache_replication_group: Allows creating a Replication Group as part of a Global Replication Group ([#17725](https://github.com/hashicorp/terraform-provider-aws/issues/17725))
+* resource/aws_kinesis_analytics_application: Add `start_application` attribute ([#17784](https://github.com/hashicorp/terraform-provider-aws/issues/17784))
+* resource/aws_kinesis_analytics_application: `starting_position_configuration` can be specified when starting an application ([#17784](https://github.com/hashicorp/terraform-provider-aws/issues/17784))
 * resource/aws_mq_broker: Add RabbitMQ as option for `engine_type`, and new arguments `authentication_strategy`, `ldap_server_metadata`, and `storage_type`. Improve handling of eventual consistency. ([#16108](https://github.com/hashicorp/terraform-provider-aws/issues/16108))
+* resource/aws_mq_broker: Support updating broker engine version without recreating broker ([#12758](https://github.com/hashicorp/terraform-provider-aws/issues/12758))
 
 BUG FIXES:
 

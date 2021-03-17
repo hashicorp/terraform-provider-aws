@@ -10,6 +10,7 @@ description: |-
 
 Provides a AWS Transfer User SSH Key resource.
 
+## Example Usage
 
 ```terraform
 resource "aws_transfer_ssh_key" "example" {

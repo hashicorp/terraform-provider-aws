@@ -37,7 +37,7 @@ The following arguments are supported:
 * `managed_policy_arn` - (Required, Forces new resource) The IAM managed policy Amazon Resource Name (ARN) to be attached to the Permission Set.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

@@ -29,7 +29,7 @@ The following arguments are supported:
 * `retention_lock_time_in_days` - (Optional) Tape retention lock time is set in days. Tape retention lock can be enabled for up to 100 years (36,500 days). Default value is 0.
 * `tags` - (Optional) Key-value map of resource tags
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

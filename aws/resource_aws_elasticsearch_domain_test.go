@@ -1285,7 +1285,7 @@ func testAccCheckAWSESDomainNotRecreated(i, j *elasticsearch.ElasticsearchDomain
 			return err
 		}
 
-		if aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) != aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate) {
+		if !aws.TimeValue(iConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate).Equal(aws.TimeValue(jConfig.DomainConfig.ElasticsearchClusterConfig.Status.CreationDate)) {
 			return fmt.Errorf("ES Domain was recreated")
 		}
 

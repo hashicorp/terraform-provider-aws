@@ -121,9 +121,7 @@ rules:
     paths:
       include:
         - aws/
-    patterns:
-      - pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
-      - pattern-not-inside: func flattenStringSet(list []*string) *schema.Set { ... }
+    pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
     severity: WARNING
     
   - id: helper-schema-Set-extraneous-expandStringList-with-List
@@ -139,7 +137,6 @@ rules:
             $LIST := $SET.List()
             ...
             expandStringList($LIST)
-      - pattern-not-inside: func expandStringSet(configured *schema.Set) []*string { ... }
     severity: WARNING
 
 
@@ -215,9 +212,39 @@ rules:
               var $CAST *resource.NotFoundError
               ...
               errors.As($ERR, &$CAST)
-          - pattern-not-inside: func NotFound(err error) bool { ... }
+          - pattern-not-inside: |
+              var $CAST *resource.NotFoundError
+              ...
+              errors.As($ERR, &$CAST)
+              ...
+              $CAST.$FIELD
         - patterns:
           - pattern: |
               $X, $Y := $ERR.(*resource.NotFoundError)
-          - pattern-not-inside: func isResourceNotFoundError(err error) bool { ... }
+    severity: WARNING
+
+  - id: time-equality
+    languages: [go]
+    message: Use time.Equal() instead of ==
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: |
+            aws.TimeValue($X) == $Y
+        - pattern: |
+            aws.TimeValue($X) != $Y
+        - pattern: |
+            ($X : time.Time) == $Y
+        - pattern: |
+            ($X : time.Time) != $Y
+        - pattern: |
+            $X == aws.TimeValue($Y)
+        - pattern: |
+            $X != aws.TimeValue($Y)
+        - pattern: |
+            $X == ($Y : time.Time)
+        - pattern: |
+            $X != ($Y : time.Time)
     severity: WARNING

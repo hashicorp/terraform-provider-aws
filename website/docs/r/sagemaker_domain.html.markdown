@@ -140,14 +140,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Domain.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Domain.
 * `url` - The domain's URL.
 * `single_sign_on_managed_application_instance_id` - The SSO managed application instance ID.
 * `home_efs_file_system_id` - The ID of the Amazon Elastic File System (EFS) managed by this Domain.
-
 
 ## Import
 
