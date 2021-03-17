@@ -7,7 +7,7 @@ provider: Add `default_tags` argument (in public preview, see note above)
 
 
 ```release-note:enhancement
-aws_subnet: Support provider-wide default tags (in public preview, see note above)
+resource/aws_subnet: Support provider-wide default tags (in public preview, see note above)
 ```
 
 ```release-note:enhancement
