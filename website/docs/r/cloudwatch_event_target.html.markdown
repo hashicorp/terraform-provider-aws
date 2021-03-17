@@ -365,6 +365,10 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).

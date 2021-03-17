@@ -91,6 +91,10 @@ The following arguments are supported:
 * `name` - (Required) The name of the recorder
 * `is_enabled` - (Required) Whether the configuration recorder should be enabled or disabled.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Configuration Recorder Status can be imported using the name of the Configuration Recorder, e.g.

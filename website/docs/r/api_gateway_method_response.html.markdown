@@ -59,6 +59,10 @@ The following arguments are supported:
    For example: `response_parameters = { "method.response.header.X-Some-Header" = true }`
    would define that the header `X-Some-Header` can be provided on the response.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_api_gateway_method_response` can be imported using `REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE`, e.g.

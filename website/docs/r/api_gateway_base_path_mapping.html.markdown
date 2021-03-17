@@ -48,6 +48,10 @@ The following arguments are supported:
 * `stage_name` - (Optional) The name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.

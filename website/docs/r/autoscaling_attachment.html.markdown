@@ -62,3 +62,6 @@ The following arguments are supported:
 * `elb` - (Optional) The name of the ELB.
 * `alb_target_group_arn` - (Optional) The ARN of an ALB Target Group.
 
+## Attributes Reference
+
+No additional attributes are exported.

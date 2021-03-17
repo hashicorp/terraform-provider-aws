@@ -54,6 +54,10 @@ The following arguments are supported:
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 CloudWatch Logs destination policies can be imported using the `destination_name`, e.g.

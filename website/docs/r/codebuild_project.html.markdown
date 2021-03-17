@@ -367,7 +367,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.

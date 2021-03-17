@@ -42,6 +42,10 @@ The following arguments are supported:
 * `response_templates` - (Optional) A map specifying the templates used to transform the response body.
 * `response_parameters` - (Optional) A map specifying the parameters (paths, query strings and headers) of the Gateway Response.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 `aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.

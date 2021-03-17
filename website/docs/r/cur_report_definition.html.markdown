@@ -45,6 +45,10 @@ The following arguments are supported:
 * `refresh_closed_reports` - (Optional) Set to true to update your reports after they have been finalized if AWS detects charges related to previous months.
 * `report_versioning` - (Optional) Overwrite the previous version of each report or to deliver the report in addition to the previous versions. Valid values are: CREATE_NEW_REPORT, OVERWRITE_REPORT
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Report Definitions can be imported using the `report_name`, e.g.
