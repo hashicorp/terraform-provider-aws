@@ -14,7 +14,7 @@ Provides a VPC resource.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
 
 Basic usage with tags:
 
-```hcl
+```terraform
 resource "aws_vpc" "main" {
   cidr_block       = "10.0.0.0/16"
   instance_tenancy = "default"

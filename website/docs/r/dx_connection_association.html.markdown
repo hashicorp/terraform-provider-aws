@@ -12,7 +12,7 @@ Associates a Direct Connect Connection with a LAG.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dx_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"

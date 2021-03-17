@@ -12,7 +12,7 @@ Provides an HTTP Method Integration for an API Gateway Integration.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "MyDemoAPI" {
   name        = "MyDemoAPI"
   description = "This is my API for demonstration purposes"
@@ -57,7 +57,7 @@ EOF
 
 ## Lambda integration
 
-```hcl
+```terraform
 # Variables
 variable "myregion" {}
 
@@ -138,7 +138,7 @@ POLICY
 
 ## VPC Link
 
-```hcl
+```terraform
 variable "name" {}
 variable "subnet_id" {}
 

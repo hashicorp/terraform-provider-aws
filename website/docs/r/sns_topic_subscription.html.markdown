@@ -24,7 +24,7 @@ Provides a resource for subscribing to SNS topics. Requires that an SNS topic ex
 
 You can directly supply a topic and ARN by hand in the `topic_arn` property along with the queue ARN:
 
-```hcl
+```terraform
 resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
   topic_arn = "arn:aws:sns:us-west-2:432981146916:user-updates-topic"
   protocol  = "sqs"
@@ -34,7 +34,7 @@ resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
 
 Alternatively you can use the ARN properties of a managed SNS topic and SQS queue:
 
-```hcl
+```terraform
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
@@ -52,7 +52,7 @@ resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
 
 You can subscribe SNS topics to SQS queues in different Amazon accounts and regions:
 
-```hcl
+```terraform
 variable "sns" {
   default = {
     account-id   = "111111111111"

@@ -28,7 +28,7 @@ This guide outlines how to get started with customizing endpoints, the available
 
 To configure the Terraform AWS Provider to use customized endpoints, it can be done within `provider` declarations using the `endpoints` configuration block, e.g.
 
-```hcl
+```terraform
 provider "aws" {
   # ... potentially other provider configuration ...
 
@@ -222,7 +222,7 @@ The Amazon DynamoDB service offers a downloadable version for writing and testin
 
 An example provider configuration:
 
-```hcl
+```terraform
 provider "aws" {
   access_key                  = "mock_access_key"
   region                      = "us-east-1"
@@ -243,7 +243,7 @@ provider "aws" {
 
 An example provider configuration:
 
-```hcl
+```terraform
 provider "aws" {
   access_key                  = "mock_access_key"
   region                      = "us-east-1"

@@ -14,7 +14,7 @@ Provides a Sagemaker Domain resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_domain" "example" {
   domain_name = "example"
   auth_mode   = "IAM"
@@ -46,7 +46,7 @@ data "aws_iam_policy_document" "example" {
 
 ### Using Custom Images
 
-```hcl
+```terraform
 resource "aws_sagemaker_image" "test" {
   image_name = "example"
   role_arn   = aws_iam_role.test.arn

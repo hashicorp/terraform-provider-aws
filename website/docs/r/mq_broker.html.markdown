@@ -23,7 +23,7 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ### Basic Example
 
-```hcl
+```terraform
 resource "aws_mq_broker" "example" {
   broker_name = "example"
 
@@ -48,7 +48,7 @@ resource "aws_mq_broker" "example" {
 
 This example shows the use of EBS storage for high-throughput optimized performance.
 
-```hcl
+```terraform
 resource "aws_mq_broker" "example" {
   broker_name = "example"
 

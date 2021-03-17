@@ -12,7 +12,7 @@ Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` res
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
   acl    = "private"

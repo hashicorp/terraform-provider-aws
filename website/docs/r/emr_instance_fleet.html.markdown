@@ -17,7 +17,7 @@ Terraform will resize any Instance Fleet to zero when destroying the resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_emr_instance_fleet" "task" {
   cluster_id = aws_emr_cluster.cluster.id
   instance_type_configs {

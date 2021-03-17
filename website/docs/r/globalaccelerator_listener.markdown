@@ -12,7 +12,7 @@ Provides a Global Accelerator listener.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "Example"
   ip_address_type = "IPV4"

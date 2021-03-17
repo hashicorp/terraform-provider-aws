@@ -17,7 +17,7 @@ Use the navigation to the left to read about the available resources.
 
 Terraform 0.13 and later:
 
-```hcl
+```terraform
 terraform {
   required_providers {
     aws = {
@@ -40,7 +40,7 @@ resource "aws_vpc" "example" {
 
 Terraform 0.12 and earlier:
 
-```hcl
+```terraform
 # Configure the AWS Provider
 provider "aws" {
   version = "~> 3.0"
@@ -76,7 +76,7 @@ in-line in the AWS provider block:
 
 Usage:
 
-```hcl
+```terraform
 provider "aws" {
   region     = "us-west-2"
   access_key = "my-access-key"
@@ -94,7 +94,7 @@ will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
 The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
 are also used, if applicable:
 
-```hcl
+```terraform
 provider "aws" {}
 ```
 
@@ -113,7 +113,7 @@ You can use an [AWS credentials or configuration file](https://docs.aws.amazon.c
 
 Usage:
 
-```hcl
+```terraform
 provider "aws" {
   region                  = "us-west-2"
   shared_credentials_file = "/Users/tf_user/.aws/creds"
@@ -158,7 +158,7 @@ using the supplied credentials.
 
 Usage:
 
-```hcl
+```terraform
 provider "aws" {
   assume_role {
     role_arn     = "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
@@ -386,7 +386,7 @@ The `assume_role` configuration block supports the following optional arguments:
 
 Example:
 
-```hcl
+```terraform
 provider "aws" {
   ignore_tags {
     keys = ["TagKey1"]

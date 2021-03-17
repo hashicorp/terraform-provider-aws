@@ -12,7 +12,7 @@ Provides a Global Accelerator endpoint group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_globalaccelerator_endpoint_group" "example" {
   listener_arn = aws_globalaccelerator_listener.example.id
 

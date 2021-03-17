@@ -14,7 +14,7 @@ Provides an EC2 instance resource. This allows instances to be created, updated,
 
 ### Basic Example Using AMI Lookup
 
-```hcl
+```terraform
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -43,7 +43,7 @@ resource "aws_instance" "web" {
 
 ### Network and Credit Specification Example
 
-```hcl
+```terraform
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
 

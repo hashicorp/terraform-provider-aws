@@ -14,7 +14,7 @@ Provides a Sagemaker App Image Config resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = "example"
 
@@ -28,7 +28,7 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ### Default File System Config
 
-```hcl
+```terraform
 resource "aws_sagemaker_app_image_config" "test" {
   app_image_config_name = "example"
 

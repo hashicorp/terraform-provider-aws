@@ -16,7 +16,7 @@ Manages an AWS Storage Gateway stored iSCSI volume.
 
 ### Create Empty Stored iSCSI Volume
 
-```hcl
+```terraform
 resource "aws_storagegateway_stored_iscsi_volume" "example" {
   gateway_arn            = aws_storagegateway_cache.example.gateway_arn
   network_interface_id   = aws_instance.example.private_ip
@@ -28,7 +28,7 @@ resource "aws_storagegateway_stored_iscsi_volume" "example" {
 
 ### Create Stored iSCSI Volume From Snapshot
 
-```hcl
+```terraform
 resource "aws_storagegateway_stored_iscsi_volume" "example" {
   gateway_arn            = aws_storagegateway_cache.example.gateway_arn
   network_interface_id   = aws_instance.example.private_ip

@@ -12,7 +12,7 @@ Provides a load balancer policy, which can be attached to an ELB listener or bac
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]

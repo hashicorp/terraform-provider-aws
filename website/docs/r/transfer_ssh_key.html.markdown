@@ -12,7 +12,7 @@ Provides a AWS Transfer User SSH Key resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_transfer_ssh_key" "example" {
   server_id = aws_transfer_server.example.id
   user_name = aws_transfer_user.example.user_name

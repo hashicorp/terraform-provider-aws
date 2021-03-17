@@ -58,7 +58,7 @@ resource "aws_ecs_task_definition" "service" {
 
 ### With AppMesh Proxy
 
-```hcl
+```terraform
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
   container_definitions = file("task-definitions/service.json")
@@ -126,7 +126,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 
 ##### Example Usage
 
-```hcl
+```terraform
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
   container_definitions = file("task-definitions/service.json")
@@ -163,7 +163,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 ##### Example Usage
 
-```hcl
+```terraform
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
   container_definitions = file("task-definitions/service.json")
@@ -208,7 +208,7 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 
 ##### Example Usage
 
-```hcl
+```terraform
 resource "aws_ecs_task_definition" "test" {
   family                = "test"
   container_definitions = <<TASK_DEFINITION

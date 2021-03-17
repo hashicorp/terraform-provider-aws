@@ -16,7 +16,7 @@ Provides an Application AutoScaling ScalableTarget resource. To manage policies 
 
 ### DynamoDB Table Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
   max_capacity       = 100
   min_capacity       = 5
@@ -28,7 +28,7 @@ resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
 
 ### DynamoDB Index Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "dynamodb_index_read_target" {
   max_capacity       = 100
   min_capacity       = 5
@@ -40,7 +40,7 @@ resource "aws_appautoscaling_target" "dynamodb_index_read_target" {
 
 ### ECS Service Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = 4
   min_capacity       = 1
@@ -52,7 +52,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 ### Aurora Read Replica Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "replicas" {
   service_namespace  = "rds"
   scalable_dimension = "rds:cluster:ReadReplicaCount"

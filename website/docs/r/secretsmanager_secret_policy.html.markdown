@@ -14,7 +14,7 @@ Provides a resource to manage AWS Secrets Manager secret policy.
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_secretsmanager_secret" "example" {
   name = "example"
 }

@@ -19,7 +19,7 @@ For more details, see the [Amazon Kinesis Analytics Documentation][1].
 
 ### Kinesis Stream Input
 
-```hcl
+```terraform
 resource "aws_kinesis_stream" "test_stream" {
   name        = "terraform-kinesis-test"
   shard_count = 1
@@ -63,7 +63,7 @@ resource "aws_kinesis_analytics_application" "test_application" {
 
 ### Starting An Application
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "analytics"
 }

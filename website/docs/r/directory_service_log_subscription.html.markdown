@@ -12,7 +12,7 @@ Provides a Log subscription for AWS Directory Service that pushes logs to cloudw
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name              = "/aws/directoryservice/${aws_directory_service_directory.example.id}"
   retention_in_days = 14

@@ -16,7 +16,7 @@ Manages an association with WAF Regional Web ACL.
 
 ### Application Load Balancer Association
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -86,7 +86,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 
 ### API Gateway Association
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 

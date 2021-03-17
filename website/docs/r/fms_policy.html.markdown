@@ -12,7 +12,7 @@ Provides a resource to create an AWS Firewall Manager policy. You need to be usi
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_fms_policy" "example" {
   name                  = "FMS-Policy-Example"
   exclude_resource_tags = false

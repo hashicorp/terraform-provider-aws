@@ -14,7 +14,7 @@ Provides a Glue Development Endpoint resource.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_glue_dev_endpoint" "example" {
   name     = "foo"
   role_arn = aws_iam_role.example.arn

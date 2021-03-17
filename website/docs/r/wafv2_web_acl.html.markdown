@@ -17,7 +17,7 @@ This resource is based on `aws_wafv2_rule_group`, check the documentation of the
 
 ### Managed Rule
 
-```hcl
+```terraform
 resource "aws_wafv2_web_acl" "example" {
   name        = "managed-rule-example"
   description = "Example of a managed rule."
@@ -72,7 +72,7 @@ resource "aws_wafv2_web_acl" "example" {
 
 ### Rate Based
 
-```hcl
+```terraform
 resource "aws_wafv2_web_acl" "example" {
   name        = "rate-based-example"
   description = "Example of a rate based statement."
@@ -125,7 +125,7 @@ resource "aws_wafv2_web_acl" "example" {
 
 ### Rule Group Reference
 
-```hcl
+```terraform
 resource "aws_wafv2_rule_group" "example" {
   capacity = 10
   name     = "example-rule-group"

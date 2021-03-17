@@ -16,7 +16,7 @@ Be sure to give the data firehose a name that starts with the prefix `aws-waf-lo
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafv2_web_acl_logging_configuration" "example" {
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.example.arn]
   resource_arn            = aws_wafv2_web_acl.example.arn

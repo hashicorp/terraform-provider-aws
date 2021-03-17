@@ -15,7 +15,7 @@ Creating or updating this resource will automatically [Provision the Permission 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_permission_set" "example" {

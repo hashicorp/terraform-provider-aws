@@ -12,7 +12,7 @@ Provides a Cognito User Group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "main" {
   name = "identity pool"
 }

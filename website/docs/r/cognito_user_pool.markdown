@@ -14,7 +14,7 @@ Provides a Cognito User Pool resource.
 
 ### Basic configuration
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "pool" {
   name = "mypool"
 }
@@ -22,7 +22,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 ### Enabling SMS and Software Token Multi-Factor Authentication
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
 
@@ -42,7 +42,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ### Using Account Recovery Setting
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "test" {
   name = "mypool"
 
@@ -158,7 +158,7 @@ The following arguments are optional:
 
 The [standard attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) have the following defaults. Note that attributes which match the default values are not stored in Terraform state when importing.
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
 

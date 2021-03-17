@@ -19,7 +19,7 @@ By using the `aws_ebs_default_kms_key` resource, you can specify a customer-mana
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ebs_default_kms_key" "example" {
   key_arn = aws_kms_key.example.arn
 }

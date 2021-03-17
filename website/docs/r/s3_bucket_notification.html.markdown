@@ -16,7 +16,7 @@ Manages a S3 Bucket Notification Configuration. For additional information, see 
 
 ### Add notification configuration to SNS Topic
 
-```hcl
+```terraform
 resource "aws_sns_topic" "topic" {
   name = "s3-event-notification-topic"
 
@@ -53,7 +53,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add notification configuration to SQS Queue
 
-```hcl
+```terraform
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 
@@ -92,7 +92,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add notification configuration to Lambda Function
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -148,7 +148,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Trigger multiple Lambda functions
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -229,7 +229,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ### Add multiple notification configurations to SQS Queue
 
-```hcl
+```terraform
 resource "aws_sqs_queue" "queue" {
   name = "s3-event-notification-queue"
 

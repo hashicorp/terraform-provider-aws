@@ -15,7 +15,7 @@ Provides a Pinpoint APNs VoIP Sandbox Channel resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_apns_voip_sandbox_channel" "apns_voip_sandbox" {
   application_id = aws_pinpoint_app.app.application_id
 

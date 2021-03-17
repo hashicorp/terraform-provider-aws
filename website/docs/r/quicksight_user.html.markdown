@@ -12,7 +12,7 @@ Resource for managing QuickSight User
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_quicksight_user" "example" {
   user_name     = "an-author"
   email         = "author@example.com"

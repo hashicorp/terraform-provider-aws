@@ -15,7 +15,7 @@ This data feed is sent to an Amazon S3 bucket that you specify when you subscrib
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "default" {
   bucket = "tf-spot-datafeed"
 }

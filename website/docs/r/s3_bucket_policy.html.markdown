@@ -14,7 +14,7 @@ Attaches a policy to an S3 bucket resource.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "my-tf-test-bucket"
 }

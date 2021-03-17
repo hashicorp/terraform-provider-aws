@@ -18,7 +18,7 @@ For more information about Device Farm Projects, see the AWS Documentation on
 ## Example Usage
 
 
-```hcl
+```terraform
 resource "aws_devicefarm_project" "awesome_devices" {
   name = "my-device-farm"
 }

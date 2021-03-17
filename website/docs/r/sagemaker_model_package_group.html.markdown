@@ -14,7 +14,7 @@ Provides a Sagemaker Model Package Group resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_model_package_group" "example" {
   model_package_group_name = "example"
 }

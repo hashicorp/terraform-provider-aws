@@ -14,7 +14,7 @@ Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/Amazo
 
 ### Add inventory configuration
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }
@@ -44,7 +44,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
 ### Add inventory configuration with S3 bucket object prefix
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }

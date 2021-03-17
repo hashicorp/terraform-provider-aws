@@ -12,7 +12,7 @@ Provides an Elastic Transcoder preset resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elastictranscoder_preset" "bar" {
   container   = "mp4"
   description = "Sample Preset"

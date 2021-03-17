@@ -10,7 +10,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_neptune_cluster" "default" {
   cluster_identifier                  = "neptune-cluster-demo"
   engine                              = "neptune"

@@ -22,7 +22,7 @@ For a detailed example of setting up Lambda and API Gateway, see [Serverless App
 
 ### Basic Example
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -68,7 +68,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 ~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
 
-```hcl
+```terraform
 resource "aws_lambda_layer_version" "example" {
   # ... other configuration ...
 }
@@ -83,7 +83,7 @@ resource "aws_lambda_function" "example" {
 
 Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
 
-```hcl
+```terraform
 # A lambda function connected to an EFS file system
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
@@ -145,7 +145,7 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
-```hcl
+```terraform
 variable "lambda_function_name" {
   default = "lambda_function_name"
 }

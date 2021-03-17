@@ -16,7 +16,7 @@ Provides an ElastiCache Global Replication Group resource, which manages replica
 
 The global replication group depends on the primary group existing. Secondary replication groups depend on the global replication group. Terraform dependency management will handle this transparently using resource value references.
 
-```hcl
+```terraform
 resource "aws_elasticache_global_replication_group" "example" {
   global_replication_group_id_suffix = "example"
   primary_replication_group_id       = aws_elasticache_replication_group.primary.id

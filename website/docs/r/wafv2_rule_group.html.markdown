@@ -14,7 +14,7 @@ Creates a WAFv2 Rule Group resource.
 
 ### Simple
 
-```hcl
+```terraform
 resource "aws_wafv2_rule_group" "example" {
   name     = "example-rule"
   scope    = "REGIONAL"
@@ -52,7 +52,7 @@ resource "aws_wafv2_rule_group" "example" {
 
 ### Complex
 
-```hcl
+```terraform
 resource "aws_wafv2_ip_set" "test" {
   name               = "test"
   scope              = "REGIONAL"

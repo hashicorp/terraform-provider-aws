@@ -23,7 +23,7 @@ cross-account scenarios.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 }
@@ -54,7 +54,7 @@ resource "aws_vpc_peering_connection_options" "foo" {
 
 ### Cross-Account Usage
 
-```hcl
+```terraform
 provider "aws" {
   alias = "requester"
 

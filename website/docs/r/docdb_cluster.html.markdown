@@ -23,7 +23,7 @@ phase because a modification has not yet taken place. You can use the
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_docdb_cluster" "docdb" {
   cluster_identifier      = "my-docdb-cluster"
   engine                  = "docdb"

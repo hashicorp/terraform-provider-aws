@@ -14,7 +14,7 @@ Provides a S3 bucket [analytics configuration](https://docs.aws.amazon.com/Amazo
 
 ### Add analytics configuration for entire S3 bucket and export results to a second S3 bucket
 
-```hcl
+```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-entire-bucket" {
   bucket = aws_s3_bucket.example.bucket
   name   = "EntireBucket"
@@ -41,7 +41,7 @@ resource "aws_s3_bucket" "analytics" {
 
 ### Add analytics configuration with S3 bucket object filter
 
-```hcl
+```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-filtered" {
   bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"

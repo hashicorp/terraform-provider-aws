@@ -12,7 +12,7 @@ Provides a way to set SNS SMS preferences.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_sns_sms_preferences" "update_sms_prefs" {}
 ```
 

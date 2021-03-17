@@ -16,7 +16,7 @@ Provides a Cognito User Pool UI Customization resource.
 
 ### UI customization settings for a single client
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   name = "example"
 }
@@ -45,7 +45,7 @@ resource "aws_cognito_user_pool_ui_customization" "example" {
 
 ### UI customization settings for all clients
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   name = "example"
 }

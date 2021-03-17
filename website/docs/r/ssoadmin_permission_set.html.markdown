@@ -14,7 +14,7 @@ Provides a Single Sign-On (SSO) Permission Set resource
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_permission_set" "example" {

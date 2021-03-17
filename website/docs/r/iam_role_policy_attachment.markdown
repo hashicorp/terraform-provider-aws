@@ -16,7 +16,7 @@ Attaches a Managed IAM Policy to an IAM role
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "role" {
   name = "test-role"
 

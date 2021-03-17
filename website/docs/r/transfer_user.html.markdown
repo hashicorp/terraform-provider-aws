@@ -12,7 +12,7 @@ Provides a AWS Transfer User resource. Managing SSH keys can be accomplished wit
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
 

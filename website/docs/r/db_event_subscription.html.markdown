@@ -12,7 +12,7 @@ Provides a DB event subscription resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
   engine               = "mysql"

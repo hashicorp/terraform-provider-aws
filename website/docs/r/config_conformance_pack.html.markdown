@@ -21,7 +21,7 @@ successfully create or update. See also the
 
 ### Template Body
 
-```hcl
+```terraform
 resource "aws_config_conformance_pack" "example" {
   name = "example"
 
@@ -50,7 +50,7 @@ EOT
 
 ### Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_conformance_pack" "example" {
   name            = "example"
   template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_bucket_object.example.key}"
