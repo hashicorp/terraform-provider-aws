@@ -11,5 +11,5 @@ resource/aws_subnet: Support provider-wide default tags (in public preview, see 
 ```
 
 ```release-note:enhancement
-aws_vpc: Support provider-wide default tags (in public preview, see note above)
+resource/aws_vpc: Support provider-wide default tags (in public preview, see note above)
 ```
