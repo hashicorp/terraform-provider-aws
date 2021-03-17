@@ -329,8 +329,6 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
     - [`aws_vpc_dhcp_options` resource](/docs/providers/aws/r/vpc_dhcp_options.html)
     - [`aws_vpc_endpoint_service` data source](/docs/providers/aws/d/vpc_endpoint_service.html)
     - [`aws_vpc_endpoint_service` resource](/docs/providers/aws/r/vpc_endpoint_service.html)
-    - [`aws_vpc_endpoint` data source](/docs/providers/aws/d/vpc_endpoint.html)
-    - [`aws_vpc_endpoint` resource](/docs/providers/aws/r/vpc_endpoint.html)
     - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
     - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
     - [`aws_vpn_connection` resource](/docs/providers/aws/r/vpn_connection.html)
