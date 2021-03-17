@@ -1044,6 +1044,12 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 	if serviceErrorCheckFuncs == nil {
 		serviceErrorCheckFuncs = make(map[string]ServiceErrorCheckFunc)
 	}
+
+	if _, ok := serviceErrorCheckFuncs[endpointID]; ok {
+		// already registered
+		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID))
+	}
+
 	serviceErrorCheckFuncs[endpointID] = f
 }
 
@@ -1057,6 +1063,10 @@ func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckF
 			if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
 				ef := f(t)
 				err = ef(err)
+			}
+
+			if err == nil {
+				break
 			}
 		}
 
