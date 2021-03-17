@@ -29,9 +29,7 @@ func resourceAwsSsmPatchGroupStateUpgradeV0(_ context.Context, rawState map[stri
 		rawState = map[string]interface{}{}
 	}
 
-	if _, ok := rawState["id"]; ok {
-		rawState["id"] = fmt.Sprintf("%s,%s", rawState["patch_group"], rawState["baseline_id"])
-	}
+	rawState["id"] = fmt.Sprintf("%s,%s", rawState["patch_group"], rawState["baseline_id"])
 
 	return rawState, nil
 }
