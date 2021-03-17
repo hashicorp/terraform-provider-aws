@@ -30,6 +30,7 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),

@@ -44,6 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Traffic Mirror target.
 * `arn` - The ARN of the traffic mirror target.
+* `owner_id` - The ID of the AWS account that owns the traffic mirror target.
 
 ## Import
 
