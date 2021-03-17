@@ -8,6 +8,20 @@ BUG FIXES:
 
 * resource/aws_dms_certificate: Correctly base64 decode `certificate_wallet` value ([#17958](https://github.com/hashicorp/terraform-provider-aws/issues/17958))
 * resource/aws_globalaccelerator_accelerator: Correct length for `name` attribute validation ([#17985](https://github.com/hashicorp/terraform-provider-aws/issues/17985))
+* resource/aws_ssm_patch_group: Allow for a single patch group to be registered with multiple patch baselines ([#15213](https://github.com/hashicorp/terraform-provider-aws/issues/15213))
+* resource/aws_ssm_patch_group: Replace `Provider produced inconsistent result after apply` with actual error message ([#15213](https://github.com/hashicorp/terraform-provider-aws/issues/15213))
+* resource/aws_waf_rule: Fix rule deletion when still referenced by a WebACL ([#17876](https://github.com/hashicorp/terraform-provider-aws/issues/17876))
+
+## 3.32.0 (March 12, 2021)
+
+ENHANCEMENTS:
+
+* resource/aws_ssm_parameter: Add support for `Intelligent-Tiering` ([#11967](https://github.com/hashicorp/terraform-provider-aws/issues/11967))
+
+BUG FIXES:
+
+* resource/aws_dms_certificate: Correctly base64 decode `certificate_wallet` value ([#17958](https://github.com/hashicorp/terraform-provider-aws/issues/17958))
+* resource/aws_globalaccelerator_accelerator: Correct length for `name` attribute validation ([#17985](https://github.com/hashicorp/terraform-provider-aws/issues/17985))
 * resource/aws_waf_rule: Fix rule deletion when still referenced by a WebACL ([#17876](https://github.com/hashicorp/terraform-provider-aws/issues/17876))
 
 ## 3.32.0 (March 12, 2021)
