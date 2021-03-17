@@ -1047,7 +1047,7 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 
 	if _, ok := serviceErrorCheckFuncs[endpointID]; ok {
 		// already registered
-		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID))
+		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID)) //lintignore:R009
 	}
 
 	serviceErrorCheckFuncs[endpointID] = f
