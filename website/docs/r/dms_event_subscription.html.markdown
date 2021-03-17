@@ -38,6 +38,12 @@ The following arguments are supported:
 * `source_ids` - (Required) Ids of sources to listen to.
 * `sns_topic_arn` - (Required) SNS topic arn to send events on.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - Amazon Resource Name (ARN) of the DMS Event Subscription.
+
 ## Timeouts
 
 `aws_dms_event_subscription` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:

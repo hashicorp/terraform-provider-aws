@@ -31,6 +31,10 @@ The following arguments are supported:
 
 * `key_arn` - (Required, ForceNew) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use to encrypt the EBS volume.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 The EBS default KMS CMK can be imported with the KMS key ARN, e.g.

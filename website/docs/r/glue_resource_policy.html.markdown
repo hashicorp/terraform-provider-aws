@@ -44,6 +44,9 @@ The following arguments are supported:
 
 * `policy` – (Required) The policy to be applied to the aws glue data catalog.
 
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

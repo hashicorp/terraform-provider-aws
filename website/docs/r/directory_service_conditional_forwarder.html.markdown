@@ -32,6 +32,10 @@ The following arguments are supported:
 * `dns_ips` - (Required) A list of forwarder IP addresses.
 * `remote_domain_name` - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
 Conditional forwarders can be imported using the directory id and remote_domain_name, e.g.
