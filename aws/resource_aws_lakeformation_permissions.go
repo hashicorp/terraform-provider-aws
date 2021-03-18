@@ -257,6 +257,8 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 
 	input.Resource = expandLakeFormationResource(d, true)
 	matchResource := expandLakeFormationResource(d, false)
+	// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
+	selectPermissionsResource := expandLakeFormationResourceForSelectPermissions(d)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
@@ -270,10 +272,11 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 
 				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
+					continue
 				}
 
 				// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
-				if resourceAwsLakeFormationPermissionsCompareSelectSeparateRow(*matchResource, *permission.Resource) {
+				if selectPermissionsResource != nil && resourceAwsLakeFormationPermissionsCompareResource(*selectPermissionsResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
 				}
 			}
@@ -298,11 +301,11 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 
 				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
+					continue
 				}
 
 				// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
-				// Only check for this case if we don't have any specified column names
-				if resourceAwsLakeFormationPermissionsCompareSelectSeparateRow(*matchResource, *permission.Resource) {
+				if selectPermissionsResource != nil && resourceAwsLakeFormationPermissionsCompareResource(*selectPermissionsResource, *permission.Resource) {
 					principalResourcePermissions = append(principalResourcePermissions, permission)
 				}
 			}
@@ -489,6 +492,37 @@ func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns 
 		} else {
 			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
 		}
+	}
+
+	return res
+}
+
+func expandLakeFormationResourceForSelectPermissions(d *schema.ResourceData) *lakeformation.Resource {
+	tableMapSchema := d.Get("table").([]interface{})
+	if len(tableMapSchema) == 0 {
+		return nil
+	}
+
+	tableSchema := tableMapSchema[0].(map[string]interface{})
+	if tableSchema == nil {
+		return nil
+	}
+
+	databaseName, ok := tableSchema["database_name"].(string)
+	if !ok {
+		return nil
+	}
+	name, ok := tableSchema["name"].(string)
+	if !ok {
+		return nil
+	}
+
+	res := &lakeformation.Resource{
+		TableWithColumns: &lakeformation.TableWithColumnsResource{
+			DatabaseName:   aws.String(databaseName),
+			Name:           aws.String(name),
+			ColumnWildcard: &lakeformation.ColumnWildcard{}, // A wildcard is used for SELECT permissions
+		},
 	}
 
 	return res
