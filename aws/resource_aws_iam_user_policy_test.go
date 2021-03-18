@@ -25,6 +25,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -67,6 +68,7 @@ func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -177,6 +179,7 @@ func TestAccAWSIAMUserPolicy_multiplePolicies(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMUserPolicyDestroy,
 		Steps: []resource.TestStep{
