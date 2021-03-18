@@ -430,24 +430,6 @@ func resourceAwsLakeFormationPermissionsCompareResource(in, out lakeformation.Re
 	return reflect.DeepEqual(in, out)
 }
 
-// The SELECT permission always appears on the Data permissions page of the Lake Formation console as a separate row
-func resourceAwsLakeFormationPermissionsCompareSelectSeparateRow(in, out lakeformation.Resource) bool {
-	if in.TableWithColumns == nil || in.TableWithColumns.ColumnNames == nil {
-		return false
-	}
-
-	if len(in.TableWithColumns.ColumnNames) > 0 {
-		return false
-	}
-
-	columnNames := make([]*string, 0)
-	columnNames = append(columnNames, aws.String("*"))
-
-	in.TableWithColumns.ColumnNames = columnNames
-
-	return reflect.DeepEqual(in, out)
-}
-
 // expandLakeFormationResourceType returns the Lake Formation resource type represented by the resource.
 // This is helpful in distinguishing between TABLE and TABLE_WITH_COLUMNS types when filtering ListPermission results.
 func expandLakeFormationResourceType(d *schema.ResourceData) string {
