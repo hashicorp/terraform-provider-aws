@@ -142,6 +142,10 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ramdisk_id": {
 				Type:     schema.TypeString,
 				Computed: true,
