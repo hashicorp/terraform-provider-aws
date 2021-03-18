@@ -223,9 +223,9 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*AWSClient).ec2conn
 
 	req := &ec2.CreateImageInput{
-		Name:        aws.String(d.Get("name").(string)),
 		Description: aws.String(d.Get("description").(string)),
 		InstanceId:  aws.String(d.Get("source_instance_id").(string)),
+		Name:        aws.String(d.Get("name").(string)),
 		NoReboot:    aws.Bool(d.Get("snapshot_without_reboot").(bool)),
 	}
 
