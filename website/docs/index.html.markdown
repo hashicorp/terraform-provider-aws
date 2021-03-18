@@ -215,6 +215,14 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   AWS account IDs to prevent you from mistakenly using the wrong one (and
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
+  
+* `default_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.**
+Map of tags to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations).
+This is designed to replace redundant per-resource `tags` configurations. At this time, tags defined within this configuration block can be overridden with new values, but not excluded from specific resources. To override tag values defined within this configuration block, use the `tags` argument within a resource to configure new tag values for matching keys.
+See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments.
+This functionality is only supported in the following resources:
+    - `aws_subnet`
+    - `aws_vpc`
 
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 
@@ -373,6 +381,139 @@ The `assume_role` configuration block supports the following optional arguments:
 * `session_name` - (Optional) Session name to use when assuming the role.
 * `tags` - (Optional) Map of assume role session tags.
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
+
+### default_tags Configuration Block
+
+Example: Resource with provider default tags
+
+```hcl
+provider "aws" {
+  default_tags {
+    tags = {
+      Environment = "Test"
+      Name        = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+})
+```
+
+Example: Resource with tags and provider default tags
+
+```hcl
+provider "aws" {
+  default_tags {
+    tags = {
+      Environment = "Test"
+      Name        = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+  tags = {
+    Owner = "example"
+  }
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Test"
+  "Name" = "Provider Tag"
+  "Owner" = "example"
+})
+vpc_resource_level_tags = tomap({
+  "Owner" = "example"
+})
+```
+
+Example: Resource overriding provider default tags
+
+```hcl
+provider "aws" {
+  default_tags {
+    tags = {
+      Environment = "Test"
+      Name        = "Provider Tag"
+    }
+  }
+}
+
+resource "aws_vpc" "example" {
+  # ..other configuration...
+  tags = {
+    Environment = "Production"
+  }
+}
+
+output "vpc_resource_level_tags" {
+  value = aws_vpc.example.tags
+}
+
+output "vpc_all_tags" {
+  value = aws_vpc.example.tags_all
+}
+```
+
+Outputs:
+
+```console
+$ terraform apply
+...
+Outputs:
+
+vpc_all_tags = tomap({
+  "Environment" = "Production"
+  "Name" = "Provider Tag"
+})
+vpc_resource_level_tags = tomap({
+  "Environment" = "Production"
+})
+```
+
+The `default_tags` configuration block supports the following argument:
+
+* `tags` - (Optional) **NOTE: This functionality is in public preview and only supported by the [`aws_subnet`](/docs/providers/aws/r/subnet.html) and [`aws_vpc`](/docs/providers/aws/r/vpc.html) resources.** Key-value map of tags to apply to all resources.
 
 ### ignore_tags Configuration Block
 

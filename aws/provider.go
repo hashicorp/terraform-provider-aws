@@ -89,6 +89,23 @@ func Provider() *schema.Provider {
 				Set:           schema.HashString,
 			},
 
+			"default_tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration block with settings to default resource tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tags": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tags to default across all resources",
+						},
+					},
+				},
+			},
+
 			"endpoints": endpointsSchema(),
 
 			"ignore_tags": {
@@ -1343,6 +1360,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		CredsFilename:           d.Get("shared_credentials_file").(string),
+		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
@@ -1526,6 +1544,20 @@ func endpointsSchema() *schema.Schema {
 			Schema: endpointsAttributes,
 		},
 	}
+}
+
+func expandProviderDefaultTags(l []interface{}) *keyvaluetags.DefaultConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	defaultConfig := &keyvaluetags.DefaultConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["tags"].(map[string]interface{}); ok {
+		defaultConfig.Tags = keyvaluetags.New(v)
+	}
+	return defaultConfig
 }
 
 func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {

@@ -192,9 +192,10 @@ type Config struct {
 	AllowedAccountIds   []string
 	ForbiddenAccountIds []string
 
-	Endpoints        map[string]string
-	IgnoreTagsConfig *keyvaluetags.IgnoreConfig
-	Insecure         bool
+	DefaultTagsConfig *keyvaluetags.DefaultConfig
+	Endpoints         map[string]string
+	IgnoreTagsConfig  *keyvaluetags.IgnoreConfig
+	Insecure          bool
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -251,6 +252,7 @@ type AWSClient struct {
 	datapipelineconn                    *datapipeline.DataPipeline
 	datasyncconn                        *datasync.DataSync
 	daxconn                             *dax.DAX
+	DefaultTagsConfig                   *keyvaluetags.DefaultConfig
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
@@ -495,6 +497,7 @@ func (c *Config) Client() (interface{}, error) {
 		datapipelineconn:                    datapipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datapipeline"])})),
 		datasyncconn:                        datasync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datasync"])})),
 		daxconn:                             dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dax"])})),
+		DefaultTagsConfig:                   c.DefaultTagsConfig,
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
