@@ -33,23 +33,20 @@ func testSweepKinesisStreams(region string) error {
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
-		for _, streamNamePtr := range page.StreamNames {
-			if streamNamePtr == nil {
+		for _, streamName := range page.StreamNames {
+			if streamName == nil {
 				continue
 			}
 
-			streamName := aws.StringValue(streamNamePtr)
-			input := &kinesis.DeleteStreamInput{
-				EnforceConsumerDeletion: aws.Bool(false),
-				StreamName:              streamNamePtr,
-			}
+			r := resourceAwsKinesisStream()
+			d := r.Data(nil)
+			d.Set("name", streamName)
+			d.Set("enforce_consumer_deletion", true)
 
-			log.Printf("[INFO] Deleting Kinesis Stream: %s", streamName)
-
-			_, err := conn.DeleteStream(input)
+			err := r.Delete(d, client)
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", streamName, err)
+				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", aws.StringValue(streamName), err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
