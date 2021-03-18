@@ -332,8 +332,8 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	d.Set("principal", principalResourcePermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenPermissions(principalResourcePermissions))
-	d.Set("permissions_with_grant_option", flattenGrantPermissions(principalResourcePermissions))
+	d.Set("permissions", flattenLakeFormationPermissions(principalResourcePermissions))
+	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(principalResourcePermissions))
 
 	if principalResourcePermissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
@@ -694,26 +694,34 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 	return tfMap
 }
 
-func flattenPermissions(principalResourcePermissions []*lakeformation.PrincipalResourcePermissions) []string {
-	permissions := make([]string, 0)
+func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+	if apiObjects == nil || len(apiObjects) == 0 {
+		return nil
+	}
 
-	for _, resourcePermission := range principalResourcePermissions {
+	tfList := make([]string, 0)
+
+	for _, resourcePermission := range apiObjects {
 		for _, permission := range resourcePermission.Permissions {
-			permissions = append(permissions, aws.StringValue(permission))
+			tfList = append(tfList, aws.StringValue(permission))
 		}
 	}
 
-	return permissions
+	return tfList
 }
 
-func flattenGrantPermissions(principalResourcePermissions []*lakeformation.PrincipalResourcePermissions) []string {
-	grantPermissions := make([]string, 0)
+func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+	if apiObjects == nil || len(apiObjects) == 0 {
+		return nil
+	}
 
-	for _, resourcePermission := range principalResourcePermissions {
+	tfList := make([]string, 0)
+
+	for _, resourcePermission := range apiObjects {
 		for _, grantPermission := range resourcePermission.PermissionsWithGrantOption {
-			grantPermissions = append(grantPermissions, aws.StringValue(grantPermission))
+			tfList = append(tfList, aws.StringValue(grantPermission))
 		}
 	}
 
-	return grantPermissions
+	return tfList
 }
