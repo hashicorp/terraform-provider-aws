@@ -26,6 +26,10 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -121,7 +125,19 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
+			"hypervisor": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"image_location": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,6 +160,18 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"ramdisk_id": {
@@ -173,40 +201,12 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
-			"virtualization_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"platform_details": {
+			"virtualization_type": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_owner_alias": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hypervisor": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public": {
-				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
