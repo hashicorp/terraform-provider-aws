@@ -2,38 +2,39 @@ package aws
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kinesis/finder"
 )
 
 func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
-	var stream kinesis.StreamDescription
-	var consumer kinesis.ConsumerDescription
-	config := createAccKinesisStreamConsumerConfig()
-	resourceName := config.getName()
+	resourceName := "aws_kinesis_stream_consumer.test"
+	streamName := "aws_kinesis_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisStreamConsumerDestroy,
+		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config.single(),
+				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists(config.stream.getName(), &stream),
-					testAccCheckKinesisStreamConsumerExists(config, -1, &consumer),
-					testAccCheckAWSKinesisStreamConsumerAttributes(config, &consumer),
+					testAccAWSKinesisStreamConsumerExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccKinesisStreamConsumerImportStateIdFunc(config),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -41,218 +42,162 @@ func TestAccAWSKinesisStreamConsumer_basic(t *testing.T) {
 	})
 }
 
-func testAccKinesisStreamConsumerImportStateIdFunc(config *accKinesisStreamConsumerConfig) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		return fmt.Sprintf("%s@arn:aws:kinesis:%s:%s:stream/%s", config.getConsumerName(), testAccGetRegion(), testAccGetAccountID(), config.stream.getStreamName()), nil //lintignore:AWSAT005
-	}
-}
-
-func TestAccAWSKinesisStreamConsumer_createMultipleConcurrentStreamConsumers(t *testing.T) {
-	var stream kinesis.StreamDescription
-	var consumer kinesis.ConsumerDescription
-	config := createAccKinesisStreamConsumerConfig()
-
-	var checkFunctions []resource.TestCheckFunc
-
-	checkFunctions = append(
-		checkFunctions,
-		testAccCheckKinesisStreamExists(config.stream.getName(), &stream))
-
-	for i := 0; i < config.count; i++ {
-		checkFunctions = append(
-			checkFunctions,
-			testAccCheckKinesisStreamConsumerExists(config, i, &consumer))
-	}
+func TestAccAWSKinesisStreamConsumer_disappears(t *testing.T) {
+	resourceName := "aws_kinesis_stream_consumer.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisStreamConsumerDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: config.multiple(),
-				Check:  resource.ComposeTestCheckFunc(checkFunctions...),
+				Config: testAccAWSKinesisStreamConsumerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSKinesisStreamConsumerExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKinesisStreamConsumer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
 
-func testAccCheckKinesisStreamConsumerExists(c *accKinesisStreamConsumerConfig,
-	index int, consumer *kinesis.ConsumerDescription) resource.TestCheckFunc {
-	var resourceName string
-	if index > -1 {
-		resourceName = c.getIndexedName(index)
-	} else {
-		resourceName = c.getName()
-	}
+func TestAccAWSKinesisStreamConsumer_MaxConcurrentConsumers(t *testing.T) {
+	resourceName := "aws_kinesis_stream_consumer.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Stream Consumer ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
-		describeOpts := &kinesis.DescribeStreamConsumerInput{
-			ConsumerName: aws.String(rs.Primary.Attributes["name"]),
-			StreamARN:    aws.String(rs.Primary.Attributes["stream_arn"]),
-		}
-		resp, err := conn.DescribeStreamConsumer(describeOpts)
-		if err != nil {
-			return err
-		}
-
-		*consumer = *resp.ConsumerDescription
-
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Test creation of max number (5 according to AWS API docs) of concurrent consumers for a single stream
+				Config: testAccAWSKinesisStreamConsumerConfig_multiple(rName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckAWSKinesisStreamConsumerAttributes(
-	c *accKinesisStreamConsumerConfig, consumer *kinesis.ConsumerDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !strings.HasPrefix(*consumer.ConsumerName, c.getConsumerName()) {
-			return fmt.Errorf("Bad Stream Consumer name: %s", *consumer.ConsumerName)
-		}
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_kinesis_stream_consumer" {
-				continue
-			}
+func TestAccAWSKinesisStreamConsumer_ExceedMaxConcurrentConsumers(t *testing.T) {
+	resourceName := "aws_kinesis_stream_consumer.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-			if *consumer.ConsumerARN != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Stream Consumer(%s) ARN\n\t expected: %s\n\tgot: %s\n", rs.Type, rs.Primary.Attributes["arn"], *consumer.ConsumerARN)
-			}
-		}
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKinesisStreamConsumerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Test creation of more than the max number (5 according to AWS API docs) of concurrent consumers for a single stream
+				Config: testAccAWSKinesisStreamConsumerConfig_multiple(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.0", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.1", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.2", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.3", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.4", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.5", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.6", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.7", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.8", resourceName)),
+					testAccAWSKinesisStreamConsumerExists(fmt.Sprintf("%s.9", resourceName)),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckKinesisStreamConsumerDestroy(s *terraform.State) error {
+func testAccCheckAWSKinesisStreamConsumerDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream_consumer" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
-		describeOpts := &kinesis.DescribeStreamConsumerInput{
-			ConsumerName: aws.String(rs.Primary.Attributes["name"]),
-			StreamARN:    aws.String(rs.Primary.Attributes["stream_arn"]),
-		}
-		resp, err := conn.DescribeStreamConsumer(describeOpts)
-		if err == nil {
-			if resp.ConsumerDescription != nil && *resp.ConsumerDescription.ConsumerStatus != "DELETING" {
-				return fmt.Errorf("Error: Stream Consumer still exists")
-			}
+
+		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
+
+		if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
+			continue
 		}
 
-		return nil
+		if err != nil {
+			return fmt.Errorf("error reading Kinesis Stream Consumer (%s): %w", rs.Primary.ID, err)
+		}
 
+		if consumer != nil {
+			return fmt.Errorf("Kinesis Stream Consumer (%s) still exists", rs.Primary.ID)
+		}
 	}
 
 	return nil
 }
 
-type accKinesisStreamConfig struct {
-	resourceType      string
-	resourceLocalName string
-	streamBasename    string
-	randInt           int
-}
+func testAccAWSKinesisStreamConsumerExists(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
 
-func (r *accKinesisStreamConfig) getName() string {
-	return fmt.Sprintf("%s.%s", r.resourceType, r.resourceLocalName)
-}
+		if !ok {
+			return fmt.Errorf("resource %s not found", resourceName)
+		}
 
-func (r *accKinesisStreamConfig) getStreamName() string {
-	return fmt.Sprintf("%s-%d", r.streamBasename, r.randInt)
-}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource %s has not set its id", resourceName)
+		}
 
-func (r *accKinesisStreamConfig) single() string {
+		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
 
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-	name = "%s"
-	shard_count               = 2
-  	enforce_consumer_deletion = true
+		consumer, err := finder.StreamConsumerByARN(conn, rs.Primary.ID)
 
-  	tags = {
-    	Name = "tf-test"
-  	}
-}`, r.resourceType, r.resourceLocalName, r.getStreamName())
-}
+		if err != nil {
+			return fmt.Errorf("error reading Kinesis Stream Consumer (%s): %w", rs.Primary.ID, err)
+		}
 
-type accKinesisStreamConsumerConfig struct {
-	stream            *accKinesisStreamConfig
-	resourceType      string
-	resourceLocalName string
-	consumerBasename  string
-	count             int
-	randInt           int
-}
+		if consumer == nil {
+			return fmt.Errorf("Kinesis Stream Consumer (%s) not found", rs.Primary.ID)
+		}
 
-func (r *accKinesisStreamConsumerConfig) getName() string {
-	return fmt.Sprintf("%s.%s", r.resourceType, r.resourceLocalName)
-}
-
-func (r *accKinesisStreamConsumerConfig) getIndexedName(index int) string {
-	return fmt.Sprintf("%s.%s.%d", r.resourceType, r.resourceLocalName, index)
-}
-
-func (r *accKinesisStreamConsumerConfig) getConsumerName() string {
-	return fmt.Sprintf("%s-%d", r.consumerBasename, r.randInt)
-}
-
-func (r *accKinesisStreamConsumerConfig) data() string {
-	return fmt.Sprintf(`
-%s
-
-data "%s" "%s" {
-	name = "${%s.name}"
-	stream_arn = "${%s.arn}"
-}`, r.single(), r.resourceType, r.resourceLocalName, r.getName(), r.stream.getName())
-}
-
-func (r *accKinesisStreamConsumerConfig) single() string {
-
-	return fmt.Sprintf(`
-%s
-
-resource "%s" "%s" {
-	name = "%s"
-	stream_arn = "${%s.arn}"
-}
-
-`, r.stream.single(), r.resourceType, r.resourceLocalName, r.getConsumerName(), r.stream.getName())
-}
-
-func (r *accKinesisStreamConsumerConfig) multiple() string {
-
-	return fmt.Sprintf(`
-%s
-
-resource "%s" "%s" {
-	count = %d
-	name = "%s-${count.index}"
-	stream_arn = "${%s.arn}"
-}`, r.stream.single(), r.resourceType, r.resourceLocalName, r.count, r.getConsumerName(), r.stream.getName())
-}
-
-func createAccKinesisStreamConsumerConfig() *accKinesisStreamConsumerConfig {
-	iRnd := acctest.RandInt()
-	return &accKinesisStreamConsumerConfig{
-		stream: &accKinesisStreamConfig{
-			resourceType:      "aws_kinesis_stream",
-			resourceLocalName: "test_stream",
-			streamBasename:    "terraform-kinesis-stream-test",
-			randInt:           iRnd,
-		},
-		resourceType:      "aws_kinesis_stream_consumer",
-		resourceLocalName: "test_stream_consumer",
-		consumerBasename:  "terraform-kinesis-stream-consumer-test",
-		count:             2,
-		randInt:           iRnd,
+		return nil
 	}
+}
+
+func testAccAWSKinesisStreamConsumerBaseConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = %q
+  shard_count = 2
+}
+`, rName)
+}
+
+func testAccAWSKinesisStreamConsumerConfig_basic(rName string) string {
+	return composeConfig(
+		testAccAWSKinesisStreamConsumerBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_stream_consumer" "test" {
+  name       = %q
+  stream_arn = aws_kinesis_stream.test.arn
+}
+`, rName))
+}
+
+func testAccAWSKinesisStreamConsumerConfig_multiple(rName string, count int) string {
+	return composeConfig(
+		testAccAWSKinesisStreamConsumerBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_stream_consumer" "test" {
+  count      = %d
+  name       = "%s-${count.index}"
+  stream_arn = aws_kinesis_stream.test.arn
+}
+`, count, rName))
 }
