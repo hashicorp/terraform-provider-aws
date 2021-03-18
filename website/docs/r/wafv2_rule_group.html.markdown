@@ -429,7 +429,7 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified. 
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
