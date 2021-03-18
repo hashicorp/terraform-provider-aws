@@ -1842,7 +1842,7 @@ func testAccCheckProviderDefaultTags_Tags(providers *[]*schema.Provider, expecte
 				var found bool
 
 				for _, actualElement := range actualTags {
-					if *actualElement.Value == expectedElement {
+					if aws.StringValue(actualElement.Value) == expectedElement {
 						found = true
 						break
 					}
@@ -1857,7 +1857,7 @@ func testAccCheckProviderDefaultTags_Tags(providers *[]*schema.Provider, expecte
 				var found bool
 
 				for _, expectedElement := range expectedTags {
-					if *actualElement.Value == expectedElement {
+					if aws.StringValue(actualElement.Value) == expectedElement {
 						found = true
 						break
 					}
