@@ -57,6 +57,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
 
+## Timeouts
+
 `aws_globalaccelerator_listener` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
