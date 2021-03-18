@@ -42,6 +42,7 @@ func ScanGraphemeClusters(data []byte, atEOF bool) (int, []byte, error) {
 
     %%{
         include GraphemeCluster "grapheme_clusters_table.rl";
+        include Emoji "emoji_table.rl";
 
         action start {
             startPos = p
@@ -55,7 +56,7 @@ func ScanGraphemeClusters(data []byte, atEOF bool) (int, []byte, error) {
             return endPos+1, data[startPos:endPos+1], nil
         }
 
-        ZWJGlue = ZWJ (Glue_After_Zwj | E_Base_GAZ Extend* E_Modifier?)?;
+        ZWJGlue = ZWJ (Extended_Pictographic Extend*)?;
         AnyExtender = Extend | ZWJGlue | SpacingMark;
         Extension = AnyExtender*;
         ReplacementChar = (0xEF 0xBF 0xBD);
@@ -69,8 +70,8 @@ func ScanGraphemeClusters(data []byte, atEOF bool) (int, []byte, error) {
             LVT T* |
             T+
         ) Extension;
-        EmojiSeq = (E_Base | E_Base_GAZ) Extend* E_Modifier? Extension;
-        ZWJSeq = ZWJGlue Extension;
+        EmojiSeq = Extended_Pictographic Extend* Extension;
+        ZWJSeq = ZWJ (ZWJ | Extend | SpacingMark)*;
         EmojiFlagSeq = Regional_Indicator Regional_Indicator? Extension;
 
         UTF8Cont = 0x80 .. 0xBF;
@@ -82,7 +83,7 @@ func ScanGraphemeClusters(data []byte, atEOF bool) (int, []byte, error) {
         );
 
         # OtherSeq is any character that isn't at the start of one of the extended sequences above, followed by extension
-        OtherSeq = (AnyUTF8 - (CR|LF|Control|ReplacementChar|L|LV|V|LVT|T|E_Base|E_Base_GAZ|ZWJ|Regional_Indicator|Prepend)) Extension;
+        OtherSeq = (AnyUTF8 - (CR|LF|Control|ReplacementChar|L|LV|V|LVT|T|Extended_Pictographic|ZWJ|Regional_Indicator|Prepend)) (Extend | ZWJ | SpacingMark)*;
 
         # PrependSeq is prepend followed by any of the other patterns above, except control characters which explicitly break
         PrependSeq = Prepend+ (HangulSeq|EmojiSeq|ZWJSeq|EmojiFlagSeq|OtherSeq)?;

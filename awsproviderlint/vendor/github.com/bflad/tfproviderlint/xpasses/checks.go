@@ -1,6 +1,7 @@
 package xpasses
 
 import (
+	"github.com/bflad/tfproviderlint/xpasses/XAT001"
 	"github.com/bflad/tfproviderlint/xpasses/XR001"
 	"github.com/bflad/tfproviderlint/xpasses/XR002"
 	"github.com/bflad/tfproviderlint/xpasses/XR003"
@@ -16,6 +17,7 @@ import (
 // This can be consumed via multichecker.Main(xpasses.AllChecks...) or by
 // combining these Analyzers with additional custom Analyzers
 var AllChecks = []*analysis.Analyzer{
+	XAT001.Analyzer,
 	XR001.Analyzer,
 	XR002.Analyzer,
 	XR003.Analyzer,
