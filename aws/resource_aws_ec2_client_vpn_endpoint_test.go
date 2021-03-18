@@ -101,9 +101,10 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
 		},
 		"NetworkAssociation": {
-			"basic":          testAccAwsEc2ClientVpnNetworkAssociation_basic,
-			"disappears":     testAccAwsEc2ClientVpnNetworkAssociation_disappears,
-			"securityGroups": testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
+			"basic":           testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"multipleSubnets": testAccAwsEc2ClientVpnNetworkAssociation_multipleSubnets,
+			"disappears":      testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+			"securityGroups":  testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
 		},
 		"Route": {
 			"basic":       testAccAwsEc2ClientVpnRoute_basic,

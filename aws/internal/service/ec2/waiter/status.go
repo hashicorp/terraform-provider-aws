@@ -154,12 +154,7 @@ func ClientVpnNetworkAssociationStatus(conn *ec2.EC2, cvnaID string, cvepID stri
 	return func() (interface{}, string, error) {
 		result, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
 			ClientVpnEndpointId: aws.String(cvepID),
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("association-id"),
-					Values: []*string{aws.String(cvnaID)},
-				},
-			},
+			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
 		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAssociationIdNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
