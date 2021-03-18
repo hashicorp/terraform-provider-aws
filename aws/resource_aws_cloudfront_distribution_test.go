@@ -1248,8 +1248,9 @@ resource "aws_s3_bucket" "s3_backup_bucket_origin" {
 
 var logBucket = `
 resource "aws_s3_bucket" "s3_bucket_logs" {
-  bucket = "mylogs.${var.rand_id}"
-  acl    = "public-read"
+  acl           = "public-read"
+  bucket        = "mylogs.${var.rand_id}"
+  force_destroy = true
 }
 `
 
