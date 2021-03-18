@@ -97,6 +97,7 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +131,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +175,7 @@ func TestAccAWSWafWebAcl_DefaultAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -208,6 +211,7 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -256,6 +260,7 @@ func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
 			testAccPreCheckAWSWaf(t)
 			testAccPreCheckWafLoggingConfiguration(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, waf.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -303,6 +308,7 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
@@ -325,6 +331,7 @@ func TestAccAWSWafWebAcl_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
 		Steps: []resource.TestStep{
