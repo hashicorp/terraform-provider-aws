@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"math"
 	"regexp"
 
@@ -418,9 +417,9 @@ func wafv2VisibilityConfigSchema() *schema.Schema {
 	}
 }
 
-func expandWafv2Rules(l []interface{}) ([]*wafv2.Rule, error) {
+func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	rules := make([]*wafv2.Rule, 0)
@@ -429,35 +428,24 @@ func expandWafv2Rules(l []interface{}) ([]*wafv2.Rule, error) {
 		if rule == nil {
 			continue
 		}
-		r, err := expandWafv2Rule(rule.(map[string]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		rules = append(rules, r)
+		rules = append(rules, expandWafv2Rule(rule.(map[string]interface{})))
 	}
 
-	return rules, nil
+	return rules
 }
 
-func expandWafv2Rule(m map[string]interface{}) (*wafv2.Rule, error) {
+func expandWafv2Rule(m map[string]interface{}) *wafv2.Rule {
 	if m == nil {
-		return nil, nil
+		return nil
 	}
 
-	rule := &wafv2.Rule{
+	return &wafv2.Rule{
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
+		Statement:        expandWafv2RootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
-	s, err := expandWafv2RootStatement(m["statement"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	rule.Statement = s
-
-	return rule, nil
 }
 
 func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
@@ -507,9 +495,9 @@ func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
 	return configuration
 }
 
-func expandWafv2RootStatement(l []interface{}) (*wafv2.Statement, error) {
+func expandWafv2RootStatement(l []interface{}) *wafv2.Statement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
@@ -517,9 +505,9 @@ func expandWafv2RootStatement(l []interface{}) (*wafv2.Statement, error) {
 	return expandWafv2Statement(m)
 }
 
-func expandWafv2Statements(l []interface{}) ([]*wafv2.Statement, error) {
+func expandWafv2Statements(l []interface{}) []*wafv2.Statement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	statements := make([]*wafv2.Statement, 0)
@@ -528,37 +516,25 @@ func expandWafv2Statements(l []interface{}) ([]*wafv2.Statement, error) {
 		if statement == nil {
 			continue
 		}
-		s, err := expandWafv2Statement(statement.(map[string]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statements = append(statements, s)
+		statements = append(statements, expandWafv2Statement(statement.(map[string]interface{})))
 	}
 
-	return statements, nil
+	return statements
 }
 
-func expandWafv2Statement(m map[string]interface{}) (*wafv2.Statement, error) {
+func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 	if m == nil {
-		return nil, nil
+		return nil
 	}
 
 	statement := &wafv2.Statement{}
 
 	if v, ok := m["and_statement"]; ok {
-		s, err := expandWafv2AndStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.AndStatement = s
+		statement.AndStatement = expandWafv2AndStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["byte_match_statement"]; ok {
-		s, err := expandWafv2ByteMatchStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.ByteMatchStatement = s
+		statement.ByteMatchStatement = expandWafv2ByteMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["ip_set_reference_statement"]; ok {
@@ -570,133 +546,96 @@ func expandWafv2Statement(m map[string]interface{}) (*wafv2.Statement, error) {
 	}
 
 	if v, ok := m["not_statement"]; ok {
-		s, err := expandWafv2NotStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.NotStatement = s
+		statement.NotStatement = expandWafv2NotStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["or_statement"]; ok {
-		s, err := expandWafv2OrStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.OrStatement = s
+		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
-		s, err := expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.RegexPatternSetReferenceStatement = s
+		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["size_constraint_statement"]; ok {
-		s, err := expandWafv2SizeConstraintStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.SizeConstraintStatement = s
+		statement.SizeConstraintStatement = expandWafv2SizeConstraintStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["sqli_match_statement"]; ok {
-		s, err := expandWafv2SqliMatchStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.SqliMatchStatement = s
+		statement.SqliMatchStatement = expandWafv2SqliMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["xss_match_statement"]; ok {
-		s, err := expandWafv2XssMatchStatement(v.([]interface{}))
-		if err != nil {
-			return nil, err
-		}
-		statement.XssMatchStatement = s
+		statement.XssMatchStatement = expandWafv2XssMatchStatement(v.([]interface{}))
 	}
 
-	return statement, nil
+	return statement
 }
 
-func expandWafv2AndStatement(l []interface{}) (*wafv2.AndStatement, error) {
+func expandWafv2AndStatement(l []interface{}) *wafv2.AndStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s, err := expandWafv2Statements(m["statement"].([]interface{}))
-	if err != nil {
-		return nil, err
+	return &wafv2.AndStatement{
+		Statements: expandWafv2Statements(m["statement"].([]interface{})),
 	}
-
-	return &wafv2.AndStatement{Statements: s}, nil
 }
 
-func expandWafv2ByteMatchStatement(l []interface{}) (*wafv2.ByteMatchStatement, error) {
+func expandWafv2ByteMatchStatement(l []interface{}) *wafv2.ByteMatchStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s := &wafv2.ByteMatchStatement{
+	return &wafv2.ByteMatchStatement{
+		FieldToMatch:         expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
 		PositionalConstraint: aws.String(m["positional_constraint"].(string)),
 		SearchString:         []byte(m["search_string"].(string)),
 		TextTransformations:  expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-
-	fieldToMatch, err := expandWafv2FieldToMatch(m["field_to_match"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	s.FieldToMatch = fieldToMatch
-
-	return s, nil
 }
 
-func expandWafv2FieldToMatch(l []interface{}) (*wafv2.FieldToMatch, error) {
+func expandWafv2FieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 	f := &wafv2.FieldToMatch{}
 
-	// While the FieldToMatch struct allows more than 1 of its fields to be set,
-	// the WAFv2 API does not.
-	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/14248
-	nFields := 0
-	for _, v := range m {
-		if len(v.([]interface{})) > 0 {
-			nFields++
-		}
-		if nFields > 1 {
-			return nil, fmt.Errorf(`error expanding field_to_match: only one of "all_query_arguments", "body", method", 
-							"query_string", "single_header", "single_query_argument", or "uri_path" is valid`)
-		}
-	}
-
 	if v, ok := m["all_query_arguments"]; ok && len(v.([]interface{})) > 0 {
 		f.AllQueryArguments = &wafv2.AllQueryArguments{}
-	} else if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
 		f.Body = &wafv2.Body{}
-	} else if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
-	} else if v, ok := m["query_string"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["query_string"]; ok && len(v.([]interface{})) > 0 {
 		f.QueryString = &wafv2.QueryString{}
-	} else if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
 		f.SingleHeader = expandWafv2SingleHeader(m["single_header"].([]interface{}))
-	} else if v, ok := m["single_query_argument"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["single_query_argument"]; ok && len(v.([]interface{})) > 0 {
 		f.SingleQueryArgument = expandWafv2SingleQueryArgument(m["single_query_argument"].([]interface{}))
-	} else if v, ok := m["uri_path"]; ok && len(v.([]interface{})) > 0 {
+	}
+
+	if v, ok := m["uri_path"]; ok && len(v.([]interface{})) > 0 {
 		f.UriPath = &wafv2.UriPath{}
 	}
 
-	return f, nil
+	return f
 }
 
 func expandWafv2ForwardedIPConfig(l []interface{}) *wafv2.ForwardedIPConfig {
@@ -814,127 +753,90 @@ func expandWafv2GeoMatchStatement(l []interface{}) *wafv2.GeoMatchStatement {
 	return statement
 }
 
-func expandWafv2NotStatement(l []interface{}) (*wafv2.NotStatement, error) {
+func expandWafv2NotStatement(l []interface{}) *wafv2.NotStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 	s := m["statement"].([]interface{})
 
 	if len(s) == 0 || s[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m = s[0].(map[string]interface{})
 
-	statement, err := expandWafv2Statement(m)
-	if err != nil {
-		return nil, err
+	return &wafv2.NotStatement{
+		Statement: expandWafv2Statement(m),
 	}
-	return &wafv2.NotStatement{Statement: statement}, nil
 }
 
-func expandWafv2OrStatement(l []interface{}) (*wafv2.OrStatement, error) {
+func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s, err := expandWafv2Statements(m["statement"].([]interface{}))
-	if err != nil {
-		return nil, err
+	return &wafv2.OrStatement{
+		Statements: expandWafv2Statements(m["statement"].([]interface{})),
 	}
-
-	return &wafv2.OrStatement{Statements: s}, nil
 }
 
-func expandWafv2RegexPatternSetReferenceStatement(l []interface{}) (*wafv2.RegexPatternSetReferenceStatement, error) {
+func expandWafv2RegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatternSetReferenceStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s := &wafv2.RegexPatternSetReferenceStatement{
+	return &wafv2.RegexPatternSetReferenceStatement{
 		ARN:                 aws.String(m["arn"].(string)),
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-
-	fieldToMatch, err := expandWafv2FieldToMatch(m["field_to_match"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	s.FieldToMatch = fieldToMatch
-
-	return s, nil
 }
 
-func expandWafv2SizeConstraintStatement(l []interface{}) (*wafv2.SizeConstraintStatement, error) {
+func expandWafv2SizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s := &wafv2.SizeConstraintStatement{
+	return &wafv2.SizeConstraintStatement{
 		ComparisonOperator:  aws.String(m["comparison_operator"].(string)),
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
 		Size:                aws.Int64(int64(m["size"].(int))),
 		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-
-	fieldToMatch, err := expandWafv2FieldToMatch(m["field_to_match"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	s.FieldToMatch = fieldToMatch
-
-	return s, nil
 }
 
-func expandWafv2SqliMatchStatement(l []interface{}) (*wafv2.SqliMatchStatement, error) {
+func expandWafv2SqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s := &wafv2.SqliMatchStatement{
+	return &wafv2.SqliMatchStatement{
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-
-	fieldToMatch, err := expandWafv2FieldToMatch(m["field_to_match"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	s.FieldToMatch = fieldToMatch
-
-	return s, nil
 }
 
-func expandWafv2XssMatchStatement(l []interface{}) (*wafv2.XssMatchStatement, error) {
+func expandWafv2XssMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	if len(l) == 0 || l[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	s := &wafv2.XssMatchStatement{
+	return &wafv2.XssMatchStatement{
+		FieldToMatch:        expandWafv2FieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandWafv2TextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-
-	fieldToMatch, err := expandWafv2FieldToMatch(m["field_to_match"].([]interface{}))
-	if err != nil {
-		return nil, err
-	}
-
-	s.FieldToMatch = fieldToMatch
-
-	return s, nil
 }
 
 func flattenWafv2Rules(r []*wafv2.Rule) interface{} {

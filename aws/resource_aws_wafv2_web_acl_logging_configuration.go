@@ -42,9 +42,9 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 				// to be correctly interpreted, this argument must be of type List,
 				// otherwise, at apply-time a field configured as an empty block
 				// (e.g. body {}) will result in a nil redacted_fields attribute
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         100,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 100,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// TODO: remove attributes marked as Deprecated
@@ -98,7 +98,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 						"uri_path": wafv2EmptySchema(),
 					},
 				},
-				Description: "Parts of the request to exclude from logs",
+				Description:      "Parts of the request to exclude from logs",
 				DiffSuppressFunc: suppressRedactedFieldsDiff,
 			},
 			"resource_arn": {
