@@ -214,10 +214,6 @@ func resourceAwsAmiCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
