@@ -10,7 +10,6 @@ on:
       - .github/workflows/terraform_provider.yml
       - .go-version
       - .golangci.yml
-      - .goreleaser.yml
       - .semgrep.yml
       - aws/**
       - awsproviderlint/**
