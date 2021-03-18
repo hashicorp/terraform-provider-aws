@@ -144,6 +144,7 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -163,12 +164,14 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 	var v ec2.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -195,6 +198,7 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
