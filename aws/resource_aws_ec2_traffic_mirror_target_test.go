@@ -23,6 +23,7 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -57,6 +58,7 @@ func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -89,6 +91,7 @@ func TestAccAWSEc2TrafficMirrorTarget_tags(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
@@ -137,6 +140,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TrafficMirrorTarget(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
