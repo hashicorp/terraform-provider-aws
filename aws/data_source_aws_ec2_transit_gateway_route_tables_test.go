@@ -6,27 +6,41 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSEc2TransitGatewayRouteTablesDataSource_TransitGatewayFilter(t *testing.T) {
+func TestAccDataSourceAwsEc2TransitGatewayRouteTables_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
-	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayRouteTablesDataSourceTransitGatewayFilter(),
+				Config: testAccDataSourceAwsEc2TransitGatewayRouteTablesConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
+					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAWSEc2TransitGatewayRouteTablesDataSourceTransitGatewayFilter() string {
-	return `
+func TestAccDataSourceAwsEc2TransitGatewayRouteTables_Filter(t *testing.T) {
+	dataSourceName := "data.aws_ec2_transit_gateway_route_tables.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsEc2TransitGatewayRouteTablesTransitGatewayFilter,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+const testAccDataSourceAwsEc2TransitGatewayRouteTablesConfig = `
 resource "aws_ec2_transit_gateway" "test" {}
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -34,9 +48,23 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
 }
 
 data "aws_ec2_transit_gateway_route_tables" "test" {
+  depends_on = [aws_ec2_transit_gateway_route_table.test]
+}
+`
+
+const testAccDataSourceAwsEc2TransitGatewayRouteTablesTransitGatewayFilter = `
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
+}
+
+data "aws_ec2_transit_gateway_route_tables" "test" {
+  filter {
+    name   = "transit-gateway-id"
+    values = [aws_ec2_transit_gateway.test.id]
+  }
 
   depends_on = [aws_ec2_transit_gateway_route_table.test]
 }
 `
-}
