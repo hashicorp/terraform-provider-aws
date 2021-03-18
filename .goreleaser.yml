@@ -11,17 +11,16 @@ builds:
     flags:
       - -trimpath
     goarch:
-      - '386'
+      - 386
       - amd64
       - arm
       - arm64
     goos:
-      - darwin
-      - freebsd
       - linux
+      - darwin
       - windows
     ignore:
-      - goarch: '386'
+      - goarch: 386
         goos: darwin
     ldflags:
       - -s -w -X version.ProviderVersion={{.Version}}
@@ -31,8 +30,6 @@ changelog:
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
-env:
-  - CGO_ENABLED=0
 release:
   disable: true
 signs:
