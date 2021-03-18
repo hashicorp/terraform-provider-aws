@@ -664,6 +664,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_vpc_attachment_accepter":         resourceAwsEc2TransitGatewayVpcAttachmentAccepter(),
 			"aws_ecr_lifecycle_policy":                                resourceAwsEcrLifecyclePolicy(),
 			"aws_ecrpublic_repository":                                resourceAwsEcrPublicRepository(),
+			"aws_ecrpublic_repository_policy":                         resourceAwsEcrPublicRepositoryPolicy(),
 			"aws_ecr_repository":                                      resourceAwsEcrRepository(),
 			"aws_ecr_repository_policy":                               resourceAwsEcrRepositoryPolicy(),
 			"aws_ecs_capacity_provider":                               resourceAwsEcsCapacityProvider(),
