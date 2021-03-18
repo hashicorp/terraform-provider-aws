@@ -104,6 +104,7 @@ awsproviderlint:
 		-XR003=false \
 		-XR004=false \
 		-XR005=false \
+		-XAT001=false \
 		-XS001=false \
 		-XS002=false \
 		./$(PKG_NAME)
