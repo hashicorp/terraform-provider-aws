@@ -543,6 +543,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 				continue
 			}
 
+			hasTableUpdate = true
 			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
 		}
 	}
