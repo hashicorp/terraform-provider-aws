@@ -223,16 +223,8 @@ func testAccAWSLakeFormationPermissions_selectPermissions(t *testing.T) {
 					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "7"),
 				),
-			},
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_selectPermissions(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLakeFormationPermissionsExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -824,12 +816,14 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_permissions" "test" {
-  permissions = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT", "SELECT"]
   principal   = aws_iam_role.test.arn
+
+  permissions 				    = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT", "SELECT"]
+  permissions_with_grant_option = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT", "SELECT"]
 
   table {
     database_name = aws_glue_catalog_table.test.database_name
-	wildcard	  = true
+    name          = aws_glue_catalog_table.test.name
   }
 }
 `, rName)
