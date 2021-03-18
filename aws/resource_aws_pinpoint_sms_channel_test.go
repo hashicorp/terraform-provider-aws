@@ -51,6 +51,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test_sms_channel"
