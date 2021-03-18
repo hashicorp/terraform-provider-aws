@@ -70,7 +70,7 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-ErrorCheck: testAccErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAppDestroy,
@@ -97,7 +97,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-ErrorCheck: testAccErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAppDestroy,
@@ -126,7 +126,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-ErrorCheck: testAccErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAppDestroy,
@@ -155,7 +155,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-ErrorCheck: testAccErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointAppDestroy,
