@@ -695,7 +695,7 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 }
 
 func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
-	if apiObjects == nil || len(apiObjects) == 0 {
+	if apiObjects == nil {
 		return nil
 	}
 
@@ -711,7 +711,7 @@ func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResour
 }
 
 func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
-	if apiObjects == nil || len(apiObjects) == 0 {
+	if apiObjects == nil {
 		return nil
 	}
 
