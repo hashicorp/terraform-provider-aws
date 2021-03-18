@@ -312,14 +312,16 @@ func TestAccAWSElasticacheReplicationGroup_updateParameterGroup(t *testing.T) {
 func TestAccAWSElasticacheReplicationGroup_vpc(t *testing.T) {
 	var rg elasticache.ReplicationGroup
 	resourceName := "aws_elasticache_replication_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheReplicationGroupInVPCConfig,
+				Config: testAccAWSElasticacheReplicationGroupInVPCConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
@@ -1658,7 +1660,8 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
+func testAccAWSElasticacheReplicationGroupInVPCConfig(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1687,13 +1690,13 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03d"
+  name        = %[1]q
   description = "tf-test-cache-subnet-group-descr"
   subnet_ids  = [aws_subnet.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -1706,7 +1709,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = "tf-%s"
+  replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
   number_cache_clusters         = 1
@@ -1716,7 +1719,8 @@ resource "aws_elasticache_replication_group" "test" {
   availability_zones            = [data.aws_availability_zones.available.names[0]]
   auto_minor_version_upgrade    = false
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, rName)
+}
 
 func testAccAWSElasticacheReplicationGroupConfig_MultiAZNotInVPC_Basic(rName string) string {
 	return fmt.Sprintf(`
