@@ -10,7 +10,6 @@ on:
       - .github/workflows/terraform_provider.yml
       - .go-version
       - .golangci.yml
-      - .goreleaser.yml
       - .semgrep.yml
       - aws/**
       - awsproviderlint/**
@@ -274,32 +273,6 @@ jobs:
         key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
     - run: cd tools && go install github.com/pavius/impi/cmd/impi
     - run: impi --local . --scheme stdThirdPartyLocal ./...
-
-  goreleaser:
-    needs: [go_mod_download]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      # See also: https://github.com/actions/setup-go/pull/62
-      - run: echo "GO_VERSION=$(cat .go-version)" >> $GITHUB_ENV
-      - uses: actions/setup-go@v2
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - name: goreleaser check
-        continue-on-error: true
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          args: check
-      - name: goreleaser build
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          args: build --snapshot --timeout 2h
 
   semgrep:
     runs-on: ubuntu-latest
