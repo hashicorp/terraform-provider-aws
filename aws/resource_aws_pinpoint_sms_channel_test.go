@@ -16,6 +16,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointSMSChannelDestroy,
@@ -51,6 +52,7 @@ func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 	var channel pinpoint.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test_sms_channel"
@@ -60,6 +62,7 @@ func TestAccAWSPinpointSMSChannel_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSPinpointSMSChannelDestroy,
