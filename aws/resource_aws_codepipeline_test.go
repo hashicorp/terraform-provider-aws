@@ -27,6 +27,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -131,6 +132,7 @@ func TestAccAWSCodePipeline_disappears(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -157,6 +159,7 @@ func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -198,6 +201,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -230,6 +234,7 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -288,6 +293,7 @@ func TestAccAWSCodePipeline_multiregion_basic(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -329,6 +335,7 @@ func TestAccAWSCodePipeline_multiregion_Update(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -384,6 +391,7 @@ func TestAccAWSCodePipeline_multiregion_ConvertSingleRegion(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t, testAccGetAlternateRegion())
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, codepipeline.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -446,6 +454,7 @@ func TestAccAWSCodePipeline_WithNamespace(t *testing.T) {
 			testAccPreCheckAWSCodePipelineSupported(t)
 			testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -478,6 +487,7 @@ func TestAccAWSCodePipeline_WithGitHubv1SourceAction(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
