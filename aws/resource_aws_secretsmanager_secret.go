@@ -99,6 +99,32 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 					},
 				},
 			},
+
+			"force_overwrite_replica_secret": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"replica_region": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kms_key_id": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -211,6 +237,14 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 		if err != nil {
 			return fmt.Errorf("error enabling Secrets Manager Secret %q rotation: %w", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("") {
+		input := &secretsmanager.
+
+		if err != nil {
+			return fmt.Errorf("error replicatin Secrets Manager Secret")
 		}
 	}
 
