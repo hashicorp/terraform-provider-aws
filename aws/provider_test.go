@@ -1110,6 +1110,9 @@ func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckF
 	}
 }
 
+// NOTE: This function cannot use the standard tfawserr helpers
+// as it is receiving error strings from the SDK testing framework,
+// not actual error types from the resource logic.
 func testAccErrorCheckCommon(err error) bool {
 	if strings.Contains(err.Error(), "is not supported in this") {
 		return true
@@ -1119,19 +1122,19 @@ func testAccErrorCheckCommon(err error) bool {
 		return true
 	}
 
-	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	if strings.Contains(err.Error(), "InvalidAction") {
 		return true
 	}
 
-	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+	if strings.Contains(err.Error(), "Unknown operation") {
 		return true
 	}
 
-	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+	if strings.Contains(err.Error(), "UnknownOperationException") {
 		return true
 	}
 
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+	if strings.Contains(err.Error(), "UnsupportedOperation") {
 		return true
 	}
 
