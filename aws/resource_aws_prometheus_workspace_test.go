@@ -17,6 +17,7 @@ func TestAccAWSAMPWorkspace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{
@@ -53,6 +54,7 @@ func TestAccAWSAMPWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_prometheus_workspace.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, prometheusservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAMPWorkspaceDestroy,
 		Steps: []resource.TestStep{

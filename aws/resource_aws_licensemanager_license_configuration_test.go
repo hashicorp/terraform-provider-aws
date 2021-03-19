@@ -66,6 +66,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -101,6 +102,7 @@ func TestAccAWSLicenseManagerLicenseConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, licensemanager.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLicenseManagerLicenseConfigurationDestroy,
 		Steps: []resource.TestStep{
