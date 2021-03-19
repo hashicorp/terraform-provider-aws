@@ -93,6 +93,7 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +133,7 @@ func TestAccAWSKinesisAnalyticsApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -154,6 +156,7 @@ func TestAccAWSKinesisAnalyticsApplication_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -201,6 +204,7 @@ func TestAccAWSKinesisAnalyticsApplication_Code_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -262,6 +266,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Add(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -325,6 +330,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Delete(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -390,6 +396,7 @@ func TestAccAWSKinesisAnalyticsApplication_CloudWatchLoggingOptions_Update(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -455,6 +462,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Add(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -542,6 +550,7 @@ func TestAccAWSKinesisAnalyticsApplication_Input_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -655,6 +664,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Add(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -768,6 +778,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Delete(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -883,6 +894,7 @@ func TestAccAWSKinesisAnalyticsApplication_InputProcessingConfiguration_Update(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1003,6 +1015,7 @@ func TestAccAWSKinesisAnalyticsApplication_Multiple_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1172,6 +1185,7 @@ func TestAccAWSKinesisAnalyticsApplication_Output_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1283,6 +1297,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Add(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1362,6 +1377,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Delete(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1442,6 +1458,7 @@ func TestAccAWSKinesisAnalyticsApplication_ReferenceDataSource_Update(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1542,6 +1559,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnCreate(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1608,6 +1626,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_OnUpdate(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -1767,6 +1786,7 @@ func TestAccAWSKinesisAnalyticsApplication_StartApplication_Update(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalytics.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
