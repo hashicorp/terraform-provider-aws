@@ -26,12 +26,14 @@ func resourceAwsPinpointEventStream() *schema.Resource {
 				ForceNew: true,
 			},
 			"destination_stream_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
@@ -42,19 +44,21 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 
 	applicationId := d.Get("application_id").(string)
 
-	params := &pinpoint.WriteEventStream{}
-
-	params.DestinationStreamArn = aws.String(d.Get("destination_stream_arn").(string))
-	params.RoleArn = aws.String(d.Get("role_arn").(string))
+	params := &pinpoint.WriteEventStream{
+		DestinationStreamArn: aws.String(d.Get("destination_stream_arn").(string)),
+		RoleArn:              aws.String(d.Get("role_arn").(string)),
+	}
 
 	req := pinpoint.PutEventStreamInput{
 		ApplicationId:    aws.String(applicationId),
 		WriteEventStream: params,
 	}
 
-	_, err := conn.PutEventStream(&req)
+	_, err := retryOnAwsCode("BadRequestException", func() (interface{}, error) {
+		return conn.PutEventStream(&req)
+	})
 	if err != nil {
-		return fmt.Errorf("error putting Pinpoint Event Stream for application %s: %s", applicationId, err)
+		return fmt.Errorf("error putting Pinpoint Event Stream for application %s: %w", applicationId, err)
 	}
 
 	d.SetId(applicationId)
@@ -77,12 +81,13 @@ func resourceAwsPinpointEventStreamRead(d *schema.ResourceData, meta interface{}
 			return nil
 		}
 
-		return fmt.Errorf("error getting Pinpoint Event Stream for application %s: %s", d.Id(), err)
+		return fmt.Errorf("error getting Pinpoint Event Stream for application %s: %w", d.Id(), err)
 	}
 
-	d.Set("application_id", output.EventStream.ApplicationId)
-	d.Set("destination_stream_arn", output.EventStream.DestinationStreamArn)
-	d.Set("role_arn", output.EventStream.RoleArn)
+	res := output.EventStream
+	d.Set("application_id", res.ApplicationId)
+	d.Set("destination_stream_arn", res.DestinationStreamArn)
+	d.Set("role_arn", res.RoleArn)
 
 	return nil
 }
@@ -100,7 +105,7 @@ func resourceAwsPinpointEventStreamDelete(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Pinpoint Event Stream for application %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting Pinpoint Event Stream for application %s: %w", d.Id(), err)
 	}
 	return nil
 }
