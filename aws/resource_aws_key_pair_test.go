@@ -169,6 +169,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"key_name_prefix"},
 		Providers:       testAccProviders,
