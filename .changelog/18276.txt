@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/iam_policy: Add tagging support
+```
