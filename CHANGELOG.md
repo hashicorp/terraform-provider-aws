@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_codestarconnections_connection` ([#18129](https://github.com/hashicorp/terraform-provider-aws/issues/18129))
 
+BUG FIXES:
+
+* resource/aws_pinpoint_sms_channel: Set all params on update ([#18281](https://github.com/hashicorp/terraform-provider-aws/issues/18281))
+
 ## 3.33.0 (March 18, 2021)
 
 NOTES:
