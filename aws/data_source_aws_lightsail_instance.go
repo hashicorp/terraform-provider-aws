@@ -49,6 +49,11 @@ func dataSourceAwsLightsailInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"ip_address_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			// cannot be retrieved from the API
 			"user_data": {
 				Type:     schema.TypeString,
@@ -94,6 +99,7 @@ func dataSourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"username": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -146,12 +152,16 @@ func dataSourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}
 	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
 	if len(i.Ipv6Addresses) > 0 {
 		d.Set("ipv6_address", aws.StringValue(i.Ipv6Addresses[0]))
+	} else {
+		// Setting empty value if no address returned
+		d.Set("ipv6_address", "")
 	}
 
 	d.Set("ipv6_addresses", aws.StringValueSlice(i.Ipv6Addresses))
 	d.Set("is_static_ip", i.IsStaticIp)
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
+	d.Set("ip_address_type", i.IpAddressType)
 
 	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
