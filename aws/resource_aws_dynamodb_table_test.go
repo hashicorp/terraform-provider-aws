@@ -1505,12 +1505,36 @@ func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_Replica_Single_With_CMK(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	kmsKeyResourceName := "aws_kms_key.mastertest"
+	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
+	kmsKeyReplicaResourceName := "aws_kms_key.replicatest"
+	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica1CMK(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
 				),
 			},
 		},
@@ -2342,19 +2366,20 @@ resource "aws_dynamodb_table" "test" {
 `, rName))
 }
 
-func testAccAWSDynamoDbTableConfigReplica1WithCMK(rName string) string {
+func testAccAWSDynamoDbTableConfigReplicaWithCMK(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
+
 data "aws_region" "alternate" {
-  provider = "awsalternate"
+	provider = "awsalternate"
 }
 
-resource "aws_kms_key" "test" {
+resource "aws_kms_key" "mastertest" {
 	description = "DynamoDbTest"
 }
 
-resource "aws_kms_key" "alternatetest" {
+resource "aws_kms_key" "replicatest" {
 	provider = "awsalternate"
 	description = "DynamoDbReplicaTest"
 }
@@ -2373,12 +2398,18 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
 	region_name = data.aws_region.alternate.name
-	kms_key_arn	= aws_kms_key.alternatetest.id
+	kms_key_arn	= aws_kms_key.replicatest.arn
   }
 
   server_side_encryption {
     enabled     = true
-    kms_key_arn = aws_kms_key.test.arn
+    kms_key_arn = aws_kms_key.mastertest.arn
+  }
+
+  timeouts {
+	create = "20m"
+	update = "20m"
+	delete = "20m"
   }
 }
 `, rName))
