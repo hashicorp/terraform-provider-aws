@@ -105,20 +105,33 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Optional: true,
 			},
 
-			"replica_region": {
+			"replica_regions": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
+						"force_overwrite_replica_secret": {
+							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"kms_key_id": {
+						"replica_region": {
 							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"region": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"kms_key_id": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -240,11 +253,48 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if v, ok := d.GetOk("") {
-		input := &secretsmanager.
+	if v := d.Get("replication_configuration"); v != nil {
+		input := secretsmanager.ReplicateSecretToRegionsInput{
+			SecretId: aws.String(d.Id()),
+		}
 
+		if v, ok := d.GetOk("force_overwrite_replica_secret"); ok {
+			input.ForceOverwriteReplicaSecret = aws.Bool(v.(bool))
+		}
+
+		var replicaRegions []*secretsmanager.ReplicaRegionType
+		if v := d.Get("replica_region"); v != nil {
+			for _, v := range v.(*schema.Set).List() {
+				replicaRegionResource := v.(map[string]interface{})
+
+				replicaRegion := secretsmanager.ReplicaRegionType{}
+				if v, ok := replicaRegionResource["region"]; ok && v.(string) != "" {
+
+					replicaRegion.Region = aws.String(v.(string))
+				}
+
+				if v, ok := d.GetOk("kms_key_id"); ok {
+					replicaRegion.KmsKeyId = aws.String(v.(string))
+				}
+
+				replicaRegions = append(replicaRegions, &replicaRegion)
+			}
+			input.AddReplicaRegions = replicaRegions
+		}
+
+		log.Printf("[DEBUG] Enabling Secrets Manager Secret Replication: %s", input)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.ReplicateSecretToRegions(&input)
+			if err != nil {
+				// AccessDeniedException: Secrets Manager cannot replicate the secret.
+				if isAWSErr(err, "AccessDeniedException", "") {
+					return resource.RetryableError(err)
+				}
+			}
+			return nil
+		})
 		if err != nil {
-			return fmt.Errorf("error replicatin Secrets Manager Secret")
+			return fmt.Errorf("error enabling Secrets Manager Secret %q replication: %w", d.Id(), err)
 		}
 	}
 
@@ -330,10 +380,28 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 		d.Set("rotation_rules", []interface{}{})
 	}
 
+<<<<<<< HEAD
 	tags := keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+=======
+	if output.ReplicationStatus != nil && len(output.ReplicationStatus) > 0 {
+		replicationStatuses := make([]interface{}, len(output.ReplicationStatus))
+		for i, rs := range output.ReplicationStatus {
+			replicationStatus := map[string]interface{}{
+				"region":      aws.StringValue(rs.Region),
+				"kms_key_id":  aws.StringValue(rs.KmsKeyId),
+			}
+			replicationStatuses[i] = replicationStatus
+		}
+		if err := d.Set("replica_region", replicationStatuses); err != nil {
+			return fmt.Errorf("error setting replica_region: %s", err)
+		}
+	}
+
+	if err := d.Set("tags", keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+>>>>>>> 95dac460e (First pass at implementation)
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
