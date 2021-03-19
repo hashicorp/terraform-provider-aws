@@ -95,6 +95,7 @@ func TestAccAWSIAMUserPolicy_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, iam.EndpointsID),
 		IDRefreshName: policyResourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckIAMUserPolicyDestroy,
@@ -137,6 +138,7 @@ func TestAccAWSIAMUserPolicy_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, iam.EndpointsID),
 		IDRefreshName: policyResourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckIAMUserPolicyDestroy,

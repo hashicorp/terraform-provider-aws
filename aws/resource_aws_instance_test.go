@@ -240,6 +240,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t)
 		},
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -269,6 +270,7 @@ func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -398,6 +400,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -442,6 +445,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
 		Providers:       testAccProviders,
@@ -533,6 +537,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
 		Providers:       testAccProviders,
@@ -609,6 +614,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -663,6 +669,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
 		Providers:       testAccProviders,
@@ -719,6 +726,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -778,6 +786,7 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -812,6 +821,7 @@ func TestAccAWSInstance_dedicatedInstance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
@@ -842,6 +852,7 @@ func TestAccAWSInstance_outpost(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
@@ -870,6 +881,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
@@ -969,6 +981,7 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
@@ -996,6 +1009,7 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1033,6 +1047,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1264,6 +1279,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1320,6 +1336,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1384,6 +1401,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1421,6 +1439,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
@@ -1461,6 +1480,7 @@ func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -1503,6 +1523,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"source_dest_check"},
 		Providers:       testAccProviders,
@@ -1563,6 +1584,7 @@ func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -3326,6 +3348,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -3923,6 +3946,7 @@ func TestAccAWSInstance_GP3RootBlockDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
 		Providers:       testAccProviders,
