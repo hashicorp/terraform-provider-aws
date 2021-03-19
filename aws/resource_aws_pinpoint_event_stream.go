@@ -54,6 +54,7 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 		WriteEventStream: params,
 	}
 
+	// Retry for IAM eventual consistency
 	_, err := retryOnAwsCode("BadRequestException", func() (interface{}, error) {
 		return conn.PutEventStream(&req)
 	})
