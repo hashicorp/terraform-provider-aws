@@ -12,7 +12,7 @@ Resource for managing SES Identity Notification Topics
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_identity_notification_topic" "test" {
   topic_arn                = aws_sns_topic.example.arn
   notification_type        = "Bounce"
@@ -29,6 +29,10 @@ The following arguments are supported:
 * `notification_type` - (Required) The type of notifications that will be published to the specified Amazon SNS topic. Valid Values: *Bounce*, *Complaint* or *Delivery*.
 * `identity` - (Required) The identity for which the Amazon SNS topic will be set. You can specify an identity by using its name or by using its Amazon Resource Name (ARN).
 * `include_original_headers` - (Optional) Whether SES should include original email headers in SNS notifications of this type. *false* by default.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

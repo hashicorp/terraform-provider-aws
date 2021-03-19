@@ -3,7 +3,7 @@ TEST?=./...
 SWEEP_DIR?=./aws
 PKG_NAME=aws
 TEST_COUNT?=1
-ACCTEST_TIMEOUT?=120m
+ACCTEST_TIMEOUT?=180m
 ACCTEST_PARALLELISM?=20
 
 default: build
@@ -104,6 +104,7 @@ awsproviderlint:
 		-XR003=false \
 		-XR004=false \
 		-XR005=false \
+		-XAT001=false \
 		-XS001=false \
 		-XS002=false \
 		./$(PKG_NAME)
@@ -112,14 +113,14 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd awsproviderlint && GO111MODULE=on go install .
-	cd tools && GO111MODULE=on go install github.com/bflad/tfproviderdocs
-	cd tools && GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
-	cd tools && GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && GO111MODULE=on go install github.com/katbyte/terrafmt
-	cd tools && GO111MODULE=on go install github.com/terraform-linters/tflint
-	cd tools && GO111MODULE=on go install github.com/pavius/impi/cmd/impi
-	cd tools && GO111MODULE=on go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd awsproviderlint && go install .
+	cd tools && go install github.com/bflad/tfproviderdocs
+	cd tools && go install github.com/client9/misspell/cmd/misspell
+	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd tools && go install github.com/katbyte/terrafmt
+	cd tools && go install github.com/terraform-linters/tflint
+	cd tools && go install github.com/pavius/impi/cmd/impi
+	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

@@ -12,7 +12,7 @@ Provides a resource to create an AWS Firewall Manager policy. You need to be usi
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_fms_policy" "example" {
   name                  = "FMS-Policy-Example"
   exclude_resource_tags = false
@@ -72,7 +72,7 @@ The following arguments are supported:
 * `managed_service_data` (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. Valid values are `WAFV2`, `WAF`, `SHIELD_ADVANCED`, `SECURITY_GROUPS_COMMON`, `SECURITY_GROUPS_CONTENT_AUDIT`, and `SECURITY_GROUPS_USAGE_AUDIT`.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

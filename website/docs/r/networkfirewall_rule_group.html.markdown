@@ -14,7 +14,7 @@ Provides an AWS Network Firewall Rule Group Resource
 
 ### Stateful Inspection for denying access to a domain
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -38,7 +38,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection for permitting packets from a source IP address
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity    = 50
   description = "Permits http traffic from source"
@@ -78,7 +78,7 @@ locals {
 
 ### Stateful Inspection for blocking packets from going to an intended destination
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -111,7 +111,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateful Inspection from rules specifications defined in Suricata flat format
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   capacity = 100
   name     = "example"
@@ -127,7 +127,7 @@ resource "aws_networkfirewall_rule_group" "example" {
 
 ### Stateless Inspection with a Custom Action
 
-```hcl
+```terraform
 resource "aws_networkfirewall_rule_group" "example" {
   description = "Stateless Rate Limiting Rule"
   capacity    = 100

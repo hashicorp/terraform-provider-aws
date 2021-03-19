@@ -18,7 +18,7 @@ For more information, see the Amazon VPC User Guide on [Route Tables](https://do
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_default_route_table" "r" {
   default_route_table_id = aws_vpc.foo.default_route_table_id
 

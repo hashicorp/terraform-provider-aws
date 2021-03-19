@@ -138,7 +138,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(output.DhcpOptions[0].OwnerId),
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()
 

@@ -120,8 +120,7 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(aws.StringValue(rule.Id))
-	arn := *rule.Arn
-	d.Set("arn", arn)
+	d.Set("arn", rule.Arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
 	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
@@ -134,6 +133,7 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 	d.Set("share_status", shareStatus)
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != route53resolver.ShareStatusSharedWithMe {
+		arn := aws.StringValue(rule.Arn)
 		tags, err := keyvaluetags.Route53resolverListTags(conn, arn)
 
 		if err != nil {

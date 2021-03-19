@@ -12,7 +12,7 @@ Provides a resource to create a SES template.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_template" "MyTemplate" {
   name    = "MyTemplate"
   subject = "Greetings, {{name}}!"

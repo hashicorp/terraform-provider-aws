@@ -16,7 +16,7 @@ This resource is for additional certificates and does not replace the default ce
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_acm_certificate" "example" {
   # ...
 }

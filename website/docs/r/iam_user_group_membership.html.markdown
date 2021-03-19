@@ -16,9 +16,9 @@ groups.
 To exclusively manage the users in a group, see the
 [`aws_iam_group_membership` resource][3].
 
-## Example usage
+## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_user_group_membership" "example1" {
   user = aws_iam_user.user1.name
 

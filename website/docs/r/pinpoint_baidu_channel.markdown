@@ -16,7 +16,7 @@ Provides a Pinpoint Baidu Channel resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {

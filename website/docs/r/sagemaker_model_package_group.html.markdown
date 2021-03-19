@@ -14,7 +14,7 @@ Provides a Sagemaker Model Package Group resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_model_package_group" "example" {
   model_package_group_name = "example"
 }
@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the Model Package Group.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Model Package Group.

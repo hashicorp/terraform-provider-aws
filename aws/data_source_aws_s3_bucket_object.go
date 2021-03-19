@@ -216,7 +216,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		if out.ContentType == nil {
 			contentType = "<EMPTY>"
 		} else {
-			contentType = *out.ContentType
+			contentType = aws.StringValue(out.ContentType)
 		}
 
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)

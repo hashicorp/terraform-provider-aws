@@ -312,6 +312,7 @@ data "aws_iam_policy_document" "test" {
       variable = "s3:prefix"
       values = [
         "home/",
+        "",
         "home/&{aws:username}/",
       ]
     }
@@ -394,6 +395,7 @@ func testAccAWSIAMPolicyDocumentExpectedJSON() string {
         "StringLike": {
           "s3:prefix": [
             "home/",
+            "",
             "home/${aws:username}/"
           ]
         }

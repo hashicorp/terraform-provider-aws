@@ -18,6 +18,7 @@ func TestAccAWSFmsPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -46,6 +47,7 @@ func TestAccAWSFmsPolicy_cloudfrontDistribution(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +76,7 @@ func TestAccAWSFmsPolicy_includeMap(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +106,7 @@ func TestAccAWSFmsPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -128,6 +132,7 @@ func TestAccAWSFmsPolicy_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, fms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsFmsPolicyDestroy,
 		Steps: []resource.TestStep{
