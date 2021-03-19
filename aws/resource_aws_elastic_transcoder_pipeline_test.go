@@ -21,6 +21,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:    testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -49,6 +50,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:    testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -77,6 +79,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:    testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -147,6 +150,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:    testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -180,6 +184,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:    testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -206,6 +211,7 @@ func TestAccAWSElasticTranscoderPipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		ErrorCheck:   testAccErrorCheck(t, elastictranscoder.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPipelineDestroy,
 		Steps: []resource.TestStep{
