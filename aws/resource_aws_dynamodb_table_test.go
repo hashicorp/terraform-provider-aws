@@ -1505,6 +1505,14 @@ func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "2"),
+				),
+			},
 		},
 	})
 }
