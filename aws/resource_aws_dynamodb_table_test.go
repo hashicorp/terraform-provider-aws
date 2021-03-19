@@ -1505,6 +1505,14 @@ func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica1CMK(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "2"),
+				),
+			},
 		},
 	})
 }
@@ -2329,6 +2337,48 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
+  }
+}
+`, rName))
+}
+
+func testAccAWSDynamoDbTableConfigReplica1WithCMK(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_kms_key" "test" {
+	description = "DynamoDbTest"
+}
+
+resource "aws_kms_key" "alternatetest" {
+	provider = "awsalternate"
+	description = "DynamoDbReplicaTest"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+	region_name = data.aws_region.alternate.name
+	kms_key_arn	= aws_kms_key.alternatetest.id
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
   }
 }
 `, rName))
