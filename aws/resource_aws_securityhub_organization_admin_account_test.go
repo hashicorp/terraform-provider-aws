@@ -19,6 +19,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccOrganizationsAccountPreCheck(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
@@ -46,6 +47,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 			testAccPreCheck(t)
 			testAccOrganizationsAccountPreCheck(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
