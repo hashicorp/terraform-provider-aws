@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -45,6 +46,7 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearchservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
