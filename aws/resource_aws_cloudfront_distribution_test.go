@@ -947,6 +947,7 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:        testAccErrorCheck(t, cloudfront.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
@@ -978,6 +979,7 @@ func TestAccAWSCloudFrontDistribution_ViewerCertificate_AcmCertificateArn_Confli
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:        testAccErrorCheck(t, cloudfront.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
