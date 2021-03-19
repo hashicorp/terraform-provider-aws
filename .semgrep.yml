@@ -143,6 +143,22 @@ rules:
     pattern: 'd.SetId(*$VALUE)'
     severity: WARNING
 
+  - id: aws-go-sdk-pointer-conversion-immediate-dereference
+    fix: $VALUE
+    languages: [go]
+    message: Using AWS Go SDK pointer conversion, e.g. aws.String(), with immediate dereferencing is extraneous
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: '*aws.Bool($VALUE)'
+        - pattern: '*aws.Float64($VALUE)'
+        - pattern: '*aws.Int64($VALUE)'
+        - pattern: '*aws.String($VALUE)'
+        - pattern: '*aws.Time($VALUE)'
+    severity: WARNING
+
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
     message: Prefer `flattenStringSet()` function for casting a list of string pointers to a set
