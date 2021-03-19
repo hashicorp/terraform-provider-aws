@@ -88,6 +88,7 @@ func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +133,7 @@ func TestAccAwsAcmpcaCertificateAuthority_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -154,6 +156,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -203,6 +206,7 @@ func TestAccAwsAcmpcaCertificateAuthority_DeleteFromActiveState(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -228,6 +232,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -313,6 +318,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -382,6 +388,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
@@ -439,6 +446,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
 		Steps: []resource.TestStep{
