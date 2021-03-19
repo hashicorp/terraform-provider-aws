@@ -81,6 +81,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -122,6 +123,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -156,6 +158,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -182,6 +185,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 3)
 		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
@@ -206,6 +210,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegio
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 3)
 		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
 		Steps: []resource.TestStep{
