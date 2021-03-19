@@ -58,7 +58,7 @@ With Terraform v0.14 and later, [development overrides for provider developers](
 
 To do this, populate a Terraform CLI configuration file (`~/.terraformrc` for all platforms other than Windows; `terraform.rc` in the `%APPDATA%` directory when using Windows) with at least the following options:
 
-```
+```hcl
 provider_installation {
   dev_overrides {
     "hashicorp/aws" = "[REPLACE WITH GOPATH]/bin"
