@@ -107,7 +107,7 @@ for full details on using Replication Groups.
 
 A Global Replication Group can have one one two secondary Replication Groups in different regions. These are added to an existing Global Replication Group.
 
-```hcl
+```terraform
 resource "aws_elasticache_replication_group" "secondary" {
   replication_group_id          = "example-secondary"
   replication_group_description = "secondary replication group"

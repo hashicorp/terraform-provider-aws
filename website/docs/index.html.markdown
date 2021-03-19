@@ -386,7 +386,7 @@ The `assume_role` configuration block supports the following optional arguments:
 
 Example: Resource with provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {
@@ -424,7 +424,7 @@ vpc_all_tags = tomap({
 
 Example: Resource with tags and provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {
@@ -469,7 +469,7 @@ vpc_resource_level_tags = tomap({
 
 Example: Resource overriding provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {

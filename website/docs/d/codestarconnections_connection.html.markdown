@@ -12,7 +12,7 @@ Provides details about CodeStar Connection.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_codestarconnections_connection" "example" {
   arn = aws_codestarconnections_connection.example.arn
 }
