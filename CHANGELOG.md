@@ -1,5 +1,9 @@
 ## 3.34.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_codestarconnections_connection` ([#18129](https://github.com/hashicorp/terraform-provider-aws/issues/18129))
+
 ## 3.33.0 (March 18, 2021)
 
 NOTES:
