@@ -113,7 +113,7 @@ The following arguments are supported:
 * `node_type` - (Required) The compute and memory capacity of the nodes in the node group.
 * `automatic_failover_enabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If true, Multi-AZ is enabled for this replication group. If false, Multi-AZ is disabled for this replication group. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether a minor engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window. This parameter is currently not supported by the AWS API. Defaults to `true`.
-* `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created. The order of the availability zones in the list is not important.
+* `availability_zones` - (Optional) A list of EC2 availability zones in which the replication group's cache clusters will be created.  The order of the Availability Zones in the list is the order in which clusters are allocated. The primary cluster is created in the first AZ in the list. The availability zones must be associated with the subnets in the associated subnet group and the number of availability zones must equal the value of `number_cache_clusters`. Defaults to system chosen availability zones.
 * `engine` - (Optional) The name of the cache engine to be used for the clusters in this replication group. e.g. `redis`
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
