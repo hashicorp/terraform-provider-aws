@@ -90,6 +90,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
@@ -157,6 +158,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
@@ -295,6 +297,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
