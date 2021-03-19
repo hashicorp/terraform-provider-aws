@@ -164,7 +164,7 @@ func TestAccAWSShieldProtection_Route53(t *testing.T) {
 			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
 			testAccPreCheckAWSShield(t)
 		},
-		ErrorCheck:   testAccErrorCheckSkipRoute53(t),
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID, "route53"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
 		Steps: []resource.TestStep{
