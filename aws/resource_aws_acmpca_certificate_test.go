@@ -22,6 +22,7 @@ func TestAccAwsAcmpcaCertificate_RootCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -63,6 +64,7 @@ func TestAccAwsAcmpcaCertificate_SubordinateCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +105,7 @@ func TestAccAwsAcmpcaCertificate_EndEntityCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -143,6 +146,7 @@ func TestAccAwsAcmpcaCertificate_Validity_EndDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
@@ -183,6 +187,7 @@ func TestAccAwsAcmpcaCertificate_Validity_Absolute(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateDestroy,
 		Steps: []resource.TestStep{
