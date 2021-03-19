@@ -5,3 +5,7 @@ resource/iam_policy: Add tagging support
 ```release-note:enhancement
 resource/iam_policy: Add `policy_id` attribute
 ```
+
+```release-note:enhancement
+data-source/iam_policy: Add `policy_id` and `tags` attributes
+```

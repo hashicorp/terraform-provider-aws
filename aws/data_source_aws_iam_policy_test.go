@@ -9,7 +9,8 @@ import (
 )
 
 func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
-	resourceName := "data.aws_iam_policy.test"
+	datasourceName := "data.aws_iam_policy.test"
+	resourceName := "aws_iam_policy.test_policy"
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -19,11 +20,13 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig(policyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", policyName),
-					resource.TestCheckResourceAttr(resourceName, "description", "My test policy"),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_policy.test_policy", "arn"),
+					resource.TestCheckResourceAttr(datasourceName, "name", policyName),
+					resource.TestCheckResourceAttr(datasourceName, "description", "My test policy"),
+					resource.TestCheckResourceAttr(datasourceName, "path", "/"),
+					resource.TestCheckResourceAttrSet(datasourceName, "policy"),
+					resource.TestCheckResourceAttrSet(datasourceName, "policy_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},
