@@ -74,7 +74,7 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:      testAccErrorCheck(t, iam.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"name_prefix"},
 		Providers:       testAccProviders,
