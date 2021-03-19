@@ -56,7 +56,7 @@ $ make testacc
 
 With Terraform v0.14 and later, [development overrides for provider developers](https://www.terraform.io/docs/cli/config/config-file.html#development-overrides-for-provider-developers) can be leveraged in order to use the provider built from source.
 
-To do this, populate a Terraform CLI configuration file can be created (in `~/.terraformrc` for all platforms other than Windows; in `terraform.rc` in the `%APPDATA%` directory when using Windows) with at least the following options:
+To do this, populate a Terraform CLI configuration file (`~/.terraformrc` for all platforms other than Windows; `terraform.rc` in the `%APPDATA%` directory when using Windows) with at least the following options:
 
 ```
 provider_installation {
