@@ -69,6 +69,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -110,6 +111,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +152,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -190,6 +193,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -228,6 +232,7 @@ func TestAccAWSStorageGatewayGateway_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -275,6 +280,7 @@ func TestAccAWSStorageGatewayGateway_GatewayName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -310,6 +316,7 @@ func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -337,6 +344,7 @@ func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -372,6 +380,7 @@ func TestAccAWSStorageGatewayGateway_GatewayVpcEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -399,6 +408,7 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -429,6 +439,7 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings_timeout(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -458,6 +469,7 @@ func TestAccAWSStorageGatewayGateway_SmbGuestPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -492,6 +504,7 @@ func TestAccAWSStorageGatewayGateway_SMBSecurityStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -527,6 +540,7 @@ func TestAccAWSStorageGatewayGateway_SMBVisibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -568,6 +582,7 @@ func TestAccAWSStorageGatewayGateway_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -590,6 +605,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -631,6 +647,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -672,6 +689,7 @@ func TestAccAWSStorageGatewayGateway_bandwidthAll(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, storagegateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
