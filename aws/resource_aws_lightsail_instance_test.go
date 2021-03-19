@@ -297,21 +297,21 @@ resource "aws_lightsail_instance" "test" {
 
 func testAccAWSLightsailInstanceConfigIpAddressType(rName string, rIpAddressType string) string {
 	return fmt.Sprintf(`
-	data "aws_availability_zones" "available" {
-		state = "available"
-	
-		filter {
-			name   = "opt-in-status"
-			values = ["opt-in-not-required"]
-		}
-	}
-	resource "aws_lightsail_instance" "test" {
-		name              = %[1]q
-		availability_zone = data.aws_availability_zones.available.names[0]
-		blueprint_id      = "amazon_linux"
-		bundle_id         = "nano_1_0"
-		ip_address_type   = %[2]q
-	}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+resource "aws_lightsail_instance" "test" {
+  name              = %[1]q
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+  ip_address_type   = %[2]q
+}
 `, rName, rIpAddressType)
 }
 
