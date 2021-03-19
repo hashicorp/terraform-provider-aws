@@ -99,7 +99,7 @@ func resourceAwsIamPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	response, err := conn.CreatePolicy(request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM policy %s: %s", name, err)
+		return fmt.Errorf("Error creating IAM policy %s: %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(response.Policy.Arn))
@@ -142,7 +142,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading IAM policy %s: %s", d.Id(), err)
+		return fmt.Errorf("Error reading IAM policy %s: %w", d.Id(), err)
 	}
 
 	if getPolicyResponse == nil || getPolicyResponse.Policy == nil {
@@ -196,7 +196,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading IAM policy version %s: %s", d.Id(), err)
+		return fmt.Errorf("Error reading IAM policy version %s: %w", d.Id(), err)
 	}
 
 	policy := ""
@@ -204,7 +204,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		policy, err = url.QueryUnescape(aws.StringValue(getPolicyVersionResponse.PolicyVersion.Document))
 		if err != nil {
-			return fmt.Errorf("error parsing policy: %s", err)
+			return fmt.Errorf("error parsing policy: %w", err)
 		}
 	}
 
@@ -229,7 +229,7 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if _, err := conn.CreatePolicyVersion(request); err != nil {
-			return fmt.Errorf("Error updating IAM policy %s: %s", d.Id(), err)
+			return fmt.Errorf("Error updating IAM policy %s: %w", d.Id(), err)
 		}
 	}
 
@@ -237,7 +237,7 @@ func resourceAwsIamPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.IamPolicyUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating tags for IAM Policy (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -259,7 +259,7 @@ func resourceAwsIamPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM policy %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting IAM policy %s: %w", d.Id(), err)
 	}
 
 	return nil
@@ -323,7 +323,7 @@ func iamPolicyDeleteVersion(arn, versionID string, conn *iam.IAM) error {
 
 	_, err := conn.DeletePolicyVersion(request)
 	if err != nil {
-		return fmt.Errorf("Error deleting version %s from IAM policy %s: %s", versionID, arn, err)
+		return fmt.Errorf("Error deleting version %s from IAM policy %s: %w", versionID, arn, err)
 	}
 	return nil
 }
@@ -335,7 +335,7 @@ func iamPolicyListVersions(arn string, conn *iam.IAM) ([]*iam.PolicyVersion, err
 
 	response, err := conn.ListPolicyVersions(request)
 	if err != nil {
-		return nil, fmt.Errorf("Error listing versions for IAM policy %s: %s", arn, err)
+		return nil, fmt.Errorf("Error listing versions for IAM policy %s: %w", arn, err)
 	}
 	return response.Versions, nil
 }
