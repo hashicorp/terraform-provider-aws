@@ -13,7 +13,7 @@ Snapshots are the AWS implementation of [Flink Savepoints](https://ci.apache.org
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_kinesisanalyticsv2_application_snapshot" "example" {
   application_name = aws_kinesisanalyticsv2_application.example.name
   snapshot_name    = "example-snapshot"
