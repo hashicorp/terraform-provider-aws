@@ -20,6 +20,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -49,6 +50,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -72,6 +74,7 @@ func TestAccAWSKinesisAnalyticsV2ApplicationSnapshot_disappears_Application(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		ErrorCheck:   testAccErrorCheck(t, kinesisanalyticsv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationSnapshotDestroy,
 		Steps: []resource.TestStep{
