@@ -256,6 +256,7 @@ func testAccAwsAppmeshVirtualGateway_BackendDefaultsCertificate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -585,6 +586,7 @@ func testAccAwsAppmeshVirtualGateway_ListenerValidation(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualGatewayDestroy,
 		Steps: []resource.TestStep{
