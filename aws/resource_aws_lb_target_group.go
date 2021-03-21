@@ -500,16 +500,19 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
 								})
 						} else {
-							appCookie := stickiness["app_cookie"].(map[string]interface{})
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", appCookie["duration_seconds"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(appCookie["cookie_name"].(string)),
-								})
+							appCookieBlocks := stickiness["app_cookie"].([]interface{})
+							if len(appCookieBlocks) == 1 {
+								appStickiness := appCookieBlocks[0].(map[string]interface{})
+								attrs = append(attrs,
+									&elbv2.TargetGroupAttribute{
+										Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+										Value: aws.String(fmt.Sprintf("%d", appStickiness["duration_seconds"].(int))),
+									},
+									&elbv2.TargetGroupAttribute{
+										Key:   aws.String("stickiness.app_cookie.cookie_name"),
+										Value: aws.String(appStickiness["cookie_name"].(string)),
+									})
+							}
 						}
 
 					}
@@ -765,7 +768,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 		}
 	}
 	if len(appStickinessMap) > 0 {
-		stickinessMap["app_cookie"] = appStickinessMap
+		stickinessMap["app_cookie"] = []interface{}{appStickinessMap}
 	}
 
 	setStickyMap := []interface{}{}
