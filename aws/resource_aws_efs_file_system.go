@@ -32,6 +32,19 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				Computed: true,
 			},
 
+			"availability_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"availability_zone_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
 			"creation_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -127,6 +140,10 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
 		Tags:           keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EfsTags(),
+	}
+
+	if v, ok := d.GetOk("availability_zone_name"); ok {
+		createOpts.AvailabilityZoneName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
@@ -299,6 +316,8 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	}.String()
 
 	d.Set("arn", fsARN)
+	d.Set("availability_zone_id", fs.AvailabilityZoneId)
+	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
