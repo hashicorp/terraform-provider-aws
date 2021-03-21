@@ -193,6 +193,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 					},
 				},
 			},
+			"concurrent_build_limit": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -747,6 +752,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.Cache = expandProjectCache(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("concurrent_build_limit"); ok {
+		params.ConcurrentBuildLimit = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("description"); ok {
 		params.Description = aws.String(v.(string))
 	}
@@ -1277,6 +1286,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("arn", project.Arn)
+	d.Set("concurrent_build_limit", project.ConcurrentBuildLimit)
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
 	d.Set("name", project.Name)
@@ -1361,6 +1371,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 				Type: aws.String("NO_CACHE"),
 			}
 		}
+	}
+
+	if d.HasChange("concurrent_build_limit") {
+		params.ConcurrentBuildLimit = aws.Int64(int64(d.Get("concurrent_build_limit").(int)))
 	}
 
 	if d.HasChange("description") {

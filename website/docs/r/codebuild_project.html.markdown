@@ -233,6 +233,7 @@ The following arguments are optional:
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
 * `build_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
 * `cache` - (Optional) Configuration block. Detailed below.
+* `concurrent_build_limit` - (Optional) Specify a maximum number of concurrent builds for the project. The value specified must be greater than 0 and less than the account concurrent running builds limit.
 * `description` - (Optional) Short description of the project.
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
