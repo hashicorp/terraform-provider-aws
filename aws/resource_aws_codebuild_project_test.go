@@ -2220,6 +2220,7 @@ func TestAccAWSCodeBuildProject_ConcurrentBuildLimit(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
+		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
