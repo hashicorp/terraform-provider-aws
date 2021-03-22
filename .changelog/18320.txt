@@ -1,3 +1,0 @@
-```release-notes:enhancement
-resource/aws_glue_catalog_database: Add `glue catalog database` naming convention.
-```
