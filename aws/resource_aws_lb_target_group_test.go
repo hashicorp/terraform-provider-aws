@@ -897,6 +897,7 @@ func TestAccAWSLBTargetGroup_updateAppSticknessEnabled(t *testing.T) {
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		ErrorCheck:    testAccErrorCheck(t, elbv2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBTargetGroupConfig_appStickiness(targetGroupName, false, false),
