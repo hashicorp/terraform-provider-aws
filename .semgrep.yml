@@ -57,7 +57,6 @@ rules:
         - aws/cloudfront_distribution_configuration_structure.go
         - aws/data_source_aws_route_table.go
         - aws/opsworks_layers.go
-        - aws/resource_aws_c*
         - aws/resource_aws_d*
         - aws/resource_aws_e*
         - aws/resource_aws_g*
@@ -94,7 +93,6 @@ rules:
         - aws/data_source_aws_route*
         - aws/ecs_task_definition_equivalency.go
         - aws/opsworks_layers.go
-        - aws/resource_aws_c*.go
         - aws/resource_aws_d*.go
         - aws/resource_aws_e*.go
         - aws/resource_aws_g*.go

@@ -50,9 +50,9 @@ func testSweepCloudFrontDistributions(region string) error {
 	}
 
 	for _, distributionSummary := range distributionSummaries {
-		distributionID := *distributionSummary.Id
+		distributionID := aws.StringValue(distributionSummary.Id)
 
-		if *distributionSummary.Enabled {
+		if aws.BoolValue(distributionSummary.Enabled) {
 			log.Printf("[WARN] Skipping deletion of enabled CloudFront Distribution: %s", distributionID)
 			continue
 		}

@@ -129,13 +129,13 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 				return 42, "", err
 			}
 
-			status := *out.Status
-			var sErr error
+			status := aws.StringValue(out.Status)
+
 			if status == cloud9.EnvironmentStatusError && out.Message != nil {
-				sErr = fmt.Errorf("Reason: %s", *out.Message)
+				return out, status, fmt.Errorf("Reason: %s", aws.StringValue(out.Message))
 			}
 
-			return out, status, sErr
+			return out, status, nil
 		},
 	}
 	_, err = stateConf.WaitForState()
