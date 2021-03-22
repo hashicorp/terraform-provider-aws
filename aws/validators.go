@@ -2403,9 +2403,12 @@ var validateCloudWatchEventBusName = validation.All(
 	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
 )
 
-var validateCloudWatchEventRuleBusName = validation.All(
-	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-/]+$`), ""),
+var validateCloudWatchEventRuleBusName = validation.Any(
+	validateArn,
+	validation.All(
+		validation.StringLenBetween(1, 256),
+		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-/]+$`), ""),
+	),
 )
 
 var validateCloudWatchEventArchiveName = validation.All(
