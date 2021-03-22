@@ -175,7 +175,7 @@ func TestValidateCloudWatchEventRuleBusName(t *testing.T) {
 		"hello-world",
 		"hello.World0125",
 		"aws.partner/mongodb.com/stitch.trigger/something",
-		"arn:aws:events:us-east-1:123456789012:event-bus/default",
+		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
 		_, errors := validateCloudWatchEventRuleBusName(v, "name")
@@ -186,7 +186,7 @@ func TestValidateCloudWatchEventRuleBusName(t *testing.T) {
 
 	invalidNames := []string{
 		"special@character",
-		"arn:aw:events:us-east-1:123456789012:event-bus/default", //Invalid ARN
+		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range invalidNames {
 		_, errors := validateCloudWatchEventRuleBusName(v, "name")
