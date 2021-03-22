@@ -345,6 +345,28 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionPropagateTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -646,4 +668,21 @@ resource "aws_batch_job_definition" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccBatchJobDefinitionPropagateTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+
+  propagate_tags = true
+}
+`, rName)
 }
