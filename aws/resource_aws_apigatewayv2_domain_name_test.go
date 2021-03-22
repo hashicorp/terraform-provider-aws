@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -293,8 +295,8 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s.1", rName, rName)),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_version", ""),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -311,7 +313,7 @@ func TestAccAWSAPIGatewayV2DomainName_MutualTlsAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.0.security_policy", "TLS_1_2"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_configuration.0.target_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s.2", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -350,12 +352,12 @@ func testAccCheckAWSAPIGatewayV2DomainNameDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetDomainName(&apigatewayv2.GetDomainNameInput{
-			DomainName: aws.String(rs.Primary.ID),
-		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		_, err := finder.DomainNameByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
@@ -379,14 +381,13 @@ func testAccCheckAWSAPIGatewayV2DomainNameExists(n string, v *apigatewayv2.GetDo
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		resp, err := conn.GetDomainName(&apigatewayv2.GetDomainNameInput{
-			DomainName: aws.String(rs.Primary.ID),
-		})
+		output, err := finder.DomainNameByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
@@ -500,11 +501,15 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   force_destroy = true
+
+  versioning {
+    enabled = true
+  }
 }
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.1"
+  key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
 
@@ -519,6 +524,7 @@ resource "aws_apigatewayv2_domain_name" "test" {
 
   mutual_tls_authentication {
     truststore_uri = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+    truststore_version = aws_s3_bucket_object.test.version_id
   }
 }
 `, rName))
@@ -540,7 +546,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.2"
+  key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-2.pem"
 }
 
