@@ -1,17 +1,23 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
+	ssmParameterCreationValidationTimeout = 2 * time.Minute
 )
 
 func resourceAwsSsmParameter() *schema.Resource {
@@ -35,22 +41,18 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 			},
 			"tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.ParameterTierStandard,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTierStandard,
-					ssm.ParameterTierAdvanced,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.ParameterTierStandard,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("tier").(string) == ssm.ParameterTierIntelligentTiering
+				},
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTypeString,
-					ssm.ParameterTypeStringList,
-					ssm.ParameterTypeSecureString,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
 			},
 			"value": {
 				Type:      schema.TypeString,
@@ -66,6 +68,15 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"data_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"aws:ec2:image",
+					"text",
+				}, false),
 			},
 			"overwrite": {
 				Type:     schema.TypeBool,
@@ -85,8 +96,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			customdiff.ForceNewIfChange("tier", func(old, new, meta interface{}) bool {
-				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
+			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
+			// but rather no change occurs without resource re-creation
+			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
+				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
 			}),
 		),
 	}
@@ -98,15 +111,37 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
 
-	resp, err := ssmconn.GetParameter(&ssm.GetParameterInput{
+	input := &ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
 		WithDecryption: aws.Bool(true),
+	}
+
+	var resp *ssm.GetParameterOutput
+	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+		var err error
+		resp, err = ssmconn.GetParameter(input)
+
+		if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
+			return resource.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
-	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
+
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.GetParameter(input)
+	}
+
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && !d.IsNewResource() {
 		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading SSM Parameter (%s): %w", d.Id(), err)
 	}
@@ -146,25 +181,19 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("tier", detail.Tier)
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
+	d.Set("data_type", detail.DataType)
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", name, err)
+		return fmt.Errorf("error listing tags for SSM Parameter (%s): %s", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "ssm",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("parameter/%s", strings.TrimPrefix(d.Id(), "/")),
-	}
-	d.Set("arn", arn.String())
+	d.Set("arn", param.ARN)
 
 	return nil
 }
@@ -196,6 +225,10 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("data_type"); ok {
+		paramInput.DataType = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {

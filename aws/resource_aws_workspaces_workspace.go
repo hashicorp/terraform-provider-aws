@@ -7,11 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
 )
 
 func resourceAwsWorkspacesWorkspace() *schema.Resource {
@@ -134,6 +133,11 @@ func resourceAwsWorkspacesWorkspace() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.WorkspaceAvailableTimeout),
+			Update: schema.DefaultTimeout(waiter.WorkspaceUpdatingTimeout),
+			Delete: schema.DefaultTimeout(waiter.WorkspaceTerminatedTimeout),
+		},
 	}
 }
 
@@ -166,34 +170,20 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 	}
 
 	wsFail := resp.FailedRequests
-
 	if len(wsFail) > 0 {
-		return fmt.Errorf("workspace creation failed: %s", *wsFail[0].ErrorMessage)
+		return fmt.Errorf("workspace creation failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
-	wsPendingID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
+	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
 
-	log.Printf("[DEBUG] Waiting for workspace to be available...")
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStatePending,
-			workspaces.WorkspaceStateStarting,
-		},
-		Target:       []string{workspaces.WorkspaceStateAvailable},
-		Refresh:      workspaceRefreshStateFunc(conn, wsPendingID),
-		PollInterval: 30 * time.Second,
-		Timeout:      25 * time.Minute,
-	}
-
-	_, err = stateConf.WaitForState()
+	log.Printf("[DEBUG] Waiting for workspace %q to be available...", workspaceID)
+	_, err = waiter.WorkspaceAvailable(conn, workspaceID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("workspace %q is not available: %s", wsPendingID, err)
+		return fmt.Errorf("workspace %q is not available: %s", workspaceID, err)
 	}
 
-	wsAvailableID := wsPendingID
-
-	d.SetId(wsAvailableID)
-	log.Printf("[DEBUG] Workspace %q is available", d.Id())
+	d.SetId(workspaceID)
+	log.Printf("[DEBUG] Workspace %q is available", workspaceID)
 
 	return resourceAwsWorkspacesWorkspaceRead(d, meta)
 }
@@ -202,7 +192,7 @@ func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).workspacesconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	workspace, state, err := workspaceRefreshStateFunc(conn, d.Id())()
+	rawOutput, state, err := waiter.WorkspaceState(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error reading workspace (%s): %s", d.Id(), err)
 	}
@@ -212,17 +202,17 @@ func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}
 		return nil
 	}
 
-	ws := workspace.(*workspaces.Workspace)
-	d.Set("bundle_id", ws.BundleId)
-	d.Set("directory_id", ws.DirectoryId)
-	d.Set("ip_address", ws.IpAddress)
-	d.Set("computer_name", ws.ComputerName)
-	d.Set("state", ws.State)
-	d.Set("root_volume_encryption_enabled", ws.RootVolumeEncryptionEnabled)
-	d.Set("user_name", ws.UserName)
-	d.Set("user_volume_encryption_enabled", ws.UserVolumeEncryptionEnabled)
-	d.Set("volume_encryption_key", ws.VolumeEncryptionKey)
-	if err := d.Set("workspace_properties", flattenWorkspaceProperties(ws.WorkspaceProperties)); err != nil {
+	workspace := rawOutput.(*workspaces.Workspace)
+	d.Set("bundle_id", workspace.BundleId)
+	d.Set("directory_id", workspace.DirectoryId)
+	d.Set("ip_address", workspace.IpAddress)
+	d.Set("computer_name", workspace.ComputerName)
+	d.Set("state", workspace.State)
+	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)
+	d.Set("user_name", workspace.UserName)
+	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
+	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
+	if err := d.Set("workspace_properties", flattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
 		return fmt.Errorf("error setting workspace properties: %s", err)
 	}
 
@@ -288,7 +278,7 @@ func resourceAwsWorkspacesWorkspaceUpdate(d *schema.ResourceData, meta interface
 func resourceAwsWorkspacesWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	err := workspaceDelete(d.Id(), conn)
+	err := workspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
 	}
@@ -296,9 +286,9 @@ func resourceAwsWorkspacesWorkspaceDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func workspaceDelete(id string, conn *workspaces.WorkSpaces) error {
+func workspaceDelete(conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating workspace %q", id)
-	_, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
+	resp, err := conn.TerminateWorkspaces(&workspaces.TerminateWorkspacesInput{
 		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
 			{
 				WorkspaceId: aws.String(id),
@@ -309,35 +299,13 @@ func workspaceDelete(id string, conn *workspaces.WorkSpaces) error {
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStatePending,
-			workspaces.WorkspaceStateAvailable,
-			workspaces.WorkspaceStateImpaired,
-			workspaces.WorkspaceStateUnhealthy,
-			workspaces.WorkspaceStateRebooting,
-			workspaces.WorkspaceStateStarting,
-			workspaces.WorkspaceStateRebuilding,
-			workspaces.WorkspaceStateRestoring,
-			workspaces.WorkspaceStateMaintenance,
-			workspaces.WorkspaceStateAdminMaintenance,
-			workspaces.WorkspaceStateSuspended,
-			workspaces.WorkspaceStateUpdating,
-			workspaces.WorkspaceStateStopping,
-			workspaces.WorkspaceStateStopped,
-			workspaces.WorkspaceStateTerminating,
-			workspaces.WorkspaceStateError,
-		},
-		Target: []string{
-			workspaces.WorkspaceStateTerminated,
-		},
-		Refresh:      workspaceRefreshStateFunc(conn, id),
-		PollInterval: 15 * time.Second,
-		Timeout:      10 * time.Minute,
+	wsFail := resp.FailedRequests
+	if len(wsFail) > 0 {
+		return fmt.Errorf("workspace termination failed: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
 	}
 
-	_, err = stateConf.WaitForState()
+	log.Printf("[DEBUG] Waiting for workspace %q to be terminated", id)
+	_, err = waiter.WorkspaceTerminated(conn, id, timeout)
 	if err != nil {
 		return fmt.Errorf("workspace %q was not terminated: %s", id, err)
 	}
@@ -386,50 +354,17 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 		WorkspaceProperties: wsp,
 	})
 	if err != nil {
-		return fmt.Errorf("workspace %q %s property was not modified: %s", d.Id(), p, err)
+		return fmt.Errorf("workspace %q %s property was not modified: %w", d.Id(), p, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for workspace %q %s property to be modified...", d.Id(), p)
-	// OperationInProgressException: The properties of this WorkSpace are currently under modification. Please try again in a moment.
-	// AWS Workspaces service doesn't change instance status to "Updating" during property modification. Respective AWS Support feature request has been created. Meanwhile, artificial delay is placed here as a workaround.
-	time.Sleep(1 * time.Minute)
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			workspaces.WorkspaceStateUpdating,
-		},
-		Target: []string{
-			workspaces.WorkspaceStateAvailable,
-			workspaces.WorkspaceStateStopped,
-		},
-		Refresh:      workspaceRefreshStateFunc(conn, d.Id()),
-		PollInterval: 30 * time.Second,
-		Timeout:      10 * time.Minute,
-	}
-
-	_, err = stateConf.WaitForState()
+	_, err = waiter.WorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("workspace %q %s property was not modified: %s", d.Id(), p, err)
+		return fmt.Errorf("error modifying workspace %q property %q was not modified: %w", d.Id(), p, err)
 	}
 	log.Printf("[DEBUG] Workspace %q %s property is modified", d.Id(), p)
 
 	return nil
-}
-
-func workspaceRefreshStateFunc(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
-			WorkspaceIds: []*string{aws.String(workspaceID)},
-		})
-		if err != nil {
-			return nil, workspaces.WorkspaceStateError, err
-		}
-		if len(resp.Workspaces) == 0 {
-			return nil, workspaces.WorkspaceStateTerminated, nil
-		}
-		workspace := resp.Workspaces[0]
-		return workspace, aws.StringValue(workspace.State), nil
-	}
 }
 
 func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspaceProperties {
@@ -441,13 +376,18 @@ func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 
 	p := properties[0].(map[string]interface{})
 
-	return &workspaces.WorkspaceProperties{
-		ComputeTypeName:                     aws.String(p["compute_type_name"].(string)),
-		RootVolumeSizeGib:                   aws.Int64(int64(p["root_volume_size_gib"].(int))),
-		RunningMode:                         aws.String(p["running_mode"].(string)),
-		RunningModeAutoStopTimeoutInMinutes: aws.Int64(int64(p["running_mode_auto_stop_timeout_in_minutes"].(int))),
-		UserVolumeSizeGib:                   aws.Int64(int64(p["user_volume_size_gib"].(int))),
+	workspaceProperties := &workspaces.WorkspaceProperties{
+		ComputeTypeName:   aws.String(p["compute_type_name"].(string)),
+		RootVolumeSizeGib: aws.Int64(int64(p["root_volume_size_gib"].(int))),
+		RunningMode:       aws.String(p["running_mode"].(string)),
+		UserVolumeSizeGib: aws.Int64(int64(p["user_volume_size_gib"].(int))),
 	}
+
+	if p["running_mode"].(string) == workspaces.RunningModeAutoStop {
+		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int64(int64(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
+	}
+
+	return workspaceProperties
 }
 
 func flattenWorkspaceProperties(properties *workspaces.WorkspaceProperties) []map[string]interface{} {

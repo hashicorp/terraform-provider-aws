@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 )
 
@@ -94,71 +94,138 @@ func testSweepServiceDiscoveryPrivateDnsNamespaces(region string) error {
 }
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
-	rName := acctest.RandString(5) + ".example.com"
+	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexp.MustCompile(`namespace/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
-	rName := acctest.RandString(64-len("example.com")) + ".example.com"
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_disappears(t *testing.T) {
+	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceDiscoveryPrivateDnsNamespace(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
+		},
+	})
+}
+
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Description(t *testing.T) {
+	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
-				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
-				ImportStateVerify: true,
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigDescription(rName, "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+				),
 			},
 		},
 	})
 }
 
 // This acceptance test ensures we properly send back error messaging. References:
-//  * https://github.com/terraform-providers/terraform-provider-aws/issues/2830
-//  * https://github.com/terraform-providers/terraform-provider-aws/issues/5532
+//  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
+//  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
-	rName := acctest.RandString(5) + ".example.com"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(rName),
 				ExpectError: regexp.MustCompile(`ConflictingDomainExists`),
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceDiscoveryPrivateDnsNamespace_Tags(t *testing.T) {
+	resourceName := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicediscovery.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -220,39 +287,99 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-service-discovery-private-dns-ns"
+    Name = %[1]q
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name        = "%s"
-  description = "test"
-  vpc         = "${aws_vpc.test.id}"
+  name = "%[1]s.tf"
+  vpc  = aws_vpc.test.id
 }
 `, rName)
 }
 
-func testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(topDomain string) string {
+func testAccServiceDiscoveryPrivateDnsNamespaceConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-service-discovery-private-dns-ns"
+    Name = %[2]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  description = %[1]q
+  name        = "%[2]s.tf"
+  vpc         = aws_vpc.test.id
+}
+`, description, rName)
+}
+
+func testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "top" {
-  name = %q
-  vpc  = "${aws_vpc.test.id}"
+  name = "%[1]s.tf"
+  vpc  = aws_vpc.test.id
 }
 
 # Ensure ordering after first namespace
 resource "aws_service_discovery_private_dns_namespace" "subdomain" {
-  name = "${aws_service_discovery_private_dns_namespace.top.name}"
-  vpc  = "${aws_service_discovery_private_dns_namespace.top.vpc}"
+  name = aws_service_discovery_private_dns_namespace.top.name
+  vpc  = aws_service_discovery_private_dns_namespace.top.vpc
 }
-`, topDomain)
+`, rName)
+}
+
+func testAccServiceDiscoveryPrivateDnsNamespaceConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "%[1]s.tf"
+  vpc  = aws_vpc.test.id
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccServiceDiscoveryPrivateDnsNamespaceConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "test" {
+  name = "%[1]s.tf"
+  vpc  = aws_vpc.test.id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

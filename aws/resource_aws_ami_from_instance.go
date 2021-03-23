@@ -6,9 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -24,6 +23,10 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"architecture": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,6 +68,11 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 
@@ -117,7 +125,19 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
+			"hypervisor": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"image_location": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_owner_alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,6 +157,22 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"ramdisk_id": {
 				Type:     schema.TypeString,
@@ -165,6 +201,10 @@ func resourceAwsAmiFromInstance() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"usage_operation": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"virtualization_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,9 +223,9 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*AWSClient).ec2conn
 
 	req := &ec2.CreateImageInput{
-		Name:        aws.String(d.Get("name").(string)),
 		Description: aws.String(d.Get("description").(string)),
 		InstanceId:  aws.String(d.Get("source_instance_id").(string)),
+		Name:        aws.String(d.Get("name").(string)),
 		NoReboot:    aws.Bool(d.Get("snapshot_without_reboot").(bool)),
 	}
 
@@ -194,17 +234,16 @@ func resourceAwsAmiFromInstanceCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	id := *res.ImageId
-	d.SetId(id)
+	d.SetId(aws.StringValue(res.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(client, id, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(client, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
-	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
+	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), d.Id(), client)
 	if err != nil {
 		return err
 	}

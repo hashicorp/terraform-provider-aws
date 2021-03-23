@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
 )
 
 func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
@@ -19,8 +19,8 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 		ErrCount           int
 	}{
 		{
-			Input:              "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0",
-			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:              "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0", //lintignore:AWSAT003,AWSAT005
+			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",                               //lintignore:AWSAT003,AWSAT005
 			ExpectedDiskID:     "pci-0000:03:00.0-scsi-0:0:0:0",
 			ErrCount:           0,
 		},
@@ -33,7 +33,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
@@ -67,15 +67,16 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 	}
 }
 
-func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
+func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -111,27 +112,17 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return err
 		}
 
-		input := &storagegateway.DescribeUploadBufferInput{
-			GatewayARN: aws.String(gatewayARN),
-		}
-
-		output, err := conn.DescribeUploadBuffer(input)
+		foundDiskID, err := finder.UploadBufferDisk(conn, gatewayARN, diskID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Storage Gateway upload buffer: %s", err)
+			return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): %w", rs.Primary.ID, err)
 		}
 
-		if output == nil || len(output.DiskIds) == 0 {
-			return fmt.Errorf("Storage Gateway upload buffer %q not found", rs.Primary.ID)
+		if foundDiskID == nil {
+			return fmt.Errorf("Storage Gateway Upload Buffer (%s) not found", rs.Primary.ID)
 		}
 
-		for _, existingDiskID := range output.DiskIds {
-			if aws.StringValue(existingDiskID) == diskID {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("Storage Gateway upload buffer %q not found", rs.Primary.ID)
+		return nil
 	}
 }
 

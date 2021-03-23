@@ -10,14 +10,14 @@ description: |-
 
 Provides a DynamoDB table resource
 
-~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+~> **Note:** It is recommended to use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
 
 ## Example Usage
 
 The following dynamodb table description models the table and GSI shown
 in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
   name           = "GameScores"
   billing_mode   = "PROVISIONED"
@@ -67,7 +67,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
 
-```hcl
+```terraform
 resource "aws_dynamodb_table" "example" {
   name             = "example"
   hash_key         = "TestTableHashKey"
@@ -102,11 +102,11 @@ The following arguments are supported:
 * `write_capacity` - (Optional) The number of write units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `read_capacity` - (Optional) The number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
 * `attribute` - (Required) List of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. Each attribute has two properties:
-  * `name` - (Required) The name of the attribute
-  * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
+    * `name` - (Required) The name of the attribute
+    * `type` - (Required) Attribute type, which must be a scalar type: `S`, `N`, or `B` for (S)tring, (N)umber or (B)inary data
 * `ttl` - (Optional) Defines ttl, has two properties, and can only be specified once:
-  * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
-  * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
+    * `enabled` - (Required) Indicates whether ttl is enabled (true) or disabled (false).
+    * `attribute_name` - (Required) The name of the table attribute to store the TTL timestamp in.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table;
   these can only be allocated *at creation* so you cannot change this
 definition after you have created the resource.
@@ -122,7 +122,7 @@ attributes, etc.
 
 ### Timeouts
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when creating the table
 * `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index and Replica update

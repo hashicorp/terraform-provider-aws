@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
@@ -19,6 +19,7 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
@@ -61,6 +62,7 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{

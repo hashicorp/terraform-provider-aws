@@ -5,8 +5,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -38,6 +39,10 @@ func dataSourceAwsInternetGateway() *schema.Resource {
 				},
 			},
 			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,11 +90,21 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 	d.SetId(aws.StringValue(igw.InternetGatewayId))
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(igw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("owner_id", igw.OwnerId)
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: aws.StringValue(igw.OwnerId),
+		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	err1 := d.Set("attachments", dataSourceAttachmentsRead(igw.Attachments))
 	return err1
@@ -100,8 +115,8 @@ func dataSourceAttachmentsRead(igwAttachments []*ec2.InternetGatewayAttachment) 
 	attachments := make([]map[string]interface{}, 0, len(igwAttachments))
 	for _, a := range igwAttachments {
 		m := make(map[string]interface{})
-		m["state"] = *a.State
-		m["vpc_id"] = *a.VpcId
+		m["state"] = aws.StringValue(a.State)
+		m["vpc_id"] = aws.StringValue(a.VpcId)
 		attachments = append(attachments, m)
 	}
 

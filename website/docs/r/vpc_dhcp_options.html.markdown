@@ -14,7 +14,7 @@ Provides a VPC DHCP Options resource.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_vpc_dhcp_options" "dns_resolver" {
   domain_name_servers = ["8.8.8.8", "8.8.4.4"]
 }
@@ -22,7 +22,7 @@ resource "aws_vpc_dhcp_options" "dns_resolver" {
 
 Full usage:
 
-```hcl
+```terraform
 resource "aws_vpc_dhcp_options" "foo" {
   domain_name          = "service.consul"
   domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
@@ -60,6 +60,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the DHCP Options Set.
+* `arn` - The ARN of the DHCP Options Set.
 * `owner_id` - The ID of the AWS account that owns the DHCP options set.
 
 You can find more technical documentation about DHCP Options Set in the

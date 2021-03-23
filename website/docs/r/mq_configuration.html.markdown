@@ -8,13 +8,13 @@ description: |-
 
 # Resource: aws_mq_configuration
 
-Provides an MQ Configuration Resource. 
+Provides an MQ Configuration Resource.
 
 For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
   name           = "example"

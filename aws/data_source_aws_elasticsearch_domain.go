@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -23,6 +23,22 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"advanced_security_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"internal_user_database_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -137,6 +153,18 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -238,7 +266,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"processing": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
@@ -257,7 +285,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	resp, err := esconn.DescribeElasticsearchDomain(req)
 	if err != nil {
-		return fmt.Errorf("error querying elasticsearch_domain: %s", err)
+		return fmt.Errorf("error querying elasticsearch_domain: %w", err)
 	}
 
 	if resp.DomainStatus == nil {
@@ -266,18 +294,18 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	ds := resp.DomainStatus
 
-	d.SetId(*ds.ARN)
+	d.SetId(aws.StringValue(ds.ARN))
 
-	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
+	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
+			return fmt.Errorf("access policies contain an invalid JSON: %w", err)
 		}
 		d.Set("access_policies", policies)
 	}
 
 	if err := d.Set("advanced_options", pointersMapToStringList(ds.AdvancedOptions)); err != nil {
-		return fmt.Errorf("error setting advanced_options: %s", err)
+		return fmt.Errorf("error setting advanced_options: %w", err)
 	}
 
 	d.Set("arn", ds.ARN)
@@ -285,34 +313,38 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	d.Set("endpoint", ds.Endpoint)
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
+	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
+		return fmt.Errorf("error setting advanced_security_options: %w", err)
+	}
+
 	if err := d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions)); err != nil {
-		return fmt.Errorf("error setting ebs_options: %s", err)
+		return fmt.Errorf("error setting ebs_options: %w", err)
 	}
 
 	if err := d.Set("encryption_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
-		return fmt.Errorf("error setting encryption_at_rest: %s", err)
+		return fmt.Errorf("error setting encryption_at_rest: %w", err)
 	}
 
 	if err := d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting node_to_node_encryption: %s", err)
+		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
 	}
 
 	if err := d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
-		return fmt.Errorf("error setting cluster_config: %s", err)
+		return fmt.Errorf("error setting cluster_config: %w", err)
 	}
 
 	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
-		return fmt.Errorf("error setting snapshot_options: %s", err)
+		return fmt.Errorf("error setting snapshot_options: %w", err)
 	}
 
 	if ds.VPCOptions != nil {
 		if err := d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions)); err != nil {
-			return fmt.Errorf("error setting vpc_options: %s", err)
+			return fmt.Errorf("error setting vpc_options: %w", err)
 		}
 
 		endpoints := pointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
-			return fmt.Errorf("error setting endpoint: %s", err)
+			return fmt.Errorf("error setting endpoint: %w", err)
 		}
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -345,7 +377,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	if err := d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions)); err != nil {
-		return fmt.Errorf("error setting cognito_options: %s", err)
+		return fmt.Errorf("error setting cognito_options: %w", err)
 	}
 
 	d.Set("created", ds.Created)
@@ -356,11 +388,11 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	tags, err := keyvaluetags.ElasticsearchserviceListTags(esconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

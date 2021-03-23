@@ -11,21 +11,21 @@ description: |-
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
 ~> **Note:** All arguments including the password and customer username will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
 ### SimpleAD
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size     = "Small"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    vpc_id     = aws_vpc.main.id
+    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
   }
 
   tags = {
@@ -38,13 +38,13 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2b"
   cidr_block        = "10.0.2.0/24"
 }
@@ -52,7 +52,7 @@ resource "aws_subnet" "bar" {
 
 ### Microsoft Active Directory (MicrosoftAD)
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "bar" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -60,8 +60,8 @@ resource "aws_directory_service_directory" "bar" {
   type     = "MicrosoftAD"
 
   vpc_settings {
-    vpc_id     = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    vpc_id     = aws_vpc.main.id
+    subnet_ids = [aws_subnet.foo.id, aws_subnet.bar.id]
   }
 
   tags = {
@@ -74,13 +74,13 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2b"
   cidr_block        = "10.0.2.0/24"
 }
@@ -88,7 +88,7 @@ resource "aws_subnet" "bar" {
 
 ### Microsoft Active Directory Connector (ADConnector)
 
-```hcl
+```terraform
 resource "aws_directory_service_directory" "connector" {
   name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -98,8 +98,8 @@ resource "aws_directory_service_directory" "connector" {
   connect_settings {
     customer_dns_ips  = ["A.B.C.D"]
     customer_username = "Admin"
-    subnet_ids        = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-    vpc_id            = "${aws_vpc.main.id}"
+    subnet_ids        = [aws_subnet.foo.id, aws_subnet.bar.id]
+    vpc_id            = aws_vpc.main.id
   }
 }
 
@@ -108,13 +108,13 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2a"
   cidr_block        = "10.0.1.0/24"
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id            = "${aws_vpc.main.id}"
+  vpc_id            = aws_vpc.main.id
   availability_zone = "us-west-2b"
   cidr_block        = "10.0.2.0/24"
 }
@@ -158,6 +158,9 @@ In addition to all arguments above, the following attributes are exported:
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
 * `security_group_id` - The ID of the security group created by the directory.
 
+`connect_settings` (for `ADConnector`) is also exported with the following attributes:
+
+* `connect_ips` - The IP addresses of the AD Connector servers.
 
 ## Import
 

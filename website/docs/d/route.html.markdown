@@ -19,20 +19,20 @@ connection associated with a CIDR value.
 The following example shows how one might use a CIDR value to find a network interface id
 and use this to create a data source of that network interface.
 
-```hcl
+```terraform
 variable "subnet_id" {}
 
 data "aws_route_table" "selected" {
-  subnet_id = "${var.subnet_id}"
+  subnet_id = var.subnet_id
 }
 
 data "aws_route" "route" {
-  route_table_id         = "${aws_route_table.selected.id}"
+  route_table_id         = aws_route_table.selected.id
   destination_cidr_block = "10.0.1.0/24"
 }
 
 data "aws_network_interface" "interface" {
-  network_interface_id = "${data.aws_route.route.network_interface_id}"
+  id = data.aws_route.route.network_interface_id
 }
 ```
 
@@ -55,6 +55,8 @@ Route whose data will be exported as attributes.
 * `instance_id` - (Optional) The Instance ID of the Route belonging to the Route Table.
 
 * `nat_gateway_id` - (Optional) The NAT Gateway ID of the Route belonging to the Route Table.
+
+* `local_gateway_id` - (Optional) The Local Gateway ID of the Route belonging to the Route Table.
 
 * `transit_gateway_id` - (Optional) The EC2 Transit Gateway ID of the Route belonging to the Route Table.
 

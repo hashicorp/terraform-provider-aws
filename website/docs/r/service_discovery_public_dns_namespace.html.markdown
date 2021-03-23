@@ -12,7 +12,7 @@ Provides a Service Discovery Public DNS Namespace resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_service_discovery_public_dns_namespace" "example" {
   name        = "hoge.example.com"
   description = "example"
@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
+* `tags` - (Optional) A map of tags to assign to the namespace.
 
 ## Attributes Reference
 

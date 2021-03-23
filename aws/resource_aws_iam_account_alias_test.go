@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSIAMAccountAlias(t *testing.T) {
+func TestAccAWSIAMAccountAlias_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Basic": {
 			"basic": testAccAWSIAMAccountAlias_basic_with_datasource,
@@ -41,6 +41,7 @@ func testAccAWSIAMAccountAlias_importBasic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
 		Steps: []resource.TestStep{
@@ -64,6 +65,7 @@ func testAccAWSIAMAccountAlias_basic_with_datasource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMAccountAliasDestroy,
 		Steps: []resource.TestStep{
@@ -162,7 +164,7 @@ resource "aws_iam_account_alias" "test" {
 }
 
 data "aws_iam_account_alias" "current" {
-  depends_on = ["aws_iam_account_alias.test"]
+  depends_on = [aws_iam_account_alias.test]
 }
 `, rstring)
 }

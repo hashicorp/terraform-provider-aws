@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceAwsEcsTaskDefinition() *schema.Resource {
@@ -53,10 +53,14 @@ func dataSourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}
 	desc, err := conn.DescribeTaskDefinition(params)
 
 	if err != nil {
-		return fmt.Errorf("Failed getting task definition %s %q", err, d.Get("task_definition").(string))
+		return fmt.Errorf("Failed getting task definition %q: %w", d.Get("task_definition").(string), err)
 	}
 
-	taskDefinition := *desc.TaskDefinition
+	if desc == nil || desc.TaskDefinition == nil {
+		return fmt.Errorf("error reading ECS Task Definition: empty response")
+	}
+
+	taskDefinition := desc.TaskDefinition
 
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
 	d.Set("family", aws.StringValue(taskDefinition.Family))

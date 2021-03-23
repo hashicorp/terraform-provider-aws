@@ -12,7 +12,7 @@ Manages an RDS database instance snapshot. For managing RDS database cluster sna
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "bar" {
   allocated_storage = 10
   engine            = "MySQL"
@@ -28,7 +28,7 @@ resource "aws_db_instance" "bar" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.bar.id}"
+  db_instance_identifier = aws_db_instance.bar.id
   db_snapshot_identifier = "testsnapshot1234"
 }
 ```
@@ -61,6 +61,12 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Specifies the status of this DB snapshot.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
 * `vpc_id` - Specifies the storage type associated with DB snapshot.
+
+## Timeouts
+
+`aws_db_snapshot` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `read` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
 
 ## Import
 

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSMqConfiguration_basic(t *testing.T) {
@@ -18,6 +18,7 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -60,6 +61,7 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -90,6 +92,7 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{

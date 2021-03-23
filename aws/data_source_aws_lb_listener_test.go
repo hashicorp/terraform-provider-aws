@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBasic(lbName, targetGroupName),
@@ -40,12 +42,13 @@ func TestAccDataSourceAWSLBListener_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(lbName, targetGroupName),
@@ -71,14 +74,15 @@ func TestAccDataSourceAWSLBListener_BackwardsCompatibility(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLBListener_https(t *testing.T) {
-	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key)),
@@ -107,15 +111,36 @@ func TestAccDataSourceAWSLBListener_https(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSLBListener_DefaultAction_Forward(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lb_listener.test"
+	resourceName := "aws_lb_listener.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.#", resourceName, "default_action.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.#", resourceName, "default_action.0.forward.#"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAWSLBListenerConfigBasic(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -123,8 +148,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -138,7 +163,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -154,7 +179,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -176,10 +201,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-data-source-basic"
@@ -189,7 +214,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port = 0
@@ -211,24 +236,24 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_lb_listener" "front_end" {
-  arn = "${aws_lb_listener.front_end.arn}"
+  arn = aws_lb_listener.front_end.arn
 }
 
 data "aws_lb_listener" "from_lb_and_port" {
-  load_balancer_arn = "${aws_lb.alb_test.arn}"
-  port              = "${aws_lb_listener.front_end.port}"
+  load_balancer_arn = aws_lb.alb_test.arn
+  port              = aws_lb_listener.front_end.port
 }
 
 output "front_end_load_balancer_arn" {
-  value = "${data.aws_lb_listener.front_end.load_balancer_arn}"
+  value = data.aws_lb_listener.front_end.load_balancer_arn
 }
 
 output "front_end_port" {
-  value = "${data.aws_lb_listener.front_end.port}"
+  value = data.aws_lb_listener.front_end.port
 }
 
 output "from_lb_and_port_arn" {
-  value = "${data.aws_lb_listener.from_lb_and_port.arn}"
+  value = data.aws_lb_listener.from_lb_and_port.arn
 }
 `, lbName, targetGroupName)
 }
@@ -236,12 +261,12 @@ output "from_lb_and_port_arn" {
 func testAccDataSourceAWSLBListenerConfigBackwardsCompatibility(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = "${aws_alb.alb_test.id}"
+  load_balancer_arn = aws_alb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.test.id}"
+    target_group_arn = aws_alb_target_group.test.id
     type             = "forward"
   }
 }
@@ -249,8 +274,8 @@ resource "aws_alb_listener" "front_end" {
 resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -264,7 +289,7 @@ resource "aws_alb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -280,7 +305,7 @@ resource "aws_alb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -302,10 +327,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-data-source-bc"
@@ -315,7 +340,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port = 0
@@ -337,12 +362,12 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_alb_listener" "front_end" {
-  arn = "${aws_alb_listener.front_end.arn}"
+  arn = aws_alb_listener.front_end.arn
 }
 
 data "aws_alb_listener" "from_lb_and_port" {
-  load_balancer_arn = "${aws_alb.alb_test.arn}"
-  port              = "${aws_alb_listener.front_end.port}"
+  load_balancer_arn = aws_alb.alb_test.arn
+  port              = aws_alb_listener.front_end.port
 }
 `, lbName, targetGroupName)
 }
@@ -350,14 +375,14 @@ data "aws_alb_listener" "from_lb_and_port" {
 func testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName, certificate, key string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.test_cert.arn}"
+  certificate_arn   = aws_iam_server_certificate.test_cert.arn
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -365,8 +390,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%[1]s"
   internal        = false
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -375,14 +400,14 @@ resource "aws_lb" "alb_test" {
     TestName = "TestAccAWSALB_basic"
   }
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 }
 
 resource "aws_lb_target_group" "test" {
   name     = "%[2]s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -398,7 +423,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -419,7 +444,7 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id = aws_vpc.alb_test.id
 
   tags = {
     Name     = "terraform-testacc-lb-listener-data-source-https"
@@ -429,10 +454,10 @@ resource "aws_internet_gateway" "gw" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-data-source-https"
@@ -442,7 +467,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port = 0
@@ -470,12 +495,85 @@ resource "aws_iam_server_certificate" "test_cert" {
 }
 
 data "aws_lb_listener" "front_end" {
-  arn = "${aws_lb_listener.front_end.arn}"
+  arn = aws_lb_listener.front_end.arn
 }
 
 data "aws_lb_listener" "from_lb_and_port" {
-  load_balancer_arn = "${aws_lb.alb_test.arn}"
-  port              = "${aws_lb_listener.front_end.port}"
+  load_balancer_arn = aws_lb.alb_test.arn
+  port              = aws_lb_listener.front_end.port
 }
 `, lbName, targetGroupName, acctest.RandInt(), certificate, key)
+}
+
+func testAccDataSourceAWSLBListenerConfigDefaultActionForward(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-test-load-balancer"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal = true
+  name     = %[1]q
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[1].id
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  count = 2
+
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test[0].arn
+        weight = 1
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.test[1].arn
+        weight = 2
+      }
+    }
+  }
+}
+
+data "aws_lb_listener" "test" {
+  arn = aws_lb_listener.test.arn
+}
+`, rName))
 }

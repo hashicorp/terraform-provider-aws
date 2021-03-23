@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
@@ -19,6 +19,7 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -26,6 +27,9 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/test-%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-%s", rName)),
 				),
 			},
 			{
@@ -37,38 +41,13 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
-	var conf iam.GetInstanceProfileOutput
-	resourceName := "aws_iam_instance_profile.test"
-
-	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSInstanceProfileWithRoleSpecified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
-			},
-		},
-	})
-}
-
 func TestAccAWSIAMInstanceProfile_withoutRole(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
@@ -95,6 +74,7 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
+		ErrorCheck:      testAccErrorCheck(t, iam.EndpointsID),
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"name_prefix"},
 		Providers:       testAccProviders,
@@ -118,6 +98,52 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMInstanceProfile_disappears(t *testing.T) {
+	var conf iam.GetInstanceProfileOutput
+	resourceName := "aws_iam_instance_profile.test"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamInstanceProfileConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamInstanceProfile(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMInstanceProfile_disappears_role(t *testing.T) {
+	var conf iam.GetInstanceProfileOutput
+	resourceName := "aws_iam_instance_profile.test"
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamInstanceProfileConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), "aws_iam_role.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSInstanceProfileGeneratedNamePrefix(resource, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, ok := s.RootModule().Resources[resource]
@@ -136,7 +162,7 @@ func testAccCheckAWSInstanceProfileGeneratedNamePrefix(resource, prefix string) 
 }
 
 func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
-	iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_instance_profile" {
@@ -144,14 +170,14 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 		}
 
 		// Try to get role
-		_, err := iamconn.GetInstanceProfile(&iam.GetInstanceProfileInput{
+		_, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),
 		})
 		if err == nil {
 			return fmt.Errorf("still exist.")
 		}
 
-		if isAWSErr(err, "NoSuchEntity", "") {
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 			continue
 		}
 
@@ -172,9 +198,9 @@ func testAccCheckAWSInstanceProfileExists(n string, res *iam.GetInstanceProfileO
 			return fmt.Errorf("No Instance Profile name is set")
 		}
 
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		resp, err := iamconn.GetInstanceProfile(&iam.GetInstanceProfileInput{
+		resp, err := conn.GetInstanceProfile(&iam.GetInstanceProfileInput{
 			InstanceProfileName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -190,13 +216,31 @@ func testAccCheckAWSInstanceProfileExists(n string, res *iam.GetInstanceProfileO
 func testAccAwsIamInstanceProfileConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = "test-%s"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_instance_profile" "test" {
-  name  = "test"
-  roles = ["${aws_iam_role.test.name}"]
+  name = "test-%[1]s"
+  role = aws_iam_role.test.name
 }
 `, rName)
 }
@@ -212,27 +256,31 @@ resource "aws_iam_instance_profile" "test" {
 func testAccAWSInstanceProfilePrefixNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name               = "test-%s"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name = "test-%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_instance_profile" "test" {
   name_prefix = "test-"
-  roles       = ["${aws_iam_role.test.name}"]
-}
-`, rName)
-}
-
-func testAccAWSInstanceProfileWithRoleSpecified(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name               = "test-%s"
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name_prefix = "test-"
-  role        = "${aws_iam_role.test.name}"
+  role        = aws_iam_role.test.name
 }
 `, rName)
 }

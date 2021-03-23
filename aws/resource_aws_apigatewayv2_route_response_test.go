@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
@@ -21,6 +21,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -52,6 +53,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -78,6 +80,7 @@ func TestAccAWSAPIGatewayV2RouteResponse_Model(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteResponseDestroy,
 		Steps: []resource.TestStep{
@@ -186,27 +189,27 @@ func testAccAWSAPIGatewayV2RouteResponseImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_basic(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_basic(rName) + `
 resource "aws_apigatewayv2_route_response" "test" {
-  api_id             = "${aws_apigatewayv2_api.test.id}"
-  route_id           = "${aws_apigatewayv2_route.test.id}"
+  api_id             = aws_apigatewayv2_api.test.id
+  route_id           = aws_apigatewayv2_route.test.id
   route_response_key = "$default"
 }
-`)
+`
 }
 
 func testAccAWSAPIGatewayV2RouteResponseConfig_model(rName string) string {
-	return testAccAWSAPIGatewayV2RouteConfig_model(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2RouteConfig_model(rName) + `
 resource "aws_apigatewayv2_route_response" "test" {
-  api_id             = "${aws_apigatewayv2_api.test.id}"
-  route_id           = "${aws_apigatewayv2_route.test.id}"
+  api_id             = aws_apigatewayv2_api.test.id
+  route_id           = aws_apigatewayv2_route.test.id
   route_response_key = "$default"
 
   model_selection_expression = "action"
 
   response_models = {
-    "test" = "${aws_apigatewayv2_model.test.name}"
+    "test" = aws_apigatewayv2_model.test.name
   }
 }
-`)
+`
 }
