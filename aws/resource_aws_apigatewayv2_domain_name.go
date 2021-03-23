@@ -179,11 +179,8 @@ func resourceAwsApiGatewayV2DomainNameUpdate(d *schema.ResourceData, meta interf
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
-			DomainName: aws.String(d.Id()),
-		}
-
-		if d.HasChange("domain_name_configuration") {
-			input.DomainNameConfigurations = expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{}))
+			DomainName:               aws.String(d.Id()),
+			DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
