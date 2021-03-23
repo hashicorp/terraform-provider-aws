@@ -154,4 +154,8 @@ website-lint-fix:
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+
+.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
