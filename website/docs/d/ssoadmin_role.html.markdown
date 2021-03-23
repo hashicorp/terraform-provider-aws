@@ -12,12 +12,20 @@ Use this data source to get a Single Sign-On (SSO) Role.
 
 ## Example Usage
 
+In the root account, create a permission set and assign it to an SSO group or user for a given AWS account:
+
 ```hcl
 data "aws_ssoadmin_instances" "example" {}
 
-data "aws_ssoadmin_permission_set" "example" {
+resource "aws_ssoadmin_permission_set" "example" {
   instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   name         = "AWSReadOnlyAccess"
+}
+
+resource "aws_ssoadmin_managed_policy_attachment" "example" {
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  managed_policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+  permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
 
 data "aws_identitystore_group" "example" {
@@ -30,8 +38,8 @@ data "aws_identitystore_group" "example" {
 }
 
 resource "aws_ssoadmin_account_assignment" "example" {
-  instance_arn       = data.aws_ssoadmin_permission_set.example.instance_arn
-  permission_set_arn = data.aws_ssoadmin_permission_set.example.arn
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  permission_set_arn = aws_ssoadmin_permission_set.example.arn
 
   principal_id   = data.aws_identitystore_group.example.group_id
   principal_type = "GROUP"
@@ -39,9 +47,13 @@ resource "aws_ssoadmin_account_assignment" "example" {
   target_id   = "012347678910"
   target_type = "AWS_ACCOUNT"
 }
+```
 
+In the target AWS account, retrieve the role that was created for that permission set:
+
+```hcl
 data "aws_ssoadmin_role" "example" {
-  permission_set_name = data.aws_ssoadmin_permission_set.example.name
+  permission_set_name = "AWSReadOnlyAccess"
 }
 
 output "arn" {
@@ -59,7 +71,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The friendly IAM role name to match.
+* `id` - The friendly IAM role name.
 * `arn` - The Amazon Resource Name (ARN) specifying the role.
 * `assume_role_policy` - The policy document associated with the role.
 * `create_date` - Creation date of the role in RFC 3339 format.
