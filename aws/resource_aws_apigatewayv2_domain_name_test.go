@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -26,42 +27,40 @@ func init() {
 func testSweepAPIGatewayV2DomainNames(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).apigatewayv2conn
 	input := &apigatewayv2.GetDomainNamesInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.GetDomainNames(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway v2 domain names sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving API Gateway v2 domain names: %s", err)
+	err = lister.GetDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		for _, domainName := range output.Items {
-			log.Printf("[INFO] Deleting API Gateway v2 domain name: %s", aws.StringValue(domainName.DomainName))
-			_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{
-				DomainName: domainName.DomainName,
-			})
-			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
+		for _, domainName := range page.Items {
+			r := resourceAwsApiGatewayV2DomainName()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(domainName.DomainName))
+			err = r.Delete(d, client)
+
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting API Gateway v2 domain name (%s): %s", aws.StringValue(domainName.DomainName), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping API Gateway v2 domain names sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 domain names: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
