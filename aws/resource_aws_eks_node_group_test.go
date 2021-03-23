@@ -1780,8 +1780,8 @@ resource "aws_eks_node_group" "test" {
   subnet_ids      = aws_subnet.test[*].id
 
   scaling_config {
-    max_size     = %[2]d
-    min_size     = %[3]d
+    max_size = %[2]d
+    min_size = %[3]d
   }
 
   depends_on = [
