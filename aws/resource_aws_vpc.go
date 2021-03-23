@@ -334,9 +334,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		classiclink_enabled := false
 		for _, v := range respClassiclink.Vpcs {
-			if *v.VpcId == vpcid {
+			if aws.StringValue(v.VpcId) == vpcid {
 				if v.ClassicLinkEnabled != nil {
-					classiclink_enabled = *v.ClassicLinkEnabled
+					classiclink_enabled = aws.BoolValue(v.ClassicLinkEnabled)
 				}
 				break
 			}
@@ -359,9 +359,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		classiclinkdns_enabled := false
 		for _, v := range respClassiclinkDnsSupport.Vpcs {
-			if *v.VpcId == vpcid {
+			if aws.StringValue(v.VpcId) == vpcid {
 				if v.ClassicLinkDnsSupported != nil {
-					classiclinkdns_enabled = *v.ClassicLinkDnsSupported
+					classiclinkdns_enabled = aws.BoolValue(v.ClassicLinkDnsSupported)
 				}
 				break
 			}

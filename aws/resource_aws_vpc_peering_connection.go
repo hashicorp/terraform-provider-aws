@@ -143,7 +143,7 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Account ID %s, VPC PeerConn Requester %s, Accepter %s",
 		client.accountid, *pc.RequesterVpcInfo.OwnerId, *pc.AccepterVpcInfo.OwnerId)
 
-	if (client.accountid == *pc.AccepterVpcInfo.OwnerId) && (client.accountid != *pc.RequesterVpcInfo.OwnerId) {
+	if (client.accountid == aws.StringValue(pc.AccepterVpcInfo.OwnerId)) && (client.accountid != aws.StringValue(pc.RequesterVpcInfo.OwnerId)) {
 		// We're the accepter
 		d.Set("peer_owner_id", pc.RequesterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", pc.RequesterVpcInfo.VpcId)

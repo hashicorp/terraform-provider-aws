@@ -87,7 +87,7 @@ func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta inte
 	rt := rtRaw.(*ec2.RouteTable)
 	exists := false
 	for _, vgw := range rt.PropagatingVgws {
-		if *vgw.GatewayId == gwID {
+		if aws.StringValue(vgw.GatewayId) == gwID {
 			exists = true
 		}
 	}

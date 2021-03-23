@@ -68,9 +68,6 @@ rules:
         - aws/resource_aws_o*
         - aws/resource_aws_r*
         - aws/resource_aws_s*
-        - aws/resource_aws_transfer_ssh_key.go
-        - aws/resource_aws_vpc.go
-        - aws/resource_aws_w*
         - aws/structure.go
         - aws/waf_helpers.go
         - aws/internal/generators/
@@ -106,9 +103,6 @@ rules:
         - aws/resource_aws_o*.go
         - aws/resource_aws_r*.go
         - aws/resource_aws_s*.go
-        - aws/resource_aws_transfer_ssh_key.go
-        - aws/resource_aws_v*.go
-        - aws/resource_aws_w*
         - aws/resource*_test.go
         - aws/structure.go
         - aws/internal/generators/
