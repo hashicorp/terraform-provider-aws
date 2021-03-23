@@ -125,6 +125,7 @@ var mapServiceNames = []string{
 	"glue",
 	"guardduty",
 	"greengrass",
+	"greengrassv2",
 	"kafka",
 	"kinesisvideo",
 	"imagebuilder",

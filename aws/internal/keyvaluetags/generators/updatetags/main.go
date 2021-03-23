@@ -76,6 +76,7 @@ var serviceNames = []string{
 	"glue",
 	"guardduty",
 	"greengrass",
+	"greengrassv2",
 	"imagebuilder",
 	"iot",
 	"iotanalytics",

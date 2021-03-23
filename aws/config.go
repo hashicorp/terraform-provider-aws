@@ -81,6 +81,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/aws/aws-sdk-go/service/greengrassv2"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/identitystore"
@@ -285,6 +286,7 @@ type AWSClient struct {
 	glueconn                            *glue.Glue
 	guarddutyconn                       *guardduty.GuardDuty
 	greengrassconn                      *greengrass.Greengrass
+	greengrassv2conn                    *greengrassv2.GreengrassV2
 	iamconn                             *iam.IAM
 	identitystoreconn                   *identitystore.IdentityStore
 	IgnoreTagsConfig                    *keyvaluetags.IgnoreConfig
@@ -529,6 +531,7 @@ func (c *Config) Client() (interface{}, error) {
 		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		greengrassconn:                      greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
+		greengrassv2conn:                    greengrassv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrassv2"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		identitystoreconn:                   identitystore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["identitystore"])})),
 		IgnoreTagsConfig:                    c.IgnoreTagsConfig,

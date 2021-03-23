@@ -64,6 +64,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/aws/aws-sdk-go/service/greengrassv2"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
@@ -247,6 +248,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(guardduty.New)
 	case "greengrass":
 		funcType = reflect.TypeOf(greengrass.New)
+	case "greengrassv2":
+		funcType = reflect.TypeOf(greengrassv2.New)
 	case "imagebuilder":
 		funcType = reflect.TypeOf(imagebuilder.New)
 	case "inspector":

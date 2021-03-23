@@ -284,6 +284,16 @@ func GreengrassKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// Greengrassv2Tags returns greengrassv2 service tags.
+func (tags KeyValueTags) Greengrassv2Tags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Greengrassv2KeyValueTags creates KeyValueTags from greengrassv2 service tags.
+func Greengrassv2KeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // GuarddutyTags returns guardduty service tags.
 func (tags KeyValueTags) GuarddutyTags() map[string]*string {
 	return aws.StringMap(tags.Map())

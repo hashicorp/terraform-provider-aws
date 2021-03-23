@@ -59,6 +59,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
+	"github.com/aws/aws-sdk-go/service/greengrassv2"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
@@ -1054,6 +1055,23 @@ func GreengrassListTags(conn *greengrass.Greengrass, identifier string) (KeyValu
 	}
 
 	return GreengrassKeyValueTags(output.Tags), nil
+}
+
+// Greengrassv2ListTags lists greengrassv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Greengrassv2ListTags(conn *greengrassv2.GreengrassV2, identifier string) (KeyValueTags, error) {
+	input := &greengrassv2.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Greengrassv2KeyValueTags(output.Tags), nil
 }
 
 // GuarddutyListTags lists guardduty service tags.
