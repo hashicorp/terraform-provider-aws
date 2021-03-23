@@ -13,7 +13,6 @@ const (
 	// Maximum amount of time to wait for an EventSubscription to return Deleted
 	EventSubscriptionDeletedTimeout  = 10 * time.Minute
 	RdsClusterInitiateUpgradeTimeout = 5 * time.Minute
-	EventSubscriptionDeletedTimeout = 10 * time.Minute
 
 	// Delay time to retry fetch RDS Cluster Activity Stream Status
 	ActivityStreamRetryDelay = 5 * time.Second

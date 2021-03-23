@@ -35,6 +35,7 @@ func TestAccAWSRDSClusterActivityStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
@@ -67,6 +68,7 @@ func TestAccAWSRDSClusterActivityStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
@@ -92,6 +94,7 @@ func TestAccAWSRDSClusterActivityStream_kmsKeyId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
@@ -128,6 +131,7 @@ func TestAccAWSRDSClusterActivityStream_mode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
@@ -169,6 +173,7 @@ func TestAccAWSRDSClusterActivityStream_resourceArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{

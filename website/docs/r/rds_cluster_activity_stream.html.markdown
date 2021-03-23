@@ -22,7 +22,7 @@ references using the [resource `depends_on` meta-argument](/docs/configuration/r
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_rds_cluster" "default" {
   cluster_identifier = "aurora-cluster-demo"
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
