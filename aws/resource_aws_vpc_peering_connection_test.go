@@ -93,11 +93,8 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -138,10 +135,8 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -166,11 +161,8 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
@@ -232,11 +224,8 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -392,10 +381,8 @@ func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandString(17))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -534,7 +521,6 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 			testAccMultipleRegionPreCheck(t, 2)
 		},
 		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshIgnore:   []string{"auto_accept"},
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -557,10 +543,7 @@ func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -589,11 +572,8 @@ func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		ErrorCheck:      testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
