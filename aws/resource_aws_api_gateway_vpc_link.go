@@ -86,8 +86,7 @@ func resourceAwsApiGatewayVpcLinkCreate(d *schema.ResourceData, meta interface{}
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		d.SetId("")
-		return fmt.Errorf("Error waiting for APIGateway Vpc Link status to be \"%s\": %s", apigateway.VpcLinkStatusAvailable, err)
+		return fmt.Errorf("error waiting for APIGateway Vpc Link status to be \"%s\": %w", apigateway.VpcLinkStatusAvailable, err)
 	}
 
 	return resourceAwsApiGatewayVpcLinkRead(d, meta)
