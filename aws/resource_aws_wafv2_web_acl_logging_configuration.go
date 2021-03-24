@@ -69,7 +69,6 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 											// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
 											validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 										),
-										Deprecated: "Not supported by WAFv2 API",
 									},
 								},
 							},
