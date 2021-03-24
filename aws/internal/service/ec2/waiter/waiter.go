@@ -270,6 +270,7 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 }
 
 const (
+	SubnetPropagationTimeout          = 2 * time.Minute
 	SubnetAttributePropagationTimeout = 5 * time.Minute
 )
 
