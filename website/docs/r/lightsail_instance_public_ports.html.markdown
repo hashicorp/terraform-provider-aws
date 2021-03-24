@@ -40,7 +40,7 @@ resource "aws_lightsail_instance_public_ports" "test" {
 The following arguments are required:
 
 * `instance_name` - (Required) Name of the Lightsail Instance.
-* `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below. 
+* `port_info` - (Required) Configuration block with port information. AWS closes all currently open ports that are not included in the `port_info`. Detailed below.
 
 ### port_info
 
