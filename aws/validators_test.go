@@ -368,6 +368,7 @@ func TestValidatePrincipal(t *testing.T) {
 
 	validNames := []string{
 		"IAM_ALLOWED_PRINCIPALS", // Special principal
+		"123456789012",           //Account ID
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
 		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
 		"arn:aws-us-gov:iam:us-west-2:357342307427:role/tf-acc-test-3217321001347236965", // lintignore:AWSAT003,AWSAT005 // Non-global IAM Role?
@@ -383,7 +384,6 @@ func TestValidatePrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
 		"arn",
-		"123456789012",
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
