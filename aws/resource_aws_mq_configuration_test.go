@@ -17,7 +17,11 @@ func TestAccAWSMqConfiguration_basic(t *testing.T) {
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
@@ -61,7 +65,11 @@ func TestAccAWSMqConfiguration_withData(t *testing.T) {
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
@@ -92,7 +100,11 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
@@ -124,7 +136,11 @@ func TestAccAWSMqConfiguration_updateTags(t *testing.T) {
 	resourceName := "aws_mq_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
+			testAccPreCheckAWSMq(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
