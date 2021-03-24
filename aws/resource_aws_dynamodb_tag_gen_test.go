@@ -5,6 +5,7 @@ package aws
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -36,7 +37,7 @@ func testAccCheckDynamodbTagDestroy(s *terraform.State) error {
 		}
 
 		if exists {
-			return fmt.Errorf("resource (%s) tag (%s) still exists", identifier, key)
+			return fmt.Errorf("%s resource (%s) tag (%s) still exists", dynamodb.ServiceID, identifier, key)
 		}
 	}
 
@@ -69,7 +70,7 @@ func testAccCheckDynamodbTagExists(resourceName string) resource.TestCheckFunc {
 		}
 
 		if !exists {
-			return fmt.Errorf("resource (%s) tag (%s) not found", identifier, key)
+			return fmt.Errorf("%s resource (%s) tag (%s) not found", dynamodb.ServiceID, identifier, key)
 		}
 
 		return nil

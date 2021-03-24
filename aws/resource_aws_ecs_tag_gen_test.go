@@ -5,6 +5,7 @@ package aws
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -36,7 +37,7 @@ func testAccCheckEcsTagDestroy(s *terraform.State) error {
 		}
 
 		if exists {
-			return fmt.Errorf("resource (%s) tag (%s) still exists", identifier, key)
+			return fmt.Errorf("%s resource (%s) tag (%s) still exists", ecs.ServiceID, identifier, key)
 		}
 	}
 
@@ -69,7 +70,7 @@ func testAccCheckEcsTagExists(resourceName string) resource.TestCheckFunc {
 		}
 
 		if !exists {
-			return fmt.Errorf("resource (%s) tag (%s) not found", identifier, key)
+			return fmt.Errorf("%s resource (%s) tag (%s) not found", ecs.ServiceID, identifier, key)
 		}
 
 		return nil

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
@@ -48,7 +49,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 	value := d.Get("value").(string)
 
 	if err := keyvaluetags.Ec2CreateTags(conn, identifier, map[string]string{key: value}); err != nil {
-		fmt.Errorf("error creating ec2 resource (%s) tag (%s): %w", identifier, key, err)
+		fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tagresource.SetResourceId(identifier, key))
@@ -67,11 +68,15 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	exists, value, err := keyvaluetags.Ec2GetTag(conn, identifier, key)
 
 	if err != nil {
-		fmt.Errorf("error reading ec2 resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error reading %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
 	if !exists {
-		log.Printf("[WARN] ec2 resource (%s) tag (%s) not found, removing from state", identifier, key)
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading %s resource (%s) tag (%s): not found after creation", ec2.ServiceID, identifier, key)
+		}
+
+		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ec2.ServiceID, identifier, key)
 		d.SetId("")
 		return nil
 	}
@@ -92,7 +97,7 @@ func resourceAwsEc2TagUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := keyvaluetags.Ec2UpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
-		return fmt.Errorf("error updating ec2 resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
 	return resourceAwsEc2TagRead(d, meta)
@@ -107,7 +112,7 @@ func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := keyvaluetags.Ec2UpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
-		return fmt.Errorf("error deleting ec2 resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error deleting %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
 	return nil

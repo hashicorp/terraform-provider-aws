@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tagresource"
@@ -48,7 +49,7 @@ func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) erro
 	value := d.Get("value").(string)
 
 	if err := keyvaluetags.DynamodbUpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
-		fmt.Errorf("error creating dynamodb resource (%s) tag (%s): %w", identifier, key, err)
+		fmt.Errorf("error creating %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tagresource.SetResourceId(identifier, key))
@@ -67,11 +68,15 @@ func resourceAwsDynamodbTagRead(d *schema.ResourceData, meta interface{}) error 
 	exists, value, err := keyvaluetags.DynamodbGetTag(conn, identifier, key)
 
 	if err != nil {
-		fmt.Errorf("error reading dynamodb resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error reading %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	if !exists {
-		log.Printf("[WARN] dynamodb resource (%s) tag (%s) not found, removing from state", identifier, key)
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading %s resource (%s) tag (%s): not found after creation", dynamodb.ServiceID, identifier, key)
+		}
+
+		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", dynamodb.ServiceID, identifier, key)
 		d.SetId("")
 		return nil
 	}
@@ -92,7 +97,7 @@ func resourceAwsDynamodbTagUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := keyvaluetags.DynamodbUpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
-		return fmt.Errorf("error updating dynamodb resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	return resourceAwsDynamodbTagRead(d, meta)
@@ -107,7 +112,7 @@ func resourceAwsDynamodbTagDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := keyvaluetags.DynamodbUpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
-		return fmt.Errorf("error deleting dynamodb resource (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("error deleting %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	return nil
