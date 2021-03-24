@@ -58,12 +58,10 @@ func resourceAwsMqConfiguration() *schema.Resource {
 				Optional: true,
 			},
 			"engine_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					mq.EngineTypeActivemq,
-				}, true),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), true),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -134,8 +132,8 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", out.LatestRevision.Description)
 	d.Set("engine_type", out.EngineType)
 	d.Set("engine_version", out.EngineVersion)
-	d.Set("name", out.Name)
 	d.Set("latest_revision", out.LatestRevision.Revision)
+	d.Set("name", out.Name)
 
 	rOut, err := conn.DescribeConfigurationRevision(&mq.DescribeConfigurationRevisionInput{
 		ConfigurationId:       aws.String(d.Id()),
