@@ -2683,7 +2683,7 @@ resource "aws_elasticache_replication_group" "test" {
 
   number_cache_clusters = 1
 
-  port                          = 16379
+  port = 16379
 }
 
 resource "aws_elasticache_global_replication_group" "test" {
@@ -2707,7 +2707,7 @@ resource "aws_elasticache_replication_group" "primary" {
   engine_version        = "5.0.6"
   number_cache_clusters = 1
 
-  port                          = 6379
+  port = 6379
 
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
