@@ -16,7 +16,7 @@ Manages an individual ECS resource tag. This resource should only be used in cas
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "example" {
   compute_environment_name = "example"
   service_role             = "${aws_iam_role.example.arn}"
@@ -38,7 +38,7 @@ The following arguments are supported:
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 

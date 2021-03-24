@@ -16,7 +16,7 @@ Manages an individual DynamoDB resource tag. This resource should only be used i
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   region = "us-west-2"
 }
@@ -57,7 +57,7 @@ The following arguments are supported:
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
