@@ -93,6 +93,7 @@ func TestAccAWSMqConfiguration_withLdapData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqConfigurationDestroy,
 		Steps: []resource.TestStep{
