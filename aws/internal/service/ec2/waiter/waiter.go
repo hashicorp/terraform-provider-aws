@@ -369,6 +369,7 @@ func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGateway
 }
 
 const (
+	VpcPropagationTimeout          = 2 * time.Minute
 	VpcAttributePropagationTimeout = 5 * time.Minute
 )
 
