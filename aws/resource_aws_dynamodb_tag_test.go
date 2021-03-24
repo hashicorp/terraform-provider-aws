@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestAccAWSDynamodbTag_basic(t *testing.T) {
@@ -15,6 +16,7 @@ func TestAccAWSDynamodbTag_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
@@ -41,6 +43,7 @@ func TestAccAWSDynamodbTag_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
@@ -67,7 +70,8 @@ func TestAccAWSDynamodbTag_ResourceArn_TableReplica(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -92,6 +96,7 @@ func TestAccAWSDynamodbTag_Value(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDynamodbTagDestroy,
 		Steps: []resource.TestStep{

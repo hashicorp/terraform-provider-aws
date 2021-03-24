@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWSEcsTag_basic(t *testing.T) {
@@ -14,6 +15,7 @@ func TestAccAWSEcsTag_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
@@ -40,6 +42,7 @@ func TestAccAWSEcsTag_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
@@ -62,6 +65,7 @@ func TestAccAWSEcsTag_ResourceArn_BatchComputeEnvironment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
@@ -86,6 +90,7 @@ func TestAccAWSEcsTag_Value(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEcsTagDestroy,
 		Steps: []resource.TestStep{
