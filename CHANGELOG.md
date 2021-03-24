@@ -6,6 +6,7 @@ FEATURES:
 
 BUG FIXES:
 
+* resource/aws_mq_configuration: Add `ldap` as an `authentication_strategy` and `RabbitMQ` as an `engine_type` ([#18070](https://github.com/hashicorp/terraform-provider-aws/issues/18070))
 * resource/aws_pinpoint_sms_channel: Set all params on update ([#18281](https://github.com/hashicorp/terraform-provider-aws/issues/18281))
 
 ## 3.33.0 (March 18, 2021)
