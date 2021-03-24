@@ -3251,7 +3251,7 @@ func TestCloudWatchEventBusName(t *testing.T) {
 			IsValid: true,
 		},
 		{
-			Value:   "arn:aws:events:us-east-1:123456789012:event-bus/something-custom/subpath",
+			Value:   "arn:aws:events:us-east-1:123456789012:event-bus/something-custom/subpath", // lintignore:AWSAT003,AWSAT005
 			IsValid: true,
 		},
 	}
