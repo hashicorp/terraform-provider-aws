@@ -297,6 +297,12 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
+						},
 					},
 				},
 			},
@@ -956,6 +962,7 @@ func waitForDynamoDbReplicaDeleteToBeCompleted(tableName string, region string, 
 }
 
 func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -973,13 +980,26 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			continue
 		}
 
+		var kmsMasterKeyId string
+
+		if v, ok := tfMap["kms_key_arn"].(string); ok {
+			kmsMasterKeyId = v
+		}
+
+		var createReplicationGroupMemberAction = &dynamodb.CreateReplicationGroupMemberAction{
+			RegionName: aws.String(regionName),
+		}
+
+		if kmsMasterKeyId != "" {
+			createReplicationGroupMemberAction.KMSMasterKeyId = aws.String(kmsMasterKeyId)
+		}
+
 		input := &dynamodb.UpdateTableInput{
 			TableName: aws.String(tableName),
 			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
 				{
-					Create: &dynamodb.CreateReplicationGroupMemberAction{
-						RegionName: aws.String(regionName),
-					},
+
+					Create: createReplicationGroupMemberAction,
 				},
 			},
 		}
