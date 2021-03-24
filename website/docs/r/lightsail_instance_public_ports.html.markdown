@@ -50,6 +50,6 @@ The following arguments are required:
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attribute is exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the resource.
