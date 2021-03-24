@@ -3219,6 +3219,53 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 	}
 }
 
+func TestCloudWatchEventBusName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(257, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/test/test",
+			IsValid: true,
+		},
+		{
+			//this seems like it would be wrong, but AWS documentation states this is allowed for partner busses
+			// see - https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html#API_PutRule_RequestSyntax
+			Value:   "/test0._1-",
+			IsValid: true,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: true,
+		},
+		{
+			Value:   "arn:aws:events:us-east-1:123456789012:event-bus/something-custom/subpath",
+			IsValid: true,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
+		}
+	}
+}
+
 func TestValidateServiceDiscoveryNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",

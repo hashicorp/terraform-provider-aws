@@ -2392,15 +2392,18 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+//custom event bus names are still subject to this validation
 var validateCloudWatchEventCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
 	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
 )
 
+//partner names or references to the bus name can be ARNs or include slashes in the name
+//see https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html#API_PutRule_RequestSyntax
 var validateCloudWatchEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+	validation.StringMatch(regexp.MustCompile(`^(arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?[/\.\-_A-Za-z0-9]+$`), ""),
 )
 
 var validateCloudWatchEventArchiveName = validation.All(
