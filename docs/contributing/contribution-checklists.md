@@ -23,6 +23,7 @@ each type of contribution.
     - [Resource Filtering Code Implementation](#resource-filtering-code-implementation)
     - [Resource Filtering Documentation Implementation](#resource-filtering-documentation-implementation)
 - [New Resource](#new-resource)
+    - [New Tag Resource](#new-tag-resource)
 - [New Service](#new-service)
 - [New Region](#new-region)
 
@@ -672,8 +673,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccAWS{Service}Tag_basic(t *testing.T) {
@@ -777,7 +778,6 @@ resource "aws_{service}_tag" "test" {
 ```
 
 - Run `make testacc TEST=./aws TESTARGS='-run=TestAccAWS{Service}Tags_'` and ensure there are no failures.
-- In `website/aws.erb`: Add the new resource.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown
@@ -799,7 +799,7 @@ Manages an individual {SERVICE} resource tag. This resource should only be used 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_{service}_tag" "example" {
   resource_arn = "..."
   key          = "Name"
@@ -815,7 +815,7 @@ The following arguments are supported:
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
