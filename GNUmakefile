@@ -93,12 +93,18 @@ awsproviderlint:
 		-c 1 \
 		-AWSAT006=false \
 		-AWSV001=false \
+		-AT010=false \
+		-AT012=false \
 		-R001=false \
 		-R010=false \
 		-R018=false \
 		-R019=false \
 		-V001=false \
 		-V009=false \
+		-V011=false \
+		-V012=false \
+		-V013=false \
+		-V014=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \
