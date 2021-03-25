@@ -387,6 +387,7 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing
 
 func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
 	var distribution cloudfront.Distribution
+	rInt := acctest.RandInt()
 	resourceName := "aws_cloudfront_distribution.main"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -394,13 +395,13 @@ func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T)
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontDistributionOrderedCacheBehavior,
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehavior(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 				),
 			},
 			{
-				Config: testAccAWSCloudFrontDistributionOrderedCacheBehaviorCachePolicy,
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehaviorCachePolicy(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 				),
