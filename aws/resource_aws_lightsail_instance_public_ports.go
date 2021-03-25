@@ -33,6 +33,15 @@ func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cidrs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateCIDRNetworkAddress,
+							},
+						},
 						"from_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -152,6 +161,10 @@ func expandLightsailPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 		Protocol: aws.String(tfMap["protocol"].(string)),
 	}
 
+	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Cidrs = expandStringSet(v)
+	}
+
 	return apiObject
 }
 
@@ -191,6 +204,10 @@ func flattenLightsailInstancePortState(apiObject *lightsail.InstancePortState) m
 	tfMap["from_port"] = aws.Int64Value(apiObject.FromPort)
 	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
 	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
+
+	if v := apiObject.Cidrs; v != nil {
+		tfMap["cidrs"] = aws.StringValueSlice(v)
+	}
 
 	return tfMap
 }

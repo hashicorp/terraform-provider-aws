@@ -44,9 +44,15 @@ The following arguments are required:
 
 ### port_info
 
+The following arguments are required:
+
 * `from_port` - (Required) First port in a range of open ports on an instance.
 * `protocol` - (Required) IP protocol name. Valid values are `tcp`, `all`, `udp`, and `icmp`.
 * `to_port` - (Required) Last port in a range of open ports on an instance.
+
+The following arguments are optional:
+
+* `cidrs` - (Optional) Set of CIDR blocks.
 
 ## Attributes Reference
 
