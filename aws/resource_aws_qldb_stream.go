@@ -60,20 +60,20 @@ func resourceAwsQLDBStream() *schema.Resource {
 			"kinesis_configuration": {
 				Type:     schema.TypeList,
 				ForceNew: true,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kinesis_stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
+						"aggregation_enabled": {
+							Type:         schema.TypeBool,
+							Required:     false,
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
 
 						"role_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Required:     false,
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
