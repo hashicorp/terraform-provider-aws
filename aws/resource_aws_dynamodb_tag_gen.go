@@ -49,7 +49,7 @@ func resourceAwsDynamodbTagCreate(d *schema.ResourceData, meta interface{}) erro
 	value := d.Get("value").(string)
 
 	if err := keyvaluetags.DynamodbUpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
-		fmt.Errorf("error creating %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
+		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", dynamodb.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tagresource.SetResourceId(identifier, key))

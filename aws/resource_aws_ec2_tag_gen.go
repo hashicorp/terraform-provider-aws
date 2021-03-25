@@ -49,7 +49,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 	value := d.Get("value").(string)
 
 	if err := keyvaluetags.Ec2CreateTags(conn, identifier, map[string]string{key: value}); err != nil {
-		fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
+		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ec2.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tagresource.SetResourceId(identifier, key))
