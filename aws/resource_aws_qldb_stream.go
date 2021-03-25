@@ -26,13 +26,74 @@ func resourceAwsQLDBStream() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		// https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-qldb-stream.html
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			"exlusive_end_time": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					// TODO: The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
+				),
+			},
+			"inclusive_start_time": {
+				Type:     schema.TypeString,
+				Optional: false,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					// The InclusiveStartTime cannot be in the future and must be before ExclusiveEndTime.
+					// If you provide an InclusiveStartTime that is before the ledger's CreationDateTime, QLDB effectively defaults it to the ledger's CreationDateTime.
+				),
+			},
+
+			"kinesis_configuration": {
+				Type:     schema.TypeList,
+				ForceNew: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kinesis_stream_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
+			"ledger_name": {
+				Type:     schema.TypeString,
+				Optional: false,
+				Computed: false, // TODO: Confirm if this should be true/false
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					// (?!^.*--)(?!^[0-9]+$)(?!^-)(?!.*-$)^[A-Za-z0-9-]+$
+				),
+			},
+
+			"stream_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -41,6 +102,13 @@ func resourceAwsQLDBStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
+			},
+
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"deletion_protection": {
