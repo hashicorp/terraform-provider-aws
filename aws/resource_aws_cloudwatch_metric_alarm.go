@@ -307,7 +307,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	if err := d.Set("alarm_actions", flattenStringSet(resp.AlarmActions)); err != nil {
 		log.Printf("[WARN] Error setting Alarm Actions: %s", err)
 	}
-	arn := *resp.AlarmArn
+	arn := aws.StringValue(resp.AlarmArn)
 	d.Set("alarm_description", resp.AlarmDescription)
 	d.Set("alarm_name", resp.AlarmName)
 	d.Set("arn", arn)
@@ -578,7 +578,7 @@ func getAwsCloudWatchMetricAlarm(d *schema.ResourceData, meta interface{}) (*clo
 func flattenDimensions(dims []*cloudwatch.Dimension) map[string]interface{} {
 	flatDims := make(map[string]interface{})
 	for _, d := range dims {
-		flatDims[*d.Name] = *d.Value
+		flatDims[aws.StringValue(d.Name)] = aws.StringValue(d.Value)
 	}
 	return flatDims
 }

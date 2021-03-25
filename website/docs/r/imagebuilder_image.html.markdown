@@ -12,7 +12,7 @@ Manages an Image Builder Image.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_imagebuilder_image" "example" {
   distribution_configuration_arn   = aws_imagebuilder_distribution_configuration.example.arn
   image_recipe_arn                 = aws_imagebuilder_image_recipe.example.arn

@@ -15,6 +15,7 @@ func testAccAwsSecurityHubActionTarget_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
@@ -42,6 +43,7 @@ func testAccAwsSecurityHubActionTarget_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
@@ -62,6 +64,7 @@ func testAccAwsSecurityHubActionTarget_Description(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{
@@ -93,6 +96,7 @@ func testAccAwsSecurityHubActionTarget_Name(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecurityHubActionTargetDestroy,
 		Steps: []resource.TestStep{

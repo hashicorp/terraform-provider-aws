@@ -18,6 +18,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -48,6 +49,7 @@ func TestAccAWSGlueCatalogTable_columnParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -78,6 +80,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -141,6 +144,7 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -213,6 +217,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -326,6 +331,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_EmptyConfigurationBlock(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -346,6 +352,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_EmptyConfigurationBl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -367,6 +374,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SerDeInfo_UpdateValues(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -407,6 +415,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_SkewedInfo_EmptyConfigurationB
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -428,6 +437,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -458,6 +468,7 @@ func TestAccAWSGlueCatalogTable_StorageDescriptor_schemaReferenceArn(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -487,6 +498,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -517,6 +529,7 @@ func TestAccAWSGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -550,6 +563,7 @@ func TestAccAWSGlueCatalogTable_disappears_database(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{
@@ -572,6 +586,7 @@ func TestAccAWSGlueCatalogTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glue.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
 		Steps: []resource.TestStep{

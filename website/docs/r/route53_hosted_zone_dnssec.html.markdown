@@ -12,7 +12,7 @@ Manages Route 53 Hosted Zone Domain Name System Security Extensions (DNSSEC). Fo
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   region = "us-east-1"
 }

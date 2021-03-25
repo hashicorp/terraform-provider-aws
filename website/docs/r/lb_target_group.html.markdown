@@ -16,7 +16,7 @@ Provides a Target Group resource for use with Load Balancer resources.
 
 ### Instance Target Group
 
-```hcl
+```terraform
 resource "aws_lb_target_group" "test" {
   name     = "tf-example-lb-tg"
   port     = 80
@@ -31,7 +31,7 @@ resource "aws_vpc" "main" {
 
 ### IP Target Group
 
-```hcl
+```terraform
 resource "aws_lb_target_group" "ip-example" {
   name        = "tf-example-lb-tg"
   port        = 80
@@ -47,7 +47,7 @@ resource "aws_vpc" "main" {
 
 ### Lambda Target Group
 
-```hcl
+```terraform
 resource "aws_lb_target_group" "lambda-example" {
   name        = "tf-example-lb-tg"
   target_type = "lambda"

@@ -12,7 +12,7 @@ Provides an SES receipt rule resource
 
 ## Example Usage
 
-```hcl
+```terraform
 # Add a header to the email and store it in S3
 resource "aws_ses_receipt_rule" "store" {
   name          = "store"
@@ -102,7 +102,7 @@ WorkMail actions support the following:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The SES receipt rule name.
 * `arn` - The SES receipt rule ARN.

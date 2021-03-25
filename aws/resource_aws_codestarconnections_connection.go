@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codestarconnections/finder"
 )
 
 func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
@@ -77,9 +78,7 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).codestarconnectionsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetConnection(&codestarconnections.GetConnectionInput{
-		ConnectionArn: aws.String(d.Id()),
-	})
+	connection, err := finder.ConnectionByArn(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] CodeStar connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -89,16 +88,16 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error reading CodeStar connection: %w", err)
 	}
 
-	if resp == nil || resp.Connection == nil {
+	if connection == nil {
 		return fmt.Errorf("error reading CodeStar connection (%s): empty response", d.Id())
 	}
 
-	arn := aws.StringValue(resp.Connection.ConnectionArn)
+	arn := aws.StringValue(connection.ConnectionArn)
 	d.SetId(arn)
-	d.Set("arn", resp.Connection.ConnectionArn)
-	d.Set("name", resp.Connection.ConnectionName)
-	d.Set("connection_status", resp.Connection.ConnectionStatus)
-	d.Set("provider_type", resp.Connection.ProviderType)
+	d.Set("arn", connection.ConnectionArn)
+	d.Set("connection_status", connection.ConnectionStatus)
+	d.Set("name", connection.ConnectionName)
+	d.Set("provider_type", connection.ProviderType)
 
 	tags, err := keyvaluetags.CodestarconnectionsListTags(conn, arn)
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -73,8 +74,9 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,

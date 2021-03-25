@@ -17,6 +17,9 @@
         - [PreChecks](#prechecks)
             - [Standard Provider PreChecks](#standard-provider-prechecks)
             - [Custom PreChecks](#custom-prechecks)
+        - [ErrorChecks](#errorchecks)
+            - [Common ErrorCheck](#common-errorcheck)
+            - [Service-Specific ErrorChecks](#service-specific-errorchecks)
         - [Disappears Acceptance Tests](#disappears-acceptance-tests)
         - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
         - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -192,6 +195,7 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
 		Steps: []resource.TestStep{
@@ -488,6 +492,7 @@ func TestAccAwsExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -595,6 +600,59 @@ func testAccPreCheckAwsExample(t *testing.T) {
 }
 ```
 
+#### ErrorChecks
+
+Acceptance test cases have an ErrorCheck. The ErrorCheck provides a chance to take a look at errors before the test fails. While most errors should result in test failure, some should not. For example, an error that indicates an API operation is not supported in a particular region should cause the test to skip instead of fail. Since errors should flow through the ErrorCheck, do not handle the vast majority of failing conditions. Instead, in ErrorCheck, focus on the rare errors that should cause a test to skip, or in other words, be ignored.
+
+##### Common ErrorCheck
+
+In many situations, the common ErrorCheck is sufficient. It will skip tests for several normal occurrences such as when AWS reports a feature is not supported in the current region.
+
+Here is an example of the common ErrorCheck:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    // PreCheck
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
+    // ... additional checks follow ...
+  })
+}
+```
+
+##### Service-Specific ErrorChecks
+
+However, some services have special conditions that aren't caught by the common ErrorCheck. In these cases, you can create a service-specific ErrorCheck.
+
+To add a service-specific ErrorCheck, follow these steps:
+
+1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
+2. Create the service-specific ErrorCheck in an `_test.go` file for the service. See the example below.
+3. Register the new service-specific ErrorCheck in the `init()` at the top of the `_test.go` file. See the example below.
+
+An example of adding a service-specific ErrorCheck:
+
+```go
+// just after the imports, create or add to the init() function
+func init() {
+  RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
+}
+
+// ... additional code and tests ...
+
+// this is the service-specific ErrorCheck
+func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Error message specific to the service that indicates unsupported features",
+		"You can include from one to many portions of error messages",
+		"Be careful to not inadvertently capture errors that should not be skipped",
+	)
+}
+```
+
 #### Disappears Acceptance Tests
 
 This test is generally implemented second. It is straightforward to setup once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g. deleted outside Terraform).
@@ -610,6 +668,7 @@ func TestAccAwsExampleThing_disappears(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -652,6 +711,7 @@ func TestAccAwsExampleChildThing_disappears_ParentThing(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleChildThingDestroy,
     Steps: []resource.TestStep{
@@ -681,6 +741,7 @@ func TestAccAwsExampleThing_Description(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -741,6 +802,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccAlternateAccountPreCheck(t)
     },
+    ErrorCheck:        testAccErrorCheck(t, service.EndpointsID),
     ProviderFactories: testAccProviderFactoriesAlternate(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
@@ -804,6 +866,7 @@ func TestAccAwsExample_basic(t *testing.T) {
       testAccPreCheck(t)
       testAccMultipleRegionPreCheck(t, 2)
     },
+    ErrorCheck:        testAccErrorCheck(t, service.EndpointsID),
     ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 2),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
     Steps: []resource.TestStep{
@@ -1018,6 +1081,7 @@ func TestAccAwsExampleThingDataSource_Name(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAwsExampleThingDestroy,
     Steps: []resource.TestStep{
@@ -1212,9 +1276,11 @@ The below are required items that will be noted during submission review and pre
 - [ ] __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheckAws{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [Extending Terraform Custom Check Functions documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy).
 - [ ] __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `provider_test.go` should be used for multiple account/region or otherwise specialized testing.
 - [ ] __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
+- [ ] __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),`).
 - [ ] __Uses resource.ParallelTest__: Tests should utilize [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAccAws{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
 - [ ] __Uses Randomized Infrastructure Naming__: Test configurations that utilize resources where a unique name is required should generate a random name. Typically this is created via `rName := acctest.RandomWithPrefix("tf-acc-test")` in the acceptance test function before generating the configuration.
+- [ ] __Prevents S3 Bucket Deletion Errors__: Test configurations that utilize `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
 For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
 

@@ -12,7 +12,7 @@ Get an existing AWS Customer Gateway.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_customer_gateway" "foo" {
   filter {
     name   = "tag:Name"

@@ -14,7 +14,7 @@ Provides a Sagemaker App resource.
 
 ### Basic usage
 
-```hcl
+```terraform
 resource "aws_sagemaker_app" "example" {
   domain_id         = aws_sagemaker_domain.example.id
   user_profile_name = aws_sagemaker_user_profile.example.user_profile_name
@@ -42,11 +42,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) of the app.
 * `arn` - The Amazon Resource Name (ARN) of the app.
-
 
 ## Import
 
