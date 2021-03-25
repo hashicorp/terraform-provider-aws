@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -66,6 +67,23 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"request_parameter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 0,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"request_parameter_key": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"required": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"route_key": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -107,6 +125,9 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 	if v, ok := d.GetOk("request_models"); ok {
 		req.RequestModels = stringMapToPointers(v.(map[string]interface{}))
 	}
+	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
+		req.RequestParameters = expandApiGatewayV2RouteRequestParameters(v.(*schema.Set).List())
+	}
 	if v, ok := d.GetOk("route_response_selection_expression"); ok {
 		req.RouteResponseSelectionExpression = aws.String(v.(string))
 	}
@@ -117,7 +138,7 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Creating API Gateway v2 route: %s", req)
 	resp, err := conn.CreateRoute(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 route: %s", err)
+		return fmt.Errorf("error creating API Gateway v2 route: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.RouteId))
@@ -132,25 +153,30 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		log.Printf("[WARN] API Gateway v2 route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 route: %s", err)
+		return fmt.Errorf("error reading API Gateway v2 route (%s): %w", d.Id(), err)
 	}
 
 	d.Set("api_key_required", resp.ApiKeyRequired)
 	if err := d.Set("authorization_scopes", flattenStringSet(resp.AuthorizationScopes)); err != nil {
-		return fmt.Errorf("error setting authorization_scopes: %s", err)
+		return fmt.Errorf("error setting authorization_scopes: %w", err)
 	}
 	d.Set("authorization_type", resp.AuthorizationType)
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
 	if err := d.Set("request_models", pointersMapToStringList(resp.RequestModels)); err != nil {
-		return fmt.Errorf("error setting request_models: %s", err)
+		return fmt.Errorf("error setting request_models: %w", err)
+	}
+	if err := d.Set("request_parameter", flattenApiGatewayV2RouteRequestParameters(resp.RequestParameters)); err != nil {
+		return fmt.Errorf("error setting request_parameter: %w", err)
 	}
 	d.Set("route_key", resp.RouteKey)
 	d.Set("route_response_selection_expression", resp.RouteResponseSelectionExpression)
@@ -187,6 +213,38 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("request_models") {
 		req.RequestModels = stringMapToPointers(d.Get("request_models").(map[string]interface{}))
 	}
+	if d.HasChange("request_parameter") {
+		o, n := d.GetChange("request_parameter")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		for _, tfMapRaw := range os.Difference(ns).List() {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
+			}
+
+			if v, ok := tfMap["request_parameter_key"].(string); ok && v != "" {
+				log.Printf("[DEBUG] Deleting API Gateway v2 route (%s) request parameter (%s)", d.Id(), v)
+				_, err := conn.DeleteRouteRequestParameter(&apigatewayv2.DeleteRouteRequestParameterInput{
+					ApiId:               aws.String(d.Get("api_id").(string)),
+					RequestParameterKey: aws.String(v),
+					RouteId:             aws.String(d.Id()),
+				})
+
+				if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+					continue
+				}
+
+				if err != nil {
+					return fmt.Errorf("error deleting API Gateway v2 route (%s) request parameter (%s): %w", d.Id(), v, err)
+				}
+			}
+		}
+
+		req.RequestParameters = expandApiGatewayV2RouteRequestParameters(ns.List())
+	}
 	if d.HasChange("route_key") {
 		req.RouteKey = aws.String(d.Get("route_key").(string))
 	}
@@ -199,8 +257,9 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 route: %s", req)
 	_, err := conn.UpdateRoute(req)
+
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 route: %s", err)
+		return fmt.Errorf("error updating API Gateway v2 route (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsApiGatewayV2RouteRead(d, meta)
@@ -214,11 +273,13 @@ func resourceAwsApiGatewayV2RouteDelete(d *schema.ResourceData, meta interface{}
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 route: %s", err)
+		return fmt.Errorf("error deleting API Gateway v2 route (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -251,4 +312,53 @@ func resourceAwsApiGatewayV2RouteImport(d *schema.ResourceData, meta interface{}
 	d.Set("api_id", apiId)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func expandApiGatewayV2RouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2.ParameterConstraints {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := map[string]*apigatewayv2.ParameterConstraints{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := &apigatewayv2.ParameterConstraints{}
+
+		if v, ok := tfMap["required"].(bool); ok {
+			apiObject.Required = aws.Bool(v)
+		}
+
+		if v, ok := tfMap["request_parameter_key"].(string); ok && v != "" {
+			apiObjects[v] = apiObject
+		}
+	}
+
+	return apiObjects
+}
+
+func flattenApiGatewayV2RouteRequestParameters(apiObjects map[string]*apigatewayv2.ParameterConstraints) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for k, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, map[string]interface{}{
+			"request_parameter_key": k,
+			"required":              aws.BoolValue(apiObject.Required),
+		})
+	}
+
+	return tfList
 }
