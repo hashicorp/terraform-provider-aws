@@ -285,6 +285,37 @@ func VpcAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) 
 	return nil, fmt.Errorf("unimplemented VPC attribute: %s", attribute)
 }
 
+// VpcByID looks up a Vpc by ID. When not found, returns nil and potentially an API error.
+func VpcByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
+	input := &ec2.DescribeVpcsInput{
+		VpcIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcs(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, vpc := range output.Vpcs {
+		if vpc == nil {
+			continue
+		}
+
+		if aws.StringValue(vpc.VpcId) != id {
+			continue
+		}
+
+		return vpc, nil
+	}
+
+	return nil, nil
+}
+
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
 // Returns nil and potentially an error if no VPC peering connection is found.
 func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
