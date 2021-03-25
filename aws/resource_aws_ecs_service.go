@@ -571,7 +571,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		out, err = conn.CreateService(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("%s %q", err, d.Get("name").(string))
+		return fmt.Errorf("error creating %s service: %w", d.Get("name").(string), err)
 	}
 
 	service := *out.Service
@@ -637,7 +637,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading ECS service: %s", err)
+		return fmt.Errorf("Error reading ECS service: %w", err)
 	}
 
 	if len(out.Services) < 1 {
@@ -710,7 +710,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
-		return fmt.Errorf("Error setting deployment_controller for (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting deployment_controller for (%s): %w", d.Id(), err)
 	}
 
 	if service.LoadBalancers != nil {
@@ -718,11 +718,11 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
-		return fmt.Errorf("error setting capacity_provider_strategy: %s", err)
+		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
 	}
 
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
-		return fmt.Errorf("error setting ordered_placement_strategy: %s", err)
+		return fmt.Errorf("error setting ordered_placement_strategy: %w", err)
 	}
 
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
@@ -730,15 +730,15 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return fmt.Errorf("Error setting network_configuration for (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return fmt.Errorf("Error setting service_registries for (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error setting service_registries for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -1143,7 +1143,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			_, err = conn.UpdateService(&input)
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating ECS Service (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error updating ECS Service (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1157,7 +1157,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Service (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating ECS Service (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -1224,7 +1224,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		_, err = conn.DeleteService(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting ECS service: %s", err)
+		return fmt.Errorf("Error deleting ECS service (%s): %w", d.Id(), err)
 	}
 
 	// Wait until it's deleted
