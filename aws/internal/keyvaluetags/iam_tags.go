@@ -81,6 +81,41 @@ func IamUserUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{},
 	return nil
 }
 
+// IamInstanceProfileUpdateTags updates IAM Instance Profile tags.
+// The identifier is the Instance Profile name.
+func IamInstanceProfileUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &iam.UntagInstanceProfileInput{
+			InstanceProfileName: aws.String(identifier),
+			TagKeys:             aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagInstanceProfile(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &iam.TagInstanceProfileInput{
+			InstanceProfileName: aws.String(identifier),
+			Tags:                updatedTags.IgnoreAws().IamTags(),
+		}
+
+		_, err := conn.TagInstanceProfile(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // IamOpenIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
 func IamOpenIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
