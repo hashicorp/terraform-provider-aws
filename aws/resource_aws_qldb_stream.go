@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -8,6 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+const _keyLedgerName = "LedgerName"
+const _keyStreamID = "StreamID"
 
 func resourceAwsQLDBStream() *schema.Resource {
 	// return &schema.Resource{
@@ -175,44 +180,47 @@ func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error
 	// return resourceAwsQLDBLedgerRead(d, meta)
 }
 
+// TODO: You cannot actually "delete" a stream, it can only be "cancelled".  Not sure about naming preferences here...
 func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).qldbconn
-	// deleteLedgerOpts := &qldb.DeleteLedgerInput{
-	// 	Name: aws.String(d.Id()),
-	// }
-	// log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
+	conn := meta.(*AWSClient).qldbconn
+	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
+		LedgerName: aws.String(d.Get(_keyLedgerName)), // TODO: Figure out how to confirm this field actually exists where it's needed
+		StreamId:   aws.String(d.Get(_keyStreamID)),   // TODO: Figure out how to confirm this field actually exists where it's needed
+	}
+	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get(_keyLedgerName), d.Get(_keyStreamID))
 
-	// err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-	// 	_, err := conn.DeleteLedger(deleteLedgerOpts)
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
 
-	// 	if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
-	// 		return resource.RetryableError(err)
-	// 	}
+		// TODO:  Confirm which errors to be checking for here
+		if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
+			return resource.RetryableError(err)
+		}
 
-	// 	if err != nil {
-	// 		return resource.NonRetryableError(err)
-	// 	}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
 
-	// 	return nil
-	// })
+		return nil
+	})
 
-	// if isResourceTimeoutError(err) {
-	// 	_, err = conn.DeleteLedger(deleteLedgerOpts)
-	// }
+	if isResourceTimeoutError(err) {
+		_, err = conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
+	}
 
-	// if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
-	// 	return nil
-	// }
+	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
 
-	// if err != nil {
-	// 	return fmt.Errorf("error deleting QLDB Ledger (%s): %s", d.Id(), err)
-	// }
+	if err != nil {
+		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get(_keyLedgerName), d.Get(_keyStreamID), err)
+	}
 
-	// if err := waitForQLDBLedgerDeletion(conn, d.Id()); err != nil {
-	// 	return fmt.Errorf("error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
-	// }
+	if err := waitForQLDBStreamDeletion(conn, d.LedgerName(), d.StreamID()); err != nil {
+		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get(_keyLedgerName), d.Get(_keyStreamID), err)
+	}
 
-	// return nil
+	return nil
 }
 
 func qldbStreamRefreshStatusFunc(conn *qldb.QLDB, ledgerName string, streamID string) resource.StateRefreshFunc {
