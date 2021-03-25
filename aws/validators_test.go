@@ -169,7 +169,7 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 	}
 }
 
-func TestValidateCloudWatchEventRuleBusName(t *testing.T) {
+func TestvalidateCloudWatchEventBusNameOrARN(t *testing.T) {
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
@@ -178,7 +178,7 @@ func TestValidateCloudWatchEventRuleBusName(t *testing.T) {
 		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
-		_, errors := validateCloudWatchEventRuleBusName(v, "name")
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
 		}
@@ -189,7 +189,7 @@ func TestValidateCloudWatchEventRuleBusName(t *testing.T) {
 		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range invalidNames {
-		_, errors := validateCloudWatchEventRuleBusName(v, "name")
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}
