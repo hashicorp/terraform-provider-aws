@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
@@ -35,7 +34,7 @@ func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidrs": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -161,14 +160,9 @@ func expandLightsailPortInfo(tfMap map[string]interface{}) *lightsail.PortInfo {
 		ToPort:   aws.Int64((int64)(tfMap["to_port"].(int))),
 		Protocol: aws.String(tfMap["protocol"].(string)),
 	}
-	if cidrs, ok := tfMap["cidrs"]; ok {
-		for _, v := range cidrs.([]interface{}) {
-			apiObject.Cidrs = append(apiObject.Cidrs, aws.String(v.(string)))
-		}
 
-		sort.Slice(apiObject.Cidrs, func(i, j int) bool {
-			return *apiObject.Cidrs[i] > *apiObject.Cidrs[j]
-		})
+	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Cidrs = expandStringSet(v)
 	}
 
 	return apiObject
@@ -211,11 +205,9 @@ func flattenLightsailInstancePortState(apiObject *lightsail.InstancePortState) m
 	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
 	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
 
-	cidrs := apiObject.Cidrs
-	sort.Slice(cidrs, func(i, j int) bool {
-		return *cidrs[i] > *cidrs[j]
-	})
-	tfMap["cidrs"] = aws.StringValueSlice(cidrs)
+	if v := apiObject.Cidrs; v != nil {
+		tfMap["cidrs"] = aws.StringValueSlice(v)
+	}
 
 	return tfMap
 }
