@@ -1274,6 +1274,35 @@ func TestAccAWSEcsService_PropagateTags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_ExecuteCommand(t *testing.T) {
+	var service ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigExecuteCommand(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceConfigExecuteCommand(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcsServiceDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecsconn
 
@@ -3855,4 +3884,79 @@ resource "aws_ecs_service" "ghost" {
   desired_count       = 1
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceConfigExecuteCommand(rName string, enable bool) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name               = %q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+  inline_policy {
+    name = "exec_policy"
+
+    policy = <<EOF
+{
+   "Version": "2012-10-17",
+   "Statement": [
+       {
+       "Effect": "Allow",
+       "Action": [
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel"
+       ],
+      "Resource": "*"
+      }
+   ]
+}
+EOF
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+
+  task_role_arn = aws_iam_role.test.arn
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                = aws_ecs_cluster.test.id
+  desired_count          = 0
+  name                   = %q
+  task_definition        = aws_ecs_task_definition.test.arn
+  enable_execute_command = %t
+}
+`, rName, rName, rName, rName, enable)
 }
