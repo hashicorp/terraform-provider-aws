@@ -34,6 +34,15 @@ func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cidrs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateCIDRNetworkAddress,
+							},
+						},
 						"from_port": {
 							Type:         schema.TypeInt,
 							Required:     true,
@@ -51,15 +60,6 @@ func resourceAwsLightsailInstancePublicPorts() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(0, 65535),
-						},
-						"cidrs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
-							},
 						},
 					},
 				},
