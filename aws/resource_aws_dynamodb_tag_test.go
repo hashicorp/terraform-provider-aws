@@ -156,13 +156,13 @@ func testAccDynamodbTagConfigResourceArnTableReplica(rName string) string {
 		testAccMultipleRegionProviderConfig(2),
 		fmt.Sprintf(`
 data "aws_region" "alternate" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 }
 
 data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
-  provider = "aws.alternate"
+  provider = "awsalternate"
 
   billing_mode     = "PAY_PER_REQUEST"
   hash_key         = "TestTableHashKey"
