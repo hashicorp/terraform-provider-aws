@@ -391,6 +391,7 @@ func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T)
 	resourceName := "aws_cloudfront_distribution.main"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
