@@ -39,15 +39,10 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"authorization_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  apigatewayv2.AuthorizationTypeNone,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.AuthorizationTypeNone,
-					apigatewayv2.AuthorizationTypeAwsIam,
-					apigatewayv2.AuthorizationTypeCustom,
-					apigatewayv2.AuthorizationTypeJwt,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      apigatewayv2.AuthorizationTypeNone,
+				ValidateFunc: validation.StringInSlice(apigatewayv2.AuthorizationType_Values(), false),
 			},
 			"authorizer_id": {
 				Type:     schema.TypeString,
