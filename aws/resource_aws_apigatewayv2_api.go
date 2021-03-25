@@ -97,6 +97,10 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"fail_on_warnings": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -158,6 +162,10 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 		importReq := &apigatewayv2.ReimportApiInput{
 			ApiId: aws.String(d.Id()),
 			Body:  aws.String(body.(string)),
+		}
+
+		if value, ok := d.GetOk("fail_on_warnings"); ok {
+			importReq.FailOnWarnings = aws.Bool(value.(bool))
 		}
 
 		_, err := conn.ReimportApi(importReq)
@@ -322,7 +330,9 @@ func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChanges("api_key_selection_expression", "description", "disable_execute_api_endpoint", "name", "route_selection_expression", "version") ||
+	if d.HasChanges(
+		"api_key_selection_expression", "description", "disable_execute_api_endpoint",
+		"name", "route_selection_expression", "version") ||
 		(d.HasChange("cors_configuration") && !deleteCorsConfiguration) {
 		req := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
