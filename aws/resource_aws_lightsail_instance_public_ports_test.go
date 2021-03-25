@@ -90,11 +90,13 @@ func TestAccAWSLightsailInstancePublicPorts_cidrs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailInstancePublicPortsExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port_info.0.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "port_info.0.from_port", "125"),
-					resource.TestCheckResourceAttr(resourceName, "port_info.0.to_port", "125"),
-					resource.TestCheckResourceAttr(resourceName, "port_info.0.cidrs.0", "192.168.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "port_info.0.cidrs.1", "1.1.1.1/32"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
+						"protocol":  "tcp",
+						"from_port": "125",
+						"to_port":   "125",
+						"cidrs.0":   "1.1.1.1/32",
+						"cidrs.1":   "192.168.1.0/24",
+					}),
 				),
 			},
 		},
