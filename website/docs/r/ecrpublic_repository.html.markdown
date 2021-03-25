@@ -12,7 +12,7 @@ Provides a Public Elastic Container Registry Repository.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ecrpublic_repository" "foo" {
   repository_name = "bar"
 

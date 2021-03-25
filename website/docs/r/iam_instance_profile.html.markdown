@@ -12,7 +12,7 @@ Provides an IAM instance profile.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_instance_profile" "test_profile" {
   name = "test_profile"
   role = aws_iam_role.role.name
@@ -51,7 +51,7 @@ The following arguments are optional:
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN assigned by AWS to the instance profile.
 * `create_date` - Creation timestamp of the instance profile.

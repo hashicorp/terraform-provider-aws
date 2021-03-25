@@ -12,7 +12,7 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 }
@@ -20,7 +20,7 @@ resource "aws_ses_configuration_set" "test" {
 
 ### Require TLS Connections
 
-```hcl
+```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
 
@@ -46,7 +46,7 @@ The following argument is optional:
 
 ## Attributes Reference
 
-In addition to the arguments, which are exported, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - SES configuration set ARN.
 * `id` - SES configuration set name.

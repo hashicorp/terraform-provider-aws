@@ -12,7 +12,7 @@ Provides a CodeArtifact Domain Resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codeartifact_domain" "example" {
   domain = "example"
 }

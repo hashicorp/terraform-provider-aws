@@ -12,7 +12,7 @@ Get information on an Amazon MSK Cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_msk_cluster" "example" {
   cluster_name = "example"
 }

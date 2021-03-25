@@ -12,7 +12,7 @@ Provides an IAM policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_policy" "policy" {
   name        = "test_policy"
   path        = "/"

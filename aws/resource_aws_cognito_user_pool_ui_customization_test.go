@@ -23,6 +23,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -72,6 +73,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_Disappears(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -97,6 +99,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_ImageFile(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -149,6 +152,7 @@ func TestAccAWSCognitoUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -215,6 +219,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_CSS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +269,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -290,6 +296,7 @@ func TestAccAWSCognitoUserPoolUICustomization_Client_Image(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -344,6 +351,7 @@ func TestAccAWSCognitoUserPoolUICustomization_ClientAndAll_CSS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -415,6 +423,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateClientToAll_CSS(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{
@@ -453,6 +462,7 @@ func TestAccAWSCognitoUserPoolUICustomization_UpdateAllToClient_CSS(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolUICustomizationDestroy,
 		Steps: []resource.TestStep{

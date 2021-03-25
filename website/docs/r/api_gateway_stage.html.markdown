@@ -14,7 +14,7 @@ Manages an API Gateway Stage. A stage is a named reference to a deployment, whic
 
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({
     openapi = "3.0.1"
@@ -75,7 +75,7 @@ API Gateway provides the ability to [enable CloudWatch API logging](https://docs
 
 -> The below configuration uses [`depends_on`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
-```hcl
+```terraform
 variable "stage_name" {
   default = "example"
   type    = string

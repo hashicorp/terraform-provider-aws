@@ -12,7 +12,7 @@ Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amaz
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "dlm_lifecycle_role" {
   name = "dlm-lifecycle-role"
 

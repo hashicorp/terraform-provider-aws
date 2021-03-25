@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIamSamlProvider() *schema.Resource {
@@ -33,14 +35,17 @@ func resourceAwsIamSamlProvider() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"saml_metadata_document": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1000, 10000000),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -51,6 +56,7 @@ func resourceAwsIamSamlProviderCreate(d *schema.ResourceData, meta interface{}) 
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(d.Get("name").(string)),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IamTags(),
 	}
 
 	out, err := conn.CreateSAMLProvider(input)
@@ -65,6 +71,7 @@ func resourceAwsIamSamlProviderCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetSAMLProviderInput{
 		SAMLProviderArn: aws.String(d.Id()),
@@ -88,19 +95,33 @@ func resourceAwsIamSamlProviderRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("valid_until", out.ValidUntil.Format(time.RFC1123))
 	d.Set("saml_metadata_document", out.SAMLMetadataDocument)
 
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsIamSamlProviderUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
 
-	input := &iam.UpdateSAMLProviderInput{
-		SAMLProviderArn:      aws.String(d.Id()),
-		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
+	if d.HasChangeExcept("tags") {
+		input := &iam.UpdateSAMLProviderInput{
+			SAMLProviderArn:      aws.String(d.Id()),
+			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
+		}
+		_, err := conn.UpdateSAMLProvider(input)
+		if err != nil {
+			return fmt.Errorf("error updating IAM SAML Provider (%q): %w", d.Id(), err)
+		}
 	}
-	_, err := conn.UpdateSAMLProvider(input)
-	if err != nil {
-		return fmt.Errorf("error updating IAM SAML Provider (%q): %w", d.Id(), err)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.IamSAMLProviderUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags for IAM SAML Provider (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsIamSamlProviderRead(d, meta)

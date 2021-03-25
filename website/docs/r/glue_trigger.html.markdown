@@ -14,7 +14,7 @@ Manages a Glue Trigger resource.
 
 ### Conditional Trigger
 
-```hcl
+```terraform
 resource "aws_glue_trigger" "example" {
   name = "example"
   type = "CONDITIONAL"
@@ -34,7 +34,7 @@ resource "aws_glue_trigger" "example" {
 
 ### On-Demand Trigger
 
-```hcl
+```terraform
 resource "aws_glue_trigger" "example" {
   name = "example"
   type = "ON_DEMAND"
@@ -47,7 +47,7 @@ resource "aws_glue_trigger" "example" {
 
 ### Scheduled Trigger
 
-```hcl
+```terraform
 resource "aws_glue_trigger" "example" {
   name     = "example"
   schedule = "cron(15 12 * * ? *)"
@@ -63,7 +63,7 @@ resource "aws_glue_trigger" "example" {
 
 **Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
 
-```hcl
+```terraform
 resource "aws_glue_trigger" "example" {
   name = "example"
   type = "CONDITIONAL"
@@ -85,7 +85,7 @@ resource "aws_glue_trigger" "example" {
 
 **Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
 
-```hcl
+```terraform
 resource "aws_glue_trigger" "example" {
   name = "example"
   type = "CONDITIONAL"

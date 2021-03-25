@@ -64,6 +64,7 @@ func TestAccAWSSagemakerModelPackageGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -92,6 +93,7 @@ func TestAccAWSSagemakerModelPackageGroup_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +120,7 @@ func TestAccAWSSagemakerModelPackageGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{
@@ -162,6 +165,7 @@ func TestAccAWSSagemakerModelPackageGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerModelPackageGroupDestroy,
 		Steps: []resource.TestStep{

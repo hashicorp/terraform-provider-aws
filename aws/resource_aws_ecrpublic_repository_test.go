@@ -73,6 +73,7 @@ func TestAccAWSEcrPublicRepository_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -101,6 +102,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_abouttext(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -136,6 +138,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_architectures(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -171,6 +174,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -206,6 +210,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_operatingsystems(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -241,6 +246,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_usagetext(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -276,6 +282,7 @@ func TestAccAWSEcrPublicRepository_catalogdata_logoimageblob(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -304,6 +311,7 @@ func TestAccAWSEcrPublicRepository_basic_forcedestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
@@ -333,6 +341,7 @@ func TestAccAWSEcrPublicRepository_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAwsEcrPublic(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecrpublic.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrPublicRepositoryDestroy,
 		Steps: []resource.TestStep{
