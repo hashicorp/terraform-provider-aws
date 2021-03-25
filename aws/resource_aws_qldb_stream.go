@@ -35,20 +35,17 @@ func resourceAwsQLDBStream() *schema.Resource {
 
 			"exlusive_end_time": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: false,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validateUTCTimestamp,
+					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
 					// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
-					// TODO: The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
 				),
 			},
 			"inclusive_start_time": {
 				Type:     schema.TypeString,
-				Optional: false,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
@@ -85,8 +82,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 
 			"ledger_name": {
 				Type:     schema.TypeString,
-				Optional: false,
-				Computed: false, // TODO: Confirm if this should be true/false
+				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
@@ -94,22 +90,18 @@ func resourceAwsQLDBStream() *schema.Resource {
 				),
 			},
 
-			"stream_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
-				),
-			},
-
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Computed:     true,
 				ValidateFunc: validateArn,
+			},
+
+			"stream_name": {
+				Type: schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`(?!^.*--)(?!^[0-9]+$)(?!^-)(?!.*-$)^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),				)
 			},
 
 			"deletion_protection": {
