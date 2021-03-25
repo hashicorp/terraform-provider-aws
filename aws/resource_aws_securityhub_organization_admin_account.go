@@ -7,11 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSecurityHubOrganizationAdminAccount() *schema.Resource {
@@ -44,21 +42,7 @@ func resourceAwsSecurityHubOrganizationAdminAccountCreate(d *schema.ResourceData
 		AdminAccountId: aws.String(adminAccountID),
 	}
 
-	err := resource.Retry(waiter.AdminAccountEnabledTimeout, func() *resource.RetryError {
-		_, err := conn.EnableOrganizationAdminAccount(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceConflictException) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableOrganizationAdminAccount(input)
-	}
+	_, err := conn.EnableOrganizationAdminAccount(input)
 
 	if err != nil {
 		return fmt.Errorf("error enabling Security Hub Organization Admin Account (%s): %w", adminAccountID, err)

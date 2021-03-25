@@ -771,6 +771,16 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17996
+	client.securityhubconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		switch r.Operation.Name {
+		case "EnableOrganizationAdminAccount":
+			if tfawserr.ErrCodeEquals(r.Error, securityhub.ErrCodeResourceConflictException) {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
