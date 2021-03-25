@@ -338,20 +338,24 @@ func resourceAwsEcsService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"container_name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Optional: true,
 						},
 						"container_port": {
 							Type:         schema.TypeInt,
+							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"port": {
 							Type:         schema.TypeInt,
+							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
+							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: validateArn,
 						},
