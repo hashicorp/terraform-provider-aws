@@ -33,12 +33,6 @@ func resourceAwsEcsService() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -73,78 +67,6 @@ func resourceAwsEcsService() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-
-			"task_definition": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"desired_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon
-				},
-			},
-
-			"enable_ecs_managed_tags": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"enable_execute_command": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"force_new_deployment": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"health_check_grace_period_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
-			},
-
-			"launch_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ecs.LaunchTypeEc2,
-					ecs.LaunchTypeFargate,
-				}, false),
-			},
-
-			"platform_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"scheduling_strategy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ecs.SchedulingStrategyReplica,
-				ValidateFunc: validation.StringInSlice([]string{
-					ecs.SchedulingStrategyDaemon,
-					ecs.SchedulingStrategyReplica,
-				}, false),
-			},
-
-			"iam_role": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-
 			"deployment_circuit_breaker": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -169,7 +91,6 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
-
 			"deployment_controller": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -197,7 +118,6 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
-
 			"deployment_maximum_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -209,7 +129,6 @@ func resourceAwsEcsService() *schema.Resource {
 					return false
 				},
 			},
-
 			"deployment_minimum_healthy_percent": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -221,7 +140,48 @@ func resourceAwsEcsService() *schema.Resource {
 					return false
 				},
 			},
-
+			"desired_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon
+				},
+			},
+			"enable_ecs_managed_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_execute_command": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"force_new_deployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"health_check_grace_period_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
+			},
+			"iam_role": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
+			},
+			"launch_type": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.LaunchTypeEc2,
+					ecs.LaunchTypeFargate,
+				}, false),
+			},
 			"load_balancer": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -257,31 +217,10 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 				Set: resourceAwsEcsLoadBalancerHash,
 			},
-			"network_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"subnets": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"assign_public_ip": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"ordered_placement_strategy": {
 				Type:     schema.TypeList,
@@ -321,6 +260,10 @@ func resourceAwsEcsService() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"expression": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -329,14 +272,14 @@ func resourceAwsEcsService() *schema.Resource {
 								ecs.PlacementConstraintTypeMemberOf,
 							}, false),
 						},
-						"expression": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 					},
 				},
 			},
-
+			"platform_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"propagate_tags": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -353,7 +296,16 @@ func resourceAwsEcsService() *schema.Resource {
 					"",
 				}, false),
 			},
-
+			"scheduling_strategy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ecs.SchedulingStrategyReplica,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.SchedulingStrategyDaemon,
+					ecs.SchedulingStrategyReplica,
+				}, false),
+			},
 			"service_registries": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -388,7 +340,10 @@ func resourceAwsEcsService() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
-
+			"task_definition": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"wait_for_steady_state": {
 				Type:     schema.TypeBool,
 				Optional: true,
