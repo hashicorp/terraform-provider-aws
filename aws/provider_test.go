@@ -1018,8 +1018,14 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 			return fmt.Errorf("resource ID missing: %s", resourceName)
 		}
 
-		if resource.DeleteContext != nil {
-			diags := resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+		if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
+			var diags diag.Diagnostics
+
+			if resource.DeleteContext != nil {
+				diags = resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+			} else {
+				diags = resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+			}
 
 			for i := range diags {
 				if diags[i].Severity == diag.Error {
