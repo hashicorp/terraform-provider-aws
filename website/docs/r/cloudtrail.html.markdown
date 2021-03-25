@@ -185,8 +185,8 @@ For **event_selector** the following attributes are supported.
 #### Data Resource Arguments
 For **data_resource** the following attributes are supported.
 
-* `type` (Required) - The resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function"
-* `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes..
+* `type` (Required) - The resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function" and "AWS::DynamoDB::Table".
+* `values` (Required) - A list of ARN for the specified S3 buckets and object prefixes.
 
 ### Insight Selector Arguments
 
