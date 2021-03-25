@@ -330,9 +330,7 @@ func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	if d.HasChanges(
-		"api_key_selection_expression", "description", "disable_execute_api_endpoint",
-		"name", "route_selection_expression", "version") ||
+	if d.HasChanges("api_key_selection_expression", "description", "disable_execute_api_endpoint", "name", "route_selection_expression", "version") ||
 		(d.HasChange("cors_configuration") && !deleteCorsConfiguration) {
 		req := &apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
