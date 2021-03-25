@@ -16,12 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIAMServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIAMServerCertificateCreate,
 		Read:   resourceAwsIAMServerCertificateRead,
+		Update: resourceAwsIAMServerCertificateUpdate,
 		Delete: resourceAwsIAMServerCertificateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsIAMServerCertificateImport,
@@ -79,9 +81,17 @@ func resourceAwsIAMServerCertificate() *schema.Resource {
 
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
+			"expiration": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"upload_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -102,6 +112,7 @@ func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interfac
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
+		Tags:                  keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IamTags(),
 	}
 
 	if v, ok := d.GetOk("certificate_chain"); ok {
@@ -126,6 +137,8 @@ func resourceAwsIAMServerCertificateCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
@@ -140,14 +153,45 @@ func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading IAM Server Certificate (%s): %w", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(resp.ServerCertificate.ServerCertificateMetadata.ServerCertificateId))
+	cert := resp.ServerCertificate
+	metadata := cert.ServerCertificateMetadata
+	d.SetId(aws.StringValue(metadata.ServerCertificateId))
 
-	d.Set("certificate_body", resp.ServerCertificate.CertificateBody)
-	d.Set("certificate_chain", resp.ServerCertificate.CertificateChain)
-	d.Set("path", resp.ServerCertificate.ServerCertificateMetadata.Path)
-	d.Set("arn", resp.ServerCertificate.ServerCertificateMetadata.Arn)
+	d.Set("certificate_body", cert.CertificateBody)
+	d.Set("certificate_chain", cert.CertificateChain)
+	d.Set("path", metadata.Path)
+	d.Set("arn", metadata.Arn)
+	if metadata.Expiration != nil {
+		d.Set("expiration", aws.TimeValue(metadata.Expiration).Format(time.RFC3339))
+	} else {
+		d.Set("expiration", nil)
+	}
+
+	if metadata.UploadDate != nil {
+		d.Set("upload_date", aws.TimeValue(metadata.UploadDate).Format(time.RFC3339))
+	} else {
+		d.Set("upload_date", nil)
+	}
+
+	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(cert.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
+}
+
+func resourceAwsIAMServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).iamconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.IamServerCertificateUpdateTags(conn, d.Get("name").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for IAM Server Certificate (%s): %w", d.Get("name").(string), err)
+		}
+	}
+
+	return resourceAwsIAMServerCertificateRead(d, meta)
 }
 
 func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
@@ -160,12 +204,12 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "DeleteConflict" && strings.Contains(awsErr.Message(), "currently in use by arn") {
+				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
 					currentlyInUseBy(awsErr.Message(), meta.(*AWSClient).elbconn)
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}
-				if awsErr.Code() == "NoSuchEntity" {
+				if awsErr.Code() == iam.ErrCodeNoSuchEntityException {
 					return nil
 				}
 			}

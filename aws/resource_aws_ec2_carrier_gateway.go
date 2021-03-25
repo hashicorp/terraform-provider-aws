@@ -99,7 +99,7 @@ func resourceAwsEc2CarrierGatewayRead(d *schema.ResourceData, meta interface{}) 
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(carrierGateway.OwnerId),
 		Resource:  fmt.Sprintf("carrier-gateway/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)

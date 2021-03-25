@@ -58,6 +58,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The Amazon Resource Name (ARN) of the endpoint group.
 * `arn` - The Amazon Resource Name (ARN) of the endpoint group.
 
+## Timeouts
+
 `aws_globalaccelerator_endpoint_group` provides the following
 [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 

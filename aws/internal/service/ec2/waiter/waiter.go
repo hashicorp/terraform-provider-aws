@@ -270,6 +270,7 @@ func SecurityGroupCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2
 }
 
 const (
+	SubnetPropagationTimeout          = 2 * time.Minute
 	SubnetAttributePropagationTimeout = 5 * time.Minute
 )
 
@@ -369,6 +370,7 @@ func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGateway
 }
 
 const (
+	VpcPropagationTimeout          = 2 * time.Minute
 	VpcAttributePropagationTimeout = 5 * time.Minute
 )
 

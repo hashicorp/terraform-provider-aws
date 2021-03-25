@@ -52,6 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the traffic mirror session.
 * `id` - The name of the session.
+* `owner_id` - The AWS account ID of the session owner.
 
 ## Import
 

@@ -263,6 +263,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -335,6 +336,7 @@ func TestAccAWSMqBroker_throughputOptimized(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -413,6 +415,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -536,6 +539,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -647,6 +651,7 @@ func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -680,6 +685,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) 
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -712,6 +718,7 @@ func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -744,6 +751,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -816,6 +824,7 @@ func TestAccAWSMqBroker_tags(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -865,6 +874,7 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -917,6 +927,7 @@ func TestAccAWSMqBroker_updateEngineVersion(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -955,6 +966,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -981,6 +993,7 @@ func TestAccAWSMqBroker_rabbitmq(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1018,6 +1031,7 @@ func TestAccAWSMqBroker_clusterRabbitMQ(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -1078,6 +1092,7 @@ func TestAccAWSMqBroker_ldap(t *testing.T) {
 			testAccPartitionHasServicePreCheck(mq.EndpointsID, t)
 			testAccPreCheckAWSMq(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, mq.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
