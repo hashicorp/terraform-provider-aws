@@ -3,53 +3,55 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const _keyLedgerName = "LedgerName"
 const _keyStreamID = "StreamID"
 
 func resourceAwsQLDBStream() *schema.Resource {
-	// return &schema.Resource{
-	// 	Create: resourceAwsQLDBStreamCreate,
-	// 	Read:   resourceAwsQLDBStreamRead,
-	// 	Update: resourceAwsQLDBStreamUpdate,
-	// 	Delete: resourceAwsQLDBStreamDelete,
-	// 	Importer: &schema.ResourceImporter{
-	// 		State: schema.ImportStatePassthrough,
-	// 	},
+	return &schema.Resource{
+		Create: resourceAwsQLDBStreamCreate,
+		Read:   resourceAwsQLDBStreamRead,
+		Update: resourceAwsQLDBStreamUpdate,
+		Delete: resourceAwsQLDBStreamDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
-	// 	Schema: map[string]*schema.Schema{
-	// 		"arn": {
-	// 			Type:     schema.TypeString,
-	// 			Computed: true,
-	// 		},
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
-	// 		"name": {
-	// 			Type:     schema.TypeString,
-	// 			Optional: true,
-	// 			Computed: true,
-	// 			ForceNew: true,
-	// 			ValidateFunc: validation.All(
-	// 				validation.StringLenBetween(1, 32),
-	// 				validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
-	// 			),
-	// 		},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+				),
+			},
 
-	// 		"deletion_protection": {
-	// 			Type:     schema.TypeBool,
-	// 			Optional: true,
-	// 			Default:  true,
-	// 		},
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 
-	// 		"tags": tagsSchema(),
-	// 	},
-	// }
+			"tags": tagsSchema(),
+		},
+	}
 }
 
 func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error {
