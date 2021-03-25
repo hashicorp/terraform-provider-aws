@@ -1165,7 +1165,6 @@ func TestAccAWSEcsService_withServiceRegistries_container(t *testing.T) {
 	})
 }
 
-// Regression for
 func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
