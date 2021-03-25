@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_codestarconnections_connection` ([#18129](https://github.com/hashicorp/terraform-provider-aws/issues/18129))
+* **New Resource:** `aws_lightsail_instance_public_ports` ([#8611](https://github.com/hashicorp/terraform-provider-aws/issues/8611))
 
 BUG FIXES:
 
