@@ -6,7 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsPinpointEventStream() *schema.Resource {
@@ -55,9 +59,24 @@ func resourceAwsPinpointEventStreamUpsert(d *schema.ResourceData, meta interface
 	}
 
 	// Retry for IAM eventual consistency
-	_, err := retryOnAwsCode("BadRequestException", func() (interface{}, error) {
-		return conn.PutEventStream(&req)
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutEventStream(&req)
+
+		if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeBadRequestException, "make sure the IAM Role is configured correctly") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutEventStream(&req)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error putting Pinpoint Event Stream for application %s: %w", applicationId, err)
 	}
