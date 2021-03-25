@@ -169,7 +169,7 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 	}
 }
 
-func TestvalidateCloudWatchEventBusNameOrARN(t *testing.T) {
+func TestValidateCloudWatchEventBusNameOrARN(t *testing.T) {
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
