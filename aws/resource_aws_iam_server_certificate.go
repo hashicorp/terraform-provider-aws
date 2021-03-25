@@ -161,8 +161,17 @@ func resourceAwsIAMServerCertificateRead(d *schema.ResourceData, meta interface{
 	d.Set("certificate_chain", cert.CertificateChain)
 	d.Set("path", metadata.Path)
 	d.Set("arn", metadata.Arn)
-	d.Set("expiration", aws.TimeValue(metadata.Expiration).Format(time.RFC3339))
-	d.Set("upload_date", aws.TimeValue(metadata.UploadDate).Format(time.RFC3339))
+	if metadata.Expiration != nil {
+		d.Set("expiration", aws.TimeValue(metadata.Expiration).Format(time.RFC3339))
+	} else {
+		d.Set("expiration", nil)
+	}
+
+	if metadata.UploadDate != nil {
+		d.Set("upload_date", aws.TimeValue(metadata.UploadDate).Format(time.RFC3339))
+	} else {
+		d.Set("upload_date", nil)
+	}
 
 	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(cert.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
