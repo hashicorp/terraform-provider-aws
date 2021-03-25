@@ -1178,6 +1178,7 @@ func TestAccAWSEcsService_withServiceRegistriesChanges(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(servicediscovery.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
