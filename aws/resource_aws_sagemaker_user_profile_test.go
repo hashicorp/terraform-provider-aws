@@ -72,6 +72,7 @@ func testAccAWSSagemakerUserProfile_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +104,7 @@ func testAccAWSSagemakerUserProfile_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -147,6 +149,7 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -176,6 +179,7 @@ func testAccAWSSagemakerUserProfile_tensorboardAppSettingsWithImage(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -206,6 +210,7 @@ func testAccAWSSagemakerUserProfile_kernelGatewayAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -235,6 +240,7 @@ func testAccAWSSagemakerUserProfile_jupyterServerAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +270,7 @@ func testAccAWSSagemakerUserProfile_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerUserProfileDestroy,
 		Steps: []resource.TestStep{

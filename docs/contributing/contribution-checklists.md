@@ -136,6 +136,7 @@ func TestAccAWSServiceThing_Name_Generated(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
@@ -163,6 +164,7 @@ func TestAccAWSServiceThing_NamePrefix(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
@@ -353,6 +355,7 @@ More details about this code generation, including fixes for potential error mes
 
     resource.ParallelTest(t, resource.TestCase{
       PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+      ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
       Providers:    testAccProviders,
       CheckDestroy: testAccCheckAWSEksClusterDestroy,
       Steps: []resource.TestStep{

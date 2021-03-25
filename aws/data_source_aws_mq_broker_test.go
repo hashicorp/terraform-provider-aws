@@ -19,8 +19,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	resourceName := "aws_mq_broker.acctest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(mq.EndpointsID, t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(mq.EndpointsID, t) },
+		ErrorCheck: testAccErrorCheck(t, mq.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSMqBrokerConfig_byId(brokerName, prefix),

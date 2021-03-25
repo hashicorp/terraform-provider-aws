@@ -14,7 +14,7 @@ Provides a Synthetics Canary resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_synthetics_canary" "some" {
   name                 = "some-canary"
   artifact_s3_location = "s3://some-bucket/"

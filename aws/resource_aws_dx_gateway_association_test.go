@@ -192,6 +192,7 @@ func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -217,6 +218,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -259,6 +261,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -292,6 +295,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -335,6 +339,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -368,6 +373,7 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -399,6 +405,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -447,6 +454,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -492,6 +500,7 @@ func TestAccAwsDxGatewayAssociation_recreateProposal(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{

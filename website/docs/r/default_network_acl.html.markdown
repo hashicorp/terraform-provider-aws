@@ -24,7 +24,7 @@ For more information about Network ACLs, see the AWS Documentation on [Network A
 
 The following config gives the Default Network ACL the same rules that AWS includes but pulls the resource under management by Terraform. This means that any ACL rules added or changed will be detected as drift.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -56,7 +56,7 @@ resource "aws_default_network_acl" "default" {
 
 The following denies all Egress traffic by omitting any `egress` rules, while including the default `ingress` rule to allow all traffic.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -79,7 +79,7 @@ resource "aws_default_network_acl" "default" {
 
 This config denies all traffic in the Default ACL. This can be useful if you want to lock down the VPC to force all resources to assign a non-default ACL.
 
-```hcl
+```terraform
 resource "aws_vpc" "mainvpc" {
   cidr_block = "10.1.0.0/16"
 }
@@ -101,7 +101,7 @@ Because Subnets are by default associated with the Default Network ACL, any non-
 
 As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
 
-```hcl
+```terraform
 resource "aws_default_network_acl" "default" {
   # ... other configuration ...
 

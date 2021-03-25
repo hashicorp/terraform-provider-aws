@@ -16,8 +16,9 @@ func dataSourceAwsElasticacheReplicationGroup() *schema.Resource {
 		Read: dataSourceAwsElasticacheReplicationGroupRead,
 		Schema: map[string]*schema.Schema{
 			"replication_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateReplicationGroupID,
 			},
 			"replication_group_description": {
 				Type:     schema.TypeString,

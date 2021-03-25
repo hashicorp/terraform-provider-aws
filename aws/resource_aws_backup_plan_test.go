@@ -20,6 +20,7 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -56,6 +57,7 @@ func TestAccAwsBackupPlan_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -111,6 +113,7 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -193,6 +196,7 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +268,7 @@ func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -336,6 +341,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_SameRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -398,6 +404,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_NoLifecycle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -458,6 +465,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_Multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -497,6 +505,7 @@ func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
 			testAccPreCheckAWSBackup(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, backup.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -532,6 +541,7 @@ func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -577,6 +587,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{

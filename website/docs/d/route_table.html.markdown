@@ -16,7 +16,7 @@ This resource can prove useful when a module accepts a Subnet ID as an input var
 
 The following example shows how one might accept a Route Table ID as a variable and use this data source to obtain the data necessary to create a route.
 
-```hcl
+```terraform
 variable "subnet_id" {}
 
 data "aws_route_table" "selected" {

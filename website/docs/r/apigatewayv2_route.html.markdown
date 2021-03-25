@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name                       = "example-websocket-api"
   protocol_type              = "WEBSOCKET"
@@ -30,7 +30,7 @@ resource "aws_apigatewayv2_route" "example" {
 
 ### HTTP Proxy Integration
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name          = "example-http-api"
   protocol_type = "HTTP"

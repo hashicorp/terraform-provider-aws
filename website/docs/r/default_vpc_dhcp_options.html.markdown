@@ -23,7 +23,7 @@ into management.
 
 Basic usage with tags:
 
-```hcl
+```terraform
 resource "aws_default_vpc_dhcp_options" "default" {
   tags = {
     Name = "Default DHCP Option Set"
