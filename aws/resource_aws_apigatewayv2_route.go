@@ -183,31 +183,8 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	req := &apigatewayv2.UpdateRouteInput{
-		ApiId:   aws.String(d.Get("api_id").(string)),
-		RouteId: aws.String(d.Id()),
-	}
-	if d.HasChange("api_key_required") {
-		req.ApiKeyRequired = aws.Bool(d.Get("api_key_required").(bool))
-	}
-	if d.HasChange("authorization_scopes") {
-		req.AuthorizationScopes = expandStringSet(d.Get("authorization_scopes").(*schema.Set))
-	}
-	if d.HasChange("authorization_type") {
-		req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
-	}
-	if d.HasChange("authorizer_id") {
-		req.AuthorizerId = aws.String(d.Get("authorizer_id").(string))
-	}
-	if d.HasChange("model_selection_expression") {
-		req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
-	}
-	if d.HasChange("operation_name") {
-		req.OperationName = aws.String(d.Get("operation_name").(string))
-	}
-	if d.HasChange("request_models") {
-		req.RequestModels = stringMapToPointers(d.Get("request_models").(map[string]interface{}))
-	}
+	var requestParameters map[string]*apigatewayv2.ParameterConstraints
+
 	if d.HasChange("request_parameter") {
 		o, n := d.GetChange("request_parameter")
 		os := o.(*schema.Set)
@@ -238,23 +215,54 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 
-		req.RequestParameters = expandApiGatewayV2RouteRequestParameters(ns.List())
-	}
-	if d.HasChange("route_key") {
-		req.RouteKey = aws.String(d.Get("route_key").(string))
-	}
-	if d.HasChange("route_response_selection_expression") {
-		req.RouteResponseSelectionExpression = aws.String(d.Get("route_response_selection_expression").(string))
-	}
-	if d.HasChange("target") {
-		req.Target = aws.String(d.Get("target").(string))
+		requestParameters = expandApiGatewayV2RouteRequestParameters(ns.List())
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 route: %s", req)
-	_, err := conn.UpdateRoute(req)
+	if d.HasChangesExcept("request_parameter") || len(requestParameters) > 0 {
+		req := &apigatewayv2.UpdateRouteInput{
+			ApiId:   aws.String(d.Get("api_id").(string)),
+			RouteId: aws.String(d.Id()),
+		}
+		if d.HasChange("api_key_required") {
+			req.ApiKeyRequired = aws.Bool(d.Get("api_key_required").(bool))
+		}
+		if d.HasChange("authorization_scopes") {
+			req.AuthorizationScopes = expandStringSet(d.Get("authorization_scopes").(*schema.Set))
+		}
+		if d.HasChange("authorization_type") {
+			req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
+		}
+		if d.HasChange("authorizer_id") {
+			req.AuthorizerId = aws.String(d.Get("authorizer_id").(string))
+		}
+		if d.HasChange("model_selection_expression") {
+			req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
+		}
+		if d.HasChange("operation_name") {
+			req.OperationName = aws.String(d.Get("operation_name").(string))
+		}
+		if d.HasChange("request_models") {
+			req.RequestModels = stringMapToPointers(d.Get("request_models").(map[string]interface{}))
+		}
+		if d.HasChange("request_parameter") {
+			req.RequestParameters = requestParameters
+		}
+		if d.HasChange("route_key") {
+			req.RouteKey = aws.String(d.Get("route_key").(string))
+		}
+		if d.HasChange("route_response_selection_expression") {
+			req.RouteResponseSelectionExpression = aws.String(d.Get("route_response_selection_expression").(string))
+		}
+		if d.HasChange("target") {
+			req.Target = aws.String(d.Get("target").(string))
+		}
 
-	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 route (%s): %w", d.Id(), err)
+		log.Printf("[DEBUG] Updating API Gateway v2 route: %s", req)
+		_, err := conn.UpdateRoute(req)
+
+		if err != nil {
+			return fmt.Errorf("error updating API Gateway v2 route (%s): %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsApiGatewayV2RouteRead(d, meta)
