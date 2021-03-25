@@ -400,7 +400,7 @@ func resourceAwsEcsService() *schema.Resource {
 
 func resourceAwsEcsServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'cluster-name/service-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s, expecting 'cluster-name/service-name'", d.Id())
 	}
 	cluster := strings.Split(d.Id(), "/")[0]
 	name := strings.Split(d.Id(), "/")[1]
@@ -637,7 +637,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading ECS service: %w", err)
+		return fmt.Errorf("error reading ECS service: %w", err)
 	}
 
 	if len(out.Services) < 1 {
@@ -710,7 +710,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("deployment_controller", flattenEcsDeploymentController(service.DeploymentController)); err != nil {
-		return fmt.Errorf("Error setting deployment_controller for (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting deployment_controller for (%s): %w", d.Id(), err)
 	}
 
 	if service.LoadBalancers != nil {
@@ -730,11 +730,11 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return fmt.Errorf("Error setting network_configuration for (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting network_configuration for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return fmt.Errorf("Error setting service_registries for (%s): %w", d.Id(), err)
+		return fmt.Errorf("error setting service_registries for (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -1143,7 +1143,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			_, err = conn.UpdateService(&input)
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating ECS Service (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating ECS Service (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1224,7 +1224,7 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		_, err = conn.DeleteService(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting ECS service (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting ECS service (%s): %w", d.Id(), err)
 	}
 
 	// Wait until it's deleted
