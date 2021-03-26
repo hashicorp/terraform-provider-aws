@@ -208,6 +208,7 @@ func TestAccAWSConfigConfigurationAggregator_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{

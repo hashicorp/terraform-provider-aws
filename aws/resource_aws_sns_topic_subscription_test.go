@@ -443,6 +443,7 @@ func TestAccAWSSNSTopicSubscription_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -465,6 +466,7 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
