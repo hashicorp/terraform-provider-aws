@@ -10,11 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -259,15 +262,59 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] creating Synthetics Canary: %#v", input)
 
-	resp, err := conn.CreateCanary(input)
-	if err != nil {
-		return fmt.Errorf("error creating Synthetics Canary: %w", err)
-	}
+	// Underlying IAM eventual consistency errors can occur after the creation
+	// operation. The goal is only retry these types of errors up to the IAM
+	// timeout. Since the creation process is asynchronous and can take up to
+	// its own timeout, we store a stop time upfront for checking.
+	iamwaiterStopTime := time.Now().Add(iamwaiter.PropagationTimeout)
 
-	d.SetId(aws.StringValue(resp.Canary.Name))
+	// Ensure to add IAM eventual consistency timeout in case of retries
+	err = resource.Retry(iamwaiter.PropagationTimeout+waiter.CanaryCreatedTimeout, func() *resource.RetryError {
+		// Only retry IAM eventual consistency errors up to that timeout
+		iamwaiterRetry := time.Now().Before(iamwaiterStopTime)
 
-	if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %w", d.Id(), err)
+		resp, err := conn.CreateCanary(input)
+
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error creating Synthetics Canary: %w", err))
+		}
+
+		if resp == nil || resp.Canary == nil {
+			return resource.NonRetryableError(fmt.Errorf("error creating Synthetics Canary: empty response"))
+		}
+
+		d.SetId(aws.StringValue(resp.Canary.Name))
+
+		_, err = waiter.CanaryReady(conn, d.Id())
+
+		if err != nil {
+			// This error synthesized from the Status object and not an AWS SDK Go error type
+			if iamwaiterRetry && strings.Contains(err.Error(), "The role defined for the function cannot be assumed by Lambda") {
+				return resource.RetryableError(fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %w", d.Id(), err))
+			}
+
+			return resource.NonRetryableError(fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %w", d.Id(), err))
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		resp, err := conn.CreateCanary(input)
+
+		if err != nil {
+			return fmt.Errorf("error creating Synthetics Canary: %w", err)
+		}
+
+		if resp == nil || resp.Canary == nil {
+			return fmt.Errorf("error creating Synthetics Canary: empty response")
+		}
+
+		d.SetId(aws.StringValue(resp.Canary.Name))
+
+		if _, err = waiter.CanaryReady(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %w", d.Id(), err)
+		}
 	}
 
 	if v := d.Get("start_canary"); v.(bool) {

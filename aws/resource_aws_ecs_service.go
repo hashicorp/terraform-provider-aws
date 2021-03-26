@@ -93,6 +93,12 @@ func resourceAwsEcsService() *schema.Resource {
 				Default:  false,
 			},
 
+			"enable_execute_command": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"force_new_deployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -332,20 +338,24 @@ func resourceAwsEcsService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"container_name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Optional: true,
 						},
 						"container_port": {
 							Type:         schema.TypeInt,
+							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"port": {
 							Type:         schema.TypeInt,
+							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
+							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: validateArn,
 						},
@@ -398,6 +408,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
 		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
+		EnableExecuteCommand: aws.Bool(d.Get("enable_execute_command").(bool)),
 	}
 
 	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
@@ -638,6 +649,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
 	d.Set("propagate_tags", service.PropagateTags)
 	d.Set("platform_version", service.PlatformVersion)
+	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*AWSClient).partition+":ecs:") {
@@ -1028,6 +1040,11 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
 		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+	}
+
+	if d.HasChange("enable_execute_command") {
+		updateService = true
+		input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
 	}
 
 	if updateService {

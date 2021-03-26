@@ -324,17 +324,21 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 
 	certificateAuthority, err := finder.CertificateAuthorityByARN(conn, d.Id())
 
-	if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate Authority: %s", err)
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s): %w", d.Id(), err)
 	}
 
 	if certificateAuthority == nil || aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusDeleted {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading ACM PCA Certificate Authority (%s): not found or deleted", d.Id())
+		}
+
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -365,17 +369,17 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
 
 	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(getCertificateAuthorityCertificateInput)
-	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		// Returned when in PENDING_CERTIFICATE status
-		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
-			return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate: %s", err)
-		}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s) Certificate: %w", d.Id(), err)
 	}
 
 	d.Set("certificate", "")
@@ -392,15 +396,17 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
-	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
-			return fmt.Errorf("error reading ACM PCA Certificate Authority Certificate Signing Request: %s", err)
-		}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %w", d.Id(), err)
 	}
 
 	d.Set("certificate_signing_request", "")

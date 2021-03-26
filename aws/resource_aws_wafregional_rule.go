@@ -225,9 +225,9 @@ func flattenWafPredicates(ts []*waf.Predicate) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, p := range ts {
 		m := make(map[string]interface{})
-		m["negated"] = *p.Negated
-		m["type"] = *p.Type
-		m["data_id"] = *p.DataId
+		m["negated"] = aws.BoolValue(p.Negated)
+		m["type"] = aws.StringValue(p.Type)
+		m["data_id"] = aws.StringValue(p.DataId)
 		out[i] = m
 	}
 	return out

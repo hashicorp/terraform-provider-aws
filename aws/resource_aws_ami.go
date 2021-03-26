@@ -356,7 +356,11 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to find AMI after retries: %s", err)
 	}
 
-	if len(res.Images) != 1 {
+	if res == nil || len(res.Images) != 1 {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 AMI (%s): empty response", d.Id())
+		}
+
 		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -379,6 +383,10 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if state == ec2.ImageStateDeregistered {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 AMI (%s): deregistered", d.Id())
+		}
+
 		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
