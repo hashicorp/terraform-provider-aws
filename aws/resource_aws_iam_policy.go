@@ -293,7 +293,7 @@ func iamPolicyPruneVersions(arn string, conn *iam.IAM) error {
 		}
 	}
 
-	err1 := iamPolicyDeleteVersion(arn, *oldestVersion.VersionId, conn)
+	err1 := iamPolicyDeleteVersion(arn, aws.StringValue(oldestVersion.VersionId), conn)
 	return err1
 }
 
@@ -307,7 +307,7 @@ func iamPolicyDeleteNondefaultVersions(arn string, conn *iam.IAM) error {
 		if *version.IsDefaultVersion {
 			continue
 		}
-		if err := iamPolicyDeleteVersion(arn, *version.VersionId, conn); err != nil {
+		if err := iamPolicyDeleteVersion(arn, aws.StringValue(version.VersionId), conn); err != nil {
 			return err
 		}
 	}
