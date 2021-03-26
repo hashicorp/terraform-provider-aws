@@ -227,6 +227,44 @@ rules:
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
     severity: WARNING
 
+  - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
+    languages: [go]
+    message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is checked first
+    paths:
+      exclude:
+        - aws/resource_aws_api_gateway_*.go
+        - aws/resource_aws_apigatewayv2_*.go
+        - aws/resource_aws_app_cookie_stickiness_policy.go
+        - aws/resource_aws_appautoscaling_*.go
+        - aws/resource_aws_appmesh_*.go
+        - aws/resource_aws_appsync_*.go
+        - aws/resource_aws_athena_*.go
+        - aws/resource_aws_autoscaling_*.go
+        - aws/resource_aws_autoscalingplans_scaling_plan.go
+        - aws/resource_aws_[b-g]*.go
+        - aws/resource_aws_i*.go
+        - aws/resource_aws_[k-t]*.go
+        - aws/resource_aws_[v-x]*.go
+      include:
+        - aws/resource*.go
+    patterns:
+      - pattern-either:
+        - pattern: |
+            d.SetId("")
+            ...
+            return nil
+      - pattern-not-inside: |
+          if ... {
+            if <... d.IsNewResource() ...> { ... }
+            ...
+            d.SetId("")
+            ...
+            return nil
+          }
+      - pattern-not-inside: |
+          if <... d.IsNewResource() ...> { ... }
+    severity: WARNING
+
   - id: helper-schema-resource-Retry-without-TimeoutError-check
     languages: [go]
     message: Check resource.Retry() errors with tfresource.TimedOut()
