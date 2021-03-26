@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,6 +23,7 @@ var routeTableValidDestinations = []string{
 }
 
 var routeTableValidTargets = []string{
+	"carrier_gateway_id",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"instance_id",
@@ -67,6 +69,9 @@ func resourceAwsRouteTable() *schema.Resource {
 				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						///
+						// Destinations.
+						///
 						"cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -85,6 +90,14 @@ func resourceAwsRouteTable() *schema.Resource {
 							),
 						},
 
+						//
+						// Targets.
+						//
+						"carrier_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"egress_only_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -100,12 +113,17 @@ func resourceAwsRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"local_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"nat_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"local_gateway_id": {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -124,14 +142,14 @@ func resourceAwsRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
-						"network_interface_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 					},
 				},
 				Set: resourceAwsRouteTableHash,
+			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"owner_id": {
@@ -231,6 +249,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		if r.DestinationIpv6CidrBlock != nil {
 			m["ipv6_cidr_block"] = aws.StringValue(r.DestinationIpv6CidrBlock)
 		}
+		if r.CarrierGatewayId != nil {
+			m["carrier_gateway_id"] = aws.StringValue(r.CarrierGatewayId)
+		}
 		if r.EgressOnlyInternetGatewayId != nil {
 			m["egress_only_gateway_id"] = aws.StringValue(r.EgressOnlyInternetGatewayId)
 		}
@@ -269,7 +290,16 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.Set("owner_id", rt.OwnerId)
+	ownerID := aws.StringValue(rt.OwnerId)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: ownerID,
+		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 
 	return nil
 }
@@ -422,6 +452,10 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				opts.GatewayId = aws.String(s)
 			}
 
+			if s, ok := m["carrier_gateway_id"].(string); ok && s != "" {
+				opts.CarrierGatewayId = aws.String(s)
+			}
+
 			if s, ok := m["egress_only_gateway_id"].(string); ok && s != "" {
 				opts.EgressOnlyInternetGatewayId = aws.String(s)
 			}
@@ -556,6 +590,10 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	if v, ok := m["gateway_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["carrier_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
