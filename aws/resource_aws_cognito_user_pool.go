@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -692,7 +693,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
 	var resp *cognitoidentityprovider.CreateUserPoolOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
 		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -735,7 +736,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -923,7 +924,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -1124,7 +1125,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateUserPool(params)
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {

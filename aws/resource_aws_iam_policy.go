@@ -5,13 +5,13 @@ import (
 	"log"
 	"net/url"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsIamPolicy() *schema.Resource {
@@ -110,7 +110,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyResponse *iam.GetPolicyOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyResponse, err = iamconn.GetPolicy(getPolicyRequest)
 
@@ -158,7 +158,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle IAM eventual consistency
 	var getPolicyVersionResponse *iam.GetPolicyVersionOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		getPolicyVersionResponse, err = iamconn.GetPolicyVersion(getPolicyVersionRequest)
 

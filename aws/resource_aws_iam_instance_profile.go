@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -120,7 +121,7 @@ func instanceProfileAddRole(conn *iam.IAM, profileName, roleName string) error {
 		RoleName:            aws.String(roleName),
 	}
 
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.AddRoleToInstanceProfile(request)
 		// IAM unfortunately does not provide a better error code or message for eventual consistency

@@ -3,13 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsEcrRepositoryPolicy() *schema.Resource {
@@ -55,7 +55,7 @@ func resourceAwsEcrRepositoryPolicyPut(d *schema.ResourceData, meta interface{})
 	// Retry due to IAM eventual consistency
 	var err error
 	var out *ecr.SetRepositoryPolicyOutput
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		out, err = conn.SetRepositoryPolicy(&input)
 
 		if isAWSErr(err, ecr.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
@@ -97,7 +97,7 @@ func resourceAwsEcrRepositoryPolicyRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	log.Printf("[DEBUG] Received repository policy %#v", out)
+	log.Printf("[DEBUG] Received repository policy %s", out)
 
 	d.Set("repository", out.RepositoryName)
 	d.Set("registry_id", out.RegistryId)

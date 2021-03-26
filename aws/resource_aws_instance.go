@@ -24,6 +24,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -628,7 +629,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Run configuration: %s", runOpts)
 
 	var runResp *ec2.Reservation
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1092,7 +1093,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 					} else {
-						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
 								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1716,7 +1717,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {

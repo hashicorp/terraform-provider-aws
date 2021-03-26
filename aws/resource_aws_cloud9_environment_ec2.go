@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -91,7 +92,7 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 	}
 
 	var out *cloud9.CreateEnvironmentEC2Output
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateEnvironmentEC2(params)
 		if err != nil {

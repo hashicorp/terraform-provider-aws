@@ -5,13 +5,13 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsBackupSelection() *schema.Resource {
@@ -98,7 +98,7 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 
 	// Retry for IAM eventual consistency
 	var output *backup.CreateBackupSelectionOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateBackupSelection(input)
 
