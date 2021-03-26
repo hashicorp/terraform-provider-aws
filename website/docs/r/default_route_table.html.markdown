@@ -18,7 +18,7 @@ For more information, see the Amazon VPC User Guide on [Route Tables](https://do
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_default_route_table" "example" {
   default_route_table_id = aws_vpc.example.default_route_table_id
 
@@ -40,7 +40,7 @@ resource "aws_default_route_table" "example" {
 
 To subsequently remove all managed routes:
 
-```hcl
+```terraform
 resource "aws_default_route_table" "example" {
   default_route_table_id = aws_vpc.example.default_route_table_id
 

@@ -53,7 +53,7 @@ resource "aws_route_table" "example" {
 
 To subsequently remove all managed routes:
 
-```hcl
+```terraform
 resource "aws_route_table" "example" {
   vpc_id = aws_vpc.example.id
 
