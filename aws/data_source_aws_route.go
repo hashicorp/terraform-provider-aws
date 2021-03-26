@@ -28,7 +28,6 @@ func dataSourceAwsRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"destination_ipv6_cidr_block": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -43,49 +42,41 @@ func dataSourceAwsRoute() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
 			"egress_only_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"local_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"nat_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -181,6 +172,7 @@ func dataSourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	} else if destination := aws.StringValue(route.DestinationIpv6CidrBlock); destination != "" {
 		d.SetId(tfec2.RouteCreateID(routeTableID, destination))
 	}
+
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
