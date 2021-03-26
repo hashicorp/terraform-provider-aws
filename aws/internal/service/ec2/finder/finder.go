@@ -98,6 +98,88 @@ func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	return output.Reservations[0].Instances[0], nil
 }
 
+// NetworkAclByID looks up a NetworkAcl by ID. When not found, returns nil and potentially an API error.
+func NetworkAclByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		NetworkAclIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeNetworkAcls(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkAcl := range output.NetworkAcls {
+		if networkAcl == nil {
+			continue
+		}
+
+		if aws.StringValue(networkAcl.NetworkAclId) != id {
+			continue
+		}
+
+		return networkAcl, nil
+	}
+
+	return nil, nil
+}
+
+// NetworkAclEntry looks up a NetworkAclEntry by Network ACL ID, Egress, and Rule Number. When not found, returns nil and potentially an API error.
+func NetworkAclEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("entry.egress"),
+				Values: aws.StringSlice([]string{fmt.Sprintf("%t", egress)}),
+			},
+			{
+				Name:   aws.String("entry.rule-number"),
+				Values: aws.StringSlice([]string{fmt.Sprintf("%d", ruleNumber)}),
+			},
+		},
+		NetworkAclIds: aws.StringSlice([]string{networkAclID}),
+	}
+
+	output, err := conn.DescribeNetworkAcls(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkAcl := range output.NetworkAcls {
+		if networkAcl == nil {
+			continue
+		}
+
+		if aws.StringValue(networkAcl.NetworkAclId) != networkAclID {
+			continue
+		}
+
+		for _, entry := range output.NetworkAcls[0].Entries {
+			if entry == nil {
+				continue
+			}
+
+			if aws.BoolValue(entry.Egress) != egress || aws.Int64Value(entry.RuleNumber) != int64(ruleNumber) {
+				continue
+			}
+
+			return entry, nil
+		}
+	}
+
+	return nil, nil
+}
+
 // RouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
 func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
