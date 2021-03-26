@@ -115,6 +115,29 @@ func TestAccAWSRouteDataSource_LocalGatewayID(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteDataSource_CarrierGatewayID(t *testing.T) {
+	dataSourceName := "data.aws_route.test"
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteDataSourceConfigIpv4CarrierGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", dataSourceName, "carrier_gateway_id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsRouteConfigBasic(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
@@ -349,6 +372,45 @@ data "aws_route" "by_local_gateway_id" {
   route_table_id   = aws_route_table.test.id
   local_gateway_id = data.aws_ec2_local_gateway.first.id
   depends_on       = [aws_route.test]
+}
+`, rName)
+}
+
+func testAccAWSRouteDataSourceConfigIpv4CarrierGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_carrier_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  route_table_id         = aws_route_table.test.id
+  carrier_gateway_id     = aws_ec2_carrier_gateway.test.id
+}
+
+data "aws_route" "test" {
+  route_table_id     = aws_route.test.route_table_id
+  carrier_gateway_id = aws_route.test.carrier_gateway_id
 }
 `, rName)
 }
