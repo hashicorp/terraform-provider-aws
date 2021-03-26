@@ -10,6 +10,7 @@ import (
 const (
 	// Maximum amount of time to wait for a Capacity Provider to return INACTIVE
 	CapacityProviderInactiveTimeout = 20 * time.Minute
+	ServiceCreateTimeout            = 2 * time.Minute
 )
 
 // CapacityProviderInactive waits for a Capacity Provider to return INACTIVE

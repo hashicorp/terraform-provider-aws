@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecs/waiter"
 )
 
 func resourceAwsEcsService() *schema.Resource {
@@ -523,7 +524,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	// Retry due to AWS IAM & ECS eventual consistency
 	var out *ecs.CreateServiceOutput
 	var err error
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.ServiceCreateTimeout, func() *resource.RetryError {
 		out, err = conn.CreateService(&input)
 
 		if err != nil {
