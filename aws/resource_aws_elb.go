@@ -411,7 +411,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
-				d.Set("source_security_group_id", aws.StringValue(sg.GroupId))
+				d.Set("source_security_group_id", sg.GroupId)
 			}
 		}
 	}
