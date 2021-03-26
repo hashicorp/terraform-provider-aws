@@ -23,6 +23,7 @@ var routeValidDestinations = []string{
 }
 
 var routeValidTargets = []string{
+	"carrier_gateway_id",
 	"egress_only_gateway_id",
 	"gateway_id",
 	"instance_id",
@@ -89,6 +90,13 @@ func resourceAwsRoute() *schema.Resource {
 			//
 			// Targets.
 			//
+			"carrier_gateway_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ExactlyOneOf:  routeValidTargets,
+				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
+			},
+
 			"egress_only_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -203,6 +211,8 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch target := aws.String(target); targetAttributeKey {
+	case "carrier_gateway_id":
+		input.CarrierGatewayId = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
@@ -317,6 +327,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
+	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("destination_cidr_block", route.DestinationCidrBlock)
 	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
@@ -372,6 +383,8 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch target := aws.String(target); targetAttributeKey {
+	case "carrier_gateway_id":
+		input.CarrierGatewayId = target
 	case "egress_only_gateway_id":
 		input.EgressOnlyInternetGatewayId = target
 	case "gateway_id":
