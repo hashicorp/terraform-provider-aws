@@ -1264,17 +1264,3 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 func getNameFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
-
-func waitForSteadyState(conn *ecs.ECS, d *schema.ResourceData) error {
-	input := &ecs.DescribeServicesInput{
-		Services: aws.StringSlice([]string{d.Id()}),
-	}
-	if v, ok := d.GetOk("cluster"); ok {
-		input.Cluster = aws.String(v.(string))
-	}
-
-	if err := conn.WaitUntilServicesStable(input); err != nil {
-		return fmt.Errorf("error waiting for service (%s) to reach a steady state: %w", d.Id(), err)
-	}
-	return nil
-}
