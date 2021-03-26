@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 // CarrierGatewayByID returns the carrier gateway corresponding to the specified identifier.
@@ -444,11 +443,17 @@ func SecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*ec2.
 	}
 
 	if result == nil || len(result.SecurityGroups) == 0 || result.SecurityGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, &resource.NotFoundError{
+			Message:     "empty result",
+			LastRequest: input,
+		}
 	}
 
 	if len(result.SecurityGroups) > 1 {
-		return nil, tfresource.NewTooManyResultsError(len(result.SecurityGroups), input)
+		return nil, &resource.NotFoundError{
+			Message:     fmt.Sprintf("too many results: wanted 1, got %d", len(result.SecurityGroups)),
+			LastRequest: input,
+		}
 	}
 
 	return result.SecurityGroups[0], nil
