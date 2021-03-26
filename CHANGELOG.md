@@ -1,5 +1,9 @@
 ## 3.35.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_synthetics_canary: Handle asynchronous IAM eventual consistency error on creation ([#18404](https://github.com/hashicorp/terraform-provider-aws/issues/18404))
+
 ## 3.34.0 (March 26, 2021)
 
 NOTES:
