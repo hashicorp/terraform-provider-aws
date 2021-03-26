@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsVpc() *schema.Resource {
@@ -250,18 +252,54 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	// Refresh the VPC state
-	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
+	var vpc *ec2.Vpc
+
+	err := resource.Retry(waiter.VpcPropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		vpc, err = finder.VpcByID(conn, d.Id())
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if d.IsNewResource() && vpc == nil {
+			return resource.RetryableError(&resource.NotFoundError{
+				LastError: fmt.Errorf("EC2 VPC (%s) not found", d.Id()),
+			})
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		vpc, err = finder.VpcByID(conn, d.Id())
 	}
-	if vpcRaw == nil {
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidVpcID.NotFound") {
+		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	// VPC stuff
-	vpc := vpcRaw.(*ec2.Vpc)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 VPC (%s): %w", d.Id(), err)
+	}
+
+	if vpc == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 VPC (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] EC2 VPC (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	vpcid := d.Id()
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
@@ -272,7 +310,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: aws.StringValue(vpc.OwnerId),
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)

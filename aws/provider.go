@@ -818,6 +818,7 @@ func Provider() *schema.Provider {
 			"aws_licensemanager_license_configuration":                resourceAwsLicenseManagerLicenseConfiguration(),
 			"aws_lightsail_domain":                                    resourceAwsLightsailDomain(),
 			"aws_lightsail_instance":                                  resourceAwsLightsailInstance(),
+			"aws_lightsail_instance_public_ports":                     resourceAwsLightsailInstancePublicPorts(),
 			"aws_lightsail_key_pair":                                  resourceAwsLightsailKeyPair(),
 			"aws_lightsail_static_ip":                                 resourceAwsLightsailStaticIp(),
 			"aws_lightsail_static_ip_attachment":                      resourceAwsLightsailStaticIpAttachment(),

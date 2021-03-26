@@ -50,9 +50,9 @@ func testSweepCloudFrontDistributions(region string) error {
 	}
 
 	for _, distributionSummary := range distributionSummaries {
-		distributionID := *distributionSummary.Id
+		distributionID := aws.StringValue(distributionSummary.Id)
 
-		if *distributionSummary.Enabled {
+		if aws.BoolValue(distributionSummary.Enabled) {
 			log.Printf("[WARN] Skipping deletion of enabled CloudFront Distribution: %s", distributionID)
 			continue
 		}
@@ -380,6 +380,32 @@ func TestAccAWSCloudFrontDistribution_orderedCacheBehaviorCachePolicy(t *testing
 					"retain_on_delete",
 					"wait_for_deployment",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontDistribution_forwardedValuesToCachePolicy(t *testing.T) {
+	var distribution cloudfront.Distribution
+	rInt := acctest.RandInt()
+	resourceName := "aws_cloudfront_distribution.main"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehavior(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+				),
+			},
+			{
+				Config: testAccAWSCloudFrontDistributionOrderedCacheBehaviorCachePolicy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+				),
 			},
 		},
 	})

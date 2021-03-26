@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
 )
 
 const (
@@ -21,7 +22,12 @@ const (
 )
 
 const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
 	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
 )
 
 const (
