@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-aws/tools
 go 1.15
 
 require (
-	github.com/bflad/tfproviderdocs v0.8.0
+	github.com/bflad/tfproviderdocs v0.9.1
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.37.1
 	github.com/hashicorp/go-changelog v0.0.0-20201005170154-56335215ce3a

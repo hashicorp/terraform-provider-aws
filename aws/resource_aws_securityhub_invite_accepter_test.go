@@ -21,6 +21,7 @@ func testAccAWSSecurityHubInviteAccepter_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
+		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSSecurityHubInviteAccepterDestroy,
 		Steps: []resource.TestStep{

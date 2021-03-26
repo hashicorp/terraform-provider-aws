@@ -19,6 +19,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_RootCA(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
@@ -48,6 +49,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_UpdateRootCA(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
@@ -80,6 +82,7 @@ func TestAccAwsAcmpcaCertificateAuthorityCertificate_SubordinateCA(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, acmpca.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{

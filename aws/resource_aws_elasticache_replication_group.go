@@ -48,8 +48,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Computed: true,
 			},
 			"auth_token": {
 				Type:         schema.TypeString,
@@ -263,8 +263,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,

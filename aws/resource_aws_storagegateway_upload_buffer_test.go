@@ -2,8 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -73,17 +75,52 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayUploadBufferConfig_Basic(rName),
+				Config: testAccAWSStorageGatewayUploadBufferConfigDiskId(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayUploadBufferExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17809
+func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_upload_buffer.test"
+	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
+	gatewayResourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
+		// Storage Gateway API does not support removing upload buffers,
+		// but we want to ensure other resources are removed.
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayUploadBufferConfigDiskPath(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayUploadBufferExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "disk_id", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),
 			},
@@ -124,7 +161,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 	}
 }
 
-func testAccAWSStorageGatewayUploadBufferConfig_Basic(rName string) string {
+func testAccAWSStorageGatewayUploadBufferConfigDiskId(rName string) string {
 	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName) + fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
@@ -150,6 +187,37 @@ data "aws_storagegateway_local_disk" "test" {
 
 resource "aws_storagegateway_upload_buffer" "test" {
   disk_id     = data.aws_storagegateway_local_disk.test.id
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+`, rName)
+}
+
+func testAccAWSStorageGatewayUploadBufferConfigDiskPath(rName string) string {
+	return testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName) + fmt.Sprintf(`
+resource "aws_ebs_volume" "test" {
+  availability_zone = aws_instance.test.availability_zone
+  size              = "10"
+  type              = "gp2"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_volume_attachment" "test" {
+  device_name  = "/dev/xvdc"
+  force_detach = true
+  instance_id  = aws_instance.test.id
+  volume_id    = aws_ebs_volume.test.id
+}
+
+data "aws_storagegateway_local_disk" "test" {
+  disk_node   = aws_volume_attachment.test.device_name
+  gateway_arn = aws_storagegateway_gateway.test.arn
+}
+
+resource "aws_storagegateway_upload_buffer" "test" {
+  disk_path   = data.aws_storagegateway_local_disk.test.disk_path
   gateway_arn = aws_storagegateway_gateway.test.arn
 }
 `, rName)

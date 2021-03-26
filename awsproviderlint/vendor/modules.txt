@@ -12,7 +12,7 @@ cloud.google.com/go/storage
 github.com/agext/levenshtein
 # github.com/apparentlymart/go-textseg/v12 v12.0.0
 github.com/apparentlymart/go-textseg/v12/textseg
-# github.com/aws/aws-sdk-go v1.37.4
+# github.com/aws/aws-sdk-go v1.38.0
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
@@ -68,7 +68,7 @@ github.com/bflad/gopaniccheck/passes/logpaniccallexpr
 github.com/bflad/gopaniccheck/passes/logpanicfcallexpr
 github.com/bflad/gopaniccheck/passes/logpaniclncallexpr
 github.com/bflad/gopaniccheck/passes/paniccallexpr
-# github.com/bflad/tfproviderlint v0.23.0
+# github.com/bflad/tfproviderlint v0.24.0
 ## explicit
 github.com/bflad/tfproviderlint/helper/analysisutils
 github.com/bflad/tfproviderlint/helper/astutils
@@ -88,6 +88,9 @@ github.com/bflad/tfproviderlint/passes/AT006
 github.com/bflad/tfproviderlint/passes/AT007
 github.com/bflad/tfproviderlint/passes/AT008
 github.com/bflad/tfproviderlint/passes/AT009
+github.com/bflad/tfproviderlint/passes/AT010
+github.com/bflad/tfproviderlint/passes/AT011
+github.com/bflad/tfproviderlint/passes/AT012
 github.com/bflad/tfproviderlint/passes/R001
 github.com/bflad/tfproviderlint/passes/R002
 github.com/bflad/tfproviderlint/passes/R003
@@ -154,6 +157,10 @@ github.com/bflad/tfproviderlint/passes/V007
 github.com/bflad/tfproviderlint/passes/V008
 github.com/bflad/tfproviderlint/passes/V009
 github.com/bflad/tfproviderlint/passes/V010
+github.com/bflad/tfproviderlint/passes/V011
+github.com/bflad/tfproviderlint/passes/V012
+github.com/bflad/tfproviderlint/passes/V013
+github.com/bflad/tfproviderlint/passes/V014
 github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/helper/acctest/randstringfromcharsetcallexpr
 github.com/bflad/tfproviderlint/passes/helper/resource/retryfuncinfo
@@ -278,7 +285,7 @@ github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5
 github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/toproto
 github.com/hashicorp/terraform-plugin-go/tfprotov5/server
 github.com/hashicorp/terraform-plugin-go/tfprotov5/tftypes
-# github.com/hashicorp/terraform-plugin-sdk/v2 v2.4.4
+# github.com/hashicorp/terraform-plugin-sdk/v2 v2.5.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging

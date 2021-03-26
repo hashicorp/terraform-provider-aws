@@ -93,18 +93,23 @@ awsproviderlint:
 		-c 1 \
 		-AWSAT006=false \
 		-AWSV001=false \
+		-AT010=false \
+		-AT012=false \
 		-R001=false \
 		-R010=false \
 		-R018=false \
 		-R019=false \
 		-V001=false \
 		-V009=false \
+		-V011=false \
+		-V012=false \
+		-V013=false \
+		-V014=false \
 		-XR001=false \
 		-XR002=false \
 		-XR003=false \
 		-XR004=false \
 		-XR005=false \
-		-XAT001=false \
 		-XS001=false \
 		-XS002=false \
 		./$(PKG_NAME)
@@ -155,4 +160,8 @@ website-lint-fix:
 	@docker run -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck
+semgrep:
+	@echo "==> Running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+
+.PHONY: awsproviderlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep

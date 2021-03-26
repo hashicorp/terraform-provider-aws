@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func dataSourceAwsRoute() *schema.Resource {
@@ -201,4 +203,17 @@ func getRoutes(table *ec2.RouteTable, d *schema.ResourceData) []*ec2.Route {
 		routes = append(routes, r)
 	}
 	return routes
+}
+
+// Helper: Create an ID for a route
+func resourceAwsRouteID(d *schema.ResourceData, r *ec2.Route) string {
+	routeTableID := d.Get("route_table_id").(string)
+
+	if destination := aws.StringValue(r.DestinationCidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
+	} else if destination := aws.StringValue(r.DestinationIpv6CidrBlock); destination != "" {
+		return tfec2.RouteCreateID(routeTableID, destination)
+	}
+
+	return ""
 }
