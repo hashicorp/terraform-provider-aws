@@ -30,6 +30,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -59,6 +60,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
