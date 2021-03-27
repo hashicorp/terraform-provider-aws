@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudtrail_trail: Add plan time validations for `name`, `cloud_watch_logs_role_arn`, `cloud_watch_logs_group_arn`
+```
+
+```release-note:enhancement
+resource/aws_cloudtrail_trail: Add `sns_topic_arn` attribute
+```
