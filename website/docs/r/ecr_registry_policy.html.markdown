@@ -12,7 +12,7 @@ Provides an Elastic Container Registry Policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
