@@ -236,7 +236,7 @@ func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheckSkipCognito(t),
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
@@ -900,6 +900,7 @@ func TestAccAWSCognitoUserPool_withUsernameAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
@@ -1081,6 +1082,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig_emailConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
@@ -1120,6 +1122,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig_smsConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
