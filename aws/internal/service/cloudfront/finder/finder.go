@@ -73,3 +73,22 @@ func FieldLevelEncryptionProfileByID(conn *cloudfront.CloudFront, id string) (*c
 
 	return output, nil
 }
+
+// FieldLevelEncryptionConfigByID returns the field level encryption config corresponding to the specified ID.
+// Returns nil if no configuration is found.
+func FieldLevelEncryptionConfigByID(conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionConfig(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	return output, nil
+}

@@ -18,7 +18,8 @@ func TestAccAWSCloudfrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
@@ -74,7 +75,8 @@ func TestAccAWSCloudfrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFieldLevelEncryptionConfigDestroy,
 		Steps: []resource.TestStep{
@@ -98,11 +100,7 @@ func testAccCheckCloudfrontFieldLevelEncryptionConfigDestroy(s *terraform.State)
 			continue
 		}
 
-		params := &cloudfront.GetFieldLevelEncryptionConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetFieldLevelEncryptionConfig(params)
+		_, err := finder.FieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("cloudfront Field Level Encryption Config was not deleted")
 		}
@@ -123,13 +121,9 @@ func testAccCheckCloudfrontFieldLevelEncryptionConfigExists(r string, profile *c
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
 
-		params := &cloudfront.GetFieldLevelEncryptionConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.GetFieldLevelEncryptionConfig(params)
+		resp, err := finder.FieldLevelEncryptionConfigByID(conn, rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("Error retrieving Cloudfront Field Level Encryption Config: %s", err)
+			return fmt.Errorf("Error retrieving Cloudfront Field Level Encryption Config: %w", err)
 		}
 
 		*profile = *resp
