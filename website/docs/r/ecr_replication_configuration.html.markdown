@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Container Registry Replication Configuration.
 ---
 
-# Resource: aws_ecr_replication configuration
+# Resource: aws_ecr_replication_configuration
 
 Provides an Elastic Container Registry Replication Configuration.
 
