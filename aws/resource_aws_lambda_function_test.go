@@ -1367,6 +1367,7 @@ func TestAccAWSLambdaFunction_VPC_publish_Has_Changes(t *testing.T) {
 		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaConfigWithVPCPublish(funcName, policyName, roleName, sgName),
@@ -2975,8 +2976,8 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
   publish       = true
   vpc_config {
-    subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
-    security_group_ids = [aws_security_group.sg_for_lambda.id]
+    security_group_ids = []
+    subnet_ids         = []
   }
 }
 `, funcName)
