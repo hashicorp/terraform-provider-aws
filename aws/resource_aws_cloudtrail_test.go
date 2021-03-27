@@ -222,9 +222,6 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					// AWS will create the trail with logging turned off.
-					// Test that "enable_logging" default works.
-					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -238,7 +235,6 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Config: testAccAWSCloudTrailConfigModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					testAccCheckCloudTrailLoggingEnabled(resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -247,7 +243,6 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enable_log_file_validation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -594,6 +589,7 @@ func testAccAWSCloudTrail_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
@@ -628,30 +624,6 @@ func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.Te
 			return fmt.Errorf("Trail not found")
 		}
 		*trail = *resp.TrailList[0]
-
-		return nil
-	}
-}
-
-func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
-		params := cloudtrail.GetTrailStatusInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetTrailStatus(&params)
-
-		if err != nil {
-			return err
-		}
-		if aws.BoolValue(resp.IsLogging) != desired {
-			return fmt.Errorf("Expected logging status %t, given %t", desired, aws.BoolValue(resp.IsLogging))
-		}
 
 		return nil
 	}
