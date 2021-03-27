@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -12,8 +13,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_basic(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesBasicConfig,
@@ -32,8 +34,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *tes
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesTagKeyFilterConfig(rName),
@@ -52,8 +55,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_compliance(t *testing
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesComplianceConfig,
@@ -73,8 +77,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeFiltersConfig(rName),
@@ -95,8 +100,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_arn_list(t *
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceARNListConfig(rName),
