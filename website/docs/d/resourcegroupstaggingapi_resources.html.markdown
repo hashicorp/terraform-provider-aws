@@ -14,13 +14,13 @@ Provides details about resource tagging.
 
 ### Get All Resource Tag Mappings
 
-```hcl
+```terraform
 data "aws_resourcegroupstaggingapi_resources" "test" {}
 ```
 
 ### Filter By Tag Key and Value
 
-```hcl
+```terraform
 data "aws_resourcegroupstaggingapi_resources" "test" {
   filter {
     key    = "tag-key"
@@ -31,7 +31,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 
 ### Filter By Resource Type
 
-```hcl
+```terraform
 data "aws_resourcegroupstaggingapi_resources" "test" {
   resource_type_filter = ["ec2:instance"]
 }
