@@ -6,14 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-<<<<<<< HEAD
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
-=======
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 )
 
 func resourceAwsCloudfrontFieldLevelEncryptionProfile() *schema.Resource {
@@ -34,10 +29,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfile() *schema.Resource {
 			"encryption_entities": {
 				Type:     schema.TypeList,
 				Required: true,
-<<<<<<< HEAD
 				MaxItems: 1,
-=======
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"public_key_id": {
@@ -91,11 +83,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileCreate(d *schema.ResourceDa
 
 	resp, err := conn.CreateFieldLevelEncryptionProfile(input)
 	if err != nil {
-<<<<<<< HEAD
 		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
-=======
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %s", d.Id(), err)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	}
 
 	d.SetId(aws.StringValue(resp.FieldLevelEncryptionProfile.Id))
@@ -106,15 +94,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileCreate(d *schema.ResourceDa
 func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-<<<<<<< HEAD
 	resp, err := finder.FieldLevelEncryptionProfileByID(conn, d.Id())
-=======
-	input := &cloudfront.GetFieldLevelEncryptionProfileInput{
-		Id: aws.String(d.Id()),
-	}
-
-	resp, err := conn.GetFieldLevelEncryptionProfile(input)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	if isAWSErr(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile, "") {
 		log.Printf("[WARN] Cloudfront Field Level Encryption Profile %s not found, removing from state", d.Id())
 		d.SetId("")
@@ -122,11 +102,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData
 	}
 
 	if err != nil {
-<<<<<<< HEAD
 		return fmt.Errorf("error reading Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
-=======
-		return fmt.Errorf("error reading Cloudfront Field Level Encryption Profile (%s): %s", d.Id(), err)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	}
 	profile := resp.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
 	d.Set("etag", resp.ETag)
@@ -135,11 +111,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d *schema.ResourceData
 	d.Set("caller_reference", profile.CallerReference)
 
 	if err := d.Set("encryption_entities", flattenAwsCloudfrontFieldLevelEncryptionProfileEncryptionEntitiesConfig(profile.EncryptionEntities)); err != nil {
-<<<<<<< HEAD
 		return fmt.Errorf("error setting encryption_entities %w", err)
-=======
-		return fmt.Errorf("error setting encryption_entities %s", err)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	}
 
 	return nil
@@ -166,11 +138,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileUpdate(d *schema.ResourceDa
 
 	_, err := conn.UpdateFieldLevelEncryptionProfile(input)
 	if err != nil {
-<<<<<<< HEAD
 		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
-=======
-		return fmt.Errorf("error creating Cloudfront Field Level Encryption Profile (%s): %s", d.Id(), err)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	}
 
 	return resourceAwsCloudfrontFieldLevelEncryptionProfileRead(d, meta)
@@ -186,11 +154,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionProfileDelete(d *schema.ResourceDa
 
 	_, err := conn.DeleteFieldLevelEncryptionProfile(input)
 	if err != nil {
-<<<<<<< HEAD
 		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Profile (%s): %w", d.Id(), err)
-=======
-		return fmt.Errorf("error deleting Cloudfront Field Level Encryption Profile (%s): %s", d.Id(), err)
->>>>>>> 7e2a4846f (add support for cloudfront field level encryption profile)
 	}
 
 	return nil
