@@ -131,11 +131,7 @@ func resourceAwsCloudfrontFieldLevelEncryptionConfigCreate(d *schema.ResourceDat
 func resourceAwsCloudfrontFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
-		Id: aws.String(d.Id()),
-	}
-
-	resp, err := conn.GetFieldLevelEncryptionConfig(input)
+	resp, err := finder.FieldLevelEncryptionConfigByID(conn, d.Id())
 	if isAWSErr(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig, "") {
 		log.Printf("[WARN] Cloudfront Field Level Encryption Config %s not found, removing from state", d.Id())
 		d.SetId("")
