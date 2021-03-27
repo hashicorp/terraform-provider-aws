@@ -1217,6 +1217,10 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 				return resource.RetryableError(err)
 			}
 
+			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
+				return resource.RetryableError(err)
+			}
+
 			return resource.NonRetryableError(err)
 		}
 
