@@ -27,12 +27,12 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 			// Verify non-existent Route Table ID behavior
 			{
 				Config:      testAccDefaultRouteTableConfigDefaultRouteTableId("rtb-00000000"),
-				ExpectError: regexp.MustCompile(`EC2 Default Route Table \(rtb-00000000\): not found`),
+				ExpectError: regexp.MustCompile(`EC2 Default Route Table \(rtb-00000000\): couldn't find resource`),
 			},
 			// Verify invalid Route Table ID behavior
 			{
 				Config:      testAccDefaultRouteTableConfigDefaultRouteTableId("vpc-00000000"),
-				ExpectError: regexp.MustCompile(`EC2 Default Route Table \(vpc-00000000\): not found`),
+				ExpectError: regexp.MustCompile(`EC2 Default Route Table \(vpc-00000000\): couldn't find resource`),
 			},
 			{
 				Config: testAccDefaultRouteTableConfigBasic(rName),
@@ -105,7 +105,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -127,7 +127,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 					// The route block from the previous step should still be
 					// present, because no blocks means "ignore existing blocks".
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -176,7 +176,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -199,7 +199,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,7 +209,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", rtResourceName, "id"),
 				),
 				// Follow up plan will now show a diff as the destination CIDR on the aws_route_table
@@ -239,7 +239,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, "id"),
 				),
 			},
 			{
@@ -271,7 +271,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_VpcEndpoint(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, "id"),
 				),
 			},
 			{
@@ -313,7 +313,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -384,14 +384,14 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					testAccCheckDefaultRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -423,7 +423,7 @@ func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckDefaultRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -440,6 +440,67 @@ func TestAccAWSDefaultRouteTable_PrefixList_To_InternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDefaultRouteTable_RevokeExistingRules(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_default_route_table.test"
+	rtResourceName := "aws_route_table.test"
+	eoigwResourceName := "aws_egress_only_internet_gateway.test"
+	igwResourceName := "aws_internet_gateway.test"
+	vgwResourceName := "aws_vpn_gateway.test"
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(rtResourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "route.#", "1"),
+					testAccCheckAWSRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTableToMain(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(rtResourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "route.#", "1"),
+					testAccCheckAWSRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccDefaultRouteTableConfigRevokeExistingRulesDefaultRouteTableOverlaysCustomRouteTable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", "0.0.0.0/0", "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+				// The plan on refresh will not be empty as the custom route table resource's routes and propagating VGWs have
+				// been modified since the default route table's routes and propagating VGWs now overlay the custom route table.
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -472,54 +533,6 @@ func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckDefaultRouteTableRoute(resourceName, destinationAttr, destination, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[targetResourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", targetResourceName)
-		}
-
-		target := rs.Primary.Attributes[targetResourceAttr]
-		if target == "" {
-			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
-		}
-
-		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-			destinationAttr: destination,
-			targetAttr:      target,
-		})(s)
-	}
-}
-
-func testAccCheckDefaultRouteTablePrefixListRoute(resourceName, prefixListResourceName, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rsPrefixList, ok := s.RootModule().Resources[prefixListResourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", prefixListResourceName)
-		}
-
-		destination := rsPrefixList.Primary.Attributes["id"]
-		if destination == "" {
-			return fmt.Errorf("Not found: %s.id", prefixListResourceName)
-		}
-
-		rsTarget, ok := s.RootModule().Resources[targetResourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", targetResourceName)
-		}
-
-		target := rsTarget.Primary.Attributes[targetResourceAttr]
-		if target == "" {
-			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
-		}
-
-		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-			"destination_prefix_list_id": destination,
-			targetAttr:                   target,
-		})(s)
-	}
 }
 
 func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -1112,4 +1125,90 @@ resource "aws_default_route_table" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway_attachment" "test" {
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = aws_vpn_gateway.test.id
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  propagating_vgws = [aws_vpn_gateway_attachment.test.vpn_gateway_id]
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTableToMain(rName string) string {
+	return composeConfig(
+		testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTable(rName),
+		`
+resource "aws_main_route_table_association" "test" {
+  vpc_id         = aws_vpc.test.id
+  route_table_id = aws_route_table.test.id
+}
+`)
+}
+
+func testAccDefaultRouteTableConfigRevokeExistingRulesDefaultRouteTableOverlaysCustomRouteTable(rName string) string {
+	return composeConfig(
+		testAccDefaultRouteTableConfigRevokeExistingRulesCustomRouteTableToMain(rName),
+		fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_route_table.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
