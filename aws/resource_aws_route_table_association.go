@@ -104,7 +104,7 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 	rt, err := waiter.RouteTableReady(conn, rtID)
 
 	if err != nil {
-		return fmt.Errorf("error getting route table (%s) status: %w", rtID, err)
+		return fmt.Errorf("error getting route table (%s) status while reading route table association: %w", rtID, err)
 	}
 
 	// Inspect that the association exists

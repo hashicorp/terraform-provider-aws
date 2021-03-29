@@ -509,7 +509,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 	rt, err := waiter.RouteTableReady(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error getting route table (%s) status: %w", d.Id(), err)
+		return fmt.Errorf("error getting route table (%s) prior to disassociating associations: %w", d.Id(), err)
 	}
 
 	// Do all the disassociations

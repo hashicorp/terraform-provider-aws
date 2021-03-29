@@ -285,7 +285,7 @@ func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 
 func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"ready"},
+		Pending: []string{RouteTableStatusReady},
 		Target:  []string{},
 		Refresh: RouteTableStatus(conn, id),
 		Timeout: RouteTableDeletedTimeout,
