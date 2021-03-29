@@ -157,24 +157,3 @@ func detachPolicyFromUser(conn *iam.IAM, user string, arn string) error {
 	})
 	return err
 }
-
-// See also: iamRoleHasPolicyARNAttachment
-func iamUserHasPolicyARNAttachment(conn *iam.IAM, user string, policyARN string) (bool, error) {
-	hasPolicyAttachment := false
-	input := &iam.ListAttachedUserPoliciesInput{
-		UserName: aws.String(user),
-	}
-
-	err := conn.ListAttachedUserPoliciesPages(input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
-		for _, p := range page.AttachedPolicies {
-			if aws.StringValue(p.PolicyArn) == policyARN {
-				hasPolicyAttachment = true
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return hasPolicyAttachment, err
-}
