@@ -52,8 +52,10 @@ func RuleParseID(id string) (string, string, error) {
 	}
 	if len(parts) > 2 {
 		i := strings.LastIndex(id, ruleIDSeparator)
-		if partnerEventBusPattern.MatchString(id[:i]) {
-			return id[:i], id[i+1:], nil
+		busName := id[:i]
+		statementID := id[i+1:]
+		if partnerEventBusPattern.MatchString(busName) && statementID != "" {
+			return busName, statementID, nil
 		}
 	}
 

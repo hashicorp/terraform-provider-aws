@@ -53,6 +53,11 @@ func TestRuleParseID(t *testing.T) {
 			ExpectedError: true,
 		},
 		{
+			TestName:      "empty partner event rule",
+			InputID:       "aws.partner/example.com/Test/",
+			ExpectedError: true,
+		},
+		{
 			TestName:      "three parts",
 			InputID:       "TestEventBus/TestRule/Suffix",
 			ExpectedError: true,
