@@ -2,7 +2,12 @@ package cloudwatchevents
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+)
+
+var (
+	partnerEventBusPattern = regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
 )
 
 const DefaultEventBusName = "default"
@@ -44,6 +49,12 @@ func RuleParseID(id string) (string, string, error) {
 	}
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
+	}
+	if len(parts) > 2 {
+		i := strings.LastIndex(id, ruleIDSeparator)
+		if partnerEventBusPattern.MatchString(id[:i]) {
+			return id[:i], id[i+1:], nil
+		}
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%q), expected <event-bus-name>"+ruleIDSeparator+"<rule-name> or <rule-name>", id)
