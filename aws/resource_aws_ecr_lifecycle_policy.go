@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ecr/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsEcrLifecyclePolicy() *schema.Resource {
@@ -89,6 +90,10 @@ func resourceAwsEcrLifecyclePolicyRead(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		resp, err = conn.GetLifecyclePolicy(input)
+	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
