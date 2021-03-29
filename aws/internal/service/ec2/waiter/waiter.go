@@ -375,6 +375,48 @@ func TransitGatewayPrefixListReferenceStateUpdated(conn *ec2.EC2, transitGateway
 }
 
 const (
+	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
+)
+
+func TransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPropagationStateEnabling},
+		Target:  []string{ec2.TransitGatewayPropagationStateEnabled},
+		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Refresh: TransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func TransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayPropagationStateDisabling},
+		Target:  []string{},
+		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Refresh: TransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, nil
+	}
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	VpcPropagationTimeout          = 2 * time.Minute
 	VpcAttributePropagationTimeout = 5 * time.Minute
 )

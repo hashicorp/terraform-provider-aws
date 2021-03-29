@@ -331,6 +331,22 @@ func TransitGatewayPrefixListReferenceState(conn *ec2.EC2, transitGatewayRouteTa
 	}
 }
 
+func TransitGatewayRouteTablePropagationState(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		transitGatewayRouteTablePropagation, err := finder.TransitGatewayRouteTablePropagation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if transitGatewayRouteTablePropagation == nil {
+			return nil, "", nil
+		}
+
+		return transitGatewayRouteTablePropagation, aws.StringValue(transitGatewayRouteTablePropagation.State), nil
+	}
+}
+
 // VpcAttribute fetches the Vpc and its attribute value
 func VpcAttribute(conn *ec2.EC2, id string, attribute string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {

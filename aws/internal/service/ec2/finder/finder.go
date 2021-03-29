@@ -351,6 +351,41 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 	return TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
 }
 
+func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("transit-gateway-attachment-id"),
+				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
+			},
+		},
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	var result *ec2.TransitGatewayRouteTablePropagation
+
+	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
+			if transitGatewayRouteTablePropagation == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
+				result = transitGatewayRouteTablePropagation
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return result, err
+}
+
 // VpcAttribute looks up a VPC attribute.
 func VpcAttribute(conn *ec2.EC2, vpcID string, attribute string) (*bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
