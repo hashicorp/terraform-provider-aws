@@ -82,6 +82,10 @@ func resourceAwsRouteTable() *schema.Resource {
 								validateIpv4CIDRNetworkAddress,
 							),
 						},
+						"destination_prefix_list_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"ipv6_cidr_block": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -89,10 +93,6 @@ func resourceAwsRouteTable() *schema.Resource {
 								validation.StringIsEmpty,
 								validateIpv6CIDRNetworkAddress,
 							),
-						},
-						"destination_prefix_list_id": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 
 						//
