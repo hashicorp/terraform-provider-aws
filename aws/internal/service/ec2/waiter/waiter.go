@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -293,10 +292,6 @@ func RouteTableDeleted(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	}
 
 	outputRaw, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil, nil
-	}
 
 	if output, ok := outputRaw.(*ec2.RouteTable); ok {
 		return output, err
