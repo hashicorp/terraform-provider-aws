@@ -18,6 +18,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
+)
+
+const (
 	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
 )
 
