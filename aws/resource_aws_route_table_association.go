@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
@@ -99,15 +100,12 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).ec2conn
 
 	// Get the routing table that this association belongs to
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(
-		conn, d.Get("route_table_id").(string))()
+	rtID := d.Get("route_table_id").(string)
+	rt, err := waiter.RouteTableReady(conn, rtID)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting route table (%s) status: %w", rtID, err)
 	}
-	if rtRaw == nil {
-		return nil
-	}
-	rt := rtRaw.(*ec2.RouteTable)
 
 	// Inspect that the association exists
 	found := false
