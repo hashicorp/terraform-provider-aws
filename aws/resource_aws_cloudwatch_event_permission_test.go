@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -314,6 +315,40 @@ func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventPermission_PartnerEventBus(t *testing.T) {
+	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
+	busName := os.Getenv(key)
+	if busName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudwatch_event_permission.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudWatchEventPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsCloudWatchEventPermissionPartnerEventBusConfig(rName, busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventPermissionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "principal", "111111111111"),
+					resource.TestCheckResourceAttr(resourceName, "statement_id", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
@@ -472,4 +507,14 @@ resource "aws_cloudwatch_event_permission" "test2" {
   statement_id = "%[4]s"
 }
 `, principal1, statementID1, principal2, statementID2)
+}
+
+func testAccCheckAwsCloudWatchEventPermissionPartnerEventBusConfig(rName, eventBusName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_permission" "test" {
+  principal      = "111111111111"
+  statement_id   = %[1]q
+  event_bus_name = %[2]q
+}
+`, rName, eventBusName)
 }
