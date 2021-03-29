@@ -267,8 +267,8 @@ const (
 
 func RouteTableReady(conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"pending"},
-		Target:         []string{"ready"},
+		Pending:        []string{},
+		Target:         []string{RouteTableStatusReady},
 		Refresh:        RouteTableStatus(conn, id),
 		Timeout:        RouteTableReadyTimeout,
 		NotFoundChecks: RouteTableNotFoundChecks,

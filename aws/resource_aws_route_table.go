@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,7 +18,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var routeTableValidDestinations = []string{
@@ -188,7 +188,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	routeTable, err := finder.RouteTableByID(conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waiter.ErrCodeInvalidRouteTableIDNotFound) {
 		log.Printf("[WARN] Route table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
