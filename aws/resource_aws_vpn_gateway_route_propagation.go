@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
@@ -74,17 +75,18 @@ func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta inte
 	rtID := d.Get("route_table_id").(string)
 
 	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, rtID)()
+	rt, err := waiter.RouteTableReady(conn, d.Id())
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting route table (%s) status: %w", d.Id(), err)
 	}
-	if rtRaw == nil {
+
+	if rt == nil {
 		log.Printf("[INFO] Route table %q doesn't exist, so dropping %q route propagation from state", rtID, gwID)
 		d.SetId("")
 		return nil
 	}
 
-	rt := rtRaw.(*ec2.RouteTable)
 	exists := false
 	for _, vgw := range rt.PropagatingVgws {
 		if aws.StringValue(vgw.GatewayId) == gwID {
