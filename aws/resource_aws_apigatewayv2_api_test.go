@@ -556,6 +556,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckAWSAPIGatewayV2ApiExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeHttp),
+					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", "false"),
 					testAccCheckAWSAPIGatewayV2ApiRoutes(&v, []string{"GET /update"}),
 				),
 			},
@@ -563,7 +564,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "fail_on_warnings"},
 			},
 			// fail_on_warnings should be optional and false by default
 			{
@@ -579,7 +580,7 @@ func TestAccAWSAPIGatewayV2Api_Openapi_FailOnWarnings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "fail_on_warnings"},
 			},
 		},
 	})
