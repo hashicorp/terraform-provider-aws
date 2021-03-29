@@ -288,6 +288,37 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	return result.SecurityGroups[0], nil
 }
 
+// SpotInstanceRequestByID looks up a SpotInstanceRequest by ID. When not found, returns nil and potentially an API error.
+func SpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceRequest, error) {
+	input := &ec2.DescribeSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeSpotInstanceRequests(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, spotInstanceRequest := range output.SpotInstanceRequests {
+		if spotInstanceRequest == nil {
+			continue
+		}
+
+		if aws.StringValue(spotInstanceRequest.SpotInstanceRequestId) != id {
+			continue
+		}
+
+		return spotInstanceRequest, nil
+	}
+
+	return nil, nil
+}
+
 // SubnetByID looks up a Subnet by ID. When not found, returns nil and potentially an API error.
 func SubnetByID(conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	input := &ec2.DescribeSubnetsInput{
