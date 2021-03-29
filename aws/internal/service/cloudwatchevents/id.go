@@ -29,6 +29,14 @@ func PermissionParseID(id string) (string, string, error) {
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
 	}
+	if len(parts) > 2 {
+		i := strings.LastIndex(id, ruleIDSeparator)
+		busName := id[:i]
+		statementID := id[i+1:]
+		if partnerEventBusPattern.MatchString(busName) && statementID != "" {
+			return busName, statementID, nil
+		}
+	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%q), expected <event-bus-name>"+PermissionIDSeparator+"<statement-id> or <statement-id>", id)
 }
@@ -52,8 +60,10 @@ func RuleParseID(id string) (string, string, error) {
 	}
 	if len(parts) > 2 {
 		i := strings.LastIndex(id, ruleIDSeparator)
-		if partnerEventBusPattern.MatchString(id[:i]) {
-			return id[:i], id[i+1:], nil
+		busName := id[:i]
+		statementID := id[i+1:]
+		if partnerEventBusPattern.MatchString(busName) && statementID != "" {
+			return busName, statementID, nil
 		}
 	}
 
