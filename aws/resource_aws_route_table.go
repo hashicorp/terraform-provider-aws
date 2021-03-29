@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 var routeTableValidDestinations = []string{
@@ -203,35 +205,29 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 			d.Id(), err)
 	}
 
-	if err := resourceAwsRouteTableUpdate(d, meta); err != nil {
-		return fmt.Errorf("Error updating route table after creating it: %s", err)
-	}
-
-	if d.Id() == "" {
-		return fmt.Errorf("Route table not found after creating it: %s", err)
-	}
-
-	return nil
+	return resourceAwsRouteTableUpdate(d, meta)
 }
 
 func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
-	}
-	if rtRaw == nil {
+	routeTable, err := finder.RouteTableByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	rt := rtRaw.(*ec2.RouteTable)
-	d.Set("vpc_id", rt.VpcId)
+	if err != nil {
+		return fmt.Errorf("error reading route table (%s): %w", d.Id(), err)
+	}
 
-	propagatingVGWs := make([]string, 0, len(rt.PropagatingVgws))
-	for _, vgw := range rt.PropagatingVgws {
+	d.Set("vpc_id", routeTable.VpcId)
+
+	propagatingVGWs := make([]string, 0, len(routeTable.PropagatingVgws))
+	for _, vgw := range routeTable.PropagatingVgws {
 		propagatingVGWs = append(propagatingVGWs, aws.StringValue(vgw.GatewayId))
 	}
 	d.Set("propagating_vgws", propagatingVGWs)
@@ -240,7 +236,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	route := &schema.Set{F: resourceAwsRouteTableHash}
 
 	// Loop through the routes and add them to the set
-	for _, r := range rt.Routes {
+	for _, r := range routeTable.Routes {
 		if aws.StringValue(r.GatewayId) == "local" {
 			continue
 		}
@@ -303,11 +299,11 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route", route)
 
 	// Tags
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	ownerID := aws.StringValue(rt.OwnerId)
+	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   ec2.ServiceName,
