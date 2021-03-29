@@ -19,6 +19,7 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:    testAccErrorCheck(t, transfer.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -51,6 +52,7 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:    testAccErrorCheck(t, transfer.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -110,6 +112,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -129,6 +132,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -169,6 +173,7 @@ func TestAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:    testAccErrorCheck(t, transfer.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,

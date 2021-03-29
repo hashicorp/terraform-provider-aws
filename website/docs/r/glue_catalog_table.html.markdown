@@ -14,7 +14,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 
 ### Basic Table
 
-```hcl
+```terraform
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
@@ -23,7 +23,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 
 ### Parquet Table for Athena
 
-```hcl
+```terraform
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"

@@ -25,7 +25,7 @@ The Terraform state associated with existing resources will automatically be mig
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
   mesh_name = aws_appmesh_mesh.simple.id
@@ -55,7 +55,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ### AWS Cloud Map Service Discovery
 
-```hcl
+```terraform
 resource "aws_service_discovery_http_namespace" "example" {
   name = "example-ns"
 }
@@ -94,7 +94,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ### Listener Health Check
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
   mesh_name = aws_appmesh_mesh.simple.id
@@ -133,7 +133,7 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ### Logging
 
-```hcl
+```terraform
 resource "aws_appmesh_virtual_node" "serviceb1" {
   name      = "serviceBv1"
   mesh_name = aws_appmesh_mesh.simple.id

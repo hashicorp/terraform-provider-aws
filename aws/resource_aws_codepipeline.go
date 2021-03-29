@@ -348,7 +348,7 @@ func expandAwsCodePipelineActions(a []interface{}) []*codepipeline.ActionDeclara
 	for _, config := range a {
 		data := config.(map[string]interface{})
 
-		conf := expandAwsCodePipelineStageActionConfiguration(data["configuration"].(map[string]interface{}))
+		conf := stringMapToPointers(data["configuration"].(map[string]interface{}))
 
 		action := codepipeline.ActionDeclaration{
 			ActionTypeId: &codepipeline.ActionTypeId{
@@ -406,7 +406,7 @@ func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDe
 			"name":     aws.StringValue(action.Name),
 		}
 		if action.Configuration != nil {
-			config := flattenAwsCodePipelineStageActionConfiguration(action.Configuration)
+			config := aws.StringValueMap(action.Configuration)
 
 			actionProvider := aws.StringValue(action.ActionTypeId.Provider)
 			if actionProvider == CodePipelineProviderGitHub {
@@ -449,23 +449,6 @@ func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDe
 	return actionsList
 }
 
-func expandAwsCodePipelineStageActionConfiguration(config map[string]interface{}) map[string]*string {
-	m := map[string]*string{}
-	for k, v := range config {
-		s := v.(string)
-		m[k] = &s
-	}
-	return m
-}
-
-func flattenAwsCodePipelineStageActionConfiguration(config map[string]*string) map[string]string {
-	m := map[string]string{}
-	for k, v := range config {
-		m[k] = *v
-	}
-	return m
-}
-
 func expandAwsCodePipelineActionsOutputArtifacts(s []interface{}) []*codepipeline.OutputArtifact {
 	outputArtifacts := []*codepipeline.OutputArtifact{}
 	for _, artifact := range s {
@@ -482,7 +465,7 @@ func expandAwsCodePipelineActionsOutputArtifacts(s []interface{}) []*codepipelin
 func flattenAwsCodePipelineActionsOutputArtifacts(artifacts []*codepipeline.OutputArtifact) []string {
 	values := []string{}
 	for _, artifact := range artifacts {
-		values = append(values, *artifact.Name)
+		values = append(values, aws.StringValue(artifact.Name))
 	}
 	return values
 }
@@ -503,7 +486,7 @@ func expandAwsCodePipelineActionsInputArtifacts(s []interface{}) []*codepipeline
 func flattenAwsCodePipelineActionsInputArtifacts(artifacts []*codepipeline.InputArtifact) []string {
 	values := []string{}
 	for _, artifact := range artifacts {
-		values = append(values, *artifact.Name)
+		values = append(values, aws.StringValue(artifact.Name))
 	}
 	return values
 }

@@ -173,7 +173,7 @@ func dataSourceAwsCloudFrontCachePolicyFindByName(d *schema.ResourceData, conn *
 	}
 
 	for _, policySummary := range resp.CachePolicyList.Items {
-		if *policySummary.CachePolicy.CachePolicyConfig.Name == d.Get("name").(string) {
+		if aws.StringValue(policySummary.CachePolicy.CachePolicyConfig.Name) == d.Get("name").(string) {
 			cachePolicy = policySummary.CachePolicy
 			break
 		}

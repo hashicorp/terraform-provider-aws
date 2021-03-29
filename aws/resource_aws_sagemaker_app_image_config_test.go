@@ -46,14 +46,12 @@ func testSweepSagemakerAppImageConfigs(region string) error {
 		}
 
 		for _, config := range output.AppImageConfigs {
+
 			name := aws.StringValue(config.AppImageConfigName)
-			input := &sagemaker.DeleteAppImageConfigInput{
-				AppImageConfigName: aws.String(name),
-			}
-
-			log.Printf("[INFO] Deleting SageMaker App Image Config: %s", name)
-			_, err := conn.DeleteAppImageConfig(input)
-
+			r := resourceAwsSagemakerAppImageConfig()
+			d := r.Data(nil)
+			d.SetId(name)
+			err = r.Delete(d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -79,6 +77,7 @@ func TestAccAWSSagemakerAppImageConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -108,6 +107,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_kernalSpecs(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +150,7 @@ func TestAccAWSSagemakerAppImageConfig_kernelGatewayImageConfig_fileSystemConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{
@@ -195,6 +196,7 @@ func TestAccAWSSagemakerAppImageConfig_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppImageConfigDestroy,
 		Steps: []resource.TestStep{

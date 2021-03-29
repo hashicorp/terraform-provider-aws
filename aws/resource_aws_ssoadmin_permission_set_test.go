@@ -104,6 +104,7 @@ func TestAccAWSSSOAdminPermissionSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +131,7 @@ func TestAccAWSSSOAdminPermissionSet_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -183,6 +185,7 @@ func TestAccAWSSSOAdminPermissionSet_updateDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -215,6 +218,7 @@ func TestAccAWSSSOAdminPermissionSet_updateRelayState(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -247,6 +251,7 @@ func TestAccAWSSSOAdminPermissionSet_updateSessionDuration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -281,6 +286,7 @@ func TestAccAWSSSOAdminPermissionSet_relayState_updateSessionDuration(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{
@@ -319,6 +325,7 @@ func TestAccAWSSSOAdminPermissionSet_mixedPolicyAttachments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSOAdminPermissionSetDestroy,
 		Steps: []resource.TestStep{

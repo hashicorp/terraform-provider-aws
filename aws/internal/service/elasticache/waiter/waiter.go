@@ -199,3 +199,31 @@ func GlobalReplicationGroupDeleted(conn *elasticache.ElastiCache, globalReplicat
 	}
 	return nil, err
 }
+
+const (
+	GlobalReplicationGroupDisassociationRetryTimeout = 45 * time.Minute
+
+	globalReplicationGroupDisassociationTimeout = 20 * time.Minute
+
+	globalReplicationGroupDisassociationMinTimeout = 10 * time.Second
+	globalReplicationGroupDisassociationDelay      = 30 * time.Second
+)
+
+func GlobalReplicationGroupMemberDetached(conn *elasticache.ElastiCache, globalReplicationGroupID, id string) (*elasticache.GlobalReplicationGroupMember, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			GlobalReplicationGroupMemberStatusAssociated,
+		},
+		Target:     []string{},
+		Refresh:    GlobalReplicationGroupMemberStatus(conn, globalReplicationGroupID, id),
+		Timeout:    globalReplicationGroupDisassociationTimeout,
+		MinTimeout: globalReplicationGroupDisassociationMinTimeout,
+		Delay:      globalReplicationGroupDisassociationDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+	if v, ok := outputRaw.(*elasticache.GlobalReplicationGroupMember); ok {
+		return v, err
+	}
+	return nil, err
+}

@@ -71,6 +71,11 @@ func ClientVpnRouteParseID(id string) (string, string, string, error) {
 			"target-subnet-id"+clientVpnRouteIDSeparator+"destination-cidr-block", id)
 }
 
+// RouteCreateID returns a route resource ID.
+func RouteCreateID(routeTableID, destination string) string {
+	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
+}
+
 const transitGatewayPrefixListReferenceSeparator = "_"
 
 func TransitGatewayPrefixListReferenceCreateID(transitGatewayRouteTableID string, prefixListID string) string {

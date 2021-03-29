@@ -32,31 +32,29 @@ func resourceAwsSsmParameter() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ssm.ParameterTierStandard,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTierStandard,
-					ssm.ParameterTierAdvanced,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.ParameterTierStandard,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("tier").(string) == ssm.ParameterTierIntelligentTiering
+				},
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ssm.ParameterTypeString,
-					ssm.ParameterTypeStringList,
-					ssm.ParameterTypeSecureString,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
 			},
 			"value": {
 				Type:      schema.TypeString,
@@ -87,8 +85,9 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 			},
 			"allowed_pattern": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"version": {
 				Type:     schema.TypeInt,
@@ -100,8 +99,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
+			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
+			// but rather no change occurs without resource re-creation
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
-				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
+				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
 			}),
 		),
 	}
@@ -166,7 +167,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	describeResp, err := ssmconn.DescribeParameters(describeParamsInput)
 	if err != nil {
-		return fmt.Errorf("error describing SSM parameter: %s", err)
+		return fmt.Errorf("error describing SSM parameter: %w", err)
 	}
 
 	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
@@ -188,11 +189,11 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Parameter (%s): %s", name, err)
+		return fmt.Errorf("error listing tags for SSM Parameter (%s): %w", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	d.Set("arn", param.ARN)
@@ -218,10 +219,11 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
-	log.Printf("[INFO] Creating SSM Parameter: %s", d.Get("name").(string))
+	name := d.Get("name").(string)
+	log.Printf("[INFO] Creating SSM Parameter: %s", name)
 
 	paramInput := &ssm.PutParameterInput{
-		Name:           aws.String(d.Get("name").(string)),
+		Name:           aws.String(name),
 		Type:           aws.String(d.Get("type").(string)),
 		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
@@ -242,6 +244,10 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		paramInput.SetKeyId(keyID.(string))
 	}
 
+	if v, ok := d.GetOk("tags"); ok && d.IsNewResource() {
+		paramInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	}
+
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
 	_, err := ssmconn.PutParameter(paramInput)
 
@@ -251,19 +257,18 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM parameter: %s", err)
+		return fmt.Errorf("error creating SSM parameter: %w", err)
 	}
 
-	name := d.Get("name").(string)
-	if d.HasChange("tags") {
+	if !d.IsNewResource() && d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.SsmUpdateTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %s", name, err)
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
 		}
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
 	return resourceAwsSsmParameterRead(d, meta)
 }

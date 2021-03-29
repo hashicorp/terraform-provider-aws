@@ -187,7 +187,7 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var createResp *iam.CreateRoleOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		createResp, err = iamconn.CreateRole(request)
 		// IAM users (referenced in Principal field of assume policy)
