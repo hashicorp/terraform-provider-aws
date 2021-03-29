@@ -75,10 +75,10 @@ func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta inte
 	rtID := d.Get("route_table_id").(string)
 
 	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
-	rt, err := waiter.RouteTableReady(conn, d.Id())
+	rt, err := waiter.RouteTableReady(conn, rtID)
 
 	if err != nil {
-		return fmt.Errorf("error getting route table (%s) status: %w", d.Id(), err)
+		return fmt.Errorf("error getting route table (%s) status: %w", rtID, err)
 	}
 
 	if rt == nil {
