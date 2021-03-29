@@ -70,7 +70,6 @@ func resourceAwsRoute() *schema.Resource {
 					validateIpv4CIDRNetworkAddress,
 				),
 			},
-
 			"destination_ipv6_cidr_block": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -81,7 +80,6 @@ func resourceAwsRoute() *schema.Resource {
 				),
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},
-
 			"destination_prefix_list_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -97,53 +95,45 @@ func resourceAwsRoute() *schema.Resource {
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
 			},
-
 			"egress_only_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{"destination_cidr_block"}, // IPv6 destinations only.
 			},
-
 			"gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-
 			"instance_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-
 			"local_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-
 			"nat_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ExactlyOneOf:  routeValidTargets,
 				ConflictsWith: []string{"destination_ipv6_cidr_block"}, // IPv4 destinations only.
 			},
-
 			"network_interface_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-
 			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-
 			"vpc_endpoint_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -153,7 +143,6 @@ func resourceAwsRoute() *schema.Resource {
 					"destination_prefix_list_id",  // "Cannot create or replace a prefix list route targeting a VPC Endpoint."
 				},
 			},
-
 			"vpc_peering_connection_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -167,12 +156,10 @@ func resourceAwsRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"origin": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -292,7 +279,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tfresource.NotFound(err) {
-		return fmt.Errorf("Route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
+		return fmt.Errorf("route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
 	}
 
 	d.SetId(tfec2.RouteCreateID(routeTableID, destination))
