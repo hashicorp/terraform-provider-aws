@@ -12,6 +12,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -255,7 +256,7 @@ func RouteTableStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := finder.RouteTableByID(conn, id)
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tfnet "github.com/terraform-providers/terraform-provider-aws/aws/internal/net"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
@@ -192,12 +193,22 @@ func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error)
 func RouteTable(conn *ec2.EC2, input *ec2.DescribeRouteTablesInput) (*ec2.RouteTable, error) {
 	output, err := conn.DescribeRouteTables(input)
 
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidRouteTableIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
-		return nil, fmt.Errorf(tfec2.ErrCodeInvalidRouteTableIDNotFound)
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
 	}
 
 	return output.RouteTables[0], nil

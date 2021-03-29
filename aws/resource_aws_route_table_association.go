@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
@@ -104,7 +104,7 @@ func resourceAwsRouteTableAssociationRead(d *schema.ResourceData, meta interface
 	rtID := d.Get("route_table_id").(string)
 	rt, err := waiter.RouteTableReady(conn, rtID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waiter.ErrCodeInvalidRouteTableIDNotFound) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route table (%s) not found, removing route table association (%s) from state", rtID, d.Id())
 		d.SetId("")
 		return nil

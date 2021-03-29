@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsVpnGatewayRoutePropagation() *schema.Resource {
@@ -76,6 +77,12 @@ func resourceAwsVpnGatewayRoutePropagationRead(d *schema.ResourceData, meta inte
 
 	log.Printf("[INFO] Reading route table %s to check for VPN gateway %s", rtID, gwID)
 	rt, err := waiter.RouteTableReady(conn, rtID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route table (%s) not found, removing VPN gateway route propagation (%s) from state", rtID, d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error getting route table (%s) status while reading VPN gateway route propagation: %w", rtID, err)
