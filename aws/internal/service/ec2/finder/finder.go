@@ -254,6 +254,23 @@ func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr str
 	return nil, &resource.NotFoundError{}
 }
 
+// RouteByPrefixListIDDestination returns the route corresponding to the specified prefix list destination.
+// Returns NotFoundError if no route is found.
+func RouteByPrefixListIDDestination(conn *ec2.EC2, routeTableID, prefixListID string) (*ec2.Route, error) {
+	routeTable, err := RouteTableByID(conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if aws.StringValue(route.DestinationPrefixListId) == prefixListID {
+			return route, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
 // SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
 func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	req := &ec2.DescribeSecurityGroupsInput{
