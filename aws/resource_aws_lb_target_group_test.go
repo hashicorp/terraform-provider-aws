@@ -1340,6 +1340,7 @@ func TestAccAWSLBTargetGroup_preserveClientIPValid(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
