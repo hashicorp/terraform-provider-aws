@@ -556,6 +556,7 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_composite_alarm":                          resourceAwsCloudWatchCompositeAlarm(),
 			"aws_cloudwatch_metric_alarm":                             resourceAwsCloudWatchMetricAlarm(),
 			"aws_cloudwatch_dashboard":                                resourceAwsCloudWatchDashboard(),
+			"aws_cloudwatch_query_definition":                         resourceAwsCloudWatchQueryDefinition(),
 			"aws_codedeploy_app":                                      resourceAwsCodeDeployApp(),
 			"aws_codedeploy_deployment_config":                        resourceAwsCodeDeployDeploymentConfig(),
 			"aws_codedeploy_deployment_group":                         resourceAwsCodeDeployDeploymentGroup(),
