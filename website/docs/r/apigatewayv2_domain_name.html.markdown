@@ -18,7 +18,7 @@ a particular domain name. An API stage can be associated with the domain name us
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_domain_name" "example" {
   domain_name = "ws-api.example.com"
 
@@ -32,7 +32,7 @@ resource "aws_apigatewayv2_domain_name" "example" {
 
 ### Associated Route 53 Resource Record
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_domain_name" "example" {
   domain_name = "http-api.example.com"
 
@@ -92,6 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `aws_apigatewayv2_domain_name` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
+- `create` - (Default `10 minutes`) Used for creating the domain name
 - `update` - (Default `60 minutes`) Used for updating the domain name
 
 ## Import

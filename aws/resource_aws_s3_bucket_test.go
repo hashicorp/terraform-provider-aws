@@ -172,6 +172,7 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -205,6 +206,7 @@ func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -231,6 +233,7 @@ func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -290,8 +293,9 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 	var stackID string
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, s3.EndpointsID),
+		Providers:  testAccProviders,
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckAWSS3BucketDestroy,
 			func(s *terraform.State) error {
@@ -373,6 +377,7 @@ func TestAccAWSS3Bucket_ignoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -417,6 +422,7 @@ func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -438,6 +444,7 @@ func TestAccAWSS3Bucket_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -463,6 +470,7 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -491,6 +499,7 @@ func TestAccAWSS3Bucket_acceleration(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -524,6 +533,7 @@ func TestAccAWSS3Bucket_RequestPayer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -560,6 +570,7 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -610,6 +621,7 @@ func TestAccAWSS3Bucket_UpdateAcl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -643,6 +655,7 @@ func TestAccAWSS3Bucket_UpdateGrant(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -700,6 +713,7 @@ func TestAccAWSS3Bucket_AclToGrant(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -729,6 +743,7 @@ func TestAccAWSS3Bucket_GrantToAcl(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -759,6 +774,7 @@ func TestAccAWSS3Bucket_Website_Simple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -803,6 +819,7 @@ func TestAccAWSS3Bucket_WebsiteRedirect(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -847,6 +864,7 @@ func TestAccAWSS3Bucket_WebsiteRoutingRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -897,6 +915,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenTypical(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -927,6 +946,7 @@ func TestAccAWSS3Bucket_enableDefaultEncryption_whenAES256IsUsed(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -957,6 +977,7 @@ func TestAccAWSS3Bucket_disableDefaultEncryption_whenDefaultEncryptionIsEnabled(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -992,6 +1013,7 @@ func TestAccAWSS3Bucket_shouldFailNotFound(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1013,6 +1035,7 @@ func TestAccAWSS3Bucket_Versioning(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1080,6 +1103,7 @@ func TestAccAWSS3Bucket_Cors_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1155,6 +1179,7 @@ func TestAccAWSS3Bucket_Cors_Delete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1176,6 +1201,7 @@ func TestAccAWSS3Bucket_Cors_EmptyOrigin(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1213,6 +1239,7 @@ func TestAccAWSS3Bucket_Logging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1239,6 +1266,7 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1355,6 +1383,7 @@ func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1392,6 +1421,7 @@ func TestAccAWSS3Bucket_LifecycleRule_Expiration_EmptyConfigurationBlock(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1412,6 +1442,7 @@ func TestAccAWSS3Bucket_LifecycleRule_AbortIncompleteMultipartUploadDays_NoExpir
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -1447,6 +1478,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1759,6 +1791,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlT
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1851,6 +1884,7 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AddAccessContr
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1931,6 +1965,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1963,6 +1998,7 @@ func TestAccAWSS3Bucket_ReplicationExpectVersioningValidationError(t *testing.T)
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -1989,6 +2025,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -2026,6 +2063,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
@@ -2204,6 +2242,7 @@ func TestAccAWSS3Bucket_SameRegionReplicationSchemaV2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -2255,6 +2294,7 @@ func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -2294,6 +2334,7 @@ func TestAccAWSS3Bucket_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -2319,6 +2360,7 @@ func TestAccAWSS3Bucket_forceDestroyWithEmptyPrefixes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
@@ -2339,6 +2381,7 @@ func TestAccAWSS3Bucket_forceDestroyWithObjectLockEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{

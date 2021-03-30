@@ -16,7 +16,7 @@ Provides an VPC subnet resource.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
@@ -32,7 +32,7 @@ resource "aws_subnet" "main" {
 When managing subnets in one of a VPC's secondary CIDR blocks created using a [`aws_vpc_ipv4_cidr_block_association`](vpc_ipv4_cidr_block_association.html)
 resource, it is recommended to reference that resource's `vpc_id` attribute to ensure correct dependency ordering.
 
-```hcl
+```terraform
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "172.2.0.0/16"
@@ -63,7 +63,7 @@ The following arguments are supported:
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
 * `vpc_id` - (Required) The VPC ID.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -73,6 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the subnet.
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the subnet.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 

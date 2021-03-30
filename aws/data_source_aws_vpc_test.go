@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -22,8 +23,9 @@ func TestAccDataSourceAwsVpc_basic(t *testing.T) {
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcConfig(cidr, tag),
@@ -87,8 +89,9 @@ func TestAccDataSourceAwsVpc_ipv6Associated(t *testing.T) {
 	ds1ResourceName := "data.aws_vpc.by_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsVpcConfigIpv6(cidr, tag),
@@ -116,6 +119,7 @@ func TestAccDataSourceAwsVpc_CidrBlockAssociations_Multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{

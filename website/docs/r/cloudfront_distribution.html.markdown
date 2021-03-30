@@ -24,7 +24,7 @@ want to wait, you need to use the `retain_on_delete` flag.
 
 The following example below creates a CloudFront distribution with an S3 origin.
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "mybucket"
   acl    = "private"
@@ -146,7 +146,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
 The following example below creates a Cloudfront distribution with an origin group for failover routing:
 
-```hcl
+```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin_group {
     origin_id = "groupS3"
@@ -351,7 +351,7 @@ for more information.
 
 Example configuration:
 
-```hcl
+```terraform
 resource "aws_cloudfront_distribution" "example" {
   # ... other configuration ...
 

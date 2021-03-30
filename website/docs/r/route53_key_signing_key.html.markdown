@@ -12,7 +12,7 @@ Manages a Route 53 Key Signing Key. To manage Domain Name System Security Extens
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
   region = "us-east-1"
 }

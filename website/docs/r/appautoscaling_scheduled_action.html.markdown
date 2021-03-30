@@ -14,7 +14,7 @@ Provides an Application AutoScaling ScheduledAction resource.
 
 ### DynamoDB Table Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "dynamodb" {
   max_capacity       = 100
   min_capacity       = 5
@@ -39,7 +39,7 @@ resource "aws_appautoscaling_scheduled_action" "dynamodb" {
 
 ### ECS Service Autoscaling
 
-```hcl
+```terraform
 resource "aws_appautoscaling_target" "ecs" {
   max_capacity       = 4
   min_capacity       = 1

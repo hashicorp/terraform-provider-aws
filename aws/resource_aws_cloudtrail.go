@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -192,7 +192,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -259,7 +259,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	// you're looking for is not found. Instead, it's simply not in the list.
 	var trail *cloudtrail.Trail
 	for _, c := range resp.TrailList {
-		if d.Id() == *c.Name {
+		if d.Id() == aws.StringValue(c.Name) {
 			trail = c
 		}
 	}
@@ -377,7 +377,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
 	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
@@ -566,8 +566,8 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["read_write_type"] = *raw.ReadWriteType
-		item["include_management_events"] = *raw.IncludeManagementEvents
+		item["read_write_type"] = aws.StringValue(raw.ReadWriteType)
+		item["include_management_events"] = aws.BoolValue(raw.IncludeManagementEvents)
 		item["data_resource"] = flattenAwsCloudTrailEventSelectorDataResource(raw.DataResources)
 
 		eventSelectors = append(eventSelectors, item)
@@ -581,7 +581,7 @@ func flattenAwsCloudTrailEventSelectorDataResource(configured []*cloudtrail.Data
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["type"] = *raw.Type
+		item["type"] = aws.StringValue(raw.Type)
 		item["values"] = flattenStringList(raw.Values)
 
 		dataResources = append(dataResources, item)

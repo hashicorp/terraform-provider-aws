@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	NotebookInstanceInServiceTimeout  = 10 * time.Minute
+	NotebookInstanceInServiceTimeout  = 60 * time.Minute
 	NotebookInstanceStoppedTimeout    = 10 * time.Minute
 	NotebookInstanceDeletedTimeout    = 10 * time.Minute
 	ModelPackageGroupCompletedTimeout = 10 * time.Minute

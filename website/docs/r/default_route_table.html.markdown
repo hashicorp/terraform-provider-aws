@@ -18,16 +18,36 @@ For more information, see the Amazon VPC User Guide on [Route Tables](https://do
 
 ## Example Usage
 
-```hcl
-resource "aws_default_route_table" "r" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+```terraform
+resource "aws_default_route_table" "example" {
+  default_route_table_id = aws_vpc.example.default_route_table_id
 
   route {
-    # ...
+    cidr_block = "10.0.1.0/24"
+    gateway_id = aws_internet_gateway.example.id
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
   }
 
   tags = {
-    Name = "default table"
+    Name = "example"
+  }
+}
+```
+
+To subsequently remove all managed routes:
+
+```terraform
+resource "aws_default_route_table" "example" {
+  default_route_table_id = aws_vpc.example.default_route_table_id
+
+  route = []
+
+  tags = {
+    Name = "example"
   }
 }
 ```
@@ -41,7 +61,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `propagating_vgws` - (Optional) List of virtual gateways for propagation.
-* `route` - (Optional) Configuration block of routes. Detailed below.
+* `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
 * `tags` - (Optional) Map of tags to assign to the resource.
 
 ### route
@@ -52,6 +72,7 @@ One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
 * `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
+* `destination_prefix_list_id` - (Optional) The ID of a [managed prefix list](ec2_managed_prefix_list.html) destination of the route.
 
 One of the following target arguments must be supplied:
 
@@ -71,6 +92,7 @@ Note that the default route, mapping the VPC's CIDR block to "local", is created
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the route table.
+* `arn` - The ARN of the route table.
 * `owner_id` - ID of the AWS account that owns the route table.
 * `vpc_id` - ID of the VPC.
 

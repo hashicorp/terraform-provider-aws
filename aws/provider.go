@@ -89,6 +89,23 @@ func Provider() *schema.Provider {
 				Set:           schema.HashString,
 			},
 
+			"default_tags": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "Configuration block with settings to default resource tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tags": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tags to default across all resources",
+						},
+					},
+				},
+			},
+
 			"endpoints": endpointsSchema(),
 
 			"ignore_tags": {
@@ -169,6 +186,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"aws_acm_certificate":                            dataSourceAwsAcmCertificate(),
 			"aws_acmpca_certificate_authority":               dataSourceAwsAcmpcaCertificateAuthority(),
+			"aws_acmpca_certificate":                         dataSourceAwsAcmpcaCertificate(),
 			"aws_ami":                                        dataSourceAwsAmi(),
 			"aws_ami_ids":                                    dataSourceAwsAmiIds(),
 			"aws_api_gateway_api_key":                        dataSourceAwsApiGatewayApiKey(),
@@ -203,6 +221,7 @@ func Provider() *schema.Provider {
 			"aws_codeartifact_repository_endpoint":           dataSourceAwsCodeArtifactRepositoryEndpoint(),
 			"aws_cognito_user_pools":                         dataSourceAwsCognitoUserPools(),
 			"aws_codecommit_repository":                      dataSourceAwsCodeCommitRepository(),
+			"aws_codestarconnections_connection":             dataSourceAwsCodeStarConnectionsConnection(),
 			"aws_cur_report_definition":                      dataSourceAwsCurReportDefinition(),
 			"aws_db_cluster_snapshot":                        dataSourceAwsDbClusterSnapshot(),
 			"aws_db_event_categories":                        dataSourceAwsDbEventCategories(),
@@ -238,6 +257,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  dataSourceAwsEc2TransitGatewayDxGatewayAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment":     dataSourceAwsEc2TransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_route_table":            dataSourceAwsEc2TransitGatewayRouteTable(),
+			"aws_ec2_transit_gateway_route_tables":           dataSourceAwsEc2TransitGatewayRouteTables(),
 			"aws_ec2_transit_gateway_vpc_attachment":         dataSourceAwsEc2TransitGatewayVpcAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment":         dataSourceAwsEc2TransitGatewayVpnAttachment(),
 			"aws_ecr_authorization_token":                    dataSourceAwsEcrAuthorizationToken(),
@@ -289,6 +309,7 @@ func Provider() *schema.Provider {
 			"aws_iot_endpoint":                               dataSourceAwsIotEndpoint(),
 			"aws_ip_ranges":                                  dataSourceAwsIPRanges(),
 			"aws_kinesis_stream":                             dataSourceAwsKinesisStream(),
+			"aws_kinesis_stream_consumer":                    dataSourceAwsKinesisStreamConsumer(),
 			"aws_kms_alias":                                  dataSourceAwsKmsAlias(),
 			"aws_kms_ciphertext":                             dataSourceAwsKmsCiphertext(),
 			"aws_kms_key":                                    dataSourceAwsKmsKey(),
@@ -413,6 +434,8 @@ func Provider() *schema.Provider {
 			"aws_acm_certificate":                                     resourceAwsAcmCertificate(),
 			"aws_acm_certificate_validation":                          resourceAwsAcmCertificateValidation(),
 			"aws_acmpca_certificate_authority":                        resourceAwsAcmpcaCertificateAuthority(),
+			"aws_acmpca_certificate_authority_certificate":            resourceAwsAcmpcaCertificateAuthorityCertificate(),
+			"aws_acmpca_certificate":                                  resourceAwsAcmpcaCertificate(),
 			"aws_ami":                                                 resourceAwsAmi(),
 			"aws_ami_copy":                                            resourceAwsAmiCopy(),
 			"aws_ami_from_instance":                                   resourceAwsAmiFromInstance(),
@@ -768,6 +791,7 @@ func Provider() *schema.Provider {
 			"aws_kinesisanalyticsv2_application":                      resourceAwsKinesisAnalyticsV2Application(),
 			"aws_kinesis_firehose_delivery_stream":                    resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                                      resourceAwsKinesisStream(),
+			"aws_kinesis_stream_consumer":                             resourceAwsKinesisStreamConsumer(),
 			"aws_kinesis_video_stream":                                resourceAwsKinesisVideoStream(),
 			"aws_kms_alias":                                           resourceAwsKmsAlias(),
 			"aws_kms_external_key":                                    resourceAwsKmsExternalKey(),
@@ -795,6 +819,7 @@ func Provider() *schema.Provider {
 			"aws_licensemanager_license_configuration":                resourceAwsLicenseManagerLicenseConfiguration(),
 			"aws_lightsail_domain":                                    resourceAwsLightsailDomain(),
 			"aws_lightsail_instance":                                  resourceAwsLightsailInstance(),
+			"aws_lightsail_instance_public_ports":                     resourceAwsLightsailInstancePublicPorts(),
 			"aws_lightsail_key_pair":                                  resourceAwsLightsailKeyPair(),
 			"aws_lightsail_static_ip":                                 resourceAwsLightsailStaticIp(),
 			"aws_lightsail_static_ip_attachment":                      resourceAwsLightsailStaticIpAttachment(),
@@ -1187,6 +1212,7 @@ func init() {
 		"appstream",
 		"appsync",
 		"athena",
+		"auditmanager",
 		"autoscaling",
 		"autoscalingplans",
 		"backup",
@@ -1338,6 +1364,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
 		CredsFilename:           d.Get("shared_credentials_file").(string),
+		DefaultTagsConfig:       expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
@@ -1521,6 +1548,20 @@ func endpointsSchema() *schema.Schema {
 			Schema: endpointsAttributes,
 		},
 	}
+}
+
+func expandProviderDefaultTags(l []interface{}) *keyvaluetags.DefaultConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	defaultConfig := &keyvaluetags.DefaultConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["tags"].(map[string]interface{}); ok {
+		defaultConfig.Tags = keyvaluetags.New(v)
+	}
+	return defaultConfig
 }
 
 func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {

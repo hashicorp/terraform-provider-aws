@@ -75,6 +75,7 @@ func testAccAWSSagemakerApp_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
@@ -108,6 +109,7 @@ func testAccAWSSagemakerApp_resourceSpec(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
@@ -137,6 +139,7 @@ func testAccAWSSagemakerApp_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{
@@ -181,6 +184,7 @@ func testAccAWSSagemakerApp_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sagemaker.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSagemakerAppDestroy,
 		Steps: []resource.TestStep{

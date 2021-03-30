@@ -24,6 +24,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
+		ErrorCheck:        testAccErrorCheck(t, apigateway.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSAPIGatewayEdgeDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -85,6 +86,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -120,6 +122,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -163,6 +166,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -195,6 +199,7 @@ func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -224,6 +229,7 @@ func TestAccAWSAPIGatewayDomainName_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -271,6 +277,7 @@ func TestAccAWSAPIGatewayDomainName_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
@@ -298,6 +305,7 @@ func TestAccAWSAPIGatewayDomainName_MutualTlsAuthentication(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{

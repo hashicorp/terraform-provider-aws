@@ -205,6 +205,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -241,6 +242,7 @@ func TestAccAWSUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -264,6 +266,7 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -293,6 +296,7 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -322,6 +326,7 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -351,6 +356,7 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -380,6 +386,7 @@ func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -411,6 +418,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -447,6 +455,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -484,6 +493,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -558,6 +568,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{

@@ -35,9 +35,10 @@ func BrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 func BrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
-			mq.BrokerStateRunning,
-			mq.BrokerStateRebootInProgress,
+			mq.BrokerStateCreationFailed,
 			mq.BrokerStateDeletionInProgress,
+			mq.BrokerStateRebootInProgress,
+			mq.BrokerStateRunning,
 		},
 		Target:  []string{},
 		Timeout: BrokerDeleteTimeout,

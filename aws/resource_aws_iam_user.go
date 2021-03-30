@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -381,7 +381,7 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(username),
 	}
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {

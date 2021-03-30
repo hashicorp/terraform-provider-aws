@@ -12,7 +12,7 @@ Provides a resource for copying an S3 object.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_object_copy" "test" {
   bucket = "destination_bucket"
   key    = "destination_key"
@@ -91,7 +91,7 @@ This configuration block has the following optional arguments (one of the three 
 
 ## Attributes Reference
 
-The following attributes are exported
+In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `expiration` - If the object expiration is configured, this attribute will be set.

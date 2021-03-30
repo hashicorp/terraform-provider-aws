@@ -116,7 +116,6 @@ func resourceAwsMqBroker() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"host_instance_type": {
 				Type:     schema.TypeString,
@@ -147,6 +146,7 @@ func resourceAwsMqBroker() *schema.Resource {
 			"ldap_server_metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -172,8 +172,9 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional: true,
 						},
 						"service_account_password": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"service_account_username": {
 							Type:     schema.TypeString,
@@ -299,7 +300,6 @@ func resourceAwsMqBroker() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
-							Set:      schema.HashString,
 							Optional: true,
 						},
 						"password": {
@@ -329,7 +329,6 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(requestId),
-		EncryptionOptions:       expandMqEncryptionOptions(d.Get("encryption_options").([]interface{})),
 		EngineType:              aws.String(d.Get("engine_type").(string)),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -340,23 +339,26 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandMqConfigurationId(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
 		input.DeploymentMode = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 {
-		input.Logs = expandMqLogs(d.Get("logs").([]interface{}))
+	if v, ok := d.GetOk("encryption_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EncryptionOptions = expandMqEncryptionOptions(d.Get("encryption_options").([]interface{}))
+	}
+	if v, ok := d.GetOk("logs"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Logs = expandMqLogs(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
+		input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("maintenance_window_start_time"); ok {
+	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandMqWeeklyStartTime(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = expandStringSet(d.Get("security_groups").(*schema.Set))
+		input.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
@@ -438,8 +440,12 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output.LdapServerMetadata != nil {
-		if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata)); err != nil {
-			return fmt.Errorf("error setting lda_server_metadata: %w", err)
+		password := ""
+		if v, ok := d.GetOk("ldap_server_metadata.0.service_account_password"); ok {
+			password = v.(string)
+		}
+		if err := d.Set("ldap_server_metadata", flattenMQLDAPServerMetadata(output.LdapServerMetadata, password)); err != nil {
+			return fmt.Errorf("error setting ldap_server_metadata: %w", err)
 		}
 	} else {
 		d.Set("ldap_server_metadata", nil)
@@ -493,21 +499,6 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	requiresReboot := false
 
-	if d.HasChange("ldap_server_metadata") {
-		input := &mq.UpdateBrokerRequest{
-			BrokerId:           aws.String(d.Id()),
-			LdapServerMetadata: nil,
-		}
-
-		if v, ok := d.GetOk("ldap_server_metadata"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.LdapServerMetadata = expandMQLDAPServerMetadata(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		if _, err := conn.UpdateBroker(input); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) LDAP server metadata: %w", d.Id(), err)
-		}
-	}
-
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:       aws.String(d.Id()),
@@ -518,11 +509,12 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChanges("configuration", "logs") {
+	if d.HasChanges("configuration", "logs", "engine_version") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
 			Configuration: expandMqConfigurationId(d.Get("configuration").([]interface{})),
 			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
+			EngineVersion: aws.String(d.Get("engine_version").(string)),
 		})
 		if err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) configuration: %w", d.Id(), err)
@@ -896,13 +888,13 @@ func flattenMqBrokerInstances(instances []*mq.BrokerInstance) []interface{} {
 	for i, instance := range instances {
 		m := make(map[string]interface{})
 		if instance.ConsoleURL != nil {
-			m["console_url"] = *instance.ConsoleURL
+			m["console_url"] = aws.StringValue(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
 			m["endpoints"] = aws.StringValueSlice(instance.Endpoints)
 		}
 		if instance.IpAddress != nil {
-			m["ip_address"] = *instance.IpAddress
+			m["ip_address"] = aws.StringValue(instance.IpAddress)
 		}
 		l[i] = m
 	}
@@ -948,7 +940,7 @@ func expandMqLogs(l []interface{}) *mq.Logs {
 	return logs
 }
 
-func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[string]interface{} {
+func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput, password string) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -970,6 +962,9 @@ func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[str
 	if v := apiObject.RoleSearchSubtree; v != nil {
 		tfMap["role_search_subtree"] = aws.BoolValue(v)
 	}
+	if password != "" {
+		tfMap["service_account_password"] = password
+	}
 	if v := apiObject.ServiceAccountUsername; v != nil {
 		tfMap["service_account_username"] = aws.StringValue(v)
 	}
@@ -986,15 +981,17 @@ func flattenMQLDAPServerMetadata(apiObject *mq.LdapServerMetadataOutput) map[str
 		tfMap["user_search_subtree"] = aws.BoolValue(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func expandMQLDAPServerMetadata(tfMap map[string]interface{}) *mq.LdapServerMetadataInput {
-	if tfMap == nil {
+func expandMQLDAPServerMetadata(tfList []interface{}) *mq.LdapServerMetadataInput {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &mq.LdapServerMetadataInput{}
+
+	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["hosts"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.Hosts = expandStringList(v.([]interface{}))
