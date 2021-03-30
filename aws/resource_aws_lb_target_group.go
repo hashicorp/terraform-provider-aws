@@ -372,7 +372,7 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).elbv2conn
 
 	resp, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-		TargetGroupArns: []*string{aws.String(d.Id())},
+		TargetGroupArns: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
