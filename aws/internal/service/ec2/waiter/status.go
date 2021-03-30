@@ -247,8 +247,6 @@ func InstanceIamInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshF
 }
 
 const (
-	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
-
 	RouteTableStatusReady = "ready"
 )
 
@@ -262,10 +260,6 @@ func RouteTableStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 
 		if err != nil {
 			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", nil
 		}
 
 		return output, RouteTableStatusReady, nil
