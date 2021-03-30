@@ -45,8 +45,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch query definitions can be imported using the query definition ID.
+CloudWatch query definitions can be imported using the query definition ARN. The ARN can be found on the "Edit Query" page for the query in the AWS Console.
 
 ```
-$ terraform import aws_cloudwatch_query_definition.example 269951d7-6f75-496d-9d7b-6b7a5486bdbd
+$ terraform import aws_cloudwatch_query_definition.example arn:aws:logs:us-west-2:123456789012:query-definition:269951d7-6f75-496d-9d7b-6b7a5486bdbd
 ```
