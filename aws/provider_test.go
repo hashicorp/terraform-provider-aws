@@ -1030,6 +1030,18 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 			return nil
 		}
 
+		if resource.DeleteWithoutTimeout != nil {
+			diags := resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+
+			for i := range diags {
+				if diags[i].Severity == diag.Error {
+					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				}
+			}
+
+			return nil
+		}
+
 		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())
 	}
 }
