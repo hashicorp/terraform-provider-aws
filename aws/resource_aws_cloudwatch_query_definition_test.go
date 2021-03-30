@@ -172,7 +172,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchl
 		}
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
 
-		result, err := finder.QueryDefinitionByResourceID(context.Background(), conn, rs.Primary.ID)
+		result, err := finder.QueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -196,12 +196,12 @@ func testAccCheckAWSCloudWatchQueryDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := finder.QueryDefinitionByResourceID(context.Background(), conn, rs.Primary.ID)
+		result, err := finder.QueryDefinition(context.Background(), conn, "", rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading CloudWatch query definition (%s): %w", rs.Primary.ID, err)
 		}
 
-		if output != nil {
+		if result != nil {
 			return fmt.Errorf("CloudWatch query definition (%s) still exists", rs.Primary.ID)
 		}
 	}

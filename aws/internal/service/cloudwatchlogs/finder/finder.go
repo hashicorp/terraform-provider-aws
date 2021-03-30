@@ -32,26 +32,3 @@ func QueryDefinition(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, n
 
 	return result, err
 }
-
-// TODO: remove
-func QueryDefinitionByResourceID(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, queryDefinitionID string) (*cloudwatchlogs.QueryDefinition, error) {
-	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
-
-	var result *cloudwatchlogs.QueryDefinition
-	err := lister.DescribeQueryDefinitionsPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, qd := range page.QueryDefinitions {
-			if aws.StringValue(qd.QueryDefinitionId) == queryDefinitionID {
-				result = qd
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}
