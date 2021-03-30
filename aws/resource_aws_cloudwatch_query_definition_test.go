@@ -99,6 +99,40 @@ func TestAccAWSCloudWatchQueryDefinition_Rename(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchQueryDefinition_LogGroups(t *testing.T) {
+	var v cloudwatchlogs.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	queryName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSCloudWatchQueryDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchQueryDefinitionConfig_LogGroups(queryName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchQueryDefinitionConfig_LogGroups(queryName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCloudWatchQueryDefinitionExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", queryName),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "5"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.1", "aws_cloudwatch_log_group.test.1", "name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCloudWatchQueryDefinitionExists(rName string, v *cloudwatchlogs.QueryDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rName]
@@ -144,7 +178,7 @@ func testAccCheckAWSCloudWatchQueryDefinitionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudWatchQueryDefinitionConfig_Basic(name string) string {
+func testAccAWSCloudWatchQueryDefinitionConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_query_definition" "test" {
   name = %[1]q
@@ -155,5 +189,27 @@ fields @timestamp, @message
 | limit 20
 EOF
 }
-`, name)
+`, rName)
+}
+
+func testAccAWSCloudWatchQueryDefinitionConfig_LogGroups(rName string, count int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  log_group_names = aws_cloudwatch_log_group.test[*].name
+
+  query_string = <<EOF
+fields @timestamp, @message
+| sort @timestamp desc
+| limit 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  count = %[2]d
+
+  name = "%[1]s-${count.index}"
+}
+`, rName, count)
 }
