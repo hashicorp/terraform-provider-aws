@@ -23,8 +23,9 @@ func TestAccAWSSecurityHub_serial(t *testing.T) {
 			"basic": testAccAWSSecurityHubInviteAccepter_basic,
 		},
 		"OrganizationAdminAccount": {
-			"basic":      testAccAwsSecurityHubOrganizationAdminAccount_basic,
-			"disappears": testAccAwsSecurityHubOrganizationAdminAccount_disappears,
+			"basic":       testAccAwsSecurityHubOrganizationAdminAccount_basic,
+			"disappears":  testAccAwsSecurityHubOrganizationAdminAccount_disappears,
+			"MultiRegion": testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion,
 		},
 		"ProductSubscription": {
 			"basic": testAccAWSSecurityHubProductSubscription_basic,

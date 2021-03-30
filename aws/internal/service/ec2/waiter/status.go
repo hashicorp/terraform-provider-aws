@@ -12,6 +12,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -242,6 +243,32 @@ func InstanceIamInstanceProfile(conn *ec2.EC2, id string) resource.StateRefreshF
 		}
 
 		return instance, name, nil
+	}
+}
+
+const (
+	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+
+	RouteTableStatusReady = "ready"
+)
+
+func RouteTableStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.RouteTableByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, RouteTableStatusReady, nil
 	}
 }
 

@@ -10,7 +10,8 @@ import (
 )
 
 func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
-	resourceName := "data.aws_iam_policy.test"
+	datasourceName := "data.aws_iam_policy.test"
+	resourceName := "aws_iam_policy.test"
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,11 +22,13 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig(policyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", policyName),
-					resource.TestCheckResourceAttr(resourceName, "description", "My test policy"),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_policy.test_policy", "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},
@@ -35,7 +38,7 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 
 func testAccAwsDataSourceIamPolicyConfig(policyName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_policy" "test_policy" {
+resource "aws_iam_policy" "test" {
   name        = "%s"
   path        = "/"
   description = "My test policy"
@@ -57,7 +60,7 @@ EOF
 }
 
 data "aws_iam_policy" "test" {
-  arn = aws_iam_policy.test_policy.arn
+  arn = aws_iam_policy.test.arn
 }
 `, policyName)
 }

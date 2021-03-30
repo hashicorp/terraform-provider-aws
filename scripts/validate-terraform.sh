@@ -25,8 +25,6 @@ rules=(
     "--only=aws_instance_previous_type"
     "--only=aws_db_instance_previous_type"
     "--only=aws_elasticache_cluster_previous_type"
-    # Prevent some configuration errors
-    "--only=aws_route_specified_multiple_targets"
 )
 while read -r filename ; do
     block_number=0
