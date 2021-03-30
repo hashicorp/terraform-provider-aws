@@ -13,14 +13,16 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
+
+const s3BucketObjectCreationTimeout = 2 * time.Minute
 
 func resourceAwsS3BucketObject() *schema.Resource {
 	return &schema.Resource{
@@ -305,15 +307,35 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 
-	resp, err := s3conn.HeadObject(
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
+	input := &s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	var resp *s3.HeadObjectOutput
+	var err error
+
+	err = resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+		resp, err = s3conn.HeadObject(input)
+
+		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = s3conn.HeadObject(input)
+	}
 
 	if err != nil {
 		// If S3 returns a 404 Request Failure, mark the object as destroyed
-		if awsErr, ok := err.(awserr.RequestFailure); ok && awsErr.StatusCode() == 404 {
+		if isAWSErrRequestFailureStatusCode(err, 404) {
 			d.SetId("")
 			log.Printf("[WARN] Error Reading Object (%s), object not found (HTTP status 404)", key)
 			return nil
