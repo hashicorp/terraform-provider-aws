@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/mitchellh/go-homedir"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const s3BucketObjectCreationTimeout = 2 * time.Minute
@@ -313,9 +314,10 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	var resp *s3.HeadObjectOutput
-	var err error
 
-	err = resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(s3BucketObjectCreationTimeout, func() *resource.RetryError {
+		var err error
+
 		resp, err = s3conn.HeadObject(input)
 
 		if d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
@@ -329,19 +331,20 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = s3conn.HeadObject(input)
 	}
 
-	if err != nil {
-		// If S3 returns a 404 Request Failure, mark the object as destroyed
-		if isAWSErrRequestFailureStatusCode(err, 404) {
-			d.SetId("")
-			log.Printf("[WARN] Error Reading Object (%s), object not found (HTTP status 404)", key)
-			return nil
-		}
-		return err
+	if !d.IsNewResource() && isAWSErrRequestFailureStatusCode(err, 404) {
+		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
+	}
+
 	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
 
 	d.Set("cache_control", resp.CacheControl)
