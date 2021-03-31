@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * data-source/aws_efs_file_system: Add `availability_zone_id` and `availability_zone_name` attributes ([#18319](https://github.com/hashicorp/terraform-provider-aws/issues/18319))
 * data-source/aws_iam_policy: Add `policy_id` and `tags` attributes ([#18276](https://github.com/hashicorp/terraform-provider-aws/issues/18276))
+* resource/aws_cloudformation_stack_set: Add `auto_deployment` configuration block and `permissions_model` arguments (support service managed permissions) ([#12423](https://github.com/hashicorp/terraform-provider-aws/issues/12423))
 * resource/aws_ecs_service: Add `deployment_circuit_breaker` ([#16936](https://github.com/hashicorp/terraform-provider-aws/issues/16936))
 * resource/aws_efs_file_system: Add `availability_zone_id` attribute and `availability_zone_name` argument ([#18319](https://github.com/hashicorp/terraform-provider-aws/issues/18319))
 * resource/aws_efs_file_system: Add `number_of_mount_targets`, `size_in_bytes` and `owner_id` attributes ([#17969](https://github.com/hashicorp/terraform-provider-aws/issues/17969))
