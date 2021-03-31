@@ -424,9 +424,6 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		var params *elbv2.ModifyTargetGroupInput
 		healthChecks := d.Get("health_check").([]interface{})
 		if len(healthChecks) == 1 {
-			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn: aws.String(d.Id()),
-			}
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
