@@ -1229,6 +1229,8 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 		close(errChan)
 	}()
 
+	// Keep in mind: everything above (except the declarations) is executing in separate goroutines than the one that hits this line.
+	// The errChan range waits to exit for errChan to close (which, in turn, won't happen until the wait group finishes).
 	var errors *multierror.Error
 	var mutex = &sync.Mutex{}
 	for err := range errChan {
