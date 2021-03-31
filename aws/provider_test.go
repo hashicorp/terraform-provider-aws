@@ -1006,6 +1006,28 @@ func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) 
 	}
 }
 
+func testAccDeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
+		var diags diag.Diagnostics
+
+		if resource.DeleteContext != nil {
+			diags = resource.DeleteContext(context.Background(), d, meta)
+		} else {
+			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+		}
+
+		for i := range diags {
+			if diags[i].Severity == diag.Error {
+				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+			}
+		}
+
+		return nil
+	}
+
+	return resource.Delete(d, meta)
+}
+
 func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		resourceState, ok := s.RootModule().Resources[resourceName]
@@ -1018,37 +1040,7 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 			return fmt.Errorf("resource ID missing: %s", resourceName)
 		}
 
-		if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
-			var diags diag.Diagnostics
-
-			if resource.DeleteContext != nil {
-				diags = resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
-			} else {
-				diags = resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
-			}
-
-			for i := range diags {
-				if diags[i].Severity == diag.Error {
-					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
-				}
-			}
-
-			return nil
-		}
-
-		if resource.DeleteWithoutTimeout != nil {
-			diags := resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
-
-			for i := range diags {
-				if diags[i].Severity == diag.Error {
-					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
-				}
-			}
-
-			return nil
-		}
-
-		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())
+		return testAccDeleteResource(resource, resource.Data(resourceState.Primary), provider.Meta())
 	}
 }
 
@@ -1216,7 +1208,7 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 		go func(sweepResource *testSweepResource) {
 			defer wg.Done()
 
-			err := sweepResource.resource.Delete(sweepResource.d, sweepResource.meta)
+			err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 			if err != nil {
 				errChan <- err
 			}
