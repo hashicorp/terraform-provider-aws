@@ -160,13 +160,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"custom_endpoint": {
 							Type:     schema.TypeString,
 							Optional: true,
-							StateFunc: func(v interface{}) string {
-								// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
-								// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
-								// to trim the string to prevent Route53 API error
-								value := strings.TrimSuffix(v.(string), ".")
-								return strings.ToLower(value)
-							},
 							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
 						"custom_endpoint_certificate_arn": {
