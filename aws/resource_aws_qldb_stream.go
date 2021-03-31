@@ -13,9 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const _keyLedgerName = "LedgerName"
-const _keyStreamID = "StreamID"
-
 func resourceAwsQLDBStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQLDBStreamCreate,
@@ -163,52 +160,85 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).qldbconn
-	// ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*AWSClient).qldbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	// // Refresh the QLDB state
-	// input := &qldb.DescribeLedgerInput{
-	// 	Name: aws.String(d.Id()),
-	// }
+	// Refresh the QLDB Stream state
+	input := &qldb.DescribeJournalKinesisStreamInput{
+		LedgerName: aws.String(d.Get("ledger_name")),
+		StreamId:   aws.String(d.Get("stream_id")),
+	}
 
-	// qldbLedger, err := conn.DescribeLedger(input)
+	qldbStream, err := conn.DescribeJournalKinesisStream(input)
 
-	// if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
-	// 	log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
-	// 	d.SetId("")
-	// 	return nil
-	// }
+	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] QLDB Stream (%s) not found, removing from state", d.Get("stream_id"))
+		d.Set("stream_id", "")
+		d.Set("ledger_name", "")
+		return nil
+	}
 
-	// if err != nil {
-	// 	return fmt.Errorf("error describing QLDB Ledger (%s): %s", d.Id(), err)
-	// }
+	if err != nil {
+		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Get("stream_id"), err)
+	}
 
-	// // QLDB stuff
-	// if err := d.Set("name", qldbLedger.Name); err != nil {
-	// 	return fmt.Errorf("error setting name: %s", err)
-	// }
+	if err := d.Set("arn", qldbStream.Stream.Arn); err != nil {
+		return fmt.Errorf("error setting ARN: %s", err)
+	}
 
-	// if err := d.Set("deletion_protection", qldbLedger.DeletionProtection); err != nil {
-	// 	return fmt.Errorf("error setting deletion protection: %s", err)
-	// }
+	if err := d.Set("creation_time", qldbStream.Stream.CreationTime); err != nil {
+		return fmt.Errorf("error setting Creation Time: %s", err)
+	}
 
-	// // ARN
-	// if err := d.Set("arn", qldbLedger.Arn); err != nil {
-	// 	return fmt.Errorf("error setting ARN: %s", err)
-	// }
+	if err := d.Set("error_cause", qldbStream.Stream.ErrorCause); err != nil {
+		return fmt.Errorf("error setting Error Cause: %s", err)
+	}
 
-	// // Tags
-	// log.Printf("[INFO] Fetching tags for %s", d.Id())
-	// tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
-	// if err != nil {
-	// 	return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
-	// }
+	if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime); err != nil {
+		return fmt.Errorf("error setting Exclusive End Time: %s", err)
+	}
 
-	// if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-	// 	return fmt.Errorf("error setting tags: %s", err)
-	// }
+	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime); err != nil {
+		return fmt.Errorf("error setting Inclusive Start Time: %s", err)
+	}
 
-	// return nil
+	if err := d.Set("kinesis_configuration", qldbStream.Stream.KinesisConfiguration); err != nil {
+		return fmt.Errorf("error setting Kinesis Configuration: %s", err)
+	}
+
+	if err := d.Set("ledger_name", qldbStream.Stream.LedgerName); err != nil {
+		return fmt.Errorf("error setting Ledger Name: %s", err)
+	}
+
+	if err := d.Set("role_arn", qldbStream.Stream.RoleArn); err != nil {
+		return fmt.Errorf("error setting Role Arn: %s", err)
+	}
+
+	if err := d.Set("status", qldbStream.Stream.Status); err != nil {
+		return fmt.Errorf("error setting Status: %s", err)
+	}
+	
+	if err := d.Set("stream_id", qldbStream.Stream.StreamId); err != nil {
+		return fmt.Errorf("error setting Stream Id: %s", err)
+	}
+
+	if err := d.Set("stream_name", qldbStream.Stream.StreamName); err != nil {
+		return fmt.Errorf("error setting Stream Name: %s", err)
+	}
+
+	// TODO: Check this is working.  Seems like it should be the same regardless of resource type...
+	// Tags
+	log.Printf("[INFO] Fetching tags for %s", d.Id())
+	tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
+	if err != nil {
+		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -243,10 +273,10 @@ func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
-		LedgerName: aws.String(d.Get(_keyLedgerName)), // TODO: Figure out how to confirm this field actually exists where it's needed
-		StreamId:   aws.String(d.Get(_keyStreamID)),   // TODO: Figure out how to confirm this field actually exists where it's needed
+		LedgerName: aws.String(d.Get("ledger_name")),
+		StreamId:   aws.String(d.Get("stream_id")),
 	}
-	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get(_keyLedgerName), d.Get(_keyStreamID))
+	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Get("stream_id"))
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
@@ -272,11 +302,11 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get(_keyLedgerName), d.Get(_keyStreamID), err)
+		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Get("stream_id"), err)
 	}
 
 	if err := waitForQLDBStreamDeletion(conn, d.LedgerName(), d.StreamID()); err != nil {
-		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get(_keyLedgerName), d.Get(_keyStreamID), err)
+		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get("ledger_name"), d.Get("stream_id"), err)
 	}
 
 	return nil
