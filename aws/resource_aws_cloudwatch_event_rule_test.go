@@ -779,10 +779,10 @@ resource "aws_cloudwatch_event_rule" "test" {
 func testAccAWSCloudWatchEventRulePartnerEventBusConfig(rName, eventBusName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = %[1]q
-  event_bus_name      = %[2]q
+  name           = %[1]q
+  event_bus_name = %[2]q
 
-  event_pattern  = <<PATTERN
+  event_pattern = <<PATTERN
 {
   "source": ["aws.ec2"]
 }
