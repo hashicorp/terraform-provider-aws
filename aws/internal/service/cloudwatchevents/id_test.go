@@ -22,13 +22,19 @@ func TestRuleParseID(t *testing.T) {
 		{
 			TestName:      "single part",
 			InputID:       "TestRule",
-			ExpectedPart0: "default",
+			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestRule",
 		},
 		{
 			TestName:      "two parts",
-			InputID:       "TestEventBus/TestRule",
+			InputID:       tfevents.RuleCreateID("TestEventBus", "TestRule"),
 			ExpectedPart0: "TestEventBus",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "two parts with default event bus",
+			InputID:       tfevents.RuleCreateID(tfevents.DefaultEventBusName, "TestRule"),
+			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -119,7 +125,7 @@ func TestTargetParseImportID(t *testing.T) {
 		{
 			TestName:      "two parts",
 			InputID:       "TestTarget/TestRule",
-			ExpectedPart0: "default",
+			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestTarget",
 			ExpectedPart2: "TestRule",
 		},
@@ -127,6 +133,13 @@ func TestTargetParseImportID(t *testing.T) {
 			TestName:      "three parts",
 			InputID:       "TestEventBus/TestRule/TestTarget",
 			ExpectedPart0: "TestEventBus",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "three parts with default event bus",
+			InputID:       tfevents.DefaultEventBusName + "/TestRule/TestTarget",
+			ExpectedPart0: tfevents.DefaultEventBusName,
 			ExpectedPart1: "TestRule",
 			ExpectedPart2: "TestTarget",
 		},
