@@ -6,6 +6,87 @@ import (
 	tfevents "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents"
 )
 
+func TestPermissionParseID(t *testing.T) {
+	testCases := []struct {
+		TestName      string
+		InputID       string
+		ExpectedError bool
+		ExpectedPart0 string
+		ExpectedPart1 string
+	}{
+		{
+			TestName:      "empty ID",
+			InputID:       "",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "single part",
+			InputID:       "TestStatement",
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestStatement",
+		},
+		{
+			TestName:      "two parts",
+			InputID:       tfevents.PermissionCreateID("TestEventBus", "TestStatement"),
+			ExpectedPart0: "TestEventBus",
+			ExpectedPart1: "TestStatement",
+		},
+		{
+			TestName:      "two parts with default event bus",
+			InputID:       tfevents.PermissionCreateID(tfevents.DefaultEventBusName, "TestStatement"),
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestStatement",
+		},
+		{
+			TestName:      "partner event bus",
+			InputID:       "aws.partner/example.com/Test/TestStatement",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty both parts",
+			InputID:       "/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first part",
+			InputID:       "/TestStatement",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty second part",
+			InputID:       "TestEventBus/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "three parts",
+			InputID:       "TestEventBus/TestStatement/Suffix",
+			ExpectedError: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			gotPart0, gotPart1, err := tfevents.PermissionParseID(testCase.InputID)
+
+			if err == nil && testCase.ExpectedError {
+				t.Fatalf("expected error, got no error")
+			}
+
+			if err != nil && !testCase.ExpectedError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if gotPart0 != testCase.ExpectedPart0 {
+				t.Errorf("got part 0 %s, expected %s", gotPart0, testCase.ExpectedPart0)
+			}
+
+			if gotPart1 != testCase.ExpectedPart1 {
+				t.Errorf("got part 1 %s, expected %s", gotPart1, testCase.ExpectedPart1)
+			}
+		})
+	}
+}
+
 func TestRuleParseID(t *testing.T) {
 	testCases := []struct {
 		TestName      string
