@@ -12,7 +12,7 @@ Provides a CloudWatch Logs query definition resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_query_definition" "example" {
   name = "custom_query"
 
