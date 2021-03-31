@@ -27,12 +27,17 @@ func testSweepDbInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).rdsconn
 
-	ids := make([]string, 0)
+	conn := client.(*AWSClient).rdsconn
+	sweepResources := make([]*testSweepResource, 0)
+
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
-			ids = append(ids, aws.StringValue(dbi.DBInstanceIdentifier))
+			r := resourceAwsDbInstance()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
+			d.Set("skip_final_snapshot", true)
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
@@ -44,10 +49,7 @@ func testSweepDbInstances(region string) error {
 		return fmt.Errorf("Error retrieving DB instances: %s", err)
 	}
 
-	r := resourceAwsDbInstance()
-	d := r.Data(nil)
-	d.Set("skip_final_snapshot", true)
-	return testSweepOrchestratorWithData(ids, r, d, region)
+	return testSweepResourceOrchestrator(sweepResources)
 }
 
 func TestAccAWSDBInstance_basic(t *testing.T) {

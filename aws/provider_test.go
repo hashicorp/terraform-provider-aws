@@ -1191,36 +1191,36 @@ func testAccPreCheckSkipError(err error) bool {
 	return false
 }
 
-// testSweepOrchestrator is a convenience function that calls testSweepOrchestratorWithData
-//nolint
-func testSweepOrchestrator(jobs []string, r *schema.Resource, region string) error {
-	return testSweepOrchestratorWithData(jobs, r, r.Data(nil), region)
+type testSweepResource struct {
+	d        *schema.ResourceData
+	meta     interface{}
+	resource *schema.Resource
 }
 
-// testSweepOrchestratorWithData launches goroutines to perform sweeping work
-func testSweepOrchestratorWithData(jobs []string, r *schema.Resource, d *schema.ResourceData, region string) error {
+func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) *testSweepResource {
+	return &testSweepResource{
+		d:        d,
+		meta:     meta,
+		resource: resource,
+	}
+}
+
+func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 	var wg sync.WaitGroup
 	wgDone := make(chan bool)
-	errChan := make(chan error, len(jobs))
+	errChan := make(chan error, len(sweepResources))
 
-	for _, jobID := range jobs {
+	for _, sweepResource := range sweepResources {
 		wg.Add(1)
 
-		go func(id string) {
+		go func(sweepResource *testSweepResource) {
 			defer wg.Done()
 
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				errChan <- fmt.Errorf("error getting client: %s", err)
-				return
-			}
-
-			d.SetId(id)
-			err = r.Delete(d, client)
+			err := sweepResource.resource.Delete(sweepResource.d, sweepResource.meta)
 			if err != nil {
 				errChan <- err
 			}
-		}(jobID)
+		}(sweepResource)
 	}
 
 	go func() {
@@ -1229,7 +1229,7 @@ func testSweepOrchestratorWithData(jobs []string, r *schema.Resource, d *schema.
 		close(errChan)
 	}()
 
-	var errors error
+	var errors *multierror.Error
 	var mutex = &sync.Mutex{}
 	for err := range errChan {
 		mutex.Lock()
@@ -1237,7 +1237,7 @@ func testSweepOrchestratorWithData(jobs []string, r *schema.Resource, d *schema.
 		mutex.Unlock()
 	}
 
-	return errors
+	return errors.ErrorOrNil()
 }
 
 // Check sweeper API call error for reasons to skip sweeping
