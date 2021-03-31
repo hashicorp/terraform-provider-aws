@@ -38,9 +38,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Required: false,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
 					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
-					// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
 			"inclusive_start_time": {
@@ -48,11 +46,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 32),
 					validateUTCTimestamp,
-					// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
-					// The InclusiveStartTime cannot be in the future and must be before ExclusiveEndTime.
-					// If you provide an InclusiveStartTime that is before the ledger's CreationDateTime, QLDB effectively defaults it to the ledger's CreationDateTime.
 				),
 			},
 
@@ -93,12 +87,14 @@ func resourceAwsQLDBStream() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 
 			"stream_name": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`(?!^.*--)(?!^[0-9]+$)(?!^-)(?!.*-$)^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),				)
