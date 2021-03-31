@@ -158,8 +158,8 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Default:  false,
 						},
 						"custom_endpoint": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
 							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
 						"custom_endpoint_certificate_arn": {
