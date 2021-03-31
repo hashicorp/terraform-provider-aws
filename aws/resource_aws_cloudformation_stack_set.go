@@ -67,12 +67,8 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						cloudformation.CapabilityCapabilityAutoExpand,
-						cloudformation.CapabilityCapabilityIam,
-						cloudformation.CapabilityCapabilityNamedIam,
-					}, false),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(cloudformation.Capability_Values(), false),
 				},
 			},
 			"description": {
@@ -102,13 +98,10 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"permission_model": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					cloudformation.PermissionModelsServiceManaged,
-					cloudformation.PermissionModelsSelfManaged,
-				}, false),
-				Default: cloudformation.PermissionModelsSelfManaged,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(cloudformation.PermissionModels_Values(), false),
+				Default:      cloudformation.PermissionModelsSelfManaged,
 			},
 			"stack_set_id": {
 				Type:     schema.TypeString,

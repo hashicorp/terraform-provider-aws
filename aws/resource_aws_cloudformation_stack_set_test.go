@@ -458,12 +458,19 @@ func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
 }
 
 func TestAccAWSCloudFormationStackSet_PermissionModel_ServiceManaged(t *testing.T) {
+	TestAccSkip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
+
 	var stackSet1 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCloudFormationStackSet(t)
+			testAccOrganizationsAccountPreCheck(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID, "organizations"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
@@ -1479,13 +1486,12 @@ resource "aws_cloudformation_stack_set" "test" {
 func testAccAWSCloudFormationStackSetConfigPermissionModel(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
-  name                    = %[1]q
-
+  name             = %[1]q
   permission_model = "SERVICE_MANAGED"
 
   auto_deployment {
-		enabled                          = true
-		retain_stacks_on_account_removal = false
+    enabled                          = true
+    retain_stacks_on_account_removal = false
   }
 
   template_body = <<TEMPLATE
