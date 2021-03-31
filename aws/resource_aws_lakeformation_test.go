@@ -13,9 +13,9 @@ func TestAccAWSLakeFormation_serial(t *testing.T) {
 			"dataSource":       testAccAWSLakeFormationDataLakeSettingsDataSource_basic,
 		},
 		"Permissions": {
-			"basic":             testAccAWSLakeFormationPermissions_basic,
-			"dataLocation":      testAccAWSLakeFormationPermissions_dataLocation,
-			"database":          testAccAWSLakeFormationPermissions_database,
+			"basic":               testAccAWSLakeFormationPermissions_basic,
+			"dataLocation":        testAccAWSLakeFormationPermissions_dataLocation,
+			"database":            testAccAWSLakeFormationPermissions_database,
 			"selectPermissions":   testAccAWSLakeFormationPermissions_selectPermissions,
 			"wildcardPermissions": testAccAWSLakeFormationPermissions_wildcardPermissions,
 		},

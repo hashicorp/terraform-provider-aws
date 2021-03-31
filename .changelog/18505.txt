@@ -1,0 +1,3 @@
+```release-note:bug
+ resource/aws_lakeformation_permissions: aws_lakeformation_permissions throwing "no permissions found" for wildcard table
+ ```

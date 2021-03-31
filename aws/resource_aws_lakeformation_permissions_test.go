@@ -924,7 +924,7 @@ resource "aws_lakeformation_permissions" "test" {
 
   table {
     database_name = aws_glue_catalog_table.test.database_name
-	wildcard      = true
+    wildcard      = true
   }
 }
 `, rName)

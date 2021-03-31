@@ -325,7 +325,8 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if len(principalResourcePermissions) == 0 {
-		return fmt.Errorf("error reading Lake Formation permissions: %s", "no permissions found")
+		log.Printf("[INFO] No Lake Formation permissions found")
+		return nil
 	}
 
 	if len(principalResourcePermissions) > 2 {
