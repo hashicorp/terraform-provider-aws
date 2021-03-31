@@ -521,9 +521,9 @@ resource "aws_securityhub_insight" "test" {
   filters {
     created_at {
       date_range {
-	    unit = "DAYS"
-		value = 5
-  	  }
+        unit  = "DAYS"
+        value = 5
+      }
     }
   }
 
@@ -564,7 +564,7 @@ resource "aws_securityhub_account" "test" {}
 resource "aws_securityhub_insight" "test" {
   filters {
     network_destination_ipv4 {
-	  cidr = "10.0.0.0/16"
+      cidr = "10.0.0.0/16"
     }
   }
 
@@ -603,10 +603,10 @@ resource "aws_securityhub_account" "test" {}
 
 resource "aws_securityhub_insight" "test" {
   filters {
-	product_fields {
-	  comparison = "EQUALS"
+    product_fields {
+      comparison = "EQUALS"
       key        = "key1"
-	  value      = "value1"
+      value      = "value1"
     }
   }
 
@@ -635,16 +635,16 @@ resource "aws_securityhub_insight" "test" {
       value      = "09876543210"
     }
 
-	product_fields {
-	  comparison = "EQUALS"
+    product_fields {
+      comparison = "EQUALS"
       key        = "key1"
-	  value      = "value1"
+      value      = "value1"
     }
 
     product_fields {
-	  comparison = "EQUALS"
+      comparison = "EQUALS"
       key        = "key2"
-	  value      = "value2"
+      value      = "value2"
     }
   }
 
@@ -663,7 +663,7 @@ resource "aws_securityhub_account" "test" {}
 
 resource "aws_securityhub_insight" "test" {
   filters {
-	confidence {
+    confidence {
       %s
     }
   }
