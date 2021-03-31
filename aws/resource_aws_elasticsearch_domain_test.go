@@ -168,6 +168,58 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_CustomEndpoint(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	resourceName := "aws_elasticsearch_domain.example"
+	customEndpoint := fmt.Sprintf("%s.example.com", resourceId)
+	certResourceName := "aws_acm_certificate.example"
+	certKey := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(certKey, customEndpoint)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     resourceId,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckESCustomEndpoint(resourceName, true, customEndpoint, &domain),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_CustomEndpoint(ri, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckESCustomEndpoint(resourceName, false, customEndpoint, &domain),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(16)) // len = 28
@@ -1165,6 +1217,29 @@ func testAccCheckESDomainEndpointOptions(enforceHTTPS bool, tls string, status *
 	}
 }
 
+func testAccCheckESCustomEndpoint(n string, customEndpointEnabled bool, customEndpoint string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		options := status.DomainEndpointOptions
+		if *options.CustomEndpointEnabled != customEndpointEnabled {
+			return fmt.Errorf("CustomEndpointEnabled differ. Given: %t, Expected: %t", *options.CustomEndpointEnabled, customEndpointEnabled)
+		}
+		if *options.CustomEndpointEnabled {
+			if *options.CustomEndpoint != customEndpoint {
+				return fmt.Errorf("CustomEndpoint differ. Given: %s, Expected: %s", *options.CustomEndpoint, customEndpoint)
+			}
+			customEndpointCertificateArn := rs.Primary.Attributes["domain_endpoint_options.0.custom_endpoint_certificate_arn"]
+			if *options.CustomEndpointCertificateArn != customEndpointCertificateArn {
+				return fmt.Errorf("CustomEndpointCertificateArn differ. Given: %s, Expected: %s", *options.CustomEndpointCertificateArn, customEndpointCertificateArn)
+			}
+		}
+		return nil
+	}
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -1427,6 +1502,32 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt, enforceHttps, tlsSecurityPolicy)
+}
+
+func testAccESDomainConfig_CustomEndpoint(randInt int, enforceHttps bool, tlsSecurityPolicy string, customEndpointEnabled bool, customEndpoint string, certKey string, certBody string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "example" {
+  private_key      = "%[6]s"
+  certificate_body = "%[7]s"
+}
+
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%[1]d"
+
+  domain_endpoint_options {
+    enforce_https                   = %[2]t
+    tls_security_policy             = %[3]q
+    custom_endpoint_enabled         = %[4]t
+    custom_endpoint                 = "%[5]s"
+    custom_endpoint_certificate_arn = aws_acm_certificate.example.arn
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, randInt, enforceHttps, tlsSecurityPolicy, customEndpointEnabled, customEndpoint, tlsPemEscapeNewlines(certKey), tlsPemEscapeNewlines(certBody))
 }
 
 func testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {
