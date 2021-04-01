@@ -456,7 +456,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	cluster := out.ClusterInfo
 
-	d.Set("arn", aws.StringValue(cluster.ClusterArn))
+	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))

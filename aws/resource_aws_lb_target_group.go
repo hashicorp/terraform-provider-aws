@@ -736,7 +736,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 			if err != nil {
 				return fmt.Errorf("error converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
-			d.Set("preserve_client_ip", aws.StringValue(attr.Value))
+			d.Set("preserve_client_ip", attr.Value)
 		}
 	}
 
