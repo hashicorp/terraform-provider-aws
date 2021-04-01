@@ -1207,8 +1207,9 @@ func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 		wg.Add(1)
 
 		go func(sweepResource *testSweepResource) {
-			err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
-			if err != nil {
+			defer wg.Done()
+
+			if err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta); err != nil {
 				mutex.Lock()
 				errors = multierror.Append(errors, err)
 				mutex.Unlock()
