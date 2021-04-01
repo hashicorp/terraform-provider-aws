@@ -416,7 +416,7 @@ func TestAccAWSS3Bucket_ignoreTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
+func TestAccAWSS3Bucket_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_s3_bucket.bucket1"
 

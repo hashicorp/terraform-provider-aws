@@ -184,7 +184,7 @@ func TestAccAWSDBOptionGroup_generatedName(t *testing.T) {
 	})
 }
 
-func TestAccAWSDBOptionGroupConfig_OptionGroupDescription(t *testing.T) {
+func TestAccAWSDBOptionGroup_OptionGroupDescription(t *testing.T) {
 	var optionGroup1 rds.OptionGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_option_group.test"

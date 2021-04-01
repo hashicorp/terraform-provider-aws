@@ -1240,7 +1240,7 @@ func testSweepSkipResourceError(err error) bool {
 	return tfawserr.ErrCodeContains(err, "AccessDenied")
 }
 
-func TestAccProvider_DefaultTags_EmptyConfigurationBlock(t *testing.T) {
+func TestAccAWSProvider_DefaultTags_EmptyConfigurationBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
