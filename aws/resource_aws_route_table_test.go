@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -1083,17 +1085,14 @@ func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestChec
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
-		})
+
+		routeTable, err := finder.RouteTableByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.RouteTables) == 0 {
-			return fmt.Errorf("RouteTable not found")
-		}
 
-		*v = *resp.RouteTables[0]
+		*v = *routeTable
 
 		return nil
 	}
@@ -1107,22 +1106,17 @@ func testAccCheckRouteTableDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			if len(resp.RouteTables) > 0 {
-				return fmt.Errorf("still exist.")
-			}
+		_, err := finder.RouteTableByID(conn, rs.Primary.ID)
 
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		if !isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Route table %s still exists", rs.Primary.ID)
 	}
 
 	return nil

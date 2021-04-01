@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSRouteTableAssociation_Subnet_basic(t *testing.T) {
@@ -240,26 +241,18 @@ func testAccCheckRouteTableAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.Attributes["route_table_id"])},
-		})
-		if err != nil {
-			// Verify the error is what we want
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if ec2err.Code() != "InvalidRouteTableID.NotFound" {
-				return err
-			}
-			return nil
+		routeTable, err := finder.RouteTableByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		rt := resp.RouteTables[0]
-		if len(rt.Associations) > 0 {
-			return fmt.Errorf(
-				"route table %s has associations", *rt.RouteTableId)
+		if err != nil {
+			return err
+		}
+
+		if len(routeTable.Associations) > 0 {
+			return fmt.Errorf("Route table %s has associations", aws.StringValue(routeTable.RouteTableId))
 		}
 	}
 
@@ -278,33 +271,22 @@ func testAccCheckRouteTableAssociationExists(n string, rta *ec2.RouteTableAssoci
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.Attributes["route_table_id"])},
-		})
+
+		routeTable, err := finder.RouteTableByID(conn, rs.Primary.Attributes["route_table_id"])
+
 		if err != nil {
 			return err
 		}
-		if len(resp.RouteTables) == 0 {
-			return fmt.Errorf("Route Table not found")
-		}
 
-		if len(resp.RouteTables[0].Associations) == 0 {
-			return fmt.Errorf("no associations found for Route Table %q", rs.Primary.Attributes["route_table_id"])
-		}
-
-		found := false
-		for _, association := range resp.RouteTables[0].Associations {
-			if rs.Primary.ID == *association.RouteTableAssociationId {
-				found = true
+		for _, association := range routeTable.Associations {
+			if rs.Primary.ID == aws.StringValue(association.RouteTableAssociationId) {
 				*rta = *association
-				break
+
+				return nil
 			}
 		}
-		if !found {
-			return fmt.Errorf("Association %q not found on Route Table %q", rs.Primary.ID, rs.Primary.Attributes["route_table_id"])
-		}
 
-		return nil
+		return fmt.Errorf("Association %q not found on Route Table %q", rs.Primary.ID, rs.Primary.Attributes["route_table_id"])
 	}
 }
 
