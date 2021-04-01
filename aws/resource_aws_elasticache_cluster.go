@@ -13,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -115,14 +117,19 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(tfelasticache.Engine_Values(), false),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"actual_engine_version": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"maintenance_window": {
@@ -269,32 +276,57 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for engine_version
+				// Plan time validation for engine_version values
+				// Memcached: Versions in format <major>.<minor>.<bug fix>
+				// Redis: Starting with version 6, must match <major>.x, prior to version 6, <major>.<minor>.<bug fix>
+				engineVersion, ok := diff.GetOk("engine_version")
+				if !ok {
+					return nil
+				}
+
+				var validator schema.SchemaValidateFunc
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
+					validator = validateVersionString
+				} else {
+					validator = tfelasticache.ValidateElastiCacheRedisVersionString
+				}
+
+				_, errs := validator(engineVersion, "engine_version")
+
+				var err *multierror.Error
+				err = multierror.Append(err, errs...)
+				return err.ErrorOrNil()
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for engine_version changes
 				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
 				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
 				if diff.Id() == "" || !diff.HasChange("engine_version") {
 					return nil
 				}
 				o, n := diff.GetChange("engine_version")
-				oVersion, err := gversion.NewVersion(o.(string))
+				oVersion, err := tfelasticache.NormalizeElastiCacheEngineVersion(o.(string))
 				if err != nil {
-					return err
+					return fmt.Errorf("error parsing old engine_version: %w", err)
 				}
-				nVersion, err := gversion.NewVersion(n.(string))
+				nVersion, err := tfelasticache.NormalizeElastiCacheEngineVersion(n.(string))
 				if err != nil {
-					return err
+					return fmt.Errorf("error parsing new engine_version: %w", err)
 				}
+
 				if nVersion.GreaterThan(oVersion) {
 					return nil
 				}
+
 				return diff.ForceNew("engine_version")
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
 				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
 					return nil
 				}
+
 				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
 					return nil
 				}
@@ -307,13 +339,13 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				if diff.Id() == "" || !diff.HasChange("node_type") {
 					return nil
 				}
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineRedis {
 					return nil
 				}
 				return diff.ForceNew("node_type")
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineRedis {
 					return nil
 				}
 				if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
@@ -446,7 +478,18 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	d.Set("node_type", c.CacheNodeType)
 	d.Set("num_cache_nodes", c.NumCacheNodes)
 	d.Set("engine", c.Engine)
-	d.Set("engine_version", c.EngineVersion)
+
+	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
+	if err != nil {
+		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
+	}
+	if engineVersion.Segments()[0] < 6 {
+		d.Set("engine_version", engineVersion.String())
+	} else {
+		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+	}
+	d.Set("actual_engine_version", engineVersion.String())
+
 	if c.ConfigurationEndpoint != nil {
 		d.Set("port", c.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", aws.StringValue(c.ConfigurationEndpoint.Address), aws.Int64Value(c.ConfigurationEndpoint.Port))))
