@@ -140,18 +140,26 @@ func resourceAwsVpcDhcpOptionsAssociationUpdate(d *schema.ResourceData, meta int
 	return resourceAwsVpcDhcpOptionsAssociationCreate(d, meta)
 }
 
+const VPCDefaultOptionsID = "default"
+
 // AWS does not provide an API to disassociate a DHCP Options set from a VPC.
 // So, we do this by setting the VPC to the default DHCP Options Set.
 func resourceAwsVpcDhcpOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	log.Printf("[INFO] Disassociating DHCP Options Set %s from VPC %s...", d.Get("dhcp_options_id"), d.Get("vpc_id"))
+
+	if d.Get("dhcp_options_id").(string) == VPCDefaultOptionsID {
+		// definition of deleted is DhcpOptionsId being equal to "default", nothing to do
+		return nil
+	}
+
 	_, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
-		DhcpOptionsId: aws.String("default"),
+		DhcpOptionsId: aws.String(VPCDefaultOptionsID),
 		VpcId:         aws.String(d.Get("vpc_id").(string)),
 	})
 
-	if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidVpcIDNotFound) {
 		return nil
 	}
 
