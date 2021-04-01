@@ -119,7 +119,7 @@ data "aws_iam_policy_document" "dms_assume_role_policy_document" {
     actions = ["sts:AssumeRole"]
 
     principals {
-      identifiers = ["dms.amazonaws.com"]
+      identifiers = ["dms.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
@@ -250,7 +250,7 @@ data "aws_iam_policy_document" "dms_assume_role_policy_document" {
     actions = ["sts:AssumeRole"]
 
     principals {
-      identifiers = ["dms.amazonaws.com"]
+      identifiers = ["dms.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
