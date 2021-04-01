@@ -1199,7 +1199,6 @@ func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, met
 
 func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 	var wg sync.WaitGroup
-
 	var errors *multierror.Error
 	var mutex = &sync.Mutex{}
 
