@@ -72,6 +72,12 @@ func TestAccAWSDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameter"},
+			},
 		},
 	})
 }

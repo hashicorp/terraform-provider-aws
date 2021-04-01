@@ -162,7 +162,7 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error reading DocDB Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenDocDBParameters(describeParametersResp.Parameters, d)); err != nil {
+	if err := d.Set("parameter", flattenDocDBParameters(describeParametersResp.Parameters, d.Get("parameter").(*schema.Set).List())); err != nil {
 		return fmt.Errorf("error setting docdb cluster parameter: %s", err)
 	}
 
