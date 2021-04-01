@@ -180,6 +180,61 @@ func NetworkAclEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNumber
 	return nil, nil
 }
 
+// NetworkInterfaceByID looks up a NetworkInterface by ID. When not found, returns nil and potentially an API error.
+func NetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeNetworkInterfaces(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkInterface := range output.NetworkInterfaces {
+		if networkInterface == nil {
+			continue
+		}
+
+		if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
+			continue
+		}
+
+		return networkInterface, nil
+	}
+
+	return nil, nil
+}
+
+// NetworkInterfaceSecurityGroup returns the associated GroupIdentifier if found
+func NetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, securityGroupID string) (*ec2.GroupIdentifier, error) {
+	var result *ec2.GroupIdentifier
+
+	networkInterface, err := NetworkInterfaceByID(conn, networkInterfaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, nil
+	}
+
+	for _, groupIdentifier := range networkInterface.Groups {
+		if aws.StringValue(groupIdentifier.GroupId) == securityGroupID {
+			result = groupIdentifier
+			break
+		}
+	}
+
+	return result, err
+}
+
 // RouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
 func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
