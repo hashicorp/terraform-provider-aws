@@ -51,6 +51,10 @@ const (
 )
 
 const (
+	ErrCodeInvalidSpotInstanceRequestIDNotFound = "InvalidSpotInstanceRequestID.NotFound"
+)
+
+const (
 	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
 )
 
