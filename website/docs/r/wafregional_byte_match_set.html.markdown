@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_byte_match_set"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF Regional Byte Match Set Resource for use with Application Load Ba
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
 

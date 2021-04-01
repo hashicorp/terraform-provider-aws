@@ -7,12 +7,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/acmpca/waiter"
 )
 
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsAcmpcaCertificateAuthorityCreate,
 		Read:   resourceAwsAcmpcaCertificateAuthorityRead,
@@ -268,6 +273,7 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 
 func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AcmpcaTags()
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandAcmpcaCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
@@ -276,7 +282,11 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		RevocationConfiguration:           expandAcmpcaRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] Creating ACMPCA Certificate Authority: %s", input)
+	if len(tags) > 0 {
+		input.Tags = tags
+	}
+
+	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
 	var output *acmpca.CreateCertificateAuthorityOutput
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
@@ -294,40 +304,15 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		output, err = conn.CreateCertificateAuthority(input)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating ACMPCA Certificate Authority: %s", err)
+		return fmt.Errorf("error creating ACM PCA Certificate Authority: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
 
-	if v, ok := d.GetOk("tags"); ok {
-		input := &acmpca.TagCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(d.Id()),
-			Tags:                    tagsFromMapACMPCA(v.(map[string]interface{})),
-		}
+	_, err = waiter.CertificateAuthorityCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
-		log.Printf("[DEBUG] Tagging ACMPCA Certificate Authority: %s", input)
-		_, err := conn.TagCertificateAuthority(input)
-		if err != nil {
-			return fmt.Errorf("error tagging ACMPCA Certificate Authority %q: %s", d.Id(), input)
-		}
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"",
-			acmpca.CertificateAuthorityStatusCreating,
-		},
-		Target: []string{
-			acmpca.CertificateAuthorityStatusActive,
-			acmpca.CertificateAuthorityStatusPendingCertificate,
-		},
-		Refresh: acmpcaCertificateAuthorityRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for ACMPCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
 	}
 
 	return resourceAwsAcmpcaCertificateAuthorityRead(d, meta)
@@ -335,29 +320,29 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 
 func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	describeCertificateAuthorityInput := &acmpca.DescribeCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(d.Id()),
-	}
+	certificateAuthority, err := finder.CertificateAuthorityByARN(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority: %s", describeCertificateAuthorityInput)
-
-	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(describeCertificateAuthorityInput)
-	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACMPCA Certificate Authority %q not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading ACMPCA Certificate Authority: %s", err)
-	}
-
-	if describeCertificateAuthorityOutput.CertificateAuthority == nil {
-		log.Printf("[WARN] ACMPCA Certificate Authority %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
+
+	if err != nil {
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s): %w", d.Id(), err)
+	}
+
+	if certificateAuthority == nil || aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusDeleted {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading ACM PCA Certificate Authority (%s): not found or deleted", d.Id())
+		}
+
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	d.Set("arn", certificateAuthority.Arn)
 
@@ -366,8 +351,8 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 	}
 
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
-	d.Set("not_after", certificateAuthority.NotAfter)
-	d.Set("not_before", certificateAuthority.NotBefore)
+	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
+	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 
 	if err := d.Set("revocation_configuration", flattenAcmpcaRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -381,20 +366,20 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
 
 	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(getCertificateAuthorityCertificateInput)
-	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACMPCA Certificate Authority %q not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		// Returned when in PENDING_CERTIFICATE status
-		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
-			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate: %s", err)
-		}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s) Certificate: %w", d.Id(), err)
 	}
 
 	d.Set("certificate", "")
@@ -408,18 +393,20 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading ACMPCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(getCertificateAuthorityCsrInput)
-	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] ACMPCA Certificate Authority %q not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
-			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %s", err)
-		}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !tfawserr.ErrCodeEquals(err, acmpca.ErrCodeInvalidStateException) {
+		return fmt.Errorf("error reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %w", d.Id(), err)
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -427,12 +414,13 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := listAcmpcaTags(conn, d.Id())
+	tags, err := keyvaluetags.AcmpcaListTags(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapACMPCA(tags)); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -461,38 +449,18 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 	}
 
 	if updateCertificateAuthority {
-		log.Printf("[DEBUG] Updating ACMPCA Certificate Authority: %s", input)
+		log.Printf("[DEBUG] Updating ACM PCA Certificate Authority: %s", input)
 		_, err := conn.UpdateCertificateAuthority(input)
 		if err != nil {
-			return fmt.Errorf("error updating ACMPCA Certificate Authority: %s", err)
+			return fmt.Errorf("error updating ACM PCA Certificate Authority: %s", err)
 		}
 	}
 
 	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTagsACMPCA(tagsFromMapACMPCA(o), tagsFromMapACMPCA(n))
+		o, n := d.GetChange("tags")
 
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing ACMPCA Certificate Authority %q tags: %#v", d.Id(), remove)
-			_, err := conn.UntagCertificateAuthority(&acmpca.UntagCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(d.Id()),
-				Tags:                    remove,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating ACMPCA Certificate Authority %q tags: %#v", d.Id(), create)
-			_, err := conn.TagCertificateAuthority(&acmpca.TagCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(d.Id()),
-				Tags:                    create,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
-			}
+		if err := keyvaluetags.AcmpcaUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ACM PCA Certificate Authority (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -502,47 +470,37 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
 
-	input := &acmpca.DeleteCertificateAuthorityInput{
+	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
+	updateInput := &acmpca.UpdateCertificateAuthorityInput{
+		CertificateAuthorityArn: aws.String(d.Id()),
+		Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+	}
+	_, err := conn.UpdateCertificateAuthority(updateInput)
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+	if err != nil && !tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority must be in the ACTIVE or DISABLED state to be updated") {
+		return fmt.Errorf("error setting ACM PCA Certificate Authority (%s) to DISABLED status before deleting: %w", d.Id(), err)
+	}
+
+	deleteInput := &acmpca.DeleteCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
 	if v, exists := d.GetOk("permanent_deletion_time_in_days"); exists {
-		input.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
+		deleteInput.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Deleting ACMPCA Certificate Authority: %s", input)
-	_, err := conn.DeleteCertificateAuthority(input)
+	log.Printf("[DEBUG] Deleting ACM PCA Certificate Authority: %s", deleteInput)
+	_, err = conn.DeleteCertificateAuthority(deleteInput)
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("error deleting ACMPCA Certificate Authority: %s", err)
+		return fmt.Errorf("error deleting ACM PCA Certificate Authority (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func acmpcaCertificateAuthorityRefreshFunc(conn *acmpca.ACMPCA, certificateAuthorityArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &acmpca.DescribeCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(certificateAuthorityArn),
-		}
-
-		log.Printf("[DEBUG] Reading ACMPCA Certificate Authority: %s", input)
-		output, err := conn.DescribeCertificateAuthority(input)
-		if err != nil {
-			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
-				return nil, "", nil
-			}
-			return nil, "", err
-		}
-
-		if output == nil || output.CertificateAuthority == nil {
-			return nil, "", nil
-		}
-
-		return output.CertificateAuthority, aws.StringValue(output.CertificateAuthority.Status), nil
-	}
 }
 
 func expandAcmpcaASN1Subject(l []interface{}) *acmpca.ASN1Subject {
@@ -713,25 +671,4 @@ func flattenAcmpcaRevocationConfiguration(config *acmpca.RevocationConfiguration
 	}
 
 	return []interface{}{m}
-}
-
-func listAcmpcaTags(conn *acmpca.ACMPCA, certificateAuthorityArn string) ([]*acmpca.Tag, error) {
-	tags := []*acmpca.Tag{}
-	input := &acmpca.ListTagsInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
-	}
-
-	for {
-		output, err := conn.ListTags(input)
-		if err != nil {
-			return tags, err
-		}
-		tags = append(tags, output.Tags...)
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return tags, nil
 }

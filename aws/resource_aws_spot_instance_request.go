@@ -3,14 +3,17 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -19,6 +22,9 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 		Read:   resourceAwsSpotInstanceRequestRead,
 		Delete: resourceAwsSpotInstanceRequestDelete,
 		Update: resourceAwsSpotInstanceRequestUpdate,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -40,17 +46,26 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			s["volume_tags"] = &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			}
 
 			s["spot_price"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldFloat, _ := strconv.ParseFloat(old, 64)
+					newFloat, _ := strconv.ParseFloat(new, 64)
+
+					return big.NewFloat(oldFloat).Cmp(big.NewFloat(newFloat)) == 0
+				},
 			}
 			s["spot_type"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "persistent",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.SpotInstanceTypePersistent,
+				ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
 			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -75,33 +90,30 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Computed: true,
 			}
 			s["block_duration_minutes"] = &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntDivisibleBy(60),
 			}
 			s["instance_interruption_behaviour"] = &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ec2.InstanceInterruptionBehaviorTerminate,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.InstanceInterruptionBehaviorTerminate,
-					ec2.InstanceInterruptionBehaviorStop,
-					ec2.InstanceInterruptionBehaviorHibernate,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.InstanceInterruptionBehaviorTerminate,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
 			}
 			s["valid_from"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
 			s["valid_until"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
 			return s
@@ -121,6 +133,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
 		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
+		TagSpecifications:            ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSpotInstancesRequest),
 
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -152,19 +165,19 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(time.RFC3339, v.(string))
+		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidFrom = aws.Time(valid_from)
+		spotOpts.ValidFrom = aws.Time(validFrom)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(time.RFC3339, v.(string))
+		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidUntil = aws.Time(valid_until)
+		spotOpts.ValidUntil = aws.Time(validUntil)
 	}
 
 	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
@@ -176,7 +189,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -189,7 +202,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {
@@ -205,7 +221,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	sir := *resp.SpotInstanceRequests[0]
-	d.SetId(*sir.SpotInstanceRequestId)
+	d.SetId(aws.StringValue(sir.SpotInstanceRequestId))
 
 	if d.Get("wait_for_fulfillment").(bool) {
 		spotStateConf := &resource.StateChangeConf{
@@ -226,12 +242,13 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return resourceAwsSpotInstanceRequestUpdate(d, meta)
+	return resourceAwsSpotInstanceRequestRead(d, meta)
 }
 
 // Update spot state, etc
 func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []*string{aws.String(d.Id())},
@@ -241,7 +258,8 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSpotInstanceRequestID.NotFound" {
+		if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
+			log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -252,6 +270,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 
 	// If nothing was found, then return no state
 	if len(resp.SpotInstanceRequests) == 0 {
+		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -259,15 +278,15 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	request := resp.SpotInstanceRequests[0]
 
 	// if the request is cancelled or closed, then it is gone
-	if *request.State == "cancelled" || *request.State == "closed" {
+	if *request.State == ec2.SpotInstanceStateCancelled || *request.State == ec2.SpotInstanceStateClosed {
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("spot_bid_status", *request.Status.Code)
+	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
 	if request.InstanceId != nil {
-		d.Set("spot_instance_id", *request.InstanceId)
+		d.Set("spot_instance_id", request.InstanceId)
 		// Read the instance data, setting up connection information
 		if err := readInstance(d, meta); err != nil {
 			return fmt.Errorf("Error reading Spot Instance Data: %s", err)
@@ -277,10 +296,19 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("spot_request_state", request.State)
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
-	d.Set("tags", tagsToMap(request.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
 	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
+	d.Set("spot_type", request.Type)
+	d.Set("spot_price", request.SpotPrice)
+	d.Set("key_name", request.LaunchSpecification.KeyName)
+	d.Set("instance_type", request.LaunchSpecification.InstanceType)
+	d.Set("ami", request.LaunchSpecification.ImageId)
 
 	return nil
 }
@@ -288,13 +316,11 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 func readInstance(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-		InstanceIds: []*string{aws.String(d.Get("spot_instance_id").(string))},
-	})
+	instance, err := resourceAwsInstanceFindByID(conn, d.Get("spot_instance_id").(string))
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -303,68 +329,68 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If nothing was found, then return no state
-	if len(resp.Reservations) == 0 {
+	if instance == nil {
 		return fmt.Errorf("no instances found")
 	}
 
-	instance := resp.Reservations[0].Instances[0]
+	d.Set("public_dns", instance.PublicDnsName)
+	d.Set("public_ip", instance.PublicIpAddress)
+	d.Set("private_dns", instance.PrivateDnsName)
+	d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("source_dest_check", instance.SourceDestCheck)
 
-	// Set these fields for connection information
-	if instance != nil {
-		d.Set("public_dns", instance.PublicDnsName)
-		d.Set("public_ip", instance.PublicIpAddress)
-		d.Set("private_dns", instance.PrivateDnsName)
-		d.Set("private_ip", instance.PrivateIpAddress)
+	// set connection information
+	if instance.PublicIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			"type": "ssh",
+			"host": *instance.PublicIpAddress,
+		})
+	} else if instance.PrivateIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			"type": "ssh",
+			"host": *instance.PrivateIpAddress,
+		})
+	}
+	if err := readBlockDevices(d, instance, conn); err != nil {
+		return err
+	}
 
-		// set connection information
-		if instance.PublicIpAddress != nil {
-			d.SetConnInfo(map[string]string{
-				"type": "ssh",
-				"host": *instance.PublicIpAddress,
-			})
-		} else if instance.PrivateIpAddress != nil {
-			d.SetConnInfo(map[string]string{
-				"type": "ssh",
-				"host": *instance.PrivateIpAddress,
-			})
-		}
-		if err := readBlockDevices(d, instance, conn); err != nil {
-			return err
-		}
+	var ipv6Addresses []string
+	if len(instance.NetworkInterfaces) > 0 {
+		for _, ni := range instance.NetworkInterfaces {
+			if *ni.Attachment.DeviceIndex == 0 {
+				d.Set("subnet_id", ni.SubnetId)
+				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
+				d.Set("associate_public_ip_address", ni.Association != nil)
+				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
-		var ipv6Addresses []string
-		if len(instance.NetworkInterfaces) > 0 {
-			for _, ni := range instance.NetworkInterfaces {
-				if *ni.Attachment.DeviceIndex == 0 {
-					d.Set("subnet_id", ni.SubnetId)
-					d.Set("network_interface_id", ni.NetworkInterfaceId)
-					d.Set("associate_public_ip_address", ni.Association != nil)
-					d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
-
-					for _, address := range ni.Ipv6Addresses {
-						ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
-					}
+				for _, address := range ni.Ipv6Addresses {
+					ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
 				}
 			}
-		} else {
-			d.Set("subnet_id", instance.SubnetId)
-			d.Set("network_interface_id", "")
 		}
+	} else {
+		d.Set("subnet_id", instance.SubnetId)
+		d.Set("primary_network_interface_id", "")
+	}
 
-		if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
-			log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
-		}
+	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
+		log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
+	}
 
-		if d.Get("get_password_data").(bool) {
-			passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
-			if err != nil {
-				return err
-			}
-			d.Set("password_data", passwordData)
-		} else {
-			d.Set("get_password_data", false)
-			d.Set("password_data", nil)
+	if err := readSecurityGroups(d, instance, conn); err != nil {
+		return err
+	}
+
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
 		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("get_password_data", false)
+		d.Set("password_data", nil)
 	}
 
 	return nil
@@ -373,14 +399,13 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSpotInstanceRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
-	}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsSpotInstanceRequestRead(d, meta)
 }
@@ -418,7 +443,7 @@ func SpotInstanceStateRefreshFunc(
 		})
 
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSpotInstanceRequestID.NotFound" {
+			if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
 				// Set this to nil as if we didn't find anything.
 				resp = nil
 			} else {

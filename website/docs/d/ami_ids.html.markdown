@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_ids"
 description: |-
@@ -11,7 +12,7 @@ Use this data source to get a list of AMI IDs matching the specified criteria.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ami_ids" "ubuntu" {
   owners = ["099720109477"]
 

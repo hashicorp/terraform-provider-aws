@@ -1,4 +1,5 @@
 ---
+subcategory: "SNS"
 layout: "aws"
 page_title: "AWS: aws_sns_platform_application"
 description: |-
@@ -13,7 +14,7 @@ Provides an SNS platform application resource
 
 ### Apple Push Notification Service (APNS)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "apns_application" {
   name                = "apns_application"
   platform            = "APNS"
@@ -24,7 +25,7 @@ resource "aws_sns_platform_application" "apns_application" {
 
 ### Google Cloud Messaging (GCM)
 
-```hcl
+```terraform
 resource "aws_sns_platform_application" "gcm_application" {
   name                = "gcm_application"
   platform            = "GCM"

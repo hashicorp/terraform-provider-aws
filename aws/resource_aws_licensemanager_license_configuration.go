@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
@@ -22,6 +23,10 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,6 +64,10 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -89,7 +98,7 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		opts.Tags = tagsFromMapLicenseManager(v.(map[string]interface{}))
+		opts.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().LicensemanagerTags()
 	}
 
 	log.Printf("[DEBUG] License Manager license configuration: %s", opts)
@@ -98,12 +107,13 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 	if err != nil {
 		return fmt.Errorf("Error creating License Manager license configuration: %s", err)
 	}
-	d.SetId(*resp.LicenseConfigurationArn)
+	d.SetId(aws.StringValue(resp.LicenseConfigurationArn))
 	return resourceAwsLicenseManagerLicenseConfigurationRead(d, meta)
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).licensemanagerconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetLicenseConfiguration(&licensemanager.GetLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
@@ -118,6 +128,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 		return fmt.Errorf("Error reading License Manager license configuration: %s", err)
 	}
 
+	d.Set("arn", resp.LicenseConfigurationArn)
 	d.Set("description", resp.Description)
 	d.Set("license_count", resp.LicenseCount)
 	d.Set("license_count_hard_limit", resp.LicenseCountHardLimit)
@@ -126,8 +137,9 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 		return fmt.Errorf("error setting license_rules: %s", err)
 	}
 	d.Set("name", resp.Name)
+	d.Set("owner_account_id", resp.OwnerAccountId)
 
-	if err := d.Set("tags", tagsToMapLicenseManager(resp.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.LicensemanagerKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -137,16 +149,13 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).licensemanagerconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
-		if err := setTagsLicenseManager(conn, d); err != nil {
-			return err
-		}
-		d.SetPartial("tags")
-	}
+		o, n := d.GetChange("tags")
 
-	d.Partial(false)
+		if err := keyvaluetags.LicensemanagerUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating License Manager License Configuration (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	opts := &licensemanager.UpdateLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),

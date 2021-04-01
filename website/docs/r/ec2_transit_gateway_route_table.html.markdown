@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table"
 description: |-
@@ -11,9 +12,9 @@ Manages an EC2 Transit Gateway Route Table.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ec2_transit_gateway_route_table" "example" {
-  transit_gateway_id = "${aws_ec2_transit_gateway.example.id}"
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
 }
 ```
 
@@ -24,10 +25,11 @@ The following arguments are supported:
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Route Table.
 
-## Attribute Reference
+## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - EC2 Transit Gateway Route Table Amazon Resource Name (ARN).
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway.
 * `default_propagation_route_table` - Boolean whether this is the default propagation route table for the EC2 Transit Gateway.
 * `id` - EC2 Transit Gateway Route Table identifier

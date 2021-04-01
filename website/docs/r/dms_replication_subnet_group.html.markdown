@@ -1,4 +1,5 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_subnet_group"
 description: |-
@@ -11,7 +12,7 @@ Provides a DMS (Data Migration Service) replication subnet group resource. DMS r
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new replication subnet group
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_description = "Test replication subnet group"
@@ -38,7 +39,7 @@ The following arguments are supported:
     - Must not be "default".
 
 * `subnet_ids` - (Required) A list of the EC2 subnet IDs for the subnet group.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

@@ -1,4 +1,5 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
 description: |-
@@ -14,7 +15,7 @@ See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "prod" {
   allocated_storage    = 10
   engine               = "mysql"
@@ -28,7 +29,7 @@ resource "aws_db_instance" "prod" {
 }
 
 data "aws_db_snapshot" "latest_prod_snapshot" {
-  db_instance_identifier = "${aws_db_instance.prod.id}"
+  db_instance_identifier = aws_db_instance.prod.id
   most_recent            = true
 }
 
@@ -36,10 +37,10 @@ data "aws_db_snapshot" "latest_prod_snapshot" {
 resource "aws_db_instance" "dev" {
   instance_class      = "db.t2.micro"
   name                = "mydbdev"
-  snapshot_identifier = "${data.aws_db_snapshot.latest_prod_snapshot.id}"
+  snapshot_identifier = data.aws_db_snapshot.latest_prod_snapshot.id
 
   lifecycle {
-    ignore_changes = ["snapshot_identifier"]
+    ignore_changes = [snapshot_identifier]
   }
 }
 ```

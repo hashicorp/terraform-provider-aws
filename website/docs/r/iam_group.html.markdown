@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_group"
 description: |-
@@ -11,7 +12,7 @@ Provides an IAM group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group" "developers" {
   name = "developers"
   path = "/users/"

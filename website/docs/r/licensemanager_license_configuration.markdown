@@ -1,4 +1,5 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_license_configuration"
 description: |-
@@ -13,7 +14,7 @@ Provides a License Manager license configuration resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_licensemanager_license_configuration" "example" {
   name                     = "Example"
   description              = "Example"
@@ -41,7 +42,7 @@ The following arguments are supported:
 * `license_count_hard_limit` - (Optional) Sets the number of available licenses as a hard limit.
 * `license_counting_type` - (Required) Dimension to use to track license inventory. Specify either `vCPU`, `Instance`, `Core` or `Socket`.
 * `license_rules` - (Optional) Array of configured License Manager rules.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Rules
 
@@ -59,7 +60,9 @@ License rules should be in the format of `#RuleType=RuleValue`. Supported rule t
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The license configuration ARN.
 * `id` - The license configuration ARN.
+* `owner_account_id` - Account ID of the owner of the license configuration.
 
 ## Import
 

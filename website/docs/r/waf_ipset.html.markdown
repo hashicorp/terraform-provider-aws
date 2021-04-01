@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_ipset"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF IPSet Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -41,8 +42,7 @@ The following arguments are supported:
 #### Arguments
 
 * `type` - (Required) Type of the IP address - `IPV4` or `IPV6`.
-* `value` - (Required) An IPv4 or IPv6 address specified via CIDR notation.
-	e.g. `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
+* `value` - (Required) An IPv4 or IPv6 address specified via CIDR notation. e.g. `192.0.2.44/32` or `1111:0000:0000:0000:0000:0000:0000:0000/64`
 
 ## Attributes Reference
 

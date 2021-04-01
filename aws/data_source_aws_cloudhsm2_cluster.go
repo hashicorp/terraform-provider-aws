@@ -6,12 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceCloudHsm2Cluster() *schema.Resource {
+func dataSourceCloudHsmV2Cluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudHsm2ClusterRead,
+		Read: dataSourceCloudHsmV2ClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -37,7 +37,6 @@ func dataSourceCloudHsm2Cluster() *schema.Resource {
 
 			"cluster_certificates": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -74,7 +73,7 @@ func dataSourceCloudHsm2Cluster() *schema.Resource {
 	}
 }
 
-func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudhsmv2conn
 
 	clusterId := d.Get("cluster_id").(string)
@@ -95,7 +94,7 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 	out, err := conn.DescribeClusters(input)
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudHSM v2 Cluster: %s", err)
+		return fmt.Errorf("error describing CloudHSM v2 Cluster: %w", err)
 	}
 
 	var cluster *cloudhsmv2.Cluster
@@ -114,8 +113,8 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("vpc_id", cluster.VpcId)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("cluster_state", cluster.State)
-	if err := d.Set("cluster_certificates", readCloudHsm2ClusterCertificates(cluster)); err != nil {
-		return fmt.Errorf("error setting cluster_certificates: %s", err)
+	if err := d.Set("cluster_certificates", readCloudHsmV2ClusterCertificates(cluster)); err != nil {
+		return fmt.Errorf("error setting cluster_certificates: %w", err)
 	}
 
 	var subnets []string
@@ -124,7 +123,7 @@ func dataSourceCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSM v2 Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("[DEBUG] Error saving Subnet IDs to state for CloudHSM v2 Cluster (%s): %w", d.Id(), err)
 	}
 
 	return nil

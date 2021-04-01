@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_role"
 description: |-
@@ -13,7 +14,7 @@ properties without having to hard code ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_role" "example" {
   name = "an_example_role_name"
 }
@@ -34,3 +35,4 @@ data "aws_iam_role" "example" {
 * `path` - The path to the role.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the role.
 * `unique_id` - The stable and unique string identifying the role.
+* `tags` - The tags attached to the role.

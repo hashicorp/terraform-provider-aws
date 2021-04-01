@@ -2,27 +2,101 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAWSDxConnection_importBasic(t *testing.T) {
-	resourceName := "aws_dx_connection.hoge"
+func init() {
+	resource.AddTestSweepers("aws_dx_connection", &resource.Sweeper{
+		Name: "aws_dx_connection",
+		F:    testSweepDxConnections,
+	})
+}
+
+func testSweepDxConnections(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).dxconn
+
+	var sweeperErrs *multierror.Error
+
+	input := &directconnect.DescribeConnectionsInput{}
+
+	// DescribeConnections has no pagination support
+	output, err := conn.DescribeConnections(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		sweeperErr := fmt.Errorf("error listing Direct Connect Connections for %s: %w", region, err)
+		log.Printf("[ERROR] %s", sweeperErr)
+		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if output == nil {
+		log.Printf("[WARN] Skipping Direct Connect Connection sweep for %s: empty response", region)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	for _, connection := range output.Connections {
+		if connection == nil {
+			continue
+		}
+
+		id := aws.StringValue(connection.ConnectionId)
+
+		r := resourceAwsDxConnection()
+		d := r.Data(nil)
+		d.SetId(id)
+
+		err = r.Delete(d, client)
+
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting Direct Connect Connection (%s): %w", id, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func TestAccAWSDxConnection_basic(t *testing.T) {
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+	resourceName := "aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfig(acctest.RandString(5)),
+				Config: testAccDxConnectionConfig(connectionName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "location", "EqSe2-EQ"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -32,52 +106,37 @@ func TestAccAWSDxConnection_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDxConnection_basic(t *testing.T) {
-	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxConnectionConfig(connectionName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "location", "EqSe2"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDxConnection_tags(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
+	resourceName := "aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxConnectionConfig_tags(connectionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.Usage", "original"),
+					testAccCheckAwsDxConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDxConnectionConfig_tagsChanged(connectionName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxConnectionExists("aws_dx_connection.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "name", connectionName),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_dx_connection.hoge", "tags.Usage", "changed"),
+					testAccCheckAwsDxConnectionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
 			},
 		},
@@ -122,20 +181,20 @@ func testAccCheckAwsDxConnectionExists(name string) resource.TestCheckFunc {
 
 func testAccDxConnectionConfig(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_connection" "hoge" {
+resource "aws_dx_connection" "test" {
   name      = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 `, n)
 }
 
 func testAccDxConnectionConfig_tags(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_connection" "hoge" {
+resource "aws_dx_connection" "test" {
   name      = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 
   tags = {
     Environment = "production"
@@ -147,10 +206,10 @@ resource "aws_dx_connection" "hoge" {
 
 func testAccDxConnectionConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_connection" "hoge" {
+resource "aws_dx_connection" "test" {
   name      = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 
   tags = {
     Usage = "changed"

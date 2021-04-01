@@ -1,4 +1,5 @@
 ---
+subcategory: "Resource Groups"
 layout: "aws"
 page_title: "AWS: aws_resourcegroups_group"
 description: |-
@@ -11,7 +12,7 @@ Provides a Resource Group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_resourcegroups_group" "test" {
   name = "test-group"
 
@@ -40,11 +41,12 @@ The following arguments are supported:
 * `name` - (Required) The resource group's name. A resource group name can have a maximum of 127 characters, including letters, numbers, hyphens, dots, and underscores. The name cannot start with `AWS` or `aws`.
 * `description` - (Optional) A description of the resource group.
 * `resource_query` - (Required) A `resource_query` block. Resource queries are documented below.
+* `tags` - (Optional) Key-value map of resource tags
 
 An `resource_query` block supports the following arguments:
 
 * `query` - (Required) The resource query as a JSON string.
-* `type` - (Required) The type of the resource query. Defaults to `TAG_FILTERS_1_0`. 
+* `type` - (Required) The type of the resource query. Defaults to `TAG_FILTERS_1_0`.
 
 ## Attributes Reference
 

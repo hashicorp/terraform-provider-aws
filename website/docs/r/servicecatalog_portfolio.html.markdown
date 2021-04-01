@@ -1,4 +1,5 @@
 ---
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_portfolio"
 description: |-
@@ -11,7 +12,7 @@ Provides a resource to create a Service Catalog Portfolio.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_servicecatalog_portfolio" "portfolio" {
   name          = "My App Portfolio"
   description   = "List of my organizations apps"

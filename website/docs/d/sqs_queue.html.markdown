@@ -1,4 +1,5 @@
 ---
+subcategory: "SQS"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue"
 description: |-
@@ -13,7 +14,7 @@ the ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_sqs_queue" "example" {
   name = "queue"
 }
@@ -27,3 +28,4 @@ data "aws_sqs_queue" "example" {
 
 * `arn` - The Amazon Resource Name (ARN) of the queue.
 * `url` - The URL of the queue.
+* `tags` - A map of tags for the resource.

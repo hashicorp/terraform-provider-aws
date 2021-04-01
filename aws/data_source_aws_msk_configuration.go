@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsMskConfiguration() *schema.Resource {
@@ -64,7 +64,7 @@ func dataSourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Configurations: %s", err)
+		return fmt.Errorf("error listing MSK Configurations: %w", err)
 	}
 
 	if configuration == nil {
@@ -84,7 +84,7 @@ func dataSourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{})
 	revisionOutput, err := conn.DescribeConfigurationRevision(revisionInput)
 
 	if err != nil {
-		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): %s", d.Id(), aws.Int64Value(revision), err)
+		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): %w", d.Id(), aws.Int64Value(revision), err)
 	}
 
 	if revisionOutput == nil {
@@ -95,7 +95,7 @@ func dataSourceAwsMskConfigurationRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", aws.StringValue(configuration.Description))
 
 	if err := d.Set("kafka_versions", aws.StringValueSlice(configuration.KafkaVersions)); err != nil {
-		return fmt.Errorf("error setting kafka_versions: %s", err)
+		return fmt.Errorf("error setting kafka_versions: %w", err)
 	}
 
 	d.Set("latest_revision", aws.Int64Value(revision))

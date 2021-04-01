@@ -1,4 +1,5 @@
 ---
+subcategory: "Cost and Usage Report"
 layout: "aws"
 page_title: "AWS: aws_cur_report_definition"
 description: |-
@@ -15,7 +16,7 @@ Use this data source to get information on an AWS Cost and Usage Report Definiti
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cur_report_definition" "report_definition" {
   report_name = "example"
 }
@@ -37,5 +38,5 @@ The following arguments are supported:
 * `s3_prefix` - Preferred report path prefix.
 * `s3_region` - Region of customer S3 bucket.
 * `additional_artifacts` - A list of additional artifacts.
-
-
+* `refresh_closed_reports` - If true reports are updated after they have been finalized.
+* `report_versioning` - Overwrite the previous version of each report or to deliver the report in addition to the previous versions.

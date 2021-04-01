@@ -1,4 +1,5 @@
 ---
+subcategory: "Transfer"
 layout: "aws"
 page_title: "AWS: aws_transfer_server"
 description: |-
@@ -12,7 +13,7 @@ resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_transfer_server" "example" {
   server_id = "s-1234567"
 }

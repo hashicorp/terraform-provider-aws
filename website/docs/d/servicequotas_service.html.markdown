@@ -1,4 +1,5 @@
 ---
+subcategory: "Service Quotas"
 layout: "aws"
 page_title: "AWS: aws_servicequotas_service"
 description: |-
@@ -11,7 +12,7 @@ Retrieve information about a Service Quotas Service.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_servicequotas_service" "example" {
   service_name = "Amazon Virtual Private Cloud (Amazon VPC)"
 }

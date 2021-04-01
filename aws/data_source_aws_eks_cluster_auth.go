@@ -2,11 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks/token"
 )
 
 func dataSourceAwsEksClusterAuth() *schema.Resource {
@@ -32,16 +31,16 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 func dataSourceAwsEksClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).stsconn
 	name := d.Get("name").(string)
-	generator, err := token.NewGenerator(false)
+	generator, err := token.NewGenerator(false, false)
 	if err != nil {
-		return fmt.Errorf("error getting token generator: %v", err)
+		return fmt.Errorf("error getting token generator: %w", err)
 	}
 	token, err := generator.GetWithSTS(name, conn)
 	if err != nil {
-		return fmt.Errorf("error getting token: %v", err)
+		return fmt.Errorf("error getting token: %w", err)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(name)
 	d.Set("token", token.Token)
 
 	return nil

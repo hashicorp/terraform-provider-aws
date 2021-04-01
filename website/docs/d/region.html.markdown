@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_region"
 description: |-
@@ -19,7 +20,7 @@ configuration from its parent module.
 The following example shows how the resource might be used to obtain
 the name of the AWS region configured on the provider.
 
-```hcl
+```terraform
 data "aws_region" "current" {}
 ```
 

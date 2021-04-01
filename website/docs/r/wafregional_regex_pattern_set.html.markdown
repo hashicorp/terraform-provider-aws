@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_regex_pattern_set"
 description: |-
@@ -11,7 +12,7 @@ Provides a WAF Regional Regex Pattern Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_regex_pattern_set" "example" {
   name                  = "example"
   regex_pattern_strings = ["one", "two"]
