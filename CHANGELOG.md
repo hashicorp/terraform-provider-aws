@@ -30,6 +30,9 @@ BUG FIXES:
 
 * resource/aws_ec2_transit_gateway_route_table_propagation: Wait for enable and disable operations to complete ([#18470](https://github.com/hashicorp/terraform-provider-aws/issues/18470))
 * resource/aws_ecs_service: Improve handling of eventual consistency including security group dependency violations on deletion ([#16936](https://github.com/hashicorp/terraform-provider-aws/issues/16936))
+* resource/aws_iam_role: Handle read-after-create eventual consistency ([#18435](https://github.com/hashicorp/terraform-provider-aws/issues/18435))
+* resource/aws_iam_role_policy: Handle read-after-create eventual consistency ([#18435](https://github.com/hashicorp/terraform-provider-aws/issues/18435))
+* resource/aws_iam_role_policy_attachment: Handle read-after-create eventual consistency ([#18435](https://github.com/hashicorp/terraform-provider-aws/issues/18435))
 * resource/aws_network_interface_sg_attachment: Handle read-after-create eventual consistency ([#18466](https://github.com/hashicorp/terraform-provider-aws/issues/18466))
 * resource/aws_route_table: Improve eventual consistency handling and handling of out-of-band resource removal ([#17319](https://github.com/hashicorp/terraform-provider-aws/issues/17319))
 * resource/aws_route_table_association: Improve eventual consistency handling and handling of out-of-band resource removal ([#17319](https://github.com/hashicorp/terraform-provider-aws/issues/17319))
