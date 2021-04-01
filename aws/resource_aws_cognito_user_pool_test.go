@@ -1095,6 +1095,11 @@ func TestAccAWSCognitoUserPool_schemaAttributes(t *testing.T) {
 					}),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
