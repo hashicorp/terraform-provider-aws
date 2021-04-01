@@ -592,7 +592,7 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).docdbconn
 	requestUpdate := false
 
-	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+	if d.HasChanges("skip_final_snapshot", "final_snapshot_identifier") {
 		skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 		finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 		if !skipFinalSnapshot && finalSnapshotIdentifier == "" {

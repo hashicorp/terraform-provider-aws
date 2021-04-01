@@ -652,24 +652,22 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-  if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+	if d.HasChanges("skip_final_snapshot", "final_snapshot_identifier") {
 		skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 		finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 		if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
 			return fmt.Errorf(`provider.aws: aws_redshift_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
 		}
-		d.SetPartial("skip_final_snapshot")
-		d.SetPartial("final_snapshot_identifier")
 	}
 
-  if d.HasChange("tags") {
+	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
-  }
-    
+	}
+
 	requestUpdate := false
 	log.Printf("[INFO] Building Redshift Modify Cluster Options")
 	req := &redshift.ModifyClusterInput{

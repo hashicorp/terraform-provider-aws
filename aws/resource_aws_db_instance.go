@@ -1588,16 +1588,12 @@ func waitUntilAwsDbInstanceIsDeleted(id string, conn *rds.RDS, timeout time.Dura
 func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	d.Partial(true)
-
-	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+	if d.HasChanges("skip_final_snapshot", "final_snapshot_identifier") {
 		skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 		finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 		if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
 			return fmt.Errorf(`provider.aws: aws_db_instance: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
 		}
-		d.SetPartial("skip_final_snapshot")
-		d.SetPartial("final_snapshot_identifier")
 	}
 
 	req := &rds.ModifyDBInstanceInput{
