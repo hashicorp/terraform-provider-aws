@@ -910,7 +910,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("runtime_environment", application.RuntimeEnvironment)
 	d.Set("service_execution_role", application.ServiceExecutionRole)
 	d.Set("status", application.ApplicationStatus)
-	d.Set("version_id", int(aws.Int64Value(application.ApplicationVersionId)))
+	d.Set("version_id", application.ApplicationVersionId)
 
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %w", err)

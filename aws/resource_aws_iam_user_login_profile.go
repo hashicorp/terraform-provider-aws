@@ -185,7 +185,7 @@ func resourceAwsIamUserLoginProfileRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error getting IAM User Login Profile (%s): empty response", d.Id())
 	}
 
-	d.Set("user", aws.StringValue(output.LoginProfile.UserName))
+	d.Set("user", output.LoginProfile.UserName)
 
 	return nil
 }

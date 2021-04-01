@@ -329,8 +329,8 @@ func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	d.Set("enabled", aws.BoolValue(output.InventoryConfiguration.IsEnabled))
-	d.Set("included_object_versions", aws.StringValue(output.InventoryConfiguration.IncludedObjectVersions))
+	d.Set("enabled", output.InventoryConfiguration.IsEnabled)
+	d.Set("included_object_versions", output.InventoryConfiguration.IncludedObjectVersions)
 
 	if err := d.Set("optional_fields", flattenStringList(output.InventoryConfiguration.OptionalFields)); err != nil {
 		return fmt.Errorf("error setting optional_fields: %s", err)
