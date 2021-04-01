@@ -1199,37 +1199,24 @@ func NewTestSweepResource(resource *schema.Resource, d *schema.ResourceData, met
 
 func testSweepResourceOrchestrator(sweepResources []*testSweepResource) error {
 	var wg sync.WaitGroup
-	wgDone := make(chan bool)
-	errChan := make(chan error, len(sweepResources))
+
+	var errors *multierror.Error
+	var mutex = &sync.Mutex{}
 
 	for _, sweepResource := range sweepResources {
 		wg.Add(1)
 
 		go func(sweepResource *testSweepResource) {
-			defer wg.Done()
-
 			err := testAccDeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
 			if err != nil {
-				errChan <- err
+				mutex.Lock()
+				errors = multierror.Append(errors, err)
+				mutex.Unlock()
 			}
 		}(sweepResource)
 	}
 
-	go func() {
-		wg.Wait()
-		close(wgDone)
-		close(errChan)
-	}()
-
-	// Keep in mind: everything above (except the declarations) is executing in separate goroutines than the one that hits this line.
-	// The errChan range waits to exit for errChan to close (which, in turn, won't happen until the wait group finishes).
-	var errors *multierror.Error
-	var mutex = &sync.Mutex{}
-	for err := range errChan {
-		mutex.Lock()
-		errors = multierror.Append(errors, err)
-		mutex.Unlock()
-	}
+	wg.Wait()
 
 	return errors.ErrorOrNil()
 }
