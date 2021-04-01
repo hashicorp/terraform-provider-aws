@@ -1151,10 +1151,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 			_, err := conn.AddCustomAttributes(params)
 			if err != nil {
-				return fmt.Errorf("unable to add custom attributes from schema: %s", err.Error())
+				return fmt.Errorf("error updating Cognito User Pool (%s): unable to add custom attributes from schema: %w", d.Id(), err)
 			}
 		} else {
-			return fmt.Errorf("cannot modify or remove schema items")
+			return fmt.Errorf("error updating Cognito User Pool (%s): cannot modify or remove schema items", d.Id())
 		}
 	}
 
