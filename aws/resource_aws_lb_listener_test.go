@@ -304,7 +304,7 @@ func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 func TestAccAWSLBListener_redirect(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
-	rName := fmt.Sprintf("testlistener-redirect-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -347,7 +347,7 @@ func TestAccAWSLBListener_redirect(t *testing.T) {
 func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
-	rName := fmt.Sprintf("testlistener-fixedresponse-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
