@@ -228,6 +228,7 @@ rules:
     severity: WARNING
 
   - id: helper-schema-ResourceData-Set-extraneous-value-pointer-conversion
+    fix: d.Set($ATTRIBUTE, $APIOBJECT)
     languages: [go]
     message: AWS Go SDK pointer conversion function for `d.Set()` value is extraneous
     paths:
