@@ -1358,6 +1358,20 @@ func expandESDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpoin
 		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
 	}
 
+	if customEndpointEnabled, ok := m["custom_endpoint_enabled"]; ok {
+		domainEndpointOptions.CustomEndpointEnabled = aws.Bool(customEndpointEnabled.(bool))
+
+		if customEndpointEnabled.(bool) {
+			if v, ok := m["custom_endpoint"].(string); ok && v != "" {
+				domainEndpointOptions.CustomEndpoint = aws.String(v)
+			}
+
+			if v, ok := m["custom_endpoint_certificate_arn"].(string); ok && v != "" {
+				domainEndpointOptions.CustomEndpointCertificateArn = aws.String(v)
+			}
+		}
+	}
+
 	return domainEndpointOptions
 }
 
@@ -1367,8 +1381,17 @@ func flattenESDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainE
 	}
 
 	m := map[string]interface{}{
-		"enforce_https":       aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
-		"tls_security_policy": aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+		"enforce_https":           aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy":     aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+		"custom_endpoint_enabled": aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled),
+	}
+	if aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled) {
+		if domainEndpointOptions.CustomEndpoint != nil {
+			m["custom_endpoint"] = aws.StringValue(domainEndpointOptions.CustomEndpoint)
+		}
+		if domainEndpointOptions.CustomEndpointCertificateArn != nil {
+			m["custom_endpoint_certificate_arn"] = aws.StringValue(domainEndpointOptions.CustomEndpointCertificateArn)
+		}
 	}
 
 	return []interface{}{m}
@@ -4745,7 +4768,79 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 						certificate.File = file
 					}
 
+					if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+						sds := &appmesh.ListenerTlsSdsCertificate{}
+
+						mSds := vSds[0].(map[string]interface{})
+
+						if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+							sds.SecretName = aws.String(vSecretName)
+						}
+
+						certificate.Sds = sds
+					}
+
 					tls.Certificate = certificate
+				}
+
+				if vValidation, ok := mTls["validation"].([]interface{}); ok && len(vValidation) > 0 && vValidation[0] != nil {
+					validation := &appmesh.ListenerTlsValidationContext{}
+
+					mValidation := vValidation[0].(map[string]interface{})
+
+					if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]interface{}); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
+						subjectAlternativeNames := &appmesh.SubjectAlternativeNames{}
+
+						mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]interface{})
+
+						if vMatch, ok := mSubjectAlternativeNames["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+							match := &appmesh.SubjectAlternativeNameMatchers{}
+
+							mMatch := vMatch[0].(map[string]interface{})
+
+							if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+								match.Exact = expandStringSet(vExact)
+							}
+
+							subjectAlternativeNames.Match = match
+						}
+
+						validation.SubjectAlternativeNames = subjectAlternativeNames
+					}
+
+					if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
+						trust := &appmesh.ListenerTlsValidationContextTrust{}
+
+						mTrust := vTrust[0].(map[string]interface{})
+
+						if vFile, ok := mTrust["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+							file := &appmesh.TlsValidationContextFileTrust{}
+
+							mFile := vFile[0].(map[string]interface{})
+
+							if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+								file.CertificateChain = aws.String(vCertificateChain)
+							}
+
+							trust.File = file
+						}
+
+						if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+							sds := &appmesh.TlsValidationContextSdsTrust{}
+
+							mSds := vSds[0].(map[string]interface{})
+
+							if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+								sds.SecretName = aws.String(vSecretName)
+							}
+
+							trust.Sds = sds
+						}
+
+						validation.Trust = trust
+					}
+
+					tls.Validation = validation
 				}
 
 				listener.Tls = tls
@@ -4977,7 +5072,57 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 					mCertificate["file"] = []interface{}{mFile}
 				}
 
+				if sds := certificate.Sds; sds != nil {
+					mSds := map[string]interface{}{
+						"secret_name": aws.StringValue(sds.SecretName),
+					}
+
+					mCertificate["sds"] = []interface{}{mSds}
+				}
+
 				mTls["certificate"] = []interface{}{mCertificate}
+			}
+
+			if validation := tls.Validation; validation != nil {
+				mValidation := map[string]interface{}{}
+
+				if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
+					mSubjectAlternativeNames := map[string]interface{}{}
+
+					if match := subjectAlternativeNames.Match; match != nil {
+						mMatch := map[string]interface{}{
+							"exact": flattenStringSet(match.Exact),
+						}
+
+						mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+					}
+
+					mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+				}
+
+				if trust := validation.Trust; trust != nil {
+					mTrust := map[string]interface{}{}
+
+					if file := trust.File; file != nil {
+						mFile := map[string]interface{}{
+							"certificate_chain": aws.StringValue(file.CertificateChain),
+						}
+
+						mTrust["file"] = []interface{}{mFile}
+					}
+
+					if sds := trust.Sds; sds != nil {
+						mSds := map[string]interface{}{
+							"secret_name": aws.StringValue(sds.SecretName),
+						}
+
+						mTrust["sds"] = []interface{}{mSds}
+					}
+
+					mValidation["trust"] = []interface{}{mTrust}
+				}
+
+				mTls["validation"] = []interface{}{mValidation}
 			}
 
 			mListener["tls"] = []interface{}{mTls}
@@ -5053,6 +5198,41 @@ func expandAppmeshClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolic
 
 		mTls := vTls[0].(map[string]interface{})
 
+		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+			certificate := &appmesh.ClientTlsCertificate{}
+
+			mCertificate := vCertificate[0].(map[string]interface{})
+
+			if vFile, ok := mCertificate["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+				file := &appmesh.ListenerTlsFileCertificate{}
+
+				mFile := vFile[0].(map[string]interface{})
+
+				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+					file.CertificateChain = aws.String(vCertificateChain)
+				}
+				if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+					file.PrivateKey = aws.String(vPrivateKey)
+				}
+
+				certificate.File = file
+			}
+
+			if vSds, ok := mCertificate["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+				sds := &appmesh.ListenerTlsSdsCertificate{}
+
+				mSds := vSds[0].(map[string]interface{})
+
+				if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+					sds.SecretName = aws.String(vSecretName)
+				}
+
+				certificate.Sds = sds
+			}
+
+			tls.Certificate = certificate
+		}
+
 		if vEnforce, ok := mTls["enforce"].(bool); ok {
 			tls.Enforce = aws.Bool(vEnforce)
 		}
@@ -5065,6 +5245,26 @@ func expandAppmeshClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolic
 			validation := &appmesh.TlsValidationContext{}
 
 			mValidation := vValidation[0].(map[string]interface{})
+
+			if vSubjectAlternativeNames, ok := mValidation["subject_alternative_names"].([]interface{}); ok && len(vSubjectAlternativeNames) > 0 && vSubjectAlternativeNames[0] != nil {
+				subjectAlternativeNames := &appmesh.SubjectAlternativeNames{}
+
+				mSubjectAlternativeNames := vSubjectAlternativeNames[0].(map[string]interface{})
+
+				if vMatch, ok := mSubjectAlternativeNames["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+					match := &appmesh.SubjectAlternativeNameMatchers{}
+
+					mMatch := vMatch[0].(map[string]interface{})
+
+					if vExact, ok := mMatch["exact"].(*schema.Set); ok && vExact.Len() > 0 {
+						match.Exact = expandStringSet(vExact)
+					}
+
+					subjectAlternativeNames.Match = match
+				}
+
+				validation.SubjectAlternativeNames = subjectAlternativeNames
+			}
 
 			if vTrust, ok := mValidation["trust"].([]interface{}); ok && len(vTrust) > 0 && vTrust[0] != nil {
 				trust := &appmesh.TlsValidationContextTrust{}
@@ -5095,35 +5295,17 @@ func expandAppmeshClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolic
 					trust.File = file
 				}
 
-				// if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
-				// 	sds := &appmesh.TlsValidationContextSdsTrust{}
+				if vSds, ok := mTrust["sds"].([]interface{}); ok && len(vSds) > 0 && vSds[0] != nil {
+					sds := &appmesh.TlsValidationContextSdsTrust{}
 
-				// 	mSds := vSds[0].(map[string]interface{})
+					mSds := vSds[0].(map[string]interface{})
 
-				// 	if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
-				// 		sds.SecretName = aws.String(vSecretName)
-				// 	}
+					if vSecretName, ok := mSds["secret_name"].(string); ok && vSecretName != "" {
+						sds.SecretName = aws.String(vSecretName)
+					}
 
-				// 	if vSource, ok := mSds["source"].([]interface{}); ok && len(vSource) > 0 && vSource[0] != nil {
-				// 		source := &appmesh.SdsSource{}
-
-				// 		mSource := vSource[0].(map[string]interface{})
-
-				// 		if vUnixDomainSocket, ok := mSource["unix_domain_socket"].([]interface{}); ok && len(vUnixDomainSocket) > 0 && vUnixDomainSocket[0] != nil {
-				// 			unixDomainSocket := &appmesh.SdsUnixDomainSocketSource{}
-
-				// 			mUnixDomainSocket := vUnixDomainSocket[0].(map[string]interface{})
-
-				// 			if vPath, ok := mUnixDomainSocket["path"].(string); ok && vPath != "" {
-				// 				unixDomainSocket.Path = aws.String(vPath)
-				// 			}
-
-				// 			source.UnixDomainSocket = unixDomainSocket
-				// 		}
-				// 	}
-
-				// 	trust.Sds = sds
-				// }
+					trust.Sds = sds
+				}
 
 				validation.Trust = trust
 			}
@@ -5150,8 +5332,45 @@ func flattenAppmeshClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{
 			"ports":   flattenInt64Set(tls.Ports),
 		}
 
+		if certificate := tls.Certificate; certificate != nil {
+			mCertificate := map[string]interface{}{}
+
+			if file := certificate.File; file != nil {
+				mFile := map[string]interface{}{
+					"certificate_chain": aws.StringValue(file.CertificateChain),
+					"private_key":       aws.StringValue(file.PrivateKey),
+				}
+
+				mCertificate["file"] = []interface{}{mFile}
+			}
+
+			if sds := certificate.Sds; sds != nil {
+				mSds := map[string]interface{}{
+					"secret_name": aws.StringValue(sds.SecretName),
+				}
+
+				mCertificate["sds"] = []interface{}{mSds}
+			}
+
+			mTls["certificate"] = []interface{}{mCertificate}
+		}
+
 		if validation := tls.Validation; validation != nil {
 			mValidation := map[string]interface{}{}
+
+			if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
+				mSubjectAlternativeNames := map[string]interface{}{}
+
+				if match := subjectAlternativeNames.Match; match != nil {
+					mMatch := map[string]interface{}{
+						"exact": flattenStringSet(match.Exact),
+					}
+
+					mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+				}
+
+				mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+			}
 
 			if trust := validation.Trust; trust != nil {
 				mTrust := map[string]interface{}{}
@@ -5172,27 +5391,13 @@ func flattenAppmeshClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{
 					mTrust["file"] = []interface{}{mFile}
 				}
 
-				// if sds := trust.Sds; sds != nil {
-				// 	mSds := map[string]interface{}{
-				// 		"secret_name": aws.StringValue(sds.SecretName),
-				// 	}
+				if sds := trust.Sds; sds != nil {
+					mSds := map[string]interface{}{
+						"secret_name": aws.StringValue(sds.SecretName),
+					}
 
-				// 	if source := sds.Source; source != nil {
-				// 		mSource := map[string]interface{}{}
-
-				// 		if unixDomainSocket := source.UnixDomainSocket; unixDomainSocket != nil {
-				// 			mUnixDomainSocket := map[string]interface{}{
-				// 				"path": aws.StringValue(unixDomainSocket.Path),
-				// 			}
-
-				// 			mSource["unix_domain_socket"] = []interface{}{mUnixDomainSocket}
-				// 		}
-
-				// 		mSds["source"] = []interface{}{mSource}
-				// 	}
-
-				// 	mTrust["sds"] = []interface{}{mSds}
-				// }
+					mTrust["sds"] = []interface{}{mSds}
+				}
 
 				mValidation["trust"] = []interface{}{mTrust}
 			}

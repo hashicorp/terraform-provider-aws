@@ -48,7 +48,6 @@ const (
 )
 
 const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const uuidRegexPattern = `[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}`
 
 // TestAccSkip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
 //
@@ -1018,8 +1017,26 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 			return fmt.Errorf("resource ID missing: %s", resourceName)
 		}
 
-		if resource.DeleteContext != nil {
-			diags := resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+		if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
+			var diags diag.Diagnostics
+
+			if resource.DeleteContext != nil {
+				diags = resource.DeleteContext(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+			} else {
+				diags = resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
+			}
+
+			for i := range diags {
+				if diags[i].Severity == diag.Error {
+					return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				}
+			}
+
+			return nil
+		}
+
+		if resource.DeleteWithoutTimeout != nil {
+			diags := resource.DeleteWithoutTimeout(context.Background(), resource.Data(resourceState.Primary), provider.Meta())
 
 			for i := range diags {
 				if diags[i].Severity == diag.Error {

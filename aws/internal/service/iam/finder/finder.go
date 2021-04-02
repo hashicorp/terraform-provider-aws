@@ -38,3 +38,35 @@ func GroupAttachedPolicy(conn *iam.IAM, groupName string, policyARN string) (*ia
 
 	return result, nil
 }
+
+// UserAttachedPolicy returns the AttachedPolicy corresponding to the specified user and policy ARN.
+func UserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*iam.AttachedPolicy, error) {
+	input := &iam.ListAttachedUserPoliciesInput{
+		UserName: aws.String(userName),
+	}
+
+	err := conn.ListAttachedUserPoliciesPages(input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, attachedPolicy := range page.AttachedPolicies {
+			if attachedPolicy == nil {
+				continue
+			}
+
+			if aws.StringValue(attachedPolicy.PolicyArn) == policyARN {
+				result = attachedPolicy
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

@@ -38,12 +38,100 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"deregistration_delay": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      300,
+				ValidateFunc: validation.IntBetween(0, 3600),
+			},
+			"health_check": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"healthy_threshold": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3,
+							ValidateFunc: validation.IntBetween(2, 10),
+						},
+						"interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  30,
+						},
+						"matcher": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
+						},
+						"path": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateAwsLbTargetGroupHealthCheckPath,
+						},
+						"port": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "traffic-port",
+							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  elbv2.ProtocolEnumHttp,
+							StateFunc: func(v interface{}) string {
+								return strings.ToUpper(v.(string))
+							},
+							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ProtocolEnumHttp,
+								elbv2.ProtocolEnumHttps,
+								elbv2.ProtocolEnumTcp,
+							}, true),
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
+						},
+						"timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(2, 120),
+						},
+						"unhealthy_threshold": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      3,
+							ValidateFunc: validation.IntBetween(2, 10),
+						},
+					},
+				},
+			},
+			"lambda_multi_value_headers_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"load_balancing_algorithm_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"round_robin",
+					"least_outstanding_requests",
+				}, false),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -59,21 +147,29 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateLbTargetGroupNamePrefix,
 			},
-
 			"port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
-
+			"preserve_client_ip": {
+				// Use TypeString to allow an "unspecified" value,
+				// since TypeBool only has true/false with false default.
+				// The conversion from bare true/false values in
+				// configurations to TypeString value is currently safe.
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: suppressEquivalentTypeStringBoolean,
+				ValidateFunc:     validateTypeStringNullableBoolean,
+			},
 			"protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
 			},
-
 			"protocol_version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -97,61 +193,17 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 					return true
 				},
 			},
-
-			"vpc_id": {
-				Type:     schema.TypeString,
+			"proxy_protocol_v2": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				Default:  false,
 			},
-
-			"deregistration_delay": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      300,
-				ValidateFunc: validation.IntBetween(0, 3600),
-			},
-
 			"slow_start": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
 				ValidateFunc: validateSlowStart,
 			},
-
-			"proxy_protocol_v2": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"lambda_multi_value_headers_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"target_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  elbv2.TargetTypeEnumInstance,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elbv2.TargetTypeEnumInstance,
-					elbv2.TargetTypeEnumIp,
-					elbv2.TargetTypeEnumLambda,
-				}, false),
-			},
-
-			"load_balancing_algorithm_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"round_robin",
-					"least_outstanding_requests",
-				}, false),
-			},
-
 			"stickiness": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -159,6 +211,19 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cookie_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      86400,
+							ValidateFunc: validation.IntBetween(0, 604800),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("protocol").(string) {
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+									return true
+								}
+								return false
+							},
+						},
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -182,103 +247,26 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								return false
 							},
 						},
-						"cookie_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      86400,
-							ValidateFunc: validation.IntBetween(0, 604800),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
-									return true
-								}
-								return false
-							},
-						},
 					},
 				},
 			},
-
-			"health_check": {
-				Type:     schema.TypeList,
+			"target_type": {
+				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-
-						"interval": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  30,
-						},
-
-						"path": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckPath,
-						},
-
-						"port": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          "traffic-port",
-							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
-							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
-						},
-
-						"protocol": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  elbv2.ProtocolEnumHttp,
-							StateFunc: func(v interface{}) string {
-								return strings.ToUpper(v.(string))
-							},
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ProtocolEnumHttp,
-								elbv2.ProtocolEnumHttps,
-								elbv2.ProtocolEnumTcp,
-							}, true),
-							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
-						},
-
-						"timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(2, 120),
-						},
-
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-
-						"matcher": {
-							Type:     schema.TypeString,
-							Computed: true,
-							Optional: true,
-						},
-
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      3,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-					},
-				},
+				Default:  elbv2.TargetTypeEnumInstance,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.TargetTypeEnumInstance,
+					elbv2.TargetTypeEnumIp,
+					elbv2.TargetTypeEnumLambda,
+				}, false),
 			},
-
 			"tags": tagsSchema(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -384,7 +372,7 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).elbv2conn
 
 	resp, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-		TargetGroupArns: []*string{aws.String(d.Id())},
+		TargetGroupArns: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
@@ -436,9 +424,6 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		var params *elbv2.ModifyTargetGroupInput
 		healthChecks := d.Get("health_check").([]interface{})
 		if len(healthChecks) == 1 {
-			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn: aws.String(d.Id()),
-			}
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
@@ -504,6 +489,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+			})
+		}
+
+		if d.HasChange("preserve_client_ip") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("preserve_client_ip.enabled"),
+				Value: aws.String(d.Get("preserve_client_ip").(string)),
 			})
 		}
 
@@ -676,11 +668,11 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 
 	healthCheck := make(map[string]interface{})
 	healthCheck["enabled"] = aws.BoolValue(targetGroup.HealthCheckEnabled)
+	healthCheck["healthy_threshold"] = int(aws.Int64Value(targetGroup.HealthyThresholdCount))
 	healthCheck["interval"] = int(aws.Int64Value(targetGroup.HealthCheckIntervalSeconds))
 	healthCheck["port"] = aws.StringValue(targetGroup.HealthCheckPort)
 	healthCheck["protocol"] = aws.StringValue(targetGroup.HealthCheckProtocol)
 	healthCheck["timeout"] = int(aws.Int64Value(targetGroup.HealthCheckTimeoutSeconds))
-	healthCheck["healthy_threshold"] = int(aws.Int64Value(targetGroup.HealthyThresholdCount))
 	healthCheck["unhealthy_threshold"] = int(aws.Int64Value(targetGroup.UnhealthyThresholdCount))
 
 	if targetGroup.HealthCheckPath != nil {
@@ -736,6 +728,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		case "load_balancing.algorithm.type":
 			loadBalancingAlgorithm := aws.StringValue(attr.Value)
 			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
+		case "preserve_client_ip.enabled":
+			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("error converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("preserve_client_ip", attr.Value)
 		}
 	}
 
