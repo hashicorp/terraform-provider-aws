@@ -45,6 +45,8 @@ func UserAttachedPolicy(conn *iam.IAM, userName string, policyARN string) (*iam.
 		UserName: aws.String(userName),
 	}
 
+	var result *iam.AttachedPolicy
+
 	err := conn.ListAttachedUserPoliciesPages(input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
