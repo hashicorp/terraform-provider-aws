@@ -59,6 +59,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"bucket_key_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 
 			"cache_control": {
