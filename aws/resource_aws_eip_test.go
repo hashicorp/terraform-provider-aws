@@ -1018,7 +1018,7 @@ resource "aws_eip" "test" {
 
 const testAccAWSEIPConfig_BYOIPAddress_custom_default = `
 resource "aws_eip" "bar" {
-	vpc = true
+  vpc = true
 }
 `
 
@@ -1026,7 +1026,7 @@ func testAccAWSEIPConfig_BYOIPAddress_custom(address string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
   vpc     = true
-  address = "%s"
+  address = %[1]q
 }
 `, address)
 }
@@ -1034,9 +1034,9 @@ resource "aws_eip" "bar" {
 func testAccAWSEIPConfig_BYOIPAddress_custom_with_PublicIpv4Pool(address string, poolname string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
-  vpc     = true
-  address = "%[1]s"
-  public_ipv4_pool = "%[2]s"
+  vpc              = true
+  address          = %[1]q
+  public_ipv4_pool = %[2]q
 }
 `, address, poolname)
 }
