@@ -198,7 +198,7 @@ resource "aws_dms_replication_task" "test" {
   table_mappings            = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 
   tags = {
-    Name   = %[1]q
+    Name = %[1]q
 %[2]s
   }
 
