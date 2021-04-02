@@ -236,7 +236,6 @@ rules:
         - aws/resource_aws_apigatewayv2_*.go
         - aws/resource_aws_app_cookie_stickiness_policy.go
         - aws/resource_aws_appautoscaling_*.go
-        - aws/resource_aws_appmesh_*.go
         - aws/resource_aws_appsync_*.go
         - aws/resource_aws_athena_*.go
         - aws/resource_aws_autoscaling_*.go
