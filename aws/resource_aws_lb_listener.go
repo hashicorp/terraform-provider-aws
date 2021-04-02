@@ -46,7 +46,7 @@ func resourceAwsLbListener() *schema.Resource {
 
 			"port": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
 			},
 
@@ -54,7 +54,6 @@ func resourceAwsLbListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				Default:  elbv2.ProtocolEnumHttp,
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
