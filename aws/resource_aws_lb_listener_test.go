@@ -54,8 +54,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 	var conf elbv2.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	targetGroupName1 := acctest.RandomWithPrefix("tf-acc-test")
-	targetGroupName2 := acctest.RandomWithPrefix("tf-acc-test2")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -65,7 +64,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_forwardWeighted(rName, targetGroupName1, targetGroupName2),
+				Config: testAccAWSLBListenerConfig_forwardWeighted(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
@@ -89,7 +88,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, targetGroupName1, targetGroupName2),
+				Config: testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
@@ -113,7 +112,7 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, targetGroupName1, targetGroupName2),
+				Config: testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
@@ -736,7 +735,7 @@ resource "aws_lb_target_group" "test" {
 `, rName))
 }
 
-func testAccAWSLBListenerConfig_forwardWeighted(rName, targetGroupName1, targetGroupName2 string) string {
+func testAccAWSLBListenerConfig_forwardWeighted(rName, rName2 string) string {
 	return composeConfig(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -775,6 +774,28 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test1" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -795,32 +816,10 @@ resource "aws_lb_target_group" "test1" {
     Name = %[2]q
   }
 }
-
-resource "aws_lb_target_group" "test2" {
-  name     = %[3]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[3]q
-  }
-}
-`, rName, targetGroupName1, targetGroupName2))
+`, rName, rName2))
 }
 
-func testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, targetGroupName1, targetGroupName2 string) string {
+func testAccAWSLBListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
 	return composeConfig(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -864,6 +863,28 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test1" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -881,37 +902,15 @@ resource "aws_lb_target_group" "test1" {
   }
 
   tags = {
-    Name = %[2]q
+    Name = %[1]q
   }
 }
-
-resource "aws_lb_target_group" "test2" {
-  name     = %[3]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[3]q
-  }
-}
-`, rName, targetGroupName1, targetGroupName2))
+`, rName, rName2))
 }
 
-func testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, targetGroupName1, targetGroupName2 string) string {
+func testAccAWSLBListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
 	return composeConfig(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "weighted" {
+resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
@@ -937,6 +936,28 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test1" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
   name     = %[2]q
   port     = 8080
   protocol = "HTTP"
@@ -957,29 +978,7 @@ resource "aws_lb_target_group" "test1" {
     Name = %[2]q
   }
 }
-
-resource "aws_lb_target_group" "test2" {
-  name     = %[3]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[3]q
-  }
-}
-`, rName, targetGroupName1, targetGroupName2))
+`, rName, rName2))
 }
 
 func testAccAWSLBListenerConfig_basicUdp(rName string) string {
