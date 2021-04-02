@@ -655,7 +655,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = {
-    Name = %[1]q
+    Name = "%[1]s-${count.index}"
   }
 }
 
@@ -738,7 +738,7 @@ resource "aws_lb_target_group" "test" {
 
 func testAccAWSLBListenerConfig_forwardWeighted(rName, targetGroupName1, targetGroupName2 string) string {
 	return composeConfig(testAccAWSLBListenerConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "weighted" {
+resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
