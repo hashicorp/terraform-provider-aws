@@ -12,9 +12,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -561,7 +564,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	var resp *elbv2.CreateListenerOutput
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.LoadBalancerListenerCreateTimeout, func() *resource.RetryError {
 		var err error
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
 		resp, err = conn.CreateListener(params)
@@ -599,30 +602,33 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.LoadBalancedListenerReadTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.DescribeListeners(request)
-		if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return resource.RetryableError(err)
 		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		resp, err = conn.DescribeListeners(request)
 	}
 
-	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
-		log.Printf("[WARN] ELBv2 Listener (%s) not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing ELBv2 Listener (%s): %s", d.Id(), err)
+		return fmt.Errorf("error describing ELBv2 Listener (%s): %w", d.Id(), err)
 	}
 
 	if resp == nil {

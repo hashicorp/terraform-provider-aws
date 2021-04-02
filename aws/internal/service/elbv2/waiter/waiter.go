@@ -25,6 +25,9 @@ const (
 
 	// Default maximum amount of time to wait for network interfaces to propagate
 	LoadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
+
+	LoadBalancerListenerCreateTimeout = 5 * time.Minute
+	LoadBalancedListenerReadTimeout   = 2 * time.Minute
 )
 
 // LoadBalancerActive waits for a Load Balancer to return active
