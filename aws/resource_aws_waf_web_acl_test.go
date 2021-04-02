@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,74 +21,6 @@ func init() {
 		Name: "aws_waf_web_acl",
 		F:    testSweepWafWebAcls,
 	})
-}
-
-func testSweepWafWebAclsWorker(workerID int, conn *waf.WAF, jobs <-chan string, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	for webACLID := range jobs {
-		deleteInput := &waf.DeleteWebACLInput{
-			WebACLId: aws.String(webACLID),
-		}
-		wr := newWafRetryer(conn)
-
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			deleteInput.ChangeToken = token
-			log.Printf("[INFO] Deleting WAF Regional Web ACL (worker %v): %s", workerID, webACLID)
-			return conn.DeleteWebACL(deleteInput)
-		})
-
-		if isAWSErr(err, waf.ErrCodeNonEmptyEntityException, "") {
-			getWebACLInput := &waf.GetWebACLInput{
-				WebACLId: aws.String(webACLID),
-			}
-
-			getWebACLOutput, getWebACLErr := conn.GetWebACL(getWebACLInput)
-
-			if getWebACLErr != nil {
-				log.Printf("[ERROR] error getting WAF Regional Web ACL (%s) (worker %v): %s", webACLID, workerID, getWebACLErr)
-				continue
-			}
-
-			var updates []*waf.WebACLUpdate
-			updateWebACLInput := &waf.UpdateWebACLInput{
-				DefaultAction: getWebACLOutput.WebACL.DefaultAction,
-				Updates:       updates,
-				WebACLId:      aws.String(webACLID),
-			}
-
-			for _, rule := range getWebACLOutput.WebACL.Rules {
-				update := &waf.WebACLUpdate{
-					Action:        aws.String(waf.ChangeActionDelete),
-					ActivatedRule: rule,
-				}
-
-				updateWebACLInput.Updates = append(updateWebACLInput.Updates, update)
-			}
-
-			_, updateWebACLErr := wr.RetryWithToken(func(token *string) (interface{}, error) {
-				updateWebACLInput.ChangeToken = token
-				log.Printf("[INFO] Removing Rules from WAF Regional Web ACL (worker %v): %s", workerID, webACLID)
-				return conn.UpdateWebACL(updateWebACLInput)
-			})
-
-			if updateWebACLErr != nil {
-				log.Printf("[ERROR] error removing rules from WAF Regional Web ACL (%s) (worker %v): %s", webACLID, workerID, updateWebACLErr)
-				continue
-			}
-
-			_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-				deleteInput.ChangeToken = token
-				log.Printf("[INFO] Deleting WAF Regional Web ACL (worker %v): %s", workerID, webACLID)
-				return conn.DeleteWebACL(deleteInput)
-			})
-		}
-
-		if err != nil {
-			log.Printf("[ERROR] error deleting WAF Regional Web ACL (%s) (worker %v): %s", webACLID, workerID, err)
-			continue
-		}
-	}
 }
 
 func testSweepWafWebAcls(region string) error {
