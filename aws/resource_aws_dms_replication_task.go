@@ -292,11 +292,11 @@ func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.Rep
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
-	cleanedReplicationTaskSettings, err := cleanReadOnlyReplicationTaskSettings(*task.ReplicationTaskSettings)
+	settings, err := dmsReplicationTaskRemoveReadOnlySettings(*task.ReplicationTaskSettings)
 	if err != nil {
 		return err
 	}
-	d.Set("replication_task_settings", cleanedReplicationTaskSettings)
+	d.Set("replication_task_settings", settings)
 
 	return nil
 }
@@ -334,7 +334,7 @@ func resourceAwsDmsReplicationTaskStateRefreshFunc(
 	}
 }
 
-func cleanReadOnlyReplicationTaskSettings(settings string) (*string, error) {
+func dmsReplicationTaskRemoveReadOnlySettings(settings string) (*string, error) {
 	var settingsData map[string]interface{}
 	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
 		return nil, err
