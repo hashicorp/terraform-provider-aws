@@ -538,6 +538,61 @@ func VpcByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	return nil, nil
 }
 
+// VpcEndpointByID looks up a VpcEndpoint by ID. When not found, returns nil and potentially an API error.
+func VpcEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcEndpoints(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, vpcEndpoint := range output.VpcEndpoints {
+		if vpcEndpoint == nil {
+			continue
+		}
+
+		if aws.StringValue(vpcEndpoint.VpcEndpointId) != id {
+			continue
+		}
+
+		return vpcEndpoint, nil
+	}
+
+	return nil, nil
+}
+
+// VpcEndpointRouteTableAssociation returns the associated Route Table ID if found
+func VpcEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID string, routeTableID string) (*string, error) {
+	var result *string
+
+	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if vpcEndpoint == nil {
+		return nil, nil
+	}
+
+	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
+		if aws.StringValue(vpcEndpointRouteTableID) == routeTableID {
+			result = vpcEndpointRouteTableID
+			break
+		}
+	}
+
+	return result, err
+}
+
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.
 // Returns nil and potentially an error if no VPC peering connection is found.
 func VpcPeeringConnectionByID(conn *ec2.EC2, id string) (*ec2.VpcPeeringConnection, error) {
