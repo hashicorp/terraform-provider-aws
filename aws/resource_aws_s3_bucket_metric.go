@@ -83,7 +83,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 		MetricsConfiguration: metricsConfiguration,
 	}
 
-	log.Printf("[DEBUG] Putting metric configuration: %s", input)
+	log.Printf("[DEBUG] Putting S3 Bucket Metrics Configuration: %s", input)
 	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutBucketMetricsConfiguration(input)
 
@@ -103,7 +103,7 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting S3 Bucket Metric Configuration: %w", err)
+		return fmt.Errorf("error putting S3 Bucket Metrics Configuration: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
@@ -124,7 +124,7 @@ func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) e
 		Id:     aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Deleting S3 bucket metric configuration: %s", input)
+	log.Printf("[DEBUG] Deleting S3 Bucket Metrics Configuration: %s", input)
 	_, err = conn.DeleteBucketMetricsConfiguration(input)
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -136,7 +136,7 @@ func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Metric Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func resourceAwsS3BucketMetricRead(d *schema.ResourceData, meta interface{}) err
 		Id:     aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Reading S3 bucket metrics configuration: %s", input)
+	log.Printf("[DEBUG] Reading S3 Bucket Metrics Configuration: %s", input)
 	output, err := conn.GetBucketMetricsConfiguration(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
