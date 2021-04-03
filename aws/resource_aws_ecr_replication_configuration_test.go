@@ -22,6 +22,7 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccAWSEcrReplicationConfiguration(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
@@ -38,6 +39,7 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccAWSEcrReplicationConfigurationUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
