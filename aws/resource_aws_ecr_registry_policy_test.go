@@ -27,6 +27,7 @@ func TestAccAWSEcrRegistryPolicy_serial(t *testing.T) {
 }
 
 func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
+	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -38,7 +39,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSEcrRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
@@ -51,7 +52,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSEcrRegistryPolicyUpdated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
@@ -62,6 +63,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 }
 
 func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
+	var v ecr.GetRegistryPolicyOutput
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -73,7 +75,7 @@ func testAccAWSEcrRegistryPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccAWSEcrRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					testAccCheckAWSEcrRegistryPolicyExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRegistryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,21 +104,28 @@ func testAccCheckAWSEcrRegistryPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSEcrRegistryPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckAWSEcrRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		// conn := testAccProvider.Meta().(*AWSClient).ecrconn
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ECR registry policy ID is set")
+		}
 
-		// input := &ecr.GetLifecyclePolicyInput{
-		// 	RepositoryName: aws.String(rs.Primary.ID),
-		// }
+		conn := testAccProvider.Meta().(*AWSClient).ecrconn
 
-		// _, err := conn.GetLifecyclePolicy(input)
-		// return err
+		output, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRegistryPolicyNotFoundException) {
+				return fmt.Errorf("ECR repository %s not found", rs.Primary.ID)
+			}
+			return err
+		}
+
+		*res = *output
 
 		return nil
 	}
