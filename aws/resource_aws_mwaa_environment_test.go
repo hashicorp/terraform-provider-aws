@@ -87,6 +87,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "10"),
+					resource.TestCheckResourceAttr(resourceName, "min_workers", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
@@ -307,6 +308,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "WARNING"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
+					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
@@ -510,6 +512,13 @@ resource "aws_s3_bucket" "test" {
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  block_public_acls   = true
+  block_public_policy = true
+}
+
 resource "aws_s3_bucket_object" "dags" {
   bucket       = aws_s3_bucket.test.id
   acl          = "private"
@@ -694,6 +703,7 @@ resource "aws_mwaa_environment" "test" {
   }
 
   max_workers = 20
+  min_workers = 15
   name        = %[1]q
 
   network_configuration {

@@ -53,8 +53,8 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Default:  "mw1.small",
 			},
 			"execution_role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validateArn,
 			},
 			"kms_key": {
@@ -143,6 +143,11 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      10,
+				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"min_workers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"name": {
@@ -256,6 +261,10 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 		input.MaxWorkers = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("min_workers"); ok {
+		input.MinWorkers = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("plugins_s3_object_version"); ok {
 		input.PluginsS3ObjectVersion = aws.String(v.(string))
 	}
@@ -332,6 +341,7 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
+	d.Set("min_workers", environment.MinWorkers)
 	d.Set("name", environment.Name)
 	if err := d.Set("network_configuration", flattenMwaaNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
@@ -393,6 +403,10 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if d.HasChange("max_workers") {
 			input.MaxWorkers = aws.Int64(int64(d.Get("max_workers").(int)))
+		}
+
+		if d.HasChange("min_workers") {
+			input.MinWorkers = aws.Int64(int64(d.Get("min_workers").(int)))
 		}
 
 		if d.HasChange("network_configuration") {
