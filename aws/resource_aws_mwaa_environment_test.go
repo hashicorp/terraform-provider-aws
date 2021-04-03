@@ -318,9 +318,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "plugins_s3_object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "plugins_s3_path", "plugins.zip"),
-					resource.TestCheckResourceAttr(resourceName, "requirements_s3_object_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
@@ -710,9 +708,7 @@ resource "aws_mwaa_environment" "test" {
     subnet_ids         = aws_subnet.private[*].id
   }
 
-  plugins_s3_object_version       = ""
   plugins_s3_path                 = aws_s3_bucket_object.plugins.key
-  requirements_s3_object_version  = ""
   requirements_s3_path            = aws_s3_bucket_object.requirements.key
   source_bucket_arn               = aws_s3_bucket.test.arn
   webserver_access_mode           = "PUBLIC_ONLY"

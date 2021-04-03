@@ -50,7 +50,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"environment_class": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "mw1.small",
+				Computed: true,
 			},
 			"execution_role_arn": {
 				Type:         schema.TypeString,
@@ -106,35 +106,35 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(false),
+							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
 						},
 						"scheduler_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(false),
+							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
 						},
 						"task_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(true),
+							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
 						},
 						"webserver_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(false),
+							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
 						},
 						"worker_logs": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							MaxItems: 1,
-							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(false),
+							Elem:     mwaaEnvironmentModuleLoggingConfigurationSchema(),
 						},
 					},
 				},
@@ -142,12 +142,13 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"max_workers": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      10,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"name": {
@@ -180,6 +181,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"plugins_s3_object_version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"plugins_s3_path": {
 				Type:     schema.TypeString,
@@ -188,6 +190,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"requirements_s3_object_version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"requirements_s3_path": {
 				Type:     schema.TypeString,
@@ -210,7 +213,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"webserver_access_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      mwaa.WebserverAccessModePrivateOnly,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(mwaa.WebserverAccessMode_Values(), false),
 			},
 			"webserver_url": {
@@ -488,7 +491,7 @@ func resourceAwsMwaaEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schema.Resource {
+func mwaaEnvironmentModuleLoggingConfigurationSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"cloud_watch_log_group_arn": {
@@ -498,12 +501,12 @@ func mwaaEnvironmentModuleLoggingConfigurationSchema(defaultEnabled bool) *schem
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  defaultEnabled,
+				Computed: true,
 			},
 			"log_level": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      mwaa.LoggingLevelInfo,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(mwaa.LoggingLevel_Values(), false),
 			},
 		},
