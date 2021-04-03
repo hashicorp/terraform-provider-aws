@@ -15,13 +15,13 @@ Provides an Elastic Container Registry Replication Configuration.
 ```terraform
 data "aws_caller_identity" "current" {}
 
-data "aws_regions" "test" {}
+data "aws_regions" "example" {}
 
-resource "aws_ecr_replication_configuration" "test" {
+resource "aws_ecr_replication_configuration" "example" {
   replication_configuration {
     rule {
       destination {
-        region      = data.aws_regions.test.names[0]
+        region      = data.aws_regions.example.names[0]
         registry_id = data.aws_caller_identity.current.account_id
       }
     }
