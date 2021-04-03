@@ -56,6 +56,7 @@ func TestAccAWSMwaaEnvironment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, mwaa.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -117,6 +118,7 @@ func TestAccAWSMwaaEnvironment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, mwaa.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -140,6 +142,7 @@ func TestAccAWSMwaaEnvironment_AirflowConfigurationOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, mwaa.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -185,6 +188,7 @@ func TestAccAWSMwaaEnvironment_LogConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, mwaa.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -269,6 +273,7 @@ func TestAccAWSMwaaEnvironment_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, mwaa.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMwaaEnvironmentDestroy,
 		Steps: []resource.TestStep{
