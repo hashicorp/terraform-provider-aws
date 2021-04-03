@@ -19,14 +19,14 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcrReplicationConfiguration(),
+				Config: testAccAWSEcrReplicationConfiguration(testAccGetAlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
 					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_configuration.0.rule.0.destination.0.region"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", testAccGetAlternateRegion()),
 					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 				),
 			},
@@ -34,18 +34,6 @@ func TestAccAWSEcrReplicationConfiguration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSEcrReplicationConfigurationUpdated(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrReplicationConfigurationExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_configuration.0.rule.0.destination.0.region"),
-					testAccCheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
-				),
 			},
 		},
 	})
@@ -62,40 +50,19 @@ func testAccCheckAWSEcrReplicationConfigurationExists(name string) resource.Test
 	}
 }
 
-func testAccAWSEcrReplicationConfiguration() string {
-	return `
+func testAccAWSEcrReplicationConfiguration(region string) string {
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-data "aws_regions" "test" {}
 
 resource "aws_ecr_replication_configuration" "test" {
   replication_configuration {
     rule {
       destination {
-        region      = tolist(data.aws_regions.test.names)[0]
+        region      = %[1]q
         registry_id = data.aws_caller_identity.current.account_id
       }
     }
   }
 }
-`
-}
-
-func testAccAWSEcrReplicationConfigurationUpdated() string {
-	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_regions" "test" {}
-
-resource "aws_ecr_replication_configuration" "test" {
-  replication_configuration {
-    rule {
-      destination {
-        region      = tolist(data.aws_regions.test.names)[1]
-        registry_id = data.aws_caller_identity.current.account_id
-      }
-    }
-  }
-}
-`
+`, region)
 }
