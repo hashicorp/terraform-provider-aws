@@ -13,7 +13,7 @@ resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_instance" "foo" {
   instance_id = "i-instanceid"
 
@@ -111,7 +111,7 @@ interpolation.
 * `subnet_id` - The VPC subnet ID.
 * `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `user_data` - SHA-1 hash of User Data supplied to the Instance.
-* `user_data_base64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](/docs/configuration/functions/base64decode.html). This attribute is only exported if `get_user_data` is true.
+* `user_data_base64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `get_user_data` is true.
 * `tags` - A map of tags assigned to the Instance.
 * `tenancy` - The tenancy of the instance: `dedicated`, `default`, `host`.
 * `host_id` - The Id of the dedicated host the instance will be assigned to.

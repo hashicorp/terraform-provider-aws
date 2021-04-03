@@ -14,10 +14,10 @@ Provides a CodeStar Connection.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codestarconnections_connection" "example" {
-  connection_name = "example-connection"
-  provider_type   = "Bitbucket"
+  name          = "example-connection"
+  provider_type = "Bitbucket"
 }
 
 resource "aws_codepipeline" "example" {
@@ -38,10 +38,9 @@ resource "aws_codepipeline" "example" {
       version          = "1"
       output_artifacts = ["source_output"]
       configuration = {
-        Owner         = "my-organization"
-        ConnectionArn = aws_codestarconnections_connection.example.arn
-        Repo          = "foo/test"
-        Branch        = "master"
+        ConnectionArn    = aws_codestarconnections_connection.example.arn
+        FullRepositoryId = "my-organization/test"
+        BranchName       = "main"
       }
     }
   }
@@ -68,6 +67,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the connection to be created. The name must be unique in the calling AWS account. Changing `name` will create a new resource.
 * `provider_type` - (Required) The name of the external provider where your third-party code repository is configured. Valid values are `Bitbucket`, `GitHub`, or `GitHubEnterpriseServer`. Changing `provider_type` will create a new resource.
+* `tags` - (Optional) Map of key-value resource tags to associate with the resource.
 
 ## Attributes Reference
 

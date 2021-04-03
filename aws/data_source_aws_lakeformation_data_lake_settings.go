@@ -16,6 +16,11 @@ func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		Read: dataSourceAwsLakeFormationDataLakeSettingsRead,
 
 		Schema: map[string]*schema.Schema{
+			"admins": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"catalog_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -53,11 +58,6 @@ func dataSourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 						},
 					},
 				},
-			},
-			"data_lake_admins": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,
@@ -98,7 +98,7 @@ func dataSourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta
 
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	d.Set("data_lake_admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flattenStringList(settings.TrustedResourceOwners))
 
 	return nil

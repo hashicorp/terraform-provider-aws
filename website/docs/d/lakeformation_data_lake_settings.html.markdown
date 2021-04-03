@@ -12,7 +12,7 @@ Get Lake Formation principals designated as data lake administrators and lists o
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_lakeformation_data_lake_settings" "example" {
   catalog_id = "14916253649"
 }
@@ -28,17 +28,17 @@ The following arguments are optional:
 
 In addition to arguments above, the following attributes are exported.
 
+* `admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `create_database_default_permissions` - Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
-* `data_lake_admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
 * `trusted_resource_owners` – List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).
 
 ### create_database_default_permissions
 
-* `permissions` - List of permissions granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
+* `permissions` - List of permissions granted to the principal.
 * `principal` - Principal who is granted permissions.
 
 ### create_table_default_permissions
 
-* `permissions` - List of permissions granted to the principal. Valid values include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, `CREATE_DATABASE`, `CREATE_TABLE`, and `DATA_LOCATION_ACCESS`.
+* `permissions` - List of permissions granted to the principal.
 * `principal` - Principal who is granted permissions.

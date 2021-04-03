@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -190,15 +192,11 @@ func resourceAwsMskCluster() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_broker": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										Default:  kafka.ClientBrokerTls,
-										ValidateFunc: validation.StringInSlice([]string{
-											kafka.ClientBrokerPlaintext,
-											kafka.ClientBrokerTlsPlaintext,
-											kafka.ClientBrokerTls,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										Default:      kafka.ClientBrokerTls,
+										ValidateFunc: validation.StringInSlice(kafka.ClientBroker_Values(), false),
 									},
 									"in_cluster": {
 										Type:     schema.TypeBool,
@@ -213,14 +211,10 @@ func resourceAwsMskCluster() *schema.Resource {
 				},
 			},
 			"enhanced_monitoring": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  kafka.EnhancedMonitoringDefault,
-				ValidateFunc: validation.StringInSlice([]string{
-					kafka.EnhancedMonitoringDefault,
-					kafka.EnhancedMonitoringPerBroker,
-					kafka.EnhancedMonitoringPerTopicPerBroker,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      kafka.EnhancedMonitoringDefault,
+				ValidateFunc: validation.StringInSlice(kafka.EnhancedMonitoring_Values(), true),
 			},
 			"kafka_version": {
 				Type:         schema.TypeString,
@@ -462,10 +456,10 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	cluster := out.ClusterInfo
 
-	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
-	d.Set("bootstrap_brokers_sasl_scram", aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram))
-	d.Set("bootstrap_brokers_tls", aws.StringValue(brokerOut.BootstrapBrokerStringTls))
+	d.Set("arn", cluster.ClusterArn)
+	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %s", err)
@@ -475,21 +469,21 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting configuration_info: %s", err)
 	}
 
-	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
+	d.Set("cluster_name", cluster.ClusterName)
 
 	if err := d.Set("configuration_info", flattenMskConfigurationInfo(cluster.CurrentBrokerSoftwareInfo)); err != nil {
 		return fmt.Errorf("error setting configuration_info: %s", err)
 	}
 
-	d.Set("current_version", aws.StringValue(cluster.CurrentVersion))
-	d.Set("enhanced_monitoring", aws.StringValue(cluster.EnhancedMonitoring))
+	d.Set("current_version", cluster.CurrentVersion)
+	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
 
 	if err := d.Set("encryption_info", flattenMskEncryptionInfo(cluster.EncryptionInfo)); err != nil {
 		return fmt.Errorf("error setting encryption_info: %s", err)
 	}
 
-	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
-	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
+	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
+	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 
 	if err := d.Set("tags", keyvaluetags.KafkaKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -503,7 +497,7 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting logging_info: %s", err)
 	}
 
-	d.Set("zookeeper_connect_string", aws.StringValue(cluster.ZookeeperConnectString))
+	d.Set("zookeeper_connect_string", sortMskClusterEndpoints(aws.StringValue(cluster.ZookeeperConnectString)))
 
 	return nil
 }
@@ -1213,4 +1207,10 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func sortMskClusterEndpoints(s string) string {
+	splitBootstrapBrokers := strings.Split(s, ",")
+	sort.Strings(splitBootstrapBrokers)
+	return strings.Join(splitBootstrapBrokers, ",")
 }
