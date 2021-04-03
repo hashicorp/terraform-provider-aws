@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
@@ -26,7 +26,7 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -122,7 +122,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("admins"); ok {
-		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.([]interface{}))
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
@@ -132,7 +132,7 @@ func resourceAwsLakeFormationDataLakeSettingsCreate(d *schema.ResourceData, meta
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {
@@ -282,7 +282,8 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject *lakeformation.Pri
 	return tfMap
 }
 
-func expandDataLakeSettingsAdmins(tfSlice []interface{}) []*lakeformation.DataLakePrincipal {
+func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+	tfSlice := tfSet.List()
 	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
 
 	for _, tfItem := range tfSlice {

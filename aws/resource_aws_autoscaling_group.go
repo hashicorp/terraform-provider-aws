@@ -26,6 +26,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscaling/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const (
@@ -193,6 +194,31 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 												"instance_type": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"launch_template_specification": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"launch_template_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"launch_template_name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"version": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Default:  "$Default",
+															},
+														},
+													},
 												},
 												"weighted_capacity": {
 													Type:         schema.TypeString,
@@ -650,7 +676,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 	// Availability Zones are optional if VPC Zone Identifier(s) are specified
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
+		createOpts.AvailabilityZones = expandStringSet(v.(*schema.Set))
 	}
 
 	resourceID := d.Get("name").(string)
@@ -684,8 +710,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
-		createOpts.LoadBalancerNames = expandStringList(
-			v.(*schema.Set).List())
+		createOpts.LoadBalancerNames = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
@@ -697,7 +722,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
-		createOpts.TargetGroupARNs = expandStringList(v.(*schema.Set).List())
+		createOpts.TargetGroupARNs = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("service_linked_role_arn"); ok {
@@ -711,7 +736,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Auto Scaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAutoScalingGroup(&createOpts)
 
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
@@ -1034,7 +1059,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("availability_zones") {
 		if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-			opts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
+			opts.AvailabilityZones = expandStringSet(v.(*schema.Set))
 		}
 	}
 
@@ -1092,8 +1117,8 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringSet(os.Difference(ns))
+		add := expandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			// API only supports removing 10 at a time
@@ -1162,8 +1187,8 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringSet(os.Difference(ns))
+		add := expandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			// AWS API only supports adding/removing 10 at a time
@@ -1231,9 +1256,9 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 					strs[i] = a.(string)
 				}
 				if attrsSet.Contains("tag") && !attrsSet.Contains("tags") {
-					strs = append(strs, "tags")
+					strs = append(strs, "tags") // nozero
 				} else if !attrsSet.Contains("tag") && attrsSet.Contains("tags") {
-					strs = append(strs, "tag")
+					strs = append(strs, "tag") // nozero
 				}
 				shouldRefreshInstances = d.HasChanges(strs...)
 			}
@@ -1280,7 +1305,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		log.Printf("[WARN] Auto Scaling Group (%s) not found, removing from state", d.Id())
 		return nil
 	}
-	if len(g.Instances) > 0 || *g.DesiredCapacity > 0 {
+	if len(g.Instances) > 0 || aws.Int64Value(g.DesiredCapacity) > 0 {
 		if err := resourceAwsAutoscalingGroupDrain(d, meta); err != nil {
 			return err
 		}
@@ -1364,7 +1389,11 @@ func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*aut
 
 	// Search for the Auto Scaling Group
 	for idx, asc := range describeGroups.AutoScalingGroups {
-		if *asc.AutoScalingGroupName == asgName {
+		if asc == nil {
+			continue
+		}
+
+		if aws.StringValue(asc.AutoScalingGroupName) == asgName {
 			return describeGroups.AutoScalingGroups[idx], nil
 		}
 	}
@@ -1431,7 +1460,7 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
 	props := &autoscaling.ScalingProcessQuery{
 		AutoScalingGroupName: aws.String(d.Id()),
-		ScalingProcesses:     expandStringList(d.Get("suspended_processes").(*schema.Set).List()),
+		ScalingProcesses:     expandStringSet(d.Get("suspended_processes").(*schema.Set)),
 	}
 
 	_, err := conn.SuspendProcesses(props)
@@ -1442,7 +1471,7 @@ func enableASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	props := &autoscaling.EnableMetricsCollectionInput{
 		AutoScalingGroupName: aws.String(d.Id()),
 		Granularity:          aws.String(d.Get("metrics_granularity").(string)),
-		Metrics:              expandStringList(d.Get("enabled_metrics").(*schema.Set).List()),
+		Metrics:              expandStringSet(d.Get("enabled_metrics").(*schema.Set)),
 	}
 
 	log.Printf("[INFO] Enabling metrics collection for the Auto Scaling Group: %s", d.Id())
@@ -1467,7 +1496,7 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	if resumeProcesses.Len() != 0 {
 		props := &autoscaling.ScalingProcessQuery{
 			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     expandStringList(resumeProcesses.List()),
+			ScalingProcesses:     expandStringSet(resumeProcesses),
 		}
 
 		_, err := conn.ResumeProcesses(props)
@@ -1480,7 +1509,7 @@ func updateASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoS
 	if suspendedProcesses.Len() != 0 {
 		props := &autoscaling.ScalingProcessQuery{
 			AutoScalingGroupName: aws.String(d.Id()),
-			ScalingProcesses:     expandStringList(suspendedProcesses.List()),
+			ScalingProcesses:     expandStringSet(suspendedProcesses),
 		}
 
 		_, err := conn.SuspendProcesses(props)
@@ -1510,7 +1539,7 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	if disableMetrics.Len() != 0 {
 		props := &autoscaling.DisableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              expandStringList(disableMetrics.List()),
+			Metrics:              expandStringSet(disableMetrics),
 		}
 
 		_, err := conn.DisableMetricsCollection(props)
@@ -1523,7 +1552,7 @@ func updateASGMetricsCollection(d *schema.ResourceData, conn *autoscaling.AutoSc
 	if enabledMetrics.Len() != 0 {
 		props := &autoscaling.EnableMetricsCollectionInput{
 			AutoScalingGroupName: aws.String(d.Id()),
-			Metrics:              expandStringList(enabledMetrics.List()),
+			Metrics:              expandStringSet(enabledMetrics),
 			Granularity:          aws.String(d.Get("metrics_granularity").(string)),
 		}
 
@@ -1547,17 +1576,17 @@ func getELBInstanceStates(g *autoscaling.Group, meta interface{}) (map[string]ma
 	elbconn := meta.(*AWSClient).elbconn
 
 	for _, lbName := range g.LoadBalancerNames {
-		lbInstanceStates[*lbName] = make(map[string]string)
+		lbInstanceStates[aws.StringValue(lbName)] = make(map[string]string)
 		opts := &elb.DescribeInstanceHealthInput{LoadBalancerName: lbName}
 		r, err := elbconn.DescribeInstanceHealth(opts)
 		if err != nil {
 			return nil, err
 		}
 		for _, is := range r.InstanceStates {
-			if is.InstanceId == nil || is.State == nil {
+			if is == nil || is.InstanceId == nil || is.State == nil {
 				continue
 			}
-			lbInstanceStates[*lbName][*is.InstanceId] = *is.State
+			lbInstanceStates[aws.StringValue(lbName)][aws.StringValue(is.InstanceId)] = aws.StringValue(is.State)
 		}
 	}
 
@@ -1576,17 +1605,17 @@ func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[s
 	elbv2conn := meta.(*AWSClient).elbv2conn
 
 	for _, targetGroupARN := range g.TargetGroupARNs {
-		targetInstanceStates[*targetGroupARN] = make(map[string]string)
+		targetInstanceStates[aws.StringValue(targetGroupARN)] = make(map[string]string)
 		opts := &elbv2.DescribeTargetHealthInput{TargetGroupArn: targetGroupARN}
 		r, err := elbv2conn.DescribeTargetHealth(opts)
 		if err != nil {
 			return nil, err
 		}
 		for _, desc := range r.TargetHealthDescriptions {
-			if desc.Target == nil || desc.Target.Id == nil || desc.TargetHealth == nil || desc.TargetHealth.State == nil {
+			if desc == nil || desc.Target == nil || desc.Target.Id == nil || desc.TargetHealth == nil || desc.TargetHealth.State == nil {
 				continue
 			}
-			targetInstanceStates[*targetGroupARN][*desc.Target.Id] = *desc.TargetHealth.State
+			targetInstanceStates[aws.StringValue(targetGroupARN)][aws.StringValue(desc.Target.Id)] = aws.StringValue(desc.TargetHealth.State)
 		}
 	}
 
@@ -1595,8 +1624,8 @@ func getTargetGroupInstanceStates(g *autoscaling.Group, meta interface{}) (map[s
 
 func expandVpcZoneIdentifiers(list []interface{}) *string {
 	strs := make([]string, len(list))
-	for _, s := range list {
-		strs = append(strs, s.(string))
+	for i, s := range list {
+		strs[i] = s.(string)
 	}
 	return aws.String(strings.Join(strs, ","))
 }
@@ -1677,6 +1706,10 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 
 	if v, ok := m["instance_type"]; ok && v.(string) != "" {
 		launchTemplateOverrides.InstanceType = aws.String(v.(string))
+	}
+
+	if v, ok := m["launch_template_specification"]; ok && v.([]interface{}) != nil {
+		launchTemplateOverrides.LaunchTemplateSpecification = expandAutoScalingLaunchTemplateSpecification(m["launch_template_specification"].([]interface{}))
 	}
 
 	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
@@ -1770,8 +1803,9 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 			continue
 		}
 		m := map[string]interface{}{
-			"instance_type":     aws.StringValue(launchTemplateOverride.InstanceType),
-			"weighted_capacity": aws.StringValue(launchTemplateOverride.WeightedCapacity),
+			"instance_type":                 aws.StringValue(launchTemplateOverride.InstanceType),
+			"launch_template_specification": flattenAutoScalingLaunchTemplateSpecification(launchTemplateOverride.LaunchTemplateSpecification),
+			"weighted_capacity":             aws.StringValue(launchTemplateOverride.WeightedCapacity),
 		}
 		l[i] = m
 	}

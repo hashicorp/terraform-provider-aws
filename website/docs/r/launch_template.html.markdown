@@ -12,7 +12,7 @@ Provides an EC2 launch template resource. Can be used to create instances or aut
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_launch_template" "foo" {
   name = "foo"
 
@@ -180,7 +180,7 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
-* `throughput` - The throughput to provision for a `gp3` volume, with a maximum of 1,000 MiB/s.
+* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g. 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 

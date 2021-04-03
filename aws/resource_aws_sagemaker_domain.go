@@ -122,7 +122,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -151,7 +151,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -180,7 +180,7 @@ func resourceAwsSagemakerDomain() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"default_resource_spec": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -342,6 +342,10 @@ func resourceAwsSagemakerDomainUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("error updating SageMaker domain: %w", err)
 		}
+
+		if _, err := waiter.DomainInService(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for SageMaker domain (%s) to update: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -360,6 +364,9 @@ func resourceAwsSagemakerDomainDelete(d *schema.ResourceData, meta interface{}) 
 
 	input := &sagemaker.DeleteDomainInput{
 		DomainId: aws.String(d.Id()),
+		RetentionPolicy: &sagemaker.RetentionPolicy{
+			HomeEfsFileSystem: aws.String(sagemaker.RetentionTypeDelete),
+		},
 	}
 
 	if _, err := conn.DeleteDomain(input); err != nil {

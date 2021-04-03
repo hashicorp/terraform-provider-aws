@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsLakeFormationPermissions() *schema.Resource {
@@ -34,10 +36,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 				Default:  false,
 			},
 			"data_location": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"database", "table", "table_with_columns"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
@@ -55,10 +58,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 				},
 			},
 			"database": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"data_location", "table", "table_with_columns"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
@@ -101,10 +105,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 				ValidateFunc: validatePrincipal,
 			},
 			"table": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"data_location", "database", "table_with_columns"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
@@ -131,10 +136,11 @@ func resourceAwsLakeFormationPermissions() *schema.Resource {
 				},
 			},
 			"table_with_columns": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"data_location", "database", "table"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"catalog_id": {
@@ -195,7 +201,7 @@ func resourceAwsLakeFormationPermissionsCreate(d *schema.ResourceData, meta inte
 	input.Resource = expandLakeFormationResource(d, false)
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.GrantPermissions(input)
 		if err != nil {
@@ -251,18 +257,29 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 	}
 
 	input.Resource = expandLakeFormationResource(d, true)
+	matchResource := expandLakeFormationResource(d, false)
+	// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
+	selectPermissionsResource := expandLakeFormationResourceForSelectPermissions(d)
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 	var principalResourcePermissions []*lakeformation.PrincipalResourcePermissions
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		err := conn.ListPermissionsPages(input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
 			for _, permission := range resp.PrincipalResourcePermissions {
 				if permission == nil {
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+					continue
+				}
+
+				// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
+				if selectPermissionsResource != nil && resourceAwsLakeFormationPermissionsCompareResource(*selectPermissionsResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -283,7 +300,15 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 					continue
 				}
 
-				principalResourcePermissions = append(principalResourcePermissions, permission)
+				if resourceAwsLakeFormationPermissionsCompareResource(*matchResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+					continue
+				}
+
+				// AWS treats SELECT permissions differently. A separate resource is created for the {db}.{table}.* to grant select on all columns
+				if selectPermissionsResource != nil && resourceAwsLakeFormationPermissionsCompareResource(*selectPermissionsResource, *permission.Resource) {
+					principalResourcePermissions = append(principalResourcePermissions, permission)
+				}
 			}
 			return !lastPage
 		})
@@ -299,42 +324,43 @@ func resourceAwsLakeFormationPermissionsRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error reading Lake Formation permissions: %w", err)
 	}
 
-	if len(principalResourcePermissions) > 1 {
-		return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found")
+	if len(principalResourcePermissions) == 0 {
+		return fmt.Errorf("error reading Lake Formation permissions: %s", "no permissions found")
 	}
 
-	for _, permissions := range principalResourcePermissions {
-		d.Set("principal", permissions.Principal.DataLakePrincipalIdentifier)
-		d.Set("permissions", permissions.Permissions)
-		d.Set("permissions_with_grant_option", permissions.PermissionsWithGrantOption)
-
-		if permissions.Resource.Catalog != nil {
-			d.Set("catalog_resource", true)
-		}
-
-		if permissions.Resource.DataLocation != nil {
-			d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(permissions.Resource.DataLocation)})
-		} else {
-			d.Set("data_location", nil)
-		}
-
-		if permissions.Resource.Database != nil {
-			d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(permissions.Resource.Database)})
-		} else {
-			d.Set("database", nil)
-		}
-
-		// table with columns permissions will include the table and table with columns
-		if permissions.Resource.TableWithColumns != nil {
-			d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(permissions.Resource.TableWithColumns)})
-		} else if permissions.Resource.Table != nil {
-			d.Set("table_with_columns", nil)
-			d.Set("table", []interface{}{flattenLakeFormationTableResource(permissions.Resource.Table)})
-		} else {
-			d.Set("table", nil)
-		}
+	if len(principalResourcePermissions) > 2 {
+		return fmt.Errorf("error reading Lake Formation permissions: %s", "multiple permissions found for same resource")
 	}
 
+	d.Set("principal", principalResourcePermissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set("permissions", flattenLakeFormationPermissions(principalResourcePermissions))
+	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(principalResourcePermissions))
+
+	if principalResourcePermissions[0].Resource.Catalog != nil {
+		d.Set("catalog_resource", true)
+	}
+
+	if principalResourcePermissions[0].Resource.DataLocation != nil {
+		d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(principalResourcePermissions[0].Resource.DataLocation)})
+	} else {
+		d.Set("data_location", nil)
+	}
+
+	if principalResourcePermissions[0].Resource.Database != nil {
+		d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(principalResourcePermissions[0].Resource.Database)})
+	} else {
+		d.Set("database", nil)
+	}
+
+	// table with columns permissions will include the table and table with columns
+	if principalResourcePermissions[0].Resource.TableWithColumns != nil {
+		d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(principalResourcePermissions[0].Resource.TableWithColumns)})
+	} else if principalResourcePermissions[0].Resource.Table != nil {
+		d.Set("table_with_columns", nil)
+		d.Set("table", []interface{}{flattenLakeFormationTableResource(principalResourcePermissions[0].Resource.Table)})
+	} else {
+		d.Set("table", nil)
+	}
 	return nil
 }
 
@@ -385,35 +411,101 @@ func resourceAwsLakeFormationPermissionsDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
-	res := &lakeformation.Resource{}
+func resourceAwsLakeFormationPermissionsCompareResource(in, out lakeformation.Resource) bool {
+	if in.DataLocation != nil && out.DataLocation != nil && in.DataLocation.CatalogId == nil {
+		in.DataLocation.CatalogId = out.DataLocation.CatalogId
+	}
 
-	if v, ok := d.GetOk("catalog_resource"); ok {
-		if v.(bool) {
-			res.Catalog = &lakeformation.CatalogResource{}
-		}
+	if in.Database != nil && out.Database != nil && in.Database.CatalogId == nil {
+		in.Database.CatalogId = out.Database.CatalogId
+	}
+
+	if in.Table != nil && out.Table != nil && in.Table.CatalogId == nil {
+		in.Table.CatalogId = out.Table.CatalogId
+	}
+
+	if in.TableWithColumns != nil && out.TableWithColumns != nil && in.TableWithColumns.CatalogId == nil {
+		in.TableWithColumns.CatalogId = out.TableWithColumns.CatalogId
+	}
+
+	return reflect.DeepEqual(in, out)
+}
+
+// expandLakeFormationResourceType returns the Lake Formation resource type represented by the resource.
+// This is helpful in distinguishing between TABLE and TABLE_WITH_COLUMNS types when filtering ListPermission results.
+func expandLakeFormationResourceType(d *schema.ResourceData) string {
+	if d.Get("catalog_resource").(bool) {
+		return lakeformation.DataLakeResourceTypeCatalog
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.DataLocation = expandLakeFormationDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeDataLocation
 	}
 
 	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.Database = expandLakeFormationDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeDatabase
 	}
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		res.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+		return lakeformation.DataLakeResourceTypeTable
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	return DataLakeResourceTypeTableWithColumns
+}
+
+const DataLakeResourceTypeTableWithColumns = "TABLE_WITH_COLUMNS" // no lakeformation package enum value for this type
+
+func expandLakeFormationResource(d *schema.ResourceData, squashTableWithColumns bool) *lakeformation.Resource {
+	res := &lakeformation.Resource{}
+
+	switch expandLakeFormationResourceType(d) {
+	case lakeformation.DataLakeResourceTypeCatalog:
+		res.Catalog = &lakeformation.CatalogResource{}
+	case lakeformation.DataLakeResourceTypeDataLocation:
+		res.DataLocation = expandLakeFormationDataLocationResource(d.Get("data_location").([]interface{})[0].(map[string]interface{}))
+	case lakeformation.DataLakeResourceTypeDatabase:
+		res.Database = expandLakeFormationDatabaseResource(d.Get("database").([]interface{})[0].(map[string]interface{}))
+	case lakeformation.DataLakeResourceTypeTable:
+		res.Table = expandLakeFormationTableResource(d.Get("table").([]interface{})[0].(map[string]interface{}))
+	case DataLakeResourceTypeTableWithColumns:
 		if squashTableWithColumns {
 			// ListPermissions does not support getting privileges by tables with columns. Instead,
 			// use the table which will return both table and table with columns.
-			res.Table = expandLakeFormationTableResource(v.([]interface{})[0].(map[string]interface{}))
+			res.Table = expandLakeFormationTableResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
 		} else {
-			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(v.([]interface{})[0].(map[string]interface{}))
+			res.TableWithColumns = expandLakeFormationTableWithColumnsResource(d.Get("table_with_columns").([]interface{})[0].(map[string]interface{}))
 		}
+	}
+
+	return res
+}
+
+func expandLakeFormationResourceForSelectPermissions(d *schema.ResourceData) *lakeformation.Resource {
+	tableMapSchema := d.Get("table").([]interface{})
+	if len(tableMapSchema) == 0 {
+		return nil
+	}
+
+	tableSchema := tableMapSchema[0].(map[string]interface{})
+	if tableSchema == nil {
+		return nil
+	}
+
+	databaseName, ok := tableSchema["database_name"].(string)
+	if !ok {
+		return nil
+	}
+	name, ok := tableSchema["name"].(string)
+	if !ok {
+		return nil
+	}
+
+	res := &lakeformation.Resource{
+		TableWithColumns: &lakeformation.TableWithColumnsResource{
+			DatabaseName:   aws.String(databaseName),
+			Name:           aws.String(name),
+			ColumnWildcard: &lakeformation.ColumnWildcard{}, // A wildcard is used for SELECT permissions
+		},
 	}
 
 	return res
@@ -601,4 +693,36 @@ func flattenLakeFormationTableWithColumnsResource(apiObject *lakeformation.Table
 	}
 
 	return tfMap
+}
+
+func flattenLakeFormationPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfList := make([]string, 0)
+
+	for _, resourcePermission := range apiObjects {
+		for _, permission := range resourcePermission.Permissions {
+			tfList = append(tfList, aws.StringValue(permission))
+		}
+	}
+
+	return tfList
+}
+
+func flattenLakeFormationGrantPermissions(apiObjects []*lakeformation.PrincipalResourcePermissions) []string {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfList := make([]string, 0)
+
+	for _, resourcePermission := range apiObjects {
+		for _, grantPermission := range resourcePermission.PermissionsWithGrantOption {
+			tfList = append(tfList, aws.StringValue(grantPermission))
+		}
+	}
+
+	return tfList
 }

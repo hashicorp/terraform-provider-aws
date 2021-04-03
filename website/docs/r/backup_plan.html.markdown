@@ -12,7 +12,7 @@ Provides an AWS Backup plan resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_backup_plan" "example" {
   name = "tf_example_backup_plan"
 
@@ -46,6 +46,7 @@ For **rule** the following attributes are supported:
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `start_window` - (Optional) The amount of time in minutes before beginning a backup.
 * `completion_window` - (Optional) The amount of time AWS Backup attempts a backup before canceling the job and returning an error.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
@@ -67,8 +68,8 @@ For **copy_action** the following attributes are supported:
 ### Advanced Backup Setting Arguments
 For `advanced_backup_setting` the following attibutes are supported:
 
-* `backup_options` - (Optional) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resource_type` - (Optional) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
+* `backup_options` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
+* `resource_type` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
 
 ## Attributes Reference
 
