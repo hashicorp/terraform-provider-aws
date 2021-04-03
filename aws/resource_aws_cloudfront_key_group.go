@@ -28,10 +28,6 @@ func resourceAwsCloudFrontKeyGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"items": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
