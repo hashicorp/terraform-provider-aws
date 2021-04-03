@@ -55,6 +55,7 @@ func resourceAwsMwaaEnvironment() *schema.Resource {
 			"execution_role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validateArn,
 			},
 			"kms_key": {
 				Type:         schema.TypeString,
