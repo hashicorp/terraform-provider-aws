@@ -48,8 +48,7 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error creating ECR Registry Policy: %w", err)
 	}
 
-	registryPolicy := *out
-	regID := aws.StringValue(registryPolicy.RegistryId)
+	regID := aws.StringValue(out.RegistryId)
 
 	d.SetId(regID)
 
