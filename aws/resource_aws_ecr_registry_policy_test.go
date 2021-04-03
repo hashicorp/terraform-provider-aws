@@ -40,6 +40,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 			{
@@ -53,6 +54,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
+					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 		},
