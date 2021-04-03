@@ -73,7 +73,7 @@ func resourceAwsEcrReplicationConfigurationPut(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Creating ECR Replication Configuration: %#v", input)
 	_, err := conn.PutReplicationConfiguration(&input)
 	if err != nil {
-		return fmt.Errorf("error creating ECR Replication Configuration: %s", err)
+		return fmt.Errorf("error creating ECR Replication Configuration: %w", err)
 	}
 
 	d.SetId(meta.(*AWSClient).accountid)
