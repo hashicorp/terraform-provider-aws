@@ -381,7 +381,7 @@ func testAccCheckAWSMwaaEnvironmentDestroy(s *terraform.State) error {
 
 		if err != nil {
 			if isAWSErr(err, mwaa.ErrCodeResourceNotFoundException, "") {
-				return nil
+				continue
 			}
 			return err
 		}
@@ -402,6 +402,8 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
+
+data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
@@ -529,8 +531,6 @@ resource "aws_s3_bucket_object" "dags" {
   acl          = "private"
   key          = "dags/"
   content_type = "application/x-directory"
-
-  depends_on = [aws_s3_bucket.test]
 }
 
 resource "aws_iam_role" "test" {
@@ -545,8 +545,8 @@ resource "aws_iam_role" "test" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "airflow.amazonaws.com",
-          "airflow-env.amazonaws.com"
+          "airflow.${data.aws_partition.current.dns_suffix}",
+          "airflow-env.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -589,8 +589,6 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-
-  depends_on = [aws_s3_bucket_object.dags]
 }
 `, rName)
 }
@@ -613,8 +611,6 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-
-  depends_on = [aws_s3_bucket_object.dags]
 }
 `, rName, retries, parallelism)
 }
@@ -660,8 +656,6 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-
-  depends_on = [aws_s3_bucket_object.dags]
 }
 `, rName, logEnabled, logLevel)
 }
@@ -728,8 +722,6 @@ resource "aws_mwaa_environment" "test" {
     Name        = %[1]q
     Environment = "production"
   }
-
-  depends_on = [aws_s3_bucket_object.dags, aws_s3_bucket_object.plugins, aws_s3_bucket_object.requirements]
 }
 
 data "aws_region" "current" {}
@@ -753,7 +745,7 @@ resource "aws_kms_key" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -768,8 +760,6 @@ resource "aws_s3_bucket_object" "plugins" {
   acl     = "private"
   key     = "plugins.zip"
   content = ""
-
-  depends_on = [aws_s3_bucket.test]
 }
 
 resource "aws_s3_bucket_object" "requirements" {
@@ -777,8 +767,6 @@ resource "aws_s3_bucket_object" "requirements" {
   acl     = "private"
   key     = "requirements.txt"
   content = ""
-
-  depends_on = [aws_s3_bucket.test]
 }
 
 `, rName)
