@@ -38,15 +38,16 @@ func resourceAwsLbListener() *schema.Resource {
 			},
 
 			"load_balancer_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 65535),
+				ValidateFunc: validation.IsPortNumber,
 			},
 
 			"protocol": {
@@ -66,8 +67,9 @@ func resourceAwsLbListener() *schema.Resource {
 			},
 
 			"certificate_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"default_action": {
@@ -97,6 +99,7 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
+							ValidateFunc:     validateArn,
 						},
 
 						"forward": {
@@ -114,8 +117,9 @@ func resourceAwsLbListener() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"arn": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -196,8 +200,8 @@ func resourceAwsLbListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
-											"HTTP_301",
-											"HTTP_302",
+											elbv2.RedirectActionStatusCodeEnumHttp301,
+											elbv2.RedirectActionStatusCodeEnumHttp302,
 										}, false),
 									},
 								},
@@ -276,8 +280,9 @@ func resourceAwsLbListener() *schema.Resource {
 										Computed: true,
 									},
 									"user_pool_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -379,7 +384,7 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	lbArn := d.Get("load_balancer_arn").(string)
 
@@ -542,7 +547,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
-		resp, err = elbconn.CreateListener(params)
+		resp, err = conn.CreateListener(params)
 		if err != nil {
 			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 				return resource.RetryableError(err)
@@ -553,7 +558,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if isResourceTimeoutError(err) {
-		resp, err = elbconn.CreateListener(params)
+		resp, err = conn.CreateListener(params)
 	}
 
 	if err != nil {
@@ -570,7 +575,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	var resp *elbv2.DescribeListenersOutput
 	var request = &elbv2.DescribeListenersInput{
@@ -579,7 +584,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		resp, err = elbconn.DescribeListeners(request)
+		resp, err = conn.DescribeListeners(request)
 		if d.IsNewResource() && isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
@@ -590,7 +595,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if isResourceTimeoutError(err) {
-		resp, err = elbconn.DescribeListeners(request)
+		resp, err = conn.DescribeListeners(request)
 	}
 
 	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
@@ -742,7 +747,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
 	params := &elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(d.Id()),
@@ -899,7 +904,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := elbconn.ModifyListener(params)
+		_, err := conn.ModifyListener(params)
 		if err != nil {
 			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
 				return resource.RetryableError(err)
@@ -910,7 +915,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = elbconn.ModifyListener(params)
+		_, err = conn.ModifyListener(params)
 	}
 
 	if err != nil {
@@ -921,9 +926,9 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbv2conn
+	conn := meta.(*AWSClient).elbv2conn
 
-	_, err := elbconn.DeleteListener(&elbv2.DeleteListenerInput{
+	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
 	if err != nil {
