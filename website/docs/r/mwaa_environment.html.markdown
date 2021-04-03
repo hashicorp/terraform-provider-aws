@@ -166,7 +166,7 @@ A configuration block to use for logging with respect to the various Apache Airf
 
 The `network_configuration` block supports the following arguments. More information about the required subnet and security group settings can be found in the [official AWS documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/vpc-create.html).
 
-* `security_group_ids` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other. Otherwise MWAA can't be provisioned and will fail. See [Base Usage](#base-usage) for an exemplary security group.
+* `security_group_ids` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other, otherwise MWAA cannot be provisioned.
 * `subnet_ids` - (Required)  The private subnet IDs in which the environment should be created. MWAA requires two subnets.
 
 ## Attributes Reference
