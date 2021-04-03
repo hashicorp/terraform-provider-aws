@@ -49,11 +49,15 @@ func resourceAwsCloudFrontKeyGroupCreate(d *schema.ResourceData, meta interface{
 		KeyGroupConfig: expandCloudFrontKeyGroupConfig(d),
 	}
 
-	log.Println("[DEBUG] Create CloudFront key group:", input)
+	log.Println("[DEBUG] Create CloudFront Key Group:", input)
 
 	output, err := conn.CreateKeyGroup(input)
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront key group: %s", err)
+		return fmt.Errorf("error creating CloudFront Key Group: %w", err)
+	}
+
+	if output == nil || output.KeyGroup == nil {
+		return fmt.Errorf("error creating CloudFront Key Group: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.KeyGroup.Id))
@@ -68,18 +72,16 @@ func resourceAwsCloudFrontKeyGroupRead(d *schema.ResourceData, meta interface{})
 
 	output, err := conn.GetKeyGroup(input)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
+		if !d.IsNewResource() && isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading CloudFront Key Group (%s): %w", d.Id(), err)
 	}
 
 	if output == nil || output.KeyGroup == nil || output.KeyGroup.KeyGroupConfig == nil {
-		log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading CloudFront Key Group: empty response")
 	}
 
 	keyGroupConfig := output.KeyGroup.KeyGroupConfig
@@ -103,7 +105,7 @@ func resourceAwsCloudFrontKeyGroupUpdate(d *schema.ResourceData, meta interface{
 
 	_, err := conn.UpdateKeyGroup(input)
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront key group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error updating CloudFront Key Group (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsCloudFrontKeyGroupRead(d, meta)
@@ -122,7 +124,7 @@ func resourceAwsCloudFrontKeyGroupDelete(d *schema.ResourceData, meta interface{
 		if isAWSErr(err, cloudfront.ErrCodeNoSuchResource, "") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("error deleting CloudFront Key Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
