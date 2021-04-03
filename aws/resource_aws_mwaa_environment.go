@@ -326,6 +326,10 @@ func resourceAwsMwaaEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading MWAA Environment (%s): %w", d.Id(), err)
 	}
 
+	if environment == nil {
+		return fmt.Errorf("error reading MWAA Environment (%s): empty response", d.Id())
+	}
+
 	d.Set("airflow_configuration_options", aws.StringValueMap(environment.AirflowConfigurationOptions))
 	d.Set("airflow_version", environment.AirflowVersion)
 	d.Set("arn", environment.Arn)
