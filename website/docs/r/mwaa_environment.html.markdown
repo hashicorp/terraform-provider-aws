@@ -16,7 +16,7 @@ A MWAA Environment requires an IAM role (`aws_iam_role`), two subnets in the pri
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_mwaa_environment" "example" {
   dag_s3_path        = "dags/"
   execution_role_arn = aws_iam_role.example.arn
@@ -33,7 +33,7 @@ resource "aws_mwaa_environment" "example" {
 
 ### Example with Airflow configuration options
 
-```hcl
+```terraform
 resource "aws_mwaa_environment" "example" {
   airflow_configuration_options = {
     "core.default_task_retries" = 16
@@ -57,7 +57,7 @@ resource "aws_mwaa_environment" "example" {
 
 Note that Airflow task logs are enabled by default with the `INFO` log level.
 
-```hcl
+```terraform
 resource "aws_mwaa_environment" "example" {
   dag_s3_path        = "dags/"
   execution_role_arn = aws_iam_role.example.arn
@@ -102,7 +102,7 @@ resource "aws_mwaa_environment" "example" {
 
 ### Example with tags
 
-```hcl
+```terraform
 resource "aws_mwaa_environment" "example" {
   dag_s3_path        = "dags/"
   execution_role_arn = aws_iam_role.example.arn
