@@ -124,7 +124,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupUpdate(d *schema.ResourceData, m
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -145,14 +145,6 @@ func resourceAwsRoute53ResolverFirewallRuleGroupDelete(d *schema.ResourceData, m
 	if err != nil {
 		return fmt.Errorf("error deleting Route 53 Resolver DNS Firewall rule group (%s): %w", d.Id(), err)
 	}
-
-	// TODO: Check waiter is required (seems to delete immediately)
-
-	// _, err = waiter.FirewallRuleGroupDeleted(conn, d.Id())
-
-	// if err != nil {
-	// 	return fmt.Errorf("error waiting for Route 53 Resolver DNS Firewall rule group (%s) to be deleted: %w", d.Id(), err)
-	// }
 
 	return nil
 }

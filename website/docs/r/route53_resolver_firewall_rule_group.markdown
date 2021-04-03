@@ -31,6 +31,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN (Amazon Resource Name) of the rule group.
 * `id` - The ID of the rule group.
+* `owner_id` - The AWS account ID for the account that created the rule group. When a rule group is shared with your account, this is the account that has shared the rule group with you.
+* `share_status` - Whether the rule group is shared with other AWS accounts, or was shared with the current account by another AWS account. Sharing is configured through AWS Resource Access Manager (AWS RAM). Valid values: `NOT_SHARED`, `SHARED_BY_ME`, `SHARED_WITH_ME`
 
 ## Import
 

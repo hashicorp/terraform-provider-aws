@@ -37,8 +37,8 @@ func testSweepRoute53ResolverFirewallRuleGroups(region string) error {
 			return !isLast
 		}
 
-		for _, queryLogConfig := range page.FirewallRuleGroups {
-			id := aws.StringValue(queryLogConfig.Id)
+		for _, firewallRuleGroup := range page.FirewallRuleGroups {
+			id := aws.StringValue(firewallRuleGroup.Id)
 
 			log.Printf("[INFO] Deleting Route53 Resolver DNS Firewall rule group: %s", id)
 			r := resourceAwsRoute53ResolverFirewallRuleGroup()
