@@ -10,8 +10,6 @@ import (
 const (
 	// Maximum amount of time to wait for an environment creation
 	EnvironmentCreatedTimeout = 90 * time.Minute
-	// Amount of delay to check an environment status
-	EnvironmentCreatedDelay = 1 * time.Minute
 
 	// Maximum amount of time to wait for an environment update
 	EnvironmentUpdatedTimeout = 90 * time.Minute
@@ -31,7 +29,6 @@ func EnvironmentCreated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: EnvironmentStatus(conn, name),
 		Timeout: EnvironmentCreatedTimeout,
-		Delay:   EnvironmentCreatedDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
