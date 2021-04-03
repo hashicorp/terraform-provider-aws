@@ -13,13 +13,9 @@ const (
 
 	// Maximum amount of time to wait for an environment update
 	EnvironmentUpdatedTimeout = 90 * time.Minute
-	// Amount of delay to check an environment status
-	EnvironmentUpdatedDelay = 1 * time.Minute
 
 	// Maximum amount of time to wait for an environment deletion
 	EnvironmentDeletedTimeout = 90 * time.Minute
-	// Amount of delay to check an environment status
-	EnvironmentDeletedDelay = 1 * time.Minute
 )
 
 // EnvironmentCreated waits for a Environment to return AVAILABLE
@@ -47,7 +43,6 @@ func EnvironmentUpdated(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: EnvironmentStatus(conn, name),
 		Timeout: EnvironmentUpdatedTimeout,
-		Delay:   EnvironmentUpdatedDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -66,7 +61,6 @@ func EnvironmentDeleted(conn *mwaa.MWAA, name string) (*mwaa.Environment, error)
 		Target:  []string{},
 		Refresh: EnvironmentStatus(conn, name),
 		Timeout: EnvironmentDeletedTimeout,
-		Delay:   EnvironmentDeletedDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
