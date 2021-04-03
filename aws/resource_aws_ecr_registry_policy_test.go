@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -38,6 +39,7 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				Config: testAccAWSEcrRegistryPolicy(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
 				),
 			},
 			{
@@ -49,6 +51,8 @@ func testAccAWSEcrRegistryPolicy_basic(t *testing.T) {
 				Config: testAccAWSEcrRegistryPolicyUpdated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRegistryPolicyExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:CreateRepository".+`)),
 				),
 			},
 		},
@@ -102,6 +106,15 @@ func testAccCheckAWSEcrRegistryPolicyExists(name string) resource.TestCheckFunc 
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
+
+		// conn := testAccProvider.Meta().(*AWSClient).ecrconn
+
+		// input := &ecr.GetLifecyclePolicyInput{
+		// 	RepositoryName: aws.String(rs.Primary.ID),
+		// }
+
+		// _, err := conn.GetLifecyclePolicy(input)
+		// return err
 
 		return nil
 	}

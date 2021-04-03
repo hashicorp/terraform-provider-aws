@@ -7,10 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsEcrRegistryPolicy() *schema.Resource {
@@ -45,25 +43,7 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 		PolicyText: aws.String(d.Get("policy").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating ECR resository policy: %s", input)
-
-	// Retry due to IAM eventual consistency
-	var err error
-	var out *ecr.PutRegistryPolicyOutput
-	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
-		out, err = conn.PutRegistryPolicy(&input)
-
-		if tfawserr.ErrMessageContains(err, ecr.ErrCodeInvalidParameterException, "Invalid registry policy provided") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.PutRegistryPolicy(&input)
-	}
+	out, err := conn.PutRegistryPolicy(&input)
 	if err != nil {
 		return fmt.Errorf("Error creating ECR Registry Policy: %w", err)
 	}
@@ -71,7 +51,6 @@ func resourceAwsEcrRegistryPolicyPut(d *schema.ResourceData, meta interface{}) e
 	registryPolicy := *out
 	regID := aws.StringValue(registryPolicy.RegistryId)
 
-	log.Printf("[DEBUG] ECR registry policy created: %s", regID)
 	d.SetId(regID)
 
 	return resourceAwsEcrRegistryPolicyRead(d, meta)
@@ -91,11 +70,8 @@ func resourceAwsEcrRegistryPolicyRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	log.Printf("[DEBUG] Received registry policy %s", out)
-
-	registryPolicy := out
-	d.Set("registry_id", registryPolicy.RegistryId)
-	d.Set("policy", registryPolicy.PolicyText)
+	d.Set("registry_id", out.RegistryId)
+	d.Set("policy", out.PolicyText)
 
 	return nil
 }
@@ -110,8 +86,6 @@ func resourceAwsEcrRegistryPolicyDelete(d *schema.ResourceData, meta interface{}
 		}
 		return err
 	}
-
-	log.Printf("[DEBUG] registry policy %s deleted.", d.Id())
 
 	return nil
 }
