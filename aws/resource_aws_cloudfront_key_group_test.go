@@ -70,23 +70,24 @@ func testSweepCloudFrontKeyGroup(region string) error {
 }
 
 func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rInt),
+				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", "test key group"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "etag"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "id"),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "name", rName),
 				),
 			},
 			{
@@ -99,16 +100,17 @@ func TestAccAWSCloudFrontKeyGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rInt),
+				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontKeyGroup(), resourceName),
@@ -120,7 +122,7 @@ func TestAccAWSCloudFrontKeyGroup_disappears(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	firstComment := "first comment"
@@ -128,11 +130,12 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigComment(rInt, firstComment),
+				Config: testAccAWSCloudFrontKeyGroupConfigComment(rName, firstComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", firstComment),
@@ -144,7 +147,7 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigComment(rInt, secondComment),
+				Config: testAccAWSCloudFrontKeyGroupConfigComment(rName, secondComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "comment", secondComment),
@@ -155,16 +158,17 @@ func TestAccAWSCloudFrontKeyGroup_Comment(t *testing.T) {
 }
 
 func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_key_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontKeyGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfig(rInt),
+				Config: testAccAWSCloudFrontKeyGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
@@ -176,7 +180,7 @@ func TestAccAWSCloudFrontKeyGroup_Items(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudFrontKeyGroupConfigItems(rInt),
+				Config: testAccAWSCloudFrontKeyGroupConfigItems(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontKeyGroupExistence(resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "2"),
@@ -235,48 +239,48 @@ func testAccCheckCloudFrontKeyGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCloudFrontKeyGroupConfigBase(rInt int) string {
+func testAccAWSCloudFrontKeyGroupConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
   comment     = "test key"
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
-  name        = "tf-acc-test-%d"
+  name        = %q
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfig(rInt int) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rInt) + fmt.Sprintf(`
+func testAccAWSCloudFrontKeyGroupConfig(rName string) string {
+	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_key_group" "test" {
   comment = "test key group"
   items   = [aws_cloudfront_public_key.test.id]
-  name    = "tf-acc-test-%d"
+  name    = %q
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfigComment(rInt int, comment string) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rInt) + fmt.Sprintf(`
+func testAccAWSCloudFrontKeyGroupConfigComment(rName string, comment string) string {
+	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_key_group" "test" {
   comment = %q
   items   = [aws_cloudfront_public_key.test.id]
-  name    = "tf-acc-test-%d"
+  name    = %q
 }
-`, comment, rInt)
+`, comment, rName)
 }
 
-func testAccAWSCloudFrontKeyGroupConfigItems(rInt int) string {
-	return testAccAWSCloudFrontKeyGroupConfigBase(rInt) + fmt.Sprintf(`
+func testAccAWSCloudFrontKeyGroupConfigItems(rName string) string {
+	return testAccAWSCloudFrontKeyGroupConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test2" {
   comment     = "second test key"
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
-  name        = "tf-acc-test-second-%d"
+  name        = "%[1]s-second"
 }
 
 resource "aws_cloudfront_key_group" "test" {
   comment = "test key group"
   items   = [aws_cloudfront_public_key.test.id, aws_cloudfront_public_key.test2.id]
-  name    = "tf-acc-test-%d"
+  name    = %[1]q
 }
-`, rInt, rInt)
+`, rName)
 }
