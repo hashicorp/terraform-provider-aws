@@ -620,7 +620,7 @@ resource "aws_sagemaker_domain" "test" {
 
   retention_policy {
     home_efs_file_system = "Delete"
-  }  
+  }
 }
 `, rName)
 }
@@ -644,7 +644,7 @@ resource "aws_sagemaker_domain" "test" {
 
   retention_policy {
     home_efs_file_system = "Delete"
-  }  
+  }
 }
 `, rName)
 }
@@ -672,7 +672,7 @@ resource "aws_sagemaker_domain" "test" {
 
   retention_policy {
     home_efs_file_system = "Delete"
-  }  
+  }
 }
 `, rName)
 }
