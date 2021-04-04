@@ -12,7 +12,7 @@ description: |-
 
 The following example below creates a CloudFront key group.
 
-```hcl
+```terraform
 resource "aws_cloudfront_public_key" "example" {
   comment     = "example public key"
   encoded_key = file("public_key.pem")
