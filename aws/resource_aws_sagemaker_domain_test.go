@@ -142,9 +142,10 @@ func testAccAWSSagemakerDomain_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -169,9 +170,10 @@ func testAccAWSSagemakerDomain_kms(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -197,9 +199,10 @@ func testAccAWSSagemakerDomain_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
 				Config: testAccAWSSagemakerDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -242,9 +245,10 @@ func testAccAWSSagemakerDomain_securityGroup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
 				Config: testAccAWSSagemakerDomainConfigSecurityGroup2(rName),
@@ -281,9 +285,10 @@ func testAccAWSSagemakerDomain_sharingSettings(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -311,9 +316,10 @@ func testAccAWSSagemakerDomain_tensorboardAppSettings(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -342,9 +348,10 @@ func testAccAWSSagemakerDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -372,9 +379,10 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -410,9 +418,10 @@ func testAccAWSSagemakerDomain_kernelGatewayAppSettings_customImage(t *testing.T
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -440,9 +449,10 @@ func testAccAWSSagemakerDomain_jupyterServerAppSettings(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -582,6 +592,10 @@ resource "aws_sagemaker_domain" "test" {
   default_user_settings {
     execution_role = aws_iam_role.test.arn
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
 }
 `, rName)
 }
@@ -603,6 +617,10 @@ resource "aws_sagemaker_domain" "test" {
   default_user_settings {
     execution_role = aws_iam_role.test.arn
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }  
 }
 `, rName)
 }
@@ -623,6 +641,10 @@ resource "aws_sagemaker_domain" "test" {
     execution_role  = aws_iam_role.test.arn
     security_groups = [aws_security_group.test.id]
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }  
 }
 `, rName)
 }
@@ -647,6 +669,10 @@ resource "aws_sagemaker_domain" "test" {
     execution_role  = aws_iam_role.test.arn
     security_groups = [aws_security_group.test.id, aws_security_group.test2.id]
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }  
 }
 `, rName)
 }
@@ -661,6 +687,10 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 
   tags = {
@@ -680,6 +710,10 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 
   tags = {
@@ -718,6 +752,10 @@ resource "aws_sagemaker_domain" "test" {
       s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
     }
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
 }
 `, rName)
 }
@@ -738,6 +776,10 @@ resource "aws_sagemaker_domain" "test" {
         instance_type = "ml.t3.micro"
       }
     }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 }
 `, rName)
@@ -766,6 +808,10 @@ resource "aws_sagemaker_domain" "test" {
       }
     }
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
 }
 `, rName)
 }
@@ -787,6 +833,10 @@ resource "aws_sagemaker_domain" "test" {
       }
     }
   }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
 }
 `, rName)
 }
@@ -807,6 +857,10 @@ resource "aws_sagemaker_domain" "test" {
         instance_type = "ml.t3.micro"
       }
     }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 }
 `, rName)
@@ -851,6 +905,10 @@ resource "aws_sagemaker_domain" "test" {
         image_name            = aws_sagemaker_image_version.test.image_name
       }
     }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
   }
 }
 `, rName, baseImage)
