@@ -117,6 +117,7 @@ func resourceAwsCodeDeployAppCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	application := resourceAwsCodeDeployAppParseId(d.Id())
 	log.Printf("[DEBUG] Reading CodeDeploy application %s", application)
@@ -151,6 +152,16 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", appName)
 	d.Set("github_account_name", app.GitHubAccountName)
 	d.Set("linked_to_github", app.LinkedToGitHub)
+
+	tags, err := keyvaluetags.CodedeployListTags(conn, appArn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for CodeDeploy application (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

@@ -232,7 +232,7 @@ func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
 				Config: testAccAWSCodeDeployAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists(resourceName, &application1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeDeployApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
