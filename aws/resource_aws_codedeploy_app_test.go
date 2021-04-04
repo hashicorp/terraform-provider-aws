@@ -27,8 +27,12 @@ func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists(resourceName, &application1),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`application:%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "linked_to_github", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 				),
 			},
 			// Import by ID
@@ -168,6 +172,74 @@ func TestAccAWSCodeDeployApp_name(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeDeployApp_tags(t *testing.T) {
+	var application codedeploy.ApplicationInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codedeploy_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeDeployAppConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeDeployAppConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeDeployAppConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployApp_disappears(t *testing.T) {
+	var application1 codedeploy.ApplicationInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codedeploy_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeDeployAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployAppExists(resourceName, &application1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodeDeployAppDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).codedeployconn
 
@@ -248,4 +320,29 @@ resource "aws_codedeploy_app" "test" {
   name = %q
 }
 `, rName)
+}
+
+func testAccAWSCodeDeployAppConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_app" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSCodeDeployAppConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_codedeploy_app" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q	
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
