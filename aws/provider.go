@@ -515,6 +515,7 @@ func Provider() *schema.Provider {
 			"aws_cloudformation_stack_set_instance":                   resourceAwsCloudFormationStackSetInstance(),
 			"aws_cloudfront_cache_policy":                             resourceAwsCloudFrontCachePolicy(),
 			"aws_cloudfront_distribution":                             resourceAwsCloudFrontDistribution(),
+			"aws_cloudfront_key_group":                                resourceAwsCloudFrontKeyGroup(),
 			"aws_cloudfront_origin_access_identity":                   resourceAwsCloudFrontOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":                    resourceAwsCloudFrontOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                               resourceAwsCloudFrontPublicKey(),
