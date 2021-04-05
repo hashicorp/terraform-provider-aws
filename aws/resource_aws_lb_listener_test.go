@@ -1231,7 +1231,7 @@ resource "aws_lb" "test" {
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 443
-  protocol = "TCP"
+  protocol = "TLS"
   vpc_id   = aws_vpc.test.id
 
   health_check {
@@ -1253,6 +1253,7 @@ resource "aws_lb_listener" "test" {
   port              = "443"
   protocol          = "TLS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
+  alpn_policy       = "HTTP2Preferred"
 
   default_action {
     target_group_arn = aws_lb_target_group.test.arn

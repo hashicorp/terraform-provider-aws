@@ -14,41 +14,20 @@ func dataSourceAwsLbListener() *schema.Resource {
 		Read: dataSourceAwsLbListenerRead,
 
 		Schema: map[string]*schema.Schema{
+			"alpn_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"load_balancer_arn", "port"},
 			},
-
-			"load_balancer_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"arn"},
-			},
-			"port": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"arn"},
-			},
-
-			"protocol": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ssl_policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"default_action": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -169,6 +148,46 @@ func dataSourceAwsLbListener() *schema.Resource {
 								},
 							},
 						},
+						"forward": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"stickiness": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"duration": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"target_group": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"arn": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"weight": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -213,48 +232,28 @@ func dataSourceAwsLbListener() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"forward": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_group": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"arn": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"weight": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"stickiness": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												"duration": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
 					},
 				},
+			},
+			"load_balancer_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"arn"},
+			},
+			"port": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"arn"},
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ssl_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}

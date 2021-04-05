@@ -1181,7 +1181,7 @@ func testAccPreCheckSkipError(err error) bool {
 	return false
 }
 
-func TestAccProvider_DefaultTags_EmptyConfigurationBlock(t *testing.T) {
+func TestAccAWSProvider_DefaultTags_EmptyConfigurationBlock(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
