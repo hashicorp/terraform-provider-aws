@@ -562,34 +562,38 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		params.DefaultActions[i] = action
 	}
 
-	var resp *elbv2.CreateListenerOutput
+	var output *elbv2.CreateListenerOutput
 
 	err := resource.Retry(waiter.LoadBalancerListenerCreateTimeout, func() *resource.RetryError {
 		var err error
+
 		log.Printf("[DEBUG] Creating LB listener for ARN: %s", d.Get("load_balancer_arn").(string))
-		resp, err = conn.CreateListener(params)
+		output, err = conn.CreateListener(params)
+
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
-		resp, err = conn.CreateListener(params)
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateListener(params)
 	}
 
 	if err != nil {
 		return fmt.Errorf("error creating ELBv2 Listener: %s", err)
 	}
 
-	if resp == nil || len(resp.Listeners) == 0 {
+	if output == nil || len(output.Listeners) == 0 {
 		return fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
 	}
 
-	d.SetId(aws.StringValue(resp.Listeners[0].ListenerArn))
+	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
 
 	return resourceAwsLbListenerRead(d, meta)
 }
@@ -597,14 +601,14 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	var resp *elbv2.DescribeListenersOutput
-	var request = &elbv2.DescribeListenersInput{
+	var output *elbv2.DescribeListenersOutput
+	var input = &elbv2.DescribeListenersInput{
 		ListenerArns: []*string{aws.String(d.Id())},
 	}
 
 	err := resource.Retry(waiter.LoadBalancedListenerReadTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = conn.DescribeListeners(request)
+		output, err = conn.DescribeListeners(input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return resource.RetryableError(err)
@@ -618,7 +622,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeListeners(request)
+		output, err = conn.DescribeListeners(input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
@@ -631,13 +635,13 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing ELBv2 Listener (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil {
+	if output == nil {
 		return fmt.Errorf("error describing ELBv2 Listener (%s): empty response", d.Id())
 	}
 
 	var listener *elbv2.Listener
 
-	for _, l := range resp.Listeners {
+	for _, l := range output.Listeners {
 		if aws.StringValue(l.ListenerArn) == d.Id() {
 			listener = l
 			break
