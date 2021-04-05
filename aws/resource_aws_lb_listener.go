@@ -586,7 +586,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		ListenerArns: []*string{aws.String(d.Id())},
 	}
 
-	err := resource.Retry(waiter.LoadBalancedListenerReadTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.LoadBalancerListenerReadTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.DescribeListeners(input)
 
@@ -919,18 +919,21 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.LoadBalancerListenerUpdateTimeout, func() *resource.RetryError {
 		_, err := conn.ModifyListener(params)
+
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
+	if tfresource.TimedOut(err) {
 		_, err = conn.ModifyListener(params)
 	}
 

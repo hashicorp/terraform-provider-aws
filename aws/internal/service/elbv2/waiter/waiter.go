@@ -27,7 +27,8 @@ const (
 	LoadBalancerNetworkInterfaceDetachTimeout = 5 * time.Minute
 
 	LoadBalancerListenerCreateTimeout = 5 * time.Minute
-	LoadBalancedListenerReadTimeout   = 2 * time.Minute
+	LoadBalancerListenerReadTimeout   = 2 * time.Minute
+	LoadBalancerListenerUpdateTimeout = 5 * time.Minute
 )
 
 // LoadBalancerActive waits for a Load Balancer to return active
