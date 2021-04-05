@@ -20,63 +20,74 @@ func init() {
 
 	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
 		Name: "aws_eks_fargate_node_group",
-		F:    testSweepEksFargateNodegroups,
+		F:    testSweepEksFargateNodeGroups,
 	})
 }
 
-func testSweepEksFargateNodegroups(region string) error {
+func testSweepEksFargateNodeGroups(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).eksconn
 
-	var errors error
+	conn := client.(*AWSClient).eksconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errors *multierror.Error
+
 	input := &eks.ListClustersInput{}
+
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		for _, cluster := range page.Clusters {
 			clusterName := aws.StringValue(cluster)
 			input := &eks.ListNodegroupsInput{
 				ClusterName: cluster,
 			}
+
 			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
-				for _, nodegroup := range page.Nodegroups {
-					nodegroupName := aws.StringValue(nodegroup)
-					log.Printf("[INFO] Deleting EKS Node Group %q", nodegroupName)
-					input := &eks.DeleteNodegroupInput{
-						ClusterName:   cluster,
-						NodegroupName: nodegroup,
-					}
-					_, err := conn.DeleteNodegroup(input)
+				for _, nodeGroup := range page.Nodegroups {
+					nodeGroupName := aws.StringValue(nodeGroup)
 
-					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Node Group %q: %w", nodegroupName, err))
-						continue
-					}
+					r := resourceAwsEksNodeGroup()
+					d := r.Data(nil)
 
-					if err := waitForEksNodeGroupDeletion(conn, clusterName, nodegroupName, 10*time.Minute); err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Node Group %q deletion: %w", nodegroupName, err))
-						continue
-					}
+					d.Set("cluster_name", clusterName)
+					d.Set("node_group_name", nodeGroupName)
+					d.SetId(resourceAwsEksNodeGroupCreateId(clusterName, nodeGroupName))
+
+					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
-				return true
+				return !lastPage
 			})
+
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error listing Node Groups for EKS Cluster %s: %w", clusterName, err))
+				errors = multierror.Append(errors, err)
 			}
 		}
 
-		return true
+		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
+
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
+		errors = multierror.Append(errors, err)
+		// in case work can be done, don't jump out yet
 	}
 
-	return errors
+	if len(sweepResources) > 0 {
+		// any errors didn't prevent gathering of some work, so do it
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errors = multierror.Append(errors, err)
+		}
+	}
+
+	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
+
+	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EKS Node Group sweep for %s: %s", region, errors)
+		return nil
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
