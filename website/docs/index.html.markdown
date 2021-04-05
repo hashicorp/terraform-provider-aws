@@ -87,12 +87,14 @@ provider "aws" {
 ### Environment Variables
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
-`AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
-Access Key and AWS Secret Key, respectively.  Note that setting your
-AWS credentials using either these (or legacy) environment variables
-will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
-The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
-are also used, if applicable:
+`AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS Access
+Key and AWS Secret Key, respectively. You may also need to set
+`AWS_SDK_LOAD_CONFIG` to a truthy value.
+
+Note that setting your AWS credentials using either these (or legacy)
+environment variables will override the use of `AWS_SHARED_CREDENTIALS_FILE`
+and `AWS_PROFILE`.  The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN`
+environment variables are also used, if applicable:
 
 ```terraform
 provider "aws" {}
@@ -101,6 +103,7 @@ provider "aws" {}
 Usage:
 
 ```sh
+$ export AWS_SDK_LOAD_CONFIG=1
 $ export AWS_ACCESS_KEY_ID="anaccesskey"
 $ export AWS_SECRET_ACCESS_KEY="asecretkey"
 $ export AWS_DEFAULT_REGION="us-west-2"
