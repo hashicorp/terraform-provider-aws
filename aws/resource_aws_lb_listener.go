@@ -566,7 +566,7 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ELBv2 Listener: %s", err)
+		return fmt.Errorf("error creating ELBv2 Listener (%s): %w", d.Get("load_balancer_arn").(string), err)
 	}
 
 	if output == nil || len(output.Listeners) == 0 {
@@ -751,7 +751,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		defaultActions[i] = defaultActionMap
 	}
 	if err := d.Set("default_action", defaultActions); err != nil {
-		return fmt.Errorf("error setting default_action: %s", err)
+		return fmt.Errorf("error setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -935,7 +935,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error modifying LB Listener: %s", err)
+		return fmt.Errorf("error modifying ELBv2 Listener (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsLbListenerRead(d, meta)
@@ -948,7 +948,7 @@ func resourceAwsLbListenerDelete(d *schema.ResourceData, meta interface{}) error
 		ListenerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Listener: %s", err)
+		return fmt.Errorf("error deleting Listener (%s): %w", d.Id(), err)
 	}
 
 	return nil
