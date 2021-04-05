@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_cloudfront_key_group` ([#17041](https://github.com/hashicorp/terraform-provider-aws/issues/17041))
+* **New Resource:** `aws_mwaa_environment` ([#16616](https://github.com/hashicorp/terraform-provider-aws/issues/16616))
 
 ENHANCEMENTS:
 
