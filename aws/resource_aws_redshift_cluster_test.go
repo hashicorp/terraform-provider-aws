@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,39 +26,50 @@ func init() {
 
 func testSweepRedshiftClusters(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	conn := client.(*AWSClient).redshiftconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errors *multierror.Error
 
 	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
 		if len(resp.Clusters) == 0 {
 			log.Print("[DEBUG] No Redshift clusters to sweep")
-			return false
+			return !isLast
 		}
 
 		for _, c := range resp.Clusters {
-			id := aws.StringValue(c.ClusterIdentifier)
+			r := resourceAwsRedshiftCluster()
+			d := r.Data(nil)
+			d.Set("skip_final_snapshot", true)
+			d.SetId(aws.StringValue(c.ClusterIdentifier))
 
-			input := &redshift.DeleteClusterInput{
-				ClusterIdentifier:        c.ClusterIdentifier,
-				SkipFinalClusterSnapshot: aws.Bool(true),
-			}
-			_, err := conn.DeleteCluster(input)
-			if err != nil {
-				log.Printf("[ERROR] Failed deleting Redshift cluster (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 		return !isLast
 	})
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Redshift Clusters: %s", err)
+		errors = multierror.Append(errors, fmt.Errorf("error describing Redshift Clusters: %w", err))
+		// in case work can be done, don't jump out yet
 	}
-	return nil
+
+	if len(sweepResources) > 0 {
+		// any errors didn't prevent gathering of some work, so do it
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errors = multierror.Append(errors, err)
+		}
+	}
+
+	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
