@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_appmesh_virtual_router: Handle read-after-create eventual consistency ([#18529](https://github.com/hashicorp/terraform-provider-aws/issues/18529))
 * resource/aws_appmesh_virtual_service: Handle read-after-create eventual consistency ([#18529](https://github.com/hashicorp/terraform-provider-aws/issues/18529))
 * resource/aws_dms_replication_task: Handle read-only attributes in `replication_task_settings` to avoid unnecessary diffs. ([#13476](https://github.com/hashicorp/terraform-provider-aws/issues/13476))
+* resource/aws_docdb_cluster_parameter_group: Read all user parameters and parameters specified in the configuration. ([#18486](https://github.com/hashicorp/terraform-provider-aws/issues/18486))
 * resource/aws_ecr_lifecycle_policy: Handle read-after-create eventual consistency ([#18464](https://github.com/hashicorp/terraform-provider-aws/issues/18464))
 * resource/aws_ecr_repository: Handle read-after-create eventual consistency ([#18464](https://github.com/hashicorp/terraform-provider-aws/issues/18464))
 * resource/aws_ecr_repository_policy: Handle read-after-create eventual consistency ([#18464](https://github.com/hashicorp/terraform-provider-aws/issues/18464))
