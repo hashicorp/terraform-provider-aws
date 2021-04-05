@@ -102,9 +102,9 @@ func resourceAwsEc2TransitGatewayRouteTablePropagationRead(d *schema.ResourceDat
 		return nil
 	}
 
-	d.Set("resource_id", aws.StringValue(transitGatewayPropagation.ResourceId))
-	d.Set("resource_type", aws.StringValue(transitGatewayPropagation.ResourceType))
-	d.Set("transit_gateway_attachment_id", aws.StringValue(transitGatewayPropagation.TransitGatewayAttachmentId))
+	d.Set("resource_id", transitGatewayPropagation.ResourceId)
+	d.Set("resource_type", transitGatewayPropagation.ResourceType)
+	d.Set("transit_gateway_attachment_id", transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
 	return nil

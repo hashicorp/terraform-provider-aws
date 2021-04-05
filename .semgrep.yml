@@ -195,7 +195,7 @@ rules:
         - aws/
     pattern: schema.NewSet(schema.HashString, flattenStringList($APIOBJECT))
     severity: WARNING
-    
+
   - id: helper-schema-Set-extraneous-expandStringList-with-List
     languages: [go]
     message: Prefer `expandStringSet()` function for casting a set to a list of string pointers
@@ -227,6 +227,23 @@ rules:
         - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
     severity: WARNING
 
+  - id: helper-schema-ResourceData-Set-extraneous-value-pointer-conversion
+    fix: d.Set($ATTRIBUTE, $APIOBJECT)
+    languages: [go]
+    message: AWS Go SDK pointer conversion function for `d.Set()` value is extraneous
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+          - pattern: d.Set($ATTRIBUTE, aws.BoolValue($APIOBJECT))
+          - pattern: d.Set($ATTRIBUTE, aws.Float64Value($APIOBJECT))
+          - pattern: d.Set($ATTRIBUTE, aws.IntValue($APIOBJECT))
+          - pattern: d.Set($ATTRIBUTE, aws.Int64Value($APIOBJECT))
+          - pattern: d.Set($ATTRIBUTE, int(aws.Int64Value($APIOBJECT)))
+          - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
+    severity: WARNING
+
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
     message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is checked first
@@ -236,7 +253,6 @@ rules:
         - aws/resource_aws_apigatewayv2_*.go
         - aws/resource_aws_app_cookie_stickiness_policy.go
         - aws/resource_aws_appautoscaling_*.go
-        - aws/resource_aws_appmesh_*.go
         - aws/resource_aws_appsync_*.go
         - aws/resource_aws_athena_*.go
         - aws/resource_aws_autoscaling_*.go

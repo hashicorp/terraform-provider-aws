@@ -8,10 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAppmeshVirtualGateway() *schema.Resource {
@@ -706,20 +710,54 @@ func resourceAwsAppmeshVirtualGatewayRead(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).appmeshconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	virtualGateway, err := finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+	var virtualGateway *appmesh.VirtualGatewayData
 
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh virtual gateway (%s) not found, removing from state", d.Id())
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		virtualGateway, err = finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		virtualGateway, err = finder.VirtualGateway(conn, d.Get("mesh_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+	}
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh virtual gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading App Mesh Virtual Gateway: %w", err)
 	}
 
-	if virtualGateway == nil || aws.StringValue(virtualGateway.Status.Status) == appmesh.VirtualGatewayStatusCodeDeleted {
-		log.Printf("[WARN] App Mesh virtual gateway (%s) not found, removing from state", d.Id())
+	if virtualGateway == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading App Mesh Virtual Gateway: not found after creation")
+		}
+
+		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if aws.StringValue(virtualGateway.Status.Status) == appmesh.VirtualGatewayStatusCodeDeleted {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading App Mesh Virtual Gateway: %s after creation", aws.StringValue(virtualGateway.Status.Status))
+		}
+
+		log.Printf("[WARN] App Mesh Virtual Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

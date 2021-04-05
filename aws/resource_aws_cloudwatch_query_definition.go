@@ -64,7 +64,7 @@ func resourceAwsCloudWatchQueryDefinitionCreate(ctx context.Context, d *schema.R
 	}
 
 	d.SetId(aws.StringValue(r.QueryDefinitionId))
-	d.Set("query_definition_id", aws.StringValue(r.QueryDefinitionId)) // TODO: is this needed?
+	d.Set("query_definition_id", r.QueryDefinitionId) // TODO: is this needed?
 
 	return resourceAwsCloudWatchQueryDefinitionRead(ctx, d, meta)
 }
@@ -98,9 +98,9 @@ func resourceAwsCloudWatchQueryDefinitionRead(ctx context.Context, d *schema.Res
 		return nil
 	}
 
-	d.Set("name", aws.StringValue(result.Name))
-	d.Set("query_string", aws.StringValue(result.QueryString))
-	d.Set("query_definition_id", aws.StringValue(result.QueryDefinitionId))
+	d.Set("name", result.Name)
+	d.Set("query_string", result.QueryString)
+	d.Set("query_definition_id", result.QueryDefinitionId)
 	if err := d.Set("log_group_names", aws.StringValueSlice(result.LogGroupNames)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting log_group_names: %w", err))
 	}
