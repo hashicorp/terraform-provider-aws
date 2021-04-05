@@ -76,7 +76,7 @@ func testSweepEksNodeGroups(region string) error {
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, err)
+			errors = multierror.Append(errors, fmt.Errorf("error sweeping resources for %s: %w", region, err))
 		}
 	}
 
