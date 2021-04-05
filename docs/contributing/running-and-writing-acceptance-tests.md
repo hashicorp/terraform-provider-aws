@@ -1161,44 +1161,56 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
+  sweepResources := make([]*testSweepResource, 0)
+  var errors *multierror.Error
   input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
-
+  
   err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
     if page == nil {
       return !isLast
     }
 
     for _, thing := range page.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errors = multierror.Append(errors, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
     return !isLast
   })
 
-  if testSweepSkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-    return sweeperErrs.ErrorOrNil()
+  if len(sweepResources) > 0 {
+    // Any errors didn't prevent gathering some sweeping work, so do it.
+    if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+      errors = multierror.Append(errors, err)
+    }
   }
 
-  if err != nil {
-    sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Things: %w", err))
+  if testSweepSkipSweepError(errors.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errors)
+    return nil
   }
 
-  return sweeperErrs.ErrorOrNil()
+  return errors.ErrorOrNil()
 }
 ```
 
@@ -1213,37 +1225,36 @@ func testSweepExampleThings(region string) error {
   }
 
   conn := client.(*AWSClient).exampleconn
+  sweepResources := make([]*testSweepResource, 0)
+  var errors *multierror.Error
   input := &example.ListThingsInput{}
-  var sweeperErrs *multierror.Error
 
   for {
     output, err := conn.ListThings(input)
 
-    if testSweepSkipSweepError(err) {
-      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
-      return sweeperErrs.ErrorOrNil()
-    }
-
-    if err != nil {
-      sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
-      return sweeperErrs
-    }
-
     for _, thing := range output.Things {
+      r := resourceAwsThing()
+      d := r.Data(nil)
+
       id := aws.StringValue(thing.Id)
-      input := &example.DeleteThingInput{
-        Id: thing.Id,
-      }
+      d.SetId(id)
 
-      log.Printf("[INFO] Deleting Example Thing: %s", id)
-      _, err := conn.DeleteThing(input)
+      // Perform resource specific pre-sweep setup.
+      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
+      //
+      // err := r.Read(d, client)             // fill in data
+      // d.Set("skip_final_snapshot", true)   // set an argument in order to delete
 
+      // This "if" is only needed if the pre-sweep setup can produce errors.
+      // Otherwise, do not include it.
       if err != nil {
-        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", sweeperErr)
-        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", err)
+        errors = multierror.Append(errors, err)
         continue
       }
+
+      sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
     if aws.StringValue(output.NextToken) == "" {
@@ -1253,7 +1264,19 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  return sweeperErrs.ErrorOrNil()
+  if len(sweepResources) > 0 {
+    // Any errors didn't prevent gathering some sweeping work, so do it.
+    if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+      errors = multierror.Append(errors, err)
+    }
+  }
+
+  if testSweepSkipSweepError(errors.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errors)
+    return nil
+  }
+
+  return errors.ErrorOrNil()
 }
 ```
 
