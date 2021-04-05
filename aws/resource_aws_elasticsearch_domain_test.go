@@ -26,12 +26,14 @@ func init() {
 
 func testSweepElasticSearchDomains(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).esconn
 
-	var sweeperErrs *multierror.Error
+	conn := client.(*AWSClient).esconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errors *multierror.Error
 
 	input := &elasticsearch.ListDomainNamesInput{}
 
@@ -40,19 +42,19 @@ func testSweepElasticSearchDomains(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+		return errors.ErrorOrNil()
 	}
 
 	if err != nil {
 		sweeperErr := fmt.Errorf("error listing Elasticsearch Domains: %w", err)
 		log.Printf("[ERROR] %s", sweeperErr)
-		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-		return sweeperErrs.ErrorOrNil()
+		errors = multierror.Append(errors, sweeperErr)
+		return errors.ErrorOrNil()
 	}
 
 	if output == nil {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: empty response", region)
-		return sweeperErrs.ErrorOrNil()
+		return errors.ErrorOrNil()
 	}
 
 	for _, domainInfo := range output.DomainNames {
@@ -75,7 +77,7 @@ func testSweepElasticSearchDomains(region string) error {
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			errors = multierror.Append(errors, sweeperErr)
 			continue
 		}
 
@@ -89,17 +91,22 @@ func testSweepElasticSearchDomains(region string) error {
 		d.SetId(name)
 		d.Set("domain_name", name)
 
-		err = r.Delete(d, client)
+		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+	}
 
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting Elasticsearch Domain (%s): %w", name, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
+	if len(sweepResources) > 0 {
+		// Any errors didn't prevent gathering some sweeping work, so do it.
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errors = multierror.Append(errors, err)
 		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errors)
+		return nil
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
