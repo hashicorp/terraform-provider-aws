@@ -35,46 +35,6 @@ func resourceAwsLbListener() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"load_balancer_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-			},
-
-			"port": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IsPortNumber,
-			},
-
-			"protocol": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v interface{}) string {
-					return strings.ToUpper(v.(string))
-				},
-				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
-			},
-
-			"ssl_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"certificate_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateArn,
-			},
-
 			"alpn_policy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -86,177 +46,20 @@ func resourceAwsLbListener() *schema.Resource {
 					"None",
 				}, true),
 			},
-
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"certificate_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
 			"default_action": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ActionTypeEnumAuthenticateCognito,
-								elbv2.ActionTypeEnumAuthenticateOidc,
-								elbv2.ActionTypeEnumFixedResponse,
-								elbv2.ActionTypeEnumForward,
-								elbv2.ActionTypeEnumRedirect,
-							}, true),
-						},
-						"order": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 50000),
-						},
-
-						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							ValidateFunc:     validateArn,
-						},
-
-						"forward": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"target_group": {
-										Type:     schema.TypeSet,
-										MinItems: 1,
-										MaxItems: 5,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-												"weight": {
-													Type:         schema.TypeInt,
-													ValidateFunc: validation.IntBetween(0, 999),
-													Default:      1,
-													Optional:     true,
-												},
-											},
-										},
-									},
-									"stickiness": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
-										MaxItems:         1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Default:  false,
-												},
-												"duration": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 604800),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-
-						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumRedirect),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{host}",
-									},
-
-									"path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/#{path}",
-									},
-
-									"port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{port}",
-									},
-
-									"protocol": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{protocol}",
-										ValidateFunc: validation.StringInSlice([]string{
-											"#{protocol}",
-											"HTTP",
-											"HTTPS",
-										}, false),
-									},
-
-									"query": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{query}",
-									},
-
-									"status_code": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											elbv2.RedirectActionStatusCodeEnumHttp301,
-											elbv2.RedirectActionStatusCodeEnumHttp302,
-										}, false),
-									},
-								},
-							},
-						},
-
-						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"content_type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"text/plain",
-											"text/css",
-											"text/html",
-											"application/javascript",
-											"application/json",
-										}, false),
-									},
-
-									"message_body": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"status_code": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
-									},
-								},
-							},
-						},
-
 						"authenticate_cognito": {
 							Type:             schema.TypeList,
 							Optional:         true,
@@ -310,7 +113,6 @@ func resourceAwsLbListener() *schema.Resource {
 								},
 							},
 						},
-
 						"authenticate_oidc": {
 							Type:             schema.TypeList,
 							Optional:         true,
@@ -376,8 +178,186 @@ func resourceAwsLbListener() *schema.Resource {
 								},
 							},
 						},
+						"fixed_response": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"content_type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"text/plain",
+											"text/css",
+											"text/html",
+											"application/javascript",
+											"application/json",
+										}, false),
+									},
+									"message_body": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"status_code": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
+									},
+								},
+							},
+						},
+						"forward": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"target_group": {
+										Type:     schema.TypeSet,
+										MinItems: 1,
+										MaxItems: 5,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
+												},
+												"weight": {
+													Type:         schema.TypeInt,
+													ValidateFunc: validation.IntBetween(0, 999),
+													Default:      1,
+													Optional:     true,
+												},
+											},
+										},
+									},
+									"stickiness": {
+										Type:             schema.TypeList,
+										Optional:         true,
+										DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+										MaxItems:         1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"duration": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 604800),
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Default:  false,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"order": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 50000),
+						},
+						"redirect": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumRedirect),
+							MaxItems:         1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"host": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{host}",
+									},
+									"path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "/#{path}",
+									},
+									"port": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{port}",
+									},
+									"protocol": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{protocol}",
+										ValidateFunc: validation.StringInSlice([]string{
+											"#{protocol}",
+											"HTTP",
+											"HTTPS",
+										}, false),
+									},
+									"query": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "#{query}",
+									},
+									"status_code": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											elbv2.RedirectActionStatusCodeEnumHttp301,
+											elbv2.RedirectActionStatusCodeEnumHttp302,
+										}, false),
+									},
+								},
+							},
+						},
+						"target_group_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
+							ValidateFunc:     validateArn,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elbv2.ActionTypeEnumAuthenticateCognito,
+								elbv2.ActionTypeEnumAuthenticateOidc,
+								elbv2.ActionTypeEnumFixedResponse,
+								elbv2.ActionTypeEnumForward,
+								elbv2.ActionTypeEnumRedirect,
+							}, true),
+						},
 					},
 				},
+			},
+			"load_balancer_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
+			"port": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IsPortNumber,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					return strings.ToUpper(v.(string))
+				},
+				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+			},
+			"ssl_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
