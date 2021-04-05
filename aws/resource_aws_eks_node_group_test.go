@@ -18,17 +18,17 @@ import (
 func init() {
 	RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
 
-	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
-		Name: "aws_eks_fargate_node_group",
-		F:    testSweepEksFargateNodeGroups,
+	resource.AddTestSweepers("aws_eks_node_group", &resource.Sweeper{
+		Name: "aws_eks_node_group",
+		F:    testSweepEksNodeGroups,
 	})
 }
 
-func testSweepEksFargateNodeGroups(region string) error {
+func testSweepEksNodeGroups(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).eksconn
@@ -61,7 +61,7 @@ func testSweepEksFargateNodeGroups(region string) error {
 			})
 
 			if err != nil {
-				errors = multierror.Append(errors, err)
+				errors = multierror.Append(errors, fmt.Errorf("error listing EKS Node Groups: %w", err))
 			}
 		}
 
@@ -69,7 +69,7 @@ func testSweepEksFargateNodeGroups(region string) error {
 	})
 
 	if err != nil {
-		errors = multierror.Append(errors, err)
+		errors = multierror.Append(errors, fmt.Errorf("error listing EKS Clusters: %w", err))
 		// in case work can be done, don't jump out yet
 	}
 
