@@ -1,5 +1,9 @@
 ## 3.36.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_cloudfront_key_group` ([#17041](https://github.com/hashicorp/terraform-provider-aws/issues/17041))
+
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket_object: Add `bucket_key_enabled` attribute (Support S3 Bucket Keys) ([#16581](https://github.com/hashicorp/terraform-provider-aws/issues/16581))
