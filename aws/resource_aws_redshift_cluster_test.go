@@ -49,6 +49,7 @@ func testSweepRedshiftClusters(region string) error {
 
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
+
 		return !isLast
 	})
 
@@ -60,7 +61,7 @@ func testSweepRedshiftClusters(region string) error {
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, err)
+			errors = multierror.Append(errors, fmt.Errorf("error sweeping Redshift Clusters for %s: %w", region, err))
 		}
 	}
 
