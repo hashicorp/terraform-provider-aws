@@ -1163,8 +1163,9 @@ func testSweepExampleThings(region string) error {
   conn := client.(*AWSClient).exampleconn
   sweepResources := make([]*testSweepResource, 0)
   var errors *multierror.Error
+
   input := &example.ListThingsInput{}
-  
+
   err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
     if page == nil {
       return !isLast
@@ -1198,10 +1199,14 @@ func testSweepExampleThings(region string) error {
     return !isLast
   })
 
+  if err != nil {
+    errors = multierror.Append(errors, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
+  }
+
   if len(sweepResources) > 0 {
     // Any errors didn't prevent gathering some sweeping work, so do it.
     if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errors = multierror.Append(errors, err)
+      errors = multierror.Append(errors, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
     }
   }
 
@@ -1227,6 +1232,7 @@ func testSweepExampleThings(region string) error {
   conn := client.(*AWSClient).exampleconn
   sweepResources := make([]*testSweepResource, 0)
   var errors *multierror.Error
+
   input := &example.ListThingsInput{}
 
   for {
@@ -1267,7 +1273,7 @@ func testSweepExampleThings(region string) error {
   if len(sweepResources) > 0 {
     // Any errors didn't prevent gathering some sweeping work, so do it.
     if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errors = multierror.Append(errors, err)
+      errors = multierror.Append(errors, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
     }
   }
 
