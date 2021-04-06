@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,36 +33,56 @@ func init() {
 
 func testSweepElasticacheReplicationGroups(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).elasticacheconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errors *multierror.Error
 
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
 		if len(page.ReplicationGroups) == 0 {
 			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
-			return false
+			return !isLast // in rare cases across API, one page may have empty results but not be last page
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
-			id := aws.StringValue(replicationGroup.ReplicationGroupId)
+			r := resourceAwsElasticacheReplicationGroup()
+			d := r.Data(nil)
 
-			log.Printf("[INFO] Deleting ElastiCache Replication Group: %s", id)
-			err := deleteElasticacheReplicationGroup(id, conn, "", 40*time.Minute)
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ElastiCache Replication Group (%s): %s", id, err)
+			if replicationGroup.GlobalReplicationGroupInfo != nil {
+				d.Set("global_replication_group_id", replicationGroup.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 			}
+
+			d.SetId(aws.StringValue(replicationGroup.ReplicationGroupId))
+
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
+
 		return !isLast
 	})
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping ElastiCache Replication Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ElastiCache Replication Groups: %w", err)
+		errors = multierror.Append(errors, fmt.Errorf("error describing Elasticache Replication Groups: %w", err))
 	}
-	return nil
+
+	if len(sweepResources) > 0 {
+		// any errors didn't prevent gathering of some work, so do it
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
+		}
+	}
+
+	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
+
+	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Elasticache Replication Group sweep for %s: %s", region, errors)
+		return nil
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
