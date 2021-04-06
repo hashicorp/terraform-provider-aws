@@ -6,14 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsFmsAdminAccount_basic(t *testing.T) {
+func testAccAwsFmsAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_fms_admin_account.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckFmsAdmin(t)
@@ -24,7 +26,7 @@ func TestAccAwsFmsAdminAccount_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckFmsAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFmsAdminAccountConfig_basic(),
+				Config: testAccFmsAdminAccountConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
 				),
@@ -61,7 +63,7 @@ func testAccCheckFmsAdminAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFmsAdminAccountConfig_basic() string {
+func testAccFmsAdminAccountConfig_basic(rName string) string {
 	return composeConfig(
 		testAccFmsAdminRegionProviderConfig(),
 		`
