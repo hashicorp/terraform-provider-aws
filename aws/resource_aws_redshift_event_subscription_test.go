@@ -37,7 +37,7 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := resourceAwsElasticacheReplicationGroup()
+			r := resourceAwsRedshiftEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
