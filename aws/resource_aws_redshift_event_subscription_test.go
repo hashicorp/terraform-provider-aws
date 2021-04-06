@@ -22,11 +22,14 @@ func init() {
 
 func testSweepRedshiftEventSubscriptions(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
+
 	conn := client.(*AWSClient).redshiftconn
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]*testSweepResource, 0)
+	var errors *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, isLast bool) bool {
 		if page == nil {
@@ -34,34 +37,33 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			name := aws.StringValue(eventSubscription.CustSubscriptionId)
+			r := resourceAwsElasticacheReplicationGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
-			log.Printf("[INFO] Deleting Redshift Event Subscription: %s", name)
-			_, err = conn.DeleteEventSubscription(&redshift.DeleteEventSubscriptionInput{
-				SubscriptionName: aws.String(name),
-			})
-			if isAWSErr(err, redshift.ErrCodeSubscriptionNotFoundFault, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Redshift Event Subscription (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
 		return !isLast
 	})
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Redshift Event Subscriptions: %w", err))
+		errors = multierror.Append(errors, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if len(sweepResources) > 0 {
+		// any errors didn't prevent gathering of some work, so do it
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
+		}
+	}
+
+	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
