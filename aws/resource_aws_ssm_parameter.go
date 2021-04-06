@@ -40,7 +40,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"tier": {
 				Type:         schema.TypeString,
@@ -87,7 +87,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"allowed_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"version": {
 				Type:     schema.TypeInt,
