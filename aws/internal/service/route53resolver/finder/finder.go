@@ -116,6 +116,35 @@ func FirewallDomainListByID(conn *route53resolver.Route53Resolver, firewallDomai
 	return output.FirewallDomainList, nil
 }
 
+// FirewallConfigByID returns the dnssec configuration corresponding to the specified ID.
+// Returns nil if no configuration is found.
+func FirewallConfigByID(conn *route53resolver.Route53Resolver, firewallConfigID string) (*route53resolver.FirewallConfig, error) {
+	input := &route53resolver.ListFirewallConfigsInput{}
+
+	var config *route53resolver.FirewallConfig
+	// GetFirewallConfigs does not support query with id
+	err := conn.ListFirewallConfigsPages(input, func(page *route53resolver.ListFirewallConfigsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, c := range page.FirewallConfigs {
+			if aws.StringValue(c.Id) == firewallConfigID {
+				config = c
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
 // FirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
 // Returns nil if no DNS Firewall rule is found.
 func FirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {

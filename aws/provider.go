@@ -963,6 +963,7 @@ func Provider() *schema.Provider {
 			"aws_route53_health_check":                                resourceAwsRoute53HealthCheck(),
 			"aws_route53_resolver_dnssec_config":                      resourceAwsRoute53ResolverDnssecConfig(),
 			"aws_route53_resolver_endpoint":                           resourceAwsRoute53ResolverEndpoint(),
+			"aws_route53_resolver_firewall_config":                    resourceAwsRoute53ResolverFirewallConfig(),
 			"aws_route53_resolver_firewall_domain_list":               resourceAwsRoute53ResolverFirewallDomainList(),
 			"aws_route53_resolver_firewall_rule":                      resourceAwsRoute53ResolverFirewallRule(),
 			"aws_route53_resolver_firewall_rule_group":                resourceAwsRoute53ResolverFirewallRuleGroup(),
