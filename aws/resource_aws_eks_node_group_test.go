@@ -16,6 +16,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkipEKS)
+
 	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
 		Name: "aws_eks_fargate_node_group",
 		F:    testSweepEksFargateNodegroups,
@@ -783,6 +785,12 @@ func TestAccAWSEksNodeGroup_Version(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccErrorCheckSkipEKS(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"InvalidParameterException: The following supplied instance types do not exist",
+	)
 }
 
 func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodegroup) resource.TestCheckFunc {
