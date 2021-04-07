@@ -32,7 +32,7 @@ func testSweepWafWebAcls(region string) error {
 
 	conn := client.(*AWSClient).wafconn
 	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
+	var errs *multierror.Error
 	input := &waf.ListWebACLsInput{}
 
 	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
@@ -57,7 +57,7 @@ func testSweepWafWebAcls(region string) error {
 			if err != nil {
 				readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
 				log.Printf("[ERROR] %s", readErr)
-				errors = multierror.Append(errors, readErr)
+				errs = multierror.Append(errs, readErr)
 				continue
 			}
 
@@ -73,7 +73,7 @@ func testSweepWafWebAcls(region string) error {
 	})
 
 	if err != nil {
-		errors = multierror.Append(errors, err)
+		errs = multierror.Append(errs, err)
 		// in case work can be done, don't jump out yet
 	}
 
@@ -82,16 +82,16 @@ func testSweepWafWebAcls(region string) error {
 		sweepErr := testSweepResourceOrchestrator(sweepResources)
 
 		if sweepErr != nil {
-			errors = multierror.Append(errors, sweepErr)
+			errs = multierror.Append(errs, sweepErr)
 		}
 	}
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errors)
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSWafWebAcl_basic(t *testing.T) {
