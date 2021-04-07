@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -371,23 +372,55 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	resp, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-		TargetGroupArns: aws.StringSlice([]string{d.Id()}),
-	})
-	if err != nil {
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
-			log.Printf("[DEBUG] DescribeTargetGroups - removing %s from state", d.Id())
-			d.SetId("")
-			return nil
+	var targetGroup *elbv2.TargetGroup
+
+	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+
+		targetGroup, err = finder.TargetGroupByARN(conn, d.Id())
+
+		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+			return resource.RetryableError(err)
 		}
-		return fmt.Errorf("error retrieving Target Group: %w", err)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		if d.IsNewResource() && targetGroup == nil {
+			return resource.RetryableError(&resource.NotFoundError{
+				LastError: fmt.Errorf("ELBv2 Target Group (%s) not found", d.Id()),
+			})
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		targetGroup, err = finder.TargetGroupByARN(conn, d.Id())
 	}
 
-	if len(resp.TargetGroups) != 1 {
-		return fmt.Errorf("error retrieving Target Group %q", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	return flattenAwsLbTargetGroupResource(d, meta, resp.TargetGroups[0])
+	if err != nil {
+		return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", d.Id(), err)
+	}
+
+	if targetGroup == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading ELBv2 Target Group (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] ELBv2 Target Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	return flattenAwsLbTargetGroupResource(d, meta, targetGroup)
 }
 
 func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
