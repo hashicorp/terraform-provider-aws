@@ -32,9 +32,9 @@ func testSweepFSXWindowsFileSystems(region string) error {
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
-	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, isLast bool) bool {
+	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, fs := range page.FileSystems {
@@ -50,7 +50,7 @@ func testSweepFSXWindowsFileSystems(region string) error {
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
