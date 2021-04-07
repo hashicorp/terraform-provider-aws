@@ -33,7 +33,7 @@ func testSweepElasticSearchDomains(region string) error {
 
 	conn := client.(*AWSClient).esconn
 	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
+	var errs *multierror.Error
 
 	input := &elasticsearch.ListDomainNamesInput{}
 
@@ -42,19 +42,19 @@ func testSweepElasticSearchDomains(region string) error {
 
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
-		return errors.ErrorOrNil()
+		return errs.ErrorOrNil()
 	}
 
 	if err != nil {
 		sweeperErr := fmt.Errorf("error listing Elasticsearch Domains: %w", err)
 		log.Printf("[ERROR] %s", sweeperErr)
-		errors = multierror.Append(errors, sweeperErr)
-		return errors.ErrorOrNil()
+		errs = multierror.Append(errs, sweeperErr)
+		return errs.ErrorOrNil()
 	}
 
 	if output == nil {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: empty response", region)
-		return errors.ErrorOrNil()
+		return errs.ErrorOrNil()
 	}
 
 	for _, domainInfo := range output.DomainNames {
@@ -77,7 +77,7 @@ func testSweepElasticSearchDomains(region string) error {
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
-			errors = multierror.Append(errors, sweeperErr)
+			errs = multierror.Append(errs, sweeperErr)
 			continue
 		}
 
@@ -97,16 +97,16 @@ func testSweepElasticSearchDomains(region string) error {
 	if len(sweepResources) > 0 {
 		// Any errors didn't prevent gathering some sweeping work, so do it.
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, err)
+			errs = multierror.Append(errs, err)
 		}
 	}
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errors)
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
