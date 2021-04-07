@@ -33,7 +33,7 @@ func testSweepRedshiftSubnetGroups(region string) error {
 
 	conn := client.(*AWSClient).redshiftconn
 	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
+	var errs *multierror.Error
 
 	input := &redshift.DescribeClusterSubnetGroupsInput{}
 
@@ -64,22 +64,22 @@ func testSweepRedshiftSubnetGroups(region string) error {
 	})
 
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
 	}
 
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
 		}
 	}
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errors)
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSRedshiftSubnetGroup_basic(t *testing.T) {

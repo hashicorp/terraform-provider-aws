@@ -29,7 +29,7 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 
 	conn := client.(*AWSClient).redshiftconn
 	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
+	var errs *multierror.Error
 
 	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, isLast bool) bool {
 		if page == nil {
@@ -48,22 +48,22 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 	})
 
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
 		}
 	}
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSRedshiftEventSubscription_basicUpdate(t *testing.T) {
