@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,6 +41,9 @@ func testSweepWafByteMatchSet(region string) error {
 
 	input := &waf.ListByteMatchSetsInput{}
 
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
 	err = lister.ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, isLast bool) bool {
 		if page == nil {
 			return !isLast
@@ -52,22 +56,28 @@ func testSweepWafByteMatchSet(region string) error {
 			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
 			d.SetId(id)
 
-			// Need to Read first to fill in byte_match_tuples attribute
-			err := r.Read(d, client)
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in byte_match_tuples attribute
+				err := r.Read(d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				errs = multierror.Append(errs, sweeperErr)
-				continue
-			}
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
 
-			// In case it was already deleted
-			if d.Id() == "" {
-				continue
-			}
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
 		}
 
 		return !isLast
@@ -75,6 +85,10 @@ func testSweepWafByteMatchSet(region string) error {
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Byte Match Set for %s: %w", region, err))
+	}
+
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Byte Match Sets: %w", err))
 	}
 
 	if len(sweepResources) > 0 {
