@@ -36,6 +36,11 @@ func resourceAwsS3ObjectCopy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"bucket_key_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -312,6 +317,7 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
 
+	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
 	d.Set("content_disposition", resp.ContentDisposition)
 	d.Set("content_encoding", resp.ContentEncoding)
@@ -381,6 +387,7 @@ func resourceAwsS3ObjectCopyUpdate(d *schema.ResourceData, meta interface{}) err
 	args := []string{
 		"acl",
 		"bucket",
+		"bucket_key_enabled",
 		"cache_control",
 		"content_disposition",
 		"content_encoding",
@@ -453,6 +460,10 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("acl"); ok {
 		input.ACL = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {
