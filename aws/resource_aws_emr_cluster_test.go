@@ -38,9 +38,9 @@ func testSweepEmrClusters(region string) error {
 			aws.String(emr.ClusterStateWaiting),
 		},
 	}
-	err = conn.ListClustersPages(input, func(page *emr.ListClustersOutput, isLast bool) bool {
+	err = conn.ListClustersPages(input, func(page *emr.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, cluster := range page.Clusters {
@@ -64,7 +64,7 @@ func testSweepEmrClusters(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
