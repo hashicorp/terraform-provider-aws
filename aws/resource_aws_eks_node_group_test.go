@@ -33,7 +33,7 @@ func testSweepEksNodeGroups(region string) error {
 
 	conn := client.(*AWSClient).eksconn
 	sweepResources := make([]*testSweepResource, 0)
-	var errors *multierror.Error
+	var errs *multierror.Error
 
 	input := &eks.ListClustersInput{}
 
@@ -61,7 +61,7 @@ func testSweepEksNodeGroups(region string) error {
 			})
 
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error listing EKS Node Groups: %w", err))
+				errs = multierror.Append(errs, fmt.Errorf("error listing EKS Node Groups: %w", err))
 			}
 		}
 
@@ -69,25 +69,25 @@ func testSweepEksNodeGroups(region string) error {
 	})
 
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error listing EKS Clusters: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing EKS Clusters: %w", err))
 		// in case work can be done, don't jump out yet
 	}
 
 	if len(sweepResources) > 0 {
 		// any errors didn't prevent gathering of some work, so do it
 		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("error sweeping resources for %s: %w", region, err))
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping resources for %s: %w", region, err))
 		}
 	}
 
 	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
 
-	if testSweepSkipSweepError(errors.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EKS Node Group sweep for %s: %s", region, errors)
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EKS Node Group sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	return errors.ErrorOrNil()
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
