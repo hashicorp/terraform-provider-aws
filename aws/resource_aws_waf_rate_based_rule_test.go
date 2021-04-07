@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,65 +30,80 @@ func init() {
 
 func testSweepWafRateBasedRules(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafconn
 
-	var sweeperErrs *multierror.Error
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
 
 	input := &waf.ListRateBasedRulesInput{}
 
-	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
+	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, isLast bool) bool {
 		if page == nil {
-			return !lastPage
+			return !isLast
 		}
 
 		for _, rule := range page.Rules {
-			id := aws.StringValue(rule.RuleId)
-
 			r := resourceAwsWafRateBasedRule()
 			d := r.Data(nil)
+
+			id := aws.StringValue(rule.RuleId)
 			d.SetId(id)
 
-			// Need to Read first to fill in predicates attribute
-			err := r.Read(d, client)
+			// read concurrently and gather errors
+			g.Go(func() error {
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+				// Need to Read first to fill in predicates attribute
+				err := r.Read(d, client)
 
-			// In case it was already deleted
-			if d.Id() == "" {
-				continue
-			}
+				if err != nil {
+					sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					return sweeperErr
+				}
 
-			err = r.Delete(d, client)
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAF Rate Based Rule (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
 		}
 
-		return !lastPage
+		return !isLast
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Rate Based Rules: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rate Based Rule for %s: %w", region, err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rate Based Rules: %w", err))
+	}
+
+	if len(sweepResources) > 0 {
+		// Any errors didn't prevent gathering some sweeping work, so do it.
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
+		}
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
