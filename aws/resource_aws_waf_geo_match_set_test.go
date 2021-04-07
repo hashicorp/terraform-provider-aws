@@ -29,25 +29,27 @@ func init() {
 
 func testSweepWafGeoMatchSet(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafconn
 
-	var sweeperErrs *multierror.Error
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	input := &waf.ListGeoMatchSetsInput{}
 
-	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
+	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, isLast bool) bool {
 		if page == nil {
-			return !lastPage
+			return !isLast
 		}
 
 		for _, geoMatchSet := range page.GeoMatchSets {
-			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
-
 			r := resourceAwsWafGeoMatchSet()
 			d := r.Data(nil)
+
+			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
 			d.SetId(id)
 
 			// Need to Read first to fill in geo_match_constraint attribute
@@ -56,7 +58,7 @@ func testSweepWafGeoMatchSet(region string) error {
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading WAF Geo Match Set (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				errs = multierror.Append(errs, sweeperErr)
 				continue
 			}
 
@@ -65,29 +67,29 @@ func testSweepWafGeoMatchSet(region string) error {
 				continue
 			}
 
-			err = r.Delete(d, client)
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAF Geo Match Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !lastPage
+		return !isLast
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF Geo Match Sets: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Geo Match Set for %s: %w", region, err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if len(sweepResources) > 0 {
+		// Any errors didn't prevent gathering some sweeping work, so do it.
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
+		}
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
