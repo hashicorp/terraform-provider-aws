@@ -38,11 +38,10 @@ func testSweepWafByteMatchSet(region string) error {
 	conn := client.(*AWSClient).wafconn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
-
-	input := &waf.ListByteMatchSetsInput{}
-
 	var g multierror.Group
 	var mutex = &sync.Mutex{}
+
+	input := &waf.ListByteMatchSetsInput{}
 
 	err = lister.ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, isLast bool) bool {
 		if page == nil {
