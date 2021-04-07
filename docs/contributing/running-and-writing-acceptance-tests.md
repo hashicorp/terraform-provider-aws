@@ -1162,7 +1162,7 @@ func testSweepExampleThings(region string) error {
 
   conn := client.(*AWSClient).exampleconn
   sweepResources := make([]*testSweepResource, 0)
-  var errors *multierror.Error
+  var errs *multierror.Error
 
   input := &example.ListThingsInput{}
 
@@ -1189,7 +1189,7 @@ func testSweepExampleThings(region string) error {
       if err != nil {
         err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
-        errors = multierror.Append(errors, err)
+        errs = multierror.Append(errs, err)
         continue
       }
 
@@ -1200,22 +1200,22 @@ func testSweepExampleThings(region string) error {
   })
 
   if err != nil {
-    errors = multierror.Append(errors, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
+    errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
   if len(sweepResources) > 0 {
     // Any errors didn't prevent gathering some sweeping work, so do it.
     if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errors = multierror.Append(errors, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+      errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
     }
   }
 
-  if testSweepSkipSweepError(errors.ErrorOrNil()) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errors)
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
 
-  return errors.ErrorOrNil()
+  return errs.ErrorOrNil()
 }
 ```
 
@@ -1231,7 +1231,7 @@ func testSweepExampleThings(region string) error {
 
   conn := client.(*AWSClient).exampleconn
   sweepResources := make([]*testSweepResource, 0)
-  var errors *multierror.Error
+  var errs *multierror.Error
 
   input := &example.ListThingsInput{}
 
@@ -1256,7 +1256,7 @@ func testSweepExampleThings(region string) error {
       if err != nil {
         err := fmt.Errorf("error reading Example Thing (%s): %w", id, err)
         log.Printf("[ERROR] %s", err)
-        errors = multierror.Append(errors, err)
+        errs = multierror.Append(errs, err)
         continue
       }
 
@@ -1273,16 +1273,16 @@ func testSweepExampleThings(region string) error {
   if len(sweepResources) > 0 {
     // Any errors didn't prevent gathering some sweeping work, so do it.
     if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errors = multierror.Append(errors, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
+      errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
     }
   }
 
-  if testSweepSkipSweepError(errors.ErrorOrNil()) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errors)
+  if testSweepSkipSweepError(errs.ErrorOrNil()) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
   }
 
-  return errors.ErrorOrNil()
+  return errs.ErrorOrNil()
 }
 ```
 
