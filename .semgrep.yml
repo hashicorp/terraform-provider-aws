@@ -374,3 +374,27 @@ rules:
         - pattern: |
             $X != ($Y : time.Time)
     severity: WARNING
+
+  - id: prefer-pagination-bool-var-last-page
+    languages: [go]
+    message: Use lastPage for bool variable in pagination functions
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern: |
+          $X.$Z(..., func(..., $Y bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., lastPage bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., _ bool) {
+            ...
+          })
+      - metavariable-regex:
+          metavariable: '$Z'
+          regex: '.*Pages$'
+    severity: WARNING
