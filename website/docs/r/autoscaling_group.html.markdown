@@ -307,6 +307,29 @@ resource "aws_launch_template" "example" {
 }
 ```
 
+### Auto Scaling group with Warm Pool
+
+```terraform
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 5
+  min_size           = 1
+
+  warm_pool {
+    pool_state                  = "Stopped"
+    min_size                    = 1
+    max_group_prepared_capacity = 10
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -374,7 +397,9 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `instance_refresh` - (Optional) If this block is configured, start an
    [Instance Refresh](https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html)
    when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
-
+* `warm_pool` - (Optional)  if this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
+   to the specified Auto Scaling group. Defined [below](#warm_pool)
+  
 ### launch_template
 
 ~> **NOTE:** Either `id` or `name` must be specified.
@@ -457,6 +482,14 @@ This configuration block supports the following:
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 
 ~> **NOTE:** Depending on health check settings and group size, an instance refresh may take a long time or fail. This resource does not wait for the instance refresh to complete.
+
+### warm_pool
+
+This configuration block supports the following:
+
+* `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default) or Running.
+* `min_size` - (Optional) Specifies the minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `max_group_prepared_capacity` - (Optional) Specifies the total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
 
 ## Attributes Reference
 
