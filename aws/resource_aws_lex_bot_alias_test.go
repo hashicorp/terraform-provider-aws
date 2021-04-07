@@ -55,8 +55,8 @@ func testSweepLexBotAliases(region string) error {
 					d := r.Data(nil)
 
 					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
-					d.Set("bot_name", aws.StringValue(bot.Name))
-					d.Set("name", aws.StringValue(botAlias.Name))
+					d.Set("bot_name", bot.Name)
+					d.Set("name", botAlias.Name)
 
 					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
