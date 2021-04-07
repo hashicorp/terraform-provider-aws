@@ -39,9 +39,9 @@ func testSweepWafWebAcls(region string) error {
 
 	input := &waf.ListWebACLsInput{}
 
-	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, isLast bool) bool {
+	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, webACL := range page.WebACLs {
@@ -79,7 +79,7 @@ func testSweepWafWebAcls(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

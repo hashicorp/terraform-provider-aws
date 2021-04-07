@@ -46,9 +46,9 @@ func testSweepWafIPSet(region string) error {
 
 	input := &waf.ListIPSetsInput{}
 
-	err = lister.ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, isLast bool) bool {
+	err = lister.ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, ipSet := range page.IPSets {
@@ -82,7 +82,7 @@ func testSweepWafIPSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

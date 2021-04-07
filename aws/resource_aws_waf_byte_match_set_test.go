@@ -43,9 +43,9 @@ func testSweepWafByteMatchSet(region string) error {
 
 	input := &waf.ListByteMatchSetsInput{}
 
-	err = lister.ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, isLast bool) bool {
+	err = lister.ListByteMatchSetsPages(conn, input, func(page *waf.ListByteMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, byteMatchSet := range page.ByteMatchSets {
@@ -79,7 +79,7 @@ func testSweepWafByteMatchSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

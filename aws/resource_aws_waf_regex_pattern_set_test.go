@@ -43,9 +43,9 @@ func testSweepWafRegexPatternSet(region string) error {
 
 	input := &waf.ListRegexPatternSetsInput{}
 
-	err = lister.ListRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, isLast bool) bool {
+	err = lister.ListRegexPatternSetsPages(conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, regexPatternSet := range page.RegexPatternSets {
@@ -79,7 +79,7 @@ func testSweepWafRegexPatternSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

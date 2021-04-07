@@ -43,9 +43,9 @@ func testSweepWafRegexMatchSet(region string) error {
 
 	input := &waf.ListRegexMatchSetsInput{}
 
-	err = lister.ListRegexMatchSetsPages(conn, input, func(page *waf.ListRegexMatchSetsOutput, isLast bool) bool {
+	err = lister.ListRegexMatchSetsPages(conn, input, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, regexMatchSet := range page.RegexMatchSets {
@@ -79,7 +79,7 @@ func testSweepWafRegexMatchSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

@@ -43,9 +43,9 @@ func testSweepWafGeoMatchSet(region string) error {
 
 	input := &waf.ListGeoMatchSetsInput{}
 
-	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, isLast bool) bool {
+	err = lister.ListGeoMatchSetsPages(conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, geoMatchSet := range page.GeoMatchSets {
@@ -79,7 +79,7 @@ func testSweepWafGeoMatchSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

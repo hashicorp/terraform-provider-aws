@@ -43,9 +43,9 @@ func testSweepWafRateBasedRules(region string) error {
 
 	input := &waf.ListRateBasedRulesInput{}
 
-	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, isLast bool) bool {
+	err = lister.ListRateBasedRulesPages(conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, rule := range page.Rules {
@@ -79,7 +79,7 @@ func testSweepWafRateBasedRules(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

@@ -44,9 +44,9 @@ func testSweepWafSizeConstraintSet(region string) error {
 
 	input := &waf.ListSizeConstraintSetsInput{}
 
-	err = lister.ListSizeConstraintSetsPages(conn, input, func(page *waf.ListSizeConstraintSetsOutput, isLast bool) bool {
+	err = lister.ListSizeConstraintSetsPages(conn, input, func(page *waf.ListSizeConstraintSetsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, sizeConstraintSet := range page.SizeConstraintSets {
@@ -80,7 +80,7 @@ func testSweepWafSizeConstraintSet(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {

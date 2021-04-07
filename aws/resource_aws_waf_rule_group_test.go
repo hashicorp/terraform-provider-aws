@@ -42,9 +42,9 @@ func testSweepWafRuleGroups(region string) error {
 
 	input := &waf.ListRuleGroupsInput{}
 
-	err = lister.ListRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, isLast bool) bool {
+	err = lister.ListRuleGroupsPages(conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, ruleGroup := range page.RuleGroups {
@@ -78,7 +78,7 @@ func testSweepWafRuleGroups(region string) error {
 			})
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
