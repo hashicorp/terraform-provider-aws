@@ -561,7 +561,7 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		resp, err = conn.CreateDeploymentGroup(&input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodeDeploy deployment group: %s", err)
+		return fmt.Errorf("Error creating CodeDeploy deployment group: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DeploymentGroupId))
@@ -575,14 +575,16 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Reading CodeDeploy DeploymentGroup %s", d.Id())
 
+	deploymentGroupName := d.Get("deployment_group_name").(string)
 	resp, err := conn.GetDeploymentGroup(&codedeploy.GetDeploymentGroupInput{
 		ApplicationName:     aws.String(d.Get("app_name").(string)),
-		DeploymentGroupName: aws.String(d.Get("deployment_group_name").(string)),
+		DeploymentGroupName: aws.String(deploymentGroupName),
 	})
 
 	if err != nil {
-		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") {
-			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", d.Get("deployment_group_name").(string))
+		if isAWSErr(err, codedeploy.ErrCodeDeploymentGroupDoesNotExistException, "") ||
+			isAWSErr(err, codedeploy.ErrCodeApplicationDoesNotExistException, "") {
+			log.Printf("[INFO] CodeDeployment DeploymentGroup %s not found", deploymentGroupName)
 			d.SetId("")
 			return nil
 		}
@@ -612,47 +614,47 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 		autoScalingGroups[i] = aws.StringValue(autoScalingGroup.Name)
 	}
 	if err := d.Set("autoscaling_groups", autoScalingGroups); err != nil {
-		return fmt.Errorf("error setting autoscaling_groups: %s", err)
+		return fmt.Errorf("error setting autoscaling_groups: %w", err)
 	}
 
 	if err := d.Set("deployment_style", flattenDeploymentStyle(group.DeploymentStyle)); err != nil {
-		return err
+		return fmt.Errorf("error setting deployment_style: %w", err)
 	}
 
 	if err := d.Set("ec2_tag_set", ec2TagSetToMap(group.Ec2TagSet)); err != nil {
-		return err
+		return fmt.Errorf("error setting ec2_tag_set: %w", err)
 	}
 
 	if err := d.Set("ec2_tag_filter", ec2TagFiltersToMap(group.Ec2TagFilters)); err != nil {
-		return err
+		return fmt.Errorf("error setting ec2_tag_filter: %w", err)
 	}
 
 	if err := d.Set("ecs_service", flattenCodeDeployEcsServices(group.EcsServices)); err != nil {
-		return fmt.Errorf("error setting ecs_service: %s", err)
+		return fmt.Errorf("error setting ecs_service: %w", err)
 	}
 
 	if err := d.Set("on_premises_instance_tag_filter", onPremisesTagFiltersToMap(group.OnPremisesInstanceTagFilters)); err != nil {
-		return err
+		return fmt.Errorf("error setting on_premises_instance_tag_filter: %w", err)
 	}
 
 	if err := d.Set("trigger_configuration", triggerConfigsToMap(group.TriggerConfigurations)); err != nil {
-		return err
+		return fmt.Errorf("error setting trigger_configuration: %w", err)
 	}
 
 	if err := d.Set("auto_rollback_configuration", autoRollbackConfigToMap(group.AutoRollbackConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error setting auto_rollback_configuration: %w", err)
 	}
 
 	if err := d.Set("alarm_configuration", alarmConfigToMap(group.AlarmConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error setting alarm_configuration: %w", err)
 	}
 
 	if err := d.Set("load_balancer_info", flattenLoadBalancerInfo(group.LoadBalancerInfo)); err != nil {
-		return err
+		return fmt.Errorf("error setting load_balancer_info: %w", err)
 	}
 
 	if err := d.Set("blue_green_deployment_config", flattenBlueGreenDeploymentConfig(group.BlueGreenDeploymentConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error setting blue_green_deployment_config: %w", err)
 	}
 
 	tags, err := keyvaluetags.CodedeployListTags(conn, groupArn)
@@ -778,7 +780,7 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 			_, err = conn.UpdateDeploymentGroup(&input)
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating CodeDeploy deployment group: %s", err)
+			return fmt.Errorf("Error updating CodeDeploy deployment group: %w", err)
 		}
 	}
 
