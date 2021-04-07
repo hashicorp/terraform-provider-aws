@@ -32,25 +32,27 @@ func init() {
 
 func testSweepWafIPSet(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafconn
 
-	var sweeperErrs *multierror.Error
+	conn := client.(*AWSClient).wafconn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	input := &waf.ListIPSetsInput{}
 
-	err = lister.ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
+	err = lister.ListIPSetsPages(conn, input, func(page *waf.ListIPSetsOutput, isLast bool) bool {
 		if page == nil {
-			return !lastPage
+			return !isLast
 		}
 
 		for _, ipSet := range page.IPSets {
-			id := aws.StringValue(ipSet.IPSetId)
-
 			r := resourceAwsWafIPSet()
 			d := r.Data(nil)
+
+			id := aws.StringValue(ipSet.IPSetId)
 			d.SetId(id)
 
 			// Need to Read first to fill in ip_set_descriptors attribute
@@ -59,7 +61,7 @@ func testSweepWafIPSet(region string) error {
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading WAF IP Set (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				errs = multierror.Append(errs, sweeperErr)
 				continue
 			}
 
@@ -68,29 +70,31 @@ func testSweepWafIPSet(region string) error {
 				continue
 			}
 
-			err = r.Delete(d, client)
+			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAF IP Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			err = r.Delete(d, client)
 		}
 
-		return !lastPage
+		return !isLast
 	})
 
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAF IP Sets: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF IP Set for %s: %w", region, err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if len(sweepResources) > 0 {
+		// Any errors didn't prevent gathering some sweeping work, so do it.
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
+		}
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestAccAWSWafIPSet_basic(t *testing.T) {
