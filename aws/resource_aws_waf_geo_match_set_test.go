@@ -58,7 +58,6 @@ func testSweepWafGeoMatchSet(region string) error {
 
 			// read concurrently and gather errors
 			g.Go(func() error {
-
 				// Need to Read first to fill in geo_match_constraint attribute
 				err := r.Read(d, client)
 

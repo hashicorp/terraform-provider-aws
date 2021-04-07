@@ -60,7 +60,6 @@ func testSweepWafIPSet(region string) error {
 
 			// read concurrently and gather errors
 			g.Go(func() error {
-
 				// Need to Read first to fill in ip_set_descriptors attribute
 				err := r.Read(d, client)
 
