@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -33,11 +34,14 @@ func testSweepWafWebAcls(region string) error {
 	conn := client.(*AWSClient).wafconn
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
+	var g multierror.Group
+	var mutex = &sync.Mutex{}
+
 	input := &waf.ListWebACLsInput{}
 
-	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
+	err = lister.ListWebACLsPages(conn, input, func(page *waf.ListWebACLsOutput, isLast bool) bool {
 		if page == nil {
-			return !lastPage
+			return !isLast
 		}
 
 		for _, webACL := range page.WebACLs {
@@ -51,33 +55,46 @@ func testSweepWafWebAcls(region string) error {
 			id := aws.StringValue(webACL.WebACLId)
 			d.SetId(id)
 
-			// Need to Read first to fill in rules argument
-			err := r.Read(d, client)
+			// read concurrently and gather errors
+			g.Go(func() error {
+				// Need to Read first to fill in rules argument
+				err := r.Read(d, client)
 
-			if err != nil {
-				readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
-				log.Printf("[ERROR] %s", readErr)
-				errs = multierror.Append(errs, readErr)
-				continue
-			}
+				if err != nil {
+					readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
+					log.Printf("[ERROR] %s", readErr)
+					return readErr
+				}
 
-			// In case it was already deleted
-			if d.Id() == "" {
-				continue
-			}
+				// In case it was already deleted
+				if d.Id() == "" {
+					return nil
+				}
 
-			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+				mutex.Lock()
+				defer mutex.Unlock()
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+
+				return nil
+			})
 		}
 
-		return !lastPage
+		return !isLast
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing WAF Web ACLs: %w", err))
+		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Web ACLs for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACL for %s: %w", region, err))
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Web ACLs: %w", err))
+	}
+
+	if len(sweepResources) > 0 {
+		// Any errors didn't prevent gathering some sweeping work, so do it.
+		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
+		}
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
