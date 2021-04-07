@@ -33,6 +33,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s:%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -51,6 +52,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
