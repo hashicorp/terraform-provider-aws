@@ -239,6 +239,7 @@ func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
 func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
@@ -264,18 +265,41 @@ func TestAccAWSSSMParameter_overwriteWithTags(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
+func TestAccAWSSSMParameter_noOverwriteWithTags(t *testing.T) {
+	var param ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ssm.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, true, "key1", "value2"),
+				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, false, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 		},
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18550
 func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 	var param ssm.Parameter
 	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
@@ -306,14 +330,6 @@ func TestAccAWSSSMParameter_updateToOverwriteWithTags(t *testing.T) {
 					testAccCheckAWSSSMParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSSSMParameterConfigOverwriteWithTags1(rName, false, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMParameterExists(resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 		},

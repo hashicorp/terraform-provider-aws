@@ -24,9 +24,9 @@ const (
 
 func resourceAwsSsmParameter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsSsmParameterPut,
+		Create: resourceAwsSsmParameterCreate,
 		Read:   resourceAwsSsmParameterRead,
-		Update: resourceAwsSsmParameterPut,
+		Update: resourceAwsSsmParameterUpdate,
 		Delete: resourceAwsSsmParameterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -108,6 +108,66 @@ func resourceAwsSsmParameter() *schema.Resource {
 			}),
 		),
 	}
+}
+
+func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ssmconn
+
+	name := d.Get("name").(string)
+
+	paramInput := &ssm.PutParameterInput{
+		Name:           aws.String(name),
+		Type:           aws.String(d.Get("type").(string)),
+		Tier:           aws.String(d.Get("tier").(string)),
+		Value:          aws.String(d.Get("value").(string)),
+		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("data_type"); ok {
+		paramInput.DataType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		paramInput.Description = aws.String(v.(string))
+	}
+
+	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {
+		paramInput.SetKeyId(keyID.(string))
+	}
+
+	// AWS SSM Service only supports PutParameter requests with Tags
+	// iff Overwrite is not provided or is false; in this resource's case,
+	// the Overwrite value is always set in the paramInput so we check for the value
+	if v, ok := d.GetOk("tags"); ok && !aws.BoolValue(paramInput.Overwrite) {
+		paramInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
+	}
+
+	_, err := conn.PutParameter(paramInput)
+
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
+		paramInput.Tier = nil
+		_, err = conn.PutParameter(paramInput)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error creating SSM parameter (%s): %w", name, err)
+	}
+
+	// Since the AWS SSM Service does not support PutParameter requests with
+	// Tags and Overwrite set to true, we make an additional API call
+	// to Update the resource's tags if necessary
+	if d.HasChange("tags") && paramInput.Tags == nil {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
+		}
+	}
+
+	d.SetId(name)
+
+	return resourceAwsSsmParameterRead(d, meta)
 }
 
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
@@ -201,6 +261,54 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
+func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ssmconn
+
+	if d.HasChangesExcept("tags") {
+		paramInput := &ssm.PutParameterInput{
+			Name:           aws.String(d.Get("name").(string)),
+			Type:           aws.String(d.Get("type").(string)),
+			Tier:           aws.String(d.Get("tier").(string)),
+			Value:          aws.String(d.Get("value").(string)),
+			Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+		}
+
+		if d.HasChange("data_type") {
+			paramInput.DataType = aws.String(d.Get("data_type").(string))
+		}
+
+		if d.HasChange("description") {
+			paramInput.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("key_id") && d.Get("type").(string) == ssm.ParameterTypeSecureString {
+			paramInput.SetKeyId(d.Get("key_id").(string))
+		}
+
+		_, err := conn.PutParameter(paramInput)
+
+		if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
+			paramInput.Tier = nil
+			_, err = conn.PutParameter(paramInput)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating SSM parameter (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsSsmParameterRead(d, meta)
+}
+
 func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
 
@@ -217,67 +325,6 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-}
-
-func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
-
-	name := d.Get("name").(string)
-
-	paramInput := &ssm.PutParameterInput{
-		Name:           aws.String(name),
-		Type:           aws.String(d.Get("type").(string)),
-		Tier:           aws.String(d.Get("tier").(string)),
-		Value:          aws.String(d.Get("value").(string)),
-		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
-		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
-	}
-
-	if v, ok := d.GetOk("data_type"); ok {
-		paramInput.DataType = aws.String(v.(string))
-	}
-
-	if d.HasChange("description") {
-		_, n := d.GetChange("description")
-		paramInput.Description = aws.String(n.(string))
-	}
-
-	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {
-		paramInput.SetKeyId(keyID.(string))
-	}
-
-	// AWS SSM Service only supports PutParameter requests with Tags
-	// iff Overwrite is not provided or is false; in this resource's case,
-	// the Overwrite value is always set in the paramInput so we check for the value
-	if v, ok := d.GetOk("tags"); ok && aws.BoolValue(paramInput.Overwrite) == false {
-		paramInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
-	}
-
-	_, err := conn.PutParameter(paramInput)
-
-	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-		paramInput.Tier = nil
-		_, err = conn.PutParameter(paramInput)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error creating SSM parameter: %w", err)
-	}
-
-	// Since the AWS SSM Service does not support PutParameter requests with
-	// Tags and Overwrite set to true, we make an additional API call
-	// to Update the resource's tags if necessary
-	if d.HasChange("tags") && paramInput.Tags == nil {
-		o, n := d.GetChange("tags")
-
-		if err := keyvaluetags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
-		}
-	}
-
-	d.SetId(name)
-
-	return resourceAwsSsmParameterRead(d, meta)
 }
 
 func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
