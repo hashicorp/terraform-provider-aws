@@ -382,6 +382,7 @@ rules:
       include:
         - aws/resource_aws_[t-z]*.go
         - aws/resource_aws_s[f-z]*.go
+        - aws/resource_aws_[a-b]*.go
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
