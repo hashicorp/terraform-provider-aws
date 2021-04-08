@@ -250,6 +250,13 @@ func resourceAwsLightsailDatabaseRead(d *schema.ResourceData, meta interface{}) 
 	// This is to support importing a resource that is not in a ready state.
 	_, err := waiter.DatabaseModified(conn, aws.String(d.Id()))
 	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr.Code() == "NotFoundException" {
+				log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+		}
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
