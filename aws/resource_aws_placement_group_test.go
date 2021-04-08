@@ -58,10 +58,8 @@ func testSweepEc2PlacementGroups(region string) error {
 		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 	}
 
-	if len(sweepResources) > 0 {
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Placement Group for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Placement Group for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
