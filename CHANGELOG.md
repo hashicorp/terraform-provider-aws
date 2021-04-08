@@ -41,6 +41,7 @@ BUG FIXES:
 * resource/aws_iam_user_policy: Handle read-after-create eventual consistency ([#18458](https://github.com/hashicorp/terraform-provider-aws/issues/18458))
 * resource/aws_iam_user_policy_attachment: Handle read-after-create eventual consistency ([#18458](https://github.com/hashicorp/terraform-provider-aws/issues/18458))
 * resource/aws_iam_user_ssh_key: Handle read-after-create eventual consistency ([#18458](https://github.com/hashicorp/terraform-provider-aws/issues/18458))
+* resource/aws_lb_target_group: Handle read-after-create eventual consistency ([#18634](https://github.com/hashicorp/terraform-provider-aws/issues/18634))
 * resource/aws_secretsmanager_secret: Handle read-after-create eventual consistency ([#18462](https://github.com/hashicorp/terraform-provider-aws/issues/18462))
 * resource/aws_secretsmanager_secret_policy: Handle read-after-create eventual consistency ([#18462](https://github.com/hashicorp/terraform-provider-aws/issues/18462))
 * resource/aws_secretsmanager_secret_rotation: Handle read-after-create eventual consistency ([#18462](https://github.com/hashicorp/terraform-provider-aws/issues/18462))
