@@ -391,6 +391,10 @@ rules:
         - aws/resource_aws_elast*.go
         - aws/resource_aws_ecs*.go
         - aws/resource_aws_ecrp*.go
+        - aws/resource_aws_[f-j]*.go
+        - aws/resource_aws_l*.go
+        - aws/resource_aws_kinesis_a*.go
+        - aws/resource_aws_emr_cl*.go
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
