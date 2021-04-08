@@ -58,10 +58,8 @@ func testSweepLexIntents(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Lex Intent for %s: %w", region, err))
 	}
 
-	if len(sweepResources) > 0 {
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Lex Intent for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
