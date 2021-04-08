@@ -454,7 +454,7 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSElasticacheReplicationGroup_multiAz_NoAutomaticFailover(t *testing.T) {
+func TestAccAWSElasticacheReplicationGroup_Validation_multiAz_NoAutomaticFailover(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -466,27 +466,6 @@ func TestAccAWSElasticacheReplicationGroup_multiAz_NoAutomaticFailover(t *testin
 			{
 				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZ_NoAutomaticFailover(rName),
 				ExpectError: regexp.MustCompile("automatic_failover_enabled must be true if multi_az_enabled is true"),
-			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheReplicationGroup_AutomaticFailover_OneCacheCluster(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_SingleNodeGroup(rName),
-				ExpectError: regexp.MustCompile(`if automatic_failover_enabled is true, number_cache_clusters must be greater than 1`),
-			},
-			{
-				Config:      testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_ClusterMode(rName),
-				ExpectError: regexp.MustCompile(`if automatic_failover_enabled is true, cluster_mode\[0\].replicas_per_node_group must be greater than 0`),
 			},
 		},
 	})
@@ -814,6 +793,42 @@ func TestAccAWSElasticacheReplicationGroup_ClusterMode_UpdateNumNodeGroupsAndRep
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheReplicationGroup_ClusterMode_SingleNode(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig_SingleNode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x.cluster.on"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 		},
 	})
@@ -1951,36 +1966,6 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_SingleNodeGroup(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  number_cache_clusters         = 1
-  node_type                     = "cache.t3.small"
-  automatic_failover_enabled    = true
-  multi_az_enabled              = true
-}
-`, rName)
-}
-
-func testAccAWSElasticacheReplicationGroupConfig_MultiAZOneCacheCluster_ClusterMode(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  automatic_failover_enabled    = true
-  multi_az_enabled              = true
-
-  cluster_mode {
-    num_node_groups         = 1
-    replicas_per_node_group = 0
-  }
-}
-`, rName)
-}
-
 func testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -2234,6 +2219,25 @@ resource "aws_elasticache_replication_group" "test" {
   cluster_mode {
     num_node_groups         = 1
     replicas_per_node_group = 1
+  }
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig_SingleNode(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t2.medium"
+  automatic_failover_enabled    = true
+
+  parameter_group_name = "default.redis6.x.cluster.on"
+  cluster_mode {
+    num_node_groups         = 1
+    replicas_per_node_group = 0
   }
 }
 `, rName))
