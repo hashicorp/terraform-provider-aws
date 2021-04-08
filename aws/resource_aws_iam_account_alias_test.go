@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -47,8 +46,10 @@ func testAccAWSIAMAccountAlias_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSIAMAccountAliasConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSIAMAccountAliasExists(resourceName),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -83,7 +84,7 @@ func testAccCheckAWSIAMAccountAliasDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAWSIAMAccountAliasExists(n string, a *string) resource.TestCheckFunc {
+func testAccCheckAWSIAMAccountAliasExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -102,8 +103,6 @@ func testAccCheckAWSIAMAccountAliasExists(n string, a *string) resource.TestChec
 		if len(resp.AccountAliases) == 0 {
 			return fmt.Errorf("Bad: Account alias %q does not exist", rs.Primary.ID)
 		}
-
-		*a = aws.StringValue(resp.AccountAliases[0])
 
 		return nil
 	}
