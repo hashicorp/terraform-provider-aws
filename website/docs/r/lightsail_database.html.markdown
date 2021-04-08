@@ -111,5 +111,5 @@ In addition to all arguments above, the following attributes are exported:
 Lightsail Databases can be imported using their name, e.g.
 
 ```
-$ terraform import aws_lightsail_domain.foo 'bar'
+$ terraform import aws_lightsail_database.foo 'bar'
 ```
