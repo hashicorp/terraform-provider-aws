@@ -82,6 +82,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +119,7 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
+		ErrorCheck:    testAccErrorCheck(t, lightsail.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -165,6 +167,7 @@ func TestAccAWSLightsailInstance_Tags(t *testing.T) {
 			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
+		ErrorCheck:    testAccErrorCheck(t, lightsail.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -210,6 +213,7 @@ func TestAccAWSLightsailInstance_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -232,6 +236,7 @@ func TestAccAWSLightsailInstance_IpAddressType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
