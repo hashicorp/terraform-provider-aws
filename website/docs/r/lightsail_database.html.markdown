@@ -86,21 +86,7 @@ A Bundle Id can have the following infix added in order to use the HA option of 
 
 ### Suffix
 
-A Bundle ID ends with one of the following suffixes depending on Availability Zone:
-
-- ap-northeast-1: `2_0`
-- ap-northeast-2: `2_0`
-- ap-south-1: `2_1`
-- ap-southeast-1: `2_0`
-- ap-southeast-2: `2_2`
-- ca-central-1: `2_0`
-- eu-central-1: `2_0`
-- eu-west-1: `2_0`
-- eu-west-2: `2_0`
-- eu-west-3: `2_0`
-- us-east-1: `2_0`
-- us-east-2: `2_0`
-- us-west-2: `2_0`
+A Bundle ID ends with one of the following suffix: `1_0`
 
 ## Attributes Reference
 

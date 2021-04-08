@@ -246,6 +246,13 @@ func resourceAwsLightsailDatabaseRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).lightsailconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
+	// This is to support importing a resource that is not in a ready state.
+	_, err := waiter.DatabaseModified(conn, aws.String(d.Id()))
+	if err != nil {
+		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
+	}
+
 	resp, err := conn.GetRelationalDatabase(&lightsail.GetRelationalDatabaseInput{
 		RelationalDatabaseName: aws.String(d.Id()),
 	})
@@ -430,12 +437,13 @@ func resourceAwsLightsailDatabaseUpdate(d *schema.ResourceData, meta interface{}
 				return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 			}
 		}
+
+		// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
+		_, err = waiter.DatabaseModified(conn, aws.String(d.Id()))
+		if err != nil {
+			return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
+		}
 	}
 
-	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	_, err := waiter.DatabaseModified(conn, aws.String(d.Id()))
-	if err != nil {
-		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
-	}
 	return resourceAwsLightsailDatabaseRead(d, meta)
 }
