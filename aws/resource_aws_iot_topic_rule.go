@@ -948,7 +948,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							},
 						},
 						"kafka": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
