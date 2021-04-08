@@ -186,6 +186,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/cloudwatchlogs" = [
       "aws_cloudwatch_log_",
+      "aws_cloudwatch_query_definition",
     ],
     "service/codeartifact" = [
       "aws_codeartifact_",
@@ -825,7 +826,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudwatchlogs" = [
       "aws/internal/service/cloudwatchlogs/**/*",
       "**/*_cloudwatch_log_*",
-      "**/cloudwatch_log_*"
+      "**/cloudwatch_log_*",
+      "**/*_cloudwatch_query_definition*",
+      "**/cloudwatch_query_definition*"
     ]
     "service/codeartifact" = [
       "aws/internal/service/codeartifact/**/*",
