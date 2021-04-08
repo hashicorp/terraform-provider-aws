@@ -397,6 +397,9 @@ rules:
         - aws/resource_aws_emr_cl*.go
         - aws/resource_aws_[m-q]*.go
         - aws/resource_aws_route53_q*.go
+        - aws/resource_aws_route53_resolver_[e-z]*.go
+        - aws/resource_aws_route53_[s-z]*.go
+        - aws/resource_aws_s*.go
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
