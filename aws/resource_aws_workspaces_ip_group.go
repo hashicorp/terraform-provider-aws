@@ -212,12 +212,16 @@ func expandIpGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
 func flattenIpGroupRules(rules []*workspaces.IpRuleItem) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(rules))
 	for _, rule := range rules {
-		r := map[string]interface{}{
-			"source": *rule.IpRule,
+		r := map[string]interface{}{}
+
+		if v := rule.IpRule; v != nil {
+			r["source"] = aws.StringValue(v)
 		}
-		if rule.RuleDesc != nil {
-			r["description"] = *rule.RuleDesc
+
+		if v := rule.RuleDesc; v != nil {
+			r["description"] = aws.StringValue(rule.RuleDesc)
 		}
+
 		result = append(result, r)
 	}
 	return result

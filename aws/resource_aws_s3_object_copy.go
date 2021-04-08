@@ -296,15 +296,20 @@ func resourceAwsS3ObjectCopyRead(d *schema.ResourceData, meta interface{}) error
 			Key:    aws.String(key),
 		})
 
-	if err != nil {
-		// If S3 returns a 404 Request Failure, mark the object as destroyed
-		if tfawserr.ErrStatusCodeEquals(err, 404) {
-			d.SetId("")
-			log.Printf("[WARN] Error Reading Object (%s), object not found (HTTP status 404)", key)
-			return nil
-		}
-		return err
+	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, 404) {
+		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
+	}
+
+	if resp == nil {
+		return fmt.Errorf("error reading S3 Object (%s): empty response", d.Id())
+	}
+
 	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
 
 	d.Set("cache_control", resp.CacheControl)

@@ -335,8 +335,6 @@ This functionality is only supported in the following resources:
     - [`aws_synthetics_canary` resource](/docs/providers/aws/r/synthetics_canary.html)
     - [`aws_vpc_endpoint_service` data source](/docs/providers/aws/d/vpc_endpoint_service.html)
     - [`aws_vpc_endpoint_service` resource](/docs/providers/aws/r/vpc_endpoint_service.html)
-    - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
-    - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
     - [`aws_vpn_connection` resource](/docs/providers/aws/r/vpn_connection.html)
     - [`aws_vpn_gateway` data source](/docs/providers/aws/d/vpn_gateway.html)
     - [`aws_vpn_gateway` resource](/docs/providers/aws/r/vpn_gateway.html)
@@ -386,7 +384,7 @@ The `assume_role` configuration block supports the following optional arguments:
 
 Example: Resource with provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {
@@ -424,7 +422,7 @@ vpc_all_tags = tomap({
 
 Example: Resource with tags and provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {
@@ -469,7 +467,7 @@ vpc_resource_level_tags = tomap({
 
 Example: Resource overriding provider default tags
 
-```hcl
+```terraform
 provider "aws" {
   default_tags {
     tags = {

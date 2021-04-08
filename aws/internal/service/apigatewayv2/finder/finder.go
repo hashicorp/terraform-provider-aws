@@ -72,3 +72,36 @@ func Apis(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]
 
 	return apis, nil
 }
+
+func DomainNameByName(conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
+	input := &apigatewayv2.GetDomainNameInput{
+		DomainName: aws.String(name),
+	}
+
+	return DomainName(conn, input)
+}
+
+func DomainName(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetDomainNameInput) (*apigatewayv2.GetDomainNameOutput, error) {
+	output, err := conn.GetDomainName(input)
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle any empty result.
+	if output == nil || len(output.DomainNameConfigurations) == 0 {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

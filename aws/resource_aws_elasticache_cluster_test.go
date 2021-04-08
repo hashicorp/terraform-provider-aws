@@ -377,6 +377,8 @@ func TestAccAWSElasticacheCluster_NumCacheNodes_IncreaseWithPreferredAvailabilit
 func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
@@ -384,7 +386,7 @@ func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterInVPCConfig,
+				Config: testAccAWSElasticacheClusterInVPCConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists("aws_elasticache_subnet_group.test", &csg),
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.test", &ec),
@@ -398,6 +400,8 @@ func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	var ec elasticache.CacheCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
@@ -405,7 +409,7 @@ func TestAccAWSElasticacheCluster_multiAZInVpc(t *testing.T) {
 		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheClusterMultiAZInVPCConfig,
+				Config: testAccAWSElasticacheClusterMultiAZInVPCConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheSubnetGroupExists("aws_elasticache_subnet_group.test", &csg),
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.test", &ec),
@@ -1046,7 +1050,8 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, numCacheNodes, strings.Join(preferredAvailabilityZones, ","))
 }
 
-var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
+func testAccAWSElasticacheClusterInVPCConfig(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1075,13 +1080,13 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03d"
+  name        = %[1]q
   description = "tf-test-cache-subnet-group-descr"
   subnet_ids  = [aws_subnet.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -1097,7 +1102,7 @@ resource "aws_elasticache_cluster" "test" {
   # Including uppercase letters in this name to ensure
   # that we correctly handle the fact that the API
   # normalizes names to lowercase.
-  cluster_id             = "tf-%s"
+  cluster_id             = %[1]q
   node_type              = "cache.t3.small"
   num_cache_nodes        = 1
   engine                 = "redis"
@@ -1111,11 +1116,13 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name = "tf-ecache-cluster-test"
+  name = %[1]q
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, rName)
+}
 
-var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
+func testAccAWSElasticacheClusterMultiAZInVPCConfig(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1154,7 +1161,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_elasticache_subnet_group" "test" {
-  name        = "tf-test-cache-subnet-%03d"
+  name        = %[1]q
   description = "tf-test-cache-subnet-group-descr"
   subnet_ids = [
     aws_subnet.test1.id,
@@ -1163,7 +1170,7 @@ resource "aws_elasticache_subnet_group" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-test-security-group-%03d"
+  name        = %[1]q
   description = "tf-test-security-group-descr"
   vpc_id      = aws_vpc.test.id
 
@@ -1176,7 +1183,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_elasticache_cluster" "test" {
-  cluster_id         = "tf-%s"
+  cluster_id         = %[1]q
   engine             = "memcached"
   node_type          = "cache.t3.small"
   num_cache_nodes    = 2
@@ -1189,7 +1196,8 @@ resource "aws_elasticache_cluster" "test" {
     data.aws_availability_zones.available.names[1]
   ]
 }
-`, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+`, rName)
+}
 
 var testAccAWSElasticacheClusterConfig_RedisDefaultPort = `
 resource "aws_security_group" "test" {

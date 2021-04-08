@@ -10,19 +10,23 @@ import (
 )
 
 func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
+	dataSourceName := "data.aws_ecs_cluster.test"
+	resourceName := "aws_ecs_cluster.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsClusterDataSourceConfig,
+				Config: testAccCheckAwsEcsClusterDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "status", "ACTIVE"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "pending_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "running_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "registered_container_instances_count", "0"),
-					resource.TestCheckResourceAttrSet("data.aws_ecs_cluster.default", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 				),
 			},
 		},
@@ -30,39 +34,46 @@ func TestAccAWSEcsDataSource_ecsCluster(t *testing.T) {
 }
 
 func TestAccAWSEcsDataSource_ecsClusterContainerInsights(t *testing.T) {
+	dataSourceName := "data.aws_ecs_cluster.test"
+	resourceName := "aws_ecs_cluster.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsEcsClusterDataSourceConfigContainerInsights,
+				Config: testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "status", "ACTIVE"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "pending_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "running_tasks_count", "0"),
-					resource.TestCheckResourceAttr("data.aws_ecs_cluster.default", "registered_container_instances_count", "0"),
-					resource.TestCheckResourceAttrSet("data.aws_ecs_cluster.default", "arn"),
-					resource.TestCheckResourceAttrPair("data.aws_ecs_cluster.default", "setting.#", "aws_ecs_cluster.default", "setting.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "setting.#", resourceName, "setting.#"),
 				),
 			},
 		},
 	})
 }
 
-var testAccCheckAwsEcsClusterDataSourceConfig = fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = "default-%d"
+func testAccCheckAwsEcsClusterDataSourceConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
 }
 
-data "aws_ecs_cluster" "default" {
-  cluster_name = aws_ecs_cluster.default.name
+data "aws_ecs_cluster" "test" {
+  cluster_name = aws_ecs_cluster.test.name
 }
-`, acctest.RandInt())
+`, rName)
+}
 
-var testAccCheckAwsEcsClusterDataSourceConfigContainerInsights = fmt.Sprintf(`
-resource "aws_ecs_cluster" "default" {
-  name = "default-%d"
+func testAccCheckAwsEcsClusterDataSourceConfigContainerInsights(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
 
   setting {
     name  = "containerInsights"
@@ -70,7 +81,8 @@ resource "aws_ecs_cluster" "default" {
   }
 }
 
-data "aws_ecs_cluster" "default" {
-  cluster_name = aws_ecs_cluster.default.name
+data "aws_ecs_cluster" "test" {
+  cluster_name = aws_ecs_cluster.test.name
 }
-`, acctest.RandInt())
+`, rName)
+}

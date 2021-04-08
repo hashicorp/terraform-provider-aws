@@ -5,11 +5,10 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,8 +31,8 @@ func testSweepEfsFileSystems(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).efsconn
+	var sweeperErrs *multierror.Error
 
-	var errors error
 	input := &efs.DescribeFileSystemsInput{}
 	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		for _, filesystem := range page.FileSystems {
@@ -41,27 +40,24 @@ func testSweepEfsFileSystems(region string) error {
 
 			log.Printf("[INFO] Deleting EFS File System: %s", id)
 
-			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
-				FileSystemId: filesystem.FileSystemId,
-			})
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
-				continue
-			}
+			r := resourceAwsEfsFileSystem()
+			d := r.Data(nil)
+			d.SetId(id)
+			err := r.Delete(d, client)
 
-			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
 			if err != nil {
-				errors = multierror.Append(fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
 		return true
 	})
 	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
-	return errors
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
@@ -104,6 +100,12 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", efs.ThroughputModeBursting),
 					testAccCheckEfsFileSystem(resourceName, &desc),
 					testAccCheckEfsFileSystemPerformanceMode(resourceName, "generalPurpose"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value"),
+					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_ia"),
+					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_standard"),
+					testAccMatchResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -119,6 +121,35 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 					testAccCheckEfsCreationToken("aws_efs_file_system.test2", "supercalifragilisticexpialidocious"),
 					testAccCheckEfsFileSystemPerformanceMode("aws_efs_file_system.test2", "maxIO"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_availabilityZoneName(t *testing.T) {
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+	rName := acctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, efs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigAvailabilityZoneName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName, &desc),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -444,7 +475,7 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
-	rName := acctest.RandomWithPrefix("tf-acc-disappears")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -456,7 +487,7 @@ func TestAccAWSEFSFileSystem_disappears(t *testing.T) {
 				Config: testAccAWSEFSFileSystemConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName, &desc),
-					testAccCheckEfsFileSystemDisappears(&desc),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -516,20 +547,6 @@ func testAccCheckEfsFileSystem(resourceID string, fDesc *efs.FileSystemDescripti
 		*fDesc = *fs.FileSystems[0]
 
 		return nil
-	}
-}
-
-func testAccCheckEfsFileSystemDisappears(fDesc *efs.FileSystemDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-
-		input := &efs.DeleteFileSystemInput{
-			FileSystemId: fDesc.FileSystemId,
-		}
-
-		_, err := conn.DeleteFileSystem(input)
-
-		return err
 	}
 }
 
@@ -637,6 +654,24 @@ func testAccAWSEFSFileSystemConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %q
+}
+`, rName)
+}
+
+func testAccAWSEFSFileSystemConfigAvailabilityZoneName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_efs_file_system" "test" {
+  creation_token         = %q
+  availability_zone_name = data.aws_availability_zones.available.names[0]
 }
 `, rName)
 }

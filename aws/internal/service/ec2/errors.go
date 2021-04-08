@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	ErrCodeInvalidParameterValue = "InvalidParameterValue"
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
 )
 
 const (
@@ -17,11 +18,20 @@ const (
 )
 
 const (
+	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
+)
+
+const (
 	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
 )
 
 const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
 	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
 )
 
 const (
@@ -38,6 +48,10 @@ const (
 const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
+)
+
+const (
+	ErrCodeInvalidSpotInstanceRequestIDNotFound = "InvalidSpotInstanceRequestID.NotFound"
 )
 
 const (

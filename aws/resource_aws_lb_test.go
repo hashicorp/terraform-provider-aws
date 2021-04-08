@@ -15,6 +15,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(elbv2.EndpointsID, testAccErrorCheckSkipELBv2)
+
 	resource.AddTestSweepers("aws_lb", &resource.Sweeper{
 		Name: "aws_lb",
 		F:    testSweepLBs,
@@ -23,6 +25,12 @@ func init() {
 			"aws_vpc_endpoint_service",
 		},
 	})
+}
+
+func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"ValidationError: Type must be one of: 'application, network'",
+	)
 }
 
 func testSweepLBs(region string) error {
