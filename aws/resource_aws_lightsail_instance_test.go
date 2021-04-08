@@ -3,16 +3,73 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
+		Name: "aws_lightsail_instance",
+		F:    testSweepLightsailInstances,
+	})
+}
+
+func testSweepLightsailInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).lightsailconn
+
+	input := &lightsail.GetInstancesInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.GetInstances(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Lightsail Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving Lightsail Instances: %s", err)
+		}
+
+		for _, instance := range output.Instances {
+			name := aws.StringValue(instance.Name)
+			input := &lightsail.DeleteInstanceInput{
+				InstanceName: instance.Name,
+			}
+
+			log.Printf("[INFO] Deleting Lightsail Instance: %s", name)
+			_, err := conn.DeleteInstance(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Lightsail Instance (%s): %s", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		if aws.StringValue(output.NextPageToken) == "" {
+			break
+		}
+
+		input.PageToken = output.NextPageToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	var instance lightsail.Instance
