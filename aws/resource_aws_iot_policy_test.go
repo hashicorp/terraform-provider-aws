@@ -58,10 +58,8 @@ func testSweepIotPolicies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy for %s: %w", region, err))
 	}
 
-	if len(sweepResources) > 0 {
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy for %s: %w", region, err))
-		}
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
