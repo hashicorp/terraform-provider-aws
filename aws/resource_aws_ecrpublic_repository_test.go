@@ -53,11 +53,8 @@ func testSweepEcrPublicRepositories(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing ECR Public Repositories for %s: %w", region, err))
 	}
 
-	if len(sweepResources) > 0 {
-		// Any errors didn't prevent gathering some sweeping work, so do it.
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping ECR Public Repositories for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping ECR Public Repositories for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
