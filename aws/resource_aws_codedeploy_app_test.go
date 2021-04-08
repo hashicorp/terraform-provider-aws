@@ -3,14 +3,66 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_codedeploy_app", &resource.Sweeper{
+		Name: "aws_codedeploy_app",
+		F:    testSweepCodeDeployApps,
+	})
+}
+
+func testSweepCodeDeployApps(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).codedeployconn
+	input := &codedeploy.ListApplicationsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListApplicationsPages(input, func(page *codedeploy.ListApplicationsOutput, lastPage bool) bool {
+		for _, app := range page.Applications {
+			if app == nil {
+				continue
+			}
+
+			appName := aws.StringValue(app)
+			r := resourceAwsCodeDeployApp()
+			d := r.Data(nil)
+			d.SetId(fmt.Sprintf("%s:%s", "xxxx", appName))
+			err = r.Delete(d, client)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CodeDeploy Application (%s): %w", appName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CodeDeploy Application sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CodeDeploy Applications: %w", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSCodeDeployApp_basic(t *testing.T) {
 	var application1 codedeploy.ApplicationInfo
