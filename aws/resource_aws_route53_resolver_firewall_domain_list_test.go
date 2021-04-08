@@ -18,9 +18,6 @@ func init() {
 	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_domain_list",
 		F:    testSweepRoute53ResolverFirewallDomainLists,
-		Dependencies: []string{
-			"aws_route53_resolver_firewall_domain_list_association",
-		},
 	})
 }
 
@@ -126,6 +123,14 @@ func TestAccAWSRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", "bar.com."),
+				),
+			},
+			{
+				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "0"),
 				),
 			},
 		},

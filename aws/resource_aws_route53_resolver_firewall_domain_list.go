@@ -136,11 +136,29 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	if v, ok := d.GetOk("domains"); ok && d.HasChange("domains") {
+	if d.HasChange("domains") {
+		o, n := d.GetChange("domains")
+		if o == nil {
+			o = new(schema.Set)
+		}
+		if n == nil {
+			n = new(schema.Set)
+		}
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		domains := ns
+		operation := route53resolver.FirewallDomainUpdateOperationReplace
+
+		if domains.Len() == 0 {
+			domains = os
+			operation = route53resolver.FirewallDomainUpdateOperationRemove
+		}
+
 		_, err := conn.UpdateFirewallDomains(&route53resolver.UpdateFirewallDomainsInput{
 			FirewallDomainListId: aws.String(d.Id()),
-			Domains:              expandStringSet(v.(*schema.Set)),
-			Operation:            aws.String(route53resolver.FirewallDomainUpdateOperationReplace),
+			Domains:              expandStringSet(domains),
+			Operation:            aws.String(operation),
 		})
 
 		if err != nil {
@@ -157,7 +175,7 @@ func resourceAwsRoute53ResolverFirewallDomainListUpdate(d *schema.ResourceData, 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Route53 Resolver DNS Firewall domain list (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating Route53 Resolver DNS Firewall domain list (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
