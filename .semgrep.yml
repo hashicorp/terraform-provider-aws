@@ -388,6 +388,9 @@ rules:
         - aws/resource_aws_code*.go
         - aws/resource_aws_db*.go
         - aws/resource_aws_ec2*.go
+        - aws/resource_aws_elast*.go
+        - aws/resource_aws_ecs*.go
+        - aws/resource_aws_ecrp*.go
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
