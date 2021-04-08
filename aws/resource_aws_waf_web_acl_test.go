@@ -77,13 +77,8 @@ func testSweepWafWebAcls(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		sweepErr := testSweepResourceOrchestrator(sweepResources)
-
-		if sweepErr != nil {
-			errs = multierror.Append(errs, sweepErr)
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, err)
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

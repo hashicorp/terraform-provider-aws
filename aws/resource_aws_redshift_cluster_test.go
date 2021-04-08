@@ -58,11 +58,8 @@ func testSweepRedshiftClusters(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Clusters for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Clusters for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

@@ -51,11 +51,8 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
