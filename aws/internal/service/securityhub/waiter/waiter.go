@@ -59,11 +59,10 @@ func AdminAccountNotFound(conn *securityhub.SecurityHub, adminAccountID string) 
 
 func StandardsSubscriptionsReady(conn *securityhub.SecurityHub) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusIncomplete, securityhub.StandardsStatusPending},
+		Pending: []string{securityhub.StandardsStatusIncomplete, securityhub.StandardsStatusPending, StandardsStatusNotFound},
 		Target:  []string{securityhub.StandardsStatusReady},
 		Refresh: StandardsSubscriptionsStatus(conn),
 		Timeout: StandardsSubscriptionsReadyTimeout,
-		Delay:   5 * time.Second,
 	}
 
 	_, err := stateConf.WaitForState()
