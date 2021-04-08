@@ -826,7 +826,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudwatchlogs" = [
       "aws/internal/service/cloudwatchlogs/**/*",
       "**/*_cloudwatch_log_*",
-      "**/cloudwatch_log_*"
+      "**/cloudwatch_log_*",
       "**/*_cloudwatch_query_definition*",
       "**/cloudwatch_query_definition*"
     ]
