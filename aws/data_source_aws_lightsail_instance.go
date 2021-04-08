@@ -151,7 +151,7 @@ func dataSourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}
 
 	// Deprecated: AWS Go SDK v1.36.25 removed Ipv6Address field
 	if len(i.Ipv6Addresses) > 0 {
-		d.Set("ipv6_address", aws.StringValue(i.Ipv6Addresses[0]))
+		d.Set("ipv6_address", i.Ipv6Addresses[0])
 	} else {
 		// Setting empty value if no address returned
 		d.Set("ipv6_address", "")

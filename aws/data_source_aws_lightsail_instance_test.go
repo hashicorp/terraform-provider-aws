@@ -21,6 +21,7 @@ func TestAccAWSLightsailInstanceDataSource_Name(t *testing.T) {
 			testAccPartitionHasServicePreCheck(lightsail.EndpointsID, t)
 			testAccPreCheckAWSLightsail(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
