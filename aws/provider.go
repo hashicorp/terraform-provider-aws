@@ -792,6 +792,7 @@ func Provider() *schema.Provider {
 			"aws_key_pair":                                            resourceAwsKeyPair(),
 			"aws_kinesis_analytics_application":                       resourceAwsKinesisAnalyticsApplication(),
 			"aws_kinesisanalyticsv2_application":                      resourceAwsKinesisAnalyticsV2Application(),
+			"aws_kinesisanalyticsv2_application_snapshot":             resourceAwsKinesisAnalyticsV2ApplicationSnapshot(),
 			"aws_kinesis_firehose_delivery_stream":                    resourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                                      resourceAwsKinesisStream(),
 			"aws_kinesis_stream_consumer":                             resourceAwsKinesisStreamConsumer(),
