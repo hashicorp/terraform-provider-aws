@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `aws_cloudfront_key_group` ([#17041](https://github.com/hashicorp/terraform-provider-aws/issues/17041))
 * **New Resource:** `aws_ecr_registry_policy` ([#16831](https://github.com/hashicorp/terraform-provider-aws/issues/16831))
 * **New Resource:** `aws_ecr_replication_configuration` ([#16853](https://github.com/hashicorp/terraform-provider-aws/issues/16853))
+* **New Resource:** `aws_kinesisanalyticsv2_application_snapshot` ([#18056](https://github.com/hashicorp/terraform-provider-aws/issues/18056))
 * **New Resource:** `aws_mwaa_environment` ([#16616](https://github.com/hashicorp/terraform-provider-aws/issues/16616))
 
 ENHANCEMENTS:
@@ -12,9 +13,14 @@ ENHANCEMENTS:
 * data-source/aws_lb_listener: Add `alpn_policy` argument ([#14462](https://github.com/hashicorp/terraform-provider-aws/issues/14462))
 * data-source/aws_s3_bucket_object: Add `bucket_key_enabled` attribute (Support S3 Bucket Keys) ([#16581](https://github.com/hashicorp/terraform-provider-aws/issues/16581))
 * resource/aws_eip: Tags are set on create ([#17612](https://github.com/hashicorp/terraform-provider-aws/issues/17612))
+* resource/aws_kinesisanalyticsv2_application: Add `force_stop` attribute ([#18056](https://github.com/hashicorp/terraform-provider-aws/issues/18056))
+* resource/aws_kinesisanalyticsv2_application: Add `run_configuration` attribute for starting a Flink application ([#18056](https://github.com/hashicorp/terraform-provider-aws/issues/18056))
+* resource/aws_kinesisanalyticsv2_application: Add `start_application` attribute ([#18056](https://github.com/hashicorp/terraform-provider-aws/issues/18056))
+* resource/aws_kinesisanalyticsv2_application: `starting_position_configuration` can be specified when starting a SQL application ([#18056](https://github.com/hashicorp/terraform-provider-aws/issues/18056))
 * resource/aws_lb_listener: Add `alpn_policy` argument ([#14462](https://github.com/hashicorp/terraform-provider-aws/issues/14462))
 * resource/aws_s3_bucket: Add `bucket_key_enabled` argument to `server_side_encryption_configuration` `rule` configuration block (Support S3 Bucket Keys) ([#16581](https://github.com/hashicorp/terraform-provider-aws/issues/16581))
 * resource/aws_s3_bucket_object: Add `bucket_key_enabled` attribute (Support S3 Bucket Keys) ([#16581](https://github.com/hashicorp/terraform-provider-aws/issues/16581))
+* resource/aws_s3_object_copy: Add `bucket_key_enabled` argument ([#18611](https://github.com/hashicorp/terraform-provider-aws/issues/18611))
 
 BUG FIXES:
 
@@ -47,7 +53,9 @@ BUG FIXES:
 * resource/aws_secretsmanager_secret_rotation: Handle read-after-create eventual consistency ([#18462](https://github.com/hashicorp/terraform-provider-aws/issues/18462))
 * resource/aws_secretsmanager_secret_version: Handle read-after-create eventual consistency ([#18462](https://github.com/hashicorp/terraform-provider-aws/issues/18462))
 * resource/aws_ssm_parameter: Allow `allowed_pattern` and `description` arguments to be empty strings ([#18588](https://github.com/hashicorp/terraform-provider-aws/issues/18588))
+* resource/aws_ssm_parameter: Allow `tags` to be applied to resource when `overwrite` is configured ([#18640](https://github.com/hashicorp/terraform-provider-aws/issues/18640))
 * resource/aws_vpc_endpoint_route_table_association: Handle read-after-create eventual consistency ([#18465](https://github.com/hashicorp/terraform-provider-aws/issues/18465))
+* resource/aws_xray_sampling_rule: Change the maximum length of `rule_name` from 128 to 32 ([#18667](https://github.com/hashicorp/terraform-provider-aws/issues/18667))
 
 ## 3.35.0 (April 01, 2021)
 
