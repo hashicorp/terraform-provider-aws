@@ -36,9 +36,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			customdiff.Sequence(
-				customdiff.ForceNewIf("elasticsearch_version",
-					SetTagsDiff,
-				), func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				customdiff.ForceNewIf("elasticsearch_version", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 					newVersion := d.Get("elasticsearch_version").(string)
 					domainName := d.Get("domain_name").(string)
 
@@ -60,6 +58,8 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 					}
 					return true
 				}),
+			),
+			SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -622,8 +622,8 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	// This should mean that if the creation fails (eg because your token expired
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
+	if len(tags) > 0 {
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, tags.IgnoreAws().ElasticsearchserviceTags()); err != nil {
 			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
