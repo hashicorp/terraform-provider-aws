@@ -258,7 +258,6 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Expand the "listener" set to aws-sdk-go compat []*elb.Listener
 	listeners, err := expandListeners(d.Get("listener").(*schema.Set).List())
@@ -278,8 +277,6 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", elbName)
 	}
 
-	tags := tags.IgnoreAws().ElbTags()
-
 	// Provision the elb
 	elbOpts := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
@@ -287,7 +284,7 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(tags) > 0 {
-		elbOpts.Tags = tags
+		elbOpts.Tags = tags.IgnoreAws().ElbTags()
 	}
 
 	if _, ok := d.GetOk("internal"); ok {
@@ -333,10 +330,6 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(elbName)
 	log.Printf("[INFO] ELB ID: %s", d.Id())
 
-	if err := d.Set("tags", keyvaluetags.ElbKeyValueTags(tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
 	return resourceAwsElbUpdate(d, meta)
 }
 
@@ -373,6 +366,23 @@ func resourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
 		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
+	}
+
+	tags, err := keyvaluetags.ElbListTags(elbconn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig)
@@ -452,16 +462,6 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
 			return err
 		}
-	}
-
-	tags, err := keyvaluetags.ElbListTags(elbconn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	// There's only one health check, so save that to state as we
