@@ -134,13 +134,14 @@ SNS topic to send ElastiCache notifications to. Example:
 
 * `final_snapshot_identifier` - (Optional, Redis only) The name of your final cluster snapshot. If omitted, no final snapshot will be made.
 
-* `tags` - (Optional) A map of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the created ElastiCache Cluster.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
 * `configuration_endpoint` - (Memcached only) The configuration endpoint to allow host discovery.
 * `cluster_address` - (Memcached only) The DNS name of the cache cluster without the port appended.
