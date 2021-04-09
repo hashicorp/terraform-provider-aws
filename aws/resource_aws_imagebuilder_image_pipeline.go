@@ -127,13 +127,18 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 				Default:      imagebuilder.PipelineStatusEnabled,
 				ValidateFunc: validation.StringInSlice(imagebuilder.PipelineStatus_Values(), false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(resource.UniqueId()),
@@ -172,8 +177,8 @@ func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta int
 		input.Status = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ImagebuilderTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ImagebuilderTags()
 	}
 
 	output, err := conn.CreateImagePipeline(input)
@@ -302,8 +307,8 @@ func resourceAwsImageBuilderImagePipelineUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ImagebuilderUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags for Image Builder Image Pipeline (%s): %w", d.Id(), err)
