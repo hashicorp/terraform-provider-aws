@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The volume ID (e.g. vol-59fcb34e).
 * `arn` - The volume ARN (e.g. arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

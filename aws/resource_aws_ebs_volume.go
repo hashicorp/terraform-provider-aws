@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,9 +27,10 @@ func resourceAwsEbsVolume() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
-
-		CustomizeDiff: resourceAwsEbsVolumeCustomizeDiff,
+		CustomizeDiff: customdiff.All(
+			resourceAwsEbsVolumeCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -87,7 +89,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 			"throughput": {
 				Type:         schema.TypeInt,
