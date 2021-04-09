@@ -60,6 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description`
 * `environment_id`
 * `option_settings`
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `solution_stack_name`
 
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
