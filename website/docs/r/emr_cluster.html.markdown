@@ -536,6 +536,7 @@ In addition to all arguments above, the following attributes are exported:
 * `service_role` - The IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
 * `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 * `tags` - The list of tags associated with a cluster.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Example bootable config
 
