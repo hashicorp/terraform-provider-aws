@@ -618,13 +618,13 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	rawTags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %w", arn, err)
 	}
 
-	tags := rawTags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
