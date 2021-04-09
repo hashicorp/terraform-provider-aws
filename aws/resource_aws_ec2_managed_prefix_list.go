@@ -30,11 +30,11 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			customdiff.Sequence(
-				customdiff.ComputedIf("version",
-					SetTagsDiff,
-				), func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				customdiff.ComputedIf("version", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 					return diff.HasChange("entry")
 				}),
+			),
+			SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -117,7 +117,7 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromMap(v.(map[string]interface{}), "prefix-list")
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, "prefix-list")
 	}
 
 	output, err := conn.CreateManagedPrefixList(input)
