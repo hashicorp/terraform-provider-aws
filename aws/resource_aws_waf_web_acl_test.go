@@ -73,17 +73,11 @@ func testSweepWafWebAcls(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, err)
-		// in case work can be done, don't jump out yet
+		errs = multierror.Append(errs, fmt.Errorf("error describing WAF Web ACLs: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		sweepErr := testSweepResourceOrchestrator(sweepResources)
-
-		if sweepErr != nil {
-			errs = multierror.Append(errs, sweepErr)
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACL for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

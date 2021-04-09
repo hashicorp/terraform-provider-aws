@@ -67,11 +67,8 @@ func testSweepRedshiftSubnetGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Subnet Groups: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
-		}
+	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Subnet Groups for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

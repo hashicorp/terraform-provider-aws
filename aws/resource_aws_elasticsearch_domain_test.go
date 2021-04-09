@@ -94,11 +94,8 @@ func testSweepElasticSearchDomains(region string) error {
 		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 	}
 
-	if len(sweepResources) > 0 {
-		// Any errors didn't prevent gathering some sweeping work, so do it.
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, err)
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

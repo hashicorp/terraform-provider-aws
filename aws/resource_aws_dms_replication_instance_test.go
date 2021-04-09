@@ -50,11 +50,8 @@ func testSweepDmsReplicationInstances(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Instances: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Instances for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Instances for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

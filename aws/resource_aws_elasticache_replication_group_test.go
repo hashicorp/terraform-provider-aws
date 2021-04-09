@@ -68,11 +68,8 @@ func testSweepElasticacheReplicationGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Elasticache Replication Groups: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
 	}
 
 	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
