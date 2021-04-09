@@ -71,8 +71,12 @@ func testAccCheckAWSIAMAccountAliasDestroy(s *terraform.State) error {
 
 		resp, err := conn.ListAccountAliases(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			return fmt.Errorf("error reading IAM Account Alias (%s): %w", rs.Primary.ID, err)
+		}
+
+		if resp == nil {
+			return fmt.Errorf("error reading IAM Account Alias (%s): empty response", rs.Primary.ID)
 		}
 
 		if len(resp.AccountAliases) > 0 {
@@ -96,8 +100,12 @@ func testAccCheckAWSIAMAccountAliasExists(n string) resource.TestCheckFunc {
 
 		resp, err := conn.ListAccountAliases(params)
 
-		if err != nil || resp == nil {
-			return nil
+		if err != nil {
+			return fmt.Errorf("error reading IAM Account Alias (%s): %w", rs.Primary.ID, err)
+		}
+
+		if resp == nil {
+			return fmt.Errorf("error reading IAM Account Alias (%s): empty response", rs.Primary.ID)
 		}
 
 		if len(resp.AccountAliases) == 0 {

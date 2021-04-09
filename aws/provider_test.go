@@ -1063,7 +1063,7 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
-			return err
+			return nil
 		}
 
 		for _, message := range messages {
@@ -1096,7 +1096,7 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
-			return err
+			return nil
 		}
 
 		for _, endpointID := range endpointIDs {

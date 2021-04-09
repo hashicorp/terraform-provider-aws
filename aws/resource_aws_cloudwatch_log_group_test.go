@@ -443,8 +443,9 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 			continue
 		}
 		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if logGroup != nil {
