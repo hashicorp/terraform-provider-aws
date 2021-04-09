@@ -54,7 +54,7 @@ The following arguments are supported:
     overlapping CIDR blocks, but a particular CIDR should not be duplicated.
 * `max_entries` - (Required, Forces new resource) The maximum number of entries that
     this prefix list can contain.
-* `tags` - (Optional) A map of tags to assign to this resource.
+* `tags` - (Optional) A map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `entry` block supports:
 
@@ -66,6 +66,7 @@ The `entry` block supports:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the prefix list.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `arn` - The ARN of the prefix list.
 * `owner_id` - The ID of the AWS account that owns this prefix list.
 * `version` - The latest version of this prefix list.
