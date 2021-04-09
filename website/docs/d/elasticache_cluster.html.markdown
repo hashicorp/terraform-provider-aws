@@ -53,5 +53,5 @@ accept connections.
 * `cluster_address` - (Memcached only) The DNS name of the cache cluster without the port appended.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
    Referenceable e.g. as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
-* `tags` - The tags assigned to the resource
+* `tags` - The tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
