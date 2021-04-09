@@ -1,4 +1,0 @@
-```release-note:enhancement
-resource/aws_xray_group: Support provider-wide default tags.
-resource/aws_xray_sampling_rule: Support provider-wide default tags.
-```
