@@ -69,11 +69,11 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The AWS account that created the file system. If the file system was createdby an IAM user, the parent account to which the user belongs is the owner.
 * `number_of_mount_targets` - The current number of mount targets that the file system has.
 * `size_in_bytes` - The latest known metered size (in bytes) of data stored in the file system, the value is not the exact size that the file system was at any point in time. See [Size In Bytes](#size-in-bytes).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### Size In Bytes
 
 * `value` - The latest known metered size (in bytes) of data stored in the file system.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `value_in_ia` - The latest known metered size (in bytes) of data stored in the Infrequent Access storage class.
 * `value_in_standard` - The latest known metered size (in bytes) of data stored in the Standard storage class.
 
