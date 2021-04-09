@@ -58,10 +58,11 @@ The following arguments are supported:
 * `key` - (Required) S3 object that is the Application Version source bundle.
 * `force_delete` - (Optional) On delete, force an Application Version to be deleted when it may be in use
   by multiple Elastic Beanstalk Environments.
-* `tags` - Key-value map of tags for the Elastic Beanstalk Application Version.
+* `tags` - Key-value map of tags for the Elastic Beanstalk Application Version. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
