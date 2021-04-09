@@ -353,6 +353,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
+* `compute_platform` - The destination platform type for the deployment.
+* `deployment_group_id` - The ID of the CodeDeploy deployment group.
 
 ## Import
 
