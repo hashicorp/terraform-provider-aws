@@ -132,7 +132,7 @@ The following arguments are optional:
 * `launch_template` - (Optional) Configuration block with Launch Template settings. Detailed below.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` – (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
 
 ### launch_template Configuration Block
@@ -161,6 +161,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `resources` - List of objects containing information about underlying resources.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
     * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
     * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
