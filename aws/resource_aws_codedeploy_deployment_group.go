@@ -70,12 +70,19 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-
+			"compute_platform": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"deployment_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
+			},
+			"deployment_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"deployment_style": {
@@ -589,7 +596,7 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("Error reading CodeDeploy deployment group (%s): %w", d.Id(), err)
 	}
 
 	group := resp.DeploymentGroupInfo
@@ -600,13 +607,15 @@ func resourceAwsCodeDeployDeploymentGroupRead(d *schema.ResourceData, meta inter
 		Service:   "codedeploy",
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("deploymentgroup:%s:%s", appName, groupName),
+		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 
 	d.Set("arn", groupArn)
 	d.Set("app_name", appName)
 	d.Set("deployment_config_name", group.DeploymentConfigName)
 	d.Set("deployment_group_name", group.DeploymentGroupName)
+	d.Set("deployment_group_id", group.DeploymentGroupId)
+	d.Set("compute_platform", group.ComputePlatform)
 	d.Set("service_role_arn", group.ServiceRoleArn)
 
 	autoScalingGroups := make([]string, len(group.AutoScalingGroups))

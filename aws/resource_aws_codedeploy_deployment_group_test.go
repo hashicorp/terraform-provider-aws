@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"sort"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -33,7 +32,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s:%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-"+rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -52,6 +51,8 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -59,6 +60,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, "tf-acc-test-"+rName, "tf-acc-test-updated-"+rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-updated-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -241,6 +243,53 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears_app(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeDeployApp(), "aws_codedeploy_app.test"),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentGroup_tags(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, codedeploy.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeDeployDeploymentGroupConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeDeployDeploymentGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeDeployDeploymentGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -2253,36 +2302,6 @@ func testAccCheckAWSCodeDeployDeploymentGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSCodeDeployDeploymentGroupDisappears(group *codedeploy.DeploymentGroupInfo) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).codedeployconn
-		opts := &codedeploy.DeleteDeploymentGroupInput{
-			ApplicationName:     group.ApplicationName,
-			DeploymentGroupName: group.DeploymentGroupName,
-		}
-		if _, err := conn.DeleteDeploymentGroup(opts); err != nil {
-			return err
-		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			opts := &codedeploy.GetDeploymentGroupInput{
-				ApplicationName:     group.ApplicationName,
-				DeploymentGroupName: group.DeploymentGroupName,
-			}
-			_, err := conn.GetDeploymentGroup(opts)
-			if err != nil {
-				codedeploy, ok := err.(awserr.Error)
-				if ok && codedeploy.Code() == "DeploymentGroupDoesNotExistException" {
-					return nil
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving CodeDeploy Deployment Group: %s", err))
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for CodeDeploy Deployment Group: %v", group.DeploymentGroupName))
-		})
-	}
-}
-
 func testAccCheckAWSCodeDeployDeploymentGroupExists(name string, group *codedeploy.DeploymentGroupInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -2318,38 +2337,8 @@ func testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName string) r
 	}
 }
 
-func testAccAWSCodeDeployDeploymentGroup(rName string, tagGroup bool) string {
-	var tagGroupOrFilter string
-	if tagGroup {
-		tagGroupOrFilter = `
-ec2_tag_set {
-  ec2_tag_filter {
-    key   = "filterkey"
-    type  = "KEY_AND_VALUE"
-    value = "filtervalue"
-  }
-}
-`
-
-	} else {
-		tagGroupOrFilter = `
-ec2_tag_filter {
-  key   = "filterkey"
-  type  = "KEY_AND_VALUE"
-  value = "filtervalue"
-}
-`
-
-	}
-
+func testAccAWSCodeDeployDeploymentGroupConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_codedeploy_deployment_group" "test" {
-  app_name              = aws_codedeploy_app.test.name
-  deployment_group_name = "tf-acc-test-%[1]s"
-  service_role_arn      = aws_iam_role.test.arn
-  %[2]s
-}
-
 resource "aws_codedeploy_app" "test" {
   name = "tf-acc-test-%[1]s"
 }
@@ -2405,6 +2394,40 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
+}
+`, rName)
+}
+
+func testAccAWSCodeDeployDeploymentGroup(rName string, tagGroup bool) string {
+	var tagGroupOrFilter string
+	if tagGroup {
+		tagGroupOrFilter = `
+ec2_tag_set {
+  ec2_tag_filter {
+    key   = "filterkey"
+    type  = "KEY_AND_VALUE"
+    value = "filtervalue"
+  }
+}
+`
+
+	} else {
+		tagGroupOrFilter = `
+ec2_tag_filter {
+  key   = "filterkey"
+  type  = "KEY_AND_VALUE"
+  value = "filtervalue"
+}
+`
+
+	}
+
+	return testAccAWSCodeDeployDeploymentGroupConfigBase(rName) + fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = "tf-acc-test-%[1]s"
+  service_role_arn      = aws_iam_role.test.arn
+  %[2]s
 }
 `, rName, tagGroupOrFilter)
 }
@@ -2433,7 +2456,7 @@ ec2_tag_filter {
 
 	}
 
-	return fmt.Sprintf(`
+	return testAccAWSCodeDeployDeploymentGroupConfigBase(rName) + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-updated-%[1]s"
@@ -2441,11 +2464,7 @@ resource "aws_codedeploy_deployment_group" "test" {
   %[2]s
 }
 
-resource "aws_codedeploy_app" "test" {
-  name = "tf-acc-test-%[1]s"
-}
-
-resource "aws_iam_role_policy" "test" {
+resource "aws_iam_role_policy" "test_updated" {
   name = "tf-acc-test-%[1]s"
   role = aws_iam_role.test_updated.id
 
@@ -2474,8 +2493,6 @@ resource "aws_iam_role_policy" "test" {
 EOF
 }
 
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "test_updated" {
   name = "tf-acc-test-updated-%[1]s"
 
@@ -2501,64 +2518,7 @@ EOF
 }
 
 func testAccAWSCodeDeployDeploymentGroupOnPremiseTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_codedeploy_app" "test" {
-  name = "tf-acc-test-%[1]s"
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = "tf-acc-test-%[1]s"
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "autoscaling:CompleteLifecycleAction",
-        "autoscaling:DeleteLifecycleHook",
-        "autoscaling:DescribeAutoScalingGroups",
-        "autoscaling:DescribeLifecycleHooks",
-        "autoscaling:PutLifecycleHook",
-        "autoscaling:RecordLifecycleActionHeartbeat",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "tag:GetTags",
-        "tag:GetResources"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = "tf-acc-test-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "codedeploy.${data.aws_partition.current.dns_suffix}"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
+	return testAccAWSCodeDeployDeploymentGroupConfigBase(rName) + fmt.Sprintf(`
 resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-%[1]s"
@@ -3661,4 +3621,33 @@ resource "aws_codedeploy_deployment_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSCodeDeployDeploymentGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSCodeDeployDeploymentGroupConfigBase(rName) + fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = "tf-acc-test-%[1]s"
+  service_role_arn      = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSCodeDeployDeploymentGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSCodeDeployDeploymentGroupConfigBase(rName) + fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = "tf-acc-test-%[1]s"
+  service_role_arn      = aws_iam_role.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
