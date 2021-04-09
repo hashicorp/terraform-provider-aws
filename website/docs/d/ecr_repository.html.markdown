@@ -34,7 +34,8 @@ In addition to all arguments above, the following attributes are exported:
 * `image_scanning_configuration` - Configuration block that defines image scanning configuration for the repository. See [Image Scanning Configuration](#image-scanning-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for the repository.
 * `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
-* `tags` - A map of tags assigned to the resource.
+* `tags` - A map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### Encryption Configuration
 

@@ -64,13 +64,15 @@ func dataSourceAwsEcrRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":     tagsSchemaComputed(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -102,11 +104,20 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
 	tags, err := keyvaluetags.EcrListTags(conn, arn)
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %w", arn, err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags for ECR Repository (%s): %w", arn, err)
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
