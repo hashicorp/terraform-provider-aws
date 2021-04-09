@@ -112,6 +112,7 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the Elastic Beanstalk Environment.
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
 * `all_settings` – List of all option settings configured in this Environment. These
