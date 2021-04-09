@@ -41,9 +41,9 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 
 				return []*schema.ResourceData{d}, nil
 			},
-
-			CustomizeDiff: SetTagsDiff,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
