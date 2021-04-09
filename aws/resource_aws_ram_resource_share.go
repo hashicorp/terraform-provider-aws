@@ -45,21 +45,26 @@ func resourceAwsRamResourceShare() *schema.Resource {
 				Default:  false,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ram.CreateResourceShareInput{
 		Name:                    aws.String(d.Get("name").(string)),
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		request.Tags = keyvaluetags.New(v).IgnoreAws().RamTags()
+	if len(tags) > 0 {
+		request.Tags = tags.IgnoreAws().RamTags()
 	}
 
 	log.Println("[DEBUG] Create RAM resource share request:", request)
@@ -87,6 +92,7 @@ func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &ram.GetResourceSharesInput{
@@ -122,8 +128,15 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", resourceShare.Name)
 	d.Set("allow_external_principals", resourceShare.AllowExternalPrincipals)
 
-	if err := d.Set("tags", keyvaluetags.RamKeyValueTags(resourceShare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.RamKeyValueTags(resourceShare.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -151,8 +164,8 @@ func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.RamUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating RAM resource share (%s) tags: %s", d.Id(), err)
