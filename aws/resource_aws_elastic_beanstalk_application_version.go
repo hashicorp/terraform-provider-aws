@@ -125,13 +125,13 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 	d.Set("arn", arn)
 	d.Set("description", resp.ApplicationVersions[0].Description)
 
-	rawTags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application version (%s): %w", arn, err)
 	}
 
-	tags := rawTags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
