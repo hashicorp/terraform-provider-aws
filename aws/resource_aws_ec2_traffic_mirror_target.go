@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -22,10 +21,8 @@ func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: customdiff.All(
-			SetTagsDiff,
-			SetTagsDiff,
-		),
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -70,7 +67,10 @@ func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateTrafficMirrorTargetInput{}
+	input := &ec2.CreateTrafficMirrorTargetInput{
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget),
+	}
+
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -81,10 +81,6 @@ func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("network_load_balancer_arn"); ok {
 		input.NetworkLoadBalancerArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget)
 	}
 
 	out, err := conn.CreateTrafficMirrorTarget(input)
