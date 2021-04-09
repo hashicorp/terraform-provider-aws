@@ -103,7 +103,7 @@ The following arguments are supported:
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
-* `tags` - (Optional) A map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC.
+* `tags` - (Optional) A map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
 * `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `network_border_group` - The location from which the IP address is advertised. Use this parameter to limit the address to this location.
@@ -119,6 +119,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Contains the EIP allocation ID.
 * `private_ip` - Contains the private IP address (if in VPC).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `associate_with_private_ip` - Contains the user specified private IP address
 (if in VPC).
