@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_xray_group: Add default tags support.
+resource/aws_xray_sampling_rule: Add default tags support.
+```
