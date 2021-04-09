@@ -257,13 +257,13 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
 	}
 
-	rawTags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application (%s): %s", arn, err)
 	}
 
-	tags := rawTags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
