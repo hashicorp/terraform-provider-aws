@@ -226,7 +226,7 @@ The following arguments are supported:
 * `cognito_options` - (Optional) Options for authenticating Kibana with Cognito. See below.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
-* `tags` - (Optional) A map of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The **advanced_security_options** block supports the following attributes:
 
