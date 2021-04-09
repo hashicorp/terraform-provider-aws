@@ -34,29 +34,32 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				newVersion := d.Get("elasticsearch_version").(string)
-				domainName := d.Get("domain_name").(string)
+		CustomizeDiff: customdiff.All(
+			customdiff.Sequence(
+				customdiff.ForceNewIf("elasticsearch_version",
+					SetTagsDiff,
+				), func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+					newVersion := d.Get("elasticsearch_version").(string)
+					domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*AWSClient).esconn
-				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
-					DomainName: aws.String(domainName),
-				})
-				if err != nil {
-					log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
-					return false
-				}
-				if len(resp.CompatibleElasticsearchVersions) != 1 {
-					return true
-				}
-				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
-					if aws.StringValue(targetVersion) == newVersion {
+					conn := meta.(*AWSClient).esconn
+					resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+						DomainName: aws.String(domainName),
+					})
+					if err != nil {
+						log.Printf("[ERROR] Failed to get compatible ElasticSearch versions %s", domainName)
 						return false
 					}
-				}
-				return true
-			}),
+					if len(resp.CompatibleElasticsearchVersions) != 1 {
+						return true
+					}
+					for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
+						if aws.StringValue(targetVersion) == newVersion {
+							return false
+						}
+					}
+					return true
+				}),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -434,7 +437,8 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				},
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -447,6 +451,8 @@ func resourceAwsElasticSearchDomainImport(
 
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -669,6 +675,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
@@ -794,8 +801,15 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -804,8 +818,8 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
