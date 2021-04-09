@@ -21,6 +21,8 @@ func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -62,7 +64,8 @@ func resourceAwsEc2TrafficMirrorSession() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 16777216),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
