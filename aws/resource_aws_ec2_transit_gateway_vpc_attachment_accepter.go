@@ -95,8 +95,8 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterCreate(d *schema.ResourceD
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+	if len(tags) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), tags); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
