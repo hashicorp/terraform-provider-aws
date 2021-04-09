@@ -178,7 +178,7 @@ SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retain
 before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off.
 Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `tags` - (Optional) A map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself.
+* `tags` - (Optional) A map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `final_snapshot_identifier` - (Optional) The name of your final node group (shard) snapshot. ElastiCache creates the snapshot from the primary node in the cluster. If omitted, no final snapshot will be made.
 * `cluster_mode` - (Optional) Create a native Redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed. One of `number_cache_clusters` or `cluster_mode` is required. Note that configuring this block does not enable cluster mode, i.e. data sharding, this requires using a parameter group that has the parameter `cluster-enabled` set to true.
 
@@ -196,6 +196,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_enabled` - Indicates if cluster mode is enabled.
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
 * `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `reader_endpoint_address` - (Redis only) The address of the endpoint for the reader node in the replication group, if the cluster mode is disabled.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
 
