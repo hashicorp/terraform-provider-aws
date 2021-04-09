@@ -25,7 +25,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `capacity_providers` - (Optional) List of short names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `default_capacity_provider_strategy` - (Optional) The capacity provider strategy to use by default for the cluster. Can be one or more.  Defined below.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Defined below.
 
 ## setting
@@ -48,6 +48,7 @@ The `default_capacity_provider_strategy` configuration block supports the follow
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the cluster
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `arn` - The Amazon Resource Name (ARN) that identifies the cluster
 
 ## Import
