@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_route53_resolver_firewall_domain_list", &resource.Sweeper{
 		Name: "aws_route53_resolver_firewall_domain_list",
 		F:    testSweepRoute53ResolverFirewallDomainLists,
+		Dependencies: []string{
+			"aws_route53_resolver_firewall_rule",
+		},
 	})
 }
 
