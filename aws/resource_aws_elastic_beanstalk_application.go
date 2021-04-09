@@ -22,6 +22,8 @@ func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -62,13 +64,16 @@ func resourceAwsElasticBeanstalkApplication() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	beanstalkConn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Get the name and description
 	name := d.Get("name").(string)
@@ -79,7 +84,7 @@ func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta i
 	req := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
 		Description:     aws.String(description),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
+		Tags:            tags.IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 	}
 
 	app, err := beanstalkConn.CreateApplication(req)
@@ -112,8 +117,8 @@ func resourceAwsElasticBeanstalkApplicationUpdate(d *schema.ResourceData, meta i
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Elastic Beanstalk Application (%s) tags: %s", arn, err)
@@ -211,6 +216,7 @@ func resourceAwsElasticBeanstalkApplicationAppversionLifecycleUpdate(beanstalkCo
 
 func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticbeanstalkconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var app *elasticbeanstalk.ApplicationDescription
