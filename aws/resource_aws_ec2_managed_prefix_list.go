@@ -28,10 +28,13 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("version", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("entry")
-			}),
+		CustomizeDiff: customdiff.All(
+			customdiff.Sequence(
+				customdiff.ComputedIf("version",
+					SetTagsDiff,
+				), func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+					return diff.HasChange("entry")
+				}),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -80,7 +83,8 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -91,6 +95,8 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 
 func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateManagedPrefixListInput{}
 
@@ -131,6 +137,7 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	pl, err := finder.ManagedPrefixListByID(conn, d.Id())
@@ -185,8 +192,15 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 	d.Set("name", pl.PrefixListName)
 	d.Set("owner_id", pl.OwnerId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error settings attribute tags of managed prefix list %s: %w", d.Id(), err)
+	tags := keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("version", pl.Version)
@@ -235,8 +249,8 @@ func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Managed Prefix List (%s) tags: %w", d.Id(), err)
 		}
