@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the capacity provider.
 * `auto_scaling_group_provider` - (Required) Nested argument defining the provider for the ECS auto scaling group. Defined below.
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## auto_scaling_group_provider
 
@@ -73,6 +73,7 @@ The `managed_scaling` block supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the capacity provider.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `arn` - The Amazon Resource Name (ARN) that identifies the capacity provider.
 
 ## Import
