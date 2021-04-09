@@ -18,8 +18,6 @@ func resourceAwsElasticBeanstalkConfigurationTemplate() *schema.Resource {
 		Update: resourceAwsElasticBeanstalkConfigurationTemplateUpdate,
 		Delete: resourceAwsElasticBeanstalkConfigurationTemplateDelete,
 
-		CustomizeDiff: SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
