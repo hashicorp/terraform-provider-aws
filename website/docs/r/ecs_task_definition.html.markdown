@@ -104,7 +104,7 @@ section from the official [Developer Guide](https://docs.aws.amazon.com/AmazonEC
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Volume Block Arguments
 
@@ -252,6 +252,7 @@ TASK_DEFINITION
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 * `family` - The family of the Task Definition.
 * `revision` - The revision of the task in a particular family.
 
