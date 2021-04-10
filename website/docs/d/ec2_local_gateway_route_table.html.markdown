@@ -39,8 +39,8 @@ Local Gateway Route Table whose data will be exported as attributes.
 
 * `state` - (Optional) The state of the local gateway route table.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
-  a pair on the desired local gateway route table.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired local gateway route table. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
