@@ -57,7 +57,8 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":     tagsSchemaComputed(),
+			"tags_all": tagsSchemaComputed(),
 			"throughput_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -88,6 +89,7 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 
 func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	efsconn := meta.(*AWSClient).efsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
@@ -140,8 +142,15 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	res, err := efsconn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
