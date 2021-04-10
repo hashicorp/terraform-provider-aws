@@ -67,9 +67,7 @@ func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateTrafficMirrorTargetInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget),
-	}
+	input := &ec2.CreateTrafficMirrorTargetInput{}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -81,6 +79,10 @@ func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("network_load_balancer_arn"); ok {
 		input.NetworkLoadBalancerArn = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorTarget)
 	}
 
 	out, err := conn.CreateTrafficMirrorTarget(input)
