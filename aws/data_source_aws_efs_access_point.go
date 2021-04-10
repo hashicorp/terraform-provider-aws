@@ -98,6 +98,7 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 
 func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
