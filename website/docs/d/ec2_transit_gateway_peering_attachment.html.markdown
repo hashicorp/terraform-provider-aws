@@ -37,8 +37,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
-  a pair on the specific EC2 Transit Gateway Peering Attachment to retrieve.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the specific EC2 Transit Gateway Peering Attachment to retrieve. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
@@ -56,3 +55,4 @@ In addition to all arguments above, the following attributes are exported:
 * `peer_region` - Identifier of the peer AWS region
 * `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
 * `transit_gateway_id` - Identifier of the local EC2 Transit Gateway
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
