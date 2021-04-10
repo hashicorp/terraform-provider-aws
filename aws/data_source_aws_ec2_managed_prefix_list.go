@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -57,7 +58,8 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":     tagsSchemaComputed(),
+			"tags_all": tagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -68,6 +70,7 @@ func dataSourceAwsEc2ManagedPrefixList() *schema.Resource {
 
 func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := ec2.DescribeManagedPrefixListsInput{}
@@ -111,8 +114,15 @@ func dataSourceAwsEc2ManagedPrefixListRead(ctx context.Context, d *schema.Resour
 	d.Set("max_entries", pl.MaxEntries)
 	d.Set("version", pl.Version)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags attribute: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(pl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	var entries []interface{}
