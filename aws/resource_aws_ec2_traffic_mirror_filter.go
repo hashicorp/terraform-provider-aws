@@ -54,12 +54,14 @@ func resourceAwsEc2TrafficMirrorFilterCreate(d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateTrafficMirrorFilterInput{
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorFilter),
-	}
+	input := &ec2.CreateTrafficMirrorFilterInput{}
 
 	if description, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(description.(string))
+	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorFilter)
 	}
 
 	out, err := conn.CreateTrafficMirrorFilter(input)
