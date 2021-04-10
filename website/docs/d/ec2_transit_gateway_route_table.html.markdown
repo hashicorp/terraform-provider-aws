@@ -57,4 +57,5 @@ In addition to all arguments above, the following attributes are exported:
 * `default_propagation_route_table` - Boolean whether this is the default propagation route table for the EC2 Transit Gateway
 * `id` - EC2 Transit Gateway Route Table identifier
 * `transit_gateway_id` - EC2 Transit Gateway identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway Route Table
+* `tags` - Key-value tags for the EC2 Transit Gateway Route Table. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
