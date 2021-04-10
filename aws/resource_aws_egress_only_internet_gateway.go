@@ -43,7 +43,7 @@ func resourceAwsEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta int
 
 	resp, err := conn.CreateEgressOnlyInternetGateway(&ec2.CreateEgressOnlyInternetGatewayInput{
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, "egress-only-internet-gateway"),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeEgressOnlyInternetGateway),
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating egress internet gateway: %s", err)
