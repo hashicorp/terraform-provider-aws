@@ -29,11 +29,6 @@ func resourceAwsRoute53ResolverFirewallDomainList() *schema.Resource {
 				Computed: true,
 			},
 
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -101,7 +96,6 @@ func resourceAwsRoute53ResolverFirewallDomainListRead(d *schema.ResourceData, me
 
 	arn := aws.StringValue(firewallDomainList.Arn)
 	d.Set("arn", arn)
-	d.Set("id", firewallDomainList.Id)
 	d.Set("name", firewallDomainList.Name)
 
 	input := &route53resolver.ListFirewallDomainsInput{
