@@ -2,10 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/mq"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -146,8 +146,8 @@ data "aws_mq_broker_instance_type_offerings" "test" {
 func testAccAwsMqInstanceBrokerTypeOfferingsDataSourceConfigAllTypes() string {
 	return `
 data "aws_mq_broker_instance_type_offerings" "test" {
-  storage_type = "EBS"
-  engine_type = "RABBITMQ"
+  storage_type       = "EBS"
+  engine_type        = "RABBITMQ"
   host_instance_type = "mq.m5.large"
 }
 `

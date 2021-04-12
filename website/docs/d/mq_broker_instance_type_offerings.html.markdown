@@ -16,8 +16,8 @@ an error will be thrown.
 
 ```terraform
 data "aws_mq_broker_instance_type_offerings" "test" {
-  storage_type = "EBS"
-  engine_type = "RABBITMQ"
+  storage_type       = "EBS"
+  engine_type        = "RABBITMQ"
   host_instance_type = "mq.m5.large"
 }
 ```
@@ -26,13 +26,12 @@ data "aws_mq_broker_instance_type_offerings" "test" {
 
 The following arguments are supported:
 
-* `storage_type` - (Optional) Storage type. 
-  * Valid values are `EBS` and `EFS`
-* `engine_type` - (Optional) MQ Broker engine type
-  * Valid values are `RABBITMQ` and `ACTIVEMQ`
+* `storage_type` - (Optional) Storage type. Valid values are `EBS` and `EFS`
+* `engine_type` - (Optional) MQ Broker engine type. Valid values are `RABBITMQ` and `ACTIVEMQ`
 * `host_instance_type` - (Optional) The size of the instance
 
 ## Attributes Reference
 
-The following attributes are exported
+The following attributes are exported:
+
 * `availability_zones` - List of availability zones that can deploy an MQ Broker with specified criteria
