@@ -362,7 +362,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		for _, gsiObject := range gsiSet.List() {
 			gsi := gsiObject.(map[string]interface{})
 			if err := validateDynamoDbProvisionedThroughput(gsi, billingMode); err != nil {
-				return fmt.Errorf("Failed to create GSI: %v", err)
+				return fmt.Errorf("failed to create GSI: %v", err)
 			}
 
 			gsiObject := expandDynamoDbGlobalSecondaryIndex(gsi, billingMode)
@@ -421,7 +421,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating DynamoDB Table: %s", err)
+		return fmt.Errorf("error creating DynamoDB Table: %w", err)
 	}
 
 	if output == nil || output.TableDescription == nil {
@@ -437,25 +437,25 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	if requiresTagging {
 		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
-			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
-			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
+			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
 		}
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
 		if err := updateDynamoDbPITR(d, conn); err != nil {
-			return fmt.Errorf("error enabling DynamoDB Table (%s) point in time recovery: %s", d.Id(), err)
+			return fmt.Errorf("error enabling DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
 		}
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
 		if err := createDynamoDbReplicas(d.Id(), v.List(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) replicas: %s", d.Id(), err)
+			return fmt.Errorf("error creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
 
@@ -488,20 +488,20 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		TableName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
+		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
 	}
 	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
-		return fmt.Errorf("error setting ttl: %s", err)
+		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
 	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
 
 	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
@@ -531,7 +531,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		gsiUpdates, err = updateDynamoDbDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
 
 		if err != nil {
-			return fmt.Errorf("computing difference for DynamoDB Table (%s) Global Secondary Index updates failed: %s", d.Id(), err)
+			return fmt.Errorf("computing difference for DynamoDB Table (%s) Global Secondary Index updates failed: %w", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Computed DynamoDB Table (%s) Global Secondary Index updates: %s", d.Id(), gsiUpdates)
@@ -554,11 +554,11 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if _, err := conn.UpdateTable(input); err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %s", d.Id(), idxName, err)
+			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
 		if err := waitForDynamoDbGSIToBeDeleted(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %s", d.Id(), idxName, err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %w", d.Id(), idxName, err)
 		}
 	}
 
@@ -614,11 +614,11 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		_, err := conn.UpdateTable(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s): %w", d.Id(), err)
 		}
 
 		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %w", d.Id(), err)
 		}
 
 		for _, gsiUpdate := range gsiUpdates {
@@ -628,7 +628,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 
 			idxName := aws.StringValue(gsiUpdate.Update.IndexName)
 			if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %s", d.Id(), idxName, err)
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %w", d.Id(), idxName, err)
 			}
 		}
 	}
@@ -648,11 +648,11 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if _, err := conn.UpdateTable(input); err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %s", d.Id(), idxName, err)
+			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
 		if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %s", d.Id(), idxName, err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %w", d.Id(), idxName, err)
 		}
 	}
 
@@ -663,36 +663,36 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			SSESpecification: expandDynamoDbEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 		}
 
 		if err := waitForDynamoDbSSEUpdateToBeCompleted(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("ttl") {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("point_in_time_recovery") {
 		if err := updateDynamoDbPITR(d, conn); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s) point in time recovery: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("replica") {
 		if err := updateDynamoDbReplica(d, conn); err != nil {
-			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %s", d.Id(), err)
+			return fmt.Errorf("error updating DynamoDB Table (%s) replica: %w", d.Id(), err)
 		}
 	}
 
@@ -706,7 +706,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		if err := deleteDynamoDbReplicas(d.Id(), replicas, d.Timeout(schema.TimeoutDelete), conn); err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %s", d.Id(), err)
+			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
 
@@ -715,11 +715,11 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
 		}
-		return fmt.Errorf("error deleting DynamoDB Table (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
 	if err := waitForDynamodbTableDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -795,11 +795,11 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %s", tableName, tfMap["region_name"].(string), err)
+			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %w", tableName, tfMap["region_name"].(string), err)
 		}
 
 		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, tfMap["region_name"].(string), timeout, conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %s", tableName, tfMap["region_name"].(string), err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %w", tableName, tfMap["region_name"].(string), err)
 		}
 	}
 
@@ -819,12 +819,12 @@ func updateDynamoDbTimeToLive(tableName string, ttlList []interface{}, conn *dyn
 
 	log.Printf("[DEBUG] Updating DynamoDB Table (%s) Time To Live: %s", tableName, input)
 	if _, err := conn.UpdateTimeToLive(input); err != nil {
-		return fmt.Errorf("error updating DynamoDB Table (%s) Time To Live: %s", tableName, err)
+		return fmt.Errorf("error updating DynamoDB Table (%s) Time To Live: %w", tableName, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for DynamoDB Table (%s) Time to Live update to complete", tableName)
 	if err := waitForDynamoDbTtlUpdateToBeCompleted(tableName, ttlMap["enabled"].(bool), conn); err != nil {
-		return fmt.Errorf("error waiting for DynamoDB Table (%s) Time To Live update: %s", tableName, err)
+		return fmt.Errorf("error waiting for DynamoDB Table (%s) Time To Live update: %w", tableName, err)
 	}
 
 	return nil
@@ -857,11 +857,11 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		_, err = conn.UpdateContinuousBackups(input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating DynamoDB PITR status: %s", err)
+		return fmt.Errorf("error updating DynamoDB PITR status: %w", err)
 	}
 
 	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {
-		return fmt.Errorf("Error waiting for DynamoDB PITR update: %s", err)
+		return fmt.Errorf("error waiting for DynamoDB PITR update: %w", err)
 	}
 
 	return nil
@@ -1085,11 +1085,11 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 		}
 
 		if err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %s", tableName, regionName, err)
+			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
 		}
 
 		if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, regionName, timeout, conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %s", tableName, regionName, err)
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
 		}
 	}
 
@@ -1456,7 +1456,7 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 	var err *multierror.Error
 
 	if len(unindexedAttributes) > 0 {
-		err = multierror.Append(err, fmt.Errorf("All attributes must be indexed. Unused attributes: %q", unindexedAttributes))
+		err = multierror.Append(err, fmt.Errorf("all attributes must be indexed. Unused attributes: %q", unindexedAttributes))
 	}
 
 	if len(indexedAttributes) > 0 {
@@ -1465,7 +1465,7 @@ func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
 			missingIndexes = append(missingIndexes, index)
 		}
 
-		err = multierror.Append(err, fmt.Errorf("All indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
+		err = multierror.Append(err, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
 
 	return err.ErrorOrNil()
@@ -1481,15 +1481,15 @@ func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingM
 	readCapacity, readCapacitySet := data["read_capacity"].(int)
 
 	if !writeCapacitySet || !readCapacitySet {
-		return fmt.Errorf("Read and Write capacity should be set when billing mode is %s", dynamodb.BillingModeProvisioned)
+		return fmt.Errorf("read and write capacity should be set when billing mode is %s", dynamodb.BillingModeProvisioned)
 	}
 
 	if writeCapacity < 1 {
-		return fmt.Errorf("Write capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+		return fmt.Errorf("write capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
 	}
 
 	if readCapacity < 1 {
-		return fmt.Errorf("Read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+		return fmt.Errorf("read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
 	}
 
 	return nil
