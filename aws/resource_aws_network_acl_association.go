@@ -67,12 +67,14 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 
 	// Inspect that the association exists
 	subnetId := d.Get("subnet_id").(string)
-	_, errAssociation := findNetworkAclAssociation(subnetId, conn)
-	if errAssociation != nil {
+	association, err := findNetworkAclAssociation(subnetId, conn)
+	if err != nil {
 		log.Printf("[WARN] Association for subnet %s was not found, removing from state", subnetId)
 		d.SetId("")
 		return nil
 	}
+
+	d.Set("network_acl_id", aws.StringValue(association.NetworkAclId))
 
 	return nil
 }
