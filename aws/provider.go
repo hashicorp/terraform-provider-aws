@@ -597,6 +597,7 @@ func Provider() *schema.Provider {
 			"aws_db_parameter_group":                                  resourceAwsDbParameterGroup(),
 			"aws_db_proxy":                                            resourceAwsDbProxy(),
 			"aws_db_proxy_default_target_group":                       resourceAwsDbProxyDefaultTargetGroup(),
+			"aws_db_proxy_endpoint":                                   resourceAwsDbProxyEndpoint(),
 			"aws_db_proxy_target":                                     resourceAwsDbProxyTarget(),
 			"aws_db_security_group":                                   resourceAwsDbSecurityGroup(),
 			"aws_db_snapshot":                                         resourceAwsDbSnapshot(),
