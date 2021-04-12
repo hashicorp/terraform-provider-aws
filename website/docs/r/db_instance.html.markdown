@@ -193,7 +193,7 @@ default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
 specified, "gp2" if not.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
 creation. See [MSSQL User
@@ -290,6 +290,7 @@ in a Route 53 Alias record).
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `username` - The master username for the database.
 
 On Oracle and Microsoft SQL instances the following is exported additionally:
