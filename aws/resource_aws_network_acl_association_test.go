@@ -14,7 +14,7 @@ func init() {
 	})
 }
 
-func TestAccAWSNetworkAclAssociation(t *testing.T) {
+func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.acl_a"
 
@@ -49,7 +49,7 @@ resource "aws_network_acl" "acl_a" {
   }
 }
 resource "aws_subnet" "subnet_a" {
-  vpc_id = aws_vpc.test_vpc.id
+  vpc_id     = aws_vpc.test_vpc.id
   cidr_block = "10.1.33.0/24"
   tags = {
     Name = "terraform test"
@@ -57,6 +57,6 @@ resource "aws_subnet" "subnet_a" {
 }
 resource "aws_network_acl_association" "test" {
   network_acl_id = aws_network_acl.acl_a.id
-  subnet_id = aws_subnet.subnet_a.id
+  subnet_id      = aws_subnet.subnet_a.id
 }
 `
