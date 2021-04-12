@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -110,7 +111,7 @@ func resourceAwsAccessAnalyzerAnalyzerRead(d *schema.ResourceData, meta interfac
 
 	output, err := conn.GetAnalyzer(input)
 
-	if isAWSErr(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

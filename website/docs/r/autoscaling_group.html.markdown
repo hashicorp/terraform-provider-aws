@@ -19,11 +19,11 @@ with `load_balancers` and `target_group_arns` defined in-line. These two methods
 mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
 `load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
 to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
-[`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations).
+[`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_placement_group" "test" {
   name     = "test"
   strategy = "cluster"
@@ -77,7 +77,7 @@ EOF
 
 ### With Latest Version Of Launch Template
 
-```hcl
+```terraform
 resource "aws_launch_template" "foobar" {
   name_prefix   = "foobar"
   image_id      = "ami-1a2b3c"
@@ -99,7 +99,7 @@ resource "aws_autoscaling_group" "bar" {
 
 ### Mixed Instances Policy
 
-```hcl
+```terraform
 resource "aws_launch_template" "example" {
   name_prefix   = "example"
   image_id      = data.aws_ami.example.id
@@ -134,7 +134,7 @@ resource "aws_autoscaling_group" "example" {
 
 ### Mixed Instances Policy with Spot Instances and Capacity Rebalance
 
-```hcl
+```terraform
 resource "aws_launch_template" "example" {
   name_prefix   = "example"
   image_id      = data.aws_ami.example.id
@@ -174,9 +174,54 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
+### Mixed Instances Policy with Instance level LaunchTemplateSpecification Overrides
+
+When using a diverse instance set, some instance types might require a launch template with configuration values unique to that instance type such as a different AMI (Graviton2), architecture specific user data script, different EBS configuration, or different networking configuration.
+
+```terraform
+resource "aws_launch_template" "example" {
+  name_prefix   = "example"
+  image_id      = data.aws_ami.example.id
+  instance_type = "c5.large"
+}
+
+resource "aws_launch_template" "example2" {
+  name_prefix = "example2"
+  image_id    = data.aws_ami.example2.id
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.example.id
+      }
+
+      override {
+        instance_type     = "c4.large"
+        weighted_capacity = "3"
+      }
+
+      override {
+        instance_type = "c6g.large"
+        launch_template_specification {
+          launch_template_id = aws_launch_template.example2.id
+        }
+        weighted_capacity = "2"
+      }
+    }
+  }
+}
+```
+
 ### Interpolated tags
 
-```hcl
+```terraform
 variable "extra_tags" {
   default = [
     {
@@ -219,7 +264,7 @@ resource "aws_autoscaling_group" "bar" {
 
 ### Automatically refresh all instances after the group is updated
 
-```hcl
+```terraform
 resource "aws_autoscaling_group" "example" {
   availability_zones = ["us-east-1a"]
   desired_capacity   = 1
@@ -378,6 +423,7 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
 * `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
 
 ### tag and tags
@@ -402,7 +448,7 @@ This configuration block supports the following:
 
 * `strategy` - (Required) The strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 * `preferences` - (Optional) Override default parameters for Instance Refresh.
-    * `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
+    * `instance_warmup` - (Optional) The number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
     * `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
 * `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
   
@@ -445,7 +491,7 @@ care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 ## Timeouts
 
 `autoscaling_group` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `delete` - (Default `10 minutes`) Used for destroying ASG.
 

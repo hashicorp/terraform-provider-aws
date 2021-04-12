@@ -7,6 +7,7 @@ The Terraform AWS Provider codebase bridges the implementation of a [Terraform P
 At the bottom of this documentation is a [Glossary section](#glossary), which may be a helpful reference while reading the other sections.
 
 - [Data Conversions in Terraform Providers](#data-conversions-in-terraform-providers)
+    - [Implicit State Passthrough](#implicit-state-passthrough)
 - [Data Conversions in the Terraform AWS Provider](#data-conversions-in-the-terraform-aws-provider)
     - [Type Mapping](#type-mapping)
     - [Zero Value Mapping](#zero-value-mapping)
@@ -24,6 +25,7 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
     - [Root TypeSet of Resource and AWS List of Structure](#root-typeset-of-resource-and-aws-list-of-structure)
     - [Root TypeSet of TypeString and AWS List of String](#root-typeset-of-typestring-and-aws-list-of-string)
     - [Root TypeString and AWS String](#root-typestring-and-aws-string)
+    - [Root TypeString and AWS Timestamp](#root-typestring-and-aws-timestamp)
     - [Nested TypeBool and AWS Boolean](#nested-typebool-and-aws-boolean)
     - [Nested TypeFloat and AWS Float](#nested-typefloat-and-aws-float)
     - [Nested TypeInt and AWS Integer](#nested-typeint-and-aws-integer)
@@ -34,13 +36,18 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
     - [Nested TypeSet of Resource and AWS List of Structure](#nested-typeset-of-resource-and-aws-list-of-structure)
     - [Nested TypeList of TypeString and AWS List of String](#nested-typelist-of-typestring-and-aws-list-of-string-1)
     - [Nested TypeString and AWS String](#nested-typestring-and-aws-string)
+    - [Nested TypeString and AWS Timestamp](#nested-typestring-and-aws-timestamp)
 - [Further Guidelines](#further-guidelines)
+    - [Binary Values](#binary-values)
+    - [Destroy State Values](#destroy-state-values)
+    - [Hashed Values](#hashed-values)
     - [Sensitive Values](#sensitive-values)
+    - [Virtual Attributes](#virtual-attributes)
 - [Glossary](#glossary)
 
 ## Data Conversions in Terraform Providers
 
-Before getting into highly specifc documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
+Before getting into highly specific documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
 
 There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into a applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/master/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
 
@@ -58,6 +65,20 @@ As a generic walkthrough, the following data handling occurs when creating a Ter
 - Terraform CLI verifies and stores the new state
 
 The highlighted lines are the focus of this documentation today. In the future however, the Terraform AWS Provider may replace certain functionality in the items mentioning the Terraform Plugin SDK above to workaround certain limitations of that particular library.
+
+### Implicit State Passthrough
+
+An important behavior to note with Terraform State handling is if the value of a particular root attribute or block is not refreshed during plan or apply operations, then the prior Terraform State is implicitly deep copied to the new Terraform State for that attribute or block.
+
+Given a resource with a writeable root attribute named `not_set_attr` that never calls `d.Set("not_set_attr", /* ... nil or value */)`, the following happens:
+
+- If the Terraform configuration contains `not_set_attr = "anything"` on resource creation, the Terraform State contains `not_set_attr` equal to `"anything"` after apply.
+- If the Terraform configuration is updated to `not_set_attr = "updated"`, the Terraform State contains `not_set_attr` equal to `"updated"` after apply.
+- If the attribute was meant to be associated with a remote system value, it will never update the Terraform State on plan or apply with the remote value. Effectively, it cannot perform drift detection with the remote value.
+
+This however does _not_ apply for nested attributes and blocks if the parent block is refreshed. Given a resource with a root block named `parent`, nested child attributes named `set_attr` and `not_set_attr`, and that calls `d.Set("parent", /* ... only refreshes nested set_attr ... */)`, the Terraform State for the nested `not_set_attr` will not be copied.
+
+There are valid use cases for passthrough attribute values such as these (see the [Virtual Attributes section](#virtual-attributes)), however the behavior can be confusing or incorrect for operators if the drift detection is expected. Typically these types of drift detection issues can be discovered by implementing resource import testing with state verification.
 
 ## Data Conversions in the Terraform AWS Provider
 
@@ -289,7 +310,9 @@ if v, ok := d.GetOk("attribute_name"); ok && len(v.([]interface{})) > 0 {
 To write:
 
 ```go
-d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeName))
+if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeName)); err != nil {
+    return fmt.Errorf("error setting attribute_name: %w", err)
+}
 ```
 
 ### Root TypeList of Resource and AWS Structure
@@ -308,7 +331,9 @@ To write (_likely to have helper function introduced soon_):
 
 ```go
 if output.Thing.AttributeName != nil {
-    d.Set("attribute_name", []interface{}{flattenServiceStructure(output.Thing.AttributeName)})
+    if err := d.Set("attribute_name", []interface{}{flattenServiceStructure(output.Thing.AttributeName)}); err != nil {
+        return fmt.Errorf("error setting attribute_name: %w", err)
+    }
 } else {
     d.Set("attribute_name", nil)
 }
@@ -365,7 +390,9 @@ if v, ok := d.GetOk("attribute_name"); ok && v.(*schema.Set).Len() > 0 {
 To write:
 
 ```go
-d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeNames))
+if err := d.Set("attribute_name", flattenServiceStructures(output.Thing.AttributeNames)); err != nil {
+    return fmt.Errorf("error setting attribute_name: %w", err)
+}
 ```
 
 ### Root TypeSet of TypeString and AWS List of String
@@ -402,6 +429,40 @@ To write:
 
 ```go
 d.Set("attribute_name", output.Thing.AttributeName)
+```
+
+### Root TypeString and AWS Timestamp
+
+To ensure that parsing the read string value does not fail, define `attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/docs/extend/schemas/schema-behaviors.html#validatefunc):
+
+```go
+"attribute_name": {
+    Type:         schema.TypeString,
+    // ...
+    ValidateFunc: validation.IsRFC3339Time,
+},
+```
+
+To read:
+
+```go
+input := service.ExampleOperationInput{}
+
+if v, ok := d.GetOk("attribute_name"); ok {
+    t, _ := time.Parse(time.RFC3339, v.(string))
+
+    input.AttributeName = aws.Time(t)
+}
+```
+
+To write:
+
+```go
+if output.Thing.AttributeName != nil {
+    d.Set("attribute_name", aws.TimeValue(output.Thing.AttributeName).Format(time.RFC3339))
+} else {
+    d.Set("attribute_name", nil)
+}
 ```
 
 ### Nested TypeBool and AWS Boolean
@@ -605,7 +666,7 @@ To read:
 ```go
 input := service.ExampleOperationInput{}
 
-if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}; ok && len(v) > 0 {
+if v, ok := tfMap["nested_attribute_name"].(map[string]interface{}); ok && len(v) > 0 {
     apiObject.NestedAttributeName = stringMapToPointers(v)
 }
 ```
@@ -714,9 +775,71 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 }
 ```
 
+### Nested TypeString and AWS Timestamp
+
+To ensure that parsing the read string value does not fail, define `nested_attribute_name`'s `schema.Schema` with an appropriate [`ValidateFunc`](https://www.terraform.io/docs/extend/schemas/schema-behaviors.html#validatefunc):
+
+```go
+"nested_attribute_name": {
+    Type:         schema.TypeString,
+    // ...
+    ValidateFunc: validation.IsRFC3339Time,
+},
+```
+
+To read:
+
+```go
+func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
+    // ...
+
+    if v, ok := tfMap["nested_attribute_name"].(string); ok && v != "" {
+        t, _ := time.Parse(time.RFC3339, v.(string))
+
+        apiObject.NestedAttributeName = aws.Time(t)
+    }
+
+    // ...
+}
+```
+
+To write:
+
+```go
+func flattenServiceStructure(apiObject *service.Structure) map[string]interface{} {
+    // ...
+
+    if v := apiObject.NestedAttributeName; v != nil {
+        tfMap["nested_attribute_name"] = aws.TimeValue(v).Format(time.RFC3339)
+    }
+
+    // ...
+}
+```
+
 ## Further Guidelines
 
 This section includes additional topics related to data design and decision making from the Terraform AWS Provider maintainers.
+
+### Binary Values
+
+Certain resources may need to interact with binary (non UTF-8) data while the Terraform State only supports UTF-8 data. Configurations attempting to pass binary data to an attribute will receive an error from Terraform CLI. These attributes should expect and store the value as a Base64 string while performing any necessary encoding or decoding in the resource logic.
+
+### Destroy State Values
+
+During resource destroy operations, _only_ previously applied Terraform State values are available to resource logic. Even if the configuration is updated in a manner where both the resource destroy is triggered (e.g. setting the resource meta-argument `count = 0`) and an attribute value is updated, the resource logic will only have the previously applied data values.
+
+Any usage of attribute values during destroy should explicitly note in the resource documentation that the desired value must be applied into the Terraform State before any apply to destroy the resource.
+
+### Hashed Values
+
+Attribute values may be very lengthy or potentially contain [Sensitive Values](#sensitive-values). A potential solution might be to use a hashing algorithm, such as MD5 or SHA256, to convert the value before saving in the Terraform State to reduce its relative size or attempt to obfuscate the value. However, there are a few reasons not to do so:
+
+- Terraform expects any planned values to match applied values. Ensuring proper handling during the various Terraform operations such as difference planning and Terraform State storage can be a burden.
+- Hashed values are generally unusable in downstream attribute references. If a value is hashed, it cannot be successfully used in another resource or provider configuration that expects the real value.
+- Terraform plan differences are meant to be human readable. If a value is hashed, operators will only see the relatively unhelpful hash differences `abc123 -> def456` in plans.
+
+Any value hashing implementation will not be accepted. An exception to this guidance is if the remote system explicitly provides a separate hash value in responses, in which a resource can provide a separate attribute with that hashed value.
 
 ### Sensitive Values
 
@@ -733,6 +856,27 @@ Given that and especially with the improvements in Terraform CLI 0.14, the Terra
 - If the Attribute is within a Block, that all occurrences of the Attribute value will objectively contain secret material. Some APIs (and therefore the Terraform AWS Provider resources) implement generic "setting" and "value" structures which likely will contain a mixture of secret and non-secret material. These will generally not be accepted for marking as `Sensitive`.
 
 If you are unsatisfied with sensitive value handling, the maintainers can recommend ensuring there is a covering issue in the Terraform CLI and/or Terraform Plugin SDK projects explaining the use case. Ultimately, Terraform Plugins including the Terraform AWS Provider cannot implement their own sensitive value abilities if the upstream projects do not implement the appropriate functionality.
+
+### Virtual Attributes
+
+Attributes which only exist within Terraform and not the remote system are typically referred as virtual attributes. Especially in the case of [Destroy State Values](#destroy-state-values), these attributes rely on the [Implicit State Passthrough](#implicit-state-passthrough) behavior of values in Terraform to be available in resource logic. A fictitous example of one of these may be a resource attribute such as a `skip_waiting` flag, which is used only in the resource logic to skip the typical behavior of waiting for operations to complete.
+
+If a virtual attribute has a default value that does not match the [Zero Value Mapping](#zero-value-mapping) for the type, it is recommended to explicitly call `d.Set()` with the default value in the `schema.Resource` `Importer` `State` function, for example:
+
+```go
+&schema.Resource{
+	// ... other fields ...
+	Importer: &schema.ResourceImporter{
+		State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			d.Set("skip_waiting", true)
+
+			return []*schema.ResourceData{d}, nil
+		},
+	},
+}
+```
+
+This helps prevent an immediate plan difference after resource import unless the configuration has a non-default value.
 
 ## Glossary
 

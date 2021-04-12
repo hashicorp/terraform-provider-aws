@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -84,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -108,6 +110,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
@@ -175,6 +178,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(codedeploy.New)
 	case "codepipeline":
 		funcType = reflect.TypeOf(codepipeline.New)
+	case "codestarconnections":
+		funcType = reflect.TypeOf(codestarconnections.New)
 	case "codestarnotifications":
 		funcType = reflect.TypeOf(codestarnotifications.New)
 	case "cognitoidentity":
@@ -283,6 +288,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mediastore.New)
 	case "mq":
 		funcType = reflect.TypeOf(mq.New)
+	case "mwaa":
+		funcType = reflect.TypeOf(mwaa.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
 	case "networkfirewall":
@@ -331,6 +338,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(sqs.New)
 	case "ssm":
 		funcType = reflect.TypeOf(ssm.New)
+	case "ssoadmin":
+		funcType = reflect.TypeOf(ssoadmin.New)
 	case "storagegateway":
 		funcType = reflect.TypeOf(storagegateway.New)
 	case "swf":
@@ -408,6 +417,8 @@ func ServiceListTagsFunction(serviceName string) string {
 	case "lambda":
 		return "ListTags"
 	case "mq":
+		return "ListTags"
+	case "mwaa":
 		return "ListTags"
 	case "opsworks":
 		return "ListTags"
@@ -820,7 +831,8 @@ func ServiceTagKeyType(serviceName string) string {
 	}
 }
 
-// ServiceTagResourceTypeField determines the service tagging resource type field.
+// ServiceTagResourceTypeField determines the service tagging resource type field
+// with the exception of the ssoadmin service which uses the instance arn field
 func ServiceTagResourceTypeField(serviceName string) string {
 	switch serviceName {
 	case "autoscaling":
@@ -829,6 +841,8 @@ func ServiceTagResourceTypeField(serviceName string) string {
 		return "ResourceType"
 	case "ssm":
 		return "ResourceType"
+	case "ssoadmin":
+		return "InstanceArn"
 	default:
 		return ""
 	}

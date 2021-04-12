@@ -145,6 +145,10 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 		Domain: aws.String(domainOpt),
 	}
 
+	if domainOpt == ec2.DomainTypeVpc {
+		allocOpts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeElasticIp)
+	}
+
 	if v, ok := d.GetOk("public_ipv4_pool"); ok {
 		allocOpts.PublicIpv4Pool = aws.String(v.(string))
 	}
@@ -179,13 +183,8 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if d.Get("domain").(string) == ec2.DomainTypeStandard {
-			return fmt.Errorf("tags can not be set for an EIP in EC2 Classic")
-		}
-		if err := keyvaluetags.Ec2CreateTags(ec2conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
-		}
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 && d.Get("domain").(string) == ec2.DomainTypeStandard {
+		return fmt.Errorf("tags can not be set for an EIP in EC2 Classic")
 	}
 
 	return resourceAwsEipUpdate(d, meta)
@@ -279,24 +278,14 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	region := *ec2conn.Config.Region
 	d.Set("private_ip", address.PrivateIpAddress)
 	if address.PrivateIpAddress != nil {
-		dashIP := strings.Replace(*address.PrivateIpAddress, ".", "-", -1)
-
-		if region == "us-east-1" {
-			d.Set("private_dns", fmt.Sprintf("ip-%s.ec2.internal", dashIP))
-		} else {
-			d.Set("private_dns", fmt.Sprintf("ip-%s.%s.compute.internal", dashIP, region))
-		}
+		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(*address.PrivateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(region)))
 	}
+
 	d.Set("public_ip", address.PublicIp)
 	if address.PublicIp != nil {
-		dashIP := strings.Replace(*address.PublicIp, ".", "-", -1)
-
-		if region == "us-east-1" {
-			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.compute-1", dashIP)))
-		} else {
-			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
-		}
+		d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", resourceAwsEc2DashIP(*address.PublicIp), resourceAwsEc2RegionalPublicDnsSuffix(region))))
 	}
+
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)

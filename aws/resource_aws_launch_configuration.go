@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -373,9 +374,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
-		createLaunchConfigurationOpts.SecurityGroups = expandStringList(
-			v.(*schema.Set).List(),
-		)
+		createLaunchConfigurationOpts.SecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
@@ -387,9 +386,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok {
-		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = expandStringList(
-			v.(*schema.Set).List(),
-		)
+		createLaunchConfigurationOpts.ClassicLinkVPCSecurityGroups = expandStringSet(v.(*schema.Set))
 	}
 
 	var blockDevices []*autoscaling.BlockDeviceMapping
@@ -438,7 +435,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if *aws.String(bd["device_name"].(string)) == *rootDeviceName {
+			if bd["device_name"].(string) == aws.StringValue(rootDeviceName) {
 				return fmt.Errorf("Root device (%s) declared as an 'ebs_block_device'.  Use 'root_block_device' keyword.", *rootDeviceName)
 			}
 
@@ -519,7 +516,7 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	err = resource.Retry(90*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
 		if err != nil {
 			if isAWSErr(err, "ValidationError", "Invalid IamInstanceProfile") {

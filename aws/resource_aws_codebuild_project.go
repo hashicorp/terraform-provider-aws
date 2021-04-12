@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -402,9 +403,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
-										Type:      schema.TypeString,
-										Sensitive: true,
-										Optional:  true,
+										Type:       schema.TypeString,
+										Sensitive:  true,
+										Optional:   true,
+										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -412,9 +414,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.SourceAuthTypeOauth,
 										}, false),
+										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 								},
 							},
+							Deprecated: "Use the aws_codebuild_source_credential resource instead",
 						},
 						"buildspec": {
 							Type:     schema.TypeString,
@@ -486,9 +490,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
-										Type:      schema.TypeString,
-										Sensitive: true,
-										Optional:  true,
+										Type:       schema.TypeString,
+										Sensitive:  true,
+										Optional:   true,
+										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 									"type": {
 										Type:     schema.TypeString,
@@ -496,9 +501,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.SourceAuthTypeOauth,
 										}, false),
+										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 								},
 							},
+							Deprecated: "Use the aws_codebuild_source_credential resource instead",
 						},
 						"buildspec": {
 							Type:     schema.TypeString,
@@ -981,8 +988,8 @@ func expandCodeBuildVpcConfig(rawVpcConfig []interface{}) *codebuild.VpcConfig {
 
 	data := rawVpcConfig[0].(map[string]interface{})
 	vpcConfig.VpcId = aws.String(data["vpc_id"].(string))
-	vpcConfig.Subnets = expandStringList(data["subnets"].(*schema.Set).List())
-	vpcConfig.SecurityGroupIds = expandStringList(data["security_group_ids"].(*schema.Set).List())
+	vpcConfig.Subnets = expandStringSet(data["subnets"].(*schema.Set))
+	vpcConfig.SecurityGroupIds = expandStringSet(data["security_group_ids"].(*schema.Set))
 
 	return &vpcConfig
 }
@@ -1226,7 +1233,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags()
 
 	// Handle IAM eventual consistency
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.UpdateProject(params)
