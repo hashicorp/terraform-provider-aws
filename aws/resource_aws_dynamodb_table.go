@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -383,7 +384,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	var output *dynamodb.CreateTableOutput
 	var requiresTagging bool
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.CreateTableTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
 		if err != nil {
@@ -771,7 +772,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			},
 		}
 
-		err := resource.Retry(20*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if isAWSErr(err, "ThrottlingException", "") {
@@ -794,11 +795,11 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %s", tableName, tfMap["kms_key_arn"].(string), err)
+			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %s", tableName, tfMap["region_name"].(string), err)
 		}
 
-		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, tfMap["kms_key_arn"].(string), timeout, conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %s", tableName, tfMap["kms_key_arn"].(string), err)
+		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, tfMap["region_name"].(string), timeout, conn); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %s", tableName, tfMap["region_name"].(string), err)
 		}
 	}
 
@@ -841,7 +842,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 
 	log.Printf("[DEBUG] Updating DynamoDB point in time recovery status to %v", toEnable)
 
-	err := resource.Retry(20*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.UpdateTableContinuousBackupsTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateContinuousBackups(input)
 		if err != nil {
 			// Backups are still being enabled for this newly created table
@@ -1002,7 +1003,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.DeleteTableTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -1061,7 +1062,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			},
 		}
 
-		err := resource.Retry(20*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if isAWSErr(err, "ThrottlingException", "") {
