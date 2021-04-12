@@ -59,12 +59,6 @@ func resourceAwsNetworkAclAssociationCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(associationId))
 	log.Printf("[INFO] New Association ID: %s", d.Id())
 
-	//_, err = stateConf.WaitForState()
-
-	// if err != nil {
-	// 	return fmt.Errorf("error waiting for network acl association (%s) to become ready: %w", d.Id(), err)
-	// }
-
 	return resourceAwsNetworkAclAssociationRead(d, meta)
 }
 
