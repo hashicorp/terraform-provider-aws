@@ -14,8 +14,8 @@ Provides an network ACL association resource. You might set up network ACLs asso
 
 ```hcl
 resource "aws_network_acl_association" "main" {
-    network_acl_id = aws_network_acl.main.id
-    subnet_id = aws_subnet.main.id
+  network_acl_id = aws_network_acl.main.id
+  subnet_id      = aws_subnet.main.id
 }
 ```
 
