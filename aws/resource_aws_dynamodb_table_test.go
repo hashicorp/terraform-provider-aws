@@ -1314,6 +1314,130 @@ func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+				),
+			},
+			{
+				Config:            testAccAWSDynamoDbTableConfigReplica2(tableName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+			{
+				Config:            testAccAWSDynamoDbTableConfigReplica1(tableName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	kmsKeyResourceName := "aws_kms_key.mastertest"
+	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
+	kmsKeyReplicaResourceName := "aws_kms_key.replicatest"
+	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDynamoDbTableDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
 
@@ -1415,130 +1539,6 @@ func testAccCheckInitialAWSDynamoDbTableConf(resourceName string) resource.TestC
 			"projection_type": "ALL",
 		}),
 	)
-}
-
-func TestAccAWSDynamoDbTable_Replica_Multiple(t *testing.T) {
-	var table dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
-	resourceName := "aws_dynamodb_table.test"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
-		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-				),
-			},
-			{
-				Config:            testAccAWSDynamoDbTableConfigReplica2(tableName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
-				),
-			},
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
-	resourceName := "aws_dynamodb_table.test"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-		},
-		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
-		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-				),
-			},
-			{
-				Config:            testAccAWSDynamoDbTableConfigReplica1(tableName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
-				),
-			},
-			{
-				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDynamoDbTable_Replica_Single_With_CMK(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-	var providers []*schema.Provider
-	resourceName := "aws_dynamodb_table.test"
-	kmsKeyResourceName := "aws_kms_key.mastertest"
-	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
-	kmsKeyReplicaResourceName := "aws_kms_key.replicatest"
-	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 2)
-		},
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
-		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(tableName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
-				),
-			},
-		},
-	})
 }
 
 func testAccAWSDynamoDbConfig_basic(rName string) string {
@@ -2379,7 +2379,7 @@ resource "aws_kms_key" "mastertest" {
 }
 
 resource "aws_kms_key" "replicatest" {
-  provider = "awsalternate"
+  provider    = "awsalternate"
   description = "DynamoDbReplicaTest"
 }
 
