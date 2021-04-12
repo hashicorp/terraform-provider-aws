@@ -226,7 +226,7 @@ func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) er
 
 	d.SetId(aws.StringValue(result.Table.TableName))
 
-	err = flattenAwsDynamoDbTableResource(d, result.Table)
+	err = flattenDynamoDbTableResource(d, result.Table)
 	if err != nil {
 		return err
 	}
