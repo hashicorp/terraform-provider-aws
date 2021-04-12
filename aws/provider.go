@@ -1248,6 +1248,7 @@ func init() {
 		"datapipeline",
 		"datasync",
 		"dax",
+		"detective",
 		"devicefarm",
 		"directconnect",
 		"dlm",
