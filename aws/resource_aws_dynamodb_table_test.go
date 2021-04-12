@@ -2397,7 +2397,7 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-    kms_key_arn  = aws_kms_key.replicatest.arn
+    kms_key_arn = aws_kms_key.replicatest.arn
   }
 
   server_side_encryption {
