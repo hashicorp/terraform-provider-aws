@@ -1241,15 +1241,15 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSDynamoDbConfigOneAttribute(rName, "firstKey", "unusedKey", "S"),
-				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["unusedKey"\]`),
+				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["unusedKey"\]`),
 			},
 			{
 				Config:      testAccAWSDynamoDbConfigTwoAttributes(rName, "firstKey", "secondKey", "firstUnused", "N", "secondUnused", "S"),
-				ExpectError: regexp.MustCompile(`All attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
+				ExpectError: regexp.MustCompile(`attributes must be indexed. Unused attributes: \["firstUnused"\ \"secondUnused\"]`),
 			},
 			{
 				Config:      testAccAWSDynamoDbConfigUnmatchedIndexes(rName, "firstUnused", "secondUnused"),
-				ExpectError: regexp.MustCompile(`All indexes must match a defined attribute. Unmatched indexes: \["firstUnused"\ \"secondUnused\"]`),
+				ExpectError: regexp.MustCompile(`indexes must match a defined attribute. Unmatched indexes: \["firstUnused"\ \"secondUnused\"]`),
 			},
 		},
 	})
