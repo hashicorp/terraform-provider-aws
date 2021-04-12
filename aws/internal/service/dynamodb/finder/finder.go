@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func DynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
@@ -17,8 +18,34 @@ func DynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.T
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, nil
+		return nil, &resource.NotFoundError{
+			Message: dynamodb.ErrCodeTableNotFoundException,
+		}
 	}
 
 	return output.Table, nil
+}
+
+func DynamoDBReplicaByTableNameRegion(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.ReplicaDescription, error) {
+	table, err := DynamoDBTableByName(conn, tableName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if table == nil {
+		return nil, &resource.NotFoundError{
+			Message: dynamodb.ErrCodeTableNotFoundException,
+		}
+	}
+
+	for _, replica := range table.Replicas {
+		if aws.StringValue(replica.RegionName) == region {
+			return replica, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{
+		Message: dynamodb.ErrCodeReplicaNotFoundException,
+	}
 }
