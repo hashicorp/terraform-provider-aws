@@ -1421,6 +1421,7 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3), // 3 due to shared test configuration
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
