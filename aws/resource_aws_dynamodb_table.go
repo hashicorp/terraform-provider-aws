@@ -738,7 +738,6 @@ func isDynamoDbTableOptionDisabled(v interface{}) bool {
 // CRUD helpers
 
 func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -756,25 +755,18 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			continue
 		}
 
-		var kmsMasterKeyId string
-
-		if v, ok := tfMap["kms_key_arn"].(string); ok {
-			kmsMasterKeyId = v
-		}
-
 		var createReplicationGroupMemberAction = &dynamodb.CreateReplicationGroupMemberAction{
 			RegionName: aws.String(regionName),
 		}
 
-		if kmsMasterKeyId != "" {
-			createReplicationGroupMemberAction.KMSMasterKeyId = aws.String(kmsMasterKeyId)
+		if v, ok := tfMap["kms_key_arn"].(string); ok {
+			createReplicationGroupMemberAction.KMSMasterKeyId = aws.String(v)
 		}
 
 		input := &dynamodb.UpdateTableInput{
 			TableName: aws.String(tableName),
 			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
 				{
-
 					Create: createReplicationGroupMemberAction,
 				},
 			},
@@ -1241,6 +1233,25 @@ func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition
 	return attributes
 }
 
+func flattenDynamoDbReplicaDescription(apiObject *dynamodb.ReplicaDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.KMSMasterKeyId != nil {
+		tfMap["kms_key_arn"] = aws.StringValue(apiObject.KMSMasterKeyId)
+	}
+
+	if apiObject.RegionName != nil {
+		tfMap["region_name"] = aws.StringValue(apiObject.RegionName)
+	}
+
+	return tfMap
+
+}
+
 func flattenDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -1249,11 +1260,11 @@ func flattenDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescriptio
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
-			"region_name": aws.StringValue(apiObject.RegionName),
+		if apiObject == nil {
+			continue
 		}
 
-		tfList = append(tfList, tfMap)
+		tfList = append(tfList, flattenDynamoDbReplicaDescription(apiObject))
 	}
 
 	return tfList
