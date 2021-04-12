@@ -35,7 +35,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(waiter.DeleteTableTimeout),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -718,7 +718,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForDynamodbTableDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waiter.DynamodbTableDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -1496,42 +1496,6 @@ func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingM
 }
 
 // waiters
-
-func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.TableStatusActive,
-			dynamodb.TableStatusDeleting,
-		},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			input := &dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			}
-
-			output, err := conn.DescribeTable(input)
-
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-				return nil, "", nil
-			}
-
-			if err != nil {
-				return 42, "", err
-			}
-
-			if output == nil {
-				return nil, "", nil
-			}
-
-			return output.Table, aws.StringValue(output.Table.TableStatus), nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
 
 func waitForDynamoDbReplicaUpdateToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
 	stateConf := &resource.StateChangeConf{
