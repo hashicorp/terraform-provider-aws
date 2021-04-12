@@ -2370,18 +2370,17 @@ func testAccAWSDynamoDbTableConfigReplicaWithCMK(rName string) string {
 	return composeConfig(
 		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
 		fmt.Sprintf(`
-
 data "aws_region" "alternate" {
-	provider = "awsalternate"
+  provider = "awsalternate"
 }
 
 resource "aws_kms_key" "mastertest" {
-	description = "DynamoDbTest"
+  description = "DynamoDbTest"
 }
 
 resource "aws_kms_key" "replicatest" {
-	provider = "awsalternate"
-	description = "DynamoDbReplicaTest"
+  provider = "awsalternate"
+  description = "DynamoDbReplicaTest"
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2397,8 +2396,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-	region_name = data.aws_region.alternate.name
-	kms_key_arn	= aws_kms_key.replicatest.arn
+    region_name = data.aws_region.alternate.name
+    kms_key_arn  = aws_kms_key.replicatest.arn
   }
 
   server_side_encryption {
@@ -2407,9 +2406,9 @@ resource "aws_dynamodb_table" "test" {
   }
 
   timeouts {
-	create = "20m"
-	update = "20m"
-	delete = "20m"
+    create = "20m"
+    update = "20m"
+    delete = "20m"
   }
 }
 `, rName))
