@@ -189,6 +189,35 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
+						"include_transaction_details": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
+						},
+						"include_partition_value": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
+						},
+						"partition_include_schema_table": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
+						},
+						"include_table_alter_operations": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
+						},
+						"include_control_details": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
+						},
+						"include_null_and_empty": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							Default:      false,
 						},
 					},
 				},
