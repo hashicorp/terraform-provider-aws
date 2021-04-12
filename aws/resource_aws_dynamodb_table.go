@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -460,6 +461,59 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	return resourceAwsDynamoDbTableRead(d, meta)
 }
 
+func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).dynamodbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Dynamodb Table (%s) not found, error code (404)", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	err = flattenDynamoDbTableResource(d, result.Table)
+	if err != nil {
+		return err
+	}
+
+	ttlOut, err := conn.DescribeTimeToLive(&dynamodb.DescribeTimeToLiveInput{
+		TableName: aws.String(d.Id()),
+	})
+	if err != nil {
+		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
+	}
+	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
+		return fmt.Errorf("error setting ttl: %s", err)
+	}
+
+	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
+
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+		TableName: aws.String(d.Id()),
+	})
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+		return err
+	}
+	d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut))
+
+	return nil
+}
+
 func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
 	billingMode := d.Get("billing_mode").(string)
@@ -473,7 +527,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("global_secondary_index") {
 		var err error
 		o, n := d.GetChange("global_secondary_index")
-		gsiUpdates, err = diffDynamoDbGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
+		gsiUpdates, err = updateDynamoDbDiffGSI(o.(*schema.Set).List(), n.(*schema.Set).List(), billingMode)
 
 		if err != nil {
 			return fmt.Errorf("computing difference for DynamoDB Table (%s) Global Secondary Index updates failed: %s", d.Id(), err)
@@ -644,82 +698,6 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 	return resourceAwsDynamoDbTableRead(d, meta)
 }
 
-func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
-	oRaw, nRaw := d.GetChange("replica")
-	o := oRaw.(*schema.Set)
-	n := nRaw.(*schema.Set)
-
-	removed := o.Difference(n).List()
-	added := n.Difference(o).List()
-
-	if len(added) > 0 {
-		if err := createDynamoDbReplicas(d.Id(), added, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return err
-		}
-	}
-
-	if len(removed) > 0 {
-		if err := deleteDynamoDbReplicas(d.Id(), removed, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).dynamodbconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-
-	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-		TableName: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Dynamodb Table (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	err = flattenAwsDynamoDbTableResource(d, result.Table)
-	if err != nil {
-		return err
-	}
-
-	ttlOut, err := conn.DescribeTimeToLive(&dynamodb.DescribeTimeToLiveInput{
-		TableName: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
-	}
-	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
-		return fmt.Errorf("error setting ttl: %s", err)
-	}
-
-	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
-
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
-		TableName: aws.String(d.Id()),
-	})
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
-		return err
-	}
-	d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut))
-
-	return nil
-}
-
 func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
 
@@ -731,7 +709,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	err := deleteAwsDynamoDbTable(d.Id(), conn)
+	err := deleteDynamoDbTable(d.Id(), conn)
 	if err != nil {
 		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
@@ -746,220 +724,18 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
-	input := &dynamodb.DeleteTableInput{
-		TableName: aws.String(tableName),
+// custom diff
+
+func isDynamoDbTableOptionDisabled(v interface{}) bool {
+	options := v.([]interface{})
+	if len(options) == 0 {
+		return true
 	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteTable(input)
-		if err != nil {
-			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
-			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
-				return resource.RetryableError(err)
-			}
-			// This handles multiple scenarios in the DynamoDB API:
-			// 1. Updating a table immediately before deletion may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
-			// 2. Removing a table from a DynamoDB global table may return:
-			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
-			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
-				return resource.NonRetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteTable(input)
-	}
-
-	return err
+	e := options[0].(map[string]interface{})["enabled"]
+	return !e.(bool)
 }
 
-func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		var regionName string
-
-		if v, ok := tfMap["region_name"].(string); ok {
-			regionName = v
-		}
-
-		if regionName == "" {
-			continue
-		}
-
-		input := &dynamodb.UpdateTableInput{
-			TableName: aws.String(tableName),
-			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-				{
-					Delete: &dynamodb.DeleteReplicationGroupMemberAction{
-						RegionName: aws.String(regionName),
-					},
-				},
-			},
-		}
-
-		err := resource.Retry(20*time.Minute, func() *resource.RetryError {
-			_, err := conn.UpdateTable(input)
-			if err != nil {
-				if isAWSErr(err, "ThrottlingException", "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			_, err = conn.UpdateTable(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %s", tableName, regionName, err)
-		}
-
-		if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, regionName, timeout, conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %s", tableName, regionName, err)
-		}
-	}
-
-	return nil
-}
-
-func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.TableStatusActive,
-			dynamodb.TableStatusDeleting,
-		},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			input := &dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			}
-
-			output, err := conn.DescribeTable(input)
-
-			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-				return nil, "", nil
-			}
-
-			if err != nil {
-				return 42, "", err
-			}
-
-			if output == nil {
-				return nil, "", nil
-			}
-
-			return output.Table, aws.StringValue(output.Table.TableStatus), nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDynamoDbReplicaUpdateToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.ReplicaStatusCreating,
-			dynamodb.ReplicaStatusUpdating,
-			dynamodb.ReplicaStatusDeleting,
-		},
-		Target: []string{
-			dynamodb.ReplicaStatusActive,
-		},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-			log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
-
-			var targetReplica *dynamodb.ReplicaDescription
-
-			for _, replica := range result.Table.Replicas {
-				if aws.StringValue(replica.RegionName) == region {
-					targetReplica = replica
-					break
-				}
-			}
-
-			if targetReplica == nil {
-				return result, dynamodb.ReplicaStatusCreating, nil
-			}
-
-			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDynamoDbReplicaDeleteToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.ReplicaStatusCreating,
-			dynamodb.ReplicaStatusUpdating,
-			dynamodb.ReplicaStatusDeleting,
-			dynamodb.ReplicaStatusActive,
-		},
-		Target:  []string{""},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
-			var targetReplica *dynamodb.ReplicaDescription
-
-			for _, replica := range result.Table.Replicas {
-				if aws.StringValue(replica.RegionName) == region {
-					targetReplica = replica
-					break
-				}
-			}
-
-			if targetReplica == nil {
-				return result, "", nil
-			}
-
-			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
+// CRUD helpers
 
 func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
 
@@ -1099,7 +875,733 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 	return nil
 }
 
-// Waiters
+func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
+	oRaw, nRaw := d.GetChange("replica")
+	o := oRaw.(*schema.Set)
+	n := nRaw.(*schema.Set)
+
+	removed := o.Difference(n).List()
+	added := n.Difference(o).List()
+
+	if len(added) > 0 {
+		if err := createDynamoDbReplicas(d.Id(), added, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+			return err
+		}
+	}
+
+	if len(removed) > 0 {
+		if err := deleteDynamoDbReplicas(d.Id(), removed, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func updateDynamoDbDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+	// Transform slices into maps
+	oldGsis := make(map[string]interface{})
+	for _, gsidata := range oldGsi {
+		m := gsidata.(map[string]interface{})
+		oldGsis[m["name"].(string)] = m
+	}
+	newGsis := make(map[string]interface{})
+	for _, gsidata := range newGsi {
+		m := gsidata.(map[string]interface{})
+		// validate throughput input early, to avoid unnecessary processing
+		if e = validateDynamoDbProvisionedThroughput(m, billingMode); e != nil {
+			return
+		}
+		newGsis[m["name"].(string)] = m
+	}
+
+	for _, data := range newGsi {
+		newMap := data.(map[string]interface{})
+		newName := newMap["name"].(string)
+
+		if _, exists := oldGsis[newName]; !exists {
+			m := data.(map[string]interface{})
+			idxName := m["name"].(string)
+
+			ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
+				Create: &dynamodb.CreateGlobalSecondaryIndexAction{
+					IndexName:             aws.String(idxName),
+					KeySchema:             expandDynamoDbKeySchema(m),
+					ProvisionedThroughput: expandDynamoDbProvisionedThroughput(m, billingMode),
+					Projection:            expandDynamoDbProjection(m),
+				},
+			})
+		}
+	}
+
+	for _, data := range oldGsi {
+		oldMap := data.(map[string]interface{})
+		oldName := oldMap["name"].(string)
+
+		newData, exists := newGsis[oldName]
+		if exists {
+			newMap := newData.(map[string]interface{})
+			idxName := newMap["name"].(string)
+
+			oldWriteCapacity, oldReadCapacity := oldMap["write_capacity"].(int), oldMap["read_capacity"].(int)
+			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
+			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
+
+			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
+			// ordinal of elements in its equality (which we actually don't care about)
+			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
+
+			oldAttributes, err := stripCapacityAttributes(oldMap)
+			if err != nil {
+				return ops, err
+			}
+			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
+			newAttributes, err := stripCapacityAttributes(newMap)
+			if err != nil {
+				return ops, err
+			}
+			newAttributes, err = stripNonKeyAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
+			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
+
+			if capacityChanged && !otherAttributesChanged {
+				update := &dynamodb.GlobalSecondaryIndexUpdate{
+					Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
+						IndexName:             aws.String(idxName),
+						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
+					},
+				}
+				ops = append(ops, update)
+			} else if otherAttributesChanged {
+				// Other attributes cannot be updated
+				ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
+					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String(idxName),
+					},
+				})
+
+				ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
+					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
+						IndexName:             aws.String(idxName),
+						KeySchema:             expandDynamoDbKeySchema(newMap),
+						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
+						Projection:            expandDynamoDbProjection(newMap),
+					},
+				})
+			}
+		} else {
+			idxName := oldName
+			ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
+				Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
+					IndexName: aws.String(idxName),
+				},
+			})
+		}
+	}
+	return ops, nil
+}
+
+func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
+	input := &dynamodb.DeleteTableInput{
+		TableName: aws.String(tableName),
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteTable(input)
+		if err != nil {
+			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
+			if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "simultaneously") {
+				return resource.RetryableError(err)
+			}
+			// This handles multiple scenarios in the DynamoDB API:
+			// 1. Updating a table immediately before deletion may return:
+			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being updated:
+			// 2. Removing a table from a DynamoDB global table may return:
+			//    ResourceInUseException: Attempt to change a resource which is still in use: Table is being deleted:
+			if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
+				return resource.NonRetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteTable(input)
+	}
+
+	return err
+}
+
+func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		var regionName string
+
+		if v, ok := tfMap["region_name"].(string); ok {
+			regionName = v
+		}
+
+		if regionName == "" {
+			continue
+		}
+
+		input := &dynamodb.UpdateTableInput{
+			TableName: aws.String(tableName),
+			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
+				{
+					Delete: &dynamodb.DeleteReplicationGroupMemberAction{
+						RegionName: aws.String(regionName),
+					},
+				},
+			},
+		}
+
+		err := resource.Retry(20*time.Minute, func() *resource.RetryError {
+			_, err := conn.UpdateTable(input)
+			if err != nil {
+				if isAWSErr(err, "ThrottlingException", "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateTable(input)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %s", tableName, regionName, err)
+		}
+
+		if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, regionName, timeout, conn); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %s", tableName, regionName, err)
+		}
+	}
+
+	return nil
+}
+
+// flatteners, expanders
+
+func flattenDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
+	d.Set("billing_mode", dynamodb.BillingModeProvisioned)
+	if table.BillingModeSummary != nil {
+		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
+	}
+
+	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
+	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
+
+	attributes := make([]interface{}, len(table.AttributeDefinitions))
+	for i, attrdef := range table.AttributeDefinitions {
+		attributes[i] = map[string]string{
+			"name": aws.StringValue(attrdef.AttributeName),
+			"type": aws.StringValue(attrdef.AttributeType),
+		}
+	}
+
+	d.Set("attribute", attributes)
+	d.Set("name", table.TableName)
+
+	for _, attribute := range table.KeySchema {
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
+			d.Set("hash_key", attribute.AttributeName)
+		}
+
+		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+			d.Set("range_key", attribute.AttributeName)
+		}
+	}
+
+	lsiList := make([]map[string]interface{}, 0, len(table.LocalSecondaryIndexes))
+	for _, lsiObject := range table.LocalSecondaryIndexes {
+		lsi := map[string]interface{}{
+			"name":            aws.StringValue(lsiObject.IndexName),
+			"projection_type": aws.StringValue(lsiObject.Projection.ProjectionType),
+		}
+
+		for _, attribute := range lsiObject.KeySchema {
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				lsi["range_key"] = aws.StringValue(attribute.AttributeName)
+			}
+		}
+		nkaList := make([]string, len(lsiObject.Projection.NonKeyAttributes))
+		for i, nka := range lsiObject.Projection.NonKeyAttributes {
+			nkaList[i] = aws.StringValue(nka)
+		}
+		lsi["non_key_attributes"] = nkaList
+
+		lsiList = append(lsiList, lsi)
+	}
+
+	err := d.Set("local_secondary_index", lsiList)
+	if err != nil {
+		return err
+	}
+
+	gsiList := make([]map[string]interface{}, len(table.GlobalSecondaryIndexes))
+	for i, gsiObject := range table.GlobalSecondaryIndexes {
+		gsi := map[string]interface{}{
+			"write_capacity": aws.Int64Value(gsiObject.ProvisionedThroughput.WriteCapacityUnits),
+			"read_capacity":  aws.Int64Value(gsiObject.ProvisionedThroughput.ReadCapacityUnits),
+			"name":           aws.StringValue(gsiObject.IndexName),
+		}
+
+		for _, attribute := range gsiObject.KeySchema {
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
+				gsi["hash_key"] = aws.StringValue(attribute.AttributeName)
+			}
+
+			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
+				gsi["range_key"] = aws.StringValue(attribute.AttributeName)
+			}
+		}
+
+		gsi["projection_type"] = aws.StringValue(gsiObject.Projection.ProjectionType)
+
+		nonKeyAttrs := make([]string, len(gsiObject.Projection.NonKeyAttributes))
+		for i, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
+			nonKeyAttrs[i] = aws.StringValue(nonKeyAttr)
+		}
+		gsi["non_key_attributes"] = nonKeyAttrs
+
+		gsiList[i] = gsi
+	}
+
+	if table.StreamSpecification != nil {
+		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
+		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
+	} else {
+		d.Set("stream_view_type", "")
+		d.Set("stream_enabled", false)
+	}
+
+	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set("stream_label", table.LatestStreamLabel)
+
+	err = d.Set("global_secondary_index", gsiList)
+	if err != nil {
+		return err
+	}
+
+	sseOptions := []map[string]interface{}{}
+	if sseDescription := table.SSEDescription; sseDescription != nil {
+		sseOptions = []map[string]interface{}{{
+			"enabled":     aws.StringValue(sseDescription.Status) == dynamodb.SSEStatusEnabled,
+			"kms_key_arn": aws.StringValue(sseDescription.KMSMasterKeyArn),
+		}}
+	}
+	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("replica", flattenDynamoDbReplicaDescriptions(table.Replicas))
+	if err != nil {
+		return err
+	}
+
+	d.Set("arn", table.TableArn)
+
+	return nil
+}
+
+func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition {
+	attributes := make([]*dynamodb.AttributeDefinition, len(cfg))
+	for i, attribute := range cfg {
+		attr := attribute.(map[string]interface{})
+		attributes[i] = &dynamodb.AttributeDefinition{
+			AttributeName: aws.String(attr["name"].(string)),
+			AttributeType: aws.String(attr["type"].(string)),
+		}
+	}
+	return attributes
+}
+
+func flattenDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"region_name": aws.StringValue(apiObject.RegionName),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDynamoDbTtl(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
+		return []interface{}{m}
+	}
+
+	ttlDesc := ttlOutput.TimeToLiveDescription
+
+	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
+	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
+
+	return []interface{}{m}
+}
+
+func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
+	}
+
+	if pitrDesc == nil {
+		return []interface{}{m}
+	}
+
+	if pitrDesc.ContinuousBackupsDescription != nil {
+		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
+		if pitr != nil {
+			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
+		}
+	}
+
+	return []interface{}{m}
+}
+
+// TODO: Get rid of keySchemaM - the user should just explicitly define
+// this in the config, we shouldn't magically be setting it like this.
+// Removal will however require config change, hence BC. :/
+func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interface{}) []*dynamodb.LocalSecondaryIndex {
+	indexes := make([]*dynamodb.LocalSecondaryIndex, len(cfg))
+	for i, lsi := range cfg {
+		m := lsi.(map[string]interface{})
+		idxName := m["name"].(string)
+
+		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
+		if _, ok := m["hash_key"]; !ok {
+			m["hash_key"] = keySchemaM["hash_key"]
+		}
+
+		indexes[i] = &dynamodb.LocalSecondaryIndex{
+			IndexName:  aws.String(idxName),
+			KeySchema:  expandDynamoDbKeySchema(m),
+			Projection: expandDynamoDbProjection(m),
+		}
+	}
+	return indexes
+}
+
+func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
+	return &dynamodb.GlobalSecondaryIndex{
+		IndexName:             aws.String(data["name"].(string)),
+		KeySchema:             expandDynamoDbKeySchema(data),
+		Projection:            expandDynamoDbProjection(data),
+		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(data, billingMode),
+	}
+}
+
+func expandDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) *dynamodb.ProvisionedThroughput {
+
+	if billingMode == dynamodb.BillingModePayPerRequest {
+		return nil
+	}
+
+	return &dynamodb.ProvisionedThroughput{
+		WriteCapacityUnits: aws.Int64(int64(data["write_capacity"].(int))),
+		ReadCapacityUnits:  aws.Int64(int64(data["read_capacity"].(int))),
+	}
+}
+
+func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection {
+	projection := &dynamodb.Projection{
+		ProjectionType: aws.String(data["projection_type"].(string)),
+	}
+
+	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
+		projection.NonKeyAttributes = expandStringList(v)
+	}
+
+	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
+		projection.NonKeyAttributes = expandStringSet(v)
+	}
+
+	return projection
+}
+
+func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaElement {
+	keySchema := []*dynamodb.KeySchemaElement{}
+
+	if v, ok := data["hash_key"]; ok && v != nil && v != "" {
+		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
+			AttributeName: aws.String(v.(string)),
+			KeyType:       aws.String(dynamodb.KeyTypeHash),
+		})
+	}
+
+	if v, ok := data["range_key"]; ok && v != nil && v != "" {
+		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
+			AttributeName: aws.String(v.(string)),
+			KeyType:       aws.String(dynamodb.KeyTypeRange),
+		})
+	}
+
+	return keySchema
+}
+
+func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecification {
+	options := &dynamodb.SSESpecification{}
+
+	enabled := false
+	if len(vOptions) > 0 {
+		mOptions := vOptions[0].(map[string]interface{})
+
+		enabled = mOptions["enabled"].(bool)
+		if enabled {
+			if vKmsKeyArn, ok := mOptions["kms_key_arn"].(string); ok && vKmsKeyArn != "" {
+				options.KMSMasterKeyId = aws.String(vKmsKeyArn)
+				options.SSEType = aws.String(dynamodb.SSETypeKms)
+			}
+		}
+	}
+	options.Enabled = aws.Bool(enabled)
+
+	return options
+}
+
+// validators
+
+func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
+	// Collect all indexed attributes
+	primaryHashKey := d.Get("hash_key").(string)
+	indexedAttributes := map[string]bool{
+		primaryHashKey: true,
+	}
+	if v, ok := d.GetOk("range_key"); ok {
+		indexedAttributes[v.(string)] = true
+	}
+	if v, ok := d.GetOk("local_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+			rangeKey := index["range_key"].(string)
+			indexedAttributes[rangeKey] = true
+		}
+	}
+	if v, ok := d.GetOk("global_secondary_index"); ok {
+		indexes := v.(*schema.Set).List()
+		for _, idx := range indexes {
+			index := idx.(map[string]interface{})
+
+			hashKey := index["hash_key"].(string)
+			indexedAttributes[hashKey] = true
+
+			if rk, ok := index["range_key"].(string); ok && rk != "" {
+				indexedAttributes[rk] = true
+			}
+		}
+	}
+
+	// Check if all indexed attributes have an attribute definition
+	attributes := d.Get("attribute").(*schema.Set).List()
+	unindexedAttributes := []string{}
+	for _, attr := range attributes {
+		attribute := attr.(map[string]interface{})
+		attrName := attribute["name"].(string)
+
+		if _, ok := indexedAttributes[attrName]; !ok {
+			unindexedAttributes = append(unindexedAttributes, attrName)
+		} else {
+			delete(indexedAttributes, attrName)
+		}
+	}
+
+	var err *multierror.Error
+
+	if len(unindexedAttributes) > 0 {
+		err = multierror.Append(err, fmt.Errorf("All attributes must be indexed. Unused attributes: %q", unindexedAttributes))
+	}
+
+	if len(indexedAttributes) > 0 {
+		missingIndexes := []string{}
+		for index := range indexedAttributes {
+			missingIndexes = append(missingIndexes, index)
+		}
+
+		err = multierror.Append(err, fmt.Errorf("All indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
+	}
+
+	return err.ErrorOrNil()
+}
+
+func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) error {
+	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
+	if billingMode == dynamodb.BillingModePayPerRequest {
+		return nil
+	}
+
+	writeCapacity, writeCapacitySet := data["write_capacity"].(int)
+	readCapacity, readCapacitySet := data["read_capacity"].(int)
+
+	if !writeCapacitySet || !readCapacitySet {
+		return fmt.Errorf("Read and Write capacity should be set when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	if writeCapacity < 1 {
+		return fmt.Errorf("Write capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	if readCapacity < 1 {
+		return fmt.Errorf("Read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
+	}
+
+	return nil
+}
+
+// waiters
+
+func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.TableStatusActive,
+			dynamodb.TableStatusDeleting,
+		},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			input := &dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			}
+
+			output, err := conn.DescribeTable(input)
+
+			if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
+				return nil, "", nil
+			}
+
+			if err != nil {
+				return 42, "", err
+			}
+
+			if output == nil {
+				return nil, "", nil
+			}
+
+			return output.Table, aws.StringValue(output.Table.TableStatus), nil
+		},
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForDynamoDbReplicaUpdateToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.ReplicaStatusCreating,
+			dynamodb.ReplicaStatusUpdating,
+			dynamodb.ReplicaStatusDeleting,
+		},
+		Target: []string{
+			dynamodb.ReplicaStatusActive,
+		},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+			log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
+
+			var targetReplica *dynamodb.ReplicaDescription
+
+			for _, replica := range result.Table.Replicas {
+				if aws.StringValue(replica.RegionName) == region {
+					targetReplica = replica
+					break
+				}
+			}
+
+			if targetReplica == nil {
+				return result, dynamodb.ReplicaStatusCreating, nil
+			}
+
+			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForDynamoDbReplicaDeleteToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.ReplicaStatusCreating,
+			dynamodb.ReplicaStatusUpdating,
+			dynamodb.ReplicaStatusDeleting,
+			dynamodb.ReplicaStatusActive,
+		},
+		Target:  []string{""},
+		Timeout: timeout,
+		Refresh: func() (interface{}, string, error) {
+			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			})
+			if err != nil {
+				return 42, "", err
+			}
+
+			log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
+			var targetReplica *dynamodb.ReplicaDescription
+
+			for _, replica := range result.Table.Replicas {
+				if aws.StringValue(replica.RegionName) == region {
+					targetReplica = replica
+					break
+				}
+			}
+
+			if targetReplica == nil {
+				return result, "", nil
+			}
+
+			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+
+	return err
+}
 
 func waitForDynamoDbGSIToBeActive(tableName string, gsiName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
 	stateConf := &resource.StateChangeConf{
@@ -1298,76 +1800,4 @@ func waitForDynamoDbSSEUpdateToBeCompleted(tableName string, timeout time.Durati
 	_, err := stateConf.WaitForState()
 
 	return err
-}
-
-func isDynamoDbTableOptionDisabled(v interface{}) bool {
-	options := v.([]interface{})
-	if len(options) == 0 {
-		return true
-	}
-	e := options[0].(map[string]interface{})["enabled"]
-	return !e.(bool)
-}
-
-func validateDynamoDbTableAttributes(d *schema.ResourceDiff) error {
-	// Collect all indexed attributes
-	primaryHashKey := d.Get("hash_key").(string)
-	indexedAttributes := map[string]bool{
-		primaryHashKey: true,
-	}
-	if v, ok := d.GetOk("range_key"); ok {
-		indexedAttributes[v.(string)] = true
-	}
-	if v, ok := d.GetOk("local_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-			rangeKey := index["range_key"].(string)
-			indexedAttributes[rangeKey] = true
-		}
-	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]interface{})
-
-			hashKey := index["hash_key"].(string)
-			indexedAttributes[hashKey] = true
-
-			if rk, ok := index["range_key"].(string); ok && rk != "" {
-				indexedAttributes[rk] = true
-			}
-		}
-	}
-
-	// Check if all indexed attributes have an attribute definition
-	attributes := d.Get("attribute").(*schema.Set).List()
-	unindexedAttributes := []string{}
-	for _, attr := range attributes {
-		attribute := attr.(map[string]interface{})
-		attrName := attribute["name"].(string)
-
-		if _, ok := indexedAttributes[attrName]; !ok {
-			unindexedAttributes = append(unindexedAttributes, attrName)
-		} else {
-			delete(indexedAttributes, attrName)
-		}
-	}
-
-	var err *multierror.Error
-
-	if len(unindexedAttributes) > 0 {
-		err = multierror.Append(err, fmt.Errorf("All attributes must be indexed. Unused attributes: %q", unindexedAttributes))
-	}
-
-	if len(indexedAttributes) > 0 {
-		missingIndexes := []string{}
-		for index := range indexedAttributes {
-			missingIndexes = append(missingIndexes, index)
-		}
-
-		err = multierror.Append(err, fmt.Errorf("All indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
-	}
-
-	return err.ErrorOrNil()
 }
