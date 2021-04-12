@@ -36,7 +36,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(waiter.DeleteTableTimeout),
-			Update: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(waiter.UpdateTableTimeoutTotal),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -718,7 +718,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error deleting DynamoDB Table (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.DynamodbTableDeleted(conn, d.Id()); err != nil {
+	if _, err := waiter.DynamoDBTableDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -798,7 +798,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %w", tableName, tfMap["region_name"].(string), err)
 		}
 
-		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, tfMap["region_name"].(string), timeout, conn); err != nil {
+		if _, err := waiter.DynamoDBReplicaUpdateComplete(conn, tableName, tfMap["region_name"].(string)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %w", tableName, tfMap["region_name"].(string), err)
 		}
 	}
@@ -1496,47 +1496,6 @@ func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingM
 }
 
 // waiters
-
-func waitForDynamoDbReplicaUpdateToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.ReplicaStatusCreating,
-			dynamodb.ReplicaStatusUpdating,
-			dynamodb.ReplicaStatusDeleting,
-		},
-		Target: []string{
-			dynamodb.ReplicaStatusActive,
-		},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-			log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
-
-			var targetReplica *dynamodb.ReplicaDescription
-
-			for _, replica := range result.Table.Replicas {
-				if aws.StringValue(replica.RegionName) == region {
-					targetReplica = replica
-					break
-				}
-			}
-
-			if targetReplica == nil {
-				return result, dynamodb.ReplicaStatusCreating, nil
-			}
-
-			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
 
 func waitForDynamoDbReplicaDeleteToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
 	stateConf := &resource.StateChangeConf{
