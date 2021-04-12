@@ -72,38 +72,6 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"billing_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  dynamodb.BillingModeProvisioned,
-				ValidateFunc: validation.StringInSlice([]string{
-					dynamodb.BillingModePayPerRequest,
-					dynamodb.BillingModeProvisioned,
-				}, false),
-			},
-			"write_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"read_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
 			"attribute": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -131,24 +99,57 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
-			"ttl": {
-				Type:     schema.TypeList,
+			"billing_mode": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
+				Default:  dynamodb.BillingModeProvisioned,
+				ValidateFunc: validation.StringInSlice([]string{
+					dynamodb.BillingModePayPerRequest,
+					dynamodb.BillingModeProvisioned,
+				}, false),
+			},
+			"global_secondary_index": {
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"attribute_name": {
+						"hash_key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"enabled": {
-							Type:     schema.TypeBool,
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"non_key_attributes": {
+							Type:     schema.TypeSet,
 							Optional: true,
-							Default:  false,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"projection_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
+						},
+						"range_key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"read_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"write_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
-				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+			},
+			"hash_key": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"local_secondary_index": {
 				Type:     schema.TypeSet,
@@ -161,10 +162,11 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Required: true,
+						"non_key_attributes": {
+							Type:     schema.TypeList,
+							Optional: true,
 							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"projection_type": {
 							Type:         schema.TypeString,
@@ -172,11 +174,10 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
 						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Optional: true,
+						"range_key": {
+							Type:     schema.TypeString,
+							Required: true,
 							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -187,71 +188,51 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					return hashcode.String(buf.String())
 				},
 			},
-			"global_secondary_index": {
-				Type:     schema.TypeSet,
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"point_in_time_recovery": {
+				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
+						"enabled": {
+							Type:     schema.TypeBool,
 							Required: true,
-						},
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"hash_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"projection_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(dynamodb.ProjectionType_Values(), false),
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stream_view_type": {
+			"range_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToUpper(value)
+				ForceNew: true,
+			},
+			"read_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"replica": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
+						},
+						"region_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
 				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"",
-					dynamodb.StreamViewTypeNewImage,
-					dynamodb.StreamViewTypeOldImage,
-					dynamodb.StreamViewTypeNewAndOldImages,
-					dynamodb.StreamViewTypeKeysOnly,
-				}, false),
-			},
-			"stream_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"server_side_encryption": {
 				Type:     schema.TypeList,
@@ -273,38 +254,57 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
+			"stream_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"stream_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"stream_label": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"stream_view_type": {
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				StateFunc: func(v interface{}) string {
+					value := v.(string)
+					return strings.ToUpper(value)
+				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"",
+					dynamodb.StreamViewTypeNewImage,
+					dynamodb.StreamViewTypeOldImage,
+					dynamodb.StreamViewTypeNewAndOldImages,
+					dynamodb.StreamViewTypeKeysOnly,
+				}, false),
+			},
+			"tags": tagsSchema(),
+			"ttl": {
+				Type:     schema.TypeList,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region_name": {
+						"attribute_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"kms_key_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateArn,
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+			},
+			"write_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 		},
 	}
