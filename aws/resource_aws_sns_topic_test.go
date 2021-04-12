@@ -308,6 +308,7 @@ func TestAccAWSSNSTopic_FIFO(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, sns.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
@@ -335,6 +336,7 @@ func TestAccAWSSNSTopic_FIFOWithContentBasedDeduplication(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, sns.EndpointsID),
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
@@ -368,6 +370,7 @@ func TestAccAWSSNSTopic_FIFOExpectContentBasedDeduplicationError(t *testing.T) {
 	rName := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
+		ErrorCheck:    testAccErrorCheck(t, sns.EndpointsID),
 		IDRefreshName: "aws_sns_topic.test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
