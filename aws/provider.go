@@ -809,6 +809,7 @@ func Provider() *schema.Provider {
 			"aws_msk_scram_secret_association":                        resourceAwsMskScramSecretAssociation(),
 			"aws_nat_gateway":                                         resourceAwsNatGateway(),
 			"aws_network_acl":                                         resourceAwsNetworkAcl(),
+			"aws_network_acl_association":                             resourceAwsNetworkAclAssociation(),
 			"aws_default_network_acl":                                 resourceAwsDefaultNetworkAcl(),
 			"aws_neptune_cluster":                                     resourceAwsNeptuneCluster(),
 			"aws_neptune_cluster_instance":                            resourceAwsNeptuneClusterInstance(),
