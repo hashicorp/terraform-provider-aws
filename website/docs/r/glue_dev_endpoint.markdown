@@ -59,7 +59,8 @@ The following arguments are supported:
 * `security_configuration` - (Optional) The name of the Security Configuration structure to be used with this endpoint.
 * `security_group_ids` - (Optional) Security group IDs for the security groups to be used by this endpoint.
 * `subnet_id` - (Optional) The subnet ID for the new endpoint to use.
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `worker_type` - (Optional) The type of predefined worker that is allocated to this endpoint. Accepts a value of Standard, G.1X, or G.2X.
 
 ## Attributes Reference
