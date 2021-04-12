@@ -288,6 +288,7 @@ func Provider() *schema.Provider {
 			"aws_elb_hosted_zone_id":                         dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":                        dataSourceAwsElbServiceAccount(),
 			"aws_glue_connection":                            dataSourceAwsGlueConnection(),
+			"aws_glue_data_catalog_encryption_settings":      dataSourceAwsGlueDataCatalogEncryptionSettings(),
 			"aws_glue_script":                                dataSourceAwsGlueScript(),
 			"aws_guardduty_detector":                         dataSourceAwsGuarddutyDetector(),
 			"aws_iam_account_alias":                          dataSourceAwsIamAccountAlias(),
