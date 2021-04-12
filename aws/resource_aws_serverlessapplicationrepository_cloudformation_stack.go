@@ -160,6 +160,7 @@ func resourceAwsServerlessApplicationRepositoryCloudFormationStackRead(d *schema
 
 	tags = tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig)
 
+	//lintignore:AWSR002
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("failed to set tags: %w", err)
 	}
