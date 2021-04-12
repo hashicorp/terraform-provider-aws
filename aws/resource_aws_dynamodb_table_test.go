@@ -400,7 +400,7 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_disappears_PayPerRequestWithGSI(t *testing.T) {
+func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 	var table1, table2 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -412,7 +412,7 @@ func TestAccAWSDynamoDbTable_disappears_PayPerRequestWithGSI(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table1),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), resourceName),
@@ -420,7 +420,7 @@ func TestAccAWSDynamoDbTable_disappears_PayPerRequestWithGSI(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table2),
 				),
@@ -543,7 +543,7 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T) {
+func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -555,7 +555,7 @@ func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
@@ -567,7 +567,7 @@ func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Config: testAccAWSDynamoDbBilling_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
@@ -577,7 +577,7 @@ func TestAccAWSDynamoDbTable_BillingMode_PayPerRequestToProvisioned(t *testing.T
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T) {
+func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -589,7 +589,7 @@ func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBilling_Provisioned(rName),
+				Config: testAccAWSDynamoDbBilling_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
@@ -601,7 +601,7 @@ func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequest(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
@@ -611,7 +611,7 @@ func TestAccAWSDynamoDbTable_BillingMode_ProvisionedToPayPerRequest(t *testing.T
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testing.T) {
+func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -623,7 +623,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testi
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
@@ -635,7 +635,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_provisionedWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
@@ -645,7 +645,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_PayPerRequestToProvisioned(t *testi
 	})
 }
 
-func TestAccAWSDynamoDbTable_BillingMode_GSI_ProvisionedToPayPerRequest(t *testing.T) {
+func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -657,7 +657,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_ProvisionedToPayPerRequest(t *testi
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_provisionedWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
@@ -669,7 +669,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_ProvisionedToPayPerRequest(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName),
+				Config: testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModePayPerRequest),
@@ -1088,7 +1088,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccAWSDynamoDbTable_Ttl_Enabled(t *testing.T) {
+func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -1118,7 +1118,7 @@ func TestAccAWSDynamoDbTable_Ttl_Enabled(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccAWSDynamoDbTable_Ttl_Disabled(t *testing.T) {
+func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
@@ -1577,7 +1577,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbBilling_PayPerRequest(rName string) string {
+func testAccAWSDynamoDbBilling_payPerRequest(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = "%s"
@@ -1592,7 +1592,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbBilling_Provisioned(rName string) string {
+func testAccAWSDynamoDbBilling_provisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = "%s"
@@ -1610,7 +1610,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
+func testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = "%s"
@@ -1636,7 +1636,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbBilling_ProvisionedWithGSI(rName string) string {
+func testAccAWSDynamoDbBilling_provisionedWithGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   billing_mode   = "PROVISIONED"
