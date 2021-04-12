@@ -33,7 +33,7 @@ func testSweepDynamoDbTables(region string) error {
 		for _, tableName := range out.TableNames {
 			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
 
-			err := deleteAwsDynamoDbTable(*tableName, conn)
+			err := deleteDynamoDbTable(*tableName, conn)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", *tableName, err)
 				continue
@@ -52,7 +52,7 @@ func testSweepDynamoDbTables(region string) error {
 	return nil
 }
 
-func TestDiffDynamoDbGSI(t *testing.T) {
+func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
@@ -326,7 +326,7 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		ops, err := diffDynamoDbGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
+		ops, err := updateDynamoDbDiffGSI(tc.Old, tc.New, dynamodb.BillingModeProvisioned)
 		if err != nil {
 			t.Fatal(err)
 		}
