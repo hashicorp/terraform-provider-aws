@@ -600,8 +600,8 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			// "An error occurred (InvalidParameterValueException) when calling the ModifyEndpoint
 			// operation: Message format  cannot be modified for kinesis endpoints."
 			request.KinesisSettings = &dms.KinesisSettings{
-				ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
-				StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
+				ServiceAccessRoleArn:        aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
+				StreamArn:                   aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
 				IncludeTransactionDetails:   aws.Bool(d.Get("kinesis_settings.0.include_transaction_details").(bool)),
 				IncludePartitionValue:       aws.Bool(d.Get("kinesis_settings.0.include_partition_value").(bool)),
 				PartitionIncludeSchemaTable: aws.Bool(d.Get("kinesis_settings.0.partition_include_schema_table").(bool)),
@@ -811,9 +811,9 @@ func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]inter
 	}
 
 	m := map[string]interface{}{
-		"message_format":          aws.StringValue(settings.MessageFormat),
-		"service_access_role_arn": aws.StringValue(settings.ServiceAccessRoleArn),
-		"stream_arn":              aws.StringValue(settings.StreamArn),
+		"message_format":                 aws.StringValue(settings.MessageFormat),
+		"service_access_role_arn":        aws.StringValue(settings.ServiceAccessRoleArn),
+		"stream_arn":                     aws.StringValue(settings.StreamArn),
 		"include_transaction_details":    aws.BoolValue(settings.IncludeTransactionDetails),
 		"include_partition_value":        aws.BoolValue(settings.IncludePartitionValue),
 		"partition_include_schema_table": aws.BoolValue(settings.PartitionIncludeSchemaTable),
