@@ -189,6 +189,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
+						},
 						"include_transaction_details": {
 							Type:         schema.TypeBool,
 							Optional:     true,
