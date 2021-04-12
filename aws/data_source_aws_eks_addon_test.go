@@ -21,6 +21,7 @@ func TestAccAWSEksAddonDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
@@ -32,7 +33,6 @@ func TestAccAWSEksAddonDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "addon_version", dataSourceResourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_account_role_arn", dataSourceResourceName, "service_account_role_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),

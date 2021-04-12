@@ -15,18 +15,16 @@ import (
 
 func dataSourceAwsEksAddon() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceAwsEksAddonRead,
+		ReadWithoutTimeout: dataSourceAwsEksAddonRead,
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"arn": {
@@ -38,10 +36,6 @@ func dataSourceAwsEksAddon() *schema.Resource {
 				Computed: true,
 			},
 			"service_account_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +78,6 @@ func dataSourceAwsEksAddonRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", addon.AddonArn)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
-	d.Set("status", addon.Status)
 	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 

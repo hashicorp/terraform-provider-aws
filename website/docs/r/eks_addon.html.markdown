@@ -3,21 +3,21 @@ subcategory: "EKS"
 layout: "aws"
 page_title: "AWS: aws_eks_addon"
 description: |-
-  Manages an EKS Addon
+  Manages an EKS add-on
 ---
 
 # Resource: aws_eks_addon
 
-Manages an EKS Addon.
+Manages an EKS add-on.
 
-~> **Note:** Amazon EKS Addons can only be used with Amazon EKS Clusters
+~> **Note:** Amazon EKS add-on can only be used with Amazon EKS Clusters
 running version 1.18 with platform version eks.3 or later
 because add-ons rely on the Server-side Apply Kubernetes feature,
 which is only available in Kubernetes 1.18 and later.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eks_addon" "example" {
   cluster_name = aws_eks_cluster.example.name
   addon_name   = "vpc-cni"
@@ -26,7 +26,7 @@ resource "aws_eks_addon" "example" {
 
 ### Example IAM Role for EKS Addon "vpc-cni" with AWS managed policy
 
-```hcl
+```terraform
 resource "aws_eks_cluster" "example" {
   # ... other configuration ...
 }
@@ -74,22 +74,22 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 The following arguments are required:
 
-* `addon_name` – (Required) Name of the EKS Addon. The name must match one of
+* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `cluster_name` – (Required) Name of the EKS Cluster.
 
 The following arguments are optional:
 
-* `addon_version` – (Optional) The version of the EKS Addon. The version must
+* `addon_version` – (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
 * `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
-  when migrating an existing add-on to an Amazon EKS Addon or when applying
-  version updates to the Addon. Valid values are `NONE` and `OVERWRITE`.
+  when migrating an existing add-on to an Amazon EKS add-on or when applying
+  version updates to the add-on. Valid values are `NONE` and `OVERWRITE`.
 * `tags` - (Optional) Key-value map of resource tags.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
-  existing IAM role to bind to the Addon's service account. The role must be
-  assigned the IAM permissions required by the Addon. If you don't specify
-  an existing IAM role, then the Addon uses the permissions assigned to the node
+  existing IAM role to bind to the add-on's service account. The role must be
+  assigned the IAM permissions required by the add-on. If you don't specify
+  an existing IAM role, then the add-on uses the permissions assigned to the node
   IAM role. For more information, see [Amazon EKS node IAM role](https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html)
   in the Amazon EKS User Guide.
   
@@ -102,23 +102,15 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS Addon.
+* `arn` - Amazon Resource Name (ARN) of the EKS add-on.
 * `id` - EKS Cluster name and EKS Addon name separated by a colon (`:`).
-* `status` - Status of the EKS Addon.
-* `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS Addon was created.
-* `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS Addon was updated.
-
-## Timeouts
-
-`aws_eks_addon` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-* `create` - (Default `5 minutes`) How long to wait for the EKS Addon to be created.
-* `update` - (Default `5 minutes`) How long to wait for the EKS Addon to be updated.
-* `delete` - (Default `5 minutes`) How long to wait for the EKS Addon to be deleted.
+* `status` - Status of the EKS add-on.
+* `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
+* `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
 ## Import
 
-EKS Addon can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.
+EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.
 
 ```
 $ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name

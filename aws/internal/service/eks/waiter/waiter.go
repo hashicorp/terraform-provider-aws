@@ -12,16 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// EksAddonCreated waits for a EKS Addon to return status "ACTIVE" or "CREATE_FAILED"
-func EksAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
+const (
+	EksAddonCreatedTimeout = 20 * time.Minute
+	EksAddonUpdatedTimeout = 20 * time.Minute
+	EksAddonDeletedTimeout = 40 * time.Minute
+)
+
+// EksAddonCreated waits for a EKS add-on to return status "ACTIVE" or "CREATE_FAILED"
+func EksAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.AddonStatusCreating},
 		Target: []string{
 			eks.AddonStatusActive,
 			eks.AddonStatusCreateFailed,
 		},
-		Refresh: EksAddonCreatedStatus(ctx, conn, addonName, clusterName),
-		Timeout: timeout,
+		Refresh: EksAddonStatus(ctx, conn, addonName, clusterName),
+		Timeout: EksAddonCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -45,8 +51,35 @@ func EksAddonCreated(ctx context.Context, conn *eks.EKS, clusterName, addonName 
 	return nil, err
 }
 
-// EksAddonUpdated waits for a EKS Addon update to return "Successful"
-func EksAddonUpdated(ctx context.Context, conn *eks.EKS, clusterName, addonName, updateID string, timeout time.Duration) (*eks.Update, error) {
+// EksAddonDeleted waits for a EKS add-on to be deleted
+func EksAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string) (*eks.Addon, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			eks.AddonStatusActive,
+			eks.AddonStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: EksAddonStatus(ctx, conn, addonName, clusterName),
+		Timeout: EksAddonDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		// EKS API returns the ResourceNotFound error in this form:
+		// ResourceNotFoundException: No addon: vpc-cni found in cluster: tf-acc-test-533189557170672934
+		if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
+			return nil, nil
+		}
+	}
+	if v, ok := outputRaw.(*eks.Addon); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+// EksAddonUpdateSuccessful waits for a EKS add-on update to return "Successful"
+func EksAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, addonName, updateID string) (*eks.Update, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target: []string{
@@ -55,7 +88,7 @@ func EksAddonUpdated(ctx context.Context, conn *eks.EKS, clusterName, addonName,
 			eks.UpdateStatusSuccessful,
 		},
 		Refresh: EksAddonUpdateStatus(ctx, conn, clusterName, addonName, updateID),
-		Timeout: timeout,
+		Timeout: EksAddonUpdatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -78,33 +111,6 @@ func EksAddonUpdated(ctx context.Context, conn *eks.EKS, clusterName, addonName,
 			i+1, aws.StringValue(updateError.ErrorCode), aws.StringValue(updateError.ErrorMessage)))
 	}
 
-	return update, fmt.Errorf("EKS Addon (%s:%s) update (%s) not successful (%s): Errors:\n%s",
+	return update, fmt.Errorf("EKS add-on (%s:%s) update (%s) not successful (%s): Errors:\n%s",
 		clusterName, addonName, updateID, aws.StringValue(update.Status), strings.Join(detailedErrors, "\n"))
-}
-
-// EksAddonDeleted waits for a EKS Addon to return "Deleted"
-func EksAddonDeleted(ctx context.Context, conn *eks.EKS, clusterName, addonName string, timeout time.Duration) (*eks.Addon, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			eks.AddonStatusActive,
-			eks.AddonStatusDeleting,
-		},
-		Target:  []string{ResourceStatusDeleted},
-		Refresh: EksAddonDeletedStatus(ctx, conn, addonName, clusterName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		// EKS API returns the ResourceNotFound error in this form:
-		// ResourceNotFoundException: No addon: vpc-cni found in cluster: tf-acc-test-533189557170672934
-		if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-			return nil, nil
-		}
-	}
-	if v, ok := outputRaw.(*eks.Addon); ok {
-		return v, err
-	}
-
-	return nil, err
 }

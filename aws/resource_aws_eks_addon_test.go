@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,11 +21,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_eks_addon", &resource.Sweeper{
 		Name: "aws_eks_addon",
-		F:    testSweepEksAddons,
+		F:    testSweepEksAddon,
 	})
 }
 
-func testSweepEksAddons(region string) error {
+func testSweepEksAddon(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -51,12 +52,12 @@ func testSweepEksAddons(region string) error {
 
 					_, err := conn.DeleteAddonWithContext(ctx, input)
 
-					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+					if err != nil && !tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EKS Addon %s from Cluster %s: %w", addonName, clusterName, err))
 						continue
 					}
 
-					if _, err := waiter.EksAddonDeleted(ctx, conn, clusterName, addonName, 40*time.Minute); err != nil {
+					if _, err := waiter.EksAddonDeleted(ctx, conn, clusterName, addonName); err != nil {
 						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting for EKS Addon %s deletion: %w", addonName, err))
 						continue
 					}
@@ -91,18 +92,18 @@ func TestAccAWSEksAddon_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Required(rName, addonName),
+				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, addonResourceName, &addon),
 					testAccMatchResourceAttrRegionalARN(addonResourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, "name"),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
-					resource.TestCheckResourceAttr(addonResourceName, "cluster_name", rName),
-					resource.TestCheckResourceAttr(addonResourceName, "status", eks.AddonStatusActive),
+					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
 					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),
 				),
 			},
@@ -124,11 +125,12 @@ func TestAccAWSEksAddon_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Required(rName, addonName),
+				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEksAddon(), resourceName),
@@ -148,11 +150,12 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksAddon_Required(rName, addonName),
+				Config: testAccAWSEksAddon_Basic(rName, addonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksAddonExists(ctx, resourceName, &addon),
 					testAccCheckAWSEksClusterDisappears(ctx, &addon),
@@ -163,7 +166,7 @@ func TestAccAWSEksAddon_disappears_Cluster(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddons_AddonVersion(t *testing.T) {
+func TestAccAWSEksAddon_AddonVersion(t *testing.T) {
 	var addon1, addon2 eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
@@ -174,6 +177,7 @@ func TestAccAWSEksAddons_AddonVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
@@ -201,7 +205,7 @@ func TestAccAWSEksAddons_AddonVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddons_ResolveConflicts(t *testing.T) {
+func TestAccAWSEksAddon_ResolveConflicts(t *testing.T) {
 	var addon1, addon2 eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
@@ -210,6 +214,7 @@ func TestAccAWSEksAddons_ResolveConflicts(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
@@ -237,7 +242,7 @@ func TestAccAWSEksAddons_ResolveConflicts(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddons_ServiceAccountRoleArn(t *testing.T) {
+func TestAccAWSEksAddon_ServiceAccountRoleArn(t *testing.T) {
 	var addon eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
@@ -247,6 +252,7 @@ func TestAccAWSEksAddons_ServiceAccountRoleArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
@@ -266,7 +272,7 @@ func TestAccAWSEksAddons_ServiceAccountRoleArn(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksAddons_Tags(t *testing.T) {
+func TestAccAWSEksAddon_Tags(t *testing.T) {
 	var addon1, addon2, addon3 eks.Addon
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_eks_addon.test"
@@ -275,6 +281,7 @@ func TestAccAWSEksAddons_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksAddon(t) },
+		ErrorCheck:        testAccErrorCheck(t, eks.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSEksAddonDestroy,
 		Steps: []resource.TestStep{
@@ -341,13 +348,13 @@ func testAccCheckAWSEksAddonExists(ctx context.Context, resourceName string, add
 			return fmt.Errorf("EKS Addon (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.Addon.AddonName) != addonName {
-			return fmt.Errorf("EKS Addon (%s) not found", rs.Primary.ID)
-		}
+		// if aws.StringValue(output.Addon.AddonName) != addonName {
+		// 	return fmt.Errorf("EKS Addon (%s) not found", rs.Primary.ID)
+		// }
 
-		if aws.StringValue(output.Addon.ClusterName) != clusterName {
-			return fmt.Errorf("EKS Addon (%s) not found", rs.Primary.ID)
-		}
+		// if aws.StringValue(output.Addon.ClusterName) != clusterName {
+		// 	return fmt.Errorf("EKS Addon (%s) not found", rs.Primary.ID)
+		// }
 
 		*addon = *output.Addon
 
@@ -377,7 +384,7 @@ func testAccCheckAWSEksAddonDestroy(s *terraform.State) error {
 			})
 
 			if err != nil {
-				if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 					return nil
 				}
 				return resource.NonRetryableError(err)
@@ -406,7 +413,7 @@ func testAccCheckAWSEksClusterDisappears(ctx context.Context, addon *eks.Addon) 
 
 		_, err := conn.DeleteClusterWithContext(ctx, input)
 
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 
@@ -506,7 +513,7 @@ resource "aws_eks_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSEksAddon_Required(rName, addonName string) string {
+func testAccAWSEksAddon_Basic(rName, addonName string) string {
 	return composeConfig(testAccAWSEksAddonConfig_Base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
   cluster_name = aws_eks_cluster.test.name
