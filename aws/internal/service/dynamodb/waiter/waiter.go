@@ -9,12 +9,13 @@ import (
 
 const (
 	CreateTableTimeout                  = 2 * time.Minute
+	UpdateTableTimeoutTotal             = 60 * time.Minute
 	UpdateTableTimeout                  = 20 * time.Minute
 	UpdateTableContinuousBackupsTimeout = 20 * time.Minute
 	DeleteTableTimeout                  = 10 * time.Minute
 )
 
-func DynamodbTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
+func DynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.TableStatusActive,
@@ -22,12 +23,37 @@ func DynamodbTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.
 		},
 		Target:  []string{},
 		Timeout: DeleteTableTimeout,
-		Refresh: DynamoDBStatus(conn, tableName),
+		Refresh: DynamoDBTableStatus(conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func DynamoDBReplicaUpdateComplete(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.ReplicaDescription, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			dynamodb.ReplicaStatusCreating,
+			dynamodb.ReplicaStatusUpdating,
+			dynamodb.ReplicaStatusDeleting,
+			ReplicaStatusEmptyResult,
+			ReplicaStatusNotFound,
+		},
+		Target: []string{
+			dynamodb.ReplicaStatusActive,
+		},
+		Timeout: UpdateTableTimeout,
+		Refresh: DynamoDBReplicaStatus(conn, tableName, region),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*dynamodb.ReplicaDescription); ok {
 		return output, err
 	}
 
