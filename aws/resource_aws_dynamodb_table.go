@@ -745,29 +745,28 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			continue
 		}
 
-		var regionName string
+		var replicaInput = &dynamodb.CreateReplicationGroupMemberAction{}
+		needCreate := false
 
-		if v, ok := tfMap["region_name"].(string); ok {
-			regionName = v
+		if v, ok := tfMap["region_name"].(string); ok && v != "" {
+			replicaInput.RegionName = aws.String(v)
+			needCreate = true
 		}
 
-		if regionName == "" {
+		if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+			replicaInput.KMSMasterKeyId = aws.String(v)
+			needCreate = true
+		}
+
+		if !needCreate {
 			continue
-		}
-
-		var createReplicationGroupMemberAction = &dynamodb.CreateReplicationGroupMemberAction{
-			RegionName: aws.String(regionName),
-		}
-
-		if v, ok := tfMap["kms_key_arn"].(string); ok {
-			createReplicationGroupMemberAction.KMSMasterKeyId = aws.String(v)
 		}
 
 		input := &dynamodb.UpdateTableInput{
 			TableName: aws.String(tableName),
 			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
 				{
-					Create: createReplicationGroupMemberAction,
+					Create: replicaInput,
 				},
 			},
 		}
@@ -795,11 +794,11 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %s", tableName, regionName, err)
+			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %s", tableName, tfMap["kms_key_arn"].(string), err)
 		}
 
-		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, regionName, timeout, conn); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %s", tableName, regionName, err)
+		if err := waitForDynamoDbReplicaUpdateToBeCompleted(tableName, tfMap["kms_key_arn"].(string), timeout, conn); err != nil {
+			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %s", tableName, tfMap["kms_key_arn"].(string), err)
 		}
 	}
 
