@@ -92,6 +92,10 @@ func dataSourceAwsMqBrokerInstanceTypeOfferingsRead(d *schema.ResourceData, meta
 		input.NextToken = output.NextToken
 	}
 
+	if len(availabilityZones) == 0 {
+		return fmt.Errorf("no availability_zones can support criteria supplied in aws_mq_broker_instance_type_offerings; try different criteria")
+	}
+
 	if err := d.Set("availability_zones", availabilityZones); err != nil {
 		return fmt.Errorf("error setting instance_types: %w", err)
 	}

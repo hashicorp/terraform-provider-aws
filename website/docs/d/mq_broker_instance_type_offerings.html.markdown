@@ -9,7 +9,8 @@ description: |-
 # Data Source: aws_mq_broker_instance_type_offerings
 
 Provides a list of availability zones that can deploy an MQ Broker with specified criteria. Availability zones
-are based on the current active region.
+are based on the current active region. If no availability zones can support the criteria given,
+an error will be thrown.
 
 ## Example Usage
 
@@ -33,5 +34,5 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported.
-* `availability_zones` - List of availability zones that an MQ Broker of the specified type could be deployed
+The following attributes are exported
+* `availability_zones` - List of availability zones that can deploy an MQ Broker with specified criteria
