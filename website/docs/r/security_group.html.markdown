@@ -78,7 +78,7 @@ with the service, and those rules may contain a cyclic dependency that prevent
 the security groups from being destroyed without removing the dependency first.
 Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ingress` block supports:
 
@@ -167,6 +167,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - The description of the security group
 * `ingress` - The ingress rules. See above for more.
 * `egress` - The egress rules. See above for more.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
