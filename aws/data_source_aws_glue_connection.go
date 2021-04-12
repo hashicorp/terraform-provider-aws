@@ -43,6 +43,9 @@ func dataSourceAwsGlueConnection() *schema.Resource {
 func dataSourceAwsGlueConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).glueconn
 	catalogID, connectionName, err := decodeGlueConnectionID(d.Id())
+	if err != nil {
+		return diag.Errorf("error decoding Glue Connection %s: %s", d.Id(), err)
+	}
 	input := &glue.GetConnectionInput{
 		CatalogId: aws.String(catalogID),
 		Name:      aws.String(connectionName),

@@ -51,7 +51,6 @@ resource "aws_glue_connection" "test" {
   name                  = %[1]q
   connection_type       = "NETWORK"
   connection_properties = {}
-  
 }
 
 data "aws_glue_connection" "test" {
