@@ -63,7 +63,7 @@ The following arguments are supported:
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
     Maximum number of `retry_strategy` is `1`.  Defined below.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
 * `type` - (Required) The type of job definition.  Must be `container`
 
@@ -85,6 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
