@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 )
 
 func init() {
@@ -1385,20 +1387,17 @@ func testAccCheckAWSLBTargetGroupExists(n string, res *elbv2.TargetGroup) resour
 
 		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
 
-		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
-		})
+		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if len(describe.TargetGroups) != 1 ||
-			*describe.TargetGroups[0].TargetGroupArn != rs.Primary.ID {
-			return errors.New("Target Group not found")
+		if targetGroup == nil {
+			return fmt.Errorf("Target Group (%s) not found", rs.Primary.ID)
 		}
 
-		*res = *describe.TargetGroups[0]
+		*res = *targetGroup
 		return nil
 	}
 }
@@ -1501,23 +1500,21 @@ func testAccCheckAWSLBTargetGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		describe, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: []*string{aws.String(rs.Primary.ID)},
-		})
+		targetGroup, err := finder.TargetGroupByARN(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(describe.TargetGroups) != 0 &&
-				*describe.TargetGroups[0].TargetGroupArn == rs.Primary.ID {
-				return fmt.Errorf("Target Group %q still exists", rs.Primary.ID)
-			}
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+			continue
 		}
 
-		// Verify the error
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
-			return nil
-		} else {
-			return fmt.Errorf("unexpected error checking ALB destroyed: %w", err)
+		if err != nil {
+			return fmt.Errorf("unexpected error checking ALB (%s) destroyed: %w", rs.Primary.ID, err)
 		}
+
+		if targetGroup == nil {
+			continue
+		}
+
+		return fmt.Errorf("Target Group %q still exists", rs.Primary.ID)
 	}
 
 	return nil
