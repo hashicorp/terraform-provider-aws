@@ -4044,10 +4044,11 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier      = %[1]q
-  preferred_backup_window = %[2]q
-  skip_final_snapshot     = true
-  snapshot_identifier     = aws_db_cluster_snapshot.test.id
+  cluster_identifier           = %[1]q
+  preferred_backup_window      = %[2]q
+  preferred_maintenance_window = "sun:09:00-sun:09:30"
+  skip_final_snapshot          = true
+  snapshot_identifier          = aws_db_cluster_snapshot.test.id
 }
 `, rName, preferredBackupWindow)
 }
