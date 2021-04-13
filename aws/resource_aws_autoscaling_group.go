@@ -1327,7 +1327,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 			}
 
 			if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
-				return fmt.Errorf("error deleting Auto Scaling Group Warm pool: %s", err)
+				return fmt.Errorf("error deleting Warm pool for Auto Scaling Group %s: %s", d.Id(), err)
 			}
 
 			log.Printf("[INFO] Successfully removed Warm pool")
@@ -1380,7 +1380,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 
 	// Try deleting Warm pool first.
 	if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
-		return fmt.Errorf("error deleting Auto Scaling Group Warm pool: %s", err)
+		return fmt.Errorf("error deleting Warm pool for Auto Scaling Group %s: %s", d.Id(), err)
 	}
 
 	if len(g.Instances) > 0 || aws.Int64Value(g.DesiredCapacity) > 0 {
@@ -1493,30 +1493,47 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 	}
 
 	// Wait for Warm pool to be gone.
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		g, _ := getAwsAutoscalingGroup(d.Id(), conn)
-
-		if g.WarmPoolConfiguration != nil {
-			return resource.RetryableError(fmt.Errorf("Warm pool still exists"))
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		g, err = getAwsAutoscalingGroup(d.Id(), conn)
-
-		if err != nil || g.WarmPoolConfiguration != nil {
-			return fmt.Errorf("Warm pool still exists")
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting Warm Pool: %s", err)
+	if err := waitForWarmPoolDeletion(conn, d); err != nil {
+		return fmt.Errorf("error waiting for Warm Pool deletion: %s", err)
 	}
 
 	log.Printf("[INFO] Successfully removed Warm pool")
 
 	return nil
+}
+
+func waitForWarmPoolDeletion(conn *autoscaling.AutoScaling, d *schema.ResourceData) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{"", autoscaling.WarmPoolStatusPendingDelete},
+		Target:         []string{"deleted"},
+		Refresh:        asgWarmPoolStateRefreshFunc(conn, d.Id()),
+		Timeout:        d.Timeout(schema.TimeoutDelete),
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for Auto Scaling Group (%s) Warm Pool deletion", d.Id())
+	_, err := stateConf.WaitForState()
+
+	if isResourceNotFoundError(err) {
+		return nil
+	}
+
+	return err
+}
+
+func asgWarmPoolStateRefreshFunc(conn *autoscaling.AutoScaling, asgName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		g, err := getAwsAutoscalingGroup(asgName, conn)
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error describing Auto Scaling Group (%s): %s", asgName, err)
+		}
+
+		if g == nil || g.WarmPoolConfiguration == nil {
+			return nil, "deleted", nil
+		}
+		return asgName, aws.StringValue(g.WarmPoolConfiguration.Status), nil
+	}
 }
 
 func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.DescribeWarmPoolOutput, error) {
