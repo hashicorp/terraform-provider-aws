@@ -67,8 +67,7 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags": tagsSchemaComputed(),
 			"throughput": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -158,18 +157,8 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("throughput", volume.Throughput)
 
-	defaultTagsConfig := client.DefaultTagsConfig
-	ignoreTagsConfig := client.IgnoreTagsConfig
-
-	tags := keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
