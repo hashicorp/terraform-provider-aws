@@ -453,7 +453,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createDynamoDbReplicas(d.Id(), v.List(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
+		if err := createDynamoDbReplicas(d.Id(), v.List(), conn); err != nil {
 			return fmt.Errorf("error creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
@@ -738,7 +738,7 @@ func isDynamoDbTableOptionDisabled(v interface{}) bool {
 
 // CRUD helpers
 
-func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamodb.DynamoDB) error {
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -877,7 +877,7 @@ func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) erro
 	added := n.Difference(o).List()
 
 	if len(added) > 0 {
-		if err := createDynamoDbReplicas(d.Id(), added, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+		if err := createDynamoDbReplicas(d.Id(), added, conn); err != nil {
 			return err
 		}
 	}
