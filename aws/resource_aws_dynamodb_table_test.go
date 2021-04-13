@@ -31,11 +31,11 @@ func testSweepDynamoDbTables(region string) error {
 
 	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(out *dynamodb.ListTablesOutput, lastPage bool) bool {
 		for _, tableName := range out.TableNames {
-			log.Printf("[INFO] Deleting DynamoDB Table: %s", *tableName)
+			log.Printf("[INFO] Deleting DynamoDB Table: %s", aws.StringValue(tableName))
 
-			err := deleteDynamoDbTable(*tableName, conn)
+			err := deleteDynamoDbTable(aws.StringValue(tableName), conn)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", *tableName, err)
+				log.Printf("[ERROR] Failed to delete DynamoDB Table %s: %s", aws.StringValue(tableName), err)
 				continue
 			}
 		}
@@ -345,7 +345,7 @@ func TestUpdateDynamoDbDiffGSI(t *testing.T) {
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -360,9 +360,9 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
+					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": "TestTableHashKey",
+						"name": rName,
 						"type": "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -380,7 +380,7 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 	var table1 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -403,7 +403,7 @@ func TestAccAWSDynamoDbTable_disappears(t *testing.T) {
 func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 	var table1, table2 dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -437,7 +437,7 @@ func TestAccAWSDynamoDbTable_disappears_payPerRequestWithGSI(t *testing.T) {
 func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -511,7 +511,7 @@ func TestAccAWSDynamoDbTable_extended(t *testing.T) {
 func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -546,7 +546,7 @@ func TestAccAWSDynamoDbTable_enablePitr(t *testing.T) {
 func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -580,7 +580,7 @@ func TestAccAWSDynamoDbTable_BillingMode_payPerRequestToProvisioned(t *testing.T
 func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -614,7 +614,7 @@ func TestAccAWSDynamoDbTable_BillingMode_provisionedToPayPerRequest(t *testing.T
 func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -648,7 +648,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_payPerRequestToProvisioned(t *testi
 func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -682,7 +682,7 @@ func TestAccAWSDynamoDbTable_BillingMode_GSI_provisionedToPayPerRequest(t *testi
 func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	tableName := fmt.Sprintf("TerraformTestStreamTable-%s", acctest.RandString(8))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -691,12 +691,12 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigStreamSpecification(tableName, true, "KEYS_ONLY"),
+				Config: testAccAWSDynamoDbConfigStreamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", tableName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -706,12 +706,12 @@ func TestAccAWSDynamoDbTable_streamSpecification(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbConfigStreamSpecification(tableName, false, ""),
+				Config: testAccAWSDynamoDbConfigStreamSpecification(rName, false, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", tableName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "dynamodb", regexp.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -737,6 +737,7 @@ func TestAccAWSDynamoDbTable_streamSpecificationValidation(t *testing.T) {
 func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -745,7 +746,7 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigTags(),
+				Config: testAccAWSDynamoDbConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					testAccCheckInitialAWSDynamoDbTableConf(resourceName),
@@ -765,7 +766,7 @@ func TestAccAWSDynamoDbTable_tags(t *testing.T) {
 func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -774,7 +775,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
@@ -801,7 +802,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdatedCapacity(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdatedCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
@@ -829,7 +830,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -838,7 +839,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
@@ -877,7 +878,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
@@ -954,7 +955,7 @@ func TestAccAWSDynamoDbTable_lsiNonKeyAttributes(t *testing.T) {
 func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -963,7 +964,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
@@ -1003,7 +1004,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name),
+				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
@@ -1045,7 +1046,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	attributes := fmt.Sprintf("%q, %q", "AnotherAttribute", "RandomAttribute")
 	reorderedAttributes := fmt.Sprintf("%q, %q", "RandomAttribute", "AnotherAttribute")
 
@@ -1056,7 +1057,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(name, attributes),
+				Config: testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(rName, attributes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
@@ -1078,7 +1079,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(name, reorderedAttributes),
+				Config:             testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(rName, reorderedAttributes),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -1091,7 +1092,7 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1121,7 +1122,7 @@ func TestAccAWSDynamoDbTable_Ttl_enabled(t *testing.T) {
 func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1157,7 +1158,7 @@ func TestAccAWSDynamoDbTable_Ttl_disabled(t *testing.T) {
 func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1201,7 +1202,7 @@ func TestAccAWSDynamoDbTable_attributeUpdate(t *testing.T) {
 func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1231,7 +1232,7 @@ func TestAccAWSDynamoDbTable_lsiUpdate(t *testing.T) {
 }
 
 func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1249,7 +1250,7 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSDynamoDbConfigUnmatchedIndexes(rName, "firstUnused", "secondUnused"),
-				ExpectError: regexp.MustCompile(`indexes must match a defined attribute. Unmatched indexes: \["firstUnused"\ \"secondUnused\"]`),
+				ExpectError: regexp.MustCompile(`indexes must match a defined attribute. Unmatched indexes:`),
 			},
 		},
 	})
@@ -1258,7 +1259,7 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
 	var confBYOK, confEncEnabled, confEncDisabled dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	kmsKeyResourceName := "aws_kms_key.test"
 	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
 
@@ -1318,7 +1319,7 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 	var table dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1330,27 +1331,27 @@ func TestAccAWSDynamoDbTable_Replica_multiple(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 				),
 			},
 			{
-				Config:            testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Config:            testAccAWSDynamoDbTableConfigReplica2(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
@@ -1364,7 +1365,7 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1376,27 +1377,27 @@ func TestAccAWSDynamoDbTable_Replica_single(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
 			{
-				Config:            testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Config:            testAccAWSDynamoDbTableConfigReplica1(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplica1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
@@ -1410,11 +1411,11 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
 	resourceName := "aws_dynamodb_table.test"
-	kmsKeyResourceName := "aws_kms_key.mastertest"
+	kmsKeyResourceName := "aws_kms_key.test"
 	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
-	kmsKeyReplicaResourceName := "aws_kms_key.replicatest"
+	kmsKeyReplicaResourceName := "aws_kms_key.alt_test"
 	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
-	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1426,7 +1427,7 @@ func TestAccAWSDynamoDbTable_Replica_singleWithCMK(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(tableName),
+				Config: testAccAWSDynamoDbTableConfigReplicaWithCMK(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
@@ -1545,13 +1546,13 @@ func testAccCheckInitialAWSDynamoDbTableConf(resourceName string) resource.TestC
 func testAccAWSDynamoDbConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
-  hash_key       = "TestTableHashKey"
+  hash_key       = %[1]q
 
   attribute {
-    name = "TestTableHashKey"
+    name = %[1]q
     type = "S"
   }
 }
@@ -1561,7 +1562,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfig_backup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "TestTableHashKey"
@@ -1581,7 +1582,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbBilling_payPerRequest(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name         = "%s"
+  name         = %[1]q
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "TestTableHashKey"
 
@@ -1596,7 +1597,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbBilling_provisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name         = "%s"
+  name         = %[1]q
   billing_mode = "PROVISIONED"
   hash_key     = "TestTableHashKey"
 
@@ -1614,7 +1615,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbBilling_payPerRequestWithGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name         = "%s"
+  name         = %[1]q
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "TestTableHashKey"
 
@@ -1642,7 +1643,7 @@ func testAccAWSDynamoDbBilling_provisionedWithGSI(rName string) string {
 resource "aws_dynamodb_table" "test" {
   billing_mode   = "PROVISIONED"
   hash_key       = "TestTableHashKey"
-  name           = %q
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
 
@@ -1670,7 +1671,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 2
   hash_key       = "TestTableHashKey"
@@ -1721,11 +1722,11 @@ data "aws_kms_alias" "dynamodb" {
 }
 
 resource "aws_kms_key" "test" {
-  description = "DynamoDbTest"
+  description = %[1]q
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 1
   hash_key       = "TestTableHashKey"
@@ -1736,7 +1737,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   server_side_encryption {
-    enabled = %t
+    enabled = %[2]t
   }
 }
 `, rName, enabled)
@@ -1745,11 +1746,11 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigInitialStateWithEncryptionBYOK(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "DynamoDbTest"
+  description = %[1]q
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 2
   write_capacity = 2
   hash_key       = "TestTableHashKey"
@@ -1770,7 +1771,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 2
   write_capacity = 2
   hash_key       = "TestTableHashKey"
@@ -1815,10 +1816,10 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {
+func testAccAWSDynamoDbConfigStreamSpecification(rName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 2
   hash_key       = "TestTableHashKey"
@@ -1828,16 +1829,16 @@ resource "aws_dynamodb_table" "test" {
     type = "S"
   }
 
-  stream_enabled   = %t
-  stream_view_type = "%s"
+  stream_enabled   = %[2]t
+  stream_view_type = %[3]q
 }
-`, tableName, enabled, viewType)
+`, rName, enabled, viewType)
 }
 
-func testAccAWSDynamoDbConfigTags() string {
+func testAccAWSDynamoDbConfigTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "TerraformTestTable-%d"
+  name           = %[1]q
   read_capacity  = 1
   write_capacity = 2
   hash_key       = "TestTableHashKey"
@@ -1879,22 +1880,22 @@ resource "aws_dynamodb_table" "test" {
   }
 
   tags = {
-    Name    = "terraform-test-table-%d"
+    Name    = %[1]q
     AccTest = "yes"
     Testing = "absolutely"
   }
 }
-`, acctest.RandInt(), acctest.RandInt())
+`, rName)
 }
 
-func testAccAWSDynamoDbConfigGsiUpdate(name string) string {
+func testAccAWSDynamoDbConfigGsiUpdate(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "tf-acc-test-%s"
+  name           = %[1]q
   read_capacity  = var.capacity
   write_capacity = var.capacity
   hash_key       = "id"
@@ -1943,17 +1944,17 @@ resource "aws_dynamodb_table" "test" {
     projection_type = "ALL"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSDynamoDbConfigGsiUpdatedCapacity(name string) string {
+func testAccAWSDynamoDbConfigGsiUpdatedCapacity(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 2
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "tf-acc-test-%s"
+  name           = %[1]q
   read_capacity  = var.capacity
   write_capacity = var.capacity
   hash_key       = "id"
@@ -2002,17 +2003,17 @@ resource "aws_dynamodb_table" "test" {
     projection_type = "ALL"
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name string) string {
+func testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "tf-acc-test-%s"
+  name           = %[1]q
   read_capacity  = var.capacity
   write_capacity = var.capacity
   hash_key       = "id"
@@ -2069,17 +2070,17 @@ resource "aws_dynamodb_table" "test" {
     non_key_attributes = ["RandomAttribute"]
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name string) string {
+func testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(rName string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "tf-acc-test-%s"
+  name           = %[1]q
   read_capacity  = var.capacity
   write_capacity = var.capacity
   hash_key       = "id"
@@ -2136,17 +2137,17 @@ resource "aws_dynamodb_table" "test" {
     non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }
 }
-`, name)
+`, rName)
 }
 
-func testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(name, attributes string) string {
+func testAccAWSDynamoDbConfigGsiMultipleNonKeyAttributes(rName, attributes string) string {
 	return fmt.Sprintf(`
 variable "capacity" {
   default = 1
 }
 
 resource "aws_dynamodb_table" "test" {
-  name           = "tf-acc-test-%s"
+  name           = %[1]q
   read_capacity  = var.capacity
   write_capacity = var.capacity
   hash_key       = "id"
@@ -2176,13 +2177,13 @@ resource "aws_dynamodb_table" "test" {
     non_key_attributes = [%s]
   }
 }
-`, name, attributes)
+`, rName, attributes)
 }
 
-func testAccAWSDynamoDbConfigLsiNonKeyAttributes(name string) string {
+func testAccAWSDynamoDbConfigLsiNonKeyAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   hash_key       = "TestTableHashKey"
   range_key      = "TestTableRangeKey"
   write_capacity = 1
@@ -2210,7 +2211,7 @@ resource "aws_dynamodb_table" "test" {
     non_key_attributes = ["TestNonKeyAttribute"]
   }
 }
-`, name)
+`, rName)
 }
 
 func testAccAWSDynamoDbConfigTimeToLive(rName string, ttlEnabled bool) string {
@@ -2237,7 +2238,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%[1]s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "staticHashKey"
@@ -2248,13 +2249,13 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "%[3]s"
-    type = "%[4]s"
+    name = %[3]q
+    type = %[4]q
   }
 
   global_secondary_index {
     name            = "gsiName"
-    hash_key        = "%[2]s"
+    hash_key        = %[2]q
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "KEYS_ONLY"
@@ -2266,7 +2267,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%[1]s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "staticHashKey"
@@ -2277,19 +2278,19 @@ resource "aws_dynamodb_table" "test" {
   }
 
   attribute {
-    name = "%[4]s"
-    type = "%[5]s"
+    name = %[4]q
+    type = %[5]q
   }
 
   attribute {
-    name = "%[6]s"
-    type = "%[7]s"
+    name = %[6]q
+    type = %[7]q
   }
 
   global_secondary_index {
     name            = "gsiName"
-    hash_key        = "%[2]s"
-    range_key       = "%[3]s"
+    hash_key        = %[2]q
+    range_key       = %[3]q
     write_capacity  = 10
     read_capacity   = 10
     projection_type = "KEYS_ONLY"
@@ -2375,13 +2376,13 @@ data "aws_region" "alternate" {
   provider = "awsalternate"
 }
 
-resource "aws_kms_key" "mastertest" {
-  description = "DynamoDbTest"
+resource "aws_kms_key" "test" {
+  description = %[1]q
 }
 
-resource "aws_kms_key" "replicatest" {
+resource "aws_kms_key" "alt_test" {
   provider    = "awsalternate"
-  description = "DynamoDbReplicaTest"
+  description = "%[1]s-2"
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -2398,12 +2399,12 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-    kms_key_arn = aws_kms_key.replicatest.arn
+    kms_key_arn = aws_kms_key.alt_test.arn
   }
 
   server_side_encryption {
     enabled     = true
-    kms_key_arn = aws_kms_key.mastertest.arn
+    kms_key_arn = aws_kms_key.test.arn
   }
 
   timeouts {
@@ -2453,7 +2454,7 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigLSI(rName, lsiName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "staticHashKey"
@@ -2475,7 +2476,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   local_secondary_index {
-    name            = "%s"
+    name            = %[2]q
     range_key       = "staticLSIRangeKey"
     projection_type = "KEYS_ONLY"
   }
