@@ -840,6 +840,7 @@ func validateIpv6CIDRBlock(cidr string) error {
 	return nil
 }
 
+// TODO Replace with tfnet.CIDRBlocksEqual.
 // cidrBlocksEqual returns whether or not two CIDR blocks are equal:
 // - Both CIDR blocks parse to an IP address and network
 // - The string representation of the IP addresses are equal
@@ -2398,9 +2399,12 @@ var validateCloudWatchEventCustomEventBusName = validation.All(
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
 )
 
-var validateCloudWatchEventBusName = validation.All(
-	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+var validateCloudWatchEventBusNameOrARN = validation.Any(
+	validateArn,
+	validation.All(
+		validation.StringLenBetween(1, 256),
+		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-/]+$`), ""),
+	),
 )
 
 var validateCloudWatchEventArchiveName = validation.All(

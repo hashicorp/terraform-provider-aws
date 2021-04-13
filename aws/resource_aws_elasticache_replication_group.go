@@ -48,8 +48,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Computed: true,
 			},
 			"auth_token": {
 				Type:         schema.TypeString,
@@ -263,8 +263,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -299,27 +299,6 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				if v := diff.Get("automatic_failover_enabled").(bool); !v {
 					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
 				}
-				return nil
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v := diff.Get("automatic_failover_enabled").(bool); !v {
-					return nil
-				}
-
-				if v, ok := diff.GetOkExists("number_cache_clusters"); ok {
-					if v.(int) > 1 {
-						return nil
-					}
-					return errors.New(`if automatic_failover_enabled is true, number_cache_clusters must be greater than 1`)
-				}
-
-				if v, ok := diff.GetOkExists("cluster_mode.0.replicas_per_node_group"); ok {
-					if v.(int) > 0 {
-						return nil
-					}
-					return errors.New(`if automatic_failover_enabled is true, cluster_mode[0].replicas_per_node_group must be greater than 0`)
-				}
-
 				return nil
 			},
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
