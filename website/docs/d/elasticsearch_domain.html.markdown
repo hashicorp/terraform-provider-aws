@@ -75,8 +75,7 @@ The following attributes are exported:
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
-* `tags` - The tags assigned to the domain.  If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - The tags assigned to the domain.
 * `vpc_options` - VPC Options for private Elasticsearch domains.
     * `availability_zones` - The availability zones used by the domain.
     * `security_group_ids` - The security groups used by the domain.
