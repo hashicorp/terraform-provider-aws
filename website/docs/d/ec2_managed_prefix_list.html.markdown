@@ -62,5 +62,4 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The Account ID of the owner of a customer-managed prefix list, or `AWS` otherwise.
 * `address_family` - The address family of the prefix list. Valid values are `IPv4` and `IPv6`.
 * `max_entries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
-* `tags` - A map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - A map of tags assigned to the resource.

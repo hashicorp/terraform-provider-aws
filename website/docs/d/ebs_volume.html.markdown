@@ -56,8 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 * `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `volume_type` - The type of EBS volume.
 * `kms_key_id` - The ARN for the KMS encryption key.
-* `tags` - A map of tags for the resource. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - A map of tags for the resource.
 * `throughput` - The throughput that the volume supports, in MiB/s.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
