@@ -1341,13 +1341,25 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("secondary_sources") {
-		projectSecondarySources := expandProjectSecondarySources(d)
-		params.SecondarySources = projectSecondarySources
+		_, n := d.GetChange("secondary_sources")
+
+		if n.(*schema.Set).Len() > 0 {
+			projectSecondarySources := expandProjectSecondarySources(d)
+			params.SecondarySources = projectSecondarySources
+		} else {
+			params.SecondarySources = []*codebuild.ProjectSource{}
+		}
 	}
 
 	if d.HasChange("secondary_artifacts") {
-		projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
-		params.SecondaryArtifacts = projectSecondaryArtifacts
+		_, n := d.GetChange("secondary_artifacts")
+
+		if n.(*schema.Set).Len() > 0 {
+			projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
+			params.SecondaryArtifacts = projectSecondaryArtifacts
+		} else {
+			params.SecondaryArtifacts = []*codebuild.ProjectArtifacts{}
+		}
 	}
 
 	if d.HasChange("vpc_config") {
