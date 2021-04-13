@@ -53,7 +53,6 @@ In addition to all arguments above, the following attributes are exported:
 * `ipv6_support` - Whether IPv6 support is enabled.
 * `subnet_ids` - Identifiers of EC2 Subnets.
 * `transit_gateway_id` - EC2 Transit Gateway identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
 * `vpc_id` - Identifier of EC2 VPC.
 * `vpc_owner_id` - Identifier of the AWS account that owns the EC2 VPC.
