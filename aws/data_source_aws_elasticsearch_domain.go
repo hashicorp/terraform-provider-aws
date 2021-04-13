@@ -270,15 +270,13 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	esconn := meta.(*AWSClient).esconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &elasticsearchservice.DescribeElasticsearchDomainInput{
@@ -393,15 +391,8 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
