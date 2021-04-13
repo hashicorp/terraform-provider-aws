@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfsns "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sns"
 )
 
 func resourceAwsSnsTopic() *schema.Resource {
@@ -39,6 +39,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
@@ -147,16 +148,15 @@ func resourceAwsSnsTopic() *schema.Resource {
 func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
 	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SnsTags()
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
 
+	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
+
+	if fifoTopic {
+		name = naming.GenerateWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+	} else {
+		name = naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	}
 
 	attributes := make(map[string]*string)
 	// If FifoTopic is true, then the attribute must be passed into the call to CreateTopic
@@ -177,7 +177,7 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := snsconn.CreateTopic(req)
 	if err != nil {
-		return fmt.Errorf("Error creating SNS topic: %s", err)
+		return fmt.Errorf("error creating SNS Topic (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TopicArn))
@@ -411,7 +411,7 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.SnsUpdateTags(snsconn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -426,15 +426,18 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	attributeOutput, err := snsconn.GetTopicAttributes(&sns.GetTopicAttributesInput{
 		TopicArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] SNS Topic (%s) not found, error code (404)", d.Id())
-			d.SetId("")
-			return nil
-		}
 
-		return err
+	if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error reading SNS Topic (%s): %w", d.Id(), err)
+	}
+
+	fifoTopic := false
 
 	// set the mutable attributes
 	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
@@ -454,9 +457,8 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
 
 		// set the boolean values
-		d.Set("fifo_topic", false)
 		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {
-			d.Set("fifo_topic", true)
+			fifoTopic = true
 		}
 		d.Set("content_based_deduplication", false)
 		if v, ok := attributeOutput.Attributes["ContentBasedDeduplication"]; ok && aws.StringValue(v) == "true" {
@@ -472,7 +474,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		if vStr != "" {
 			v, err = strconv.ParseInt(vStr, 10, 64)
 			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'ApplicationSuccessFeedbackSampleRate': %s", err)
+				return fmt.Errorf("error parsing integer attribute 'ApplicationSuccessFeedbackSampleRate': %w", err)
 			}
 			d.Set("application_success_feedback_sample_rate", v)
 		}
@@ -481,7 +483,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		if vStr != "" {
 			v, err = strconv.ParseInt(vStr, 10, 64)
 			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'HTTPSuccessFeedbackSampleRate': %s", err)
+				return fmt.Errorf("error parsing integer attribute 'HTTPSuccessFeedbackSampleRate': %w", err)
 			}
 			d.Set("http_success_feedback_sample_rate", v)
 		}
@@ -490,7 +492,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		if vStr != "" {
 			v, err = strconv.ParseInt(vStr, 10, 64)
 			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'LambdaSuccessFeedbackSampleRate': %s", err)
+				return fmt.Errorf("error parsing integer attribute 'LambdaSuccessFeedbackSampleRate': %w", err)
 			}
 			d.Set("lambda_success_feedback_sample_rate", v)
 		}
@@ -499,31 +501,36 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		if vStr != "" {
 			v, err = strconv.ParseInt(vStr, 10, 64)
 			if err != nil {
-				return fmt.Errorf("error parsing integer attribute 'SQSSuccessFeedbackSampleRate': %s", err)
+				return fmt.Errorf("error parsing integer attribute 'SQSSuccessFeedbackSampleRate': %w", err)
 			}
 			d.Set("sqs_success_feedback_sample_rate", v)
 		}
 	}
 
-	// If we have no name set (import) then determine it from the ARN.
-	// This is a bit of a heuristic for now since AWS provides no other
-	// way to get it.
-	if _, ok := d.GetOk("name"); !ok {
-		arn := d.Get("arn").(string)
-		idx := strings.LastIndex(arn, ":")
-		if idx > -1 {
-			d.Set("name", arn[idx+1:])
-		}
+	d.Set("fifo_topic", fifoTopic)
+
+	arn, err := arn.Parse(d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+	}
+
+	name := arn.Resource
+	d.Set("name", name)
+	if fifoTopic {
+		d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(name, tfsns.FifoTopicNameSuffix))
+	} else {
+		d.Set("name_prefix", naming.NamePrefixFromName(name))
 	}
 
 	tags, err := keyvaluetags.SnsListTags(snsconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for SNS Topic (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -537,7 +544,11 @@ func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 		TopicArn: aws.String(d.Id()),
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error deleting SNS Topic (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
@@ -547,7 +558,13 @@ func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 	if diff.Id() == "" {
 		// Create.
 
-		name := naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
+		var name string
+
+		if fifoTopic {
+			name = naming.GenerateWithSuffix(diff.Get("name").(string), diff.Get("name_prefix").(string), tfsns.FifoTopicNameSuffix)
+		} else {
+			name = naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
+		}
 
 		if fifoTopic {
 			if errors := validateSNSFifoTopicName(name); len(errors) > 0 {
@@ -588,5 +605,9 @@ func updateAwsSnsTopicAttribute(topicArn, name string, value interface{}, conn *
 		return conn.SetTopicAttributes(&req)
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error setting SNS Topic (%s) attributes: %w", topicArn, err)
+	}
+
+	return nil
 }
