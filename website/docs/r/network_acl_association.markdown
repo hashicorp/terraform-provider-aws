@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_network_acl_association
 
-Provides an network ACL association resource. You might set up network ACLs associate to your subnet.
+Provides an network ACL association resource which allows you to associate your network ACL with any subnet(s).
 
 ## Example Usage
 
@@ -23,13 +23,11 @@ resource "aws_network_acl_association" "main" {
 
 The following arguments are supported:
 
-* `network_acl_id` - (Required) The ID of the network acl .
+* `network_acl_id` - (Required) The ID of the network ACL.
 * `subnet_id` - (Required) The ID of the associated Subnet.
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the network ACL
-* `network_acl_id` - The ID of the network ACL
-* `subnet_id` - The ID of the subnet id
+* `id` - The ID of the network ACL association
