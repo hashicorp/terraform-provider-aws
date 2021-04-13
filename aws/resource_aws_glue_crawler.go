@@ -288,7 +288,7 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
-	crawlerInput, err := createCrawlerInput(name, d)
+	crawlerInput, err := createCrawlerInput(d, name, meta.(*AWSClient).DefaultTagsConfig)
 	if err != nil {
 		return err
 	}
@@ -326,12 +326,14 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAwsGlueCrawlerRead(d, meta)
 }
 
-func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.CreateCrawlerInput, error) {
+func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *keyvaluetags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
+		Tags:         tags.IgnoreAws().GlueTags(),
 		Targets:      expandGlueCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {
@@ -376,7 +378,7 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 	return crawlerInput, nil
 }
 
-func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.UpdateCrawlerInput, error) {
+func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.UpdateCrawlerInput, error) {
 	crawlerInput := &glue.UpdateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
@@ -604,7 +606,7 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 	name := d.Get("name").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		updateCrawlerInput, err := updateCrawlerInput(name, d)
+		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
 			return err
 		}
