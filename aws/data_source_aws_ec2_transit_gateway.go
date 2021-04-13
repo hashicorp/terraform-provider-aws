@@ -62,8 +62,7 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags": tagsSchemaComputed(),
 			"vpn_ecmp_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,7 +73,6 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 
 func dataSourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewaysInput{}
@@ -123,15 +121,8 @@ func dataSourceAwsEc2TransitGatewayRead(d *schema.ResourceData, meta interface{}
 	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 
-	tags := keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
