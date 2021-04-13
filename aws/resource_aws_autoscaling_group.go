@@ -573,6 +573,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 						"max_group_prepared_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Default:  -1,
 						},
 					},
 				},
@@ -2082,10 +2083,15 @@ func flattenWarmPoolConfiguration(warmPoolConfiguration *autoscaling.WarmPoolCon
 		return []interface{}{}
 	}
 
+	maxGroupPreparedCapacity := int64(-1)
+	if warmPoolConfiguration.MaxGroupPreparedCapacity != nil {
+		maxGroupPreparedCapacity = aws.Int64Value(warmPoolConfiguration.MaxGroupPreparedCapacity)
+	}
+
 	m := map[string]interface{}{
 		"pool_state":                  aws.StringValue(warmPoolConfiguration.PoolState),
 		"min_size":                    aws.Int64Value(warmPoolConfiguration.MinSize),
-		"max_group_prepared_capacity": aws.Int64Value(warmPoolConfiguration.MaxGroupPreparedCapacity),
+		"max_group_prepared_capacity": maxGroupPreparedCapacity,
 	}
 
 	return []interface{}{m}

@@ -5100,7 +5100,19 @@ func TestFlattenWarmPoolConfiguration(t *testing.T) {
 			expected: []interface{}{map[string]interface{}{
 				"pool_state":                  "Stopped",
 				"min_size":                    int64(0),
-				"max_group_prepared_capacity": int64(0),
+				"max_group_prepared_capacity": int64(-1),
+			}},
+		},
+		{
+			name: "only max group prepared capacity",
+			input: &autoscaling.WarmPoolConfiguration{
+				PoolState:                aws.String("Stopped"),
+				MaxGroupPreparedCapacity: aws.Int64(2),
+			},
+			expected: []interface{}{map[string]interface{}{
+				"pool_state":                  "Stopped",
+				"min_size":                    int64(0),
+				"max_group_prepared_capacity": int64(2),
 			}},
 		},
 		{
