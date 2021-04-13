@@ -826,7 +826,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").(*schema.Set).List()))
 
 		if err != nil {
-			return fmt.Errorf("Error creating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("error creating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
 		}
 
 		log.Printf("[INFO] Successfully created Warm pool")
@@ -950,7 +950,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err := d.Set("warm_pool", flattenWarmPoolConfiguration(g.WarmPoolConfiguration)); err != nil {
-		return fmt.Errorf("error setting mixed_instances_policy: %s", err)
+		return fmt.Errorf("error setting warm_pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1327,7 +1327,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 			}
 
 			if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
-				return fmt.Errorf("Error deleting Auto Scaling Group Warm pool: %s", err)
+				return fmt.Errorf("error deleting Auto Scaling Group Warm pool: %s", err)
 			}
 
 			log.Printf("[INFO] Successfully removed Warm pool")
@@ -1335,7 +1335,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 			_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").(*schema.Set).List()))
 
 			if err != nil {
-				return fmt.Errorf("Error updating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
+				return fmt.Errorf("error updating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
 			}
 
 			log.Printf("[INFO] Successfully updated Warm pool")
@@ -1380,7 +1380,7 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 
 	// Try deleting Warm pool first.
 	if err := resourceAutoScalingGroupWarmPoolDelete(g, d, meta); err != nil {
-		return fmt.Errorf("Error deleting Auto Scaling Group Warm pool: %s", err)
+		return fmt.Errorf("error deleting Auto Scaling Group Warm pool: %s", err)
 	}
 
 	if len(g.Instances) > 0 || aws.Int64Value(g.DesiredCapacity) > 0 {
@@ -1455,7 +1455,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 		return nil
 	}
 
-	log.Printf("[INFO] Group has a warming pool. First deleting it.")
+	log.Printf("[INFO] Auto Scaling Group has a Warm Pool. First deleting it.")
 
 	if err := resourceAwsAutoscalingGroupWarmPoolDrain(d, meta); err != nil {
 		return err
@@ -1488,7 +1488,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 			_, err = conn.DeleteWarmPool(&deleteopts)
 		}
 		if err != nil {
-			return fmt.Errorf("Error deleting Warm Pool: %s", err)
+			return fmt.Errorf("error deleting Warm Pool: %s", err)
 		}
 	}
 
@@ -1511,7 +1511,7 @@ func resourceAutoScalingGroupWarmPoolDelete(g *autoscaling.Group, d *schema.Reso
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Warm Pool: %s", err)
+		return fmt.Errorf("error deleting Warm Pool: %s", err)
 	}
 
 	log.Printf("[INFO] Successfully removed Warm pool")
@@ -1532,7 +1532,7 @@ func getAwsAutoscalingGroupWarmPool(asgName string, conn *autoscaling.AutoScalin
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("Error retrieving Warm Pool: %s", err)
+		return nil, fmt.Errorf("error retrieving Warm Pool: %s", err)
 	}
 
 	return describeWarmPoolOutput, nil
@@ -1554,7 +1554,7 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 		MinSize:                  aws.Int64(0),
 	}
 	if _, err := conn.PutWarmPool(&opts); err != nil {
-		return fmt.Errorf("Error setting capacity to zero to drain: %s", err)
+		return fmt.Errorf("error setting capacity to zero to drain: %s", err)
 	}
 
 	// Next, wait for the Warm Pool to drain
@@ -1577,14 +1577,14 @@ func resourceAwsAutoscalingGroupWarmPoolDrain(d *schema.ResourceData, meta inter
 	if isResourceTimeoutError(err) {
 		p, err = getAwsAutoscalingGroupWarmPool(d.Id(), conn)
 		if err != nil {
-			return fmt.Errorf("Error getting Warm Pool info when draining: %s", err)
+			return fmt.Errorf("error getting Warm Pool info when draining Auto Scaling Group %s: %s", d.Id(), err)
 		}
 		if p != nil && len(p.Instances) > 0 {
 			return fmt.Errorf("Warm pool still has %d instances", len(p.Instances))
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("Error draining Warm pool: %s", err)
+		return fmt.Errorf("error draining Warm pool: %s", err)
 	}
 	return nil
 }
@@ -2161,11 +2161,11 @@ func createPutWarmPoolInput(asgName string, l []interface{}) *autoscaling.PutWar
 		input.PoolState = aws.String(v.(string))
 	}
 
-	if v, ok := m["min_size"]; ok && v.(int) > 0 {
+	if v, ok := m["min_size"]; ok && v.(int) > -1 {
 		input.MinSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := m["max_group_prepared_capacity"]; ok && v.(int) > 0 {
+	if v, ok := m["max_group_prepared_capacity"]; ok && v.(int) > -2 {
 		input.MaxGroupPreparedCapacity = aws.Int64(int64(v.(int)))
 	}
 

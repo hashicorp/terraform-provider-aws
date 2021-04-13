@@ -5029,6 +5029,32 @@ func TestPutWarmPoolInput(t *testing.T) {
 			},
 		},
 		{
+			name: "0 min size",
+			input: []interface{}{map[string]interface{}{
+				"pool_state":                  "Stopped",
+				"min_size":                    0,
+				"max_group_prepared_capacity": 5,
+			}},
+			expected: &autoscaling.PutWarmPoolInput{
+				AutoScalingGroupName:     aws.String(asgName),
+				PoolState:                aws.String("Stopped"),
+				MinSize:                  aws.Int64(0),
+				MaxGroupPreparedCapacity: aws.Int64(5),
+			},
+		},
+		{
+			name: "-1 max prepared size",
+			input: []interface{}{map[string]interface{}{
+				"pool_state":                  "Stopped",
+				"max_group_prepared_capacity": -1,
+			}},
+			expected: &autoscaling.PutWarmPoolInput{
+				AutoScalingGroupName:     aws.String(asgName),
+				PoolState:                aws.String("Stopped"),
+				MaxGroupPreparedCapacity: aws.Int64(-1),
+			},
+		},
+		{
 			name: "all values",
 			input: []interface{}{map[string]interface{}{
 				"pool_state":                  "Stopped",
