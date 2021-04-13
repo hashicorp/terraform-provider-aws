@@ -308,24 +308,44 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 			Expected: nil,
 		},
 		{
-			TestName: "prefix without hyphen, correct suffix",
+			TestName: "prefix without hyphen, missing additional suffix",
 			Input:    "test20060102150405000000000001",
+			Expected: nil,
+		},
+		{
+			TestName: "prefix without hyphen, correct suffix",
+			Input:    "test20060102150405000000000001suffix",
 			Expected: strPtr("test"),
 		},
 		{
-			TestName: "prefix with hyphen, correct suffix",
+			TestName: "prefix with hyphen, missing additional suffix",
 			Input:    "test-20060102150405000000000001",
+			Expected: nil,
+		},
+		{
+			TestName: "prefix with hyphen, correct suffix",
+			Input:    "test-20060102150405000000000001suffix",
 			Expected: strPtr("test-"),
 		},
 		{
-			TestName: "prefix with hyphen, correct suffix with hex",
+			TestName: "prefix with hyphen, missing additional suffix with hex",
 			Input:    "test-200601021504050000000000f1",
+			Expected: nil,
+		},
+		{
+			TestName: "prefix with hyphen, correct suffix with hex",
+			Input:    "test-200601021504050000000000f1suffix",
 			Expected: strPtr("test-"),
 		},
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17017
 		{
-			TestName: "terraform prefix, correct suffix",
+			TestName: "terraform prefix, missing additional suffix",
 			Input:    "terraform-20060102150405000000000001",
+			Expected: nil,
+		},
+		{
+			TestName: "terraform prefix, correct suffix",
+			Input:    "terraform-20060102150405000000000001suffix",
 			Expected: strPtr("terraform-"),
 		},
 	}
@@ -333,7 +353,7 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			expected := testCase.Expected
-			got := NamePrefixFromName(testCase.Input)
+			got := NamePrefixFromNameWithSuffix(testCase.Input, "suffix")
 
 			if expected == nil && got != nil {
 				t.Errorf("got %s, expected nil", *got)
@@ -352,8 +372,8 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
-			input := Generate("", prefix)
-			got := NamePrefixFromName(input)
+			input := GenerateWithSuffix("", prefix, "suffix")
+			got := NamePrefixFromNameWithSuffix(input, "suffix")
 
 			if got == nil {
 				t.Errorf("run%d: got nil, expected %s for input %s", i, prefix, input)
