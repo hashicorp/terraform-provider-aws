@@ -43,7 +43,6 @@ In addition to all arguments above, the following attributes are exported:
 * `lifecycle_policy` - A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
 * `performance_mode` - The file system performance mode.
 * `provisioned_throughput_in_mibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
-* `tags` -A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` -A map of tags to assign to the file system.
 * `throughput_mode` - Throughput mode for the file system.
 * `size_in_bytes` - The current byte count used by the file system.
