@@ -39,8 +39,7 @@ func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags": tagsSchemaComputed(),
 
 			"filter": ec2CustomFiltersSchema(),
 		},
@@ -49,7 +48,6 @@ func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 
 func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
@@ -98,15 +96,8 @@ func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta int
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
 	d.Set("state", localgatewayroutetable.State)
 
-	tags := keyvaluetags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
