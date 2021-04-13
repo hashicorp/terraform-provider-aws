@@ -15,10 +15,11 @@ func init() {
 }
 
 func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
-	//lintignore:XAT001
+
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.acl_a"
 
+  //lintignore:XAT001
 	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
