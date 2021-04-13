@@ -3,7 +3,6 @@ package aws
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -34,7 +33,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(waiter.CreateTableTimeout),
 			Delete: schema.DefaultTimeout(waiter.DeleteTableTimeout),
 			Update: schema.DefaultTimeout(waiter.UpdateTableTimeoutTotal),
 		},
@@ -431,7 +430,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(output.TableDescription.TableName))
 	d.Set("arn", output.TableDescription.TableArn)
 
-	if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
+	if _, err := waiter.DynamoDBTableActive(conn, d.Id()); err != nil {
 		return err
 	}
 
@@ -557,7 +556,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error deleting DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if err := waitForDynamoDbGSIToBeDeleted(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+		if _, err := waiter.DynamoDBGSIDeleted(conn, d.Id(), idxName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) deletion: %w", d.Id(), idxName, err)
 		}
 	}
@@ -617,7 +616,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating DynamoDB Table (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+		if _, err := waiter.DynamoDBTableActive(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) update: %w", d.Id(), err)
 		}
 
@@ -627,7 +626,8 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			}
 
 			idxName := aws.StringValue(gsiUpdate.Update.IndexName)
-			if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+
+			if _, err := waiter.DynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
 				return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) update: %w", d.Id(), idxName, err)
 			}
 		}
@@ -651,7 +651,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error creating DynamoDB Table (%s) Global Secondary Index (%s): %w", d.Id(), idxName, err)
 		}
 
-		if err := waitForDynamoDbGSIToBeActive(d.Id(), idxName, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+		if _, err := waiter.DynamoDBGSIActive(conn, d.Id(), idxName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) Global Secondary Index (%s) creation: %w", d.Id(), idxName, err)
 		}
 	}
@@ -666,7 +666,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating DynamoDB Table (%s) SSE: %w", d.Id(), err)
 		}
 
-		if err := waitForDynamoDbSSEUpdateToBeCompleted(d.Id(), d.Timeout(schema.TimeoutUpdate), conn); err != nil {
+		if _, err := waiter.DynamoDBSSEUpdated(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) SSE update: %w", d.Id(), err)
 		}
 	}
@@ -798,7 +798,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			return fmt.Errorf("error creating DynamoDB Table (%s) replica (%s): %w", tableName, tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waiter.DynamoDBReplicaUpdateComplete(conn, tableName, tfMap["region_name"].(string)); err != nil {
+		if _, err := waiter.DynamoDBReplicaActive(conn, tableName, tfMap["region_name"].(string)); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) creation: %w", tableName, tfMap["region_name"].(string), err)
 		}
 	}
@@ -823,7 +823,8 @@ func updateDynamoDbTimeToLive(tableName string, ttlList []interface{}, conn *dyn
 	}
 
 	log.Printf("[DEBUG] Waiting for DynamoDB Table (%s) Time to Live update to complete", tableName)
-	if err := waitForDynamoDbTtlUpdateToBeCompleted(tableName, ttlMap["enabled"].(bool), conn); err != nil {
+
+	if _, err := waiter.DynamoDBTTLUpdated(conn, tableName, ttlMap["enabled"].(bool)); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB Table (%s) Time To Live update: %w", tableName, err)
 	}
 
@@ -860,7 +861,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		return fmt.Errorf("error updating DynamoDB PITR status: %w", err)
 	}
 
-	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {
+	if _, err := waiter.DynamoDBPITRUpdated(conn, d.Id(), toEnable); err != nil {
 		return fmt.Errorf("error waiting for DynamoDB PITR update: %w", err)
 	}
 
@@ -1088,7 +1089,7 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time
 			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
 		}
 
-		if err := waitForDynamoDbReplicaDeleteToBeCompleted(tableName, regionName, timeout, conn); err != nil {
+		if _, err := waiter.DynamoDBReplicaDeleted(conn, tableName, regionName); err != nil {
 			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
 		}
 	}
@@ -1493,245 +1494,4 @@ func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingM
 	}
 
 	return nil
-}
-
-// waiters
-
-func waitForDynamoDbReplicaDeleteToBeCompleted(tableName string, region string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.ReplicaStatusCreating,
-			dynamodb.ReplicaStatusUpdating,
-			dynamodb.ReplicaStatusDeleting,
-			dynamodb.ReplicaStatusActive,
-		},
-		Target:  []string{""},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
-			var targetReplica *dynamodb.ReplicaDescription
-
-			for _, replica := range result.Table.Replicas {
-				if aws.StringValue(replica.RegionName) == region {
-					targetReplica = replica
-					break
-				}
-			}
-
-			if targetReplica == nil {
-				return result, "", nil
-			}
-
-			return result, aws.StringValue(targetReplica.ReplicaStatus), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDynamoDbGSIToBeActive(tableName string, gsiName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.IndexStatusCreating,
-			dynamodb.IndexStatusUpdating,
-		},
-		Target:  []string{dynamodb.IndexStatusActive},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			table := result.Table
-
-			// Find index
-			var targetGSI *dynamodb.GlobalSecondaryIndexDescription
-			for _, gsi := range table.GlobalSecondaryIndexes {
-				if *gsi.IndexName == gsiName {
-					targetGSI = gsi
-				}
-			}
-
-			if targetGSI != nil {
-				return table, *targetGSI.IndexStatus, nil
-			}
-
-			return nil, "", nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForDynamoDbGSIToBeDeleted(tableName string, gsiName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.IndexStatusActive,
-			dynamodb.IndexStatusDeleting,
-		},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			table := result.Table
-
-			// Find index
-			var targetGSI *dynamodb.GlobalSecondaryIndexDescription
-			for _, gsi := range table.GlobalSecondaryIndexes {
-				if *gsi.IndexName == gsiName {
-					targetGSI = gsi
-				}
-			}
-
-			if targetGSI == nil {
-				return nil, "", nil
-			}
-
-			return targetGSI, *targetGSI.IndexStatus, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForDynamoDbTableToBeActive(tableName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{dynamodb.TableStatusCreating, dynamodb.TableStatusUpdating},
-		Target:  []string{dynamodb.TableStatusActive},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			return result, *result.Table.TableStatus, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForDynamoDbBackupUpdateToBeCompleted(tableName string, toEnable bool, conn *dynamodb.DynamoDB) error {
-	var pending []string
-	target := []string{dynamodb.TimeToLiveStatusDisabled}
-
-	if toEnable {
-		pending = []string{
-			"ENABLING",
-		}
-		target = []string{dynamodb.PointInTimeRecoveryStatusEnabled}
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Timeout: 10 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			if result.ContinuousBackupsDescription == nil || result.ContinuousBackupsDescription.PointInTimeRecoveryDescription == nil {
-				return 42, "", errors.New("Error reading backup status from dynamodb resource: empty description")
-			}
-			pitr := result.ContinuousBackupsDescription.PointInTimeRecoveryDescription
-
-			return result, *pitr.PointInTimeRecoveryStatus, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForDynamoDbTtlUpdateToBeCompleted(tableName string, toEnable bool, conn *dynamodb.DynamoDB) error {
-	pending := []string{
-		dynamodb.TimeToLiveStatusEnabled,
-		dynamodb.TimeToLiveStatusDisabling,
-	}
-	target := []string{dynamodb.TimeToLiveStatusDisabled}
-
-	if toEnable {
-		pending = []string{
-			dynamodb.TimeToLiveStatusDisabled,
-			dynamodb.TimeToLiveStatusEnabling,
-		}
-		target = []string{dynamodb.TimeToLiveStatusEnabled}
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Timeout: 10 * time.Second,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTimeToLive(&dynamodb.DescribeTimeToLiveInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			ttlDesc := result.TimeToLiveDescription
-
-			return result, *ttlDesc.TimeToLiveStatus, nil
-		},
-	}
-
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForDynamoDbSSEUpdateToBeCompleted(tableName string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			dynamodb.SSEStatusDisabling,
-			dynamodb.SSEStatusEnabling,
-			dynamodb.SSEStatusUpdating,
-		},
-		Target: []string{
-			dynamodb.SSEStatusDisabled,
-			dynamodb.SSEStatusEnabled,
-		},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			// Disabling SSE returns null SSEDescription.
-			if result.Table.SSEDescription == nil {
-				return result, dynamodb.SSEStatusDisabled, nil
-			}
-			return result, aws.StringValue(result.Table.SSEDescription.Status), nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-
-	return err
 }
