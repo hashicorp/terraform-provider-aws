@@ -1207,6 +1207,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("db_instance_parameter_group_name") {
+		req.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		requestUpdate = true
+	}
+
 	if d.HasChange("deletion_protection") {
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true
