@@ -60,7 +60,7 @@ func DynamoDBTableDeleted(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.
 	return nil, err
 }
 
-func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.ReplicaDescription, error) {
+func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -71,19 +71,19 @@ func DynamoDBReplicaActive(conn *dynamodb.DynamoDB, tableName, region string) (*
 			dynamodb.ReplicaStatusActive,
 		},
 		Timeout: ReplicaUpdateTimeout,
-		Refresh: DynamoDBReplicaStatus(conn, tableName, region),
+		Refresh: DynamoDBReplicaUpdate(conn, tableName, region),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dynamodb.ReplicaDescription); ok {
+	if output, ok := outputRaw.(*dynamodb.DescribeTableOutput); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.ReplicaDescription, error) {
+func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.DescribeTableOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -91,14 +91,14 @@ func DynamoDBReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string) (
 			dynamodb.ReplicaStatusDeleting,
 			dynamodb.ReplicaStatusActive,
 		},
-		Target:  []string{},
+		Target:  []string{""},
 		Timeout: ReplicaUpdateTimeout,
-		Refresh: DynamoDBReplicaStatus(conn, tableName, region),
+		Refresh: DynamoDBReplicaDelete(conn, tableName, region),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dynamodb.ReplicaDescription); ok {
+	if output, ok := outputRaw.(*dynamodb.DescribeTableOutput); ok {
 		return output, err
 	}
 

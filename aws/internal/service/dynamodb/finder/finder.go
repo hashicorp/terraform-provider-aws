@@ -23,26 +23,6 @@ func DynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.T
 	return output.Table, nil
 }
 
-func DynamoDBReplicaByTableNameRegion(conn *dynamodb.DynamoDB, tableName, region string) (*dynamodb.ReplicaDescription, error) {
-	table, err := DynamoDBTableByName(conn, tableName)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if table == nil {
-		return nil, nil
-	}
-
-	for _, replica := range table.Replicas {
-		if aws.StringValue(replica.RegionName) == region {
-			return replica, nil
-		}
-	}
-
-	return nil, nil
-}
-
 func DynamoDBGSIByTableNameIndexName(conn *dynamodb.DynamoDB, tableName, indexName string) (*dynamodb.GlobalSecondaryIndexDescription, error) {
 	table, err := DynamoDBTableByName(conn, tableName)
 

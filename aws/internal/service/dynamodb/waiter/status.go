@@ -1,6 +1,8 @@
 package waiter
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
@@ -28,23 +30,57 @@ func DynamoDBTableStatus(conn *dynamodb.DynamoDB, tableName string) resource.Sta
 	}
 }
 
-func DynamoDBReplicaStatus(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+func DynamoDBReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		replica, err := finder.DynamoDBReplicaByTableNameRegion(conn, tableName, region)
-
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-			return nil, "", nil
-		}
-
+		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+			TableName: aws.String(tableName),
+		})
 		if err != nil {
-			return nil, "", err
+			return 42, "", err
+		}
+		log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
+
+		var targetReplica *dynamodb.ReplicaDescription
+
+		for _, replica := range result.Table.Replicas {
+			if aws.StringValue(replica.RegionName) == region {
+				targetReplica = replica
+				break
+			}
 		}
 
-		if replica == nil {
-			return nil, dynamodb.ReplicaStatusCreating, nil
+		if targetReplica == nil {
+			return result, dynamodb.ReplicaStatusCreating, nil
 		}
 
-		return replica, aws.StringValue(replica.ReplicaStatus), nil
+		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
+	}
+}
+
+func DynamoDBReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+			TableName: aws.String(tableName),
+		})
+		if err != nil {
+			return 42, "", err
+		}
+
+		log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
+		var targetReplica *dynamodb.ReplicaDescription
+
+		for _, replica := range result.Table.Replicas {
+			if aws.StringValue(replica.RegionName) == region {
+				targetReplica = replica
+				break
+			}
+		}
+
+		if targetReplica == nil {
+			return result, "", nil
+		}
+
+		return result, aws.StringValue(targetReplica.ReplicaStatus), nil
 	}
 }
 

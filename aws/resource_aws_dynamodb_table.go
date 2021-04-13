@@ -430,7 +430,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", output.TableDescription.TableArn)
 
 	if _, err := waiter.DynamoDBTableActive(conn, d.Id()); err != nil {
-		return err
+		return fmt.Errorf("error waiting for creation of DynamoDB table (%s): %w", d.Id(), err)
 	}
 
 	if requiresTagging {
@@ -453,7 +453,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
 		if err := createDynamoDbReplicas(d.Id(), v.List(), conn); err != nil {
-			return fmt.Errorf("error creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
+			return fmt.Errorf("error initially creating DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
 
