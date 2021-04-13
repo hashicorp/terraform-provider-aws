@@ -7,7 +7,6 @@ import (
 	"log"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -705,7 +704,7 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
-		if err := deleteDynamoDbReplicas(d.Id(), replicas, d.Timeout(schema.TimeoutDelete), conn); err != nil {
+		if err := deleteDynamoDbReplicas(d.Id(), replicas, conn); err != nil {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %w", d.Id(), err)
 		}
 	}
@@ -747,20 +746,13 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 		}
 
 		var replicaInput = &dynamodb.CreateReplicationGroupMemberAction{}
-		needCreate := false
 
 		if v, ok := tfMap["region_name"].(string); ok && v != "" {
 			replicaInput.RegionName = aws.String(v)
-			needCreate = true
 		}
 
 		if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
 			replicaInput.KMSMasterKeyId = aws.String(v)
-			needCreate = true
-		}
-
-		if !needCreate {
-			continue
 		}
 
 		input := &dynamodb.UpdateTableInput{
@@ -772,7 +764,7 @@ func createDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			},
 		}
 
-		err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
+		err := resource.Retry(waiter.ReplicaUpdateTimeout, func() *resource.RetryError {
 			_, err := conn.UpdateTable(input)
 			if err != nil {
 				if isAWSErr(err, "ThrottlingException", "") {
@@ -878,13 +870,13 @@ func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) erro
 
 	if len(added) > 0 {
 		if err := createDynamoDbReplicas(d.Id(), added, conn); err != nil {
-			return err
+			return fmt.Errorf("error updating DynamoDB replicas for table (%s), while creating: %w", d.Id(), err)
 		}
 	}
 
 	if len(removed) > 0 {
-		if err := deleteDynamoDbReplicas(d.Id(), removed, d.Timeout(schema.TimeoutUpdate), conn); err != nil {
-			return err
+		if err := deleteDynamoDbReplicas(d.Id(), removed, conn); err != nil {
+			return fmt.Errorf("error updating DynamoDB replicas for table (%s), while deleting: %w", d.Id(), err)
 		}
 	}
 
@@ -1034,7 +1026,7 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 	return err
 }
 
-func deleteDynamoDbReplicas(tableName string, tfList []interface{}, timeout time.Duration, conn *dynamodb.DynamoDB) error {
+func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamodb.DynamoDB) error {
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
