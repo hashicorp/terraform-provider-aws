@@ -58,6 +58,5 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
 * `propagation_default_route_table_id` - Identifier of the default propagation route table.
-* `tags` - Key-value tags for the EC2 Transit Gateway. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - Key-value tags for the EC2 Transit Gateway
 * `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled.
