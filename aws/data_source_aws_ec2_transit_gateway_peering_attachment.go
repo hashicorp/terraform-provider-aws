@@ -34,8 +34,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchemaComputed(),
-			"tags_all": tagsSchemaComputed(),
+			"tags": tagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -46,7 +45,6 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 
 func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
@@ -98,15 +96,8 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData,
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
 	d.Set("transit_gateway_id", local.TransitGatewayId)
 
-	tags := keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.SetId(aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
