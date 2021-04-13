@@ -202,13 +202,20 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.DescribeFlowLogs(opts)
+
 	if err != nil {
-		log.Printf("[WARN] Flow Log (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading EC2 Flow Log (%s): %w", d.Id(), err)
+	}
+
+	if resp == nil {
+		return fmt.Errorf("error reading EC2 Flow Log (%s): empty response", d.Id())
 	}
 
 	if len(resp.FlowLogs) == 0 {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 Flow Log (%s): not found after creation", d.Id())
+		}
+
 		log.Printf("[WARN] Flow Log (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -240,7 +247,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),

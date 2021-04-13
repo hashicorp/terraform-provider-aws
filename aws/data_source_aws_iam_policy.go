@@ -30,6 +30,11 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"policy_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }

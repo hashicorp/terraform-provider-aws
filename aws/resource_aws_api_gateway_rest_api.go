@@ -67,7 +67,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			"disable_execute_api_endpoint": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 
 			"parameters": {
@@ -122,6 +122,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 						"vpc_endpoint_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -248,6 +249,38 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 				Path:  aws.String("/description"),
 				Value: aws.String(v.(string)),
 			})
+		}
+
+		if v, ok := d.GetOk("disable_execute_api_endpoint"); ok && v.(bool) != aws.BoolValue(output.DisableExecuteApiEndpoint) {
+			updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/disableExecuteApiEndpoint"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+
+		if v, ok := d.GetOk("endpoint_configuration"); ok {
+			endpointConfiguration := expandApiGatewayEndpointConfiguration(v.([]interface{}))
+
+			if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
+				if output.EndpointConfiguration != nil {
+					for _, elem := range output.EndpointConfiguration.VpcEndpointIds {
+						updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+							Op:    aws.String(apigateway.OpRemove),
+							Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
+							Value: elem,
+						})
+					}
+				}
+
+				for _, elem := range endpointConfiguration.VpcEndpointIds {
+					updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+						Op:    aws.String(apigateway.OpAdd),
+						Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
+						Value: elem,
+					})
+				}
+			}
 		}
 
 		if v := d.Get("minimum_compression_size").(int); v > -1 && int64(v) != aws.Int64Value(output.MinimumCompressionSize) {
@@ -575,6 +608,38 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 					Path:  aws.String("/description"),
 					Value: aws.String(v.(string)),
 				})
+			}
+
+			if v, ok := d.GetOk("disable_execute_api_endpoint"); ok && v.(bool) != aws.BoolValue(output.DisableExecuteApiEndpoint) {
+				updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/disableExecuteApiEndpoint"),
+					Value: aws.String(strconv.FormatBool(v.(bool))),
+				})
+			}
+
+			if v, ok := d.GetOk("endpoint_configuration"); ok {
+				endpointConfiguration := expandApiGatewayEndpointConfiguration(v.([]interface{}))
+
+				if endpointConfiguration != nil && len(endpointConfiguration.VpcEndpointIds) > 0 {
+					if output.EndpointConfiguration != nil {
+						for _, elem := range output.EndpointConfiguration.VpcEndpointIds {
+							updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+								Op:    aws.String(apigateway.OpRemove),
+								Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
+								Value: elem,
+							})
+						}
+					}
+
+					for _, elem := range endpointConfiguration.VpcEndpointIds {
+						updateInput.PatchOperations = append(updateInput.PatchOperations, &apigateway.PatchOperation{
+							Op:    aws.String(apigateway.OpAdd),
+							Path:  aws.String("/endpointConfiguration/vpcEndpointIds"),
+							Value: elem,
+						})
+					}
+				}
 			}
 
 			if v := d.Get("minimum_compression_size").(int); v > -1 && int64(v) != aws.Int64Value(output.MinimumCompressionSize) {

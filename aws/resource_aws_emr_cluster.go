@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -913,7 +914,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
 
 	var resp *emr.RunJobFlowOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RunJobFlow(params)
 		if err != nil {
@@ -1024,7 +1025,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("cluster_state", state)
 
-		d.Set("arn", aws.StringValue(cluster.ClusterArn))
+		d.Set("arn", cluster.ClusterArn)
 	}
 
 	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
@@ -1880,7 +1881,7 @@ func readHttpJson(url string, target interface{}) error {
 }
 
 func readLocalJson(localFile string, target interface{}) error {
-	file, e := ioutil.ReadFile(localFile)
+	file, e := os.ReadFile(localFile)
 	if e != nil {
 		log.Printf("[ERROR] %s", e)
 		return e

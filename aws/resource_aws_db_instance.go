@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -414,6 +415,7 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -547,7 +549,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
-	// a database instance reboot to take affect. During resource creation,
+	// a database instance reboot to take effect. During resource creation,
 	// we expect everything to be in sync before returning completion.
 	var requiresRebootDbInstance bool
 
@@ -831,7 +833,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
 		// Retry for IAM eventual consistency
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
@@ -1757,7 +1759,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 
 			// Retry for IAM eventual consistency

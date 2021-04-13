@@ -97,18 +97,18 @@ func resourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta int
 		return nil
 	}
 
-	d.Set("default_association_route_table", aws.BoolValue(transitGatewayRouteTable.DefaultAssociationRouteTable))
-	d.Set("default_propagation_route_table", aws.BoolValue(transitGatewayRouteTable.DefaultPropagationRouteTable))
+	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
+	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	d.Set("transit_gateway_id", aws.StringValue(transitGatewayRouteTable.TransitGatewayId))
+	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),

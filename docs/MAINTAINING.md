@@ -13,7 +13,6 @@
             - [tfproviderlint Updates](#tfproviderlint-updates)
             - [yaml.v2 Updates](#yaml-v2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
-    - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Breaking Changes](#breaking-changes)
 - [Branch Dictionary](#branch-dictionary)
 - [Environment Variable Dictionary](#environment-variable-dictionary)
@@ -48,11 +47,11 @@ Notes for each type of pull request are (or will be) available in subsections be
 This pull request appears to be related to/solve #1234, so I have edited the pull request description to denote the issue reference.
 ```
 
-- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md)
+- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (by default we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
-- Run relevant acceptance testing ([locally](https://github.com/hashicorp/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
+- Run relevant acceptance testing ([locally](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
 
 ``````markdown
@@ -305,34 +304,12 @@ Run the acceptance testing pattern, `TestAccAWSCloudFormationStack(_dataSource)?
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog). If so, update the repository `CHANGELOG.md` by directly committing to the `master` branch (e.g. editing the file in the GitHub web interface). See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
+- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog), and follow the CHANGELOG specification [here](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/pullrequest-submission-and-lifecycle.md#changelog-process)
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown
 The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, expected in the XXX timeframe.
 ```
-
-### Pull Request Types to CHANGELOG
-
-The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
-
-#### Changes that should have a CHANGELOG entry
-
-- New Resources and Data Sources
-- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
-- Resource and provider bug fixes
-- Resource and provider enhancements
-- Deprecations
-- Removals
-
-#### Changes that may have a CHANGELOG entry
-
-- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
-
-#### Changes that should _not_ have a CHANGELOG entry
-
-- Resource and provider documentation updates
-- Testing updates
 
 ## Breaking Changes
 
@@ -348,14 +325,14 @@ The following branch conventions are used:
 
 | Branch | Example | Description |
 |--------|---------|-------------|
-| `master` | `master` | Main, unreleased code branch. |
+| `main` | `main` | Main, unreleased code branch. |
 | `release/*` | `release/2.x` | Backport branches for previous major releases. |
 
 Additional branch naming recommendations can be found in the [Pull Request Submission and Lifecycle documentation](contributing/pullrequest-submission-and-lifecycle.md#branch-prefixes).
 
 ## Environment Variable Dictionary
 
-Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing.
+Environment variables (beyond standard AWS Go SDK ones) used by acceptance testing. See also the `aws/internal/envvar` package.
 
 | Variable | Description |
 |----------|-------------|

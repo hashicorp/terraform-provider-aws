@@ -12,10 +12,10 @@ Manages an RDS database instance snapshot. For managing RDS database cluster sna
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_instance" "bar" {
   allocated_storage = 10
-  engine            = "MySQL"
+  engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
   name              = "baz"

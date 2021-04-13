@@ -16,7 +16,7 @@ Manages an Amazon API Gateway Version 2 API.
 
 ### Basic WebSocket API
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name                       = "example-websocket-api"
   protocol_type              = "WEBSOCKET"
@@ -26,7 +26,7 @@ resource "aws_apigatewayv2_api" "example" {
 
 ### Basic HTTP API
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name          = "example-http-api"
   protocol_type = "HTTP"
@@ -57,6 +57,7 @@ For HTTP integrations, specify a fully qualified URL. For Lambda integrations, s
 The type of the integration will be `HTTP_PROXY` or `AWS_PROXY`, respectively. Applicable for HTTP APIs.
 * `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the HTTP APIs. Supported only for HTTP APIs.
 * `version` - (Optional) A version identifier for the API. Must be between 1 and 64 characters in length.
+* `fail_on_warnings` - (Optional) Whether warnings should return an error while API Gateway is creating or updating the resource using an OpenAPI specification. Defaults to `false`. Applicable for HTTP APIs.
 
 __Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the integrations and route for the HTTP API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
 
@@ -79,7 +80,7 @@ The `cors_configuration` object supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The API identifier.
-* `api_endpoint` - The URI of the API, of the form `{api-id}.execute-api.{region}.amazonaws.com`.
+* `api_endpoint` - The URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
 * `arn` - The ARN of the API.
 * `execution_arn` - The ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
 or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).

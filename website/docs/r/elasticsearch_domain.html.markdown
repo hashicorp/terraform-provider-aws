@@ -14,7 +14,7 @@ Manages an AWS Elasticsearch Domain.
 
 ### Basic Usage
 
-```hcl
+```terraform
 resource "aws_elasticsearch_domain" "example" {
   domain_name           = "example"
   elasticsearch_version = "1.5"
@@ -37,7 +37,7 @@ resource "aws_elasticsearch_domain" "example" {
 
 -> See also: [`aws_elasticsearch_domain_policy` resource](/docs/providers/aws/r/elasticsearch_domain_policy.html)
 
-```hcl
+```terraform
 variable "domain" {
   default = "tf-test"
 }
@@ -72,7 +72,7 @@ POLICY
 
 ### Log Publishing to CloudWatch Logs
 
-```hcl
+```terraform
 resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
@@ -113,7 +113,7 @@ resource "aws_elasticsearch_domain" "example" {
 
 ### VPC based ES
 
-```hcl
+```terraform
 variable "vpc" {}
 
 variable "domain" {
@@ -223,6 +223,7 @@ The following arguments are supported:
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
 * `log_publishing_options` - (Optional) Options for publishing slow  and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource.
+* `cognito_options` - (Optional) Options for authenticating Kibana with Cognito. See below.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
 * `tags` - (Optional) A map of tags to assign to the resource
@@ -251,8 +252,11 @@ The **advanced_security_options** block supports the following attributes:
 
 **domain_endpoint_options** supports the following attributes:
 
-* `enforce_https` - (Required) Whether or not to require HTTPS
+* `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
 * `tls_security_policy` - (Optional) The name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the Elasticsearch domain
+* `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint
+* `custom_endpoint_certificate_arn` - (Optional) ACM certificate ARN for your custom endpoint
 
 **cluster_config** supports the following attributes:
 

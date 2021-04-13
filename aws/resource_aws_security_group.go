@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,7 +35,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -53,6 +54,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(0, 100),
@@ -381,7 +383,7 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arn", sgArn.String())
 	d.Set("description", sg.Description)
 	d.Set("name", sg.GroupName)
-	d.Set("name_prefix", aws.StringValue(naming.NamePrefixFromName(aws.StringValue(sg.GroupName))))
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(sg.GroupName)))
 	d.Set("owner_id", sg.OwnerId)
 	d.Set("vpc_id", sg.VpcId)
 
@@ -466,13 +468,23 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteSecurityGroup(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			if tfawserr.ErrCodeEquals(err, "InvalidGroup.NotFound") {
 				return nil
 			}
-			if isAWSErr(err, "DependencyViolation", "") {
-				// If it is a dependency violation, we want to retry
+
+			// If it is a dependency violation, we want to retry
+			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
 				return resource.RetryableError(err)
 			}
+
+			if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
+				return resource.RetryableError(err)
+			}
+
+			if tfawserr.ErrCodeEquals(err, "InvalidGroup.InUse") {
+				return resource.RetryableError(err)
+			}
+
 			return resource.NonRetryableError(err)
 		}
 		return nil

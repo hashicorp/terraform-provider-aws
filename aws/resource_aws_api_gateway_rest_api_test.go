@@ -71,6 +71,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -110,6 +111,7 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -159,6 +161,7 @@ func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -181,6 +184,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -256,6 +260,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -302,86 +307,13 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VPCEndpoint(t *testing.T) {
-	var restApi apigateway.RestApi
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_api_gateway_rest_api.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
-		Steps: []resource.TestStep{
-			{
-				PreConfig: func() {
-					// Ensure region supports PRIVATE endpoint
-					// This can eventually be moved to a PreCheck function
-					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
-					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
-						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
-						EndpointConfiguration: &apigateway.EndpointConfiguration{
-							Types: []*string{aws.String("PRIVATE")},
-						},
-					})
-					if err != nil {
-						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
-							t.Skip("Region does not support PRIVATE endpoint type")
-						}
-						t.Fatal(err)
-					}
-
-					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
-						RestApiId: output.Id,
-					})
-					if err != nil {
-						t.Fatal(err)
-					}
-				},
-				Config: testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
-				),
-			},
-			{
-				Config: testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSAPIGatewayRestApi_ApiKeySource(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -419,6 +351,7 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_OverrideBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -462,6 +395,7 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_SetByBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -489,6 +423,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -525,6 +460,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_OverrideBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -571,6 +507,7 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_SetByBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -599,6 +536,7 @@ func TestAccAWSAPIGatewayRestApi_Body(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -642,6 +580,7 @@ func TestAccAWSAPIGatewayRestApi_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -676,6 +615,7 @@ func TestAccAWSAPIGatewayRestApi_Description_OverrideBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -719,6 +659,7 @@ func TestAccAWSAPIGatewayRestApi_Description_SetByBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -745,11 +686,12 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, false),
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
 				),
@@ -760,16 +702,229 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, true),
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `true`),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName, false),
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_OverrideBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointOverrideBody(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
+			// Verify override can be unset (only for body set to false)
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointOverrideBody(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+				),
+			},
+			// Verify override can be reset
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointOverrideBody(rName, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_SetByBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointSetByBody(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds(t *testing.T) {
+	var restApi apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName1 := "aws_vpc_endpoint.test"
+	vpcEndpointResourceName2 := "aws_vpc_endpoint.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName2, "id"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_OverrideBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
+	vpcEndpointResourceName2 := "aws_vpc_endpoint.test.1"
+	vpcEndpointResourceName3 := "aws_vpc_endpoint.test.2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
+			// Verify updated configuration value still overrides
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+				),
+			},
+			// Verify updated body value is still overridden
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_SetByBody(t *testing.T) {
+	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_rest_api.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsSetByBody(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
 			},
 		},
 	})
@@ -782,6 +937,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -823,6 +979,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_OverrideBody(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -866,6 +1023,7 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_SetByBody(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -896,6 +1054,7 @@ func TestAccAWSAPIGatewayRestApi_Name_OverrideBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -939,6 +1098,7 @@ func TestAccAWSAPIGatewayRestApi_Parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -974,6 +1134,7 @@ func TestAccAWSAPIGatewayRestApi_Policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -1005,6 +1166,7 @@ func TestAccAWSAPIGatewayRestApi_Policy_OverrideBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -1051,6 +1213,7 @@ func TestAccAWSAPIGatewayRestApi_Policy_SetByBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
@@ -1176,13 +1339,96 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, endpointType)
 }
 
-func testAccAWSAPIGatewayRestAPIConfig_DisableExecuteApiEndpoint(rName string, disabled bool) string {
+func testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpoint(rName string, disableExecuteApiEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name                         = "%s"
-  disable_execute_api_endpoint = %t
+  disable_execute_api_endpoint = %[2]t
+  name                         = %[1]q
 }
-`, rName, disabled)
+`, rName, disableExecuteApiEndpoint)
+}
+
+func testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointOverrideBody(rName string, configDisableExecuteApiEndpoint bool, bodyDisableExecuteApiEndpoint bool) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  disable_execute_api_endpoint = %[2]t
+  name                         = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://aws.amazon.com/"
+          }
+        }
+      }
+    }
+    x-amazon-apigateway-endpoint-configuration = {
+      disableExecuteApiEndpoint = %[3]t
+    }
+  })
+}
+`, rName, configDisableExecuteApiEndpoint, bodyDisableExecuteApiEndpoint)
+}
+
+func testAccAWSAPIGatewayRestAPIConfigDisableExecuteApiEndpointSetByBody(rName string, bodyDisableExecuteApiEndpoint bool) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://aws.amazon.com/"
+          }
+        }
+      }
+    }
+    x-amazon-apigateway-endpoint-configuration = {
+      disableExecuteApiEndpoint = %[2]t
+    }
+  })
+}
+`, rName, bodyDisableExecuteApiEndpoint)
 }
 
 func testAccAWSAPIGatewayRestAPIConfig_Name(rName string) string {
@@ -1193,10 +1439,14 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName string) string {
-	return fmt.Sprintf(`
+func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds1(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_vpc" "test" {
-  cidr_block           = "11.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -1205,45 +1455,27 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_security_group" "test" {
+resource "aws_default_security_group" "test" {
   vpc_id = aws_vpc.test.id
-  name   = "default"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = aws_vpc.test.cidr_block
   availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-data "aws_region" "current" {}
-
 resource "aws_vpc_endpoint" "test" {
-  vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
-
-  subnet_ids = [
-    aws_subnet.test.id,
-  ]
-
-  security_group_ids = [
-    data.aws_security_group.test.id,
-  ]
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
 }
 
 resource "aws_api_gateway_rest_api" "test" {
@@ -1254,13 +1486,17 @@ resource "aws_api_gateway_rest_api" "test" {
     vpc_endpoint_ids = [aws_vpc_endpoint.test.id]
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration2(rName string) string {
-	return fmt.Sprintf(`
+func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds2(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_vpc" "test" {
-  cidr_block           = "11.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
@@ -1269,60 +1505,36 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_security_group" "test" {
+resource "aws_default_security_group" "test" {
   vpc_id = aws_vpc.test.id
-  name   = "default"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = aws_vpc.test.cidr_block
   availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-data "aws_region" "current" {}
-
 resource "aws_vpc_endpoint" "test" {
-  vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
-
-  subnet_ids = [
-    aws_subnet.test.id,
-  ]
-
-  security_group_ids = [
-    data.aws_security_group.test.id,
-  ]
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
 }
 
 resource "aws_vpc_endpoint" "test2" {
-  vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
-
-  subnet_ids = [
-    aws_subnet.test.id,
-  ]
-
-  security_group_ids = [
-    data.aws_security_group.test.id,
-  ]
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
 }
 
 resource "aws_api_gateway_rest_api" "test" {
@@ -1333,7 +1545,174 @@ resource "aws_api_gateway_rest_api" "test" {
     vpc_endpoint_ids = [aws_vpc_endpoint.test.id, aws_vpc_endpoint.test2.id]
   }
 }
-`, rName)
+`, rName))
+}
+
+func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsOverrideBody(rName string, configVpcEndpointResourceName string, bodyVpcEndpointResourceName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  count = 3
+
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  endpoint_configuration {
+    types            = ["PRIVATE"]
+    vpc_endpoint_ids = [%[2]s]
+  }
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://aws.amazon.com/"
+          }
+        }
+      }
+    }
+    x-amazon-apigateway-endpoint-configuration = {
+      vpcEndpointIds = [%[3]s]
+    }
+  })
+}
+`, rName, configVpcEndpointResourceName+".id", bodyVpcEndpointResourceName+".id"))
+}
+
+func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsSetByBody(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  private_dns_enabled = false
+  security_group_ids  = [aws_default_security_group.test.id]
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "Interface"
+  vpc_id              = aws_vpc.test.id
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+
+  endpoint_configuration {
+    types = ["PRIVATE"]
+  }
+
+  body = jsonencode({
+    swagger = "2.0"
+    info = {
+      title   = "test"
+      version = "2017-04-20T04:08:08Z"
+    }
+    schemes = ["https"]
+    paths = {
+      "/test" = {
+        get = {
+          responses = {
+            "200" = {
+              description = "OK"
+            }
+          }
+          x-amazon-apigateway-integration = {
+            httpMethod = "GET"
+            type       = "HTTP"
+            responses = {
+              default = {
+                statusCode = 200
+              }
+            }
+            uri = "https://aws.amazon.com/"
+          }
+        }
+      }
+    }
+    x-amazon-apigateway-endpoint-configuration = {
+      vpcEndpointIds = [aws_vpc_endpoint.test.id]
+    }
+  })
+}
+`, rName))
 }
 
 func testAccAWSAPIGatewayRestAPIConfigTags1(rName, tagKey1, tagValue1 string) string {
