@@ -72,10 +72,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								}
 								return false
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactNamespaceNone,
-								codebuild.ArtifactNamespaceBuildId,
-							}, false),
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactNamespace_Values(), false),
 						},
 						"packaging": {
 							Type:     schema.TypeString,
@@ -89,23 +86,16 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								}
 								return false
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactPackagingNone,
-								codebuild.ArtifactPackagingZip,
-							}, false),
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactPackaging_Values(), false),
 						},
 						"path": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactsTypeCodepipeline,
-								codebuild.ArtifactsTypeS3,
-								codebuild.ArtifactsTypeNoArtifacts,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactsType_Values(), false),
 						},
 						"override_artifact_name": {
 							Type:     schema.TypeBool,
@@ -172,14 +162,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  codebuild.CacheTypeNoCache,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.CacheTypeNoCache,
-								codebuild.CacheTypeS3,
-								codebuild.CacheTypeLocal,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codebuild.CacheTypeNoCache,
+							ValidateFunc: validation.StringInSlice(codebuild.CacheType_Values(), false),
 						},
 						"location": {
 							Type:     schema.TypeString,
@@ -216,14 +202,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"compute_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ComputeTypeBuildGeneral1Small,
-								codebuild.ComputeTypeBuildGeneral1Medium,
-								codebuild.ComputeTypeBuildGeneral1Large,
-								codebuild.ComputeTypeBuildGeneral12xlarge,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ComputeType_Values(), false),
 						},
 						"environment_variable": {
 							Type:     schema.TypeList,
@@ -239,14 +220,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Required: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.EnvironmentVariableTypePlaintext,
-											codebuild.EnvironmentVariableTypeParameterStore,
-											codebuild.EnvironmentVariableTypeSecretsManager,
-										}, false),
-										Default: codebuild.EnvironmentVariableTypePlaintext,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.EnvironmentVariableType_Values(), false),
+										Default:      codebuild.EnvironmentVariableTypePlaintext,
 									},
 								},
 							},
@@ -256,24 +233,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.EnvironmentTypeLinuxContainer,
-								codebuild.EnvironmentTypeLinuxGpuContainer,
-								codebuild.EnvironmentTypeWindowsContainer,
-								codebuild.EnvironmentTypeWindowsServer2019Container,
-								codebuild.EnvironmentTypeArmContainer,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.EnvironmentType_Values(), false),
 						},
 						"image_pull_credentials_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  codebuild.ImagePullCredentialsTypeCodebuild,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ImagePullCredentialsTypeCodebuild,
-								codebuild.ImagePullCredentialsTypeServiceRole,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codebuild.ImagePullCredentialsTypeCodebuild,
+							ValidateFunc: validation.StringInSlice(codebuild.ImagePullCredentialsType_Values(), false),
 						},
 						"privileged_mode": {
 							Type:     schema.TypeBool,
@@ -296,11 +264,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Required: true,
 									},
 									"credential_provider": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.CredentialProviderTypeSecretsManager,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.CredentialProviderType_Values(), false),
 									},
 								},
 							},
@@ -321,13 +287,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  codebuild.LogsConfigStatusTypeEnabled,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.LogsConfigStatusTypeDisabled,
-											codebuild.LogsConfigStatusTypeEnabled,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      codebuild.LogsConfigStatusTypeEnabled,
+										ValidateFunc: validation.StringInSlice(codebuild.LogsConfigStatusType_Values(), false),
 									},
 									"group_name": {
 										Type:     schema.TypeString,
@@ -348,13 +311,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"status": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  codebuild.LogsConfigStatusTypeDisabled,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.LogsConfigStatusTypeDisabled,
-											codebuild.LogsConfigStatusTypeEnabled,
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      codebuild.LogsConfigStatusTypeDisabled,
+										ValidateFunc: validation.StringInSlice(codebuild.LogsConfigStatusType_Values(), false),
 									},
 									"location": {
 										Type:         schema.TypeString,
@@ -383,6 +343,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"secondary_artifacts": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 12,
 				Set:      resourceAwsCodeBuildProjectArtifactsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -400,13 +361,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"namespace_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactNamespaceNone,
-								codebuild.ArtifactNamespaceBuildId,
-							}, false),
-							Default: codebuild.ArtifactNamespaceNone,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactNamespace_Values(), false),
+							Default:      codebuild.ArtifactNamespaceNone,
 						},
 						"override_artifact_name": {
 							Type:     schema.TypeBool,
@@ -414,13 +372,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Default:  false,
 						},
 						"packaging": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactPackagingNone,
-								codebuild.ArtifactPackagingZip,
-							}, false),
-							Default: codebuild.ArtifactPackagingNone,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactPackaging_Values(), false),
+							Default:      codebuild.ArtifactPackagingNone,
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -431,11 +386,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactsTypeS3,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.ArtifactsType_Values(), false),
 						},
 					},
 				},
@@ -443,6 +396,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			"secondary_sources": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 12,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
@@ -458,12 +412,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.SourceAuthTypeOauth,
-										}, false),
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
+										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
 									},
 								},
 							},
@@ -478,16 +430,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.SourceTypeCodecommit,
-								codebuild.SourceTypeCodepipeline,
-								codebuild.SourceTypeGithub,
-								codebuild.SourceTypeS3,
-								codebuild.SourceTypeBitbucket,
-								codebuild.SourceTypeGithubEnterprise,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.SourceType_Values(), false),
 						},
 						"git_clone_depth": {
 							Type:         schema.TypeInt,
@@ -540,8 +485,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 			},
 			"service_role": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 			"source": {
 				Type:     schema.TypeList,
@@ -562,12 +508,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										Deprecated: "Use the aws_codebuild_source_credential resource instead",
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											codebuild.SourceAuthTypeOauth,
-										}, false),
-										Deprecated: "Use the aws_codebuild_source_credential resource instead",
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codebuild.SourceAuthType_Values(), false),
+										Deprecated:   "Use the aws_codebuild_source_credential resource instead",
 									},
 								},
 							},
@@ -582,17 +526,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.SourceTypeCodecommit,
-								codebuild.SourceTypeCodepipeline,
-								codebuild.SourceTypeGithub,
-								codebuild.SourceTypeS3,
-								codebuild.SourceTypeBitbucket,
-								codebuild.SourceTypeGithubEnterprise,
-								codebuild.SourceTypeNoSource,
-							}, false),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codebuild.SourceType_Values(), false),
 						},
 						"git_clone_depth": {
 							Type:         schema.TypeInt,
@@ -681,14 +617,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							// Set:      schema.HashString,
 							MaxItems: 16,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							// Set:      schema.HashString,
 							MaxItems: 5,
 						},
 					},
@@ -1189,8 +1123,8 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
-	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE source types.
-	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
+	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE, BITBUCKET source types.
+	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise || sourceType == codebuild.SourceTypeBitbucket {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
 			config := v.([]interface{})[0].(map[string]interface{})
 
