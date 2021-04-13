@@ -16,20 +16,31 @@ var resourceUniqueIDRegexp = regexp.MustCompile(resourceUniqueIDRegexpPattern)
 
 // Generate returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with terraform-
 func Generate(name string, namePrefix string) string {
+	return GenerateWithSuffix(name, namePrefix, "")
+}
+
+// GenerateWithSuffix returns in order the name if non-empty, a prefix generated name if non-empty, or fully generated name prefixed with "terraform-".
+// In the latter two cases, any suffix is appended to the generated name
+func GenerateWithSuffix(name string, namePrefix string, nameSuffix string) string {
 	if name != "" {
 		return name
 	}
 
 	if namePrefix != "" {
-		return resource.PrefixedUniqueId(namePrefix)
+		return resource.PrefixedUniqueId(namePrefix) + nameSuffix
 	}
 
-	return resource.UniqueId()
+	return resource.UniqueId() + nameSuffix
 }
 
 // HasResourceUniqueIdSuffix returns true if the string has the built-in unique ID suffix
 func HasResourceUniqueIdSuffix(s string) bool {
 	return resourceUniqueIDSuffixRegexp.MatchString(s)
+}
+
+// HasResourceUniqueIdPlusAdditionalSuffix returns true if the string has the built-in unique ID suffix plus an additional suffix
+func HasResourceUniqueIdPlusAdditionalSuffix(s string, additionalSuffix string) bool {
+	return resourceUniqueIDPlusAdditionalSuffixRegexp(additionalSuffix).MatchString(s)
 }
 
 // NamePrefixFromName returns a name prefix if the string matches prefix criteria
@@ -57,10 +68,40 @@ func NamePrefixFromName(name string) *string {
 	return &namePrefix
 }
 
+func NamePrefixFromNameWithSuffix(name, nameSuffix string) *string {
+	if !HasResourceUniqueIdPlusAdditionalSuffix(name, nameSuffix) {
+		return nil
+	}
+
+	namePrefixIndex := len(name) - resource.UniqueIDSuffixLength - len(nameSuffix)
+
+	if namePrefixIndex <= 0 {
+		return nil
+	}
+
+	namePrefix := name[:namePrefixIndex]
+
+	return &namePrefix
+}
+
 // TestCheckResourceAttrNameFromPrefix verifies that the state attribute value matches name generated from given prefix
 func TestCheckResourceAttrNameFromPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		nameRegexpPattern := resourcePrefixedUniqueIDRegexpPattern(prefix)
+		attributeMatch, err := regexp.Compile(nameRegexpPattern)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile name regexp (%s): %w", nameRegexpPattern, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// TestCheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name generated with a suffix from given prefix
+func TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName string, attributeName string, prefix string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		nameRegexpPattern := resourcePrefixedUniqueIDPlusAdditionalRegexpPattern(prefix, suffix)
 		attributeMatch, err := regexp.Compile(nameRegexpPattern)
 
 		if err != nil {
@@ -78,6 +119,35 @@ func TestCheckResourceAttrNameGenerated(resourceName string, attributeName strin
 	}
 }
 
+// TestCheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
+func TestCheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPlusAdditionalRegexp(suffix))(s)
+	}
+}
+
 func resourcePrefixedUniqueIDRegexpPattern(prefix string) string {
 	return fmt.Sprintf("^%s%s", prefix, resourceUniqueIDSuffixRegexpPattern)
+}
+
+// Variants supporting an additional name suffix.
+
+func resourceUniqueIDPlusAdditionalSuffixRegexpPattern(additionalSuffix string) string {
+	return fmt.Sprintf("[[:xdigit:]]{%d}%s$", resource.UniqueIDSuffixLength, additionalSuffix)
+}
+
+func resourceUniqueIDPlusAdditionalSuffixRegexp(additionalSuffix string) *regexp.Regexp {
+	return regexp.MustCompile(resourceUniqueIDPlusAdditionalSuffixRegexpPattern(additionalSuffix))
+}
+
+func resourcePrefixedUniqueIDPlusAdditionalRegexpPattern(prefix string, additionalSuffix string) string {
+	return fmt.Sprintf("^%s%s", prefix, resourceUniqueIDPlusAdditionalSuffixRegexpPattern(additionalSuffix))
+}
+
+func resourceUniqueIDPlusAdditionalRegexpPattern(additionalSuffix string) string {
+	return resourcePrefixedUniqueIDPlusAdditionalRegexpPattern(resource.UniqueIdPrefix, additionalSuffix)
+}
+
+func resourceUniqueIDPlusAdditionalRegexp(additionalSuffix string) *regexp.Regexp {
+	return regexp.MustCompile(resourceUniqueIDPlusAdditionalRegexpPattern(additionalSuffix))
 }
