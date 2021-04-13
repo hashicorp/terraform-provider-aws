@@ -42,5 +42,4 @@ In addition to all arguments above, the following attributes are exported:
         * `owner_uid` - POSIX owner user ID
         * `permissions` - POSIX permissions mode
     * `path` - Path exposed as the root directory
-* `tags` - Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - Key-value mapping of resource tags.
