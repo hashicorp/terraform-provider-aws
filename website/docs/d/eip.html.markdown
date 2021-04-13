@@ -78,7 +78,6 @@ In addition to all arguments above, the following attributes are exported:
 * `carrier_ip` - The carrier IP address.
 * `customer_owned_ipv4_pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `customer_owned_ip` - Customer Owned IP.
-* `tags` - Key-value map of tags associated with Elastic IP. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags` - Key-value map of tags associated with Elastic IP.
 
 ~> **Note:** The data source computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
