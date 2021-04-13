@@ -1027,6 +1027,8 @@ func deleteDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 }
 
 func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamodb.DynamoDB) error {
+	var g multierror.Group
+
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
@@ -1044,49 +1046,53 @@ func deleteDynamoDbReplicas(tableName string, tfList []interface{}, conn *dynamo
 			continue
 		}
 
-		input := &dynamodb.UpdateTableInput{
-			TableName: aws.String(tableName),
-			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-				{
-					Delete: &dynamodb.DeleteReplicationGroupMemberAction{
-						RegionName: aws.String(regionName),
+		g.Go(func() error {
+			input := &dynamodb.UpdateTableInput{
+				TableName: aws.String(tableName),
+				ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
+					{
+						Delete: &dynamodb.DeleteReplicationGroupMemberAction{
+							RegionName: aws.String(regionName),
+						},
 					},
 				},
-			},
-		}
-
-		err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
-			_, err := conn.UpdateTable(input)
-			if err != nil {
-				if isAWSErr(err, "ThrottlingException", "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
 			}
+
+			err := resource.Retry(waiter.UpdateTableTimeout, func() *resource.RetryError {
+				_, err := conn.UpdateTable(input)
+				if err != nil {
+					if isAWSErr(err, "ThrottlingException", "") {
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, dynamodb.ErrCodeResourceInUseException, "") {
+						return resource.RetryableError(err)
+					}
+
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.UpdateTable(input)
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
+			}
+
+			if _, err := waiter.DynamoDBReplicaDeleted(conn, tableName, regionName); err != nil {
+				return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
+			}
+
 			return nil
 		})
-
-		if isResourceTimeoutError(err) {
-			_, err = conn.UpdateTable(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error deleting DynamoDB Table (%s) replica (%s): %w", tableName, regionName, err)
-		}
-
-		if _, err := waiter.DynamoDBReplicaDeleted(conn, tableName, regionName); err != nil {
-			return fmt.Errorf("error waiting for DynamoDB Table (%s) replica (%s) deletion: %w", tableName, regionName, err)
-		}
 	}
 
-	return nil
+	return g.Wait().ErrorOrNil()
 }
 
 // flatteners, expanders
