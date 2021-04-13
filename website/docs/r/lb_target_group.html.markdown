@@ -103,6 +103,7 @@ Application Cookie Blocks (`app_coookie`) support the following:
 
 * `cookie_name` - (Required). Name of the application based cookie. Name of the cookie should not start with the following names: AWSALB, AWSALBAPP, and AWSALBTG. They're reserved for use by the load balancer.
 * `duration_seconds` - (Optional). The time period, in seconds, during which requests from a client should be routed to the same target. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

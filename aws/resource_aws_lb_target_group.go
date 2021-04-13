@@ -249,19 +249,6 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								return false
 							},
 						},
-						"cookie_duration": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      86400,
-							ValidateFunc: validation.IntBetween(0, 604800),
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
-									return true
-								}
-								return false
-							},
-						},
 						"app_cookie": {
 							Type:     schema.TypeList,
 							Optional: true,

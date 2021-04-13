@@ -2516,7 +2516,6 @@ resource "aws_vpc" "test" {
 `, targetGroupName, appSstickinessBlock)
 }
 
-
 func testAccAWSLBTargetGroupConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
