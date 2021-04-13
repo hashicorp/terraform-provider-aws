@@ -69,9 +69,7 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	subnetId := d.Get("subnet_id").(string)
 	association, err := findNetworkAclAssociation(subnetId, conn)
 	if err != nil {
-		log.Printf("[WARN] Association for subnet %s was not found, removing from state", subnetId)
-		d.SetId("")
-		return nil
+		return fmt.Errorf("Unable to find association for subnet %s", subnetId)
 	}
 
 	d.Set("network_acl_id", aws.StringValue(association.NetworkAclId))
@@ -168,6 +166,9 @@ func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.ReplaceNetworkAclAssociation(&associationOpts)
+	}
 	if err != nil {
 		return err
 	}

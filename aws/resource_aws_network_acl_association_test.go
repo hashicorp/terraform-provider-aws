@@ -15,6 +15,7 @@ func init() {
 }
 
 func TestAccAWSNetworkAclAssociation_basic(t *testing.T) {
+	//lintignore:XAT001
 	var networkAcl ec2.NetworkAcl
 	resourceName := "aws_network_acl.acl_a"
 
