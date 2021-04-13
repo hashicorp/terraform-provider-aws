@@ -269,15 +269,11 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&targetGroup1, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&targetGroup1, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&targetGroup1, 3),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&targetGroup1, 3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -300,15 +296,11 @@ func TestAccAWSLBTargetGroup_networkLB_TargetGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&targetGroup2, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&targetGroup2, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&targetGroup2, 5),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&targetGroup2, 5),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -522,16 +514,12 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confBefore, 30),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/healthz"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&confBefore, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "2"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&confBefore, 2),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "2"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&confBefore, 2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -548,16 +536,12 @@ func TestAccAWSLBTargetGroup_TCP_HTTPHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&confAfter, 30),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/healthz2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
-					testAccCheckAWSLBTargetGroupHealthCheckTimeout(&confAfter, 10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&confAfter, 4),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&confAfter, 4),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -835,7 +819,6 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
-					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, false),
 				),
 			},
 			{
@@ -846,7 +829,6 @@ func TestAccAWSLBTargetGroup_enableHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
-					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, true),
 				),
 			},
 		},
@@ -882,14 +864,11 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&conf, 60),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&conf, 3),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&conf, 3),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 				),
 			},
@@ -908,17 +887,13 @@ func TestAccAWSLBTargetGroup_updateHealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
-					testAccCheckAWSLBTargetGroupHealthCheckEnabled(&conf, true),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
-					testAccCheckAWSLBTargetGroupHealthCheckInterval(&conf, 30),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
-					testAccCheckAWSLBTargetGroupHealthyThreshold(&conf, 4),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
-					testAccCheckAWSLBTargetGroupUnhealthyThreshold(&conf, 4),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1418,76 +1393,6 @@ func testAccCheckAWSLBTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.Tes
 			return fmt.Errorf("ELBv2 Target Group (%s) not recreated", aws.StringValue(i.TargetGroupArn))
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckAWSLBTargetGroupHealthCheckEnabled(res *elbv2.TargetGroup, expected bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if res.HealthCheckEnabled == nil {
-			return fmt.Errorf("Expected HealthCheckEnabled to be %t, given %#v",
-				expected, res.HealthCheckEnabled)
-		}
-		if *res.HealthCheckEnabled != expected {
-			return fmt.Errorf("Expected HealthCheckEnabled to be %t, given %t",
-				expected, *res.HealthCheckEnabled)
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSLBTargetGroupHealthCheckInterval(res *elbv2.TargetGroup, expected int64) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if res.HealthCheckIntervalSeconds == nil {
-			return fmt.Errorf("Expected HealthCheckIntervalSeconds to be %d, given: %#v",
-				expected, res.HealthCheckIntervalSeconds)
-		}
-		if *res.HealthCheckIntervalSeconds != expected {
-			return fmt.Errorf("Expected HealthCheckIntervalSeconds to be %d, given: %d",
-				expected, *res.HealthCheckIntervalSeconds)
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSLBTargetGroupHealthCheckTimeout(res *elbv2.TargetGroup, expected int64) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if res.HealthCheckTimeoutSeconds == nil {
-			return fmt.Errorf("Expected HealthCheckTimeoutSeconds to be %d, given: %#v",
-				expected, res.HealthCheckTimeoutSeconds)
-		}
-		if *res.HealthCheckTimeoutSeconds != expected {
-			return fmt.Errorf("Expected HealthCheckTimeoutSeconds to be %d, given: %d",
-				expected, *res.HealthCheckTimeoutSeconds)
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSLBTargetGroupHealthyThreshold(res *elbv2.TargetGroup, expected int64) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if res.HealthyThresholdCount == nil {
-			return fmt.Errorf("Expected HealthyThresholdCount to be %d, given: %#v",
-				expected, res.HealthyThresholdCount)
-		}
-		if *res.HealthyThresholdCount != expected {
-			return fmt.Errorf("Expected HealthyThresholdCount to be %d, given: %d",
-				expected, *res.HealthyThresholdCount)
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSLBTargetGroupUnhealthyThreshold(res *elbv2.TargetGroup, expected int64) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if res.UnhealthyThresholdCount == nil {
-			return fmt.Errorf("Expected.UnhealthyThresholdCount to be %d, given: %#v",
-				expected, res.UnhealthyThresholdCount)
-		}
-		if *res.UnhealthyThresholdCount != expected {
-			return fmt.Errorf("Expected.UnhealthyThresholdCount to be %d, given: %d",
-				expected, *res.UnhealthyThresholdCount)
-		}
 		return nil
 	}
 }
