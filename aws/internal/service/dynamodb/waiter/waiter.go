@@ -42,7 +42,6 @@ func DynamoDBReplicaUpdateComplete(conn *dynamodb.DynamoDB, tableName, region st
 			dynamodb.ReplicaStatusUpdating,
 			dynamodb.ReplicaStatusDeleting,
 			ReplicaStatusEmptyResult,
-			ReplicaStatusNotFound,
 		},
 		Target: []string{
 			dynamodb.ReplicaStatusActive,

@@ -3,7 +3,6 @@ package waiter
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -17,10 +16,6 @@ const (
 func DynamoDBTableStatus(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := finder.DynamoDBTableByName(conn, tableName)
-
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-			return nil, "", nil
-		}
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -43,7 +38,7 @@ func DynamoDBReplicaStatus(conn *dynamodb.DynamoDB, tableName, region string) re
 		replica, err := finder.DynamoDBReplicaByTableNameRegion(conn, tableName, region)
 
 		if tfresource.NotFound(err) {
-			return nil, ReplicaStatusNotFound, nil
+			return nil, ReplicaStatusNotFound, err
 		}
 
 		if err != nil {

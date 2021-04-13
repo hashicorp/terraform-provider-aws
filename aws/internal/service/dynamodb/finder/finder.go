@@ -18,9 +18,7 @@ func DynamoDBTableByName(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.T
 	}
 
 	if output == nil || output.Table == nil {
-		return nil, &resource.NotFoundError{
-			Message: dynamodb.ErrCodeTableNotFoundException,
-		}
+		return nil, nil
 	}
 
 	return output.Table, nil
@@ -45,7 +43,5 @@ func DynamoDBReplicaByTableNameRegion(conn *dynamodb.DynamoDB, tableName, region
 		}
 	}
 
-	return nil, &resource.NotFoundError{
-		Message: dynamodb.ErrCodeReplicaNotFoundException,
-	}
+	return nil, nil
 }
