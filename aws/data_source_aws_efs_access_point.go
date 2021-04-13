@@ -90,15 +90,13 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tagsSchema(),
-			"tags_all": tagsSchema(),
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
@@ -138,15 +136,8 @@ func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting root directory: %w", err)
 	}
 
-	tags := keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
