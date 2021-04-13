@@ -18,6 +18,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(rds.EndpointsID, testAccErrorCheckSkipRDS)
+
 	resource.AddTestSweepers("aws_rds_cluster", &resource.Sweeper{
 		Name: "aws_rds_cluster",
 		F:    testSweepRdsClusters,
@@ -25,6 +27,16 @@ func init() {
 			"aws_db_instance",
 		},
 	})
+}
+
+func testAccErrorCheckSkipRDS(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"engine mode serverless you requested is currently unavailable",
+		"engine mode multimaster you requested is currently unavailable",
+		"requested engine version was not found or does not support parallelquery functionality",
+		"Backtrack is not enabled for the aurora engine",
+		"Read replica DB clusters are not available in this region for engine aurora",
+	)
 }
 
 func testSweepRdsClusters(region string) error {
