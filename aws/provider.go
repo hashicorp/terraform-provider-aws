@@ -1115,6 +1115,7 @@ func Provider() *schema.Provider {
 			"aws_xray_group":                                          resourceAwsXrayGroup(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 			"aws_workspaces_ip_group":                                 resourceAwsWorkspacesIpGroup(),
+			"aws_macie2_account":                                      resourceAwsMacie2Account(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
