@@ -32,13 +32,13 @@ func TestGenerate(t *testing.T) {
 			TestName:              "name prefix",
 			Name:                  "",
 			NamePrefix:            "prefix",
-			ExpectedRegexpPattern: resourcePrefixedUniqueIDRegexpPattern("prefix"),
+			ExpectedRegexpPattern: resourcePrefixedUniqueIDPlusAdditionalSuffixRegexpPattern("prefix", ""),
 		},
 		{
 			TestName:              "fully generated",
 			Name:                  "",
 			NamePrefix:            "",
-			ExpectedRegexpPattern: resourceUniqueIDRegexpPattern,
+			ExpectedRegexpPattern: resourceUniqueIDPlusAdditionalSuffixRegexpPattern(""),
 		},
 	}
 
@@ -86,28 +86,28 @@ func TestGenerateWithSuffix(t *testing.T) {
 			Name:                  "",
 			NamePrefix:            "prefix",
 			NameSuffix:            "",
-			ExpectedRegexpPattern: resourcePrefixedUniqueIDPlusAdditionalRegexpPattern("prefix", ""),
+			ExpectedRegexpPattern: resourcePrefixedUniqueIDPlusAdditionalSuffixRegexpPattern("prefix", ""),
 		},
 		{
 			TestName:              "name prefix with suffix",
 			Name:                  "",
 			NamePrefix:            "prefix",
 			NameSuffix:            "suffix",
-			ExpectedRegexpPattern: resourcePrefixedUniqueIDPlusAdditionalRegexpPattern("prefix", "suffix"),
+			ExpectedRegexpPattern: resourcePrefixedUniqueIDPlusAdditionalSuffixRegexpPattern("prefix", "suffix"),
 		},
 		{
 			TestName:              "fully generated no suffix",
 			Name:                  "",
 			NamePrefix:            "",
 			NameSuffix:            "",
-			ExpectedRegexpPattern: resourceUniqueIDPlusAdditionalRegexpPattern(""),
+			ExpectedRegexpPattern: resourceUniqueIDPlusAdditionalSuffixRegexpPattern(""),
 		},
 		{
 			TestName:              "fully generated with suffix",
 			Name:                  "",
 			NamePrefix:            "",
 			NameSuffix:            "suffix",
-			ExpectedRegexpPattern: resourceUniqueIDPlusAdditionalRegexpPattern("suffix"),
+			ExpectedRegexpPattern: resourceUniqueIDPlusAdditionalSuffixRegexpPattern("suffix"),
 		},
 	}
 
