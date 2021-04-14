@@ -554,7 +554,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			},
 
 			"warm_pool": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -824,7 +824,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, ok := d.GetOk("warm_pool"); ok {
-		_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").(*schema.Set).List()))
+		_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
 
 		if err != nil {
 			return fmt.Errorf("error creating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
@@ -1318,7 +1318,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("warm_pool") {
-		w := d.Get("warm_pool").(*schema.Set).List()
+		w := d.Get("warm_pool").([]interface{})
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
@@ -1333,7 +1333,7 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 			log.Printf("[INFO] Successfully removed Warm pool")
 		} else {
-			_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").(*schema.Set).List()))
+			_, err := conn.PutWarmPool(createPutWarmPoolInput(d.Id(), d.Get("warm_pool").([]interface{})))
 
 			if err != nil {
 				return fmt.Errorf("error updating Warm Pool for Auto Scaling Group (%s), error: %s", d.Id(), err)
