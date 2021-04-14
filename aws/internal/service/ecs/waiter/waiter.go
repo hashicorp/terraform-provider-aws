@@ -1,10 +1,14 @@
 package waiter
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -17,6 +21,7 @@ const (
 	ServiceInactiveTimeoutMin = 1 * time.Second
 	ServiceDescribeTimeout    = 2 * time.Minute
 	ServiceUpdateTimeout      = 2 * time.Minute
+	ServiceStableTimeout      = 10 * time.Minute
 )
 
 // CapacityProviderInactive waits for a Capacity Provider to return INACTIVE
@@ -37,7 +42,8 @@ func CapacityProviderInactive(conn *ecs.ECS, capacityProvider string) (*ecs.Capa
 	return nil, err
 }
 
-func ServiceStable(conn *ecs.ECS, id, cluster string) error {
+// ServiceStable waits for a Service to be stable
+func ServiceStable(conn *ecs.ECS, id, cluster string, timeout *int64) error {
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -46,9 +52,29 @@ func ServiceStable(conn *ecs.ECS, id, cluster string) error {
 		input.Cluster = aws.String(cluster)
 	}
 
-	if err := conn.WaitUntilServicesStable(input); err != nil {
-		return err
+	stableTimeout := ServiceStableTimeout
+	if timeout != nil {
+		stableTimeout = time.Duration(*timeout) * time.Minute
 	}
+
+	log.Printf("[DEBUG] Waiting until services are stable. ECS Service (%s): %s", id, input)
+
+	err := resource.Retry(stableTimeout, func() *resource.RetryError {
+		if err := conn.WaitUntilServicesStable(input); err != nil {
+			if tfawserr.ErrMessageContains(err, request.WaiterResourceNotReadyErrorCode, "error waiting for service") {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("error waiting for service to be stable. ECS Service (%s): %w", id, err)
+	}
+
 	return nil
 }
 

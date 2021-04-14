@@ -379,6 +379,10 @@ func resourceAwsEcsService() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"wait_for_steady_state_timeout_in_minutes": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -579,7 +583,12 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			cluster = v.(string)
 		}
 
-		if err := waiter.ServiceStable(conn, d.Id(), cluster); err != nil {
+		var steadyStateTimeout *int64
+		if v, ok := d.GetOk("wait_for_steady_state_timeout_in_minutes"); ok {
+			steadyStateTimeout = aws.Int64(int64(v.(int)))
+		}
+
+		if err := waiter.ServiceStable(conn, d.Id(), cluster, steadyStateTimeout); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
@@ -1145,7 +1154,12 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			cluster = v.(string)
 		}
 
-		if err := waiter.ServiceStable(conn, d.Id(), cluster); err != nil {
+		var steadyStateTimeout *int64
+		if v, ok := d.GetOk("wait_for_steady_state_timeout_in_minutes"); ok {
+			steadyStateTimeout = aws.Int64(int64(v.(int)))
+		}
+
+		if err := waiter.ServiceStable(conn, d.Id(), cluster, steadyStateTimeout); err != nil {
 			return fmt.Errorf("error waiting for ECS service (%s) to become ready: %w", d.Id(), err)
 		}
 	}
