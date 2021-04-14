@@ -101,6 +101,33 @@ func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBProxyEndpoint_targetRole(t *testing.T) {
+	var v rds.DBProxyEndpoint
+	resourceName := "aws_db_proxy_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyEndpointPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBProxyEndpointConfigTargetRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBProxyEndpointExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "target_role", "READ_ONLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 	var dbProxy rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
@@ -423,6 +450,17 @@ resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
   vpc_subnet_ids         = aws_subnet.test.*.id
+}
+`, rName)
+}
+
+func testAccAWSDBProxyEndpointConfigTargetRole(rName string) string {
+	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+resource "aws_db_proxy_endpoint" "test" {
+  db_proxy_name          = aws_db_proxy.test.name
+  db_proxy_endpoint_name = %[1]q
+  vpc_subnet_ids         = aws_subnet.test.*.id
+  target_role            = "READ_ONLY"
 }
 `, rName)
 }
