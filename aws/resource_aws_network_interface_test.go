@@ -1191,8 +1191,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id         = aws_subnet.test.id
-  private_ips       = ["172.16.10.100"]
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["172.16.10.100"]
 
   tags = {
     Name = "terraform-testacc-network-interface-type-default"
