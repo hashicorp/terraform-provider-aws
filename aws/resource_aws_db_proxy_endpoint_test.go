@@ -113,11 +113,11 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 1),
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
 				),
 			},
 			{
@@ -126,20 +126,20 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 2),
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", "id"),
 				),
 			},
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 1),
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
 				),
 			},
 		},
@@ -427,21 +427,31 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName string, cnt int) string {
+func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName string) string {
 	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
   vpc_subnet_ids         = aws_subnet.test.*.id
-  vpc_security_group_ids = [aws_security_group.*.test.id]
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName)
 }
 
-resource "aws_security_group" "test" {
-  count  = %[2]d
-  name   = "%[1]s-${count.index}"
+func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds2(rName string) string {
+	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
+resource "aws_db_proxy_endpoint" "test" {
+  db_proxy_name          = aws_db_proxy.test.name
+  db_proxy_endpoint_name = %[1]q
+  vpc_subnet_ids         = aws_subnet.test.*.id
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+
+resource "aws_security_group" "test2" {
+  name   = "%[1]s-2"
   vpc_id = aws_vpc.test.id
 }
-`, rName, cnt)
+`, rName)
 }
 
 func testAccAWSDBProxyEndpointConfigTags1(rName, key1, value1 string) string {

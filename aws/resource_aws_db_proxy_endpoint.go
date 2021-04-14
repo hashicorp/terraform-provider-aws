@@ -96,6 +96,7 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
+		Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags(),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
