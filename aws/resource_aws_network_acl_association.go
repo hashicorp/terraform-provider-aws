@@ -28,6 +28,7 @@ func resourceAwsNetworkAclAssociation() *schema.Resource {
 			"network_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -69,7 +70,9 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	subnetId := d.Get("subnet_id").(string)
 	association, err := findNetworkAclAssociation(subnetId, conn)
 	if err != nil {
-		return fmt.Errorf("Unable to find association for subnet %s", subnetId)
+		log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("network_acl_id", aws.StringValue(association.NetworkAclId))
