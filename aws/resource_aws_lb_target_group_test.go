@@ -33,7 +33,7 @@ func testSweepLBTargetGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, isLast bool) bool {
+	err = conn.DescribeTargetGroupsPages(&elbv2.DescribeTargetGroupsInput{}, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
 		if page == nil || len(page.TargetGroups) == 0 {
 			log.Print("[DEBUG] No LB Target Groups to sweep")
 			return false
@@ -50,7 +50,7 @@ func testSweepLBTargetGroups(region string) error {
 				log.Printf("[ERROR] Failed to delete LB Target Group (%s): %s", name, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {

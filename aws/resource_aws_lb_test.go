@@ -43,7 +43,7 @@ func testSweepLBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbv2conn
 
-	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, isLast bool) bool {
+	err = conn.DescribeLoadBalancersPages(&elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
 		if page == nil || len(page.LoadBalancers) == 0 {
 			log.Print("[DEBUG] No LBs to sweep")
 			return false
@@ -60,7 +60,7 @@ func testSweepLBs(region string) error {
 				log.Printf("[ERROR] Failed to delete LB (%s): %s", name, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
