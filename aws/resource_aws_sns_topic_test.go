@@ -447,7 +447,7 @@ func TestAccAWSSNSTopic_FIFOExpectContentBasedDeduplicationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSNSTopicExpectContentBasedDeduplicationError(rName),
-				ExpectError: regexp.MustCompile(`Content based deduplication can only be set with FIFO topics`),
+				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO topics`),
 			},
 		},
 	})

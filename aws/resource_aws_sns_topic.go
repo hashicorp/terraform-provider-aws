@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -566,19 +567,22 @@ func resourceAwsSnsTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 			name = naming.Generate(diff.Get("name").(string), diff.Get("name_prefix").(string))
 		}
 
+		var re *regexp.Regexp
+
 		if fifoTopic {
-			if errors := validateSNSFifoTopicName(name); len(errors) > 0 {
-				return fmt.Errorf("Error validating the SNS FIFO topic name: %v", errors)
-			}
+			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,251}\.fifo$`)
 		} else {
-			if errors := validateSNSNonFifoTopicName(name); len(errors) > 0 {
-				return fmt.Errorf("Error validating SNS topic name: %v", errors)
-			}
+			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
 		}
+
+		if !re.MatchString(name) {
+			return fmt.Errorf("invalid topic name: %s", name)
+		}
+
 	}
 
 	if !fifoTopic && contentBasedDeduplication {
-		return fmt.Errorf("Content based deduplication can only be set with FIFO topics")
+		return fmt.Errorf("content-based deduplication can only be set for FIFO topics")
 	}
 
 	return nil
