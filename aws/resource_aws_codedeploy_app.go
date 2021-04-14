@@ -120,6 +120,9 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	application := resourceAwsCodeDeployAppParseId(d.Id())
+	if application != d.Get("name").(string) {
+	    application = d.Get("name").(string)
+	}
 	log.Printf("[DEBUG] Reading CodeDeploy application %s", application)
 	resp, err := conn.GetApplication(&codedeploy.GetApplicationInput{
 		ApplicationName: aws.String(application),
