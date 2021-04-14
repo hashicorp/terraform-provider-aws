@@ -11,6 +11,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_codedeploy_app: Add `arn`, `linked_to_github`, `github_account_name`, `application_id` attributes ([#18564](https://github.com/hashicorp/terraform-provider-aws/issues/18564))
+* resource/aws_codedeploy_app: Add `tags` argument ([#18564](https://github.com/hashicorp/terraform-provider-aws/issues/18564))
+* resource/aws_codedeploy_app: Add plan time validation for `name` ([#18564](https://github.com/hashicorp/terraform-provider-aws/issues/18564))
 * resource/aws_dynamodb_table: Add `kms_key_arn` argument to `replica` configuration block ([#18373](https://github.com/hashicorp/terraform-provider-aws/issues/18373))
 * resource/aws_rds_cluster: Database port is updated in-place ([#18081](https://github.com/hashicorp/terraform-provider-aws/issues/18081))
 
