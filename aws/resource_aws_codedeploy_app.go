@@ -141,6 +141,10 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	app := resp.Application
 	appName := aws.StringValue(app.ApplicationName)
 
+     if !strings.Contains(d.Id(), appName) {
+         d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(app.ApplicationId), appName))
+     }
+     
 	appArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "codedeploy",
