@@ -77,6 +77,7 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 	createOpts := &organizations.CreateOrganizationalUnitInput{
 		Name:     aws.String(d.Get("name").(string)),
 		ParentId: aws.String(d.Get("parent_id").(string)),
+		Tags:     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().OrganizationsTags(),
 	}
 
 	log.Printf("[DEBUG] Organizational Unit create config: %#v", createOpts)
@@ -109,12 +110,6 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 	// Store the ID
 	ouId := resp.OrganizationalUnit.Id
 	d.SetId(aws.StringValue(ouId))
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.OrganizationsUpdateTags(conn, d.Id(), nil, v); err != nil {
-			return fmt.Errorf("Error adding Organizational Unit (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	return resourceAwsOrganizationsOrganizationalUnitRead(d, meta)
 }
