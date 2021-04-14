@@ -383,6 +383,11 @@ rules:
         - aws/resource_aws_[t-z]*.go
         - aws/resource_aws_s[f-z]*.go
         - aws/resource_aws_[a-b]*.go
+        - aws/resource_aws_cog*.go
+        - aws/resource_aws_cloudwatch_log*.go
+        - aws/resource_aws_code*.go
+        - aws/resource_aws_db*.go
+        - aws/resource_aws_ec2*.go
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
