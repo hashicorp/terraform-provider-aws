@@ -65,7 +65,6 @@ variable "service_labels" {
     "datasync",
     "dax",
     "detective",
-    "detective",
     "devicefarm",
     "directconnect",
     "directoryservice",
