@@ -19,6 +19,7 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 		Create: resourceAwsDbProxyEndpointCreate,
 		Read:   resourceAwsDbProxyEndpointRead,
 		Delete: resourceAwsDbProxyEndpointDelete,
+		Update: resourceAwsDbProxyEndpointUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +66,7 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"vpc_id": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"is_default": {
@@ -103,7 +104,7 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName, aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)}, "/"))
 
-	return resourceAwsDbProxyTargetRead(d, meta)
+	return resourceAwsDbProxyEndpointRead(d, meta)
 }
 
 func resourceAwsDbProxyEndpointParseID(id string) (string, string, string, error) {
@@ -170,6 +171,20 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func resourceAwsDbProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).rdsconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("Error updating RDS DB Proxy Endpoint (%s) tags: %w", d.Get("arn").(string), err)
+		}
+	}
+
+	return resourceAwsDbProxyEndpointRead(d, meta)
 }
 
 func resourceAwsDbProxyEndpointDelete(d *schema.ResourceData, meta interface{}) error {
