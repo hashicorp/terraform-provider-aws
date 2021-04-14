@@ -16,13 +16,13 @@ func resourceAwsNetworkAclAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsNetworkAclAssociationCreate,
 		Read:   resourceAwsNetworkAclAssociationRead,
-		Update: resourceAwsNetworkAclAssociationUpdate,
 		Delete: resourceAwsNetworkAclAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"network_acl_id": {
@@ -90,38 +90,6 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	d.Set("network_acl_id", aws.StringValue(association.NetworkAclId))
 
 	return nil
-}
-
-func resourceAwsNetworkAclAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-
-	naclId := d.Get("network_acl_id").(string)
-	subnetId := d.Get("subnet_id").(string)
-
-	association, errAssociation := findNetworkAclAssociation(subnetId, conn)
-	if errAssociation != nil {
-		return fmt.Errorf("Failed to find association for subnet %s: %s", subnetId, errAssociation)
-	}
-
-	associationOpts := &ec2.ReplaceNetworkAclAssociationInput{
-		AssociationId: association.NetworkAclAssociationId,
-		NetworkAclId:  aws.String(naclId),
-	}
-
-	_, err := conn.ReplaceNetworkAclAssociation(associationOpts)
-
-	log.Printf("[DEBUG] Updating Network ACL association: %#v", associationOpts)
-
-	if err != nil {
-		if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
-			// Not found, so just create a new one
-			return resourceAwsNetworkAclAssociationCreate(d, meta)
-		}
-
-		return err
-	}
-
-	return resourceAwsNetworkAclAssociationRead(d, meta)
 }
 
 func resourceAwsNetworkAclAssociationDelete(d *schema.ResourceData, meta interface{}) error {
