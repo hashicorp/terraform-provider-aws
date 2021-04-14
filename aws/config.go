@@ -52,6 +52,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -253,6 +254,7 @@ type AWSClient struct {
 	datasyncconn                        *datasync.DataSync
 	daxconn                             *dax.DAX
 	DefaultTagsConfig                   *keyvaluetags.DefaultConfig
+	detectiveconn                       *detective.Detective
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
@@ -498,6 +500,7 @@ func (c *Config) Client() (interface{}, error) {
 		datasyncconn:                        datasync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datasync"])})),
 		daxconn:                             dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dax"])})),
 		DefaultTagsConfig:                   c.DefaultTagsConfig,
+		detectiveconn:                       detective.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["detective"])})),
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
