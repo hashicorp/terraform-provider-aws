@@ -2243,7 +2243,7 @@ func expandKinesisAnalyticsV2PropertyGroups(vPropertyGroups []interface{}) []*ki
 		}
 
 		if vPropertyMap, ok := mPropertyGroup["property_map"].(map[string]interface{}); ok && len(vPropertyMap) > 0 {
-			propertyGroup.PropertyMap = stringMapToPointers(vPropertyMap)
+			propertyGroup.PropertyMap = expandStringMap(vPropertyMap)
 		}
 
 		propertyGroups = append(propertyGroups, propertyGroup)
