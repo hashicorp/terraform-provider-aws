@@ -309,6 +309,7 @@ func dataSourceAwsmQBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
 	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
+	d.Set("broker_id", brokerId)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
