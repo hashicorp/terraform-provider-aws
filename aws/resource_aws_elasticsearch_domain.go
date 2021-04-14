@@ -468,7 +468,7 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		input.AdvancedOptions = stringMapToPointers(v.(map[string]interface{}))
+		input.AdvancedOptions = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
@@ -821,7 +821,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if d.HasChange("advanced_options") {
-		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
+		input.AdvancedOptions = expandStringMap(d.Get("advanced_options").(map[string]interface{}))
 	}
 
 	if d.HasChange("advanced_security_options") {

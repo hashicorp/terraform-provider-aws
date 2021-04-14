@@ -1,5 +1,23 @@
 ## 3.37.0 (Unreleased)
 
+NOTES:
+
+* provider: The HTTP User-Agent header has been reordered so the AWS SDK Go product is last, except when using the TF_APPEND_USER_AGENT environment variable. Environments dependent on the previous User-Agent header ordering may require updates. ([#18855](https://github.com/hashicorp/terraform-provider-aws/issues/18855))
+
+FEATURES:
+
+* **New Data Source:** `aws_eks_addon` ([#16972](https://github.com/hashicorp/terraform-provider-aws/issues/16972))
+* **New Resource:** `aws_eks_addon` ([#16972](https://github.com/hashicorp/terraform-provider-aws/issues/16972))
+
+ENHANCEMENTS:
+
+* resource/aws_dynamodb_table: Add `kms_key_arn` argument to `replica` configuration block ([#18373](https://github.com/hashicorp/terraform-provider-aws/issues/18373))
+* resource/aws_rds_cluster: Database port is updated in-place ([#18081](https://github.com/hashicorp/terraform-provider-aws/issues/18081))
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Update Global Secondary Index provisioned throughput settings on new changes ([#18215](https://github.com/hashicorp/terraform-provider-aws/issues/18215))
+
 ## 3.36.0 (April 09, 2021)
 
 FEATURES:

@@ -241,7 +241,7 @@ func resourceAwsMwaaEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
-		input.AirflowConfigurationOptions = stringMapToPointers(v.(map[string]interface{}))
+		input.AirflowConfigurationOptions = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("airflow_version"); ok {
@@ -385,7 +385,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 				options = map[string]interface{}{}
 			}
 
-			input.AirflowConfigurationOptions = stringMapToPointers(options.(map[string]interface{}))
+			input.AirflowConfigurationOptions = expandStringMap(options.(map[string]interface{}))
 		}
 
 		if d.HasChange("airflow_version") {

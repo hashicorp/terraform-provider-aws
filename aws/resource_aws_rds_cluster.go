@@ -353,7 +353,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 
 			// apply_immediately is used to determine when the update modifications
@@ -1151,6 +1150,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
+		requestUpdate = true
+	}
+
+	if d.HasChange("port") {
+		req.Port = aws.Int64(int64(d.Get("port").(int)))
 		requestUpdate = true
 	}
 
