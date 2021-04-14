@@ -70,10 +70,21 @@ func resourceAwsNetworkAclAssociationRead(d *schema.ResourceData, meta interface
 	subnetId := d.Get("subnet_id").(string)
 	association, err := findNetworkAclAssociation(subnetId, conn)
 	if err != nil {
-		log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
-		d.SetId("")
-		//lint:ignore nilerr subnet likely doesn't exist so there is nothing more that we can do
-		return nil
+		if isResourceNotFoundError(err) {
+			log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
+			d.SetId("")
+			// lint:ignore nilerr subnet likely doesn't exist so there is nothing more that we can do
+			return nil
+		}
+		if awsErr, ok := err.(awserr.Error); ok {
+			if awsErr != nil {
+				log.Printf("[WARN] Unable to find association for subnet %s", subnetId)
+				d.SetId("")
+				// lint:ignore nilerr subnet likely doesn't exist so there is nothing more that we can do
+				return nil
+			}
+		}
+		return err
 	}
 
 	d.Set("network_acl_id", aws.StringValue(association.NetworkAclId))
