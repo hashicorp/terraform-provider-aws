@@ -3,6 +3,7 @@ package finder
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	tfrds "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds"
 )
 
 // DBProxyTarget returns matching DBProxyTarget.
@@ -32,20 +33,25 @@ func DBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsR
 }
 
 // DBProxyEndpoint returns matching DBProxyEndpoint.
-func DBProxyEndpoint(conn *rds.RDS, dbProxyName, dbProxyEndpointName, arn string) (*rds.DBProxyEndpoint, error) {
+func DBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
+	dbProxyName, dbProxyEndpointName, dbProxyEndpointArn, err := tfrds.ResourceAwsDbProxyEndpointParseID(id)
+	if err != nil {
+		return nil, err
+	}
+
 	input := &rds.DescribeDBProxyEndpointsInput{
 		DBProxyName:         aws.String(dbProxyName),
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 	}
 	var dbProxyEndpoint *rds.DBProxyEndpoint
 
-	err := conn.DescribeDBProxyEndpointsPages(input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
+	err = conn.DescribeDBProxyEndpointsPages(input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, endpoint := range page.DBProxyEndpoints {
-			if aws.StringValue(endpoint.DBProxyEndpointArn) == arn {
+			if aws.StringValue(endpoint.DBProxyEndpointArn) == dbProxyEndpointArn {
 				dbProxyEndpoint = endpoint
 				return false
 			}

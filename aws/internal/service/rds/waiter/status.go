@@ -43,9 +43,9 @@ func EventSubscriptionStatus(conn *rds.RDS, subscriptionName string) resource.St
 }
 
 // DBProxyEndpointStatus fetches the ProxyEndpoint and its Status
-func DBProxyEndpointStatus(conn *rds.RDS, dbProxyName, dbProxyEndpointName, arn string) resource.StateRefreshFunc {
+func DBProxyEndpointStatus(conn *rds.RDS, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.DBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName, arn)
+		output, err := finder.DBProxyEndpoint(conn, id)
 
 		if err != nil {
 			return nil, ProxyEndpointStatusUnknown, err

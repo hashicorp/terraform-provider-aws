@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/waiter"
 )
 
 func resourceAwsDbProxyEndpoint() *schema.Resource {
@@ -22,6 +24,12 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 		Update: resourceAwsDbProxyEndpointUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,6 +49,14 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateRdsIdentifier,
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_default": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 			"target_role": {
 				Type:         schema.TypeString,
@@ -48,6 +64,10 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				Default:      rds.DBProxyEndpointTargetRoleReadWrite,
 				ValidateFunc: validation.StringInSlice(rds.DBProxyEndpointTargetRole_Values(), false),
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -60,18 +80,6 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"is_default": {
-				Type:     schema.TypeBool,
-				Computed: true,
 			},
 		},
 	}
@@ -104,27 +112,18 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName, aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)}, "/"))
 
-	return resourceAwsDbProxyEndpointRead(d, meta)
-}
-
-func resourceAwsDbProxyEndpointParseID(id string) (string, string, string, error) {
-	idParts := strings.SplitN(id, "/", 3)
-	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected db_proxy_name/db_proxy_endpoint_name/arn", id)
+	if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become available: %w", d.Id(), err)
 	}
-	return idParts[0], idParts[1], idParts[2], nil
+
+	return resourceAwsDbProxyEndpointRead(d, meta)
 }
 
 func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	dbProxyName, dbProxyEndpointName, dbProxyEndpointArn, err := resourceAwsDbProxyEndpointParseID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName, dbProxyEndpointArn)
+	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
@@ -150,9 +149,9 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 
 	endpointArn := aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("arn", endpointArn)
-	d.Set("db_proxy_name", dbProxyName)
+	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
 	d.Set("endpoint", dbProxyEndpoint.Endpoint)
-	d.Set("db_proxy_endpoint_name", dbProxyEndpointName)
+	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
 	d.Set("vpc_id", dbProxyEndpoint.VpcId)
@@ -176,6 +175,22 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsDbProxyEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
+	if d.HasChange("vpc_security_group_ids") {
+		params := rds.ModifyDBProxyEndpointInput{
+			DBProxyEndpointName: aws.String(d.Get("db_proxy_endpoint_name").(string)),
+			VpcSecurityGroupIds: expandStringSet(d.Get("vpc_security_group_ids").(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBProxyEndpoint(&params)
+		if err != nil {
+			return fmt.Errorf("Error updating DB Proxy Endpoint: %w", err)
+		}
+
+		if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become modified: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -197,20 +212,18 @@ func resourceAwsDbProxyEndpointDelete(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Delete DB Proxy Endpoint: %#v", params)
 	_, err := conn.DeleteDBProxyEndpoint(&params)
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetNotFoundFault) {
-		return nil
-	}
-
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
+			return nil
+		}
 		return fmt.Errorf("Error Deleting DB Proxy Endpoint: %w", err)
+	}
+
+	if _, err := waiter.DBProxyEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
+			return nil
+		}
+		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become deleted: %w", d.Id(), err)
 	}
 
 	return nil

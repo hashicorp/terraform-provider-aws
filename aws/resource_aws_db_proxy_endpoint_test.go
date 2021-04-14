@@ -113,17 +113,34 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBProxyEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName),
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.1", "id"),
+				),
+			},
+			{
+				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", "id"),
+				),
 			},
 		},
 	})
@@ -222,8 +239,7 @@ func TestAccAWSDBProxyEndpoint_disappears_proxy(t *testing.T) {
 func testAccDBProxyEndpointPreCheck(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-	input := &rds.DescribeDBProxiesInput{}
-	_, err := conn.DescribeDBProxies(input)
+	_, err := conn.DescribeDBProxyEndpoints(&rds.DescribeDBProxyEndpointsInput{})
 
 	if isAWSErr(err, "InvalidAction", "") {
 		t.Skipf("skipping acceptance test, RDS Proxy not supported: %s", err)
@@ -242,12 +258,7 @@ func testAccCheckAWSDBProxyEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		dbProxyName, dbProxyEndpointName, dbProxyEndpointArn, err := resourceAwsDbProxyEndpointParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName, dbProxyEndpointArn)
+		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) || tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 			continue
@@ -278,12 +289,7 @@ func testAccCheckAWSDBProxyEndpointExists(n string, v *rds.DBProxyEndpoint) reso
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		dbProxyName, dbProxyEndpointName, dbProxyEndpointArn, err := resourceAwsDbProxyEndpointParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, dbProxyName, dbProxyEndpointName, dbProxyEndpointArn)
+		dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -421,20 +427,21 @@ resource "aws_db_proxy_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName string) string {
+func testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds(rName string, cnt int) string {
 	return testAccAWSDBProxyEndpointConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
   vpc_subnet_ids         = aws_subnet.test.*.id
-  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_security_group_ids = [aws_security_group.*.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name   = %[1]q
+  count  = %[2]d
+  name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
 }
-`, rName)
+`, rName, cnt)
 }
 
 func testAccAWSDBProxyEndpointConfigTags1(rName, key1, value1 string) string {
