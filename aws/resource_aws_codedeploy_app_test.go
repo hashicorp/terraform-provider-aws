@@ -211,7 +211,6 @@ func TestAccAWSCodeDeployApp_name(t *testing.T) {
 				Config: testAccAWSCodeDeployAppConfigName(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployAppExists(resourceName, &application2),
-					testAccCheckAWSCodeDeployAppRecreated(&application1, &application2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},

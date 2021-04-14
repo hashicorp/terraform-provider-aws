@@ -64,7 +64,6 @@ func resourceAwsCodeDeployApp() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 
@@ -120,8 +119,9 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	application := resourceAwsCodeDeployAppParseId(d.Id())
-	if application != d.Get("name").(string) {
-	    application = d.Get("name").(string)
+	name := d.Get("name").(string)
+	if name != "" && application != name {
+		application = name
 	}
 	log.Printf("[DEBUG] Reading CodeDeploy application %s", application)
 	resp, err := conn.GetApplication(&codedeploy.GetApplicationInput{
@@ -141,10 +141,10 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 	app := resp.Application
 	appName := aws.StringValue(app.ApplicationName)
 
-     if !strings.Contains(d.Id(), appName) {
-         d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(app.ApplicationId), appName))
-     }
-     
+	if !strings.Contains(d.Id(), appName) {
+		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(app.ApplicationId), appName))
+	}
+
 	appArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "codedeploy",
@@ -175,6 +175,19 @@ func resourceAwsCodeDeployAppRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsCodeDeployUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codedeployconn
+
+	if d.HasChange("name") {
+		o, n := d.GetChange("name")
+
+		_, err := conn.UpdateApplication(&codedeploy.UpdateApplicationInput{
+			ApplicationName:    aws.String(o.(string)),
+			NewApplicationName: aws.String(n.(string)),
+		})
+
+		if err != nil {
+			return fmt.Errorf("error updating CodeDeploy Application (%s) name: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
