@@ -1170,7 +1170,7 @@ resource "aws_network_interface" "test" {
 }
 
 func testAccAWSENIConfigInterfaceTypeUnspecified() string {
-	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
@@ -1223,9 +1223,9 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id         = aws_subnet.test.id
-  private_ips       = ["172.16.10.100"]
-  interface_type    = %[1]q
+  subnet_id      = aws_subnet.test.id
+  private_ips    = ["172.16.10.100"]
+  interface_type = %[1]s
 
   tags = {
     Name = "terraform-testacc-network-interface-type-%[1]s"
