@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 const (
@@ -70,6 +71,10 @@ func ServiceStable(conn *ecs.ECS, id, cluster string, timeout *int64) error {
 
 		return nil
 	})
+
+	if tfresource.TimedOut(err) {
+		err = conn.WaitUntilServicesStable(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error waiting for service to be stable. ECS Service (%s): %w", id, err)
