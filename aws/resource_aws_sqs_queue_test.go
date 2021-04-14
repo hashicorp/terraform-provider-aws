@@ -385,7 +385,7 @@ func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSQSConfigWithFIFOExpectError(acctest.RandString(10)),
-				ExpectError: regexp.MustCompile(`Error validating the FIFO queue name`),
+				ExpectError: regexp.MustCompile(`invalid queue name:`),
 			},
 		},
 	})
@@ -430,7 +430,7 @@ func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccExpectContentBasedDeduplicationError(acctest.RandString(10)),
-				ExpectError: regexp.MustCompile(`Content based deduplication can only be set with FIFO queues`),
+				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO queue`),
 			},
 		},
 	})
