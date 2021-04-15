@@ -161,14 +161,6 @@ func TestAccAWSDBProxyEndpoint_vpcSecurityGroupIds(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test2", "id"),
 				),
 			},
-			{
-				Config: testAccAWSDBProxyEndpointConfigVpcSecurityGroupIds1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBProxyEndpointExists(resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
-				),
-			},
 		},
 	})
 }
