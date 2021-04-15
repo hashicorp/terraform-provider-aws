@@ -127,9 +127,8 @@ resource "aws_securityhub_insight" "example" {
 
 The following arguments are required:
 
-* `filters` - (Required) A configuration block including one or more (up to 10 distinct) attributes used to filter the findings included in the insight. The insight only includes findings that match criteria defined in the filters. See below for more details.
+* `filters` - (Required) A configuration block including one or more (up to 10 distinct) attributes used to filter the findings included in the insight. The insight only includes findings that match criteria defined in the filters. See [filters](#filters) below for more details.
 * `group_by_attribute` - (Required) The attribute used to group the findings for the insight e.g. if an insight is grouped by `ResourceId`, then the insight produces a list of resource identifiers.
-
 * `name` - (Required) The name of the custom insight.
 
 ### filters
@@ -139,179 +138,92 @@ The `filters` configuration block supports the following arguments:
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
 * `aws_account_id` - (Optional) AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
-
 * `company_name` - (Optional) The name of the findings provider (company) that owns the solution (product) that generates findings. See [String_Filter](#string-filter-argument-reference) below for more details.
-
 * `compliance_status` - (Optional) Exclusive to findings that are generated as the result of a check run against a specific rule in a supported standard, such as CIS AWS Foundations. Contains security standard-related finding details. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `confidence` - (Optional) A finding's confidence. Confidence is defined as the likelihood that a finding accurately identifies the behavior or issue that it was intended to identify. Confidence is scored on a 0-100 basis using a ratio scale, where 0 means zero percent confidence and 100 means 100 percent confidence. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `created_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider captured the potential security issue that a finding captured. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `criticality` - (Optional) The level of importance assigned to the resources associated with the finding. A score of 0 means that the underlying resources have no criticality, and a score of 100 is reserved for the most critical resources. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `description` - (Optional) A finding's description. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_confidence` - (Optional) The finding provider value for the finding confidence. Confidence is defined as the likelihood that a finding accurately identifies the behavior or issue that it was intended to identify. Confidence is scored on a 0-100 basis using a ratio scale, where 0 means zero percent confidence and 100 means 100 percent confidence. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_criticality` - (Optional) The finding provider value for the level of importance assigned to the resources associated with the findings. A score of 0 means that the underlying resources have no criticality, and a score of 100 is reserved for the most critical resources. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_related_findings_id` - (Optional) The finding identifier of a related finding that is identified by the finding provider. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_related_findings_product_arn` - (Optional) The ARN of the solution that generated a related finding that is identified by the finding provider. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_severity_label` - (Optional) The finding provider value for the severity label. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_severity_original` - (Optional) The finding provider's original value for the severity. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `finding_provider_fields_types` - (Optional) One or more finding types that the finding provider assigned to the finding. Uses the format of `namespace/category/classifier` that classify a finding. Valid namespace values include: `Software and Configuration Checks`, `TTPs`, `Effects`, `Unusual Behaviors`, and `Sensitive Data Identifications`. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `first_observed_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider first observed the potential security issue that a finding captured. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `generator_id` - (Optional) The identifier for the solution-specific component (a discrete unit of logic) that generated a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `id` - (Optional) The security findings provider-specific identifier for a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `keyword` - (Optional) A keyword for a finding. See [Keyword Filter](#keyword-filter-argument-reference) below for more details.
-
 * `last_observed_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider most recently observed the potential security issue that a finding captured. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `malware_name` - (Optional) The name of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `malware_path` - (Optional) The filesystem path of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `malware_state` - (Optional) The state of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `malware_type` - (Optional) The type of the malware that was observed. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_destination_domain` - (Optional) The destination domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_destination_ipv4` - (Optional) The destination IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `network_destination_ipv6` - (Optional) The destination IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `network_destination_port` - (Optional) The destination port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `network_direction` - (Optional) Indicates the direction of network traffic associated with a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_protocol` - (Optional) The protocol of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_source_domain` - (Optional) The source domain of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_source_ipv4` - (Optional) The source IPv4 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `network_source_ipv6` - (Optional) The source IPv6 address of network-related information about a finding. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `network_source_mac` - (Optional) The source media access control (MAC) address of network-related information about a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `network_source_port` - (Optional) The source port of network-related information about a finding. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `note_text` - (Optional) The text of a note. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `note_updated_at` - (Optional) The timestamp of when the note was updated. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `note_updated_by` - (Optional) The principal that created a note. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `process_launched_at` - (Optional) The date/time that the process was launched. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `process_name` - (Optional) The name of the process. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `process_parent_pid` - (Optional) The parent process ID. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `process_path` - (Optional) The path to the process executable. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `process_pid` - (Optional) The process ID. See [Number Filter](#number-filter-argument-reference) below for more details.
-
 * `process_terminated_at` - (Optional) The date/time that the process was terminated. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `product_arn` - (Optional) The ARN generated by Security Hub that uniquely identifies a third-party company (security findings provider) after this provider's product (solution that generates findings) is registered with Security Hub. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `product_fields` - (Optional) A data type where security-findings providers can include additional solution-specific details that aren't part of the defined `AwsSecurityFinding` format. See [Map Filter](#map-filter-argument-reference) below for more details.
-
 * `product_name` - (Optional) The name of the solution (product) that generates findings. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `recommendation_text` - (Optional) The recommendation of what to do about the issue described in a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `record_state` - (Optional) The updated record state for the finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `related_findings_id` - (Optional) The solution-generated identifier for a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `related_findings_product_arn` - (Optional) The ARN of the solution that generated a related finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_iam_instance_profile_arn` - (Optional) The IAM profile ARN of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_image_id` - (Optional) The Amazon Machine Image (AMI) ID of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_ipv4_addresses` - (Optional) The IPv4 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_ipv6_addresses` - (Optional) The IPv6 addresses associated with the instance. See [Ip Filter](#ip-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_key_name` - (Optional) The key name associated with the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_launched_at` - (Optional) The date and time the instance was launched. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_subnet_id` - (Optional) The identifier of the subnet that the instance was launched in. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_type` - (Optional) The instance type of the instance. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_ec2_instance_vpc_id` - (Optional) The identifier of the VPC that the instance was launched in. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_iam_access_key_created_at` - (Optional) The creation date/time of the IAM access key related to a finding. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `resource_aws_iam_access_key_status` - (Optional) The status of the IAM access key related to a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_iam_access_key_user_name` - (Optional) The user associated with the IAM access key related to a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_s3_bucket_owner_id` - (Optional) The canonical user ID of the owner of the S3 bucket. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_aws_s3_bucket_owner_name` - (Optional) The display name of the owner of the S3 bucket. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_container_image_id` - (Optional) The identifier of the image related to a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_container_image_name` - (Optional) The name of the image related to a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_container_launched_at` - (Optional) The date/time that the container was started. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `resource_container_name` - (Optional) The name of the container related to a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_details_other` - (Optional) The details of a resource that doesn't have a specific subfield for the resource type defined. See [Map Filter](#map-filter-argument-reference) below for more details.
-
 * `resource_id` - (Optional) The canonical identifier for the given resource type. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_partition` - (Optional) The canonical AWS partition name that the Region is assigned to. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_region` - (Optional) The canonical AWS external Region name where this resource is located. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `resource_tags` - (Optional) A list of AWS tags associated with a resource at the time the finding was processed. See [Map Filter](#map-filter-argument-reference) below for more details.
-
 * `resource_type` - (Optional) Specifies the type of the resource that details are provided for. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `severity_label` - (Optional) The label of a finding's severity. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `source_url` - (Optional) A URL that links to a page about the current finding in the security-findings provider's solution. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_category` - (Optional) The category of a threat intelligence indicator. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_last_observed_at` - (Optional) The date/time of the last observation of a threat intelligence indicator. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_source` - (Optional) The source of the threat intelligence. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_source_url` - (Optional) The URL for more details from the source of the threat intelligence. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_type` - (Optional) The type of a threat intelligence indicator. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `threat_intel_indicator_value` - (Optional) The value of a threat intelligence indicator. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `title` - (Optional) A finding's title. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `type` - (Optional) A finding type in the format of `namespace/category/classifier` that classifies a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `updated_at` - (Optional) An ISO8601-formatted timestamp that indicates when the security-findings provider last updated the finding record. See [Date Filter](#date-filter-argument-reference) below for more details.
-
 * `user_defined_values` - (Optional) A list of name/value string pairs associated with the finding. These are custom, user-defined fields added to a finding. See [Map Filter](#map-filter-argument-reference) below for more details.
-
 * `verification_state` - (Optional) The veracity of a finding. See [String Filter](#string-filter-argument-reference) below for more details.
-
 * `workflow_status` - (Optional) The status of the investigation into a finding. See [Workflow Status Filter](#workflow-status-filter-argument-reference) below for more details.
 
 ### Date Filter Argument reference
@@ -378,11 +290,11 @@ The workflow status filter configuration block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ARN of the insight.
-* `arn` - The Amazon Resource Name (ARN) of the insight.
+* `arn` - ARN of the insight.
 
 ## Import
 
-Security Hub insights can be imported using the Amazon Resource Name (ARN), e.g.
+Security Hub insights can be imported using the ARN, e.g.
 
 ```
 $ terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
