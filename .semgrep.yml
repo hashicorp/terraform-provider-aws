@@ -159,7 +159,7 @@ rules:
         - aws/data_source_aws_*.go
     patterns:
       - pattern-regex: '(resource.+Read|flatten.+Resource)'
-      - pattern-inside: func $FUNCNAME(...) error { ... }
+      - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
       - pattern-not-inside: |
           d.Set(..., []interface{}{ ... })
       - pattern-not-inside: |
