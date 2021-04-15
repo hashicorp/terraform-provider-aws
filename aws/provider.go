@@ -985,6 +985,7 @@ func Provider() *schema.Provider {
 			"aws_security_group_rule":                                 resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                                 resourceAwsSecurityHubAccount(),
 			"aws_securityhub_action_target":                           resourceAwsSecurityHubActionTarget(),
+			"aws_securityhub_insight":                                 resourceAwsSecurityHubInsight(),
 			"aws_securityhub_invite_accepter":                         resourceAwsSecurityHubInviteAccepter(),
 			"aws_securityhub_member":                                  resourceAwsSecurityHubMember(),
 			"aws_securityhub_organization_admin_account":              resourceAwsSecurityHubOrganizationAdminAccount(),
