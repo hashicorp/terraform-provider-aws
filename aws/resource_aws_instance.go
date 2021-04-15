@@ -273,6 +273,7 @@ func resourceAwsInstance() *schema.Resource {
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"instance_state": {
 				Type:     schema.TypeString,
@@ -937,6 +938,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := readSecurityGroups(d, instance, conn); err != nil {
+		return err
+	}
+
+	// Retrieve instance shutdown behavior
+	if err := readInstanceShutdownBehavior(d, conn); err != nil {
 		return err
 	}
 
@@ -2185,6 +2191,23 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 			return err
 		}
 	}
+	return nil
+}
+
+func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
+	out, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		InstanceId: aws.String(d.Id()),
+		Attribute:  aws.String("instanceInitiatedShutdownBehavior"),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err = d.Set("instance_initiated_shutdown_behavior", out.InstanceInitiatedShutdownBehavior.Value); err != nil {
+		return err
+	}
+
 	return nil
 }
 

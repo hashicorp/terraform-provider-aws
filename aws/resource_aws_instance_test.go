@@ -258,6 +258,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
+					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 			},
 			{
