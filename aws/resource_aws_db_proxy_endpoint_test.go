@@ -482,7 +482,7 @@ resource "aws_db_proxy_endpoint" "test" {
   db_proxy_name          = aws_db_proxy.test.name
   db_proxy_endpoint_name = %[1]q
   vpc_subnet_ids         = aws_subnet.test.*.id
-  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
 }
 
 resource "aws_security_group" "test2" {
