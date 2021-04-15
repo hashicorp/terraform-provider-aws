@@ -133,7 +133,9 @@ The following arguments are required:
 
 * `name` - (Required) The name of the custom insight.
 
-The `filters` block supports:
+### filters
+
+The `filters` configuration block supports the following arguments:
 
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
