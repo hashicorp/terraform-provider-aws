@@ -376,7 +376,7 @@ The workflow status filter configuration block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) of the insight.
+* `id` - ARN of the insight.
 * `arn` - The Amazon Resource Name (ARN) of the insight.
 
 ## Import
