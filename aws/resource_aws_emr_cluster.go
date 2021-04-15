@@ -112,12 +112,14 @@ func resourceAwsEMRCluster() *schema.Resource {
 						"subnet_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
+							Computed:      true,
 							ForceNew:      true,
 							ConflictsWith: []string{"ec2_attributes.0.subnet_ids"},
 						},
 						"subnet_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
+							Computed:      true,
 							ForceNew:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							Set:           schema.HashString,
@@ -1456,6 +1458,9 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	}
 	if ia.Ec2SubnetId != nil {
 		attrs["subnet_id"] = *ia.Ec2SubnetId
+	}
+	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
+		attrs["subnet_ids"] = flattenStringSet(ia.RequestedEc2SubnetIds)
 	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile

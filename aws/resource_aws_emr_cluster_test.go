@@ -100,17 +100,6 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEmrClusterConfigMultipleSubnets(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
-					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
-				),
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1398,11 +1387,14 @@ func TestAccAWSEMRCluster_custom_ami_id(t *testing.T) {
 	})
 }
 
-func TestAccAWSEMRCluster_instance_fleet(t *testing.T) {
-	var cluster emr.Cluster
+func TestAccAWSEMRCluster_InstanceFleet_basic(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
+	subnetResourceName := "aws_subnet.test"
+	subnet2ResourceName := "aws_subnet.test2"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, emr.EndpointsID),
@@ -1410,18 +1402,59 @@ func TestAccAWSEMRCluster_instance_fleet(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEmrDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEmrClusterConfigInstanceFleets(rName),
+				Config: testAccAWSEmrClusterConfig_InstanceFleets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfig_InstanceFleet_MultipleSubnets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnet2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
 }
 
-func TestAccAWSEMRCluster_instance_fleet_master_only(t *testing.T) {
+func TestAccAWSEMRCluster_InstanceFleet_master_only(t *testing.T) {
 	var cluster emr.Cluster
 
 	resourceName := "aws_emr_cluster.tf-test-cluster"
@@ -1437,7 +1470,18 @@ func TestAccAWSEMRCluster_instance_fleet_master_only(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
 			},
 		},
 	})
@@ -1906,63 +1950,6 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   ec2_attributes {
     subnet_id                         = aws_subnet.test.id
-    emr_managed_master_security_group = aws_security_group.test.id
-    emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
-  }
-
-  master_instance_group {
-    instance_type = "c4.large"
-  }
-
-  core_instance_group {
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  termination_protection            = false
-
-  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-    aws_route_table_association.test,
-    aws_iam_role_policy_attachment.emr_service,
-    aws_iam_role_policy_attachment.emr_instance_profile,
-    aws_iam_role_policy_attachment.emr_autoscaling_role,
-  ]
-
-  service_role         = aws_iam_role.emr_service.arn
-  autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
-  ebs_root_volume_size = 21
-}
-`, r),
-	)
-}
-
-func testAccAWSEmrClusterConfigMultipleSubnets(r string) string {
-	return testAccAWSEmrComposeConfig(false,
-		testAccAWSEmrClusterConfigCurrentPartition(),
-		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
-		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
-		testAccAWSEmrClusterConfigIAMAutoscalingRole(r),
-		fmt.Sprintf(`
-resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "%[1]s"
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_ids                        = [aws_subnet.test.id]
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
     instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
@@ -3253,7 +3240,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_subnet" "test" {
   availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = "10.0.0.0/24"
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   map_public_ip_on_launch = %[1]t
   vpc_id                  = aws_vpc.test.id
 
@@ -3571,7 +3558,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 	)
 }
 
-func testAccAWSEmrClusterConfigInstanceFleets(r string) string {
+func testAccAWSEmrClusterConfig_InstanceFleets(r string) string {
 	return testAccAWSEmrComposeConfig(false,
 		testAccAWSEmrClusterConfigCurrentPartition(),
 		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
@@ -3653,6 +3640,105 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     name = "runif"
     args = ["instance.isMaster=true", "echo running on master node"]
   }
+}
+`, r),
+	)
+}
+
+func testAccAWSEmrClusterConfig_InstanceFleet_MultipleSubnets(r string) string {
+	return testAccAWSEmrComposeConfig(false,
+		testAccAWSEmrClusterConfigCurrentPartition(),
+		testAccAWSEmrClusterConfigIAMServiceRoleBase(r),
+		testAccAWSEmrClusterConfigIAMInstanceProfileBase(r),
+		testAccAWSEmrClusterConfigBootstrapActionBucket(r),
+		fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  name          = "%[1]s"
+  release_label = "emr-5.30.1"
+  applications  = ["Hadoop", "Hive"]
+  log_uri       = "s3n://terraform/testlog/"
+
+  master_instance_fleet {
+    instance_type_configs {
+      instance_type = "m3.xlarge"
+    }
+
+    target_on_demand_capacity = 1
+  }
+  core_instance_fleet {
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 80
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m3.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.xlarge"
+      weighted_capacity = 1
+    }
+    instance_type_configs {
+      bid_price_as_percentage_of_on_demand_price = 100
+      ebs_config {
+        size                 = 100
+        type                 = "gp2"
+        volumes_per_instance = 1
+      }
+      instance_type     = "m4.2xlarge"
+      weighted_capacity = 2
+    }
+    launch_specifications {
+      spot_specification {
+        allocation_strategy      = "capacity-optimized"
+        block_duration_minutes   = 0
+        timeout_action           = "SWITCH_TO_ON_DEMAND"
+        timeout_duration_minutes = 10
+      }
+    }
+    name                      = "core fleet"
+    target_on_demand_capacity = 0
+    target_spot_capacity      = 2
+  }
+  service_role = aws_iam_role.emr_service.arn
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+  ]
+
+  ec2_attributes {
+    subnet_ids                         = [aws_subnet.test.id,aws_subnet.test2.id]
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+}
+
+resource "aws_subnet" "test2" {
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  map_public_ip_on_launch = false
+  vpc_id                  = aws_vpc.test.id
+}
+
+resource "aws_route_table_association" "test2" {
+  route_table_id = aws_route_table.test.id
+  subnet_id      = aws_subnet.test2.id
 }
 `, r),
 	)
