@@ -138,7 +138,7 @@ The `filters` configuration block supports the following arguments:
 
 ~> **NOTE:** For each argument below, up to 20 can be provided.
 
-* `aws_account_id` - (Optional) The AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
+* `aws_account_id` - (Optional) AWS account ID that a finding is generated in. See [String_Filter](#string-filter-argument-reference) below for more details.
 
 * `company_name` - (Optional) The name of the findings provider (company) that owns the solution (product) that generates findings. See [String_Filter](#string-filter-argument-reference) below for more details.
 
