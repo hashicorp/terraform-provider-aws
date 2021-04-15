@@ -366,7 +366,7 @@ resource "aws_db_proxy" "test" {
     aws_secretsmanager_secret_version.test,
     aws_iam_role_policy.test
   ]
-  
+
   name                   = %[1]q
   debug_logging          = false
   engine_family          = "MYSQL"
@@ -375,14 +375,14 @@ resource "aws_db_proxy" "test" {
   role_arn               = aws_iam_role.test.arn
   vpc_security_group_ids = [aws_security_group.test.id]
   vpc_subnet_ids         = aws_subnet.test.*.id
-  
+
   auth {
     auth_scheme = "SECRETS"
     description = "test"
     iam_auth    = "DISABLED"
     secret_arn  = aws_secretsmanager_secret.test.arn
   }
-  }
+}
 `, rName)
 }
 
