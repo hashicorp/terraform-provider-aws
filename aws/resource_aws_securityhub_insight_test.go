@@ -485,10 +485,14 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 	}
 }
 
+// testAccCheckAwsSecurityHubInsightArn checks the computed ARN value
+// and accounts for differences in SecurityHub on GovCloud where the partition portion
+// of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
 func testAccCheckAwsSecurityHubInsightArn(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedArn := regexp.MustCompile(fmt.Sprintf("insight/%s/custom/.+$", testAccGetAccountID()))
-		return testAccMatchResourceAttrRegionalARN(resourceName, "arn", "securityhub", expectedArn)(s)
+		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, testAccGetRegion(), testAccGetAccountID(), testAccGetAccountID())
+		//lintignore:AWSAT001
+		return resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(expectedArn))(s)
 	}
 }
 
