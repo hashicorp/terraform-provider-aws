@@ -36,7 +36,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) for the proxy.
+* `id` - The name of the proxy and proxy endpoint seperated by `/`, `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`.
 * `arn` - The Amazon Resource Name (ARN) for the proxy endpoint.
 * `endpoint` - The endpoint that you can use to connect to the proxy. You include the endpoint value in the connection string for a database client application.
 * `is_default` - Indicates whether this endpoint is the default endpoint for the associated DB proxy.
@@ -52,8 +52,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy endpoints can be imported using the `arn`, e.g.
+DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.
 
 ```
-$ terraform import aws_db_proxy_endpoint.example example
+$ terraform import aws_db_proxy_endpoint.example example/example
 ```

@@ -34,7 +34,7 @@ func DBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsR
 
 // DBProxyEndpoint returns matching DBProxyEndpoint.
 func DBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
-	dbProxyName, dbProxyEndpointName, dbProxyEndpointArn, err := tfrds.ResourceAwsDbProxyEndpointParseID(id)
+	dbProxyName, dbProxyEndpointName, err := tfrds.ResourceAwsDbProxyEndpointParseID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,8 @@ func DBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
 		}
 
 		for _, endpoint := range page.DBProxyEndpoints {
-			if aws.StringValue(endpoint.DBProxyEndpointArn) == dbProxyEndpointArn {
+			if aws.StringValue(endpoint.DBProxyEndpointName) == dbProxyEndpointName &&
+				aws.StringValue(endpoint.DBProxyName) == dbProxyName {
 				dbProxyEndpoint = endpoint
 				return false
 			}

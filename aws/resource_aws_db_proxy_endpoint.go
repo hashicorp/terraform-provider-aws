@@ -103,15 +103,13 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		params.VpcSecurityGroupIds = expandStringSet(v)
 	}
 
-	resp, err := conn.CreateDBProxyEndpoint(&params)
+	_, err := conn.CreateDBProxyEndpoint(&params)
 
 	if err != nil {
 		return fmt.Errorf("error Creating RDS DB Proxy Endpoint (%s/%s): %w", dbProxyName, dbProxyEndpointName, err)
 	}
 
-	dbProxyEndpoint := resp.DBProxyEndpoint
-
-	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName, aws.StringValue(dbProxyEndpoint.DBProxyEndpointArn)}, "/"))
+	d.SetId(strings.Join([]string{dbProxyName, dbProxyEndpointName}, "/"))
 
 	if _, err := waiter.DBProxyEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for RDS DB Proxy Endpoint (%s) to become available: %w", d.Id(), err)
