@@ -288,7 +288,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
 					validator = validateVersionString
 				} else {
-					validator = tfelasticache.ValidateElastiCacheRedisVersionString
+					validator = ValidateElastiCacheRedisVersionString
 				}
 
 				_, errs := validator(engineVersion, "engine_version")
@@ -297,29 +297,9 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				err = multierror.Append(err, errs...)
 				return err.ErrorOrNil()
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for engine_version changes
-				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
-				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
-				if diff.Id() == "" || !diff.HasChange("engine_version") {
-					return nil
-				}
-				o, n := diff.GetChange("engine_version")
-				oVersion, err := tfelasticache.NormalizeElastiCacheEngineVersion(o.(string))
-				if err != nil {
-					return fmt.Errorf("error parsing old engine_version: %w", err)
-				}
-				nVersion, err := tfelasticache.NormalizeElastiCacheEngineVersion(n.(string))
-				if err != nil {
-					return fmt.Errorf("error parsing new engine_version: %w", err)
-				}
 
-				if nVersion.GreaterThan(oVersion) {
-					return nil
-				}
+			CustomizeDiffElastiCacheEngineVersion,
 
-				return diff.ForceNew("engine_version")
-			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for num_cache_nodes
 				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.

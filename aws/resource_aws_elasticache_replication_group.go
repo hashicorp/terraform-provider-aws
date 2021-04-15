@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -111,8 +112,13 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{tfelasticache.EngineRedis}, true),
 			},
 			"engine_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: ValidateElastiCacheRedisVersionString,
+			},
+			"actual_engine_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"global_replication_group_id": {
@@ -303,6 +309,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				}
 				return nil
 			},
+
+			CustomizeDiffElastiCacheEngineVersion,
+
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
@@ -523,7 +532,18 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		c := res.CacheClusters[0]
 		d.Set("node_type", c.CacheNodeType)
 		d.Set("engine", c.Engine)
-		d.Set("engine_version", c.EngineVersion)
+
+		engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
+		if err != nil {
+			return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
+		}
+		if engineVersion.Segments()[0] < 6 {
+			d.Set("engine_version", engineVersion.String())
+		} else {
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+		}
+		d.Set("actual_engine_version", engineVersion.String())
+
 		d.Set("subnet_group_name", c.CacheSubnetGroupName)
 		d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
 		d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups))
