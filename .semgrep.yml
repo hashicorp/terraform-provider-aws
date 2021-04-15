@@ -380,28 +380,7 @@ rules:
     message: Use lastPage for bool variable in pagination functions
     paths:
       include:
-        - aws/resource_aws_[t-z]*.go
-        - aws/resource_aws_s[f-z]*.go
-        - aws/resource_aws_[a-b]*.go
-        - aws/resource_aws_cog*.go
-        - aws/resource_aws_cloudwatch_log*.go
-        - aws/resource_aws_code*.go
-        - aws/resource_aws_db*.go
-        - aws/resource_aws_ec2*.go
-        - aws/resource_aws_elast*.go
-        - aws/resource_aws_ecs*.go
-        - aws/resource_aws_ecrp*.go
-        - aws/resource_aws_[f-j]*.go
-        - aws/resource_aws_l*.go
-        - aws/resource_aws_kinesis_a*.go
-        - aws/resource_aws_emr_cl*.go
-        - aws/resource_aws_[m-q]*.go
-        - aws/resource_aws_route53_q*.go
-        - aws/resource_aws_route53_resolver_[e-z]*.go
-        - aws/resource_aws_route53_[s-z]*.go
-        - aws/resource_aws_service_discovery_private*.go
-        - aws/resource_aws_service_discovery_http*.go
-        - aws/resource_aws_secretsmanager*.go
+        - aws/
     patterns:
       - pattern: |
           $X.$Z(..., func(..., $Y bool) {
