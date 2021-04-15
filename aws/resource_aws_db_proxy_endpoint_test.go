@@ -13,56 +13,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/rds/finder"
 )
 
-// func init() {
-// 	resource.AddTestSweepers("aws_db_proxy_endpoint", &resource.Sweeper{
-// 		Name: "aws_db_proxy_endpoint",
-// 		F:    testSweepRdsDbProxies,
-// 	})
-// }
-
-// func testSweepRdsDbProxies(region string) error {
-// 	client, err := sharedClientForRegion(region)
-// 	if err != nil {
-// 		return fmt.Errorf("Error getting client: %s", err)
-// 	}
-// 	conn := client.(*AWSClient).rdsconn
-
-// 	err = conn.DescribeDBProxiesPages(&rds.DescribeDBProxiesInput{}, func(out *rds.DescribeDBProxiesOutput, lastPage bool) bool {
-// 		for _, dbpg := range out.DBProxies {
-// 			if dbpg == nil {
-// 				continue
-// 			}
-
-// 			input := &rds.DeleteDBProxyInput{
-// 				DBProxyName: dbpg.DBProxyName,
-// 			}
-// 			name := aws.StringValue(dbpg.DBProxyName)
-
-// 			log.Printf("[INFO] Deleting DB Proxy: %s", name)
-
-// 			_, err := conn.DeleteDBProxy(input)
-
-// 			if err != nil {
-// 				log.Printf("[ERROR] Failed to delete DB Proxy %s: %s", name, err)
-// 				continue
-// 			}
-// 		}
-
-// 		return !lastPage
-// 	})
-
-// 	if testSweepSkipSweepError(err) {
-// 		log.Printf("[WARN] Skipping RDS DB Proxy sweep for %s: %s", region, err)
-// 		return nil
-// 	}
-
-// 	if err != nil {
-// 		return fmt.Errorf("Error retrieving DB Proxies: %s", err)
-// 	}
-
-// 	return nil
-// }
-
 func TestAccAWSDBProxyEndpoint_basic(t *testing.T) {
 	var v rds.DBProxyEndpoint
 	resourceName := "aws_db_proxy_endpoint.test"
@@ -412,26 +362,26 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_db_proxy" "test" {
-	depends_on = [
-	  aws_secretsmanager_secret_version.test,
-	  aws_iam_role_policy.test
-	]
+  depends_on = [
+    aws_secretsmanager_secret_version.test,
+    aws_iam_role_policy.test
+  ]
   
-	name                   = %[1]q
-	debug_logging          = false
-	engine_family          = "MYSQL"
-	idle_client_timeout    = 1800
-	require_tls            = true
-	role_arn               = aws_iam_role.test.arn
-	vpc_security_group_ids = [aws_security_group.test.id]
-	vpc_subnet_ids         = aws_subnet.test.*.id
+  name                   = %[1]q
+  debug_logging          = false
+  engine_family          = "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.test.arn
+  vpc_security_group_ids = [aws_security_group.test.id]
+  vpc_subnet_ids         = aws_subnet.test.*.id
   
-	auth {
-	  auth_scheme = "SECRETS"
-	  description = "test"
-	  iam_auth    = "DISABLED"
-	  secret_arn  = aws_secretsmanager_secret.test.arn
-	}
+  auth {
+    auth_scheme = "SECRETS"
+    description = "test"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.test.arn
+  }
   }
 `, rName)
 }
