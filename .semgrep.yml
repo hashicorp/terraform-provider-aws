@@ -151,6 +151,24 @@ rules:
         - pattern: '*aws.Time($VALUE)'
     severity: WARNING
 
+  - id: data-source-with-resource-read
+    languages: [go]
+    message: Calling a resource's Read method from within a data-source is discouraged
+    paths:
+      include:
+        - aws/data_source_aws_*.go
+    patterns:
+      - pattern-regex: '(resource.+Read|flatten.+Resource)'
+      - pattern-inside: func $FUNCNAME(...) error { ... }
+      - pattern-not-inside: |
+          d.Set(..., []interface{}{ ... })
+      - pattern-not-inside: |
+          d.Set($ATTRIBUTE, $FUNC($APIOBJECT))
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "dataSource.+Read"
+    severity: WARNING
+
   - id: helper-acctest-RandInt-compiled
     languages: [go]
     message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
@@ -210,7 +228,6 @@ rules:
             ...
             expandStringList($LIST)
     severity: WARNING
-
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
     languages: [go]
