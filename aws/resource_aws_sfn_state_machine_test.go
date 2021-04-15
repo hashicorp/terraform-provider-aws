@@ -193,10 +193,10 @@ func TestAccAWSSfnStateMachine_Tracing_Config(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigTracingConfigEnable(rName),
+				Config: testAccAWSSfnStateMachineConfigTracingConfigDisable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", "false"),
 				),
 			},
 			{
@@ -205,10 +205,10 @@ func TestAccAWSSfnStateMachine_Tracing_Config(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTracingConfigDisable(rName),
+				Config: testAccAWSSfnStateMachineConfigTracingConfigEnable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", "true"),
 				),
 			},
 		},

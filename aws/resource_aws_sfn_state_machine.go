@@ -102,6 +102,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"tracing_config": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 		},
 
