@@ -3716,7 +3716,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   ]
 
   ec2_attributes {
-    subnet_ids                         = [aws_subnet.test.id,aws_subnet.test2.id]
+    subnet_ids                        = [aws_subnet.test.id, aws_subnet.test2.id]
     emr_managed_master_security_group = aws_security_group.test.id
     emr_managed_slave_security_group  = aws_security_group.test.id
     instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
