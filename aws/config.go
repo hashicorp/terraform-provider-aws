@@ -753,6 +753,23 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.fmsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Acceptance testing creates and deletes resources in quick succession.
+		// The FMS onboarding process into Organizations is opaque to consumers.
+		// Since we cannot reasonably check this status before receiving the error,
+		// set the operation as retryable.
+		switch r.Operation.Name {
+		case "AssociateAdminAccount":
+			if tfawserr.ErrMessageContains(r.Error, fms.ErrCodeInvalidOperationException, "Your AWS Organization is currently offboarding with AWS Firewall Manager. Please submit onboard request after offboarded.") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DisassociateAdminAccount":
+			if tfawserr.ErrMessageContains(r.Error, fms.ErrCodeInvalidOperationException, "Your AWS Organization is currently onboarding with AWS Firewall Manager and cannot be offboarded.") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.kafkaconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if isAWSErr(r.Error, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
 			r.Retryable = aws.Bool(true)
