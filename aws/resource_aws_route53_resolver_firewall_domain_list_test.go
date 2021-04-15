@@ -29,9 +29,9 @@ func testSweepRoute53ResolverFirewallDomainLists(region string) error {
 	conn := client.(*AWSClient).route53resolverconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallDomainListsPages(&route53resolver.ListFirewallDomainListsInput{}, func(page *route53resolver.ListFirewallDomainListsOutput, isLast bool) bool {
+	err = conn.ListFirewallDomainListsPages(&route53resolver.ListFirewallDomainListsInput{}, func(page *route53resolver.ListFirewallDomainListsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, queryLogConfig := range page.FirewallDomainLists {
@@ -50,7 +50,7 @@ func testSweepRoute53ResolverFirewallDomainLists(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall domain lists sweep for %s: %s", region, err)
