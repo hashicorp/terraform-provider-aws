@@ -32,9 +32,9 @@ func testSweepRoute53ResolverFirewallRules(region string) error {
 	conn := client.(*AWSClient).route53resolverconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallRulesPages(&route53resolver.ListFirewallRulesInput{}, func(page *route53resolver.ListFirewallRulesOutput, isLast bool) bool {
+	err = conn.ListFirewallRulesPages(&route53resolver.ListFirewallRulesInput{}, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, firewallRule := range page.FirewallRules {
@@ -53,7 +53,7 @@ func testSweepRoute53ResolverFirewallRules(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rules sweep for %s: %s", region, err)
