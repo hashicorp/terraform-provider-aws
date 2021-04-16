@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,21 +9,29 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 )
 
 func resourceAwsCloudWatchMetricStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCloudWatchMetricStreamPut,
-		Read:   resourceAwsCloudWatchMetricStreamRead,
-		Update: resourceAwsCloudWatchMetricStreamPut,
-		Delete: resourceAwsCloudWatchMetricStreamDelete,
+		CreateContext: resourceAwsCloudWatchMetricStreamCreate,
+		ReadContext:   resourceAwsCloudWatchMetricStreamRead,
+		UpdateContext: resourceAwsCloudWatchMetricStreamCreate,
+		DeleteContext: resourceAwsCloudWatchMetricStreamDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Read:   schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -105,64 +114,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 	}
 }
 
-func resourceAwsCloudWatchMetricStreamRead(d *schema.ResourceData, meta interface{}) error {
-	name := d.Get("name").(string)
-	log.Printf("[DEBUG] Reading CloudWatch MetricStream: %s", name)
-	conn := meta.(*AWSClient).cloudwatchconn
-
-	params := cloudwatch.GetMetricStreamInput{
-		Name: aws.String(d.Id()),
-	}
-
-	resp, err := conn.GetMetricStream(&params)
-	if err != nil {
-		if isAWSErr(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] CloudWatch MetricStream %q not found, removing", name)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Reading metric_stream failed: %s", err)
-	}
-
-	d.Set("arn", resp.Arn)
-	d.Set("creation_date", resp.CreationDate.Format(time.RFC3339))
-	d.Set("firehose_arn", resp.FirehoseArn)
-	d.Set("last_update_date", resp.CreationDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
-	d.Set("output_format", resp.OutputFormat)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("state", resp.State)
-
-	if resp.IncludeFilters != nil && len(resp.IncludeFilters) > 0 {
-		includeFilters := make([]interface{}, len(resp.IncludeFilters))
-		for i, mq := range resp.IncludeFilters {
-			includeFilter := map[string]interface{}{
-				"namespace": aws.StringValue(mq.Namespace),
-			}
-			includeFilters[i] = includeFilter
-		}
-		if err := d.Set("include_filter", includeFilters); err != nil {
-			return fmt.Errorf("error setting include_filter: %s", err)
-		}
-	}
-
-	if resp.ExcludeFilters != nil && len(resp.ExcludeFilters) > 0 {
-		excludeFilters := make([]interface{}, len(resp.ExcludeFilters))
-		for i, mq := range resp.ExcludeFilters {
-			excludeFilter := map[string]interface{}{
-				"namespace": aws.StringValue(mq.Namespace),
-			}
-			excludeFilters[i] = excludeFilter
-		}
-		if err := d.Set("exclude_filter", excludeFilters); err != nil {
-			return fmt.Errorf("error setting exclude_filter: %s", err)
-		}
-	}
-
-	return nil
-}
-
-func resourceAwsCloudWatchMetricStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudwatchconn
 
 	var name string
@@ -182,54 +134,105 @@ func resourceAwsCloudWatchMetricStreamCreate(d *schema.ResourceData, meta interf
 		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudwatchTags(),
 	}
 
-	if v, ok := d.GetOk("include_filter"); ok {
-		var includeFilters []*cloudwatch.MetricStreamFilter
-		for _, v := range v.(*schema.Set).List() {
-			metricStreamFilterResource := v.(map[string]interface{})
-			namespace := metricStreamFilterResource["namespace"].(string)
-			metricStreamFilter := cloudwatch.MetricStreamFilter{
-				Namespace: aws.String(namespace),
-			}
-			includeFilters = append(includeFilters, &metricStreamFilter)
-		}
-		params.IncludeFilters = includeFilters
+	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
+		params.IncludeFilters = expandCloudWatchMetricStreamFilters(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("exclude_filter"); ok {
-		var excludeFilters []*cloudwatch.MetricStreamFilter
-		for _, v := range v.(*schema.Set).List() {
-			metricStreamFilterResource := v.(map[string]interface{})
-			namespace := metricStreamFilterResource["namespace"].(string)
-			metricStreamFilter := cloudwatch.MetricStreamFilter{
-				Namespace: aws.String(namespace),
-			}
-			excludeFilters = append(excludeFilters, &metricStreamFilter)
-		}
-		params.ExcludeFilters = excludeFilters
+	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
+		params.ExcludeFilters = expandCloudWatchMetricStreamFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Putting CloudWatch MetricStream: %#v", params)
-
-	_, err := conn.PutMetricStream(&params)
+	_, err := conn.PutMetricStreamWithContext(ctx, &params)
 	if err != nil {
-		return fmt.Errorf("Putting metric_stream failed: %s", err)
+		return diag.FromErr(fmt.Errorf("Putting metric_stream failed: %s", err))
 	}
 	d.SetId(name)
 	log.Println("[INFO] CloudWatch MetricStream put finished")
 
-	return resourceAwsCloudWatchMetricStreamRead(d, meta)
+	return resourceAwsCloudWatchMetricStreamRead(ctx, d, meta)
 }
 
-func resourceAwsCloudWatchMetricStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Get("name").(string)
+	log.Printf("[DEBUG] Reading CloudWatch MetricStream: %s", name)
+	conn := meta.(*AWSClient).cloudwatchconn
+
+	params := cloudwatch.GetMetricStreamInput{
+		Name: aws.String(d.Id()),
+	}
+
+	var err error
+	var resp *cloudwatch.GetMetricStreamOutput
+
+	if d.IsNewResource() {
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
+			resp, err = conn.GetMetricStreamWithContext(ctx, &params)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			resp, err = conn.GetMetricStreamWithContext(ctx, &params)
+		}
+	} else {
+		resp, err = conn.GetMetricStreamWithContext(ctx, &params)
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+				log.Printf("[WARN] CloudWatch MetricStream (%s) not found, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+		}
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("Reading metric_stream failed: %s", err))
+	}
+
+	d.Set("arn", resp.Arn)
+	d.Set("creation_date", resp.CreationDate.Format(time.RFC3339))
+	d.Set("firehose_arn", resp.FirehoseArn)
+	d.Set("last_update_date", resp.CreationDate.Format(time.RFC3339))
+	d.Set("name", resp.Name)
+	d.Set("output_format", resp.OutputFormat)
+	d.Set("role_arn", resp.RoleArn)
+	d.Set("state", resp.State)
+
+	if resp.IncludeFilters != nil {
+		if err := d.Set("include_filter", flattenCloudWatchMetricStreamFilter(resp.IncludeFilters)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting include_filter error: %w", err))
+		}
+	}
+
+	if resp.ExcludeFilters != nil {
+		if err := d.Set("exclude_filter", flattenCloudWatchMetricStreamFilter(resp.ExcludeFilters)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting exclude_filter error: %w", err))
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsCloudWatchMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting CloudWatch MetricStream %s", d.Id())
 	conn := meta.(*AWSClient).cloudwatchconn
 	params := cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteMetricStream(&params); err != nil {
-		return fmt.Errorf("Error deleting CloudWatch MetricStream: %s", err)
+	if _, err := conn.DeleteMetricStreamWithContext(ctx, &params); err != nil {
+		return diag.FromErr(fmt.Errorf("Error deleting CloudWatch MetricStream: %s", err))
 	}
+
+	if _, err := waiter.MetricStreamDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error while waiting for CloudWatch Metric Stream (%s) to become deleted: %w", d.Id(), err))
+	}
+
 	log.Printf("[INFO] CloudWatch MetricStream %s deleted", d.Id())
 
 	return nil
@@ -240,4 +243,40 @@ func validateCloudWatchMetricStreamName(v interface{}, k string) (ws []string, e
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexp.MustCompile(`^[\-_A-Za-z0-9]*$`), "must match [\\-_A-Za-z0-9]"),
 	)(v, k)
+}
+
+func expandCloudWatchMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
+	var filters []*cloudwatch.MetricStreamFilter
+
+	for _, filterRaw := range s.List() {
+		filter := &cloudwatch.MetricStreamFilter{}
+		mFilter := filterRaw.(map[string]interface{})
+
+		if v, ok := mFilter["namespace"].(string); ok && v != "" {
+			filter.Namespace = aws.String(v)
+		}
+
+		filters = append(filters, filter)
+	}
+
+	return filters
+}
+
+func flattenCloudWatchMetricStreamFilter(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
+	filters := make([]map[string]interface{}, 0)
+
+	for _, bd := range s {
+		if bd.Namespace != nil {
+			stage := make(map[string]interface{})
+			stage["namespace"] = aws.StringValue(bd.Namespace)
+
+			filters = append(filters, stage)
+		}
+	}
+
+	if len(filters) > 0 {
+		return filters
+	}
+
+	return nil
 }

@@ -135,25 +135,27 @@ resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
+
+* `firehose_arn` - (Required) ARN of the Amazon Kinesis Firehose delivery stream to use for this metric stream.
+* `role_arn` - (Required) ARN of the IAM role that this metric stream will use to access Amazon Kinesis Firehose resources. For more information about role permissions, see [Trust between CloudWatch and Kinesis Data Firehose](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-trustpolicy.html).
+* `output_format` - (Required) Output format for the stream. For more information about output formats, see [Metric streams output formats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-formats.html).
+* `tags` - (Optional) Map of tags to assign to the resource.
+
+The following arguments are optional:
 
 * `exclude_filter` - (Optional) List of exclusive metric filters. If you specify this parameter, the stream sends metrics from all metric namespaces except for the namespaces that you specify here. Conflicts with `include_filter`.
-* `firehose_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis Firehose delivery stream to use for this metric stream.
 * `include_filter` - (Optional) List of inclusive metric filters. If you specify this parameter, the stream sends only the metrics from the metric namespaces that you specify here. Conflicts with `exclude_filter`.
 * `name` - (Optional, Forces new resource) Friendly name of the metric stream. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that this metric stream will use to access Amazon Kinesis Firehose resources.
-* `output_format` - (Required) Output format for the stream. For more information about metric stream output formats, see [Metric streams output formats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-formats.html).
-* `tags` - (Optional) A map of tags to assign to the resource.
-
 
 ### `exclude_filter`
 
-* `namespace` - (Required) The name of the metric namespace in the filter.
+* `namespace` - (Required) Name of the metric namespace in the filter.
 
 ### `include_filter`
 
-* `namespace` - (Required) The name of the metric namespace in the filter.
+* `namespace` - (Required) Name of the metric namespace in the filter.
 
 ## Attributes Reference
 
@@ -162,7 +164,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the metric stream.
 * `creation_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was created.
 * `last_update_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was last updated.
-* `state` - The state of the metric stream. The possible values are `running` and `stopped`.
+* `state` - State of the metric stream. Possible values are `running` and `stopped`.
 
 ## Import
 
