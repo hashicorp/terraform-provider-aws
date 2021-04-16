@@ -110,7 +110,7 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
-					resource.TestMatchResourceAttr(resourceName, "actual_engine_version", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -170,7 +170,7 @@ func TestAccAWSElasticacheReplicationGroup_EngineVersion_Update(t *testing.T) {
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &v1),
 					testAccCheckAWSElastiCacheReplicationGroupMemberClusters(resourceName, &c1),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.6"),
-					resource.TestCheckResourceAttr(resourceName, "actual_engine_version", "3.2.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.6"),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func TestAccAWSElasticacheReplicationGroup_EngineVersion_Update(t *testing.T) {
 					testAccCheckAWSElastiCacheReplicationGroupMemberClusters(resourceName, &c2),
 					testAccCheckAWSElastiCacheReplicationGroupRecreated(&c1, &c2),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.4"),
-					resource.TestCheckResourceAttr(resourceName, "actual_engine_version", "3.2.4"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.4"),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func TestAccAWSElasticacheReplicationGroup_EngineVersion_Update(t *testing.T) {
 					testAccCheckAWSElastiCacheReplicationGroupMemberClusters(resourceName, &c3),
 					testAccCheckAWSElastiCacheReplicationGroupNotRecreated(&c2, &c3),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.2.10"),
-					resource.TestCheckResourceAttr(resourceName, "actual_engine_version", "3.2.10"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "3.2.10"),
 				),
 			},
 			{
@@ -200,7 +200,7 @@ func TestAccAWSElasticacheReplicationGroup_EngineVersion_Update(t *testing.T) {
 					testAccCheckAWSElastiCacheReplicationGroupMemberClusters(resourceName, &c4),
 					testAccCheckAWSElastiCacheReplicationGroupNotRecreated(&c3, &c4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
-					resource.TestMatchResourceAttr(resourceName, "actual_engine_version", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccAWSElasticacheReplicationGroup_EngineVersion_Update(t *testing.T) {
 					testAccCheckAWSElastiCacheReplicationGroupMemberClusters(resourceName, &c5),
 					testAccCheckAWSElastiCacheReplicationGroupRecreated(&c4, &c5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
-					resource.TestCheckResourceAttr(resourceName, "actual_engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 				),
 			},
 		},

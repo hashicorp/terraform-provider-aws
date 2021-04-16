@@ -128,7 +128,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"actual_engine_version": {
+			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -468,7 +468,7 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	} else {
 		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
 	}
-	d.Set("actual_engine_version", engineVersion.String())
+	d.Set("engine_version_actual", engineVersion.String())
 
 	if c.ConfigurationEndpoint != nil {
 		d.Set("port", c.ConfigurationEndpoint.Port)

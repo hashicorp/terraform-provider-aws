@@ -117,7 +117,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: ValidateElastiCacheRedisVersionString,
 			},
-			"actual_engine_version": {
+			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -542,7 +542,7 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		} else {
 			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
 		}
-		d.Set("actual_engine_version", engineVersion.String())
+		d.Set("engine_version_actual", engineVersion.String())
 
 		d.Set("subnet_group_name", c.CacheSubnetGroupName)
 		d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
