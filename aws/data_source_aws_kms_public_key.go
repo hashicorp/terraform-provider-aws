@@ -12,17 +12,7 @@ func dataSourceAwsKmsPublicKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsKmsPublicKeyRead,
 		Schema: map[string]*schema.Schema{
-			"key_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateKmsKey,
-			},
-			"grant_tokens": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"id": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +25,21 @@ func dataSourceAwsKmsPublicKey() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"grant_tokens": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"key_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateKmsKey,
+			},
 			"key_usage": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,36 +48,42 @@ func dataSourceAwsKmsPublicKey() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"public_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
 func dataSourceAwsKmsPublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
-	keyId := d.Get("key_id")
-	var grantTokens []*string
-	if v, ok := d.GetOk("grant_tokens"); ok {
-		grantTokens = aws.StringSlice(v.([]string))
-	}
+	keyId := d.Get("key_id").(string)
+
 	input := &kms.GetPublicKeyInput{
-		KeyId:       aws.String(keyId.(string)),
-		GrantTokens: grantTokens,
+		KeyId: aws.String(keyId),
 	}
+
+	if v, ok := d.GetOk("grant_tokens"); ok {
+		input.GrantTokens = aws.StringSlice(v.([]string))
+	}
+
 	output, err := conn.GetPublicKey(input)
+
 	if err != nil {
-		return fmt.Errorf("error while describing key [%s]: %w", keyId, err)
+		return fmt.Errorf("error while describing KMS public key (%s): %w", keyId, err)
 	}
+
 	d.SetId(aws.StringValue(output.KeyId))
+
+	d.Set("arn", output.KeyId)
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
-	d.Set("encryption_algorithms", output.EncryptionAlgorithms)
-	d.Set("id", output.KeyId)
 	d.Set("key_usage", output.KeyUsage)
 	d.Set("public_key", string(output.PublicKey))
-	d.Set("signing_algorithms", output.SigningAlgorithms)
+
+	if err := d.Set("encryption_algorithms", flattenStringList(output.EncryptionAlgorithms)); err != nil {
+		return fmt.Errorf("error setting encryption_algorithms: %w", err)
+	}
+
+	if err := d.Set("signing_algorithms", flattenStringList(output.SigningAlgorithms)); err != nil {
+		return fmt.Errorf("error setting signing_algorithms: %w", err)
+	}
 
 	return nil
 }
