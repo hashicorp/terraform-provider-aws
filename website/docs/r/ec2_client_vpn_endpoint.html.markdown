@@ -29,12 +29,11 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
     cloudwatch_log_group  = aws_cloudwatch_log_group.lg.name
     cloudwatch_log_stream = aws_cloudwatch_log_stream.ls.name
   }
-  
+
   client_connect_options {
-    enabled = true
+    enabled             = true
     lambda_function_arn = aws_lambda_function.example.arn
   }
-}
 }
 ```
 
