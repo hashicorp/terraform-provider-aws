@@ -1821,13 +1821,13 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
 
-  node_type                     = "cache.t3.small"
-  number_cache_clusters         = 2
+  node_type             = "cache.t3.small"
+  number_cache_clusters = 2
 
-  engine_version = %[2]q
-  apply_immediately             = true
-  maintenance_window            = "tue:06:30-tue:07:30"
-  snapshot_window               = "01:00-02:00"
+  engine_version     = %[2]q
+  apply_immediately  = true
+  maintenance_window = "tue:06:30-tue:07:30"
+  snapshot_window    = "01:00-02:00"
 }
 `, rName, engineVersion)
 }
