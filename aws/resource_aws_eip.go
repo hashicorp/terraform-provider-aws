@@ -145,7 +145,11 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 		Domain: aws.String(domainOpt),
 	}
 
-	if domainOpt == ec2.DomainTypeVpc {
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		supportedPlatforms := meta.(*AWSClient).supportedplatforms
+		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && hasEc2Classic(supportedPlatforms) {
+			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
+		}
 		allocOpts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeElasticIp)
 	}
 
@@ -182,10 +186,6 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 && d.Get("domain").(string) == ec2.DomainTypeStandard {
-		return fmt.Errorf("tags can not be set for an EIP in EC2 Classic")
-	}
 
 	return resourceAwsEipUpdate(d, meta)
 }
@@ -400,7 +400,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags") && !d.IsNewResource() {
 		if d.Get("domain").(string) == ec2.DomainTypeStandard {
-			return fmt.Errorf("tags can not be set for an EIP in EC2 Classic")
+			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
