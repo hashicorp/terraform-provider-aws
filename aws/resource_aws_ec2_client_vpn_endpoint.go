@@ -275,6 +275,9 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	}
 
 	err = d.Set("client_connect_options", flattenClientConnectOptions(result.ClientVpnEndpoints[0].ClientConnectOptions))
+	if err != nil {
+		return fmt.Errorf("error setting client_connect_options: %w", err)
+	}
 
 	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
 	if err != nil {
