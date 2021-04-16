@@ -208,6 +208,7 @@ func TestAccAWSEIP_Instance_reassociate(t *testing.T) {
 func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	var one ec2.Address
 	resourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -217,7 +218,7 @@ func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceAssociatedConfig(),
+				Config: testAccEIPInstanceAssociatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &one),
 					testAccCheckAWSEIPAttributes(&one),
@@ -232,7 +233,7 @@ func TestAccAWSEIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"associate_with_private_ip"},
 			},
 			{
-				Config: testAccEIPInstanceAssociatedSwitchConfig(),
+				Config: testAccEIPInstanceAssociatedSwitchConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &one),
 					testAccCheckAWSEIPAttributes(&one),
@@ -310,6 +311,7 @@ func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
 func TestAccAWSEIP_NetworkInterface(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -319,7 +321,7 @@ func TestAccAWSEIP_NetworkInterface(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPNetworkInterfaceConfig,
+				Config: testAccEIPNetworkInterfaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
@@ -341,6 +343,7 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	var one, two ec2.Address
 	resourceName := "aws_eip.test"
 	resourceName2 := "aws_eip.test2"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -350,7 +353,7 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPMultiNetworkInterfaceConfig,
+				Config: testAccEIPMultiNetworkInterfaceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &one),
 					testAccCheckAWSEIPAttributes(&one),
@@ -970,16 +973,18 @@ resource "aws_eip" "test" {
 `)
 }
 
-func testAccEIPInstanceAssociatedConfig() string {
+func testAccEIPInstanceAssociatedConfig(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"), `
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-eip-instance-associated"
+    Name = %[1]q
   }
 }
 
@@ -987,7 +992,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.default.id
 
   tags = {
-    Name = "main"
+    Name = %[1]q
   }
 }
 
@@ -1000,7 +1005,7 @@ resource "aws_subnet" "test" {
   depends_on = [aws_internet_gateway.gw]
 
   tags = {
-    Name = "tf-acc-eip-instance-associated"
+    Name = %[1]q
   }
 }
 
@@ -1012,7 +1017,7 @@ resource "aws_instance" "test" {
   subnet_id  = aws_subnet.test.id
 
   tags = {
-    Name = "test instance"
+    Name = %[1]q
   }
 }
 
@@ -1024,7 +1029,7 @@ resource "aws_instance" "test2" {
   subnet_id  = aws_subnet.test.id
 
   tags = {
-    Name = "test2 instance"
+    Name = %[1]q
   }
 }
 
@@ -1034,27 +1039,19 @@ resource "aws_eip" "test" {
   instance                  = aws_instance.test2.id
   associate_with_private_ip = "10.0.0.19"
 }
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`)
+`, rName))
 }
 
-func testAccEIPInstanceAssociatedSwitchConfig() string {
+func testAccEIPInstanceAssociatedSwitchConfig(rName string) string {
 	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-eip-instance-associated"
+    Name = %[1]q
   }
 }
 
@@ -1062,7 +1059,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.default.id
 
   tags = {
-    Name = "main"
+    Name = %[1]q
   }
 }
 
@@ -1074,7 +1071,7 @@ resource "aws_subnet" "test" {
   depends_on = [aws_internet_gateway.gw]
 
   tags = {
-    Name = "tf-acc-eip-instance-associated"
+    Name = %[1]q
   }
 }
 
@@ -1086,7 +1083,7 @@ resource "aws_instance" "test" {
   subnet_id  = aws_subnet.test.id
 
   tags = {
-    Name = "test instance"
+    Name = %[1]q
   }
 }
 
@@ -1099,7 +1096,7 @@ resource "aws_instance" "test2" {
   subnet_id  = aws_subnet.test.id
 
   tags = {
-    Name = "test2 instance"
+    Name = "%[1]s-2"
   }
 }
 
@@ -1109,23 +1106,17 @@ resource "aws_eip" "test" {
   instance                  = aws_instance.test.id
   associate_with_private_ip = "10.0.0.12"
 }
-`)
+`, rName))
 }
 
-const testAccEIPNetworkInterfaceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEIPNetworkInterfaceConfig(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
   tags = {
-    Name = "terraform-testacc-eip-network-interface"
+    Name = %[1]q
   }
 }
 
@@ -1138,7 +1129,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
   tags = {
-    Name = "tf-acc-eip-network-interface"
+    Name = %[1]q
   }
 }
 
@@ -1153,22 +1144,17 @@ resource "aws_eip" "test" {
   network_interface = aws_network_interface.test.id
   depends_on        = [aws_internet_gateway.test]
 }
-`
-
-const testAccEIPMultiNetworkInterfaceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`, rName))
 }
 
+func testAccEIPMultiNetworkInterfaceConfig(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
   tags = {
-    Name = "terraform-testacc-eip-multi-network-interface"
+    Name = %[1]q
   }
 }
 
@@ -1181,7 +1167,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
   tags = {
-    Name = "tf-acc-eip-multi-network-interface"
+    Name = %[1]q
   }
 }
 
@@ -1204,7 +1190,8 @@ resource "aws_eip" "test2" {
   associate_with_private_ip = "10.0.0.11"
   depends_on                = [aws_internet_gateway.test]
 }
-`
+`, rName))
+}
 
 func testAccEIPInstanceReassociateConfig(rName string) string {
 	return composeConfig(
