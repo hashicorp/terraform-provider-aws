@@ -79,15 +79,15 @@ func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) e
 
 	input := &efs.DescribeMountTargetsInput{}
 
-	if v, ok := d.GetOk("access_point_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("access_point_id"); ok {
 		input.AccessPointId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("file_system_id"); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("mount_target_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("mount_target_id"); ok {
 		input.MountTargetId = aws.String(v.(string))
 	}
 
