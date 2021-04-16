@@ -74,27 +74,27 @@ func resourceAwsSqsQueue() *schema.Resource {
 			"delay_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
+				Default:  tfsqs.DefaultQueueDelaySeconds,
 			},
 			"max_message_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  262144,
+				Default:  tfsqs.DefaultQueueMaximumMessageSize,
 			},
 			"message_retention_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  345600,
+				Default:  tfsqs.DefaultQueueMessageRetentionPeriod,
 			},
 			"receive_wait_time_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
+				Default:  tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds,
 			},
 			"visibility_timeout_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  30,
+				Default:  tfsqs.DefaultQueueVisibilityTimeout,
 			},
 			"policy": {
 				Type:             schema.TypeString,
@@ -297,15 +297,15 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	// Always set attribute defaults
 	d.Set("arn", "")
 	d.Set("content_based_deduplication", false)
-	d.Set("delay_seconds", 0)
+	d.Set("delay_seconds", tfsqs.DefaultQueueDelaySeconds)
 	d.Set("kms_data_key_reuse_period_seconds", 300)
 	d.Set("kms_master_key_id", "")
-	d.Set("max_message_size", 262144)
-	d.Set("message_retention_seconds", 345600)
+	d.Set("max_message_size", tfsqs.DefaultQueueMaximumMessageSize)
+	d.Set("message_retention_seconds", tfsqs.DefaultQueueMessageRetentionPeriod)
 	d.Set("policy", "")
-	d.Set("receive_wait_time_seconds", 0)
+	d.Set("receive_wait_time_seconds", tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)
 	d.Set("redrive_policy", "")
-	d.Set("visibility_timeout_seconds", 30)
+	d.Set("visibility_timeout_seconds", tfsqs.DefaultQueueVisibilityTimeout)
 
 	if attributeOutput != nil {
 		queueAttributes := aws.StringValueMap(attributeOutput.Attributes)

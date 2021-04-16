@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
@@ -76,9 +77,9 @@ func testSweepSqsQueues(region string) error {
 
 func TestAccAWSSQSQueue_basic(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -89,7 +90,11 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
@@ -101,15 +106,46 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 				Config: testAccAWSSQSConfigWithOverrides(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_disappears(t *testing.T) {
+	var queueAttributes map[string]*string
+	resourceName := "aws_sqs_queue.queue"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithDefaults(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -117,9 +153,9 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 
 func TestAccAWSSQSQueue_tags(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -130,7 +166,11 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 				Config: testAccAWSSQSConfigWithTags(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
@@ -144,7 +184,11 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 				Config: testAccAWSSQSConfigWithTagsChanged(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
@@ -153,7 +197,11 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 				),
 			},
@@ -178,6 +226,11 @@ func TestAccAWSSQSQueue_Name_Generated(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
@@ -206,6 +259,11 @@ func TestAccAWSSQSQueue_Name_Generated_FIFOQueue(t *testing.T) {
 					naming.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsqs.FifoQueueNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
@@ -232,10 +290,14 @@ func TestAccAWSSQSQueue_NamePrefix(t *testing.T) {
 				Config: testAccAWSSQSQueueConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
@@ -262,10 +324,14 @@ func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
 				Config: testAccAWSSQSQueueConfigNamePrefixFIFOQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 					naming.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsqs.FifoQueueNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
@@ -279,7 +345,7 @@ func TestAccAWSSQSQueue_NamePrefix_FIFOQueue(t *testing.T) {
 
 func TestAccAWSSQSQueue_policy(t *testing.T) {
 	var queueAttributes map[string]*string
-
+	resourceName := "aws_sqs_queue.test-email-events"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
 
@@ -292,12 +358,12 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 					testAccCheckAWSSQSQueuePolicyAttribute(&queueAttributes, topicName, queueName),
 				),
 			},
 			{
-				ResourceName:      "aws_sqs_queue.test-email-events",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -307,9 +373,9 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 
 func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -320,14 +386,22 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 				Taint: []string{resourceName},
 			},
@@ -337,6 +411,7 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 
 func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 	var queueAttributes map[string]*string
+	resourceName := "aws_sqs_queue.my_dead_letter_queue"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -347,12 +422,16 @@ func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithRedrive(acctest.RandString(10)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.my_dead_letter_queue", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", strconv.Itoa(tfsqs.DefaultQueueMaximumMessageSize)),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
 				),
 			},
 			{
-				ResourceName:      "aws_sqs_queue.my_dead_letter_queue",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -363,9 +442,10 @@ func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 // Tests formatting and compacting of Policy, Redrive json
 func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 	var queueAttributes map[string]*string
-
+	resourceName := "aws_sqs_queue.test-email-events"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -375,12 +455,16 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
-					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
 			{
-				ResourceName:      "aws_sqs_queue.test-email-events",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -390,8 +474,8 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 
 func TestAccAWSSQSQueue_FIFO(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -431,8 +515,8 @@ func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
 
 func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -473,8 +557,8 @@ func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
 
 func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	var queueAttributes map[string]*string
-
 	resourceName := "aws_sqs_queue.queue"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
@@ -579,66 +663,6 @@ func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[str
 		}
 
 		*queueAttributes = output.Attributes
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSQueueDefaultAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// checking if attributes are defaults
-		for key, valuePointer := range *queueAttributes {
-			value := aws.StringValue(valuePointer)
-			if key == "VisibilityTimeout" && value != "30" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 30", value)
-			}
-
-			if key == "MessageRetentionPeriod" && value != "345600" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 345600", value)
-			}
-
-			if key == "MaximumMessageSize" && value != "262144" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 262144", value)
-			}
-
-			if key == "DelaySeconds" && value != "0" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 0", value)
-			}
-
-			if key == "ReceiveMessageWaitTimeSeconds" && value != "0" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 0", value)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSQueueOverrideAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// checking if attributes match our overrides
-		for key, valuePointer := range *queueAttributes {
-			value := aws.StringValue(valuePointer)
-			if key == "VisibilityTimeout" && value != "60" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 60", value)
-			}
-
-			if key == "MessageRetentionPeriod" && value != "86400" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 86400", value)
-			}
-
-			if key == "MaximumMessageSize" && value != "2048" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 2048", value)
-			}
-
-			if key == "DelaySeconds" && value != "90" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 90", value)
-			}
-
-			if key == "ReceiveMessageWaitTimeSeconds" && value != "10" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 10", value)
-			}
-		}
 
 		return nil
 	}

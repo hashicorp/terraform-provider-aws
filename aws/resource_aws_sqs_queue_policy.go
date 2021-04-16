@@ -81,6 +81,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[DEBUG] SQS attribute %s not found - retrying", sqs.QueueAttributeNamePolicy)
 			return resource.RetryableError(notUpdatedError)
 		}
+
 		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 		if err != nil {
 			return resource.NonRetryableError(err)

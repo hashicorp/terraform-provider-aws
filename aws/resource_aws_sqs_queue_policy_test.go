@@ -13,6 +13,7 @@ import (
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	var queueAttributes map[string]*string
 	resourceName := "aws_sqs_queue_policy.test"
+	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,9 +25,8 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSSQSPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					resource.TestMatchResourceAttr("aws_sqs_queue_policy.test", "policy",
+					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),
 			},
@@ -39,7 +39,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 				Config:   testAccAWSSQSPolicyConfigBasic(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "policy", "aws_sqs_queue.test", "policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy", queueResourceName, "policy"),
 				),
 			},
 		},
@@ -48,7 +48,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 
 func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 	var queueAttributes map[string]*string
-	resourceName := "aws_sqs_queue_policy.test"
+	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,9 +60,8 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 			{
 				Config: testAccAWSSQSPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), resourceName),
+					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,6 +72,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 	var queueAttributes map[string]*string
 	resourceName := "aws_sqs_queue_policy.test"
+	queueResourceName := "aws_sqs_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -84,8 +84,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 			{
 				Config: testAccAWSSQSPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test", &queueAttributes),
-					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					testAccCheckAWSSQSQueueExists(queueResourceName, &queueAttributes),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSqsQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
