@@ -588,8 +588,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 
   client_connect_options {
-    enabled              = true
-    lambda_function_arn  = aws_lambda_function.test.arn
+    enabled             = true
+    lambda_function_arn = aws_lambda_function.test.arn
   }
 }
 `, rName, rName)
