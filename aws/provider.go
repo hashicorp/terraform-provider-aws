@@ -314,6 +314,7 @@ func Provider() *schema.Provider {
 			"aws_kms_alias":                                  dataSourceAwsKmsAlias(),
 			"aws_kms_ciphertext":                             dataSourceAwsKmsCiphertext(),
 			"aws_kms_key":                                    dataSourceAwsKmsKey(),
+			"aws_kms_public_key":                             dataSourceAwsKmsPublicKey(),
 			"aws_kms_secret":                                 dataSourceAwsKmsSecret(),
 			"aws_kms_secrets":                                dataSourceAwsKmsSecrets(),
 			"aws_lakeformation_data_lake_settings":           dataSourceAwsLakeFormationDataLakeSettings(),
