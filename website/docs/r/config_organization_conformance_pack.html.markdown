@@ -12,7 +12,9 @@ Manages a Config Organization Conformance Pack. More information can be found in
 
 ~> **NOTE:** This resource must be created in the Organization master account or a delegated administrator account, and the Organization must have all features enabled. Every Organization account except those configured in the `excluded_accounts` argument must have a Configuration Recorder with proper IAM permissions before the Organization Conformance Pack will successfully create or update. See also the [`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
 
-## Example Usage with Template Body
+## Example Usage
+
+### Using Template Body
 
 ```hcl
 resource "aws_config_organization_conformance_pack" "example" {
@@ -46,7 +48,7 @@ resource "aws_organizations_organization" "example" {
 }
 ```
 
-## Example Usage with Template S3 URI
+### Using Template S3 URI
 
 ```hcl
 resource "aws_config_organization_conformance_pack" "example" {
@@ -102,7 +104,7 @@ The `input_parameter` configuration block supports the following arguments:
 
 ## Attributes Reference
 
-In addition to all arguments above (except for `template_body` and `template_s3_uri`), the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 
