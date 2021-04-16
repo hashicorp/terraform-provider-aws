@@ -2568,56 +2568,6 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 	}
 }
 
-func TestValidateServiceQuotasServiceQuotaServiceCode(t *testing.T) {
-	validServiceCodes := []string{
-		"AWSCloudMap",
-		"acm-pca",
-	}
-	for _, v := range validServiceCodes {
-		_, errors := validateServiceQuotasServiceQuotaServiceCode(v, "service_code")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid service service code: %q", v, errors)
-		}
-	}
-
-	invalidServiceCodes := []string{
-		" vpc",
-		"123456789012345678921234567893123456789412345678951234567896123456789712345678981234567899123456789012345678911234567892123456789",
-		`\`,
-	}
-	for _, v := range invalidServiceCodes {
-		_, errors := validateServiceQuotasServiceQuotaServiceCode(v, "service_code")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid service code", v)
-		}
-	}
-}
-
-func TestValidateServiceQuotasServiceQuotaQuotaCode(t *testing.T) {
-	validQuotaCodes := []string{
-		"L-123ABC",
-		"L-123aBc",
-	}
-	for _, v := range validQuotaCodes {
-		_, errors := validateServiceQuotasServiceQuotaQuotaCode(v, "quota_code")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid service quota code: %q", v, errors)
-		}
-	}
-
-	invalidQuotaCodes := []string{
-		" L-123ABC",
-		"123456789012345678921234567893123456789412345678951234567896123456789712345678981234567899123456789012345678911234567892123456789",
-		`\`,
-	}
-	for _, v := range invalidQuotaCodes {
-		_, errors := validateServiceQuotasServiceQuotaQuotaCode(v, "quota_code")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid quota code", v)
-		}
-	}
-}
-
 func TestValidateCognitoRoles(t *testing.T) {
 	validValues := []map[string]interface{}{
 		{"authenticated": "hoge"},
