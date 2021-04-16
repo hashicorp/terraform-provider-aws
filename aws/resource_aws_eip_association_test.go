@@ -66,6 +66,7 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.by_allocation_id"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
@@ -74,7 +75,7 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfig(),
+				Config: testAccAWSEIPAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test.0", false, &a),
 					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
@@ -153,8 +154,8 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 
 func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 	var a ec2.Address
-
 	resourceName := "aws_eip_association.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -163,7 +164,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIPAssociationConfigDisappears(),
+				Config: testAccAWSEIPAssociationConfigDisappears(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
@@ -295,14 +296,15 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSEIPAssociationConfig() string {
+func testAccAWSEIPAssociationConfig(rName string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/24"
   tags = {
-    Name = "terraform-testacc-eip-association"
+    Name = %[1]q
   }
 }
 
@@ -311,7 +313,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "192.168.0.0/25"
   availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
-    Name = "tf-acc-eip-association"
+    Name = %[1]q
   }
 }
 
@@ -360,17 +362,18 @@ resource "aws_network_interface" "test" {
     device_index = 1
   }
 }
-`)
+`, rName))
 }
 
-func testAccAWSEIPAssociationConfigDisappears() string {
+func testAccAWSEIPAssociationConfigDisappears(rName string) string {
 	return composeConfig(
 		testAccAvailableAZsNoOptInConfig(),
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(), `
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "192.168.0.0/24"
   tags = {
-    Name = "terraform-testacc-eip-association-disappears"
+    Name = %[1]q
   }
 }
 
@@ -379,7 +382,7 @@ resource "aws_subnet" "sub" {
   cidr_block        = "192.168.0.0/25"
   availability_zone = data.aws_availability_zones.available.names[0]
   tags = {
-    Name = "tf-acc-eip-association-disappears"
+    Name = %[1]q
   }
 }
 
@@ -402,7 +405,7 @@ resource "aws_eip_association" "test" {
   allocation_id = aws_eip.test.id
   instance_id   = aws_instance.test.id
 }
-`)
+`, rName))
 }
 
 func testAccAWSEIPAssociationConfig_ec2Classic() string {
