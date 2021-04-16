@@ -24,7 +24,7 @@ func TestAccAWSEIPAssociation_instance(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_instance(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 				),
 			},
@@ -50,7 +50,7 @@ func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_networkInterface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 				),
 			},
@@ -76,11 +76,11 @@ func TestAccAWSEIPAssociation_basic(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test.0", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.0", false, &a),
 					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
-					testAccCheckAWSEIPExists("aws_eip.test.1", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.1", false, &a),
 					testAccCheckAWSEIPAssociationExists("aws_eip_association.by_public_ip", &a),
-					testAccCheckAWSEIPExists("aws_eip.test.2", &a),
+					testAccCheckAWSEIPExists("aws_eip.test.2", false, &a),
 					testAccCheckAWSEIPAssociationExists("aws_eip_association.to_eni", &a),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_ec2Classic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPEc2ClassicExists("aws_eip.test", &a),
+					testAccCheckAWSEIPExists("aws_eip.test", true, &a),
 					testAccCheckAWSEIPAssociationEc2ClassicExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
@@ -136,7 +136,7 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfig_spotInstance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -165,7 +165,7 @@ func TestAccAWSEIPAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccAWSEIPAssociationConfigDisappears(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists("aws_eip.test", &a),
+					testAccCheckAWSEIPExists("aws_eip.test", false, &a),
 					testAccCheckAWSEIPAssociationExists(resourceName, &a),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEipAssociation(), resourceName),
 				),
