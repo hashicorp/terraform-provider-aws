@@ -134,24 +134,7 @@ func resourceAwsConfigOrganizationConformancePackCreate(d *schema.ResourceData, 
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	err := resource.Retry(ConfigOrganizationConformancePackCreateTimeout, func() *resource.RetryError {
-		_, err := conn.PutOrganizationConformancePack(&input)
-
-		if err != nil {
-			// OrganizationAccessDeniedException seems to be a transient error
-			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeOrganizationAccessDeniedException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutOrganizationConformancePack(&input)
-	}
+	_, err := conn.PutOrganizationConformancePack(&input)
 
 	if err != nil {
 		return fmt.Errorf("error creating Config Organization Conformance Pack (%s): %w", name, err)
@@ -239,6 +222,7 @@ func resourceAwsConfigOrganizationConformancePackUpdate(d *schema.ResourceData, 
 	}
 
 	_, err := conn.PutOrganizationConformancePack(&input)
+
 	if err != nil {
 		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
 	}

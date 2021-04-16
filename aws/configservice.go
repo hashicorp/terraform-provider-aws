@@ -21,9 +21,6 @@ const (
 
 	ConfigConformancePackStatusNotFound = "NotFound"
 	ConfigConformancePackStatusUnknown  = "Unknown"
-
-	ConfigOrganizationConformancePackStatusNotFound = "NotFound"
-	ConfigOrganizationConformancePackStatusUnknown  = "Unknown"
 )
 
 func configDescribeConformancePack(conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
@@ -318,11 +315,11 @@ func configRefreshOrganizationConformancePackStatus(conn *configservice.ConfigSe
 		status, err := configDescribeOrganizationConformancePackStatus(conn, name)
 
 		if err != nil {
-			return nil, ConfigOrganizationConformancePackStatusUnknown, err
+			return nil, "", err
 		}
 
 		if status == nil {
-			return nil, ConfigOrganizationConformancePackStatusNotFound, nil
+			return nil, "", nil
 		}
 
 		if status.ErrorCode != nil {
@@ -388,8 +385,8 @@ func configWaitForOrganizationConformancePackStatusCreateSuccessful(conn *config
 		Target:  []string{configservice.OrganizationResourceStatusCreateSuccessful},
 		Timeout: ConfigOrganizationConformancePackCreateTimeout,
 		Refresh: configRefreshOrganizationConformancePackStatus(conn, name),
-		// Include a Delay to avoid transient error i.e. OrganizationAccessDeniedException
-		Delay: 1 * time.Minute,
+		// Include a Delay to avoid transient error
+		Delay: 30 * time.Second,
 	}
 
 	_, err := stateChangeConf.WaitForState()
