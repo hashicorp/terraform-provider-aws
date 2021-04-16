@@ -143,16 +143,15 @@ The following arguments are supported:
 * `name` - (Optional, Forces new resource) Friendly name of the metric stream. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that this metric stream will use to access Amazon Kinesis Firehose resources.
-* `output_format` - (Required) The output format for the stream. For more information about metric stream output formats, see [Metric streams output formats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-formats.html).
+* `output_format` - (Required) Output format for the stream. For more information about metric stream output formats, see [Metric streams output formats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-formats.html).
 * `tags` - (Optional) A map of tags to assign to the resource.
 
-### Nested fields
 
-#### `exclude_filter`
+### `exclude_filter`
 
 * `namespace` - (Required) The name of the metric namespace in the filter.
 
-#### `include_filter`
+### `include_filter`
 
 * `namespace` - (Required) The name of the metric namespace in the filter.
 
@@ -160,7 +159,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the metric stream.
+* `arn` - ARN of the metric stream.
 * `creation_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was created.
 * `last_update_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was last updated.
 * `state` - The state of the metric stream. The possible values are `running` and `stopped`.

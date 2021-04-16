@@ -162,7 +162,7 @@ func resourceAwsCloudWatchMetricStreamRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsCloudWatchMetricStreamPut(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCloudWatchMetricStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchconn
 
 	var name string
@@ -182,7 +182,7 @@ func resourceAwsCloudWatchMetricStreamPut(d *schema.ResourceData, meta interface
 		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudwatchTags(),
 	}
 
-	if v := d.Get("include_filter"); v != nil {
+	if v, ok := d.GetOk("include_filter"); ok {
 		var includeFilters []*cloudwatch.MetricStreamFilter
 		for _, v := range v.(*schema.Set).List() {
 			metricStreamFilterResource := v.(map[string]interface{})
@@ -195,7 +195,7 @@ func resourceAwsCloudWatchMetricStreamPut(d *schema.ResourceData, meta interface
 		params.IncludeFilters = includeFilters
 	}
 
-	if v := d.Get("exclude_filter"); v != nil {
+	if v, ok := d.GetOk("exclude_filter"); ok {
 		var excludeFilters []*cloudwatch.MetricStreamFilter
 		for _, v := range v.(*schema.Set).List() {
 			metricStreamFilterResource := v.(map[string]interface{})
