@@ -18,6 +18,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
+
 	resource.AddTestSweepers("aws_sns_topic", &resource.Sweeper{
 		Name: "aws_sns_topic",
 		F:    testSweepSnsTopics,
@@ -86,6 +88,13 @@ func testSweepSnsTopics(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Invalid protocol type: firehose",
+		"Unknown attribute FifoTopic",
+	)
 }
 
 func TestAccAWSSNSTopic_basic(t *testing.T) {
