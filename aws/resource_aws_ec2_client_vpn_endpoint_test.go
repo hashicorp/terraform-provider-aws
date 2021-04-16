@@ -89,6 +89,7 @@ func TestAccAwsEc2ClientVpn_serial(t *testing.T) {
 			"msAD":              testAccAwsEc2ClientVpnEndpoint_msAD,
 			"mutualAuthAndMsAD": testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD,
 			"federated":         testAccAwsEc2ClientVpnEndpoint_federated,
+			"withClientConnect": testAccAwsEc2ClientVpnEndpoint_withClientConnectOptions,
 			"withLogGroup":      testAccAwsEc2ClientVpnEndpoint_withLogGroup,
 			"withDNSServers":    testAccAwsEc2ClientVpnEndpoint_withDNSServers,
 			"tags":              testAccAwsEc2ClientVpnEndpoint_tags,
