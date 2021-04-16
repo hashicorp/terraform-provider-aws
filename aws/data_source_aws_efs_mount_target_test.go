@@ -158,6 +158,8 @@ func testAccAWSEFSMountTargetConfigByFileSystemId(rName string) string {
 	return composeConfig(testAccAwsEfsMountTargetDataSourceBaseConfig(rName), `
 data "aws_efs_mount_target" "test" {
   file_system_id = aws_efs_file_system.test.id
+
+  depends_on = [aws_efs_mount_target.test]
 }
 `)
 }
