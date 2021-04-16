@@ -272,7 +272,7 @@ func testAccAwsEc2ClientVpnEndpoint_withClientConnectOptions(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	lambdaFunctionArn := "aws_lambda_function.lg"
+	lambdaFunctionArn := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheckClientVPNSyncronize(t); testAccPreCheck(t) },
@@ -589,7 +589,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   client_connect_options {
     enabled              = true
-    lambda_function_arn  = aws_lambda_function_test.arn
+    lambda_function_arn  = aws_lambda_function.test.arn
   }
 }
 `, rName, rName)
