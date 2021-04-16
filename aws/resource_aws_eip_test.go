@@ -279,6 +279,34 @@ func TestAccAWSEIP_Instance_notAssociated(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
+	resourceName := "aws_eip.test"
+	var conf ec2.Address
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEIPInstanceEC2ClassicConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, true, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPPublicDNSEC2Classic(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeStandard),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEIP_NetworkInterface(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
@@ -345,41 +373,11 @@ func TestAccAWSEIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSEIP_Instance_ec2Classic(t *testing.T) {
-	resourceName := "aws_eip.test"
-	var conf ec2.Address
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSEIPDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEIPInstanceEC2ClassicConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(resourceName, true, &conf),
-					testAccCheckAWSEIPAttributes(&conf),
-					testAccCheckAWSEIPPublicDNSEC2Classic(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeStandard),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-
-	// exclude ec2classic
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
@@ -417,13 +415,12 @@ func TestAccAWSEIP_Tags_EC2VPC_withVPCTrue(t *testing.T) {
 	})
 }
 
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/18756
 func TestAccAWSEIP_Tags_EC2VPC_withoutVPCTrue(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-
-	// exclude ec2classic
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
@@ -466,8 +463,6 @@ func TestAccAWSEIP_Tags_EC2Classic_withVPCTrue(t *testing.T) {
 	resourceName := "aws_eip.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-
-	// exclude ec2classic
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
