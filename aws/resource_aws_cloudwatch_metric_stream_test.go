@@ -15,7 +15,7 @@ import (
 func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -24,7 +24,7 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
 					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
@@ -309,7 +309,7 @@ func testAccAWSCloudWatchName(rInt int) string {
 	return fmt.Sprintf("terraform-test-metric-stream-%d", rInt)
 }
 
-func testAccAWSCloudWatchMetricStreamConfig(rInt int) string {
+func testAccAWSCloudWatchMetricStreamConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_stream" "test" {
   name          = "terraform-test-metric-stream-%d"
@@ -319,7 +319,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 }
 
 resource "aws_iam_role" "metric_stream_to_firehose" {
-  name = "metric_stream_to_firehose_role-%d"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -481,7 +481,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  name_prefix   = "test-stream-%d"
+  name_prefix   = "tf-acc-test"
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
