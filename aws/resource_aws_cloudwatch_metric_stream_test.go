@@ -27,7 +27,7 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -79,10 +79,10 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigNamePrefix(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, "test-stream"),
+					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, "tf-acc-test"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -107,10 +107,10 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 				),
@@ -127,7 +127,7 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -136,10 +136,10 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
 				),
@@ -156,7 +156,7 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -165,10 +165,10 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfigUpdateArn(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfigUpdateArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
 			},
@@ -178,10 +178,10 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
 			},
@@ -192,8 +192,8 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
-	rInt := acctest.RandInt()
-	rInt2 := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
@@ -201,18 +201,18 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rInt),
+				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchMetricStreamConfig(rInt2),
+				Config: testAccAWSCloudWatchMetricStreamConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "name", testAccAWSCloudWatchName(rInt2)),
-					testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(testAccAWSCloudWatchName(rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(rName),
 				),
 			},
 		},
@@ -305,14 +305,12 @@ func testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(name string) resource.
 	}
 }
 
-func testAccAWSCloudWatchName(rInt int) string {
-	return fmt.Sprintf("terraform-test-metric-stream-%d", rInt)
-}
-
 func testAccAWSCloudWatchMetricStreamConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_metric_stream" "test" {
-  name          = "terraform-test-metric-stream-%d"
+  name          = %[1]q
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
@@ -328,7 +326,7 @@ resource "aws_iam_role" "metric_stream_to_firehose" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "streams.metrics.cloudwatch.amazonaws.com"
+        "Service": "streams.metrics.cloudwatch.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -360,7 +358,7 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "metric-stream-test-bucket-%d"
+  bucket = %[1]q
   acl    = "private"
 }
 
@@ -372,7 +370,7 @@ resource "aws_iam_role" "firehose_to_s3" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "firehose.amazonaws.com"
+        "Service": "firehose.${data.aws_partition.current.dns_suffix}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -411,7 +409,7 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
-  name        = "metric-stream-test-stream-%d"
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -419,32 +417,32 @@ resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
     bucket_arn = aws_s3_bucket.bucket.arn
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigUpdateArn(rInt int) string {
+func testAccAWSCloudWatchMetricStreamConfigUpdateArn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  name          = "terraform-test-metric-stream-%d"
+  name          = %q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyOtherRole"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyOtherFirehose"
   output_format = "json"
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rInt int) string {
+func testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  name          = "terraform-test-metric-stream-%d"
+  name          = %q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
@@ -457,7 +455,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
     namespace = "AWS/EBS"
   }
 }
-`, rInt)
+`, rName)
 }
 
 func testAccAWSCloudWatchMetricStreamConfigNoName() string {
@@ -474,29 +472,29 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `
 }
 
-func testAccAWSCloudWatchMetricStreamConfigNamePrefix(rInt int) string {
+func testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  name_prefix   = "tf-acc-test"
+  name_prefix   = %q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 }
-`, rInt)
+`, rName)
 }
 
-func testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rInt int) string {
+func testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_cloudwatch_metric_stream" "test" {
-  name          = "terraform-test-metric-stream-%d"
+  name          = %q
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
@@ -509,5 +507,5 @@ resource "aws_cloudwatch_metric_stream" "test" {
     namespace = "AWS/EBS"
   }
 }
-`, rInt)
+`, rName)
 }
