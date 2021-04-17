@@ -1324,14 +1324,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			DisableApiTermination: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("disable_api_termination").(bool)),
-			},
-		})
+		err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 	}
 
@@ -1542,25 +1538,39 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	// false = enable api termination
-	// true = disable api termination (protected)
-	if !d.Get("disable_api_termination").(bool) {
-		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			DisableApiTermination: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("disable_api_termination").(bool)),
-			},
-		})
+	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
 
-		if err != nil {
-			log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error enabling API termination: %s", d.Id(), err)
-		}
+	if err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error enabling API termination: %s", d.Id(), err)
 	}
 
-	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error terminating EC2 Instance (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
+	// false = enable api termination
+	// true = disable api termination (protected)
+
+	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		InstanceId: aws.String(id),
+		DisableApiTermination: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(disableAPITermination),
+		},
+	})
+
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify instance (%s) attribute (%s): %s", id, ec2.InstanceAttributeNameDisableApiTermination, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error modify instance (%s) attribute (%s) to value %t: %w", id, ec2.InstanceAttributeNameDisableApiTermination, disableAPITermination, err)
 	}
 
 	return nil
