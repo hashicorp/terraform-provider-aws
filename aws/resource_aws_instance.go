@@ -1542,6 +1542,21 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	// false = enable api termination
+	// true = disable api termination (protected)
+	if !d.Get("disable_api_termination").(bool) {
+		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+			InstanceId: aws.String(d.Id()),
+			DisableApiTermination: &ec2.AttributeBooleanValue{
+				Value: aws.Bool(d.Get("disable_api_termination").(bool)),
+			},
+		})
+
+		if err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error enabling API termination: %s", d.Id(), err)
+		}
+	}
+
 	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
@@ -2195,17 +2210,17 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 }
 
 func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
-	out, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+	output, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
 		InstanceId: aws.String(d.Id()),
-		Attribute:  aws.String("instanceInitiatedShutdownBehavior"),
+		Attribute:  aws.String(ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error while describing instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
 	}
 
-	if err = d.Set("instance_initiated_shutdown_behavior", out.InstanceInitiatedShutdownBehavior.Value); err != nil {
-		return err
+	if output != nil && output.InstanceInitiatedShutdownBehavior != nil {
+		d.Set("instance_initiated_shutdown_behavior", output.InstanceInitiatedShutdownBehavior.Value)
 	}
 
 	return nil
