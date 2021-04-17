@@ -841,6 +841,7 @@ func Provider() *schema.Provider {
 			"aws_load_balancer_listener_policy":                       resourceAwsLoadBalancerListenerPolicies(),
 			"aws_lb_ssl_negotiation_policy":                           resourceAwsLBSSLNegotiationPolicy(),
 			"aws_macie2_account":                                      resourceAwsMacie2Account(),
+			"aws_macie2_classification_job":                           resourceAwsMacie2ClassificationJob(),
 			"aws_macie_member_account_association":                    resourceAwsMacieMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":                         resourceAwsMacieS3BucketAssociation(),
 			"aws_main_route_table_association":                        resourceAwsMainRouteTableAssociation(),
