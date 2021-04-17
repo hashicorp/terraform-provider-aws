@@ -352,7 +352,7 @@ func testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionArn(rName, qualifi
 	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + fmt.Sprintf(`
 
 	resource "aws_lambda_alias" "test" {
-		count = %t ? 1 : 0
+		count 			 = %t ? 1 : 0
 		function_name    = aws_lambda_function.test.function_name
 		function_version = aws_lambda_function.test.version
 		name             = "test"
@@ -371,7 +371,7 @@ func testAccAWSLambdaProvisionedConcurrencyConfigRefByPartialFunctionArn(rName, 
 data "aws_caller_identity" "current" {}
 
 resource "aws_lambda_alias" "test" {
-	count = %t ? 1 : 0
+	count 			 = %t ? 1 : 0
 	function_name    = aws_lambda_function.test.function_name
 	function_version = aws_lambda_function.test.version
 	name             = "test"
@@ -388,7 +388,7 @@ resource "aws_lambda_provisioned_concurrency_config" "test" {
 func testAccAWSLambdaProvisionedConcurrencyConfigRefByFunctionName(rName, qualifierAddress string, createAlias bool) string {
 	return testAccAWSLambdaProvisionedConcurrencyConfigBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_alias" "test" {
-	count = %t ? 1 : 0
+	count 			= %t ? 1 : 0
 	function_name    = aws_lambda_function.test.function_name
 	function_version = aws_lambda_function.test.version
 	name             = "test"
