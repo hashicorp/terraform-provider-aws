@@ -15,7 +15,7 @@ import (
 
 const (
 	errorMacie2AccountCreate   = "error enabling Macie2 Account: %s"
-	errorMacie2AccountRead     = "error updating Macie2 Account (%s): %w"
+	errorMacie2AccountRead     = "error reading Macie2 Account (%s): %w"
 	errorMacie2AccountUpdating = "error updating Macie2 Account (%s): %w"
 	errorMacie2AccountDelete   = "error disabling Macie2 Account (%s): %w"
 	errorMacie2AccountSetting  = "error setting `%s` for Macie2 Account (%s): %s"
