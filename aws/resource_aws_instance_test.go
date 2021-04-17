@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,18 +43,25 @@ func testAccErrorCheckSkipEC2(t *testing.T) resource.ErrorCheckFunc {
 
 func testSweepInstances(region string) error {
 	client, err := sharedClientForRegion(region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	conn := client.(*AWSClient).ec2conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
 
 	err = conn.DescribeInstancesPages(&ec2.DescribeInstancesInput{}, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
-		if len(page.Reservations) == 0 {
-			log.Print("[DEBUG] No EC2 Instances to sweep")
-			return false
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, reservation := range page.Reservations {
+			if reservation == nil {
+				continue
+			}
+
 			for _, instance := range reservation.Instances {
 				id := aws.StringValue(instance.InstanceId)
 
@@ -62,42 +70,31 @@ func testSweepInstances(region string) error {
 					continue
 				}
 
-				log.Printf("[INFO] Terminating EC2 Instance: %s", id)
-				err := awsTerminateInstance(conn, id, 5*time.Minute)
+				r := resourceAwsInstance()
+				d := r.Data(nil)
+				d.SetId(id)
+				d.Set("disable_api_termination", false)
 
-				if isAWSErr(err, "OperationNotPermitted", "Modify its 'disableApiTermination' instance attribute and try again.") {
-					log.Printf("[INFO] Enabling API Termination on EC2 Instance: %s", id)
-
-					input := &ec2.ModifyInstanceAttributeInput{
-						InstanceId: instance.InstanceId,
-						DisableApiTermination: &ec2.AttributeBooleanValue{
-							Value: aws.Bool(false),
-						},
-					}
-
-					_, err = conn.ModifyInstanceAttribute(input)
-
-					if err == nil {
-						err = awsTerminateInstance(conn, id, 5*time.Minute)
-					}
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error terminating EC2 Instance (%s): %s", id, err)
-				}
+				sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 			}
 		}
 		return !lastPage
 	})
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Instances: %s", err)
+		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Instances for %s: %w", region, err))
 	}
 
-	return nil
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Instances for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func TestFetchRootDevice(t *testing.T) {
