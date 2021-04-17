@@ -143,12 +143,13 @@ func TestAccAWSLambdaProvisionedConcurrencyConfig_ProvisionedConcurrentExecution
 
 func TestAccAWSLambdaProvisionedConcurrencyConfig_Qualifier_AliasName(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	lambdaAliasResourceName := "aws_lambda_alias.test"
-	qualifierAddress := fmt.Sprintf("%s[0].name", lambdaAliasResourceName)
+	lambdaAliasResourceName := "aws_lambda_alias.test.0"
+	qualifierAddress := fmt.Sprintf("%s.name", lambdaAliasResourceName)
 	createAlias := true
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
+
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaProvisionedConcurrencyConfigDestroy,
