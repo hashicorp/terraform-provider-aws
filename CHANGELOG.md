@@ -1,5 +1,11 @@
 ## 3.37.0 (April 16, 2021)
 
+FEATURES:
+
+* **New Data Source:** `aws_kms_public_key` ([#18873](https://github.com/hashicorp/terraform-provider-aws/issues/18873))
+
+## 3.37.0 (April 16, 2021)
+
 NOTES:
 
 * provider: The HTTP User-Agent header has been reordered so the AWS SDK Go product is last, except when using the TF_APPEND_USER_AGENT environment variable. Environments dependent on the previous User-Agent header ordering may require updates. ([#18855](https://github.com/hashicorp/terraform-provider-aws/issues/18855))
