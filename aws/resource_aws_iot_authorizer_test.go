@@ -19,6 +19,7 @@ func TestAccAWSIoTAuthorizer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
@@ -55,6 +56,7 @@ func TestAccAWSIoTAuthorizer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTAuthorizerDestroy,
 		Steps: []resource.TestStep{
