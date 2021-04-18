@@ -166,11 +166,11 @@ resource "aws_lambda_function" "test" {
 func testAccAWSIoTAuthorizerConfig(rName string) string {
 	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  status                    = "ACTIVE"
-  token_key_name            = "Token-Header"
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  signing_disabled        = false
+  status                  = "ACTIVE"
+  token_key_name          = "Token-Header"
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
   }
@@ -181,11 +181,11 @@ resource "aws_iot_authorizer" "test" {
 func testAccAWSIoTAuthorizerConfig_update(rName string) string {
 	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  token_key_name            = "Token-Header"
-  status                    = "INACTIVE"
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  signing_disabled        = false
+  token_key_name          = "Token-Header"
+  status                  = "INACTIVE"
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
     Key2 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
@@ -197,10 +197,10 @@ resource "aws_iot_authorizer" "test" {
 func testAccAWSIoTAuthorizerConfig_defaultStatus(rName string) string {
 	return testAccAWSIoTAuthorizerConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
-  name                      = %[1]q
-  authorizer_function_arn   = aws_lambda_function.test.arn
-  signing_disabled          = false
-  token_key_name            = "Token-Header"
+  name                    = %[1]q
+  authorizer_function_arn = aws_lambda_function.test.arn
+  signing_disabled        = false
+  token_key_name          = "Token-Header"
   token_signing_public_keys = {
     Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
   }
