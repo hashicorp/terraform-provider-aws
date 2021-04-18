@@ -12,7 +12,7 @@ Creates and manages an AWS IoT Authorizer.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iot_authorizer" "example" {
   name                    = "example"
   authorizer_function_arn = aws_lambda_function.example.arn
@@ -36,7 +36,7 @@ resource "aws_iot_authorizer" "example" {
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the authorizer.
 
