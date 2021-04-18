@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"regexp"
+
+	// "regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,7 +23,6 @@ import (
 )
 
 func resourceAwsIamUserLoginProfile() *schema.Resource {
-	pwd_exp, _ := regexp.Compile(`/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[$*.{}?"!@#%&/,><\':;|_~^\\]\\[\\)\\(]).{8,128}$/`)
 
 	return &schema.Resource{
 		Create: resourceAwsIamUserLoginProfileCreate,
@@ -48,10 +48,9 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				ForceNew: true,
 			},
 			"password": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(pwd_exp, "Must include lowercase, uppercase, a number, a special character and be between 8-128 characters"),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"password_reset_required": {
 				Type:     schema.TypeBool,
@@ -60,10 +59,11 @@ func resourceAwsIamUserLoginProfile() *schema.Resource {
 				ForceNew: true,
 			},
 			"password_length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				// ValidateFunc: validation.IntBetween(8, 128),
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      20,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(8, 128),
 			},
 			"key_fingerprint": {
 				Type:     schema.TypeString,
@@ -141,12 +141,8 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 
 	if password != "" {
 		if pgpKey != "" {
-			return fmt.Errorf("Cannot provide password and GPG key")
+			return fmt.Errorf("Cannot provide password and PGP key")
 		}
-
-		// if passwordLength != nil {
-		// 	return fmt.Errorf("Cannot provide password and password length")
-		// }
 	}
 
 	if pgpKey != "" {
@@ -154,8 +150,7 @@ func resourceAwsIamUserLoginProfileCreate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %s", username, err)
 		}
-
-		password, err := generateIAMPassword(passwordLength)
+		password, err = generateIAMPassword(passwordLength)
 		if err != nil {
 			return err
 		}
