@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_instance: Make `instance_initiated_shutdown_behavior` also computed, allowing value to be read ([#18880](https://github.com/hashicorp/terraform-provider-aws/issues/18880))
+* resource/aws_rds_global_cluster: Allow `engine_version` to be upgraded in place. ([#18598](https://github.com/hashicorp/terraform-provider-aws/issues/18598))
 
 ## 3.37.0 (April 16, 2021)
 
