@@ -198,7 +198,7 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		input.RetryStrategy = expandBatchRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -254,7 +254,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
+		if err := d.Set("retry_strategy", []interface{}{flattenBatchRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
 			return fmt.Errorf("error setting retry_strategy: %w", err)
 		}
 	} else {
@@ -343,7 +343,7 @@ func expandJobDefinitionParameters(params map[string]interface{}) map[string]*st
 	return jobParams
 }
 
-func expandRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
+func expandBatchRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
 	if tfMap == nil {
 		return nil
 	}
@@ -355,13 +355,13 @@ func expandRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
 	}
 
 	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EvaluateOnExit = expandEvaluateOnExits(v)
+		apiObject.EvaluateOnExit = expandBatchEvaluateOnExits(v)
 	}
 
 	return apiObject
 }
 
-func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
+func expandBatchEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 	if tfMap == nil {
 		return nil
 	}
@@ -387,7 +387,7 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 	return apiObject
 }
 
-func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
+func expandBatchEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -401,7 +401,7 @@ func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 			continue
 		}
 
-		apiObject := expandEvaluateOnExit(tfMap)
+		apiObject := expandBatchEvaluateOnExit(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -413,7 +413,7 @@ func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
 	return apiObjects
 }
 
-func flattenRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
+func flattenBatchRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -425,13 +425,13 @@ func flattenRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{}
 	}
 
 	if v := apiObject.EvaluateOnExit; v != nil {
-		tfMap["evaluate_on_exit"] = flattenEvaluateOnExits(v)
+		tfMap["evaluate_on_exit"] = flattenBatchEvaluateOnExits(v)
 	}
 
 	return tfMap
 }
 
-func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
+func flattenBatchEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -457,7 +457,7 @@ func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface
 	return tfMap
 }
 
-func flattenEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
+func flattenBatchEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -469,7 +469,7 @@ func flattenEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenEvaluateOnExit(apiObject))
+		tfList = append(tfList, flattenBatchEvaluateOnExit(apiObject))
 	}
 
 	return tfList
