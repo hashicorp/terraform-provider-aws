@@ -98,7 +98,7 @@ func TestAccAWSUserLoginProfile_basic(t *testing.T) {
 	})
 }
 
-func TestACCAWSUserLoginProfile_password_provided(t *testing.T) {
+func TestAccAWSUserLoginProfile_passwordProvided(t *testing.T) {
 	var conf iam.GetLoginProfileOutput
 	username := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	password := acctest.RandomWithPrefix("Pa5s!")
@@ -122,6 +122,7 @@ func TestACCAWSUserLoginProfile_password_provided(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"password",
 					"encrypted_password",
 					"key_fingerprint",
 					"password_length",
@@ -427,9 +428,9 @@ func testAccAWSUserLoginProfileConfig_PasswordProvided(rName, path, password str
 resource "aws_iam_user_login_profile" "user" {
   user = aws_iam_user.user.name
 
-  pgp_key = %s
+  password = "%s"
 }
-`, testAccAWSUserLoginProfileConfig_base(rName, path), pgpKey)
+`, testAccAWSUserLoginProfileConfig_base(rName, path), password)
 }
 
 const testPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da

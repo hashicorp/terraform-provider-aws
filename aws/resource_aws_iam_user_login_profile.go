@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-
-	// "regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
