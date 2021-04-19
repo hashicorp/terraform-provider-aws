@@ -20,12 +20,8 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 		Read:   resourceAwsBatchJobDefinitionRead,
 		Update: resourceAwsBatchJobDefinitionUpdate,
 		Delete: resourceAwsBatchJobDefinitionDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("arn", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -157,8 +153,9 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return fmt.Errorf("%s %q", err, name)
 	}
+
 	d.SetId(aws.StringValue(out.JobDefinitionArn))
-	d.Set("arn", out.JobDefinitionArn)
+
 	return resourceAwsBatchJobDefinitionRead(d, meta)
 }
 
@@ -166,15 +163,15 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).batchconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	arn := d.Get("arn").(string)
-	job, err := getJobDefinition(conn, arn)
+	job, err := getJobDefinition(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("%s %q", err, arn)
+		return fmt.Errorf("%s %q", err, d.Id())
 	}
 	if job == nil {
 		d.SetId("")
 		return nil
 	}
+
 	d.Set("arn", job.JobDefinitionArn)
 
 	containerProperties, err := flattenBatchContainerProperties(job.ContainerProperties)
@@ -205,6 +202,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("revision", job.Revision)
 	d.Set("type", job.Type)
+
 	return nil
 }
 
