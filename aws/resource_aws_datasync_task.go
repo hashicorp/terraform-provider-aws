@@ -85,6 +85,12 @@ func resourceAwsDataSyncTask() *schema.Resource {
 								datasync.GidNone,
 							}, false),
 						},
+						"log_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.LogLevelOff,
+							ValidateFunc: validation.StringInSlice(datasync.LogLevel_Values(), false),
+						},
 						"mtime": {
 							Type:     schema.TypeString,
 							Optional: true,

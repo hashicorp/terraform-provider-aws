@@ -59,7 +59,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the parameter. If the name contains a path (e.g. any forward slashes (`/`)), it must be fully qualified with a leading forward slash (`/`). For additional requirements and constraints, see the [AWS SSM User Guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html).
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
-* `value` - (Required) The value of the parameter.
+* `value` - (Required) The value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `description` - (Optional) The description of the parameter.
 * `tier` - (Optional) The tier of the parameter. If not specified, will default to `Standard`. Valid tiers are `Standard`, `Advanced`, and `Intelligent-Tiering`. For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.

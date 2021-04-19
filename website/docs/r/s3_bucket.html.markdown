@@ -222,23 +222,25 @@ resource "aws_iam_policy" "replication" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}"
+        "${aws_s3_bucket.source.arn}"
       ]
     },
     {
       "Action": [
-        "s3:GetObjectVersion",
-        "s3:GetObjectVersionAcl"
+        "s3:GetObjectVersionForReplication",
+        "s3:GetObjectVersionAcl",
+         "s3:GetObjectVersionTagging"
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.bucket.arn}/*"
+        "${aws_s3_bucket.source.arn}/*"
       ]
     },
     {
       "Action": [
         "s3:ReplicateObject",
-        "s3:ReplicateDelete"
+        "s3:ReplicateDelete",
+        "s3:ReplicateTags"
       ],
       "Effect": "Allow",
       "Resource": "${aws_s3_bucket.destination.arn}/*"
@@ -261,9 +263,9 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "source" {
   provider = aws.central
-  bucket   = "tf-test-bucket-12345"
+  bucket   = "tf-test-bucket-source-12345"
   acl      = "private"
 
   versioning {
@@ -476,6 +478,7 @@ The `server_side_encryption_configuration` object supports the following:
 The `rule` object supports the following:
 
 * `apply_server_side_encryption_by_default` - (required) A single object for setting server-side encryption by default. (documented below)
+* `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 
 The `apply_server_side_encryption_by_default` object supports the following:
 

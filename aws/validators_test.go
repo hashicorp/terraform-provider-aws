@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -163,6 +162,33 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 	}
 	for _, v := range invalidNames {
 		_, errors := validateCloudWatchEventRuleName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid CW event rule name", v)
+		}
+	}
+}
+
+func TestValidateCloudWatchEventBusNameOrARN(t *testing.T) {
+	validNames := []string{
+		"HelloWorl_d",
+		"hello-world",
+		"hello.World0125",
+		"aws.partner/mongodb.com/stitch.trigger/something",
+		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+	}
+	for _, v := range validNames {
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"special@character",
+		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+	}
+	for _, v := range invalidNames {
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}
@@ -943,92 +969,6 @@ func TestValidateStringIsJsonOrYaml(t *testing.T) {
 		_, errors := validateStringIsJsonOrYaml(tc.Value, "template")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
-	}
-}
-
-func TestValidateSQSQueueName(t *testing.T) {
-	validNames := []string{
-		"valid-name",
-		"valid02-name",
-		"Valid-Name1",
-		"_",
-		"-",
-		strings.Repeat("W", 80),
-	}
-	for _, v := range validNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS queue Name", v)
-		}
-
-		if errors := validateSQSNonFifoQueueName(v); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS non-fifo queue Name", v)
-		}
-	}
-
-	invalidNames := []string{
-		"Here is a name with: colon",
-		"another * invalid name",
-		"also $ invalid",
-		"This . is also %% invalid@!)+(",
-		"*",
-		"",
-		" ",
-		".",
-		strings.Repeat("W", 81), // length > 80
-	}
-	for _, v := range invalidNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS queue Name", v)
-		}
-
-		if errors := validateSQSNonFifoQueueName(v); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS non-fifo queue Name", v)
-		}
-	}
-}
-
-func TestValidateSQSFifoQueueName(t *testing.T) {
-	validNames := []string{
-		"valid-name.fifo",
-		"valid02-name.fifo",
-		"Valid-Name1.fifo",
-		"_.fifo",
-		"a.fifo",
-		"A.fifo",
-		"9.fifo",
-		"-.fifo",
-		fmt.Sprintf("%s.fifo", strings.Repeat("W", 75)),
-	}
-	for _, v := range validNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS queue Name", v)
-		}
-
-		if errors := validateSQSFifoQueueName(v); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS FIFO queue Name: %v", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"Here is a name with: colon",
-		"another * invalid name",
-		"also $ invalid",
-		"This . is also %% invalid@!)+(",
-		".fifo",
-		"*",
-		"",
-		" ",
-		".",
-		strings.Repeat("W", 81), // length > 80
-	}
-	for _, v := range invalidNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS queue Name", v)
-		}
-
-		if errors := validateSQSFifoQueueName(v); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS FIFO queue Name: %v", v, errors)
 		}
 	}
 }

@@ -56,6 +56,12 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 
+			"bucket_key_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -244,7 +250,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = stringMapToPointers(v.(map[string]interface{}))
+		putInput.Metadata = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {
@@ -257,6 +263,10 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("content_disposition"); ok {
 		putInput.ContentDisposition = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("bucket_key_enabled"); ok {
+		putInput.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
@@ -347,6 +357,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
 
+	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
 	d.Set("content_disposition", resp.ContentDisposition)
 	d.Set("content_encoding", resp.ContentEncoding)
@@ -537,6 +548,7 @@ func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.Resourc
 
 func hasS3BucketObjectContentChanges(d resourceDiffer) bool {
 	for _, key := range []string{
+		"bucket_key_enabled",
 		"cache_control",
 		"content_base64",
 		"content_disposition",

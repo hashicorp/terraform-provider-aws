@@ -108,7 +108,6 @@ func resourceAwsKinesisVideoStreamCreate(d *schema.ResourceData, meta interface{
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		createOpts.Tags = keyvaluetags.New(v).IgnoreAws().KinesisvideoTags()
 	}
-
 	resp, err := conn.CreateStream(createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating Kinesis Video Stream: %s", err)

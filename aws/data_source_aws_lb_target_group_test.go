@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAWSALBTargetGroup_basic(t *testing.T) {
+func TestAccDataSourceAWSLBTargetGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceNameArn := "data.aws_lb_target_group.alb_tg_test_with_arn"
 	resourceName := "data.aws_lb_target_group.alb_tg_test_with_name"
