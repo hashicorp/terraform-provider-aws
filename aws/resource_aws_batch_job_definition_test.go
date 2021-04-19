@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -355,15 +357,14 @@ func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) res
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).batchconn
-		arn := rs.Primary.Attributes["arn"]
-		def, err := getJobDefinition(conn, arn)
+
+		jobDefinition, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if def == nil {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		*jd = *def
+
+		*jd = *jobDefinition
 
 		return nil
 	}
@@ -375,15 +376,15 @@ func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *
 			if rs.Type != "aws_batch_job_definition" {
 				continue
 			}
-			if *jd.JobDefinitionArn != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Job Definition ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *jd.JobDefinitionArn)
+			if aws.StringValue(jd.JobDefinitionArn) != rs.Primary.Attributes["arn"] {
+				return fmt.Errorf("Bad Job Definition ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], aws.StringValue(jd.JobDefinitionArn))
 			}
 			if compare != nil {
 				if compare.Parameters != nil && !reflect.DeepEqual(compare.Parameters, jd.Parameters) {
 					return fmt.Errorf("Bad Job Definition Params\n\t expected: %v\n\tgot: %v\n", compare.Parameters, jd.Parameters)
 				}
-				if compare.RetryStrategy != nil && *compare.RetryStrategy.Attempts != *jd.RetryStrategy.Attempts {
-					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", *compare.RetryStrategy.Attempts, *jd.RetryStrategy.Attempts)
+				if compare.RetryStrategy != nil && aws.Int64Value(compare.RetryStrategy.Attempts) != aws.Int64Value(jd.RetryStrategy.Attempts) {
+					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", aws.Int64Value(compare.RetryStrategy.Attempts), aws.Int64Value(jd.RetryStrategy.Attempts))
 				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
 					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)
@@ -394,29 +395,34 @@ func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *
 	}
 }
 
-func testAccCheckJobDefinitionRecreated(t *testing.T,
-	before, after *batch.JobDefinition) resource.TestCheckFunc {
+func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.Revision == *after.Revision {
-			t.Fatalf("Expected change of JobDefinition Revisions, but both were %v", before.Revision)
+		if aws.Int64Value(before.Revision) == aws.Int64Value(after.Revision) {
+			t.Fatalf("Expected change of JobDefinition Revisions, but both were %d", aws.Int64Value(before.Revision))
 		}
 		return nil
 	}
 }
 
 func testAccCheckBatchJobDefinitionDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).batchconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_batch_job_definition" {
 			continue
 		}
-		conn := testAccProvider.Meta().(*AWSClient).batchconn
-		js, err := getJobDefinition(conn, rs.Primary.Attributes["arn"])
-		if err == nil && js != nil {
-			if *js.Status == "ACTIVE" {
-				return fmt.Errorf("Error: Job Definition still active")
-			}
+
+		_, err := finder.JobDefinitionByARN(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
-		return nil
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Batch Job Definition %s still exists", rs.Primary.ID)
 	}
 	return nil
 }

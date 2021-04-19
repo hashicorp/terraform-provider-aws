@@ -3,6 +3,7 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -12,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/equivalency"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBatchJobDefinition() *schema.Resource {
@@ -124,8 +127,9 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	if v, ok := d.GetOk("container_properties"); ok {
 		props, err := expandBatchJobContainerProperties(v.(string))
 		if err != nil {
-			return fmt.Errorf("%s %q", err, name)
+			return err
 		}
+
 		input.ContainerProperties = props
 	}
 
@@ -149,12 +153,13 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 		input.Timeout = expandJobDefinitionTimeout(v.([]interface{}))
 	}
 
-	out, err := conn.RegisterJobDefinition(input)
+	output, err := conn.RegisterJobDefinition(input)
+
 	if err != nil {
-		return fmt.Errorf("%s %q", err, name)
+		return fmt.Errorf("error creating Batch Job Definition (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.JobDefinitionArn))
+	d.SetId(aws.StringValue(output.JobDefinitionArn))
 
 	return resourceAwsBatchJobDefinitionRead(d, meta)
 }
@@ -163,45 +168,48 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).batchconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	job, err := getJobDefinition(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("%s %q", err, d.Id())
-	}
-	if job == nil {
+	jobDefinition, err := finder.JobDefinitionByARN(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("arn", job.JobDefinitionArn)
+	if err != nil {
+		return fmt.Errorf("error reading Batch Job Definition (%s): %w", d.Id(), err)
+	}
 
-	containerProperties, err := flattenBatchContainerProperties(job.ContainerProperties)
+	d.Set("arn", jobDefinition.JobDefinitionArn)
+
+	containerProperties, err := flattenBatchContainerProperties(jobDefinition.ContainerProperties)
 
 	if err != nil {
-		return fmt.Errorf("error converting Batch Container Properties to JSON: %s", err)
+		return fmt.Errorf("error converting Batch Container Properties to JSON: %w", err)
 	}
 
 	if err := d.Set("container_properties", containerProperties); err != nil {
-		return fmt.Errorf("error setting container_properties: %s", err)
+		return fmt.Errorf("error setting container_properties: %w", err)
 	}
 
-	d.Set("name", job.JobDefinitionName)
-	d.Set("parameters", aws.StringValueMap(job.Parameters))
-	d.Set("platform_capabilities", aws.StringValueSlice(job.PlatformCapabilities))
+	d.Set("name", jobDefinition.JobDefinitionName)
+	d.Set("parameters", aws.StringValueMap(jobDefinition.Parameters))
+	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
 
-	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
-		return fmt.Errorf("error setting retry_strategy: %s", err)
+	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(jobDefinition.RetryStrategy)); err != nil {
+		return fmt.Errorf("error setting retry_strategy: %w", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(job.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(jobDefinition.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("timeout", flattenBatchJobTimeout(job.Timeout)); err != nil {
-		return fmt.Errorf("error setting timeout: %s", err)
+	if err := d.Set("timeout", flattenBatchJobTimeout(jobDefinition.Timeout)); err != nil {
+		return fmt.Errorf("error setting timeout: %w", err)
 	}
 
-	d.Set("revision", job.Revision)
-	d.Set("type", job.Type)
+	d.Set("revision", jobDefinition.Revision)
+	d.Set("type", jobDefinition.Type)
 
 	return nil
 }
@@ -212,8 +220,8 @@ func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.BatchUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := keyvaluetags.BatchUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -222,39 +230,16 @@ func resourceAwsBatchJobDefinitionUpdate(d *schema.ResourceData, meta interface{
 
 func resourceAwsBatchJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
-	arn := d.Get("arn").(string)
+
 	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
-		JobDefinition: aws.String(arn),
+		JobDefinition: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("%s %q", err, arn)
+		return fmt.Errorf("error deleting Batch Job Definition (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func getJobDefinition(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
-	describeOpts := &batch.DescribeJobDefinitionsInput{
-		JobDefinitions: []*string{aws.String(arn)},
-	}
-	resp, err := conn.DescribeJobDefinitions(describeOpts)
-	if err != nil {
-		return nil, err
-	}
-
-	numJobDefinitions := len(resp.JobDefinitions)
-	switch {
-	case numJobDefinitions == 0:
-		return nil, nil
-	case numJobDefinitions == 1:
-		if aws.StringValue(resp.JobDefinitions[0].Status) == "ACTIVE" {
-			return resp.JobDefinitions[0], nil
-		}
-		return nil, nil
-	case numJobDefinitions > 1:
-		return nil, fmt.Errorf("Multiple Job Definitions with name %s", arn)
-	}
-	return nil, nil
 }
 
 func validateAwsBatchJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
