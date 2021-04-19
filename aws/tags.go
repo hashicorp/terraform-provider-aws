@@ -111,8 +111,18 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 
 	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
 
-	if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
-		return fmt.Errorf("error setting new tags_all diff: %w", err)
+	// To ensure "tags_all" is correctly computed with the value held in allTags,
+	// we explicitly set the attribute diff when values are known,
+	// otherwise mark the attribute only as "Computed"
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
+	if len(allTags) > 0 {
+		if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+			return fmt.Errorf("error setting new tags_all diff: %w", err)
+		}
+	} else {
+		if err := diff.SetNewComputed("tags_all"); err != nil {
+			return fmt.Errorf("error setting new tags_all diff: %w", err)
+		}
 	}
 
 	return nil
