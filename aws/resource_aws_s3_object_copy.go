@@ -545,7 +545,7 @@ func resourceAwsS3ObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		input.Metadata = stringMapToPointers(v.(map[string]interface{}))
+		input.Metadata = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("metadata_directive"); ok {

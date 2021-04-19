@@ -250,7 +250,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		putInput.Metadata = stringMapToPointers(v.(map[string]interface{}))
+		putInput.Metadata = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {

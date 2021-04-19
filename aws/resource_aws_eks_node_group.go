@@ -249,7 +249,7 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if v := d.Get("labels").(map[string]interface{}); len(v) > 0 {
-		input.Labels = stringMapToPointers(v)
+		input.Labels = expandStringMap(v)
 	}
 
 	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {

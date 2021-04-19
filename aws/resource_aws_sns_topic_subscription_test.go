@@ -414,7 +414,7 @@ func TestAccAWSSNSTopicSubscription_firehose(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheckSkipSNS(t),
+		ErrorCheck:   testAccErrorCheck(t, sns.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSNSTopicSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -480,13 +480,6 @@ func TestAccAWSSNSTopicSubscription_disappears_topic(t *testing.T) {
 			},
 		},
 	})
-}
-
-// testAccErrorCheckSkipSNS skips SNS tests that have error messages indicating unsupported features
-func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
-		"Invalid protocol type: firehose",
-	)
 }
 
 func testAccCheckAWSSNSTopicSubscriptionDestroy(s *terraform.State) error {

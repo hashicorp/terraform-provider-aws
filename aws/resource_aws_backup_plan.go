@@ -343,7 +343,7 @@ func expandBackupPlanAdvancedBackupSettings(vAdvancedBackupSettings *schema.Set)
 		mAdvancedBackupSetting := vAdvancedBackupSetting.(map[string]interface{})
 
 		if v, ok := mAdvancedBackupSetting["backup_options"].(map[string]interface{}); ok && v != nil {
-			advancedBackupSetting.BackupOptions = stringMapToPointers(v)
+			advancedBackupSetting.BackupOptions = expandStringMap(v)
 		}
 		if v, ok := mAdvancedBackupSetting["resource_type"].(string); ok && v != "" {
 			advancedBackupSetting.ResourceType = aws.String(v)

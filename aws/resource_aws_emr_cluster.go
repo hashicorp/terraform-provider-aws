@@ -110,9 +110,20 @@ func resourceAwsEMRCluster() *schema.Resource {
 							ForceNew: true,
 						},
 						"subnet_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"ec2_attributes.0.subnet_ids"},
+						},
+						"subnet_ids": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							Computed:      true,
+							ForceNew:      true,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							Set:           schema.HashString,
+							ConflictsWith: []string{"ec2_attributes.0.subnet_id"},
 						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
@@ -783,6 +794,9 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := attributes["subnet_id"]; ok {
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
+		if v, ok := attributes["subnet_ids"]; ok {
+			instanceConfig.Ec2SubnetIds = expandStringSet(v.(*schema.Set))
+		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
 			strSlice := strings.Split(v.(string), ",")
@@ -1444,6 +1458,9 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	}
 	if ia.Ec2SubnetId != nil {
 		attrs["subnet_id"] = *ia.Ec2SubnetId
+	}
+	if ia.RequestedEc2SubnetIds != nil && len(ia.RequestedEc2SubnetIds) > 0 {
+		attrs["subnet_ids"] = flattenStringSet(ia.RequestedEc2SubnetIds)
 	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile
