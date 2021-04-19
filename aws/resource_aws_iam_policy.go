@@ -168,7 +168,7 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	tags := keyvaluetags.IamKeyValueTags(policyRes.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := keyvaluetags.IamKeyValueTags(policy.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
