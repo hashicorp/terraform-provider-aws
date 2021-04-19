@@ -56,11 +56,10 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"platform_capability": {
-				Type:     schema.TypeList,
+			"platform_capabilities": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), true),
@@ -121,16 +120,9 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).batchconn
 	name := d.Get("name").(string)
 
-	var platformCapabilities []*string
-	if raw, ok := d.GetOk("platform_capability"); ok && len(raw.([]interface{})) > 0 {
-		platformCapability := raw.([]interface{})[0]
-		platformCapabilities = append(platformCapabilities, aws.String(platformCapability.(string)))
-	}
-
 	input := &batch.RegisterJobDefinitionInput{
-		JobDefinitionName:    aws.String(name),
-		Type:                 aws.String(d.Get("type").(string)),
-		PlatformCapabilities: platformCapabilities,
+		JobDefinitionName: aws.String(name),
+		Type:              aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("container_properties"); ok {
@@ -143,6 +135,10 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandJobDefinitionParameters(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
+		input.PlatformCapabilities = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("retry_strategy"); ok {
@@ -192,12 +188,8 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("name", job.JobDefinitionName)
-
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
-
-	if len(job.PlatformCapabilities) > 0 {
-		d.Set("platform_capability", flattenStringList(job.PlatformCapabilities))
-	}
+	d.Set("platform_capabilities", aws.StringValueSlice(job.PlatformCapabilities))
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
 		return fmt.Errorf("error setting retry_strategy: %s", err)

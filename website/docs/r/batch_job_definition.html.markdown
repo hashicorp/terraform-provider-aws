@@ -53,28 +53,9 @@ CONTAINER_PROPERTIES
 }
 ```
 
-### EC2 Platform Capability
-
-```hcl
-resource "aws_batch_job_definition" "test" {
-  name = "tf_test_batch_job_definition"
-  type = "container"
-  platform_capability = [
-    "EC2",
-  ]
-
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-}
-```
-
 ### Fargate Platform Capability
 
-```hcl
+```terraform
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = "tf_test_batch_exec_role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
@@ -99,7 +80,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 resource "aws_batch_job_definition" "test" {
   name = "tf_test_batch_job_definition"
   type = "container"
-  platform_capability = [
+  platform_capabilities = [
     "FARGATE",
   ]
 
@@ -128,7 +109,7 @@ The following arguments are supported:
 * `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
-* `platform_capability` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. Jobs run on Fargate resources specify `FARGATE`.
+* `platform_capabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
     Maximum number of `retry_strategy` is `1`.  Defined below.
 * `tags` - (Optional) Key-value map of resource tags

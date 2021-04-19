@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -83,8 +84,16 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 				Config: testAccBatchJobDefinitionConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
 				),
 			},
 			{
