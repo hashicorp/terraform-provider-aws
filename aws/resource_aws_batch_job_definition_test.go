@@ -112,6 +112,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -148,6 +149,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
