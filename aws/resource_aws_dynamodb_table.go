@@ -296,6 +296,11 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -304,6 +309,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 			},
 			"write_capacity": {
 				Type:     schema.TypeInt,
@@ -465,6 +471,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
@@ -573,8 +580,8 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
+	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
