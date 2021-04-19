@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_kms_public_key` ([#18873](https://github.com/hashicorp/terraform-provider-aws/issues/18873))
 
+ENHANCEMENTS:
+
+* resource/aws_instance: Make `instance_initiated_shutdown_behavior` also computed, allowing value to be read ([#18880](https://github.com/hashicorp/terraform-provider-aws/issues/18880))
+
 ## 3.37.0 (April 16, 2021)
 
 NOTES:
