@@ -131,9 +131,10 @@ func resourceAwsCloudFormationType() *schema.Resource {
 
 func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cfconn
-
+	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
+		TypeName:           aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
@@ -152,24 +153,20 @@ func resourceAwsCloudFormationTypeCreate(ctx context.Context, d *schema.Resource
 		input.Type = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type_name"); ok {
-		input.TypeName = aws.String(v.(string))
-	}
-
 	output, err := conn.RegisterTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type: %w", err))
+		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): %w", typeName, err))
 	}
 
 	if output == nil || output.RegistrationToken == nil {
-		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type: empty response"))
+		return diag.FromErr(fmt.Errorf("error registering CloudFormation Type (%s): empty response", typeName))
 	}
 
 	registrationOutput, err := waiter.TypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type registration: %w", err))
+		return diag.FromErr(fmt.Errorf("error waiting for CloudFormation Type (%s) registration: %w", typeName, err))
 	}
 
 	// Type Version ARN is not available until after registration is complete
