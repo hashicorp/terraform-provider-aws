@@ -896,6 +896,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Multi-Factor Authentication updates
 	if d.HasChanges(
@@ -969,6 +971,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		"sms_configuration",
 		"sms_verification_message",
 		"tags",
+		"tags_all",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
@@ -1118,8 +1121,8 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			params.SmsVerificationMessage = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("tags"); ok {
-			params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
+		if len(tags) > 0 {
+			params.UserPoolTags = tags.IgnoreAws().CognitoidentityproviderTags()
 		}
 
 		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
