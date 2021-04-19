@@ -273,6 +273,7 @@ func resourceAwsInstance() *schema.Resource {
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"instance_state": {
 				Type:     schema.TypeString,
@@ -940,6 +941,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	// Retrieve instance shutdown behavior
+	if err := readInstanceShutdownBehavior(d, conn); err != nil {
+		return err
+	}
+
 	if err := readBlockDevices(d, instance, conn); err != nil {
 		return err
 	}
@@ -1318,14 +1324,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			DisableApiTermination: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("disable_api_termination").(bool)),
-			},
-		})
+		err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 	}
 
@@ -1536,10 +1538,39 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+
+	if err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
+	}
+
+	err = awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error terminating EC2 Instance (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
+	// false = enable api termination
+	// true = disable api termination (protected)
+
+	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		InstanceId: aws.String(id),
+		DisableApiTermination: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(disableAPITermination),
+		},
+	})
+
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify instance (%s) attribute (%s): %s", id, ec2.InstanceAttributeNameDisableApiTermination, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error modify instance (%s) attribute (%s) to value %t: %w", id, ec2.InstanceAttributeNameDisableApiTermination, disableAPITermination, err)
 	}
 
 	return nil
@@ -2185,6 +2216,23 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 			return err
 		}
 	}
+	return nil
+}
+
+func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
+	output, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		InstanceId: aws.String(d.Id()),
+		Attribute:  aws.String(ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error while describing instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
+	}
+
+	if output != nil && output.InstanceInitiatedShutdownBehavior != nil {
+		d.Set("instance_initiated_shutdown_behavior", output.InstanceInitiatedShutdownBehavior.Value)
+	}
+
 	return nil
 }
 
