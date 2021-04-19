@@ -482,7 +482,7 @@ resource "aws_batch_job_definition" "test" {
   retry_strategy {
     attempts = 1
     evaluate_on_exit {
-      action           = "retry"
+      action           = "RETRY"
       on_status_reason = "Host EC2*"
     }
     evaluate_on_exit {
