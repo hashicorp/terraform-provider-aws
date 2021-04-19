@@ -105,6 +105,29 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_disappears(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBatchJobDefinition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := acctest.RandomWithPrefix("tf-acc-test")
