@@ -119,9 +119,17 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 				Config: testAccBatchJobDefinitionConfigCapabilitiesEC2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "platform_capability.0", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
 				),
 			},
 			{
@@ -147,9 +155,17 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 				Config: testAccBatchJobDefinitionConfigCapabilitiesFargate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "platform_capability.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "platform_capability.0", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
 				),
 			},
 			{
@@ -496,7 +512,8 @@ func testAccBatchJobDefinitionConfigCapabilitiesEC2(rName string) string {
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "container"
-  platform_capability = [
+
+  platform_capabilities = [
     "EC2",
   ]
 
@@ -515,7 +532,7 @@ func testAccBatchJobDefinitionConfigCapabilitiesFargate(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "%[1]s-exec-role"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
@@ -538,7 +555,8 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
   type = "container"
-  platform_capability = [
+
+  platform_capabilities = [
     "FARGATE",
   ]
 
