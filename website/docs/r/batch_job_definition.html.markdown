@@ -110,11 +110,12 @@ The following arguments are supported:
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `platform_capabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
+* `propagate_tags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
 * `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
     Maximum number of `retry_strategy` is `1`.  Defined below.
-* `tags` - (Optional) Key-value map of resource tags
+* `tags` - (Optional) Key-value map of resource tags.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
-* `type` - (Required) The type of job definition.  Must be `container`
+* `type` - (Required) The type of job definition.  Must be `container`.
 
 ## retry_strategy
 
