@@ -10,6 +10,8 @@ description: |-
 
 Provides an RDS DB subnet group resource.
 
+> **Hands-on:** For an example of the `aws_db_subnet_group` in use, follow the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/aws&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+
 ## Example Usage
 
 ```terraform

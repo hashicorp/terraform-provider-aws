@@ -236,6 +236,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/dax" = [
       "aws_dax_",
     ],
+    "service/detective" = [
+      "aws_detective_"
+    ],
     "service/devicefarm" = [
       "aws_devicefarm_",
     ],
@@ -921,6 +924,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/dax/**/*",
       "**/*_dax_*",
       "**/dax_*"
+    ]
+    "service/detective" = [
+      "aws/internal/service/detective/**/*",
+      "**/*_detective_*",
+      "**/detective_*"
     ]
     "service/devicefarm" = [
       "aws/internal/service/devicefarm/**/*",

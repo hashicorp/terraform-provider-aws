@@ -450,7 +450,7 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 	}
 
 	state := &kinesisStreamState{}
-	err := conn.DescribeStreamPages(describeOpts, func(page *kinesis.DescribeStreamOutput, last bool) (shouldContinue bool) {
+	err := conn.DescribeStreamPages(describeOpts, func(page *kinesis.DescribeStreamOutput, lastPage bool) (shouldContinue bool) {
 		state.arn = aws.StringValue(page.StreamDescription.StreamARN)
 		state.creationTimestamp = aws.TimeValue(page.StreamDescription.StreamCreationTimestamp).Unix()
 		state.status = aws.StringValue(page.StreamDescription.StreamStatus)
@@ -465,7 +465,7 @@ func readKinesisStreamState(conn *kinesis.Kinesis, sn string) (*kinesisStreamSta
 			state.encryptionType = kinesis.EncryptionTypeNone
 		}
 		state.keyId = aws.StringValue(page.StreamDescription.KeyId)
-		return !last
+		return !lastPage
 	})
 	return state, err
 }
