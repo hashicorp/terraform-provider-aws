@@ -84,6 +84,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 				Default:  false,
 			},
 			"timeout": {
