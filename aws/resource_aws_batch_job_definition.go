@@ -81,6 +81,12 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+			"propagate_tags": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -122,6 +128,7 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 		Type:              aws.String(d.Get("type").(string)),
+		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
 	}
 
 	if v, ok := d.GetOk("container_properties"); ok {
@@ -195,6 +202,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("name", jobDefinition.JobDefinitionName)
 	d.Set("parameters", aws.StringValueMap(jobDefinition.Parameters))
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
+	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(jobDefinition.RetryStrategy)); err != nil {
 		return fmt.Errorf("error setting retry_strategy: %w", err)
