@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
@@ -61,7 +63,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), true),
+					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
 				},
 			},
 			"retry_strategy": {
@@ -76,6 +78,53 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
+						},
+						"evaluate_on_exit": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MinItems: 0,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"action": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+										StateFunc: func(v interface{}) string {
+											return strings.ToLower(v.(string))
+										},
+										ValidateFunc: validation.StringInSlice(batch.RetryAction_Values(), true),
+									},
+									"on_exit_code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
+										),
+									},
+									"on_reason": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+										),
+									},
+									"on_status_reason": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+											validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+										),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -148,8 +197,8 @@ func resourceAwsBatchJobDefinitionCreate(d *schema.ResourceData, meta interface{
 		input.PlatformCapabilities = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("retry_strategy"); ok {
-		input.RetryStrategy = expandJobDefinitionRetryStrategy(v.([]interface{}))
+	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -204,8 +253,12 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
 	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
-	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(jobDefinition.RetryStrategy)); err != nil {
-		return fmt.Errorf("error setting retry_strategy: %w", err)
+	if jobDefinition.RetryStrategy != nil {
+		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
+			return fmt.Errorf("error setting retry_strategy: %w", err)
+		}
+	} else {
+		d.Set("retry_strategy", nil)
 	}
 
 	if err := d.Set("tags", keyvaluetags.BatchKeyValueTags(jobDefinition.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -290,25 +343,136 @@ func expandJobDefinitionParameters(params map[string]interface{}) map[string]*st
 	return jobParams
 }
 
-func expandJobDefinitionRetryStrategy(item []interface{}) *batch.RetryStrategy {
-	retryStrategy := &batch.RetryStrategy{}
-	data := item[0].(map[string]interface{})
-
-	if v, ok := data["attempts"].(int); ok && v > 0 && v <= 10 {
-		retryStrategy.Attempts = aws.Int64(int64(v))
+func expandRetryStrategy(tfMap map[string]interface{}) *batch.RetryStrategy {
+	if tfMap == nil {
+		return nil
 	}
 
-	return retryStrategy
+	apiObject := &batch.RetryStrategy{}
+
+	if v, ok := tfMap["attempts"].(int); ok && v != 0 {
+		apiObject.Attempts = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
+		apiObject.EvaluateOnExit = expandEvaluateOnExits(v)
+	}
+
+	return apiObject
 }
 
-func flattenBatchRetryStrategy(item *batch.RetryStrategy) []map[string]interface{} {
-	data := []map[string]interface{}{}
-	if item != nil && item.Attempts != nil {
-		data = append(data, map[string]interface{}{
-			"attempts": int(aws.Int64Value(item.Attempts)),
-		})
+func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
+	if tfMap == nil {
+		return nil
 	}
-	return data
+
+	apiObject := &batch.EvaluateOnExit{}
+
+	if v, ok := tfMap["action"].(string); ok && v != "" {
+		apiObject.Action = aws.String(v)
+	}
+
+	if v, ok := tfMap["on_exit_code"].(string); ok && v != "" {
+		apiObject.OnExitCode = aws.String(v)
+	}
+
+	if v, ok := tfMap["on_reason"].(string); ok && v != "" {
+		apiObject.OnReason = aws.String(v)
+	}
+
+	if v, ok := tfMap["on_status_reason"].(string); ok && v != "" {
+		apiObject.OnStatusReason = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandEvaluateOnExits(tfList []interface{}) []*batch.EvaluateOnExit {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*batch.EvaluateOnExit
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandEvaluateOnExit(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenRetryStrategy(apiObject *batch.RetryStrategy) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Attempts; v != nil {
+		tfMap["attempts"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.EvaluateOnExit; v != nil {
+		tfMap["evaluate_on_exit"] = flattenEvaluateOnExits(v)
+	}
+
+	return tfMap
+}
+
+func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Action; v != nil {
+		tfMap["action"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OnExitCode; v != nil {
+		tfMap["on_exit_code"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OnReason; v != nil {
+		tfMap["on_reason"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OnStatusReason; v != nil {
+		tfMap["on_status_reason"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEvaluateOnExits(apiObjects []*batch.EvaluateOnExit) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEvaluateOnExit(apiObject))
+	}
+
+	return tfList
 }
 
 func expandJobDefinitionTimeout(item []interface{}) *batch.JobTimeout {

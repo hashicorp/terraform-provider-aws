@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -216,6 +217,10 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 		},
 		RetryStrategy: &batch.RetryStrategy{
 			Attempts: aws.Int64(int64(1)),
+			EvaluateOnExit: []*batch.EvaluateOnExit{
+				{Action: aws.String(strings.ToLower(batch.RetryActionRetry)), OnStatusReason: aws.String("Host EC2*")},
+				{Action: aws.String(strings.ToLower(batch.RetryActionExit)), OnReason: aws.String("*")},
+			},
 		},
 		Timeout: &batch.JobTimeout{
 			AttemptDurationSeconds: aws.Int64(int64(60)),
@@ -421,6 +426,9 @@ func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *
 				if compare.RetryStrategy != nil && aws.Int64Value(compare.RetryStrategy.Attempts) != aws.Int64Value(jd.RetryStrategy.Attempts) {
 					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", aws.Int64Value(compare.RetryStrategy.Attempts), aws.Int64Value(jd.RetryStrategy.Attempts))
 				}
+				if compare.RetryStrategy != nil && !reflect.DeepEqual(compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit) {
+					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %v\n\tgot: %v\n", compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit)
+				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
 					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)
 				}
@@ -473,6 +481,14 @@ resource "aws_batch_job_definition" "test" {
   }
   retry_strategy {
     attempts = 1
+    evaluate_on_exit {
+      action           = "RETRY"
+      on_status_reason = "Host EC2*"
+    }
+    evaluate_on_exit {
+      action    = "exit"
+      on_reason = "*"
+    }
   }
   timeout {
     attempt_duration_seconds = 60
