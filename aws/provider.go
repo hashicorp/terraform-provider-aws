@@ -1217,6 +1217,7 @@ func init() {
 		"backup",
 		"batch",
 		"budgets",
+		"chime",
 		"cloud9",
 		"cloudformation",
 		"cloudfront",

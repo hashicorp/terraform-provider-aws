@@ -26,6 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -228,6 +229,7 @@ type AWSClient struct {
 	batchconn                           *batch.Batch
 	budgetconn                          *budgets.Budgets
 	cfconn                              *cloudformation.CloudFormation
+	chimeconn                           *chime.Chime
 	cloud9conn                          *cloud9.Cloud9
 	cloudfrontconn                      *cloudfront.CloudFront
 	cloudhsmv2conn                      *cloudhsmv2.CloudHSMV2
@@ -473,6 +475,7 @@ func (c *Config) Client() (interface{}, error) {
 		batchconn:                           batch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["batch"])})),
 		budgetconn:                          budgets.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["budgets"])})),
 		cfconn:                              cloudformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudformation"])})),
+		chimeconn:							 chime.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["chime"])})),
 		cloud9conn:                          cloud9.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloud9"])})),
 		cloudfrontconn:                      cloudfront.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudfront"])})),
 		cloudhsmv2conn:                      cloudhsmv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudhsm"])})),

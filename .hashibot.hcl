@@ -157,6 +157,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/budgets" = [
       "aws_budgets_",
     ],
+    "service/chime" = [
+      "aws_chime_",
+    ],
     "service/cloud9" = [
       "aws_cloud9_",
     ],
@@ -775,6 +778,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_budgets_*",
       "**/budgets_*"
     ]
+    "service/chime" = [
+      "aws/internal/service/chime/**/*",
+      "**/*_chime_*",
+      "**/chime_*"
+    ]
     "service/cloud9" = [
       "aws/internal/service/cloud9/**/*",
       "**/*_cloud9_*",
@@ -788,7 +796,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudformation" = [
       "aws/internal/service/cloudformation/**/*",
       "**/*_cloudformation_*",
-      "**/cloudformation_*"
+      "**/cloudformation_*"o
     ]
     "service/cloudfront" = [
       "aws/internal/service/cloudfront/**/*",
