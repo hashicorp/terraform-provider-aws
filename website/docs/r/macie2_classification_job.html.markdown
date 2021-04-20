@@ -13,9 +13,21 @@ Provides a resource to manage an [AWS Macie Classification Job](https://docs.aws
 ## Example Usage
 
 ```terraform
+resource "aws_macie2_account" "test" {
+  client_token = "%s"
+}
+
 resource "aws_macie2_classification_job" "test" {
-  finding_publishing_frequency = "FIFTEEN_MINUTES"
-  status = "ENABLED"
+  client_token = "CLIENT TOKEN"
+  job_type = "ONE_TIME"
+  name = "NAME OF THE CLASSIFICATION JOB"
+  s3_job_definition {
+    bucket_definitions{
+      account_id = "ACCOUNT ID"
+      buckets = ["S3 BUCKET NAME"]
+    }
+  }
+  depends_on = [aws_macie2_account.test]
 }
 ```
 
