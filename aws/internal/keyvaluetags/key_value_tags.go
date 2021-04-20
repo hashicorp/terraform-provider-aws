@@ -500,9 +500,9 @@ func (tags KeyValueTags) UrlEncode() string {
 func New(i interface{}) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
-		return value
+		return make(KeyValueTags).Merge(value)
 	case map[string]*TagData:
-		return KeyValueTags(value)
+		return make(KeyValueTags).Merge(KeyValueTags(value))
 	case map[string]string:
 		kvtm := make(KeyValueTags, len(value))
 

@@ -2137,9 +2137,30 @@ func TestNew(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := New(testCase.source).Map()
+			got := New(testCase.source)
 
-			testKeyValueTagsVerifyMap(t, got, testCase.want)
+			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
+
+			// Verify that any source KeyTagValues types are copied
+			// Unfortunately must be done for each separate type
+			switch src := testCase.source.(type) {
+			case KeyValueTags:
+				src.Merge(New(map[string]string{"mergekey": "mergevalue"}))
+
+				_, ok := got.Map()["mergekey"]
+
+				if ok {
+					t.Fatal("expected source to be copied, got source modification")
+				}
+			case map[string]*TagData:
+				src["mergekey"] = &TagData{Value: testStringPtr("mergevalue")}
+
+				_, ok := got.Map()["mergekey"]
+
+				if ok {
+					t.Fatal("expected source to be copied, got source modification")
+				}
+			}
 		})
 	}
 }
