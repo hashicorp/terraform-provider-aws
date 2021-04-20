@@ -6,10 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -21,13 +21,10 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		Read:   resourceAwsBatchComputeEnvironmentRead,
 		Update: resourceAwsBatchComputeEnvironmentUpdate,
 		Delete: resourceAwsBatchComputeEnvironmentDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("compute_environment_name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
 				Type:          schema.TypeString,
@@ -40,6 +37,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			"compute_environment_name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"compute_environment_name"},
 				ValidateFunc:  validateBatchPrefix,
@@ -198,16 +196,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	// Build the compute environment name.
-	var computeEnvironmentName string
-	if v, ok := d.GetOk("compute_environment_name"); ok {
-		computeEnvironmentName = v.(string)
-	} else if v, ok := d.GetOk("compute_environment_name_prefix"); ok {
-		computeEnvironmentName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		computeEnvironmentName = resource.UniqueId()
-	}
-	d.Set("compute_environment_name", computeEnvironmentName)
+	computeEnvironmentName := naming.Generate(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 
 	serviceRole := d.Get("service_role").(string)
 	computeEnvironmentType := d.Get("type").(string)
@@ -344,6 +333,7 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
+	d.Set("compute_environment_name_prefix", naming.NamePrefixFromName(aws.StringValue(computeEnvironment.ComputeEnvironmentName)))
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("service_role", computeEnvironment.ServiceRole)
 	d.Set("state", computeEnvironment.State)
