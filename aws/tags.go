@@ -121,7 +121,7 @@ func SetTagsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{})
 		}
 	} else {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting new tags_all diff: %w", err)
+			return fmt.Errorf("error setting tags_all to computed: %w", err)
 		}
 	}
 
