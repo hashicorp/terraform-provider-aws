@@ -271,7 +271,8 @@ func resourceAwsMqBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -317,11 +318,15 @@ func resourceAwsMqBroker() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("broker_name").(string)
 	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))
@@ -366,8 +371,8 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().MqTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().MqTags()
 	}
 
 	log.Printf("[INFO] Creating MQ Broker: %s", input)
@@ -388,6 +393,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
@@ -457,8 +463,15 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting user: %w", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.MqKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -522,8 +535,8 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.MqUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating MQ Broker (%s) tags: %w", d.Get("arn").(string), err)
