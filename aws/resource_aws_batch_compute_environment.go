@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
@@ -322,32 +324,32 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	computeEnvironmentName := d.Get("compute_environment_name").(string)
+	computeEnvironment, err := finder.ComputeEnvironmentDetailByName(conn, d.Id())
 
-	input := &batch.DescribeComputeEnvironmentsInput{
-		ComputeEnvironments: []*string{
-			aws.String(computeEnvironmentName),
-		},
-	}
-
-	log.Printf("[DEBUG] Read compute environment %s.\n", input)
-
-	result, err := conn.DescribeComputeEnvironments(input)
-
-	if err != nil {
-		return fmt.Errorf("error reading Batch Compute Environment (%s): %w", d.Id(), err)
-	}
-
-	if len(result.ComputeEnvironments) == 0 {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	computeEnvironment := result.ComputeEnvironments[0]
+	if err != nil {
+		return fmt.Errorf("error reading Batch Compute Environment (%s): %w", d.Id(), err)
+	}
 
+	if aws.StringValue(computeEnvironment.Type) == batch.CETypeManaged {
+		if err := d.Set("compute_resources", flattenBatchComputeResources(computeEnvironment.ComputeResources)); err != nil {
+			return fmt.Errorf("error setting compute_resources: %w", err)
+		}
+	}
+
+	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
+	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set("service_role", computeEnvironment.ServiceRole)
 	d.Set("state", computeEnvironment.State)
+	d.Set("status", computeEnvironment.Status)
+	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set("type", computeEnvironment.Type)
 
 	tags := keyvaluetags.BatchKeyValueTags(computeEnvironment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -359,19 +361,6 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
-
-	d.Set("type", computeEnvironment.Type)
-
-	if aws.StringValue(computeEnvironment.Type) == batch.CETypeManaged {
-		if err := d.Set("compute_resources", flattenBatchComputeResources(computeEnvironment.ComputeResources)); err != nil {
-			return fmt.Errorf("error setting compute_resources: %w", err)
-		}
-	}
-
-	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
-	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-	d.Set("status", computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
 
 	return nil
 }
