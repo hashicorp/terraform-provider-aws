@@ -313,7 +313,7 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 
 	if len(tags) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(client, id, tags.Map()); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(client, id, tags); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
