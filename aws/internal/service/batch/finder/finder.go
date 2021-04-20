@@ -7,6 +7,42 @@ import (
 	tfbatch "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/batch"
 )
 
+func ComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
+	input := &batch.DescribeComputeEnvironmentsInput{
+		ComputeEnvironments: aws.StringSlice([]string{name}),
+	}
+
+	return ComputeEnvironmentDetail(conn, input)
+}
+
+func ComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
+	output, err := conn.DescribeComputeEnvironments(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ComputeEnvironments) == 0 || output.ComputeEnvironments[0] == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	// TODO if len(output.ComputeEnvironments) > 1
+
+	computeEnvironment := output.ComputeEnvironments[0]
+
+	if status := aws.StringValue(computeEnvironment.Status); status == batch.CEStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return computeEnvironment, nil
+}
+
 func JobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitions: aws.StringSlice([]string{arn}),
@@ -28,6 +64,8 @@ func JobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) 
 			LastRequest: input,
 		}
 	}
+
+	// TODO if len(output.JobDefinitions) > 1
 
 	jobDefinition := output.JobDefinitions[0]
 
