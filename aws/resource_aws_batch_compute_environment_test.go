@@ -325,11 +325,13 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_ComputeResourcesTags(t *testing.T) {
+func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_Ec2KeyPair_ImageId_ComputeResourcesTags(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
+	amiDatasourceName := "data.aws_ami.amzn-ami-minimal-hvm-ebs"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
+	keyPairResourceName := "aws_key_pair.test"
 	securityGroupResourceName := "aws_security_group.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 	subnetResourceName := "aws_subnet.test"
@@ -341,7 +343,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_ComputeResourcesTa
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusAndComputeResourcesTags(rName),
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusEc2KeyPairImageIdAndComputeResourcesTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
@@ -351,8 +353,8 @@ func TestAccAWSBatchComputeEnvironment_createEc2_DesiredVcpus_ComputeResourcesTa
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "8"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.ec2_key_pair", keyPairResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.image_id", amiDatasourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
@@ -1254,9 +1256,10 @@ resource "aws_batch_compute_environment" "test" {
 `, rName))
 }
 
-func testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusAndComputeResourcesTags(rName string) string {
+func testAccAWSBatchComputeEnvironmentConfigEC2WithDesiredVcpusEc2KeyPairImageIdAndComputeResourcesTags(rName string) string {
 	return composeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1280,11 +1283,19 @@ resource "aws_batch_compute_environment" "test" {
 	tags = {
       key1 = "value1"
 	}
+
+	ec2_key_pair = aws_key_pair.test.id
+	image_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 
   service_role = aws_iam_role.batch_service.arn
   type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 `, rName))
 }
