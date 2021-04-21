@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -75,12 +76,14 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						// TODO Required for EC2
 						"instance_role": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
+						// TODO Required for EC2
 						"instance_type": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -118,6 +121,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
+						// TODO Required for SPOT
 						"min_vcpus": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -128,6 +132,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						// TODO Required for SPOT
 						"spot_iam_fleet_role": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -142,9 +147,12 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 						},
 						"tags": tagsSchemaForceNew(),
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							StateFunc: func(val interface{}) string {
+								return strings.ToUpper(val.(string))
+							},
 							ValidateFunc: validation.StringInSlice(batch.CRType_Values(), true),
 						},
 					},
