@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -530,31 +529,10 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		c := res.CacheClusters[0]
-		d.Set("node_type", c.CacheNodeType)
-		d.Set("engine", c.Engine)
 
-		engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
-		if err != nil {
-			return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
+		if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
+			return err
 		}
-		if engineVersion.Segments()[0] < 6 {
-			d.Set("engine_version", engineVersion.String())
-		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-		}
-		d.Set("engine_version_actual", engineVersion.String())
-
-		d.Set("subnet_group_name", c.CacheSubnetGroupName)
-		d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
-		d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups))
-
-		if c.CacheParameterGroup != nil {
-			d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
-		}
-
-		d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-		d.Set("snapshot_window", rgp.SnapshotWindow)
-		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
 		if rgp.ConfigurationEndpoint != nil {
 			d.Set("port", rgp.ConfigurationEndpoint.Port)

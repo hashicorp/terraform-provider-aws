@@ -455,20 +455,12 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("cluster_id", c.CacheClusterId)
-	d.Set("node_type", c.CacheNodeType)
-	d.Set("num_cache_nodes", c.NumCacheNodes)
-	d.Set("engine", c.Engine)
 
-	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
-	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
+	if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
+		return err
 	}
-	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String())
-	} else {
-		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
-	}
-	d.Set("engine_version_actual", engineVersion.String())
+
+	d.Set("num_cache_nodes", c.NumCacheNodes)
 
 	if c.ConfigurationEndpoint != nil {
 		d.Set("port", c.ConfigurationEndpoint.Port)
@@ -482,15 +474,6 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		d.Set("replication_group_id", c.ReplicationGroupId)
 	}
 
-	d.Set("subnet_group_name", c.CacheSubnetGroupName)
-	d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
-	d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups))
-	if c.CacheParameterGroup != nil {
-		d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
-	}
-	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-	d.Set("snapshot_window", c.SnapshotWindow)
-	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 	if c.NotificationConfiguration != nil {
 		if *c.NotificationConfiguration.TopicStatus == "active" {
 			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
@@ -525,6 +508,49 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	return nil
+}
+
+func elasticacheSetResourceDataFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
+	d.Set("node_type", c.CacheNodeType)
+
+	d.Set("engine", c.Engine)
+	if err := elasticacheSetResourceDataEngineVersionFromCacheCluster(d, c); err != nil {
+		return err
+	}
+
+	d.Set("subnet_group_name", c.CacheSubnetGroupName)
+	if err := d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
+		return fmt.Errorf("error setting security_group_names: %w", err)
+	}
+	if err := d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups)); err != nil {
+		return fmt.Errorf("error setting security_group_ids: %w", err)
+	}
+
+	if c.CacheParameterGroup != nil {
+		d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
+	}
+
+	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
+
+	d.Set("snapshot_window", c.SnapshotWindow)
+	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
+
+	return nil
+}
+
+func elasticacheSetResourceDataEngineVersionFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
+	engineVersion, err := gversion.NewVersion(aws.StringValue(c.EngineVersion))
+	if err != nil {
+		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s) engine version: %w", d.Id(), err)
+	}
+	if engineVersion.Segments()[0] < 6 {
+		d.Set("engine_version", engineVersion.String())
+	} else {
+		d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+	}
+	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil
 }
