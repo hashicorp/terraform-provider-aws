@@ -1201,6 +1201,40 @@ func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_compute_environment.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
+				),
+			},
+			// Can't import in this scenario.
+		},
+	})
+}
+
 // Test plan time errors...
 
 func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
@@ -1220,34 +1254,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
-	var ce batch.ComputeEnvironmentDetail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_batch_compute_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing.T) {
+func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
