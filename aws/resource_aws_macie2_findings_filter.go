@@ -1,0 +1,363 @@
+package aws
+
+import (
+	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/macie2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"log"
+	"time"
+)
+
+const (
+	errorMacie2FindingsFilterCreate   = "error creating Macie2 FindingsFilter: %s"
+	errorMacie2FindingsFilterRead     = "error reading Macie2 FindingsFilter (%s): %w"
+	errorMacie2FindingsFilterDelete   = "error deleting Macie2 FindingsFilter (%s): %w"
+	errorMacie2FindingsFilterUpdating = "error updating Macie2 FindingsFilter (%s): %w"
+	errorMacie2FindingsFilterSetting  = "error setting `%s` for Macie2 FindingsFilter (%s): %s"
+)
+
+func resourceAwsMacie2FindingsFilter() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourceMacie2FindingsFilterCreate,
+		ReadContext:   resourceMacie2FindingsFilterRead,
+		UpdateContext: resourceMacie2FindingsFilterUpdate,
+		DeleteContext: resourceMacie2FindingsFilterDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Schema: map[string]*schema.Schema{
+			"finding_criteria": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"criterion": {
+							Type:     schema.TypeSet,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"eq_exact_match": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"eq": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"neq": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"lt": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"lte": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"gt": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"gte": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"client_token": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"action": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"ARCHIVE", "NOOP"}, false),
+			},
+			"position": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).macie2conn
+
+	input := &macie2.CreateFindingsFilterInput{
+		FindingCriteria: expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{})),
+		Name:            aws.String(d.Get("name").(string)),
+		Action:          aws.String(d.Get("action").(string)),
+	}
+
+	if v, ok := d.GetOk("client_token"); ok {
+		input.SetClientToken(v.(string))
+	}
+	if v, ok := d.GetOk("description"); ok {
+		input.SetDescription(v.(string))
+	}
+	if v, ok := d.GetOk("position"); ok {
+		input.SetPosition(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("tags"); ok {
+		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().AppsyncTags())
+	}
+
+	log.Printf("[DEBUG] Creating Macie2 FindingsFilter: %v", input)
+
+	var err error
+	var output macie2.CreateFindingsFilterOutput
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		resp, err := conn.CreateFindingsFilterWithContext(ctx, input)
+		if err != nil {
+			if isAWSErr(err, macie2.ErrorCodeClientError, "") {
+				log.Printf(errorMacie2FindingsFilterCreate, err)
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+		output = *resp
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, _ = conn.CreateFindingsFilterWithContext(ctx, input)
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterCreate, err))
+	}
+
+	d.SetId(aws.StringValue(output.Id))
+
+	return resourceMacie2FindingsFilterRead(ctx, d, meta)
+}
+
+func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).macie2conn
+
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	input := &macie2.GetFindingsFilterInput{
+		Id: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Reading Macie2 FindingsFilter: %s", input)
+	resp, err := conn.GetFindingsFilterWithContext(ctx, input)
+	if err != nil {
+		if isAWSErr(err, macie2.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Macie2 FindingsFilter does not exist, removing from state: %s", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterRead, d.Id(), err))
+	}
+
+	if err = d.Set("finding_criteria", flattenFindingCriteriaFindingsFilter(resp.FindingCriteria)); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "finding_criteria", d.Id(), err))
+	}
+	if err = d.Set("name", aws.StringValue(resp.Name)); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "name", d.Id(), err))
+	}
+	if err = d.Set("description", aws.StringValue(resp.Description)); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "description", d.Id(), err))
+	}
+	if err = d.Set("action", aws.StringValue(resp.Action)); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "description", d.Id(), err))
+	}
+	if err = d.Set("position", aws.Int64Value(resp.Position)); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "position", d.Id(), err))
+	}
+	if err = d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "tags", d.Id(), err))
+	}
+	if err = d.Set("arn", resp.Arn); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "arn", d.Id(), err))
+	}
+
+	return nil
+}
+
+func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).macie2conn
+
+	input := &macie2.UpdateFindingsFilterInput{
+		Id: aws.String(d.Id()),
+	}
+
+	if d.HasChange("finding_criteria") {
+		input.SetFindingCriteria(expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{})))
+	}
+	if d.HasChange("name") {
+		input.SetName(d.Get("name").(string))
+	}
+	if d.HasChange("description") {
+		input.SetDescription(d.Get("description").(string))
+	}
+	if d.HasChange("action") {
+		input.SetAction(d.Get("action").(string))
+	}
+	if d.HasChange("position") {
+		input.SetPosition(int64(d.Get("position").(int)))
+	}
+
+	log.Printf("[DEBUG] Updating Macie2 FindingsFilter: %s", input)
+	_, err := conn.UpdateFindingsFilterWithContext(ctx, input)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterUpdating, d.Id(), err))
+	}
+
+	return resourceMacie2ClassificationJobRead(ctx, d, meta)
+}
+
+func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).macie2conn
+
+	input := &macie2.DeleteFindingsFilterInput{
+		Id: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Deleting Macie2 FindingsFilter: %s", input)
+	_, err := conn.DeleteFindingsFilterWithContext(ctx, input)
+	if err != nil {
+		if isAWSErr(err, macie2.ErrorCodeInternalError, "") {
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterDelete, d.Id(), err))
+	}
+	return nil
+}
+
+func expandFindingCriteriaFilter(findingCriterias []interface{}) *macie2.FindingCriteria {
+	criteria := map[string]*macie2.CriterionAdditionalProperties{}
+	if findingCriterias != nil && len(findingCriterias) > 0 {
+		findingCriteria := findingCriterias[0].(map[string]interface{})
+		inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
+
+		if inputFindingCriteria != nil {
+			for _, criterion := range inputFindingCriteria {
+				crit := criterion.(map[string]interface{})
+				field := crit["field"].(string)
+				conditional := macie2.CriterionAdditionalProperties{}
+
+				if v, ok := crit["eq"].([]interface{}); ok && len(v) > 0 {
+					foo := make([]*string, len(v))
+					for i := range v {
+						s := v[i].(string)
+						foo[i] = &s
+					}
+					conditional.Eq = foo
+				}
+				if v, ok := crit["neq"].([]interface{}); ok && len(v) > 0 {
+					foo := make([]*string, len(v))
+					for i := range v {
+						s := v[i].(string)
+						foo[i] = &s
+					}
+					conditional.Neq = foo
+				}
+				if v, ok := crit["eq_exact_match"].([]interface{}); ok && len(v) > 0 {
+					foo := make([]*string, len(v))
+					for i := range v {
+						s := v[i].(string)
+						foo[i] = &s
+					}
+					conditional.EqExactMatch = foo
+				}
+				if v, ok := crit["lt"].(int); ok && v > 0 {
+					conditional.Lt = aws.Int64(int64(v))
+				}
+				if v, ok := crit["lte"].(int); ok && v > 0 {
+					conditional.Lte = aws.Int64(int64(v))
+				}
+				if v, ok := crit["gt"].(int); ok && v > 0 {
+					conditional.Gt = aws.Int64(int64(v))
+				}
+				if v, ok := crit["gte"].(int); ok && v > 0 {
+					conditional.Gte = aws.Int64(int64(v))
+				}
+				criteria[field] = &conditional
+			}
+		}
+
+	}
+
+	return &macie2.FindingCriteria{Criterion: criteria}
+}
+
+func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteria) []interface{} {
+	var flatCriteria []interface{}
+
+	for field, conditions := range findingCriteria.Criterion {
+		criterion := map[string]interface{}{
+			"field": field,
+		}
+		if len(conditions.Eq) > 0 {
+			criterion["eq"] = aws.StringValueSlice(conditions.Eq)
+		}
+		if len(conditions.Neq) > 0 {
+			criterion["neq"] = aws.StringValueSlice(conditions.Neq)
+		}
+		if len(conditions.EqExactMatch) > 0 {
+			criterion["eq_exact_match"] = aws.StringValueSlice(conditions.EqExactMatch)
+		}
+		if v := aws.Int64Value(conditions.Lt); v > 0 {
+			criterion["lt"] = aws.Int64Value(conditions.Lt)
+		}
+		if v := aws.Int64Value(conditions.Lt); v > 0 {
+			criterion["lte"] = aws.Int64Value(conditions.Lte)
+		}
+		if v := aws.Int64Value(conditions.Lt); v > 0 {
+			criterion["gt"] = aws.Int64Value(conditions.Gt)
+		}
+		if v := aws.Int64Value(conditions.Lt); v > 0 {
+			criterion["gte"] = aws.Int64Value(conditions.Gte)
+		}
+		flatCriteria = append(flatCriteria, criterion)
+	}
+
+	return []interface{}{
+		map[string][]interface{}{
+			"criterion": flatCriteria,
+		},
+	}
+}
