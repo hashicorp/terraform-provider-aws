@@ -256,73 +256,71 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			customdiff.Sequence(
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					// Plan time validation for az_mode
-					// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
-					if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
-						return nil
-					}
-					if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
-						return nil
-					}
-					return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
-				},
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					// Plan time validation for engine_version
-					// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
-					// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
-					if diff.Id() == "" || !diff.HasChange("engine_version") {
-						return nil
-					}
-					o, n := diff.GetChange("engine_version")
-					oVersion, err := gversion.NewVersion(o.(string))
-					if err != nil {
-						return err
-					}
-					nVersion, err := gversion.NewVersion(n.(string))
-					if err != nil {
-						return err
-					}
-					if nVersion.GreaterThan(oVersion) {
-						return nil
-					}
-					return diff.ForceNew("engine_version")
-				},
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					// Plan time validation for num_cache_nodes
-					// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
-					if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
-						return nil
-					}
-					if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
-						return nil
-					}
-					return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
-				},
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					// Engine memcached does not currently support vertical scaling
-					// InvalidParameterCombination: Scaling is not supported for engine memcached
-					// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
-					if diff.Id() == "" || !diff.HasChange("node_type") {
-						return nil
-					}
-					if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
-						return nil
-					}
-					return diff.ForceNew("node_type")
-				},
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
-						return nil
-					}
-					if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
-						return nil
-					}
-					return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
-				},
-			),
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for az_mode
+				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
+				if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
+					return nil
+				}
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
+					return nil
+				}
+				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for engine_version
+				// InvalidParameterCombination: Cannot modify memcached from 1.4.33 to 1.4.24
+				// InvalidParameterCombination: Cannot modify redis from 3.2.6 to 3.2.4
+				if diff.Id() == "" || !diff.HasChange("engine_version") {
+					return nil
+				}
+				o, n := diff.GetChange("engine_version")
+				oVersion, err := gversion.NewVersion(o.(string))
+				if err != nil {
+					return err
+				}
+				nVersion, err := gversion.NewVersion(n.(string))
+				if err != nil {
+					return err
+				}
+				if nVersion.GreaterThan(oVersion) {
+					return nil
+				}
+				return diff.ForceNew("engine_version")
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Plan time validation for num_cache_nodes
+				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "memcached" {
+					return nil
+				}
+				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
+					return nil
+				}
+				return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				// Engine memcached does not currently support vertical scaling
+				// InvalidParameterCombination: Scaling is not supported for engine memcached
+				// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
+				if diff.Id() == "" || !diff.HasChange("node_type") {
+					return nil
+				}
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+					return nil
+				}
+				return diff.ForceNew("node_type")
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if v, ok := diff.GetOk("engine"); !ok || v.(string) == "redis" {
+					return nil
+				}
+				if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
+					return nil
+				}
+				return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
+			},
 			SetTagsDiff,
 		),
 	}
