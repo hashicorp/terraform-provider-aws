@@ -151,6 +151,24 @@ rules:
         - pattern: '*aws.Time($VALUE)'
     severity: WARNING
 
+  - id: data-source-with-resource-read
+    languages: [go]
+    message: Calling a resource's Read method from within a data-source is discouraged
+    paths:
+      include:
+        - aws/data_source_aws_*.go
+    patterns:
+      - pattern-regex: '(resource.+Read|flatten.+Resource)'
+      - pattern-inside: func $FUNCNAME(...) $RETURNTYPE { ... }
+      - pattern-not-inside: |
+          d.Set(..., []interface{}{ ... })
+      - pattern-not-inside: |
+          d.Set($ATTRIBUTE, $FUNC($APIOBJECT))
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "dataSource.+Read"
+    severity: WARNING
+
   - id: helper-acctest-RandInt-compiled
     languages: [go]
     message: Using `acctest.RandInt()` in constant or variable declaration will execute during compilation and not randomize, pass into string generating function instead
@@ -210,7 +228,6 @@ rules:
             ...
             expandStringList($LIST)
     severity: WARNING
-
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
     languages: [go]
@@ -373,4 +390,28 @@ rules:
             $X == ($Y : time.Time)
         - pattern: |
             $X != ($Y : time.Time)
+    severity: WARNING
+
+  - id: prefer-pagination-bool-var-last-page
+    languages: [go]
+    message: Use lastPage for bool variable in pagination functions
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern: |
+          $X.$Z(..., func(..., $Y bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., lastPage bool) {
+            ...
+          })
+      - pattern-not: |
+          $X.$Z(..., func(..., _ bool) {
+            ...
+          })
+      - metavariable-regex:
+          metavariable: '$Z'
+          regex: '.*Pages$'
     severity: WARNING
