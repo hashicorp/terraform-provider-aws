@@ -133,7 +133,6 @@ The following arguments are supported:
 * `max_capacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
 * `max_retries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
 * `worker_type` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `number_of_workers`.
 * `number_of_workers` - (Optional) The number of workers of a defined `worker_type` that are allocated when an ML Transform runs. Required with `worker_type`.
@@ -165,6 +164,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Glue ML Transform ID.
 * `label_count` - The number of labels available for this transform.
 * `schema` - The object that represents the schema that this transform accepts. see [Schema](#schema).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ### schema
 

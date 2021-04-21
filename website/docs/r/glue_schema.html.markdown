@@ -33,7 +33,6 @@ The following arguments are supported:
 * `schema_definition` - (Required) The schema definition using the `data_format` setting for `schema_name`.
 * `description` – (Optional) A description of the schema.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Attributes Reference
 
@@ -45,6 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 * `latest_schema_version` - The latest version of the schema associated with the returned schema definition.
 * `next_schema_version` - The next version of the schema associated with the returned schema definition.
 * `schema_checkpoint` - The version number of the checkpoint (the last time the compatibility mode was changed).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
