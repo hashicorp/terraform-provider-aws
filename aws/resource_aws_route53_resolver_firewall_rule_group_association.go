@@ -30,11 +30,6 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
 				Computed: true,
 			},
 
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -132,7 +127,6 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.Resour
 
 	arn := aws.StringValue(ruleGroupAssociation.Arn)
 	d.Set("arn", arn)
-	d.Set("id", ruleGroupAssociation.Id)
 	d.Set("name", ruleGroupAssociation.Name)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)

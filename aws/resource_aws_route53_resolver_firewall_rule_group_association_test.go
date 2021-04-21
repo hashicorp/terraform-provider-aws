@@ -29,9 +29,9 @@ func testSweepRoute53ResolverFirewallRuleGroupAssociations(region string) error 
 	conn := client.(*AWSClient).route53resolverconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListFirewallRuleGroupAssociationsPages(&route53resolver.ListFirewallRuleGroupAssociationsInput{}, func(page *route53resolver.ListFirewallRuleGroupAssociationsOutput, isLast bool) bool {
+	err = conn.ListFirewallRuleGroupAssociationsPages(&route53resolver.ListFirewallRuleGroupAssociationsInput{}, func(page *route53resolver.ListFirewallRuleGroupAssociationsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, firewallRuleGroupAssociation := range page.FirewallRuleGroupAssociations {
@@ -50,7 +50,7 @@ func testSweepRoute53ResolverFirewallRuleGroupAssociations(region string) error 
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Route53 Resolver DNS Firewall rule group associations sweep for %s: %s", region, err)
