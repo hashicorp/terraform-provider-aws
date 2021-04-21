@@ -154,6 +154,39 @@ func testSweepBatchComputeEnvironments(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
+func TestAccAWSBatchComputeEnvironment_basic(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_compute_environment.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -166,7 +199,7 @@ func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rName),
+				Config: testAccAWSBatchComputeEnvironmentConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsBatchComputeEnvironment(), resourceName),
@@ -301,32 +334,6 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigSpot(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
-	var ce batch.ComputeEnvironmentDetail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_batch_compute_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSBatchComputeEnvironmentConfigUnmanaged(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 				),
@@ -1013,6 +1020,20 @@ resource "aws_subnet" "test" {
 `, rName)
 }
 
+func testAccAWSBatchComputeEnvironmentConfigBasic(rName string) string {
+	return composeConfig(
+		testAccAWSBatchComputeEnvironmentConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
+}
+
 func testAccAWSBatchComputeEnvironmentConfigEC2(rName string) string {
 	return composeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
@@ -1236,20 +1257,6 @@ resource "aws_batch_compute_environment" "test" {
 
   service_role = aws_iam_role.batch_service.arn
   type         = "MANAGED"
-  depends_on   = [aws_iam_role_policy_attachment.batch_service]
-}
-`, rName))
-}
-
-func testAccAWSBatchComputeEnvironmentConfigUnmanaged(rName string) string {
-	return composeConfig(
-		testAccAWSBatchComputeEnvironmentConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-
-  service_role = aws_iam_role.batch_service.arn
-  type         = "UNMANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `, rName))
