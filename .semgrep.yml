@@ -261,6 +261,45 @@ rules:
           - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
     severity: WARNING
 
+  - id: helper-schema-ResourceData-Set-tags
+    languages: [go]
+    message: (schema.ResourceData).Set() call with the tags key should include IgnoreConfig in the value
+    paths:
+      include:
+        - aws/
+    patterns:
+      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+      - pattern-either:
+          - pattern: |
+              tags := $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+          - pattern: |
+              tags = $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+      - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+      - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
+      - pattern-not: if err := d.Set("tags", $FLATTENFUNC($RESOURCETAGS)); err != nil { ... }
+      - pattern-not: |
+          tags := keyvaluetags.New(...).IgnoreAws()
+          ...
+          if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+      - pattern-not: |
+          tags = tags.IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+          if err := d.Set("tags", tags.RemoveDefaultConfig($DEFAULTCONFIG).Map()); err != nil { ... }
+      - pattern-not: |
+          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+          if err := d.Set("tags", tags.RemoveDefaultConfig($DEFAULTCONFIG).Map()); err != nil { ... }
+      - pattern-not: |
+          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+          if err := d.Set("tags", tags.RemoveDefaultConfig($DEFAULTCONFIG).Map()); err != nil { ... }
+    severity: WARNING
+
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
     message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is checked first
