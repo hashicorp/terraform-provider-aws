@@ -27,7 +27,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.Sequence(
 			resourceAwsEbsVolumeCustomizeDiff,
 			SetTagsDiff,
 		),
