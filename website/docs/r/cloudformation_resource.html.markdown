@@ -39,7 +39,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume for operations.
-* `schema` - (Optional) JSON of the CloudFormation resource type schema. Automatically fetched if not provided. This value is marked sensitive only to prevent large plan differences from showing.
+* `schema` - (Optional) JSON of the CloudFormation resource type schema which is used for plan time validation where possible. Automatically fetched if not provided. In large scale environments with multiple resources using the same `type_name`, it is recommended to fetch the schema once via the [`aws_cloudformation_type` data source](/docs/providers/aws/d/cloudformation_type.html) and use this argument to reduce `DescribeType` API operation throttling. This value is marked sensitive only to prevent large plan differences from showing.
 
 ## Attributes Reference
 
