@@ -209,7 +209,7 @@ func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.Res
 		Id: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Macie2 Account: %s", input)
+	log.Printf("[DEBUG] Deleting Macie2 CustomDataIdentifier: %s", input)
 	_, err := conn.DeleteCustomDataIdentifierWithContext(ctx, input)
 	if err != nil {
 		if isAWSErr(err, macie2.ErrorCodeInternalError, "") {
