@@ -13,7 +13,7 @@ Provides details for a CloudFormation Resource. The reading of these resources i
 ## Example Usage
 
 ```terraform
-resource "aws_cloudformation_resource" "example" {
+data "aws_cloudformation_resource" "example" {
   identifier = "example"
   type_name  = "AWS::ECS::Cluster"
 }
@@ -23,7 +23,7 @@ resource "aws_cloudformation_resource" "example" {
 
 The following arguments are required:
 
-* `identifier` - (Required) "Identifier of the CloudFormation resource type. For example, `vpc-12345678`."
+* `identifier` - (Required) Identifier of the CloudFormation resource type. For example, `vpc-12345678`.
 * `type_name` - (Required) CloudFormation resource type name. For example, `AWS::EC2::VPC`.
 
 The following arguments are optional:
@@ -35,4 +35,4 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `resource_model` - JSON matching the CloudFormation resource type schema with current configuration.
+* `resource_model` - JSON string matching the CloudFormation resource type schema with current configuration. Underlying attributes can be referenced via the [`jsondecode()` function](https://www.terraform.io/docs/language/functions/jsondecode.html), for example, `jsondecode(data.aws_cloudformation_resource.example.resource_model)["example"]`.

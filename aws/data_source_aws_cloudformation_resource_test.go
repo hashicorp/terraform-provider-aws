@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccCloudformationResourceDataSource_basic(t *testing.T) {
+func TestAccAwsCloudformationResourceDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_cloudformation_resource.test"
 	resourceName := "aws_cloudformation_resource.test"
