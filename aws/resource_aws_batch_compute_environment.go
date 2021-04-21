@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -25,6 +27,11 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsBatchComputeEnvironmentCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
@@ -51,6 +58,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						// TODO Conflicts with FARGATE
 						"allocation_strategy": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -60,27 +68,32 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							},
 							ValidateFunc: validation.StringInSlice(batch.CRAllocationStrategy_Values(), true),
 						},
+						// TODO Conflicts with FARGATE
 						"bid_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
 						},
+						// TODO Conflicts with FARGATE
 						"desired_vcpus": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
+						// TODO Conflicts with FARGATE
 						"ec2_key_pair": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
+						// TODO Conflicts with FARGATE
 						"image_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
 						// TODO Required for EC2
+						// TODO Conflicts with FARGATE
 						"instance_role": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -88,12 +101,14 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ValidateFunc: validateArn,
 						},
 						// TODO Required for EC2
+						// TODO Conflicts with FARGATE
 						"instance_type": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						// TODO Conflicts with FARGATE
 						"launch_template": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -126,6 +141,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Required: true,
 						},
 						// TODO Required for SPOT
+						// TODO Conflicts with FARGATE
 						"min_vcpus": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -138,6 +154,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						// TODO Required for SPOT
+						// TODO Conflicts with FARGATE
 						"spot_iam_fleet_role": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -151,6 +168,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						// TODO Conflicts with FARGATE
 						"tags": tagsSchemaForceNew(),
 						"type": {
 							Type:     schema.TypeString,
@@ -206,8 +224,6 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -467,6 +483,14 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) delete: %w", d.Id(), err)
 		}
 	}
+
+	return nil
+}
+
+func resourceAwsBatchComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// if diff.Id() == "" {
+	// 	// Create.
+	// }
 
 	return nil
 }

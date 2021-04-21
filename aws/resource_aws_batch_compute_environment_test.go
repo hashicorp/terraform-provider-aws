@@ -1457,9 +1457,9 @@ func testAccAWSBatchComputeEnvironmentConfigNameGenerated(rName string) string {
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		`
 resource "aws_batch_compute_environment" "test" {
-	service_role = aws_iam_role.batch_service.arn
-	type         = "UNMANAGED"
-	depends_on   = [aws_iam_role_policy_attachment.batch_service]
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `)
 }
@@ -1531,12 +1531,12 @@ resource "aws_batch_compute_environment" "test" {
     ]
     type = "EC2"
 
-	tags = {
+    tags = {
       key1 = "value1"
-	}
+    }
 
-	ec2_key_pair = aws_key_pair.test.id
-	image_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ec2_key_pair = aws_key_pair.test.id
+    image_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   }
 
   service_role = aws_iam_role.batch_service.arn
@@ -1609,7 +1609,7 @@ resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
 
   compute_resources {
-    instance_role  = aws_iam_instance_profile.ecs_instance.arn
+    instance_role = aws_iam_instance_profile.ecs_instance.arn
     instance_type = [
       "c4.large",
     ]
