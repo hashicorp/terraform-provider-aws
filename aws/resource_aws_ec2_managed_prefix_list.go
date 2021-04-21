@@ -28,12 +28,10 @@ func resourceAwsEc2ManagedPrefixList() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: customdiff.All(
-			customdiff.Sequence(
-				customdiff.ComputedIf("version", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-					return diff.HasChange("entry")
-				}),
-			),
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("version", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("entry")
+			}),
 			SetTagsDiff,
 		),
 
