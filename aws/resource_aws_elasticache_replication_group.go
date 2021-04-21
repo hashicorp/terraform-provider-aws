@@ -299,18 +299,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v := diff.Get("multi_az_enabled").(bool); !v {
-					return nil
-				}
-				if v := diff.Get("automatic_failover_enabled").(bool); !v {
-					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
-				}
-				return nil
-			},
-
+			CustomizeDiffValidateReplicationGroupAutomaticFailover,
 			CustomizeDiffElastiCacheEngineVersion,
-
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
@@ -533,6 +523,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
 			return err
 		}
+
+		d.Set("snapshot_window", rgp.SnapshotWindow)
+		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
 		if rgp.ConfigurationEndpoint != nil {
 			d.Set("port", rgp.ConfigurationEndpoint.Port)

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -264,76 +262,12 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for az_mode
-				// InvalidParameterCombination: Must specify at least two cache nodes in order to specify AZ Mode of 'cross-az'.
-				if v, ok := diff.GetOk("az_mode"); !ok || v.(string) != elasticache.AZModeCrossAz {
-					return nil
-				}
-				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) != 1 {
-					return nil
-				}
-				return errors.New(`az_mode "cross-az" is not supported with num_cache_nodes = 1`)
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for engine_version values
-				// Memcached: Versions in format <major>.<minor>.<bug fix>
-				// Redis: Starting with version 6, must match <major>.x, prior to version 6, <major>.<minor>.<bug fix>
-				engineVersion, ok := diff.GetOk("engine_version")
-				if !ok {
-					return nil
-				}
-
-				var validator schema.SchemaValidateFunc
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
-					validator = validateVersionString
-				} else {
-					validator = ValidateElastiCacheRedisVersionString
-				}
-
-				_, errs := validator(engineVersion, "engine_version")
-
-				var err *multierror.Error
-				err = multierror.Append(err, errs...)
-				return err.ErrorOrNil()
-			},
-
+			CustomizeDiffValidateClusterAZMode,
+			CustomizeDiffValidateClusterEngineVersion,
 			CustomizeDiffElastiCacheEngineVersion,
-
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Plan time validation for num_cache_nodes
-				// InvalidParameterValue: Cannot create a Redis cluster with a NumCacheNodes parameter greater than 1.
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineMemcached {
-					return nil
-				}
-
-				if v, ok := diff.GetOk("num_cache_nodes"); !ok || v.(int) == 1 {
-					return nil
-				}
-				return errors.New(`engine "redis" does not support num_cache_nodes > 1`)
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				// Engine memcached does not currently support vertical scaling
-				// InvalidParameterCombination: Scaling is not supported for engine memcached
-				// https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Scaling.html#Scaling.Memcached.Vertically
-				if diff.Id() == "" || !diff.HasChange("node_type") {
-					return nil
-				}
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineRedis {
-					return nil
-				}
-				return diff.ForceNew("node_type")
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v, ok := diff.GetOk("engine"); !ok || v.(string) == tfelasticache.EngineRedis {
-					return nil
-				}
-				if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
-					return nil
-				}
-				return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
-			},
-			SetTagsDiff,
+			CustomizeDiffValidateClusterNumCacheNodes,
+			CustomizeDiffClusterMemcachedNodeType,
+			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
 		),
 	}
 }
@@ -460,6 +394,9 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	d.Set("snapshot_window", c.SnapshotWindow)
+	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
+
 	d.Set("num_cache_nodes", c.NumCacheNodes)
 
 	if c.ConfigurationEndpoint != nil {
@@ -533,9 +470,6 @@ func elasticacheSetResourceDataFromCacheCluster(d *schema.ResourceData, c *elast
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
-
-	d.Set("snapshot_window", c.SnapshotWindow)
-	d.Set("snapshot_retention_limit", c.SnapshotRetentionLimit)
 
 	return nil
 }
