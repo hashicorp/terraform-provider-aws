@@ -48,6 +48,8 @@ func resourceAwsConfigAggregateAuthorization() *schema.Resource {
 
 func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).configconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
 	region := d.Get("region").(string)
@@ -55,7 +57,7 @@ func resourceAwsConfigAggregateAuthorizationPut(d *schema.ResourceData, meta int
 	req := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountId),
 		AuthorizedAwsRegion: aws.String(region),
-		Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ConfigserviceTags(),
+		Tags:                tags.IgnoreAws().ConfigserviceTags(),
 	}
 
 	_, err := conn.PutAggregationAuthorization(req)
