@@ -37,8 +37,8 @@ The following arguments are supported:
 
 The access point exposes the specified file system path as the root directory of your file system to applications using the access point. NFS clients using the access point can only access data in the access point's RootDirectory and it's subdirectories.
 
-* `path` - (Optional) Path on the EFS file system to expose as the root directory to NFS clients using the access point to access the EFS file system. A path can have up to four subdirectories. If the specified path does not exist, you are required to provide `creation_info`.
 * `creation_info` - (Optional) POSIX IDs and permissions to apply to the access point's Root Directory. See [Creation Info](#creation_info) below.
+* `path` - (Optional) Path on the EFS file system to expose as the root directory to NFS clients using the access point to access the EFS file system. A path can have up to four subdirectories. If the specified path does not exist, you are required to provide `creation_info`.
 
 ### creation_info
 
