@@ -21,11 +21,6 @@ func resourceAwsRoute53ResolverFirewallConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -84,7 +79,6 @@ func resourceAwsRoute53ResolverFirewallConfigRead(d *schema.ResourceData, meta i
 		return nil
 	}
 
-	d.Set("id", config.Id)
 	d.Set("owner_id", config.OwnerId)
 	d.Set("resource_id", config.ResourceId)
 	d.Set("firewall_fail_open", config.FirewallFailOpen)
