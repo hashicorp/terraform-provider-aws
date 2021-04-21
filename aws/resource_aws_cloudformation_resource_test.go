@@ -522,8 +522,8 @@ resource "aws_cloudformation_resource" "test" {
   type_name = "AWS::ApiGateway::ApiKey"
 
   desired_state = jsonencode({
-    Name    = %[1]q
-    Value   = %[1]q
+    Name  = %[1]q
+    Value = %[1]q
   })
 }
 `, rName)
