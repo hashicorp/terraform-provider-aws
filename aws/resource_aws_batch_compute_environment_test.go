@@ -195,11 +195,44 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createWithNamePrefix(t *testing.T) {
+func TestAccAWSBatchComputeEnvironment_NameGenerated(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigNameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "compute_environment_name"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_NamePrefix(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
@@ -215,7 +248,13 @@ func TestAccAWSBatchComputeEnvironment_createWithNamePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", rName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -266,6 +305,11 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -286,6 +330,11 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -308,6 +357,11 @@ func TestAccAWSBatchComputeEnvironment_createFargate(t *testing.T) {
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -328,6 +382,11 @@ func TestAccAWSBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -593,6 +652,11 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -676,6 +740,11 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithAllocationStrategy(t *testi
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -972,6 +1041,34 @@ resource "aws_batch_compute_environment" "test" {
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `, rName))
+}
+
+func testAccAWSBatchComputeEnvironmentConfigNameGenerated(rName string) string {
+	return composeConfig(
+		testAccAWSBatchComputeEnvironmentConfigBase(rName),
+		`
+resource "aws_batch_compute_environment" "test" {
+  compute_resources {
+    instance_role = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`)
 }
 
 func testAccAWSBatchComputeEnvironmentConfigNamePrefix(rName string) string {
