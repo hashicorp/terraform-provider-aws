@@ -130,6 +130,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						// TODO Can be updated for FARGATE
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -143,6 +144,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
+						// TODO Can be updated for FARGATE
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
