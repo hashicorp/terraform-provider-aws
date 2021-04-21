@@ -267,7 +267,7 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 		d.Set("retry_strategy", nil)
 	}
 
-	tags := keyvaluetags.BatchKeyValueTags(job.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	tags := keyvaluetags.BatchKeyValueTags(jobDefinition.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
