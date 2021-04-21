@@ -9,7 +9,8 @@ import (
 
 const (
 	// Maximum amount of time to wait for an EventSubscription to return Deleted
-	EventSubscriptionDeletedTimeout = 10 * time.Minute
+	EventSubscriptionDeletedTimeout  = 10 * time.Minute
+	RdsClusterInitiateUpgradeTimeout = 5 * time.Minute
 )
 
 // DeploymentDeployed waits for a EventSubscription to return Deleted

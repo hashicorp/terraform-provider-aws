@@ -35,10 +35,10 @@ func testSweepRedshiftClusters(region string) error {
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, isLast bool) bool {
+	err = conn.DescribeClustersPages(&redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
 		if len(resp.Clusters) == 0 {
 			log.Print("[DEBUG] No Redshift clusters to sweep")
-			return !isLast
+			return !lastPage
 		}
 
 		for _, c := range resp.Clusters {
@@ -50,7 +50,7 @@ func testSweepRedshiftClusters(region string) error {
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
@@ -645,20 +645,18 @@ func testAccCheckAWSRedshiftClusterSnapshot(rInt int) resource.TestCheckFunc {
 				continue
 			}
 
-			var err error
-
 			// Try and delete the snapshot before we check for the cluster not found
 			conn := testAccProvider.Meta().(*AWSClient).redshiftconn
 
 			snapshot_identifier := fmt.Sprintf("tf-acctest-snapshot-%d", rInt)
 
 			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
-			_, snapDeleteErr := conn.DeleteClusterSnapshot(
+			_, err := conn.DeleteClusterSnapshot(
 				&redshift.DeleteClusterSnapshotInput{
 					SnapshotIdentifier: aws.String(snapshot_identifier),
 				})
-			if snapDeleteErr != nil {
-				return err
+			if err != nil {
+				return fmt.Errorf("error deleting Redshift Cluster Snapshot (%s): %w", snapshot_identifier, err)
 			}
 
 			//lastly check that the Cluster is missing

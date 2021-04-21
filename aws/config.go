@@ -52,6 +52,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -253,6 +254,7 @@ type AWSClient struct {
 	datasyncconn                        *datasync.DataSync
 	daxconn                             *dax.DAX
 	DefaultTagsConfig                   *keyvaluetags.DefaultConfig
+	detectiveconn                       *detective.Detective
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
@@ -498,6 +500,7 @@ func (c *Config) Client() (interface{}, error) {
 		datasyncconn:                        datasync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["datasync"])})),
 		daxconn:                             dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dax"])})),
 		DefaultTagsConfig:                   c.DefaultTagsConfig,
+		detectiveconn:                       detective.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["detective"])})),
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
@@ -685,6 +688,12 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.cloudhsmv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if tfawserr.ErrMessageContains(r.Error, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	client.configconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// When calling Config Organization Rules API actions immediately
 		// after Organization creation, the API can randomly return the
@@ -739,6 +748,23 @@ func (c *Config) Client() (interface{}, error) {
 
 		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
 			if isAWSErr(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.fmsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Acceptance testing creates and deletes resources in quick succession.
+		// The FMS onboarding process into Organizations is opaque to consumers.
+		// Since we cannot reasonably check this status before receiving the error,
+		// set the operation as retryable.
+		switch r.Operation.Name {
+		case "AssociateAdminAccount":
+			if tfawserr.ErrMessageContains(r.Error, fms.ErrCodeInvalidOperationException, "Your AWS Organization is currently offboarding with AWS Firewall Manager. Please submit onboard request after offboarded.") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DisassociateAdminAccount":
+			if tfawserr.ErrMessageContains(r.Error, fms.ErrCodeInvalidOperationException, "Your AWS Organization is currently onboarding with AWS Firewall Manager and cannot be offboarded.") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

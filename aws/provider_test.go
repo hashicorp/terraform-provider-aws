@@ -1063,12 +1063,13 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 func testAccErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
-			return err
+			return nil
 		}
 
 		for _, message := range messages {
-			if strings.Contains(err.Error(), message) {
-				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), err.Error())
+			errorMessage := err.Error()
+			if strings.Contains(errorMessage, message) {
+				t.Skipf("skipping test for %s/%s: %s", testAccGetPartition(), testAccGetRegion(), errorMessage)
 			}
 		}
 
@@ -1096,7 +1097,7 @@ func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
 func testAccErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
 	return func(err error) error {
 		if err == nil {
-			return err
+			return nil
 		}
 
 		for _, endpointID := range endpointIDs {

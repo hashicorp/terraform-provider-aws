@@ -42,10 +42,10 @@ func testSweepElasticacheReplicationGroups(region string) error {
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, isLast bool) bool {
+	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, lastPage bool) bool {
 		if len(page.ReplicationGroups) == 0 {
 			log.Print("[DEBUG] No ElastiCache Replicaton Groups to sweep")
-			return !isLast // in rare cases across API, one page may have empty results but not be last page
+			return !lastPage // in rare cases across API, one page may have empty results but not be last page
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
@@ -61,7 +61,7 @@ func testSweepElasticacheReplicationGroups(region string) error {
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
