@@ -168,6 +168,12 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
+						},
 						"region_name": {
 							Type:     schema.TypeString,
 							Computed: true,
