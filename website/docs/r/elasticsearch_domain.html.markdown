@@ -244,6 +244,7 @@ The following arguments are optional:
 * `iops` - (Optional) The baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) The size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) The type of EBS volumes attached to data nodes.
+
 ### encrypt_at_rest
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`.
