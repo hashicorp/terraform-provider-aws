@@ -198,6 +198,8 @@ func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta int
 
 func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -248,7 +250,17 @@ func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta inter
 	}
 
 	d.Set("status", imagePipeline.Status)
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
+
+	tags := keyvaluetags.ImagebuilderKeyValueTags(imagePipeline.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }

@@ -197,6 +197,8 @@ func resourceAwsImageBuilderImageCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsImageBuilderImageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
@@ -253,7 +255,17 @@ func resourceAwsImageBuilderImageRead(d *schema.ResourceData, meta interface{}) 
 		d.Set("output_resources", nil)
 	}
 
-	d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
+	tags := keyvaluetags.ImagebuilderKeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	d.Set("version", image.Version)
 
 	return nil

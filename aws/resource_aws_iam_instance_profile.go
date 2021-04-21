@@ -267,6 +267,7 @@ func resourceAwsIamInstanceProfileDelete(d *schema.ResourceData, meta interface{
 }
 
 func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.SetId(aws.StringValue(result.InstanceProfileName))
@@ -288,8 +289,15 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
-	if err := d.Set("tags", keyvaluetags.IamKeyValueTags(result.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.IamKeyValueTags(result.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
