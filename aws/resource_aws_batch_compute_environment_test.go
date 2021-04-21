@@ -990,54 +990,16 @@ func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rName),
-				ExpectError: regexp.MustCompile(`One compute environment is expected, but no compute environments are set`),
-			},
-		},
-	})
-}
-
-func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
-	var ce batch.ComputeEnvironmentDetail
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_batch_compute_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_batch_compute_environment.test"
+	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
+	launchTemplateResourceName := "aws_launch_template.test"
+	securityGroupResourceName := "aws_security_group.test"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+	spotFleetRoleResourceName := "aws_iam_role.ec2_spot_fleet"
+	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -1049,8 +1011,38 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.instance_role", instanceProfileResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.launch_template_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.launch_template.0.launch_template_name", launchTemplateResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.version", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "SPOT"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MANAGED"),
 				),
 			},
 			{
@@ -1096,23 +1088,6 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSBatchComputeEnvironmentConfigSpotWithoutBidPercentage(rName),
-				ExpectError: regexp.MustCompile(`ComputeResources.spotIamFleetRole cannot not be null or empty`),
-			},
-		},
-	})
-}
-
 func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1153,6 +1128,69 @@ func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+// Test plan time errors...
+
+func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rName),
+				ExpectError: regexp.MustCompile(`One compute environment is expected, but no compute environments are set`),
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigUnmanagedWithComputeResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					resource.TestCheckResourceAttr(resourceName, "type", "UNMANAGED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSBatchComputeEnvironmentConfigSpotWithoutBidPercentage(rName),
+				ExpectError: regexp.MustCompile(`ComputeResources.spotIamFleetRole cannot not be null or empty`),
 			},
 		},
 	})
