@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -50,7 +51,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: resourceAwsSqsQueueCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsSqsQueueCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -135,8 +139,6 @@ func resourceAwsSqsQueue() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-
-		CustomizeDiff: SetTagsDiff,
 	}
 }
 

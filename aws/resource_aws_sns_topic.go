@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,7 +28,10 @@ func resourceAwsSnsTopic() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: resourceAwsSnsTopicCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsSnsTopicCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -144,8 +148,6 @@ func resourceAwsSnsTopic() *schema.Resource {
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
-
-		CustomizeDiff: SetTagsDiff,
 	}
 }
 
