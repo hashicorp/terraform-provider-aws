@@ -25,17 +25,15 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: customdiff.All(
-			customdiff.Sequence(
-				customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
-					// Only changes from disable to enable for feature_set should force a new resource
-					return old.(string) == ec2.DefaultRouteTableAssociationValueDisable && new.(string) == ec2.DefaultRouteTableAssociationValueEnable
-				}),
-				customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
-					// Only changes from disable to enable for feature_set should force a new resource
-					return old.(string) == ec2.DefaultRouteTablePropagationValueDisable && new.(string) == ec2.DefaultRouteTablePropagationValueEnable
-				}),
-			),
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("default_route_table_association", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from disable to enable for feature_set should force a new resource
+				return old.(string) == ec2.DefaultRouteTableAssociationValueDisable && new.(string) == ec2.DefaultRouteTableAssociationValueEnable
+			}),
+			customdiff.ForceNewIfChange("default_route_table_propagation", func(_ context.Context, old, new, meta interface{}) bool {
+				// Only changes from disable to enable for feature_set should force a new resource
+				return old.(string) == ec2.DefaultRouteTablePropagationValueDisable && new.(string) == ec2.DefaultRouteTablePropagationValueEnable
+			}),
 			SetTagsDiff,
 		),
 
