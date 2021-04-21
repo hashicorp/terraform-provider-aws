@@ -43,6 +43,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				ConflictsWith: []string{"compute_environment_name"},
 				ValidateFunc:  validateBatchPrefix,
 			},
+			// TODO Required for upper(type) == MANAGED
 			"compute_resources": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -51,9 +52,12 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allocation_strategy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							StateFunc: func(val interface{}) string {
+								return strings.ToUpper(val.(string))
+							},
 							ValidateFunc: validation.StringInSlice(batch.CRAllocationStrategy_Values(), true),
 						},
 						"bid_percentage": {
@@ -164,17 +168,23 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 			"state": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToUpper(val.(string))
+				},
 				ValidateFunc: validation.StringInSlice(batch.CEState_Values(), true),
 				Default:      batch.CEStateEnabled,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToUpper(val.(string))
+				},
 				ValidateFunc: validation.StringInSlice(batch.CEType_Values(), true),
 			},
 			"arn": {
@@ -223,7 +233,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		input.Tags = tags.IgnoreAws().BatchTags()
 	}
 
-	if computeEnvironmentType == batch.CETypeManaged {
+	if strings.ToUpper(computeEnvironmentType) == batch.CETypeManaged {
 		computeResources := d.Get("compute_resources").([]interface{})
 		if len(computeResources) == 0 {
 			return fmt.Errorf("One compute environment is expected, but no compute environments are set")
@@ -371,7 +381,6 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(computeEnvironmentName),
-			ComputeResources:   &batch.ComputeResourceUpdate{},
 		}
 
 		if d.HasChange("service_role") {
@@ -387,6 +396,8 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 				return fmt.Errorf("One compute environment is expected, but no compute environments are set")
 			}
 			computeResource := computeResources[0].(map[string]interface{})
+
+			input.ComputeResources = &batch.ComputeResourceUpdate{}
 
 			if d.HasChange("compute_resources.0.desired_vcpus") {
 				input.ComputeResources.DesiredvCpus = aws.Int64(int64(computeResource["desired_vcpus"].(int)))
@@ -405,7 +416,7 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 			return fmt.Errorf("error updating Batch Compute Environment (%s): %w", d.Id(), err)
 		}
 
-		if _, err := waiter.ComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := waiter.ComputeEnvironmentUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Batch Compute Environment (%s) update: %w", d.Id(), err)
 		}
 	}
