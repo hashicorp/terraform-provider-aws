@@ -71,7 +71,6 @@ resource "aws_chime_voice_connector_termination" "t" {
 resource "aws_chime_voice_connector" "chime" {
   name                = %s
   require_encryption  = true
-  aws_region          = "us-east-1"
 }
 `, vcName)
 }

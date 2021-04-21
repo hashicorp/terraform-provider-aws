@@ -801,7 +801,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudformation" = [
       "aws/internal/service/cloudformation/**/*",
       "**/*_cloudformation_*",
-      "**/cloudformation_*"o
+      "**/cloudformation_*"
     ]
     "service/cloudfront" = [
       "aws/internal/service/cloudfront/**/*",
