@@ -3,6 +3,8 @@ package tftypes
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -23,55 +25,156 @@ var (
 type AttributePath struct {
 	// Steps are the steps that must be followed from the root of the value
 	// to obtain the value being indicated.
-	Steps []AttributePathStep
+	steps []AttributePathStep
+}
+
+// NewAttributePath returns an empty AttributePath, ready to have steps added
+// to it using WithElementKeyString, WithElementKeyInt, WithElementKeyValue, or
+// WithAttributeName.
+func NewAttributePath() *AttributePath {
+	return &AttributePath{}
+}
+
+// NewAttributePathWithSteps returns an AttributePath populated with the passed
+// AttributePathSteps.
+func NewAttributePathWithSteps(steps []AttributePathStep) *AttributePath {
+	return &AttributePath{
+		steps: steps,
+	}
+}
+
+// Steps returns the AttributePathSteps that make up an AttributePath.
+func (a *AttributePath) Steps() []AttributePathStep {
+	if a == nil {
+		return nil
+	}
+	steps := make([]AttributePathStep, len(a.steps))
+	copy(steps, a.steps)
+	return steps
+}
+
+func (a *AttributePath) String() string {
+	var res strings.Builder
+	for pos, step := range a.Steps() {
+		if pos != 0 {
+			res.WriteString(".")
+		}
+		switch v := step.(type) {
+		case AttributeName:
+			res.WriteString(`AttributeName("` + string(v) + `")`)
+		case ElementKeyString:
+			res.WriteString(`ElementKeyString("` + string(v) + `")`)
+		case ElementKeyInt:
+			res.WriteString(`ElementKeyInt(` + strconv.FormatInt(int64(v), 10) + `)`)
+		case ElementKeyValue:
+			res.WriteString(`ElementKeyValue(` + Value(v).String() + `)`)
+		}
+	}
+	return res.String()
+}
+
+// Equal returns true if two AttributePaths should be considered equal.
+// AttributePaths are considered equal if they have the same number of steps,
+// the steps are all the same types, and the steps have all the same values.
+func (a *AttributePath) Equal(o *AttributePath) bool {
+	if len(a.Steps()) == 0 && len(o.Steps()) == 0 {
+		return true
+	}
+	if len(a.Steps()) != len(o.Steps()) {
+		return false
+	}
+	for pos, aStep := range a.Steps() {
+		oStep := o.Steps()[pos]
+		switch aStep.(type) {
+		case AttributeName, ElementKeyString, ElementKeyInt:
+			if oStep != aStep {
+				return false
+			}
+		case ElementKeyValue:
+			oVal, ok := oStep.(ElementKeyValue)
+			if !ok {
+				return false
+			}
+			if !Value(aStep.(ElementKeyValue)).Equal(Value(oVal)) {
+				return false
+			}
+		default:
+			panic(fmt.Sprintf("unknown step %T in AttributePath.Equal", aStep))
+		}
+	}
+	return true
 }
 
 // NewErrorf returns an error associated with the value indicated by `a`. This
 // is equivalent to calling a.NewError(fmt.Errorf(f, args...)).
-func (a AttributePath) NewErrorf(f string, args ...interface{}) error {
-	return attributePathError{
-		error: fmt.Errorf(f, args...),
-		path:  a,
-	}
+func (a *AttributePath) NewErrorf(f string, args ...interface{}) error {
+	return a.NewError(fmt.Errorf(f, args...))
 }
 
 // NewError returns an error that associates `err` with the value indicated by
 // `a`.
-func (a AttributePath) NewError(err error) error {
-	return attributePathError{
-		error: err,
-		path:  a,
+func (a *AttributePath) NewError(err error) error {
+	var wrapped AttributePathError
+	if errors.As(err, &wrapped) {
+		// TODO: at some point we'll probably want to handle the
+		// AttributePathError-within-AttributePathError situation,
+		// either by de-duplicating the paths we're surfacing, or
+		// privileging one, or something. For now, let's just do the
+		// naive thing and not add our own path.
+		return err
+	}
+	return AttributePathError{
+		Path: a,
+		err:  err,
 	}
 }
 
 // WithAttributeName adds an AttributeName step to `a`, using `name` as the
-// attribute's name.
-func (a *AttributePath) WithAttributeName(name string) {
-	a.Steps = append(a.Steps, AttributeName(name))
+// attribute's name. `a` is copied, not modified.
+func (a *AttributePath) WithAttributeName(name string) *AttributePath {
+	steps := a.Steps()
+	return &AttributePath{
+		steps: append(steps, AttributeName(name)),
+	}
 }
 
 // WithElementKeyString adds an ElementKeyString step to `a`, using `key` as
-// the element's key.
-func (a *AttributePath) WithElementKeyString(key string) {
-	a.Steps = append(a.Steps, ElementKeyString(key))
+// the element's key. `a` is copied, not modified.
+func (a *AttributePath) WithElementKeyString(key string) *AttributePath {
+	steps := a.Steps()
+	return &AttributePath{
+		steps: append(steps, ElementKeyString(key)),
+	}
 }
 
 // WithElementKeyInt adds an ElementKeyInt step to `a`, using `key` as the
-// element's key.
-func (a *AttributePath) WithElementKeyInt(key int64) {
-	a.Steps = append(a.Steps, ElementKeyInt(key))
+// element's key. `a` is copied, not modified.
+func (a *AttributePath) WithElementKeyInt(key int64) *AttributePath {
+	steps := a.Steps()
+	return &AttributePath{
+		steps: append(steps, ElementKeyInt(key)),
+	}
 }
 
 // WithElementKeyValue adds an ElementKeyValue to `a`, using `key` as the
-// element's key.
-func (a *AttributePath) WithElementKeyValue(key Value) {
-	a.Steps = append(a.Steps, ElementKeyValue(key))
+// element's key. `a` is copied, not modified.
+func (a *AttributePath) WithElementKeyValue(key Value) *AttributePath {
+	steps := a.Steps()
+	return &AttributePath{
+		steps: append(steps, ElementKeyValue(key.Copy())),
+	}
 }
 
 // WithoutLastStep removes the last step, whatever kind of step it was, from
-// `a`.
-func (a *AttributePath) WithoutLastStep() {
-	a.Steps = a.Steps[:len(a.Steps)-1]
+// `a`. `a` is copied, not modified.
+func (a *AttributePath) WithoutLastStep() *AttributePath {
+	steps := a.Steps()
+	if len(steps) == 0 {
+		return nil
+	}
+	return &AttributePath{
+		steps: steps[:len(steps)-1],
+	}
 }
 
 // AttributePathStep is an intentionally unimplementable interface that
@@ -138,8 +241,8 @@ type AttributePathStepper interface {
 // map[string]interface{} and []interface{} types have built-in support. Other
 // types need to use the AttributePathStepper interface to tell
 // WalkAttributePath how to traverse themselves.
-func WalkAttributePath(in interface{}, path AttributePath) (interface{}, AttributePath, error) {
-	if len(path.Steps) < 1 {
+func WalkAttributePath(in interface{}, path *AttributePath) (interface{}, *AttributePath, error) {
+	if len(path.Steps()) < 1 {
 		return in, path, nil
 	}
 	stepper, ok := in.(AttributePathStepper)
@@ -149,12 +252,11 @@ func WalkAttributePath(in interface{}, path AttributePath) (interface{}, Attribu
 			return in, path, ErrNotAttributePathStepper
 		}
 	}
-	next, err := stepper.ApplyTerraform5AttributePathStep(path.Steps[0])
+	next, err := stepper.ApplyTerraform5AttributePathStep(path.Steps()[0])
 	if err != nil {
 		return in, path, err
 	}
-	path.Steps = path.Steps[1:]
-	return WalkAttributePath(next, path)
+	return WalkAttributePath(next, &AttributePath{steps: path.Steps()[1:]})
 }
 
 func builtinAttributePathStepper(in interface{}) (AttributePathStepper, bool) {
@@ -195,6 +297,9 @@ type interfaceSliceAttributePathStepper []interface{}
 func (i interfaceSliceAttributePathStepper) ApplyTerraform5AttributePathStep(step AttributePathStep) (interface{}, error) {
 	eki, isElementKeyInt := step.(ElementKeyInt)
 	if !isElementKeyInt {
+		return nil, ErrInvalidStep
+	}
+	if eki < 0 {
 		return nil, ErrInvalidStep
 	}
 	// slices can only have items up to the max value of int
