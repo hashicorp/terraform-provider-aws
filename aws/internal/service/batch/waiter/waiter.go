@@ -44,7 +44,7 @@ func ComputeEnvironmentDeleted(conn *batch.Batch, name string, timeout time.Dura
 func ComputeEnvironmentDisabled(conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
-		Target:  []string{batch.CEStatusValid},
+		Target:  []string{batch.CEStatusValid, batch.CEStatusInvalid},
 		Refresh: ComputeEnvironmentStatus(conn, name),
 		Timeout: timeout,
 	}
