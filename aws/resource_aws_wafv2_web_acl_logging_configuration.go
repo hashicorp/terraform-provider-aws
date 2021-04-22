@@ -47,7 +47,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 						"default_behavior": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"KEEP", "DROP"}, false),
+							ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
 						},
 						"filter": {
 							Type:     schema.TypeSet,
