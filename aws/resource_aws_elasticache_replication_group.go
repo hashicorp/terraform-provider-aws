@@ -292,23 +292,21 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			Update: schema.DefaultTimeout(waiter.ReplicationGroupDefaultUpdatedTimeout),
 		},
 
-		CustomizeDiff: customdiff.All(
-			customdiff.Sequence(
-				func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-					if v := diff.Get("multi_az_enabled").(bool); !v {
-						return nil
-					}
-					if v := diff.Get("automatic_failover_enabled").(bool); !v {
-						return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
-					}
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				if v := diff.Get("multi_az_enabled").(bool); !v {
 					return nil
-				},
-				customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-					return diff.HasChange("number_cache_clusters") ||
-						diff.HasChange("cluster_mode.0.num_node_groups") ||
-						diff.HasChange("cluster_mode.0.replicas_per_node_group")
-				}),
-			),
+				}
+				if v := diff.Get("automatic_failover_enabled").(bool); !v {
+					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
+				}
+				return nil
+			},
+			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("number_cache_clusters") ||
+					diff.HasChange("cluster_mode.0.num_node_groups") ||
+					diff.HasChange("cluster_mode.0.replicas_per_node_group")
+			}),
 			SetTagsDiff,
 		),
 	}
