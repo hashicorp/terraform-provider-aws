@@ -54,6 +54,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			"compute_resources": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
