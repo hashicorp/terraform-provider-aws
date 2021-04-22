@@ -117,8 +117,8 @@ func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_Name(policyName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", policyName),
-					resource.TestCheckResourceAttr(datasourceName, "description", "My test policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
@@ -145,8 +145,8 @@ func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "name", policyName),
-					resource.TestCheckResourceAttr(datasourceName, "description", "My test policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
