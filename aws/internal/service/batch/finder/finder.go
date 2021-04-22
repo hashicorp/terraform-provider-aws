@@ -12,7 +12,20 @@ func ComputeEnvironmentDetailByName(conn *batch.Batch, name string) (*batch.Comp
 		ComputeEnvironments: aws.StringSlice([]string{name}),
 	}
 
-	return ComputeEnvironmentDetail(conn, input)
+	computeEnvironmentDetail, err := ComputeEnvironmentDetail(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(computeEnvironmentDetail.Status); status == batch.CEStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return computeEnvironmentDetail, nil
 }
 
 func ComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnvironmentsInput) (*batch.ComputeEnvironmentDetail, error) {
@@ -31,16 +44,7 @@ func ComputeEnvironmentDetail(conn *batch.Batch, input *batch.DescribeComputeEnv
 
 	// TODO if len(output.ComputeEnvironments) > 1
 
-	computeEnvironment := output.ComputeEnvironments[0]
-
-	if status := aws.StringValue(computeEnvironment.Status); status == batch.CEStatusDeleted {
-		return nil, &resource.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	return computeEnvironment, nil
+	return output.ComputeEnvironments[0], nil
 }
 
 func JobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, error) {
@@ -48,7 +52,20 @@ func JobDefinitionByARN(conn *batch.Batch, arn string) (*batch.JobDefinition, er
 		JobDefinitions: aws.StringSlice([]string{arn}),
 	}
 
-	return JobDefinition(conn, input)
+	jobDefinition, err := JobDefinition(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(jobDefinition.Status); status == tfbatch.JobDefinitionStatusInactive {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return jobDefinition, nil
 }
 
 func JobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
@@ -67,14 +84,5 @@ func JobDefinition(conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) 
 
 	// TODO if len(output.JobDefinitions) > 1
 
-	jobDefinition := output.JobDefinitions[0]
-
-	if status := aws.StringValue(jobDefinition.Status); status == tfbatch.JobDefinitionStatusInactive {
-		return nil, &resource.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	return jobDefinition, nil
+	return output.JobDefinitions[0], nil
 }
