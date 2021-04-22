@@ -715,7 +715,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 }
 ```
 
-### Nested TypeList of TypeString and AWS List of String
+### Nested TypeSet of TypeString and AWS List of String
 
 To read:
 
