@@ -1850,7 +1850,7 @@ resource "aws_batch_compute_environment" "test" {
     max_vcpus = 16
     security_group_ids = [
       aws_security_group.test_2.id,
-	  aws_security_group.test_3.id,
+      aws_security_group.test_3.id,
     ]
     subnets = [
       aws_subnet.test_2.id
