@@ -114,15 +114,18 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	// Retrieve policy description
+	policyInput := &iam.GetPolicyInput{
+		PolicyArn: policy.Arn,
+	}
 
-	policyOutput, err := conn.GetPolicy(&iam.GetPolicyInput{PolicyArn: policy.Arn})
+	policyOutput, err := conn.GetPolicy(policyInput)
 
 	if err != nil {
-		return fmt.Errorf("error getting IAM policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading IAM policy (%s): %w", policyArn, err)
 	}
 
 	if policyOutput == nil || policyOutput.Policy == nil {
-		return fmt.Errorf("error getting IAM policy (%s): empty output", d.Id())
+		return fmt.Errorf("error reading IAM policy (%s): empty output", policyArn)
 	}
 
 	d.Set("description", policyOutput.Policy.Description)
