@@ -1248,7 +1248,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rName),
-				ExpectError: regexp.MustCompile(`One compute environment is expected, but no compute environments are set`),
+				ExpectError: regexp.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
 			},
 		},
 	})
@@ -1264,7 +1264,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutIamFleetRole(t *testing.
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSBatchComputeEnvironmentConfigSpotWithoutBidPercentage(rName),
+				Config:      testAccAWSBatchComputeEnvironmentConfigSpotWithoutIamFleetRole(rName),
 				ExpectError: regexp.MustCompile(`ComputeResources.spotIamFleetRole cannot not be null or empty`),
 			},
 		},
@@ -1788,7 +1788,7 @@ resource "aws_batch_compute_environment" "test" {
 `, rName))
 }
 
-func testAccAWSBatchComputeEnvironmentConfigSpotWithoutBidPercentage(rName string) string {
+func testAccAWSBatchComputeEnvironmentConfigSpotWithoutIamFleetRole(rName string) string {
 	return composeConfig(
 		testAccAWSBatchComputeEnvironmentConfigBase(rName),
 		fmt.Sprintf(`
