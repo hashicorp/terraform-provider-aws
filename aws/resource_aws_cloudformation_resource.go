@@ -290,7 +290,7 @@ func resourceAwsCloudFormationResourceCustomizeDiffGetSchema(ctx context.Context
 		return fmt.Errorf("error describing CloudFormation Type (%s): empty reponse", typeName)
 	}
 
-	if err := diff.SetNew("schema", aws.StringValue(output.Schema)); err != nil {
+	if err := diff.SetNew("schema", output.Schema); err != nil {
 		return fmt.Errorf("error setting schema diff: %w", err)
 	}
 
