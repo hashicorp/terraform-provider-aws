@@ -13,14 +13,17 @@ IAM policy.
 
 ## Example Usage
 
+### By ARN
+
 ```terraform
 data "aws_iam_policy" "example" {
   arn = "arn:aws:iam::123456789012:policy/UsersManageOwnCredentials"
 }
 ```
-Using IAM policy `name` as input,
 
-```hcl
+### By Name
+
+```terraform
 data "aws_iam_policy" "example" {
   name = "test_policy"
 }
@@ -29,16 +32,13 @@ data "aws_iam_policy" "example" {
 ## Argument Reference
 
 * `arn` - (Optional) The ARN of the IAM policy.
-* `name` - (Optional) The name of the IAM policy. You must use either ARN or name to fetch information about IAM policy.
-* `path_prefix` - (Optional) The path to the IAM policy. This parameter allows a string of characters consisting of either a forward slash (/) by itself or a string that must begin and end with forward slashes. E.G. `/service-role/`
+* `name` - (Optional) The name of the IAM policy.
+* `path_prefix` - (Optional) The prefix of the IAM policy's path.
 
 ## Attributes Reference
 
-* `name` - The name of the IAM policy.
-* `arn` - The Amazon Resource Name (ARN) specifying the policy.
 * `path` - The path to the policy.
 * `description` - The description of the policy.
 * `policy` - The policy document of the policy.
 * `policy_id` - The policy's ID.
 * `tags` - Key-value mapping of tags for the IAM Policy
-
