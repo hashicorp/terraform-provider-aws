@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -9,7 +10,75 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
+func TestPolicySearchDetails(t *testing.T) {
+	testCases := []struct {
+		Arn        string
+		Name       string
+		PathPrefix string
+		Expected   string
+	}{
+		{
+			Arn:        "",
+			Name:       "",
+			PathPrefix: "",
+			Expected:   "",
+		},
+		{
+			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
+			Name:       "",
+			PathPrefix: "",
+			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
+		},
+		{
+			Arn:        "",
+			Name:       "tf-acc-test-policy",
+			PathPrefix: "",
+			Expected:   "Name: tf-acc-test-policy",
+		},
+		{
+			Arn:        "",
+			Name:       "",
+			PathPrefix: "/test-prefix/",
+			Expected:   "PathPrefix: /test-prefix/",
+		},
+		{
+			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
+			Name:       "tf-acc-test-policy",
+			PathPrefix: "",
+			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, Name: tf-acc-test-policy", //lintignore:AWSAT005
+		},
+		{
+			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
+			Name:       "",
+			PathPrefix: "/test-prefix/",
+			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, PathPrefix: /test-prefix/", //lintignore:AWSAT005
+		},
+		{
+			Arn:        "",
+			Name:       "tf-acc-test-policy",
+			PathPrefix: "/test-prefix/",
+			Expected:   "Name: tf-acc-test-policy, PathPrefix: /test-prefix/",
+		},
+		{
+			Arn:        "arn:aws:iam::aws:policy/TestPolicy", //lintignore:AWSAT005
+			Name:       "tf-acc-test-policy",
+			PathPrefix: "/test-prefix/",
+			Expected:   "ARN: arn:aws:iam::aws:policy/TestPolicy, Name: tf-acc-test-policy, PathPrefix: /test-prefix/", //lintignore:AWSAT005
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			got := PolicySearchDetails(testCase.Arn, testCase.Name, testCase.PathPrefix)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAccAWSDataSourceIAMPolicy_Arn(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
@@ -20,7 +89,7 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataSourceIamPolicyConfig(policyName, "/"),
+				Config: testAccAwsDataSourceIamPolicyConfig_Arn(policyName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -33,7 +102,6 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
@@ -60,10 +128,9 @@ func TestAccAWSDataSourceIAMPolicy_Name(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func TestAccAWSDataSourceIAMPolicy_PathPrefix(t *testing.T) {
+func TestAccAWSDataSourceIAMPolicy_NameAndPathPrefix(t *testing.T) {
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -89,7 +156,23 @@ func TestAccAWSDataSourceIAMPolicy_PathPrefix(t *testing.T) {
 			},
 		},
 	})
+}
 
+func TestAccAWSDataSourceIAMPolicy_NonExistent(t *testing.T) {
+	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
+	policyPath := "/test-path/"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, iam.EndpointsID),
+		Providers:  testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath),
+				ExpectError: regexp.MustCompile(`no IAM policy found matching criteria`),
+			},
+		},
+	})
 }
 
 func testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath string) string {
@@ -116,7 +199,7 @@ EOF
 }`, policyName, policyPath)
 }
 
-func testAccAwsDataSourceIamPolicyConfig(policyName, policyPath string) string {
+func testAccAwsDataSourceIamPolicyConfig_Arn(policyName, policyPath string) string {
 	return composeConfig(
 		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
 		`
@@ -142,6 +225,17 @@ func testAccAwsDataSourceIamPolicyConfig_PathPrefix(policyName, policyPath strin
 		fmt.Sprintf(`
 data "aws_iam_policy" "test" {
   name        = aws_iam_policy.test.name
+  path_prefix = %q
+}
+`, policyPath))
+}
+
+func testAccAwsDataSourceIamPolicyConfig_NonExistent(policyName, policyPath string) string {
+	return composeConfig(
+		testAccAwsDataSourceIamPolicyBaseConfig(policyName, policyPath),
+		fmt.Sprintf(`
+data "aws_iam_policy" "test" {
+  name        = "non-existent"
   path_prefix = %q
 }
 `, policyPath))

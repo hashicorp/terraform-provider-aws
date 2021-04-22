@@ -22,9 +22,10 @@ func dataSourceAwsIAMPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -104,7 +105,6 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(policyArn)
 
 	d.Set("arn", policyArn)
-	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
@@ -180,6 +180,7 @@ func dataSourceAwsIAMPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+// PolicySearchDetails returns the configured search criteria as a printable string
 func PolicySearchDetails(arn, name, pathPrefix string) string {
 	var policyDetails []string
 	if arn != "" {
@@ -192,5 +193,5 @@ func PolicySearchDetails(arn, name, pathPrefix string) string {
 		policyDetails = append(policyDetails, fmt.Sprintf("PathPrefix: %s", pathPrefix))
 	}
 
-	return strings.Join(policyDetails, ",")
+	return strings.Join(policyDetails, ", ")
 }

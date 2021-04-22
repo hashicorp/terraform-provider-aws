@@ -6,7 +6,7 @@ description: |-
   Get information on a Amazon IAM policy
 ---
 
-# aws_iam_policy
+# Data Source: aws_iam_policy
 
 This data source can be used to fetch information about a specific
 IAM policy.
@@ -33,12 +33,14 @@ data "aws_iam_policy" "example" {
 
 * `arn` - (Optional) The ARN of the IAM policy.
 * `name` - (Optional) The name of the IAM policy.
-* `path_prefix` - (Optional) The prefix of the IAM policy's path.
+* `path_prefix` - (Optional) The prefix of the path to the IAM policy. Defaults to a slash (`/`).
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `path` - The path to the policy.
 * `description` - The description of the policy.
 * `policy` - The policy document of the policy.
 * `policy_id` - The policy's ID.
-* `tags` - Key-value mapping of tags for the IAM Policy
+* `tags` - Key-value mapping of tags for the IAM Policy.
