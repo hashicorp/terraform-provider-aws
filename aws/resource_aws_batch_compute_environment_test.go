@@ -1156,6 +1156,101 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_Fargate(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_compute_environment.test"
+	securityGroupResourceName1 := "aws_security_group.test"
+	securityGroupResourceName2 := "aws_security_group.test_2"
+	securityGroupResourceName3 := "aws_security_group.test_3"
+	serviceRoleResourceName := "aws_iam_role.batch_service"
+	subnetResourceName1 := "aws_subnet.test"
+	subnetResourceName2 := "aws_subnet.test_2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigFargate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.spot_iam_fleet_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MANAGED"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigFargateUpdatedSecurityGroupsAndSubnets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(resourceName, &ce),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_key_pair", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName2, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName3, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.spot_iam_fleet_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
+					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "MANAGED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_Tags(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1742,6 +1837,59 @@ resource "aws_batch_compute_environment" "test" {
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `, rName, maxVcpus, minVcpus))
+}
+
+func testAccAWSBatchComputeEnvironmentConfigFargateUpdatedSecurityGroupsAndSubnets(rName string) string {
+	return composeConfig(
+		testAccAWSBatchComputeEnvironmentConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test_2.id,
+	  aws_security_group.test_3.id,
+    ]
+    subnets = [
+      aws_subnet.test_2.id
+    ]
+    type = "FARGATE"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+
+resource "aws_security_group" "test_2" {
+  name   = "%[1]s_2"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s_2"
+  }
+}
+
+resource "aws_security_group" "test_3" {
+  name   = "%[1]s_3"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s_3"
+  }
+}
+
+resource "aws_subnet" "test_2" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.1.2.0/24"
+
+  tags = {
+    Name = "%[1]s_2"
+  }
+}
+`, rName))
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2WithoutComputeResources(rName string) string {

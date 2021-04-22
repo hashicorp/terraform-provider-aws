@@ -134,11 +134,9 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						// TODO Can be updated for FARGATE
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"spot_iam_fleet_role": {
@@ -147,11 +145,9 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
-						// TODO Can be updated for FARGATE
 						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
-							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"tags": tagsSchemaForceNew(),
@@ -345,6 +341,14 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 					computeResourceUpdate.MinvCpus = aws.Int64(int64(d.Get("compute_resources.0.min_vcpus").(int)))
 				}
 
+				if d.HasChange("compute_resources.0.security_group_ids") {
+					computeResourceUpdate.SecurityGroupIds = expandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
+				}
+
+				if d.HasChange("compute_resources.0.subnets") {
+					computeResourceUpdate.Subnets = expandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
+				}
+
 				input.ComputeResources = computeResourceUpdate
 			}
 		}
@@ -408,9 +412,27 @@ func resourceAwsBatchComputeEnvironmentDelete(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsBatchComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	// if diff.Id() == "" {
-	// 	// Create.
-	// }
+	if diff.Id() != "" {
+		// Update.
+
+		computeResourceType := strings.ToUpper(diff.Get("compute_resources.0.type").(string))
+		fargateComputeResources := false
+		if computeResourceType == batch.CRTypeFargate || computeResourceType == batch.CRTypeFargateSpot {
+			fargateComputeResources = true
+		}
+
+		if diff.HasChange("compute_resources.0.security_group_ids") && !fargateComputeResources {
+			if err := diff.ForceNew("compute_resources.0.security_group_ids"); err != nil {
+				return err
+			}
+		}
+
+		if diff.HasChange("compute_resources.0.subnets") && !fargateComputeResources {
+			if err := diff.ForceNew("compute_resources.0.subnets"); err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }
