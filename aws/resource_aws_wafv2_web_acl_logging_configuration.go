@@ -90,7 +90,7 @@ func resourceAwsWafv2WebACLLoggingConfiguration() *schema.Resource {
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(1, 1024),
-																	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and semicolons"),
+																	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
 																),
 															},
 														},
