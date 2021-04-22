@@ -252,7 +252,8 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -320,12 +321,15 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				}
 				return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
 			},
+			SetTagsDiff,
 		),
 	}
 }
 
 func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &elasticache.CreateCacheClusterInput{}
 
@@ -334,7 +338,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 	} else {
 		req.CacheSecurityGroupNames = expandStringSet(d.Get("security_group_names").(*schema.Set))
 		req.SecurityGroupIds = expandStringSet(d.Get("security_group_ids").(*schema.Set))
-		req.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
+		req.Tags = tags.IgnoreAws().ElasticacheTags()
 	}
 
 	if v, ok := d.GetOk("cluster_id"); ok {
@@ -425,6 +429,7 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	c, err := finder.CacheClusterWithNodeInfoByID(conn, d.Id())
@@ -487,8 +492,15 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -497,8 +509,8 @@ func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{})
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ElastiCache Cluster (%s) tags: %w", d.Get("arn").(string), err)
