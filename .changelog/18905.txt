@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_cloudwatch_event_connection
+```
+
+```release-note:new-resource
+aws_cloudwatch_event_api_destination
+```

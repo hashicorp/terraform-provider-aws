@@ -527,6 +527,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_event_rule":                               resourceAwsCloudWatchEventRule(),
 			"aws_cloudwatch_event_target":                             resourceAwsCloudWatchEventTarget(),
 			"aws_cloudwatch_event_archive":                            resourceAwsCloudWatchEventArchive(),
+			"aws_cloudwatch_event_connection":                         resourceAwsCloudWatchEventConnection(),
+			"aws_cloudwatch_event_api_destination":                    resourceAwsCloudWatchEventApiDestination(),
 			"aws_cloudwatch_log_destination":                          resourceAwsCloudWatchLogDestination(),
 			"aws_cloudwatch_log_destination_policy":                   resourceAwsCloudWatchLogDestinationPolicy(),
 			"aws_cloudwatch_log_group":                                resourceAwsCloudWatchLogGroup(),
