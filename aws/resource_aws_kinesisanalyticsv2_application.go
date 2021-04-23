@@ -924,8 +924,8 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	
-  applicationName := d.Get("name").(string)
+
+	applicationName := d.Get("name").(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
 		ApplicationConfiguration: expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{})),
 		ApplicationDescription:   aws.String(d.Get("description").(string)),
