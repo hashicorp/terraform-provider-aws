@@ -246,7 +246,7 @@ Some AWS components support [resource-based IAM policies](https://docs.aws.amazo
 
 AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the [AWS Tagging Strategy page](https://aws.amazon.com/answers/account-management/aws-tagging-strategies/) for more information about tagging at a high level.
 
-As of version 3.38.0 of the Terraform AWS Provider, resources that previously implemented tagging support via the argument `tags`, now support provide-wide default tagging.
+As of version 3.38.0 of the Terraform AWS Provider, resources that previously implemented tagging support via the argument `tags`, now support provider-wide default tagging.
 
 Thus, for in-flight and future contributions, implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
 
