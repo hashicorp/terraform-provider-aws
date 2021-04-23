@@ -461,7 +461,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
 
-	var stackSet1, stackSet2 cloudformation.StackSet
+	var stackSet1 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
 
@@ -472,7 +472,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value1"),
+				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, "true", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
@@ -487,15 +487,6 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"template_url",
 				},
-			},
-			{
-				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet2),
-					testAccCheckCloudFormationStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
-				),
 			},
 		},
 	})
@@ -505,7 +496,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
 	// Additional references:
 	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
 
-	var stackSet1, stackSet2 cloudformation.StackSet
+	var stackSet1 cloudformation.StackSet
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudformation_stack_set.test"
 
@@ -516,11 +507,12 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value1"),
+				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, "false", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
 				),
 			},
 			{
@@ -530,15 +522,6 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"template_url",
 				},
-			},
-			{
-				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet2),
-					testAccCheckCloudFormationStackSetNotRecreated(&stackSet1, &stackSet2),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal"),
-				),
 			},
 		},
 	})
@@ -1586,4 +1569,22 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName))
+}
+
+func testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, value1, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = %[3]s
+    retain_stacks_on_account_removal = %[4]s
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccAWSCloudFormationStackSetTemplateBodyVpc(rName), value1, value2)
 }
