@@ -60,7 +60,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validateEKSClusterName,
 			},
 			"disk_size": {
 				Type:     schema.TypeInt,
