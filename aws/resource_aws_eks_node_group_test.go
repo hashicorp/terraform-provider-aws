@@ -70,14 +70,10 @@ func testSweepEksNodeGroups(region string) error {
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing EKS Clusters: %w", err))
-		// in case work can be done, don't jump out yet
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping resources for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EKS Node Groups for %s: %w", region, err))
 	}
 
 	// waiting for deletion is not necessary in the sweeper since the resource's delete waits

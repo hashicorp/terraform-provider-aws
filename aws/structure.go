@@ -138,11 +138,11 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 			}
 
 			if v, ok := config["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
-				l.DockerVolumeConfiguration.DriverOpts = stringMapToPointers(v)
+				l.DockerVolumeConfiguration.DriverOpts = expandStringMap(v)
 			}
 
 			if v, ok := config["labels"].(map[string]interface{}); ok && len(v) > 0 {
-				l.DockerVolumeConfiguration.Labels = stringMapToPointers(v)
+				l.DockerVolumeConfiguration.Labels = expandStringMap(v)
 			}
 		}
 
@@ -1026,6 +1026,15 @@ func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 	return float64Map
 }
 
+// Expands a map of string to interface to a map of string to *string
+func expandStringMap(m map[string]interface{}) map[string]*string {
+	stringMap := make(map[string]*string, len(m))
+	for k, v := range m {
+		stringMap[k] = aws.String(v.(string))
+	}
+	return stringMap
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List()) // nosemgrep: helper-schema-Set-extraneous-expandStringList-with-List
@@ -1580,14 +1589,6 @@ func pointersMapToStringList(pointers map[string]*string) map[string]interface{}
 	list := make(map[string]interface{}, len(pointers))
 	for i, v := range pointers {
 		list[i] = *v
-	}
-	return list
-}
-
-func stringMapToPointers(m map[string]interface{}) map[string]*string {
-	list := make(map[string]*string, len(m))
-	for i, v := range m {
-		list[i] = aws.String(v.(string))
 	}
 	return list
 }
@@ -3647,114 +3648,6 @@ func flattenResourceLifecycleConfig(rlc *elasticbeanstalk.ApplicationResourceLif
 	return result
 }
 
-func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
-	// Transform slices into maps
-	oldGsis := make(map[string]interface{})
-	for _, gsidata := range oldGsi {
-		m := gsidata.(map[string]interface{})
-		oldGsis[m["name"].(string)] = m
-	}
-	newGsis := make(map[string]interface{})
-	for _, gsidata := range newGsi {
-		m := gsidata.(map[string]interface{})
-		// validate throughput input early, to avoid unnecessary processing
-		if e = validateDynamoDbProvisionedThroughput(m, billingMode); e != nil {
-			return
-		}
-		newGsis[m["name"].(string)] = m
-	}
-
-	for _, data := range newGsi {
-		newMap := data.(map[string]interface{})
-		newName := newMap["name"].(string)
-
-		if _, exists := oldGsis[newName]; !exists {
-			m := data.(map[string]interface{})
-			idxName := m["name"].(string)
-
-			ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
-				Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-					IndexName:             aws.String(idxName),
-					KeySchema:             expandDynamoDbKeySchema(m),
-					ProvisionedThroughput: expandDynamoDbProvisionedThroughput(m, billingMode),
-					Projection:            expandDynamoDbProjection(m),
-				},
-			})
-		}
-	}
-
-	for _, data := range oldGsi {
-		oldMap := data.(map[string]interface{})
-		oldName := oldMap["name"].(string)
-
-		newData, exists := newGsis[oldName]
-		if exists {
-			newMap := newData.(map[string]interface{})
-			idxName := newMap["name"].(string)
-
-			oldWriteCapacity, oldReadCapacity := oldMap["write_capacity"].(int), oldMap["read_capacity"].(int)
-			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
-			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
-
-			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
-			// ordinal of elements in its equality (which we actually don't care about)
-			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
-
-			oldAttributes, err := stripCapacityAttributes(oldMap)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err := stripCapacityAttributes(newMap)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripNonKeyAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
-
-			if capacityChanged && !otherAttributesChanged {
-				update := &dynamodb.GlobalSecondaryIndexUpdate{
-					Update: &dynamodb.UpdateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
-					},
-				}
-				ops = append(ops, update)
-			} else if otherAttributesChanged {
-				// Other attributes cannot be updated
-				ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
-					Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-						IndexName: aws.String(idxName),
-					},
-				})
-
-				ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
-					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						KeySchema:             expandDynamoDbKeySchema(newMap),
-						ProvisionedThroughput: expandDynamoDbProvisionedThroughput(newMap, billingMode),
-						Projection:            expandDynamoDbProjection(newMap),
-					},
-				})
-			}
-		} else {
-			idxName := oldName
-			ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
-				Delete: &dynamodb.DeleteGlobalSecondaryIndexAction{
-					IndexName: aws.String(idxName),
-				},
-			})
-		}
-	}
-	return ops, nil
-}
-
 func stripNonKeyAttributes(in map[string]interface{}) (map[string]interface{}, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
@@ -3795,319 +3688,6 @@ func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{},
 }
 
 // Expanders + flatteners
-
-func flattenDynamoDbTtl(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
-	m := map[string]interface{}{
-		"enabled": false,
-	}
-
-	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
-		return []interface{}{m}
-	}
-
-	ttlDesc := ttlOutput.TimeToLiveDescription
-
-	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
-	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
-
-	return []interface{}{m}
-}
-
-func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
-	m := map[string]interface{}{
-		"enabled": false,
-	}
-
-	if pitrDesc == nil {
-		return []interface{}{m}
-	}
-
-	if pitrDesc.ContinuousBackupsDescription != nil {
-		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
-		if pitr != nil {
-			m["enabled"] = (*pitr.PointInTimeRecoveryStatus == dynamodb.PointInTimeRecoveryStatusEnabled)
-		}
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAwsDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
-			"region_name": aws.StringValue(apiObject.RegionName),
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
-	d.Set("billing_mode", dynamodb.BillingModeProvisioned)
-	if table.BillingModeSummary != nil {
-		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
-	}
-
-	d.Set("write_capacity", table.ProvisionedThroughput.WriteCapacityUnits)
-	d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
-
-	attributes := make([]interface{}, len(table.AttributeDefinitions))
-	for i, attrdef := range table.AttributeDefinitions {
-		attributes[i] = map[string]string{
-			"name": aws.StringValue(attrdef.AttributeName),
-			"type": aws.StringValue(attrdef.AttributeType),
-		}
-	}
-
-	d.Set("attribute", attributes)
-	d.Set("name", table.TableName)
-
-	for _, attribute := range table.KeySchema {
-		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
-			d.Set("hash_key", attribute.AttributeName)
-		}
-
-		if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
-			d.Set("range_key", attribute.AttributeName)
-		}
-	}
-
-	lsiList := make([]map[string]interface{}, 0, len(table.LocalSecondaryIndexes))
-	for _, lsiObject := range table.LocalSecondaryIndexes {
-		lsi := map[string]interface{}{
-			"name":            aws.StringValue(lsiObject.IndexName),
-			"projection_type": aws.StringValue(lsiObject.Projection.ProjectionType),
-		}
-
-		for _, attribute := range lsiObject.KeySchema {
-			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
-				lsi["range_key"] = aws.StringValue(attribute.AttributeName)
-			}
-		}
-		nkaList := make([]string, len(lsiObject.Projection.NonKeyAttributes))
-		for i, nka := range lsiObject.Projection.NonKeyAttributes {
-			nkaList[i] = aws.StringValue(nka)
-		}
-		lsi["non_key_attributes"] = nkaList
-
-		lsiList = append(lsiList, lsi)
-	}
-
-	err := d.Set("local_secondary_index", lsiList)
-	if err != nil {
-		return err
-	}
-
-	gsiList := make([]map[string]interface{}, len(table.GlobalSecondaryIndexes))
-	for i, gsiObject := range table.GlobalSecondaryIndexes {
-		gsi := map[string]interface{}{
-			"write_capacity": aws.Int64Value(gsiObject.ProvisionedThroughput.WriteCapacityUnits),
-			"read_capacity":  aws.Int64Value(gsiObject.ProvisionedThroughput.ReadCapacityUnits),
-			"name":           aws.StringValue(gsiObject.IndexName),
-		}
-
-		for _, attribute := range gsiObject.KeySchema {
-			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeHash {
-				gsi["hash_key"] = aws.StringValue(attribute.AttributeName)
-			}
-
-			if aws.StringValue(attribute.KeyType) == dynamodb.KeyTypeRange {
-				gsi["range_key"] = aws.StringValue(attribute.AttributeName)
-			}
-		}
-
-		gsi["projection_type"] = aws.StringValue(gsiObject.Projection.ProjectionType)
-
-		nonKeyAttrs := make([]string, len(gsiObject.Projection.NonKeyAttributes))
-		for i, nonKeyAttr := range gsiObject.Projection.NonKeyAttributes {
-			nonKeyAttrs[i] = aws.StringValue(nonKeyAttr)
-		}
-		gsi["non_key_attributes"] = nonKeyAttrs
-
-		gsiList[i] = gsi
-	}
-
-	if table.StreamSpecification != nil {
-		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
-		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
-	} else {
-		d.Set("stream_view_type", "")
-		d.Set("stream_enabled", false)
-	}
-
-	d.Set("stream_arn", table.LatestStreamArn)
-	d.Set("stream_label", table.LatestStreamLabel)
-
-	err = d.Set("global_secondary_index", gsiList)
-	if err != nil {
-		return err
-	}
-
-	sseOptions := []map[string]interface{}{}
-	if sseDescription := table.SSEDescription; sseDescription != nil {
-		sseOptions = []map[string]interface{}{{
-			"enabled":     aws.StringValue(sseDescription.Status) == dynamodb.SSEStatusEnabled,
-			"kms_key_arn": aws.StringValue(sseDescription.KMSMasterKeyArn),
-		}}
-	}
-	err = d.Set("server_side_encryption", sseOptions)
-	if err != nil {
-		return err
-	}
-
-	err = d.Set("replica", flattenAwsDynamoDbReplicaDescriptions(table.Replicas))
-	if err != nil {
-		return err
-	}
-
-	d.Set("arn", table.TableArn)
-
-	return nil
-}
-
-func expandDynamoDbAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition {
-	attributes := make([]*dynamodb.AttributeDefinition, len(cfg))
-	for i, attribute := range cfg {
-		attr := attribute.(map[string]interface{})
-		attributes[i] = &dynamodb.AttributeDefinition{
-			AttributeName: aws.String(attr["name"].(string)),
-			AttributeType: aws.String(attr["type"].(string)),
-		}
-	}
-	return attributes
-}
-
-// TODO: Get rid of keySchemaM - the user should just explicitly define
-// this in the config, we shouldn't magically be setting it like this.
-// Removal will however require config change, hence BC. :/
-func expandDynamoDbLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interface{}) []*dynamodb.LocalSecondaryIndex {
-	indexes := make([]*dynamodb.LocalSecondaryIndex, len(cfg))
-	for i, lsi := range cfg {
-		m := lsi.(map[string]interface{})
-		idxName := m["name"].(string)
-
-		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
-		if _, ok := m["hash_key"]; !ok {
-			m["hash_key"] = keySchemaM["hash_key"]
-		}
-
-		indexes[i] = &dynamodb.LocalSecondaryIndex{
-			IndexName:  aws.String(idxName),
-			KeySchema:  expandDynamoDbKeySchema(m),
-			Projection: expandDynamoDbProjection(m),
-		}
-	}
-	return indexes
-}
-
-func expandDynamoDbGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
-	return &dynamodb.GlobalSecondaryIndex{
-		IndexName:             aws.String(data["name"].(string)),
-		KeySchema:             expandDynamoDbKeySchema(data),
-		Projection:            expandDynamoDbProjection(data),
-		ProvisionedThroughput: expandDynamoDbProvisionedThroughput(data, billingMode),
-	}
-}
-
-func validateDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) error {
-	// if billing mode is PAY_PER_REQUEST, don't need to validate the throughput settings
-	if billingMode == dynamodb.BillingModePayPerRequest {
-		return nil
-	}
-
-	writeCapacity, writeCapacitySet := data["write_capacity"].(int)
-	readCapacity, readCapacitySet := data["read_capacity"].(int)
-
-	if !writeCapacitySet || !readCapacitySet {
-		return fmt.Errorf("Read and Write capacity should be set when billing mode is %s", dynamodb.BillingModeProvisioned)
-	}
-
-	if writeCapacity < 1 {
-		return fmt.Errorf("Write capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
-	}
-
-	if readCapacity < 1 {
-		return fmt.Errorf("Read capacity must be > 0 when billing mode is %s", dynamodb.BillingModeProvisioned)
-	}
-
-	return nil
-}
-
-func expandDynamoDbProvisionedThroughput(data map[string]interface{}, billingMode string) *dynamodb.ProvisionedThroughput {
-
-	if billingMode == dynamodb.BillingModePayPerRequest {
-		return nil
-	}
-
-	return &dynamodb.ProvisionedThroughput{
-		WriteCapacityUnits: aws.Int64(int64(data["write_capacity"].(int))),
-		ReadCapacityUnits:  aws.Int64(int64(data["read_capacity"].(int))),
-	}
-}
-
-func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection {
-	projection := &dynamodb.Projection{
-		ProjectionType: aws.String(data["projection_type"].(string)),
-	}
-
-	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
-		projection.NonKeyAttributes = expandStringList(v)
-	}
-
-	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
-		projection.NonKeyAttributes = expandStringSet(v)
-	}
-
-	return projection
-}
-
-func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaElement {
-	keySchema := []*dynamodb.KeySchemaElement{}
-
-	if v, ok := data["hash_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       aws.String(dynamodb.KeyTypeHash),
-		})
-	}
-
-	if v, ok := data["range_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, &dynamodb.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       aws.String(dynamodb.KeyTypeRange),
-		})
-	}
-
-	return keySchema
-}
-
-func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecification {
-	options := &dynamodb.SSESpecification{}
-
-	enabled := false
-	if len(vOptions) > 0 {
-		mOptions := vOptions[0].(map[string]interface{})
-
-		enabled = mOptions["enabled"].(bool)
-		if enabled {
-			if vKmsKeyArn, ok := mOptions["kms_key_arn"].(string); ok && vKmsKeyArn != "" {
-				options.KMSMasterKeyId = aws.String(vKmsKeyArn)
-				options.SSEType = aws.String(dynamodb.SSETypeKms)
-			}
-		}
-	}
-	options.Enabled = aws.Bool(enabled)
-
-	return options
-}
 
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
 	var attributes map[string]*dynamodb.AttributeValue

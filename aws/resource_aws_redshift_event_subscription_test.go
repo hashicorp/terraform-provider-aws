@@ -31,9 +31,9 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, isLast bool) bool {
+	err = conn.DescribeEventSubscriptionsPages(&redshift.DescribeEventSubscriptionsInput{}, func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
@@ -44,18 +44,15 @@ func testSweepRedshiftEventSubscriptions(region string) error {
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Redshift Event Subscriptions: %w", err))
 	}
 
-	if len(sweepResources) > 0 {
-		// any errors didn't prevent gathering of some work, so do it
-		if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticache Replication Groups for %s: %w", region, err))
-		}
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Redshift Event Subscriptions for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {

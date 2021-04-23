@@ -1166,9 +1166,9 @@ func testSweepExampleThings(region string) error {
 
   input := &example.ListThingsInput{}
 
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
+  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
-      return !isLast
+      return !lastPage
     }
 
     for _, thing := range page.Things {
@@ -1196,18 +1196,15 @@ func testSweepExampleThings(region string) error {
       sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
     }
 
-    return !isLast
+    return !lastPage
   })
 
   if err != nil {
     errs = multierror.Append(errs, fmt.Errorf("error listing Example Thing for %s: %w", region, err))
   }
 
-  if len(sweepResources) > 0 {
-    // Any errors didn't prevent gathering some sweeping work, so do it.
-    if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
-    }
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
   if testSweepSkipSweepError(errs.ErrorOrNil()) {
@@ -1270,11 +1267,8 @@ func testSweepExampleThings(region string) error {
     input.NextToken = output.NextToken
   }
 
-  if len(sweepResources) > 0 {
-    // Any errors didn't prevent gathering some sweeping work, so do it.
-    if err := testSweepResourceOrchestrator(sweepResources); err != nil {
-      errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
-    }
+  if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("error sweeping Example Thing for %s: %w", region, err))
   }
 
   if testSweepSkipSweepError(errs.ErrorOrNil()) {

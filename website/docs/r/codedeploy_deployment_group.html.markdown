@@ -202,6 +202,7 @@ The following arguments are supported:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `tags` - (Optional) Key-value map of resource tags
 
 ### alarm_configuration Argument Reference
 
@@ -350,7 +351,10 @@ Add triggers to a Deployment Group to receive notifications about events related
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
+* `compute_platform` - The destination platform type for the deployment.
+* `deployment_group_id` - The ID of the CodeDeploy deployment group.
 
 ## Import
 

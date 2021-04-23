@@ -259,7 +259,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -301,45 +302,26 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v := diff.Get("automatic_failover_enabled").(bool); !v {
-					return nil
-				}
-
-				if v, ok := diff.GetOkExists("number_cache_clusters"); ok {
-					if v.(int) > 1 {
-						return nil
-					}
-					return errors.New(`if automatic_failover_enabled is true, number_cache_clusters must be greater than 1`)
-				}
-
-				if v, ok := diff.GetOkExists("cluster_mode.0.replicas_per_node_group"); ok {
-					if v.(int) > 0 {
-						return nil
-					}
-					return errors.New(`if automatic_failover_enabled is true, cluster_mode[0].replicas_per_node_group must be greater than 0`)
-				}
-
-				return nil
-			},
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
 					diff.HasChange("cluster_mode.0.replicas_per_node_group")
 			}),
+			SetTagsDiff,
 		),
 	}
 }
 
 func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticacheTags()
 	params := &elasticache.CreateReplicationGroupInput{
 		ReplicationGroupId:          aws.String(d.Get("replication_group_id").(string)),
 		ReplicationGroupDescription: aws.String(d.Get("replication_group_description").(string)),
 		AutoMinorVersionUpgrade:     aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                        tags,
+		Tags:                        tags.IgnoreAws().ElasticacheTags(),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_id"); ok {
@@ -460,6 +442,7 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	rgp, err := finder.ReplicationGroupByID(conn, d.Id())
@@ -583,8 +566,15 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
 		}
 
-		if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting tags: %w", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("error setting tags_all: %w", err)
 		}
 	}
 
@@ -694,7 +684,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags_all") {
 		clusters := d.Get("member_clusters").(*schema.Set).List()
 
 		for _, cluster := range clusters {
@@ -707,7 +697,7 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 				Resource:  fmt.Sprintf("cluster:%s", cluster),
 			}.String()
 
-			o, n := d.GetChange("tags")
+			o, n := d.GetChange("tags_all")
 			if err := keyvaluetags.ElasticacheUpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating tags: %w", err)
 			}

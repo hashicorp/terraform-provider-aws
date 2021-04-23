@@ -7,10 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudhsmv2/waiter"
 )
 
 func resourceAwsCloudHsmV2Cluster() *schema.Resource {
@@ -100,54 +101,18 @@ func resourceAwsCloudHsmV2Cluster() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
-	}
-}
 
-func describeCloudHsmV2Cluster(conn *cloudhsmv2.CloudHSMV2, clusterId string) (*cloudhsmv2.Cluster, error) {
-	filters := []*string{&clusterId}
-	result := int64(1)
-	out, err := conn.DescribeClusters(&cloudhsmv2.DescribeClustersInput{
-		Filters: map[string][]*string{
-			"clusterIds": filters,
-		},
-		MaxResults: &result,
-	})
-	if err != nil {
-		log.Printf("[WARN] Error on retrieving CloudHSMv2 Cluster (%s) when waiting: %s", clusterId, err)
-		return nil, err
-	}
-
-	var cluster *cloudhsmv2.Cluster
-
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterId) == clusterId {
-			cluster = c
-			break
-		}
-	}
-	return cluster, nil
-}
-
-func resourceAwsCloudHsmV2ClusterRefreshFunc(conn *cloudhsmv2.CloudHSMV2, clusterId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := describeCloudHsmV2Cluster(conn, clusterId)
-
-		if cluster == nil {
-			return 42, "destroyed", nil
-		}
-
-		if cluster.State != nil {
-			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", clusterId, *cluster.State)
-		}
-
-		return cluster, aws.StringValue(cluster.State), err
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudhsmv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
@@ -155,63 +120,32 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.TagList = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Cloudhsmv2Tags()
+		input.TagList = tags.IgnoreAws().Cloudhsmv2Tags()
 	}
 
-	backupId := d.Get("source_backup_identifier").(string)
-	if len(backupId) != 0 {
-		input.SourceBackupId = aws.String(backupId)
+	if v, ok := d.GetOk("source_backup_identifier"); ok {
+		input.SourceBackupId = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] CloudHSMv2 Cluster create %s", input)
 
-	var output *cloudhsmv2.CreateClusterOutput
-
-	err := resource.Retry(180*time.Second, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateCluster(input)
-		if err != nil {
-			if isAWSErr(err, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
-				log.Printf("[DEBUG] CloudHSMv2 Cluster re-try creating %s", input)
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		output, err = conn.CreateCluster(input)
-	}
+	output, err := conn.CreateCluster(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudHSMv2 Cluster: %s", err)
+		return fmt.Errorf("error creating CloudHSMv2 Cluster: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.Cluster.ClusterId))
 	log.Printf("[INFO] CloudHSMv2 Cluster ID: %s", d.Id())
 	log.Println("[INFO] Waiting for CloudHSMv2 Cluster to be available")
 
-	targetState := cloudhsmv2.ClusterStateUninitialized
-	if len(backupId) > 0 {
-		targetState = cloudhsmv2.ClusterStateActive
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{cloudhsmv2.ClusterStateCreateInProgress, cloudhsmv2.ClusterStateInitializeInProgress},
-		Target:     []string{targetState},
-		Refresh:    resourceAwsCloudHsmV2ClusterRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 30 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	// Wait, catching any errors
-	_, errWait := stateConf.WaitForState()
-	if errWait != nil {
-		if len(backupId) == 0 {
-			return fmt.Errorf("[WARN] Error waiting for CloudHSMv2 Cluster state to be \"UNINITIALIZED\": %s", errWait)
-		} else {
-			return fmt.Errorf("[WARN] Error waiting for CloudHSMv2 Cluster state to be \"ACTIVE\": %s", errWait)
+	if input.SourceBackupId != nil {
+		if _, err := waiter.ClusterActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
+		}
+	} else {
+		if _, err := waiter.ClusterUninitialized(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
 		}
 	}
 
@@ -220,14 +154,33 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudhsmv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	cluster, err := describeCloudHsmV2Cluster(conn, d.Id())
+	cluster, err := finder.Cluster(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %w", d.Id(), err)
+	}
 
 	if cluster == nil {
-		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found", d.Id())
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return err
+		return nil
+	}
+
+	if aws.StringValue(cluster.State) == cloudhsmv2.ClusterStateDeleted {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %s after creation", d.Id(), aws.StringValue(cluster.State))
+		}
+
+		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[INFO] Reading CloudHSMv2 Cluster Information: %s", d.Id())
@@ -250,8 +203,15 @@ func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Cloudhsmv2KeyValueTags(cluster.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Cloudhsmv2KeyValueTags(cluster.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -260,8 +220,8 @@ func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) 
 func resourceAwsCloudHsmV2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudhsmv2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Cloudhsmv2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
@@ -276,29 +236,14 @@ func resourceAwsCloudHsmV2ClusterDelete(d *schema.ResourceData, meta interface{}
 		ClusterId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] CloudHSMv2 Delete cluster: %s", d.Id())
-	err := resource.Retry(180*time.Second, func() *resource.RetryError {
-		var err error
-		_, err = conn.DeleteCluster(input)
-		if err != nil {
-			if isAWSErr(err, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
-				log.Printf("[DEBUG] CloudHSMv2 Cluster re-try deleting %s", d.Id())
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteCluster(input)
-	}
+	_, err := conn.DeleteCluster(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForCloudhsmv2ClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %s", d.Id(), err)
+	if _, err := waiter.ClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -320,19 +265,4 @@ func readCloudHsmV2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string
 		return []map[string]interface{}{certs}
 	}
 	return []map[string]interface{}{}
-}
-
-func waitForCloudhsmv2ClusterDeletion(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
-		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    resourceAwsCloudHsmV2ClusterRefreshFunc(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 30 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
