@@ -1655,7 +1655,7 @@ func xmlConfigToTunnelInfo(xmlConfig string, tunnel1PreSharedKey string, tunnel1
 		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)
 	}
 
-	// XML tunnel ordering was commented here as being inconsisent since
+	// XML tunnel ordering was commented here as being inconsistent since
 	// this logic was originally added. The original sorting is based on
 	// outside address. Given potential tunnel identifying configuration,
 	// we try to correctly align the tunnel ordering before preserving the
