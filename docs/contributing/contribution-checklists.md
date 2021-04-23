@@ -423,6 +423,23 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
+  If the resource `Update` function applies specific updates to attributes regardless of changes to tags, implement the following e.g. with IAM Policy:
+
+  ```go
+  if d.HasChangesExcept("tags", "tags_all") {
+    /* ... other logic ...*/
+    request := &iam.CreatePolicyVersionInput{
+      PolicyArn:      aws.String(d.Id()),
+      PolicyDocument: aws.String(d.Get("policy").(string)),
+      SetAsDefault:   aws.Bool(true),
+    }
+
+    if _, err := conn.CreatePolicyVersion(request); err != nil {
+        return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+    }
+  }
+  ```
+
 ### Resource Tagging Acceptance Testing Implementation
 
 - In the resource testing (e.g. `aws/resource_aws_eks_cluster_test.go`), verify that existing resources without tagging are unaffected and do not have tags saved into their Terraform state. This should be done in the `_basic` acceptance test by adding one line similar to `resource.TestCheckResourceAttr(resourceName, "tags.%s", "0"),` and one similar to `resource.TestCheckResourceAttr(resourceName, "tags_all.%s", "0"),`
