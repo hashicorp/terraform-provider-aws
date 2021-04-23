@@ -114,7 +114,7 @@ func resourceAwsEc2ManagedPrefixListCreate(d *schema.ResourceData, meta interfac
 		input.PrefixListName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+	if len(tags) > 0 {
 		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, "prefix-list")
 	}
 
@@ -209,7 +209,7 @@ func resourceAwsEc2ManagedPrefixListRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChangeExcept("tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyManagedPrefixListInput{
 			PrefixListId: aws.String(d.Id()),
 		}

@@ -401,7 +401,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).syntheticsconn
 
-	if d.HasChangesExcept("tags", "start_canary") {
+	if d.HasChangesExcept("tags", "tags_all", "start_canary") {
 		input := &synthetics.UpdateCanaryInput{
 			Name: aws.String(d.Id()),
 		}
