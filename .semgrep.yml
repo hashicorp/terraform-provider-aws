@@ -268,7 +268,7 @@ rules:
       include:
         - aws/
     patterns:
-      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+      - pattern-inside: func $FUNCNAME(...) $ERRORTYPE { ... }
       - pattern-either:
           - pattern: |
               tags := $TAGS
@@ -287,7 +287,11 @@ rules:
           ...
           if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
       - pattern-not: |
-          tags = tags.IgnoreAws().IgnoreConfig($CONFIG)
+          tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+          if err := d.Set("tags", tags.RemoveDefaultConfig($DEFAULTCONFIG).Map()); err != nil { ... }
+      - pattern-not: |
+          tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
           if err := d.Set("tags", tags.RemoveDefaultConfig($DEFAULTCONFIG).Map()); err != nil { ... }
       - pattern-not: |
