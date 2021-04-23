@@ -116,7 +116,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			"maximum_retry_attempts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 10000),
+				ValidateFunc: validation.IntBetween(-1, 10000),
 				Computed:     true,
 			},
 			"maximum_record_age_in_seconds": {
