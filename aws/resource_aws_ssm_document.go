@@ -406,7 +406,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
-	if d.HasChangesExcept("tags", "permissions") {
+	if d.HasChangesExcept("tags", "tags_all", "permissions") {
 		if err := updateAwsSSMDocument(d, meta); err != nil {
 			return err
 		}
