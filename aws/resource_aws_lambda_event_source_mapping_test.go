@@ -463,11 +463,11 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttempts(t *testing.T) {
 	})
 }
 
-func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttemptsZero(t *testing.T) {
+func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttemptsMinusOne(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
-	maximumRetryAttempts := int64(0)
+	maximumRetryAttempts := int64(-1)
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
