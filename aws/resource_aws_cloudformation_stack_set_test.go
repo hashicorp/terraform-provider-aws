@@ -457,6 +457,93 @@ func TestAccAWSCloudFormationStackSet_Parameters_NoEcho(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
+	// Additional references:
+	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
+
+	var stackSet1, stackSet2 cloudformation.StackSet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_url",
+				},
+			},
+			{
+				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet2),
+					testAccCheckCloudFormationStackSetNotRecreated(&stackSet1, &stackSet2),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
+	// Additional references:
+	//  * https://github.com/hashicorp/terraform-provider-aws/issues/19015
+
+	var stackSet1, stackSet2 cloudformation.StackSet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFormationStackSet(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationStackSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet1),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_url",
+				},
+			},
+			{
+				Config: testAccAWSCloudFormationStackSetConfigParametersNoEcho1(rName, "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackSetExists(resourceName, &stackSet2),
+					testAccCheckCloudFormationStackSetNotRecreated(&stackSet1, &stackSet2),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFormationStackSet_PermissionModel_ServiceManaged(t *testing.T) {
 	TestAccSkip(t, "API does not support enabling Organizations access (in particular, creating the Stack Sets IAM Service-Linked Role)")
 
