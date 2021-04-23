@@ -116,14 +116,17 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 			"maximum_retry_attempts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(-1, 10_000),
 				Computed:     true,
+				ValidateFunc: validation.IntBetween(-1, 10_000),
 			},
 			"maximum_record_age_in_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(-1, 604_800),
-				Computed:     true,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.IntInSlice([]int{-1}),
+					validation.IntBetween(60, 604_800),
+				),
 			},
 			"bisect_batch_on_function_error": {
 				Type:     schema.TypeBool,
