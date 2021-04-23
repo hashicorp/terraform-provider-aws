@@ -911,7 +911,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Lambda Event Source Mapping is set")
+			return fmt.Errorf("no Lambda Event Source Mapping is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
