@@ -2347,8 +2347,13 @@ func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors [
 
 var validateCloudWatchEventCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+	validation.StringMatch(regexp.MustCompile(`^[/\.\-_A-Za-z0-9]+$`), ""),
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
+)
+
+var validateCloudWatchEventCustomEventBusEventSourceName = validation.All(
+	validation.StringLenBetween(1, 256),
+	validation.StringMatch(regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`), ""),
 )
 
 var validateCloudWatchEventBusNameOrARN = validation.Any(

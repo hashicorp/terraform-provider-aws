@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 
@@ -218,6 +219,33 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchPartnerEventBus(t *testing.T) {
+	var busOutput events.DescribeEventBusOutput
+	resourceName := "aws_cloudwatch_event_bus.test"
+	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
+	busName := os.Getenv(key)
+	if busName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchPartnerEventBusConfig(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventBusExists(resourceName, &busOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", busName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 
@@ -314,4 +342,13 @@ resource "aws_cloudwatch_event_bus" "test" {
   }
 }
 `, name, key1, value1, key2, value2)
+}
+
+func testAccAWSCloudWatchPartnerEventBusConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name              = %[1]q
+  event_source_name = %[1]q
+}
+`, name)
 }

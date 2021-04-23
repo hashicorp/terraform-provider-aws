@@ -3,11 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+var (
+	partnerEventBusPattern = regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
@@ -26,6 +31,13 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateCloudWatchEventCustomEventBusName,
+			},
+			"event_source_name": {
+				Type:         schema.TypeString,
+				Required:     false,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudWatchEventCustomEventBusEventSourceName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -47,6 +59,10 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 	eventBusName := d.Get("name").(string)
 	input := &events.CreateEventBusInput{
 		Name: aws.String(eventBusName),
+	}
+
+	if v, ok := d.GetOk("event_source_name"); ok {
+		input.EventSourceName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -91,6 +107,10 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
+	// EventSourceName is an input field only, faking it on output if the event bus is a partner bus
+	if output.Name != nil && partnerEventBusPattern.MatchString(*output.Name) {
+		d.Set("event_source_name", output.Name)
+	}
 
 	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
 	if err != nil {
