@@ -442,7 +442,7 @@ More details about this code generation, including fixes for potential error mes
 
 ### Resource Tagging Acceptance Testing Implementation
 
-- In the resource testing (e.g. `aws/resource_aws_eks_cluster_test.go`), verify that existing resources without tagging are unaffected and do not have tags saved into their Terraform state. This should be done in the `_basic` acceptance test by adding one line similar to `resource.TestCheckResourceAttr(resourceName, "tags.%s", "0"),` and one similar to `resource.TestCheckResourceAttr(resourceName, "tags_all.%s", "0"),`
+- In the resource testing (e.g. `aws/resource_aws_eks_cluster_test.go`), verify that existing resources without tagging are unaffected and do not have tags saved into their Terraform state. This should be done in the `_basic` acceptance test by adding one line similar to `resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),` and one similar to `resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),`
 - In the resource testing, implement a new test named `_Tags` with associated configurations, that verifies creating the resource with tags and updating tags. e.g. EKS Clusters:
 
   ```go
