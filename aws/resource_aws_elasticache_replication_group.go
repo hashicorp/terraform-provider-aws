@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -106,12 +107,17 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "redis",
-				ValidateFunc: validation.StringInSlice([]string{"redis"}, true),
+				Default:      tfelasticache.EngineRedis,
+				ValidateFunc: validation.StringInSlice([]string{tfelasticache.EngineRedis}, true),
 			},
 			"engine_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: ValidateElastiCacheRedisVersionString,
+			},
+			"engine_version_actual": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"global_replication_group_id": {
@@ -293,15 +299,8 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if v := diff.Get("multi_az_enabled").(bool); !v {
-					return nil
-				}
-				if v := diff.Get("automatic_failover_enabled").(bool); !v {
-					return errors.New(`automatic_failover_enabled must be true if multi_az_enabled is true`)
-				}
-				return nil
-			},
+			CustomizeDiffValidateReplicationGroupAutomaticFailover,
+			CustomizeDiffElastiCacheEngineVersion,
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("number_cache_clusters") ||
 					diff.HasChange("cluster_mode.0.num_node_groups") ||
@@ -520,18 +519,11 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 
 		c := res.CacheClusters[0]
-		d.Set("node_type", c.CacheNodeType)
-		d.Set("engine", c.Engine)
-		d.Set("engine_version", c.EngineVersion)
-		d.Set("subnet_group_name", c.CacheSubnetGroupName)
-		d.Set("security_group_names", flattenElastiCacheSecurityGroupNames(c.CacheSecurityGroups))
-		d.Set("security_group_ids", flattenElastiCacheSecurityGroupIds(c.SecurityGroups))
 
-		if c.CacheParameterGroup != nil {
-			d.Set("parameter_group_name", c.CacheParameterGroup.CacheParameterGroupName)
+		if err := elasticacheSetResourceDataFromCacheCluster(d, c); err != nil {
+			return err
 		}
 
-		d.Set("maintenance_window", c.PreferredMaintenanceWindow)
 		d.Set("snapshot_window", rgp.SnapshotWindow)
 		d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
 
