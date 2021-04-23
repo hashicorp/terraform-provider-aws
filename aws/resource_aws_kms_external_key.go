@@ -32,6 +32,8 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -81,7 +83,7 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 					validation.StringIsJSON,
 				),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 			"valid_to": {
 				Type:         schema.TypeString,

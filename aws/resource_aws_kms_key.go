@@ -28,6 +28,8 @@ func resourceAwsKmsKey() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -90,7 +92,8 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
