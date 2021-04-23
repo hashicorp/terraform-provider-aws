@@ -16,6 +16,8 @@ const (
 	LambdaFunctionPublishTimeout         = 5 * time.Minute
 	LambdaFunctionPutConcurrencyTimeout  = 1 * time.Minute
 	LambdaFunctionExtraThrottlingTimeout = 9 * time.Minute
+
+	EventSourceMappingPropagationTimeout = 5 * time.Minute
 )
 
 func EventSourceMappingCreate(conn *lambda.Lambda, id string) (*lambda.EventSourceMappingConfiguration, error) {

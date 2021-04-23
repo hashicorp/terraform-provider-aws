@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -253,7 +254,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	var err error
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {
@@ -347,7 +348,7 @@ func resourceAwsLambdaEventSourceMappingDelete(d *schema.ResourceData, meta inte
 		UUID: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
@@ -431,7 +432,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(input)
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {

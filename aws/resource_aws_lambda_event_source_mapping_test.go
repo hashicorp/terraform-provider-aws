@@ -734,7 +734,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"), //using kafka.EndpointsID will import kafka and make linters sad
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
@@ -892,7 +892,7 @@ func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error reading Lambda Event Source Mapping (%s): %w", rs.Primary.ID, err)
 		}
 
 		return fmt.Errorf("Lambda Event Source Mapping %s still exists", rs.Primary.ID)
@@ -907,11 +907,11 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf(" Lambda Event Source Mapping resource not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Lambda Event Source Mapping is set")
+			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
