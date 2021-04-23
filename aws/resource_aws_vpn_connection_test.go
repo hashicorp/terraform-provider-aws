@@ -726,7 +726,7 @@ func TestXmlConfigToTunnelInfo(t *testing.T) {
 				t.Fatalf("expected no error, got: %s", err)
 			}
 
-			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) {
+			if actual, expected := *tunnelInfo, testCase.ExpectTunnelInfo; !reflect.DeepEqual(actual, expected) { // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment
 				t.Errorf("expected TunnelInfo:\n%+v\n\ngot:\n%+v\n\n", expected, actual)
 			}
 		})
