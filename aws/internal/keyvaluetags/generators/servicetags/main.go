@@ -144,6 +144,7 @@ var mapServiceNames = []string{
 	"pinpoint",
 	"resourcegroups",
 	"securityhub",
+	"schemas",
 	"signer",
 	"sqs",
 	"synthetics",
