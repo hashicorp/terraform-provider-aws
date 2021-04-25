@@ -38,7 +38,7 @@ func resourceAwsSecurityHubMember() *schema.Resource {
 			},
 			"email": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"invite": {
