@@ -62,23 +62,22 @@ func resourceAwsSecurityHubMemberCreate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).securityhubconn
 	log.Printf("[DEBUG] Creating Security Hub member %s", d.Get("account_id").(string))
 
-	memberOpts := &securityhub.CreateMembersInput{
+	var email_id string
+
+	if v, ok := d.GetOk("email"); ok {
+		email_id = aws.String(v.(string))
+	} else {
+		email_id = nil
+	}
+
+	resp, err := conn.CreateMembers(&securityhub.CreateMembersInput{
 		AccountDetails: []*securityhub.AccountDetails{
 			{
 				AccountId: aws.String(d.Get("account_id").(string)),
+				Email:     aws.String(email_id),
 			},
 		},
-	}
-
-	if v, ok := d.GetOk("email"); ok {
-		memberOpts.AccountDetails = []*securityhub.AccountDetails{
-			{
-				Email: aws.String(v.(string)),
-			},
-		}
-	}
-
-	resp, err := conn.CreateMembers(memberOpts)
+	})
 
 	if err != nil {
 		return fmt.Errorf("Error creating Security Hub member %s: %s", d.Get("account_id").(string), err)
