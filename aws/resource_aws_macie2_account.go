@@ -110,7 +110,7 @@ func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta
 
 	resp, err := conn.GetMacieSessionWithContext(ctx, input)
 
-	if isAWSErr(err, macie2.ErrCodeAccessDeniedException, "") {
+	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 		log.Printf("[WARN] Macie2 Account is not enabled, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
@@ -167,7 +167,7 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DisableMacieWithContext(ctx, input)
 	if err != nil {
-		if isAWSErr(err, macie2.ErrorCodeInternalError, "") {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeInternalError) {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf(errorMacie2AccountDelete, d.Id(), err))

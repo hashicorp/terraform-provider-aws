@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/macie2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -200,7 +201,7 @@ func testAccCheckAwsMacie2AccountDestroy(s *terraform.State) error {
 		input := &macie2.GetMacieSessionInput{}
 		resp, err := conn.GetMacieSession(input)
 
-		if isAWSErr(err, macie2.ErrCodeAccessDeniedException, "") {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			continue
 		}
 
