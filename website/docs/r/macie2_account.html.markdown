@@ -23,7 +23,6 @@ resource "aws_macie2_account" "test" {
 
 The following arguments are supported:
 
-* `client_token` - (Optional) A unique, case-sensitive token that you provide to ensure the idempotency of the request.
 * `finding_publishing_frequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
 * `status` - (Optional) Specifies the new status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
