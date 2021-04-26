@@ -2,10 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 func TestAccAwsMacie2Account_basic(t *testing.T) {
@@ -16,6 +17,7 @@ func TestAccAwsMacie2Account_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testaccawsmacieaccountconfigBasic(),
@@ -48,6 +50,7 @@ func TestAccAwsMacie2Account_WithFinding(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testaccawsmacieaccountconfigWithfinding(findingFreq),
@@ -88,6 +91,7 @@ func TestAccAwsMacie2Account_WithStatus(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testaccawsmacieaccountconfigWithstatus(status),
@@ -130,6 +134,7 @@ func TestAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testaccawsmacieaccountconfigWithfindingandstatus(findingFreq, status),
@@ -157,6 +162,28 @@ func TestAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsMacie2Account_disappears(t *testing.T) {
+	var macie2Output macie2.GetMacieSessionOutput
+	resourceName := "aws_macie2_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2AccountDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testaccawsmacieaccountconfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2AccountExists(resourceName, &macie2Output),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -217,7 +244,7 @@ func testAccCheckAwsMacie2AccountExists(resourceName string, macie2Session *maci
 }
 
 func testaccawsmacieaccountconfigBasic() string {
-	return fmt.Sprintf(`
+	return fmt.Sprint(`
 resource "aws_macie2_account" "test" {}
 `)
 }
