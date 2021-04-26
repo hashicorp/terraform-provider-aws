@@ -3,39 +3,37 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"log"
-	"time"
 )
 
 const (
-	errorMacie2AccountCreate   = "error enabling Macie2 Account: %s"
+	errorMacie2AccountCreate   = "error enabling Macie2 Account: %w"
 	errorMacie2AccountRead     = "error reading Macie2 Account (%s): %w"
 	errorMacie2AccountUpdating = "error updating Macie2 Account (%s): %w"
 	errorMacie2AccountDelete   = "error disabling Macie2 Account (%s): %w"
-	errorMacie2AccountSetting  = "error setting `%s` for Macie2 Account (%s): %s"
+	errorMacie2AccountSetting  = "error setting `%s` for Macie2 Account (%s): %w"
 )
 
 func resourceAwsMacie2Account() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceMacie2AccountCreate,
-		ReadContext:   resourceMacie2AccountRead,
-		UpdateContext: resourceMacie2AccountUpdate,
-		DeleteContext: resourceMacie2AccountDelete,
+		CreateWithoutTimeout: resourceMacie2AccountCreate,
+		ReadWithoutTimeout:   resourceMacie2AccountRead,
+		UpdateWithoutTimeout: resourceMacie2AccountUpdate,
+		DeleteWithoutTimeout: resourceMacie2AccountDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"client_token": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"finding_publishing_frequency": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -67,11 +65,10 @@ func resourceAwsMacie2Account() *schema.Resource {
 func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
 
-	input := &macie2.EnableMacieInput{}
-
-	if v, ok := d.GetOk("client_token"); ok {
-		input.ClientToken = aws.String(v.(string))
+	input := &macie2.EnableMacieInput{
+		ClientToken: aws.String(resource.UniqueId()),
 	}
+
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
@@ -79,14 +76,11 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Status = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Enabling Macie2 Account: %v", input)
-
 	var err error
 	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
 		_, err = conn.EnableMacieWithContext(ctx, input)
 		if err != nil {
-			if isAWSErr(err, macie2.ErrorCodeClientError, "") {
-				log.Printf(errorMacie2AccountCreate, err)
+			if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
 				return resource.RetryableError(err)
 			}
 
@@ -114,14 +108,15 @@ func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &macie2.GetMacieSessionInput{}
 
-	log.Printf("[DEBUG] Reading Macie2 Account: %s", input)
 	resp, err := conn.GetMacieSessionWithContext(ctx, input)
+
+	if isAWSErr(err, macie2.ErrCodeAccessDeniedException, "") {
+		log.Printf("[WARN] Macie2 Account is not enabled, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, macie2.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Macie2 Account does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf(errorMacie2AccountRead, d.Id(), err))
 	}
 
@@ -157,7 +152,6 @@ func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.Status = aws.String(d.Get("status").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Macie2 Account: %s", input)
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorMacie2AccountUpdating, d.Id(), err))
@@ -171,7 +165,6 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 
 	input := &macie2.DisableMacieInput{}
 
-	log.Printf("[DEBUG] Disabling Macie2 Account: %s", input)
 	_, err := conn.DisableMacieWithContext(ctx, input)
 	if err != nil {
 		if isAWSErr(err, macie2.ErrorCodeInternalError, "") {
