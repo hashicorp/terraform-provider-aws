@@ -1,5 +1,9 @@
 ## 3.38.0 (Unreleased)
 
+NOTES:
+
+* provider: `default_tags` support generally available to all provider resources that support `tags` with the exception of `aws_autoscaling_group` ([#19084](https://github.com/hashicorp/terraform-provider-aws/issues/19084))
+
 FEATURES:
 
 * **New Data Source:** `aws_cloudformation_type` ([#18579](https://github.com/hashicorp/terraform-provider-aws/issues/18579))
