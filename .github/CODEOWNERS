@@ -46,3 +46,6 @@
 
 /aws/*_aws_emr_*.go     @shuheiktgw @hashicorp/terraform-aws
 /website/**/emr*        @shuheiktgw @hashicorp/terraform-aws
+
+/aws/*aws_cloudwatch_event_*.go		@heitorlessa @sthulb @hashicorp/terraform-aws
+/website/**/cloudwatch_event*		@heitorlessa @sthulb @hashicorp/terraform-aws
