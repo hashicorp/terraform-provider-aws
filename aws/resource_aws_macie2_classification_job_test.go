@@ -2,32 +2,65 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"os"
-	"testing"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func TestAccAwsMacie2ClassificationJob_basic(t *testing.T) {
+func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	name := acctest.RandomWithPrefix("testacc-classification-job")
-	clientToken := acctest.RandString(10)
+	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
 	JobType := "ONE_TIME"
-	accountID := os.Getenv("AWS_ACCOUNT_ID")
+	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigBasic(clientToken, bucketName, name, accountID, JobType),
+				Config: testaccawsmacieClassificationJobconfigNameGenerated(bucketName, accountID, JobType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
+	var macie2Output macie2.DescribeClassificationJobOutput
+	resourceName := "aws_macie2_classification_job.test"
+	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	JobType := "ONE_TIME"
+	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
+	namePrefix := "tf-acc-test-prefix-"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testaccawsmacieClassificationJobconfigNamePrefix(namePrefix, bucketName, accountID, JobType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
 				),
 			},
 			{
@@ -42,23 +75,22 @@ func TestAccAwsMacie2ClassificationJob_basic(t *testing.T) {
 func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	name := acctest.RandomWithPrefix("testacc-classification-job")
-	clientToken := acctest.RandString(10)
-	accountID := os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
 	jobStatus := "RUNNING"
 	jobStatusUpdated := "USER_PAUSED"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(clientToken, bucketName, name, accountID, jobStatus),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatus),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
@@ -70,11 +102,10 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(clientToken, bucketName, name, accountID, jobStatusUpdated),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatusUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
@@ -97,23 +128,22 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 func TestAccAwsMacie2ClassificationJob_completeWithTags(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	name := acctest.RandomWithPrefix("testacc-classification-job")
-	clientToken := acctest.RandString(10)
-	accountID := os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
 	jobStatus := "RUNNING"
 	jobStatusUpdated := "USER_PAUSED"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      nil,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigCompleteWithTags(clientToken, bucketName, name, accountID, jobStatus),
+				Config: testaccawsmacieClassificationJobconfigCompleteWithTags(bucketName, accountID, jobStatus),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
@@ -125,11 +155,10 @@ func TestAccAwsMacie2ClassificationJob_completeWithTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(clientToken, bucketName, name, accountID, jobStatusUpdated),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatusUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
@@ -175,124 +204,129 @@ func testAccCheckAwsMacie2ClassificationJobExists(resourceName string, macie2Ses
 	}
 }
 
-func testaccawsmacieClassificationJobconfigBasic(clientToken, nameBucket, name, accountID, jobType string) string {
+func testaccawsmacieClassificationJobconfigNameGenerated(nameBucket, accountID, jobType string) string {
 	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {
-		client_token = "%s"
-	}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_classification_job" "test" {
-		client_token = "%[1]s"
-		job_type = "%s"
-		name = "%s"
-		s3_job_definition {
-			bucket_definitions{
-				account_id = "%s"
-				buckets = ["%s"]
-			}
-		}
-		depends_on = [aws_macie2_account.test]
-	}
-`, clientToken, jobType, name, accountID, nameBucket)
+resource "aws_macie2_classification_job" "test" {
+  job_type = "%s"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%s"
+      buckets    = ["%s"]
+    }
+  }
+  depends_on = [aws_macie2_account.test]
+}
+`, jobType, accountID, nameBucket)
 }
 
-func testaccawsmacieClassificationJobconfigComplete(clientToken, nameBucket, name, accountID, jobStatus string) string {
-	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {
-		client_token = "%s"
-	}
+func testaccawsmacieClassificationJobconfigNamePrefix(namePrefix, nameBucket, accountID, jobType string) string {
+	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_classification_job" "test" {
-		client_token = "%[1]s"
-		job_type = "SCHEDULED"
-		name = "%s"
-		s3_job_definition {
-			bucket_definitions{
-				account_id = "%s"
-				buckets = ["%s"]
-			}
-			scoping{
-				excludes{
-					and{
-						simple_scope_term{
-							comparator = "EQ"
-							key = "OBJECT_EXTENSION"
-							values = ["test"]
-						}
-					}
-				}
-				includes{
-					and{
-						simple_scope_term{
-							comparator = "EQ"
-							key = "OBJECT_EXTENSION"
-							values = ["test"]
-						}
-					}
-				}
-			}
+resource "aws_macie2_classification_job" "test" {
+	name_prefix = %[1]q
+	job_type = "%s"
+	s3_job_definition {
+		bucket_definitions{
+			account_id = "%s"
+			buckets = ["%s"]
 		}
-		schedule_frequency {
-			daily_schedule = true
-		}
-		sampling_percentage = 100
-		description = "test"
-		initial_run = true
-		job_status = "%s"
-		
-		depends_on = [aws_macie2_account.test]
 	}
-`, clientToken, name, accountID, nameBucket, jobStatus)
+	depends_on = [aws_macie2_account.test]
+}
+`, namePrefix, jobType, accountID, nameBucket)
 }
 
-func testaccawsmacieClassificationJobconfigCompleteWithTags(clientToken, nameBucket, name, accountID, jobStatus string) string {
+func testaccawsmacieClassificationJobconfigComplete(nameBucket, accountID, jobStatus string) string {
 	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {
-		client_token = "%s"
-	}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_classification_job" "test" {
-		client_token = "%[1]s"
-		job_type = "SCHEDULED"
-		name = "%s"
-		s3_job_definition {
-			bucket_definitions{
-				account_id = "%s"
-				buckets = ["%s"]
-			}
-			scoping{
-				excludes{
-					and{
-						simple_scope_term{
-							comparator = "EQ"
-							key = "OBJECT_EXTENSION"
-							values = ["test"]
-						}
-					}
-				}
-				includes{
-					and{
-						simple_scope_term{
-							comparator = "EQ"
-							key = "OBJECT_EXTENSION"
-							values = ["test"]
-						}
-					}
-				}
-			}
-		}
-		schedule_frequency {
-			daily_schedule = true
-		}
-		sampling_percentage = 100
-		description = "test"
-		initial_run = true
-		job_status = "%s"
-		tags = {
-    		Key = "value"
-		}
-		
-		depends_on = [aws_macie2_account.test]
-	}
-`, clientToken, name, accountID, nameBucket, jobStatus)
+resource "aws_macie2_classification_job" "test" {
+  job_type = "SCHEDULED"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%s"
+      buckets    = ["%s"]
+    }
+    scoping {
+      excludes {
+        and {
+          simple_scope_term {
+            comparator = "EQ"
+            key        = "OBJECT_EXTENSION"
+            values     = ["test"]
+          }
+        }
+      }
+      includes {
+        and {
+          simple_scope_term {
+            comparator = "EQ"
+            key        = "OBJECT_EXTENSION"
+            values     = ["test"]
+          }
+        }
+      }
+    }
+  }
+  schedule_frequency {
+    daily_schedule = true
+  }
+  sampling_percentage = 100
+  description         = "test"
+  initial_run         = true
+  job_status          = "%s"
+
+  depends_on = [aws_macie2_account.test]
+}
+`, accountID, nameBucket, jobStatus)
+}
+
+func testaccawsmacieClassificationJobconfigCompleteWithTags(nameBucket, accountID, jobStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
+
+resource "aws_macie2_classification_job" "test" {
+  job_type = "SCHEDULED"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%s"
+      buckets    = ["%s"]
+    }
+    scoping {
+      excludes {
+        and {
+          simple_scope_term {
+            comparator = "EQ"
+            key        = "OBJECT_EXTENSION"
+            values     = ["test"]
+          }
+        }
+      }
+      includes {
+        and {
+          simple_scope_term {
+            comparator = "EQ"
+            key        = "OBJECT_EXTENSION"
+            values     = ["test"]
+          }
+        }
+      }
+    }
+  }
+  schedule_frequency {
+    daily_schedule = true
+  }
+  sampling_percentage = 100
+  description         = "test"
+  initial_run         = true
+  job_status          = "%s"
+  tags = {
+    Key = "value"
+  }
+
+  depends_on = [aws_macie2_account.test]
+}
+`, accountID, nameBucket, jobStatus)
 }

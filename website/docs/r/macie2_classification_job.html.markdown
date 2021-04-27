@@ -19,12 +19,12 @@ resource "aws_macie2_account" "test" {
 
 resource "aws_macie2_classification_job" "test" {
   client_token = "CLIENT TOKEN"
-  job_type = "ONE_TIME"
-  name = "NAME OF THE CLASSIFICATION JOB"
+  job_type     = "ONE_TIME"
+  name         = "NAME OF THE CLASSIFICATION JOB"
   s3_job_definition {
-    bucket_definitions{
+    bucket_definitions {
       account_id = "ACCOUNT ID"
-      buckets = ["S3 BUCKET NAME"]
+      buckets    = ["S3 BUCKET NAME"]
     }
   }
   depends_on = [aws_macie2_account.test]
@@ -35,11 +35,11 @@ resource "aws_macie2_classification_job" "test" {
 
 The following arguments are supported:
 
-* `client_token` - (Required) A unique, case-sensitive token that you provide to ensure the idempotency of the request.
 * `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.
 * `sampling_percentage` -  (Optional) The sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
-* `name` -  (Required) A custom name for the job. The name can contain as many as 500 characters.
+* `name` -  (Optional) A custom name for the job. The name can contain as many as 500 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` -  (Optional) A custom description of the job. The description can contain as many as 200 characters.
 * `initial_run` -  (Optional) Specifies whether to analyze all existing, eligible objects immediately after the job is created.
 * `job_type` -  (Required) The schedule for running the job. Valid values are: `ONE_TIME` - Run the job only once. If you specify this value, don't specify a value for the `schedule_frequency` property. `SCHEDULED` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `schedule_frequency` property to define the recurrence pattern for the job.
@@ -89,7 +89,6 @@ The `tag_scope_term` object supports the following:
 * `tag_values` -  (Optional) The tag keys or tag key and value pairs to use in the condition.
 * `key` -  (Optional) The tag key to use in the condition.
 * `target` -  (Optional) The type of object to apply the condition to.
-
 
 
 ## Attributes Reference

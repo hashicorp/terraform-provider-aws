@@ -3,30 +3,33 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
-	"time"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 const (
-	errorMacie2ClassificationJobCreate   = "error creating Macie2 ClassificationJob: %s"
+	errorMacie2ClassificationJobCreate   = "error creating Macie2 ClassificationJob: %w"
 	errorMacie2ClassificationJobRead     = "error reading Macie2 ClassificationJob (%s): %w"
 	errorMacie2ClassificationJobUpdating = "error updating Macie2 ClassificationJob (%s): %w"
-	errorMacie2ClassificationJobSetting  = "error setting `%s` for Macie2 ClassificationJob (%s): %s"
+	errorMacie2ClassificationJobSetting  = "error setting `%s` for Macie2 ClassificationJob (%s): %w"
 )
 
 func resourceAwsMacie2ClassificationJob() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceMacie2ClassificationJobCreate,
-		ReadContext:   resourceMacie2ClassificationJobRead,
-		UpdateContext: resourceMacie2ClassificationJobUpdate,
-		DeleteContext: resourceMacie2ClassificationJobDelete,
+		CreateWithoutTimeout: resourceMacie2ClassificationJobCreate,
+		ReadWithoutTimeout:   resourceMacie2ClassificationJobRead,
+		UpdateWithoutTimeout: resourceMacie2ClassificationJobUpdate,
+		DeleteWithoutTimeout: resourceMacie2ClassificationJobDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -66,13 +69,17 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"client_token": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name_prefix"},
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -384,10 +391,10 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*AWSClient).macie2conn
 
 	input := &macie2.CreateClassificationJobInput{
-		ClientToken:     aws.String(d.Get("client_token").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		ClientToken:     aws.String(resource.UniqueId()),
+		Name:            aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
 		JobType:         aws.String(d.Get("job_type").(string)),
-		S3JobDefinition: expandS3JobDefinition(d),
+		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
@@ -416,8 +423,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
 		resp, err := conn.CreateClassificationJobWithContext(ctx, input)
 		if err != nil {
-			if isAWSErr(err, macie2.ErrorCodeClientError, "") {
-				log.Printf(errorMacie2ClassificationJobCreate, err)
+			if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
 				return resource.RetryableError(err)
 			}
 
@@ -449,14 +455,15 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 		JobId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading Macie2 ClassificationJob: %s", input)
 	resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Macie2 ClassificationJob does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, macie2.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Macie2 ClassificationJob does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobRead, d.Id(), err))
 	}
 
@@ -469,11 +476,11 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	if err = d.Set("sampling_percentage", aws.Int64Value(resp.SamplingPercentage)); err != nil {
 		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobSetting, "sampling_percentage", d.Id(), err))
 	}
-	if err = d.Set("client_token", aws.StringValue(resp.ClientToken)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobSetting, "client_token", d.Id(), err))
-	}
 	if err = d.Set("name", aws.StringValue(resp.Name)); err != nil {
 		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobSetting, "name", d.Id(), err))
+	}
+	if err = d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name))); err != nil {
+		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobSetting, "name_prefix", d.Id(), err))
 	}
 	if err = d.Set("description", aws.StringValue(resp.Description)); err != nil {
 		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobSetting, "description", d.Id(), err))
@@ -529,7 +536,6 @@ func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.Resour
 		input.SetJobStatus(d.Get("job_status").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Macie2 ClassificationJob: %s", input)
 	_, err := conn.UpdateClassificationJobWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf(errorMacie2ClassificationJobUpdating, d.Id(), err))
@@ -538,36 +544,37 @@ func resourceMacie2ClassificationJobUpdate(ctx context.Context, d *schema.Resour
 	return resourceMacie2ClassificationJobRead(ctx, d, meta)
 }
 
-func resourceMacie2ClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacie2ClassificationJobDelete(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	return nil
 }
 
-func expandS3JobDefinition(d *schema.ResourceData) *macie2.S3JobDefinition {
+func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *macie2.S3JobDefinition {
+	if len(s3JobDefinitionObj) == 0 {
+		return nil
+	}
+
 	var s3JobDefinition macie2.S3JobDefinition
 
-	if v, ok := d.GetOk("s3_job_definition"); ok {
-		s3Job := v.([]interface{})
-		if len(s3Job) > 0 {
-			if s3Job[0] != nil {
-				s3JobMap := s3Job[0].(map[string]interface{})
+	s3JobMap := s3JobDefinitionObj[0].(map[string]interface{})
 
-				if v1, ok1 := s3JobMap["bucket_definitions"]; ok1 && len(v1.([]interface{})) > 0 {
-					s3JobDefinition.SetBucketDefinitions(expandBucketDefinitions(v1.([]interface{})))
-				}
-				if v1, ok1 := s3JobMap["scoping"]; ok1 && len(v1.([]interface{})) > 0 {
-					s3JobDefinition.SetScoping(expandScoping(v1.([]interface{})))
-				}
-			}
-		}
+	if v1, ok1 := s3JobMap["bucket_definitions"]; ok1 && len(v1.([]interface{})) > 0 {
+		s3JobDefinition.SetBucketDefinitions(expandBucketDefinitions(v1.([]interface{})))
+	}
+	if v1, ok1 := s3JobMap["scoping"]; ok1 && len(v1.([]interface{})) > 0 {
+		s3JobDefinition.SetScoping(expandScoping(v1.([]interface{})))
 	}
 
 	return &s3JobDefinition
 }
 
 func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefinitionForJob {
-	bucketDefinitions := make([]*macie2.S3BucketDefinitionForJob, len(definitions))
+	if len(definitions) == 0 {
+		return nil
+	}
 
-	for i, v := range definitions {
+	var bucketDefinitions []*macie2.S3BucketDefinitionForJob
+
+	for _, v := range definitions {
 		v1 := v.(map[string]interface{})
 
 		var bucketDefinition macie2.S3BucketDefinitionForJob
@@ -575,35 +582,37 @@ func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefini
 		bucketDefinition.Buckets = expandStringList(v1["buckets"].([]interface{}))
 		bucketDefinition.AccountId = aws.String(v1["account_id"].(string))
 
-		bucketDefinitions[i] = &bucketDefinition
+		bucketDefinitions = append(bucketDefinitions, &bucketDefinition)
 	}
 
 	return bucketDefinitions
 }
 
 func expandScoping(scoping []interface{}) *macie2.Scoping {
+	if len(scoping) == 0 {
+		return nil
+	}
+
 	var scopingObj macie2.Scoping
 
-	if len(scoping) > 0 {
-		scopingMap := scoping[0].(map[string]interface{})
+	scopingMap := scoping[0].(map[string]interface{})
 
-		if v, ok := scopingMap["excludes"]; ok && len(v.([]interface{})) > 0 {
-			v1 := v.([]interface{})
-			andMap := v1[0].(map[string]interface{})
-			if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-				scopingObj.SetExcludes(&macie2.JobScopingBlock{
-					And: expandJobScopeTerm(v2.([]interface{})),
-				})
-			}
+	if v, ok := scopingMap["excludes"]; ok && len(v.([]interface{})) > 0 {
+		v1 := v.([]interface{})
+		andMap := v1[0].(map[string]interface{})
+		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
+			scopingObj.SetExcludes(&macie2.JobScopingBlock{
+				And: expandJobScopeTerm(v2.([]interface{})),
+			})
 		}
-		if v, ok := scopingMap["includes"]; ok && len(v.([]interface{})) > 0 {
-			v1 := v.([]interface{})
-			andMap := v1[0].(map[string]interface{})
-			if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-				scopingObj.SetIncludes(&macie2.JobScopingBlock{
-					And: expandJobScopeTerm(v2.([]interface{})),
-				})
-			}
+	}
+	if v, ok := scopingMap["includes"]; ok && len(v.([]interface{})) > 0 {
+		v1 := v.([]interface{})
+		andMap := v1[0].(map[string]interface{})
+		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
+			scopingObj.SetIncludes(&macie2.JobScopingBlock{
+				And: expandJobScopeTerm(v2.([]interface{})),
+			})
 		}
 	}
 
@@ -611,9 +620,13 @@ func expandScoping(scoping []interface{}) *macie2.Scoping {
 }
 
 func expandJobScopeTerm(scopeTerms []interface{}) []*macie2.JobScopeTerm {
-	scopeTermsList := make([]*macie2.JobScopeTerm, len(scopeTerms))
+	if len(scopeTerms) == 0 {
+		return nil
+	}
 
-	for i, v := range scopeTerms {
+	var scopeTermsList []*macie2.JobScopeTerm
+
+	for _, v := range scopeTerms {
 		v1 := v.(map[string]interface{})
 		var scopeTerm macie2.JobScopeTerm
 
@@ -623,59 +636,67 @@ func expandJobScopeTerm(scopeTerms []interface{}) []*macie2.JobScopeTerm {
 		if v2, ok1 := v1["tag_scope_term"]; ok1 && len(v2.([]interface{})) > 0 {
 			scopeTerm.SetTagScopeTerm(expandTagScopeTerm(v2.([]interface{})))
 		}
-		scopeTermsList[i] = &scopeTerm
+		scopeTermsList = append(scopeTermsList, &scopeTerm)
 	}
 
 	return scopeTermsList
 }
 
 func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTerm {
+	if len(simpleScopeTerm) == 0 {
+		return nil
+	}
+
 	var simpleTerm macie2.SimpleScopeTerm
 
-	if len(simpleScopeTerm) > 0 {
-		simpleScopeTermMap := simpleScopeTerm[0].(map[string]interface{})
+	simpleScopeTermMap := simpleScopeTerm[0].(map[string]interface{})
 
-		if v, ok := simpleScopeTermMap["key"]; ok && v.(string) != "" {
-			simpleTerm.SetKey(v.(string))
-		}
-		if v, ok := simpleScopeTermMap["values"]; ok && len(v.([]interface{})) > 0 {
-			simpleTerm.SetValues(expandStringList(v.([]interface{})))
-		}
-		if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
-			simpleTerm.SetComparator(v.(string))
-		}
+	if v, ok := simpleScopeTermMap["key"]; ok && v.(string) != "" {
+		simpleTerm.SetKey(v.(string))
+	}
+	if v, ok := simpleScopeTermMap["values"]; ok && len(v.([]interface{})) > 0 {
+		simpleTerm.SetValues(expandStringList(v.([]interface{})))
+	}
+	if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
+		simpleTerm.SetComparator(v.(string))
 	}
 
 	return &simpleTerm
 }
 
 func expandTagScopeTerm(tagScopeTerm []interface{}) *macie2.TagScopeTerm {
+	if len(tagScopeTerm) == 0 {
+		return nil
+	}
+
 	var tagTerm macie2.TagScopeTerm
 
-	if len(tagScopeTerm) > 0 {
-		tagScopeTermMap := tagScopeTerm[0].(map[string]interface{})
+	tagScopeTermMap := tagScopeTerm[0].(map[string]interface{})
 
-		if v, ok := tagScopeTermMap["key"]; ok && v.(string) != "" {
-			tagTerm.SetKey(v.(string))
-		}
-		if v, ok := tagScopeTermMap["tag_values"]; ok && len(v.([]interface{})) > 0 {
-			tagTerm.SetTagValues(expandTagValues(v.([]interface{})))
-		}
-		if v, ok := tagScopeTermMap["comparator"]; ok && v.(string) != "" {
-			tagTerm.SetComparator(v.(string))
-		}
-		if v, ok := tagScopeTermMap["target"]; ok && v.(string) != "" {
-			tagTerm.SetTarget(v.(string))
-		}
+	if v, ok := tagScopeTermMap["key"]; ok && v.(string) != "" {
+		tagTerm.SetKey(v.(string))
+	}
+	if v, ok := tagScopeTermMap["tag_values"]; ok && len(v.([]interface{})) > 0 {
+		tagTerm.SetTagValues(expandTagValues(v.([]interface{})))
+	}
+	if v, ok := tagScopeTermMap["comparator"]; ok && v.(string) != "" {
+		tagTerm.SetComparator(v.(string))
+	}
+	if v, ok := tagScopeTermMap["target"]; ok && v.(string) != "" {
+		tagTerm.SetTarget(v.(string))
 	}
 
 	return &tagTerm
 }
 
 func expandTagValues(tagValues []interface{}) []*macie2.TagValuePair {
-	tagValuesList := make([]*macie2.TagValuePair, len(tagValues))
+	if len(tagValues) == 0 {
+		return nil
+	}
 
-	for k, v := range tagValues {
+	var tagValuesList []*macie2.TagValuePair
+
+	for _, v := range tagValues {
 		v1 := v.(map[string]interface{})
 		var tagValue macie2.TagValuePair
 
@@ -685,203 +706,231 @@ func expandTagValues(tagValues []interface{}) []*macie2.TagValuePair {
 		if v2, ok := v1["key"]; ok && v2.(string) != "" {
 			tagValue.SetKey(v2.(string))
 		}
-		tagValuesList[k] = &tagValue
+		tagValuesList = append(tagValuesList, &tagValue)
 	}
 
 	return tagValuesList
 }
 
 func expandScheduleFrequency(schedules []interface{}) *macie2.JobScheduleFrequency {
+	if len(schedules) == 0 {
+		return nil
+	}
+
 	var jobScheduleFrequency macie2.JobScheduleFrequency
 
-	if len(schedules) > 0 {
-		scheduleMap := schedules[0].(map[string]interface{})
+	scheduleMap := schedules[0].(map[string]interface{})
 
-		if v1, ok1 := scheduleMap["daily_schedule"]; ok1 && v1.(bool) {
-			jobScheduleFrequency.SetDailySchedule(&macie2.DailySchedule{})
-		}
-		if v1, ok1 := scheduleMap["weekly_schedule"]; ok1 && v1.(string) != "" {
-			jobScheduleFrequency.SetWeeklySchedule(&macie2.WeeklySchedule{
-				DayOfWeek: aws.String(v1.(string)),
-			})
-		}
-		if v1, ok1 := scheduleMap["monthly_schedule"]; ok1 && v1.(int) > 0 {
-			jobScheduleFrequency.SetMonthlySchedule(&macie2.MonthlySchedule{
-				DayOfMonth: aws.Int64(int64(v1.(int))),
-			})
-		}
+	if v1, ok1 := scheduleMap["daily_schedule"]; ok1 && v1.(bool) {
+		jobScheduleFrequency.SetDailySchedule(&macie2.DailySchedule{})
+	}
+	if v1, ok1 := scheduleMap["weekly_schedule"]; ok1 && v1.(string) != "" {
+		jobScheduleFrequency.SetWeeklySchedule(&macie2.WeeklySchedule{
+			DayOfWeek: aws.String(v1.(string)),
+		})
+	}
+	if v1, ok1 := scheduleMap["monthly_schedule"]; ok1 && v1.(int) > 0 {
+		jobScheduleFrequency.SetMonthlySchedule(&macie2.MonthlySchedule{
+			DayOfMonth: aws.Int64(int64(v1.(int))),
+		})
 	}
 
 	return &jobScheduleFrequency
 }
 
 func flattenScheduleFrequency(schedule *macie2.JobScheduleFrequency) []map[string]interface{} {
-	schedulesList := make([]map[string]interface{}, 0)
-	if schedule != nil {
-		schedMap := map[string]interface{}{}
-		if schedule.DailySchedule != nil {
-			schedMap["daily_schedule"] = true
-		}
-		if schedule.WeeklySchedule != nil && schedule.WeeklySchedule.DayOfWeek != nil {
-			schedMap["weekly_schedule"] = schedule.WeeklySchedule.DayOfWeek
-		}
-		if schedule.MonthlySchedule != nil && schedule.MonthlySchedule.DayOfMonth != nil {
-			schedMap["monthly_schedule"] = schedule.MonthlySchedule.DayOfMonth
-		}
-		schedulesList = append(schedulesList, schedMap)
+	if schedule == nil {
+		return nil
 	}
+
+	var schedulesList []map[string]interface{}
+	schedMap := map[string]interface{}{}
+	if schedule.DailySchedule != nil {
+		schedMap["daily_schedule"] = true
+	}
+	if schedule.WeeklySchedule != nil && schedule.WeeklySchedule.DayOfWeek != nil {
+		schedMap["weekly_schedule"] = schedule.WeeklySchedule.DayOfWeek
+	}
+	if schedule.MonthlySchedule != nil && schedule.MonthlySchedule.DayOfMonth != nil {
+		schedMap["monthly_schedule"] = schedule.MonthlySchedule.DayOfMonth
+	}
+	schedulesList = append(schedulesList, schedMap)
 
 	return schedulesList
 }
 
 func flattenS3JobDefinition(s3JobDefinition *macie2.S3JobDefinition) []map[string]interface{} {
-	jobDefinitions := make([]map[string]interface{}, 0)
-
-	if s3JobDefinition != nil {
-		jobDefinitions = append(jobDefinitions, map[string]interface{}{
-			"bucket_definitions": flattenBucketDefinition(s3JobDefinition.BucketDefinitions),
-			"scoping":            flattenScoping(s3JobDefinition.Scoping),
-		})
+	if s3JobDefinition == nil {
+		return nil
 	}
+
+	var jobDefinitions []map[string]interface{}
+
+	jobDefinitions = append(jobDefinitions, map[string]interface{}{
+		"bucket_definitions": flattenBucketDefinition(s3JobDefinition.BucketDefinitions),
+		"scoping":            flattenScoping(s3JobDefinition.Scoping),
+	})
 
 	return jobDefinitions
 }
 
 func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJob) []map[string]interface{} {
-	bucketDefinitionList := make([]map[string]interface{}, 0)
+	if len(bucketDefinitions) == 0 {
+		return nil
+	}
 
-	if bucketDefinitions != nil {
+	var bucketDefinitionList []map[string]interface{}
 
-		for _, bucket := range bucketDefinitions {
-			bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
-				"account_id": aws.StringValue(bucket.AccountId),
-				"buckets":    flattenStringList(bucket.Buckets),
-			})
+	for _, bucket := range bucketDefinitions {
+		if bucket == nil {
+			continue
 		}
+		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
+			"account_id": aws.StringValue(bucket.AccountId),
+			"buckets":    flattenStringList(bucket.Buckets),
+		})
 	}
 
 	return bucketDefinitionList
 }
 
 func flattenScoping(scoping *macie2.Scoping) []map[string]interface{} {
-	scopingList := make([]map[string]interface{}, 0)
-
-	if scoping != nil {
-		scopingList = append(scopingList, map[string]interface{}{
-			"excludes": flattenJobScopingBlock(scoping.Excludes),
-			"includes": flattenJobScopingBlock(scoping.Includes),
-		})
+	if scoping == nil {
+		return nil
 	}
+
+	var scopingList []map[string]interface{}
+
+	scopingList = append(scopingList, map[string]interface{}{
+		"excludes": flattenJobScopingBlock(scoping.Excludes),
+		"includes": flattenJobScopingBlock(scoping.Includes),
+	})
 
 	return scopingList
 }
 
 func flattenJobScopingBlock(scopeTerm *macie2.JobScopingBlock) []map[string]interface{} {
-	scopeTermList := make([]map[string]interface{}, 0)
-
-	if scopeTerm != nil {
-		scopeTermList = append(scopeTermList, map[string]interface{}{
-			"and": flattenJobScopeTerm(scopeTerm.And),
-		})
+	if scopeTerm == nil {
+		return nil
 	}
+
+	var scopeTermList []map[string]interface{}
+
+	scopeTermList = append(scopeTermList, map[string]interface{}{
+		"and": flattenJobScopeTerm(scopeTerm.And),
+	})
 
 	return scopeTermList
 }
 
 func flattenJobScopeTerm(scopeTerms []*macie2.JobScopeTerm) []map[string]interface{} {
-	scopeTermList := make([]map[string]interface{}, 0)
+	if scopeTerms == nil {
+		return nil
+	}
 
-	if scopeTerms != nil {
-		for _, scopeTerm := range scopeTerms {
-			scopeTermList = append(scopeTermList, map[string]interface{}{
-				"simple_scope_term": flattenSimpleScopeTerm(scopeTerm.SimpleScopeTerm),
-				"tag_scope_term":    flattenTagScopeTerm(scopeTerm.TagScopeTerm),
-			})
-		}
+	var scopeTermList []map[string]interface{}
+
+	for _, scopeTerm := range scopeTerms {
+		scopeTermList = append(scopeTermList, map[string]interface{}{
+			"simple_scope_term": flattenSimpleScopeTerm(scopeTerm.SimpleScopeTerm),
+			"tag_scope_term":    flattenTagScopeTerm(scopeTerm.TagScopeTerm),
+		})
 	}
 
 	return scopeTermList
 }
 
 func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[string]interface{} {
-	simpleScopeTermList := make([]map[string]interface{}, 0)
-
-	if simpleScopeTerm != nil {
-		simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
-			"key":        aws.StringValue(simpleScopeTerm.Key),
-			"comparator": aws.StringValue(simpleScopeTerm.Comparator),
-			"values":     flattenStringList(simpleScopeTerm.Values),
-		})
+	if simpleScopeTerm == nil {
+		return nil
 	}
+
+	var simpleScopeTermList []map[string]interface{}
+
+	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
+		"key":        aws.StringValue(simpleScopeTerm.Key),
+		"comparator": aws.StringValue(simpleScopeTerm.Comparator),
+		"values":     flattenStringList(simpleScopeTerm.Values),
+	})
 
 	return simpleScopeTermList
 }
 
 func flattenTagScopeTerm(tagScopeTerm *macie2.TagScopeTerm) []map[string]interface{} {
-	tagScopeTermList := make([]map[string]interface{}, 0)
-
-	if tagScopeTerm != nil {
-		tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
-			"key":        aws.StringValue(tagScopeTerm.Key),
-			"comparator": aws.StringValue(tagScopeTerm.Comparator),
-			"target":     aws.StringValue(tagScopeTerm.Target),
-			"tag_values": flattenTagValues(tagScopeTerm.TagValues),
-		})
+	if tagScopeTerm == nil {
+		return nil
 	}
+
+	var tagScopeTermList []map[string]interface{}
+
+	tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
+		"key":        aws.StringValue(tagScopeTerm.Key),
+		"comparator": aws.StringValue(tagScopeTerm.Comparator),
+		"target":     aws.StringValue(tagScopeTerm.Target),
+		"tag_values": flattenTagValues(tagScopeTerm.TagValues),
+	})
 
 	return tagScopeTermList
 }
 
 func flattenTagValues(tagValues []*macie2.TagValuePair) []map[string]interface{} {
-	tagValuesList := make([]map[string]interface{}, 0)
+	if len(tagValues) == 0 {
+		return nil
+	}
 
-	if tagValues != nil {
-		for _, tagValue := range tagValues {
-			tagValuesList = append(tagValuesList, map[string]interface{}{
-				"value": aws.StringValue(tagValue.Value),
-				"key":   aws.StringValue(tagValue.Key),
-			})
-		}
+	var tagValuesList []map[string]interface{}
+
+	for _, tagValue := range tagValues {
+		tagValuesList = append(tagValuesList, map[string]interface{}{
+			"value": aws.StringValue(tagValue.Value),
+			"key":   aws.StringValue(tagValue.Key),
+		})
 	}
 
 	return tagValuesList
 }
 
 func flattenUserPausedDetails(userPausedDetail *macie2.UserPausedDetails) []map[string]interface{} {
-	userDetails := make([]map[string]interface{}, 0)
-
-	if userPausedDetail != nil {
-		userDetails = append(userDetails, map[string]interface{}{
-			"job_imminent_expiration_health_event_arn": aws.StringValue(userPausedDetail.JobImminentExpirationHealthEventArn),
-			"job_expires_at": userPausedDetail.JobExpiresAt.String(),
-			"job_paused_at":  userPausedDetail.JobPausedAt.String(),
-		})
+	if userPausedDetail == nil {
+		return nil
 	}
+
+	var userDetails []map[string]interface{}
+
+	userDetails = append(userDetails, map[string]interface{}{
+		"job_imminent_expiration_health_event_arn": aws.StringValue(userPausedDetail.JobImminentExpirationHealthEventArn),
+		"job_expires_at": userPausedDetail.JobExpiresAt.String(),
+		"job_paused_at":  userPausedDetail.JobPausedAt.String(),
+	})
 
 	return userDetails
 }
 
 func flattenLastRunErrorStatus(lastErrorStatus *macie2.LastRunErrorStatus) []map[string]interface{} {
-	lastError := make([]map[string]interface{}, 0)
-
-	if lastErrorStatus != nil {
-		lastError = append(lastError, map[string]interface{}{
-			"code": aws.StringValue(lastErrorStatus.Code),
-		})
+	if lastErrorStatus == nil {
+		return nil
 	}
+
+	var lastError []map[string]interface{}
+
+	lastError = append(lastError, map[string]interface{}{
+		"code": aws.StringValue(lastErrorStatus.Code),
+	})
 
 	return lastError
 }
 
 func flattenStatistics(statistics *macie2.Statistics) []map[string]interface{} {
-	statisticsList := make([]map[string]interface{}, 0)
-
-	if statistics != nil {
-		statisticsList = append(statisticsList, map[string]interface{}{
-			"approximate_number_of_objects_to_process": aws.Float64Value(statistics.ApproximateNumberOfObjectsToProcess),
-			"number_of_runs": aws.Float64Value(statistics.NumberOfRuns),
-		})
+	if statistics == nil {
+		return nil
 	}
+
+	var statisticsList []map[string]interface{}
+
+	statisticsList = append(statisticsList, map[string]interface{}{
+		"approximate_number_of_objects_to_process": aws.Float64Value(statistics.ApproximateNumberOfObjectsToProcess),
+		"number_of_runs": aws.Float64Value(statistics.NumberOfRuns),
+	})
 
 	return statisticsList
 }
