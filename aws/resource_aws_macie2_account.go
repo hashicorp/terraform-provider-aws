@@ -98,6 +98,7 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf(errorMacie2AccountCreate, err))
 	}
 
+	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
 	return resourceMacie2AccountRead(ctx, d, meta)

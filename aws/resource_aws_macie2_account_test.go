@@ -245,15 +245,15 @@ func testAccCheckAwsMacie2AccountExists(resourceName string, macie2Session *maci
 }
 
 func testaccawsmacieaccountconfigBasic() string {
-	return fmt.Sprint(`
+	return `
 resource "aws_macie2_account" "test" {}
-`)
+`
 }
 
 func testaccawsmacieaccountconfigWithfinding(finding string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
-	finding_publishing_frequency = "%s"
+  finding_publishing_frequency = "%s"
 }
 `, finding)
 }
@@ -261,7 +261,7 @@ resource "aws_macie2_account" "test" {
 func testaccawsmacieaccountconfigWithstatus(status string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
-	status = "%s"
+  status = "%s"
 }
 `, status)
 }
@@ -269,8 +269,8 @@ resource "aws_macie2_account" "test" {
 func testaccawsmacieaccountconfigWithfindingandstatus(finding, status string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {
-	finding_publishing_frequency = "%s"
-	status = "%s"
+  finding_publishing_frequency = "%s"
+  status                       = "%s"
 }
 `, finding, status)
 }

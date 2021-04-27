@@ -15,7 +15,7 @@ Provides a resource to manage an [AWS Macie Account](https://docs.aws.amazon.com
 ```terraform
 resource "aws_macie2_account" "test" {
   finding_publishing_frequency = "FIFTEEN_MINUTES"
-  status = "ENABLED"
+  status                       = "ENABLED"
 }
 ```
 
