@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,9 +15,9 @@ import (
 func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 	JobType := "ONE_TIME"
-	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
+	accountID := os.Getenv("AWS_ACCOUNT_ID")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -44,9 +45,9 @@ func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 	JobType := "ONE_TIME"
-	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
+	accountID := os.Getenv("AWS_ACCOUNT_ID")
 	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
@@ -75,8 +76,8 @@ func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
-	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
+	accountID := os.Getenv("AWS_ACCOUNT_ID")
 	jobStatus := "RUNNING"
 	jobStatusUpdated := "USER_PAUSED"
 
@@ -128,8 +129,8 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 func TestAccAwsMacie2ClassificationJob_completeWithTags(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
-	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
+	accountID := os.Getenv("AWS_ACCOUNT_ID")
 	jobStatus := "RUNNING"
 	jobStatusUpdated := "USER_PAUSED"
 
