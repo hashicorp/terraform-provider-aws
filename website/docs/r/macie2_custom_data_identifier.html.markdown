@@ -13,18 +13,15 @@ Provides a resource to manage an [AWS Macie Custom Data Identifier](https://docs
 ## Example Usage
 
 ```terraform
-resource "aws_macie2_account" "example" {
-  client_token = "CLIENT TOKEN"
-}
+resource "aws_macie2_account" "example" {}
 
 resource "aws_macie2_custom_data_identifier" "example" {
-  name = "NAME OF CUSTOM DATA IDENTIFIER"
-  regex = "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-  client_token = aws_macie2_account.test.client_token
-  description = "DESCRIPTION"
+  name                   = "NAME OF CUSTOM DATA IDENTIFIER"
+  regex                  = "[0-9]{3}-[0-9]{2}-[0-9]{4}"
+  description            = "DESCRIPTION"
   maximum_match_distance = 10
-  keywords = ["keyword"]
-  ignore_words = ["ignore"]
+  keywords               = ["keyword"]
+  ignore_words           = ["ignore"]
 
   depends_on = [aws_macie2_account.test]
 }
@@ -36,9 +33,9 @@ The following arguments are supported:
 
 * `regex` - (Optional) The regular expression (regex) that defines the pattern to match. The expression can contain as many as 512 characters.
 * `keywords` -  (Optional) An array that lists specific character sequences (keywords), one of which must be within proximity (`maximum_match_distance`) of the regular expression to match. The array can contain as many as 50 keywords. Each keyword can contain 3 - 90 characters. Keywords aren't case sensitive.
-* `client_token` - (Optional) A unique, case-sensitive token that you provide to ensure the idempotency of the request.
 * `ignore_words` - (Optional) An array that lists specific character sequences (ignore words) to exclude from the results. If the text matched by the regular expression is the same as any string in this array, Amazon Macie ignores it. The array can contain as many as 10 ignore words. Each ignore word can contain 4 - 90 characters. Ignore words are case sensitive.
-* `name` - (Optional) A custom name for the custom data identifier. The name can contain as many as 128 characters.
+* `name` - (Optional) A custom name for the custom data identifier. The name can contain as many as 128 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A custom description of the custom data identifier. The description can contain as many as 512 characters.
 * `maximum_match_distance` - (Optional) The maximum number of characters that can exist between text that matches the regex pattern and the character sequences specified by the keywords array. Macie includes or excludes a result based on the proximity of a keyword to text that matches the regex pattern. The distance can be 1 - 300 characters. The default value is 50.
 * `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the custom data identifier.
