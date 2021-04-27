@@ -15,14 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-const (
-	errorMacie2AccountCreate   = "error enabling Macie2 Account: %w"
-	errorMacie2AccountRead     = "error reading Macie2 Account (%s): %w"
-	errorMacie2AccountUpdating = "error updating Macie2 Account (%s): %w"
-	errorMacie2AccountDelete   = "error disabling Macie2 Account (%s): %w"
-	errorMacie2AccountSetting  = "error setting `%s` for Macie2 Account (%s): %w"
-)
-
 func resourceAwsMacie2Account() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2AccountCreate,
@@ -38,13 +30,13 @@ func resourceAwsMacie2Account() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"FIFTEEN_MINUTES", "ONE_HOUR", "SIX_HOURS"}, false),
+				ValidateFunc: validation.StringInSlice(macie2.FindingPublishingFrequency_Values(), false),
 			},
 			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{"PAUSED", "ENABLED"}, false),
+				ValidateFunc: validation.StringInSlice(macie2.MacieStatus_Values(), false),
 			},
 			"service_role": {
 				Type:     schema.TypeString,
@@ -91,15 +83,14 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if isResourceTimeoutError(err) {
-		_, _ = conn.EnableMacieWithContext(ctx, input)
+		_, err = conn.EnableMacieWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountCreate, err))
+		return diag.FromErr(fmt.Errorf("error enabling Macie Account: %w", err))
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.UniqueId())
+	d.SetId(meta.(*AWSClient).accountid)
 
 	return resourceMacie2AccountRead(ctx, d, meta)
 }
@@ -112,30 +103,20 @@ func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.GetMacieSessionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
-		log.Printf("[WARN] Macie2 Account is not enabled, removing from state: %s", d.Id())
+		log.Printf("[WARN] Macie not enabled for AWS account (%s), removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountRead, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error reading Macie Account (%s): %w", d.Id(), err))
 	}
 
-	if err = d.Set("status", resp.Status); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountSetting, "status", d.Id(), err))
-	}
-	if err = d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountSetting, "finding_publishing_frequency", d.Id(), err))
-	}
-	if err = d.Set("service_role", resp.ServiceRole); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountSetting, "service_role", d.Id(), err))
-	}
-	if err = d.Set("created_at", resp.CreatedAt.String()); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountSetting, "created_at", d.Id(), err))
-	}
-	if err = d.Set("updated_at", resp.UpdatedAt.String()); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountSetting, "updated_at", d.Id(), err))
-	}
+	d.Set("status", resp.Status)
+	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
+	d.Set("service_role", resp.ServiceRole)
+	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 
 	return nil
 }
@@ -155,7 +136,7 @@ func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountUpdating, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error updating Macie Account (%s): %w", d.Id(), err))
 	}
 
 	return resourceMacie2AccountRead(ctx, d, meta)
@@ -168,10 +149,10 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DisableMacieWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeInternalError) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf(errorMacie2AccountDelete, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error disabling Macie Account (%s): %w", d.Id(), err))
 	}
 	return nil
 }

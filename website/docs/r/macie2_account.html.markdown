@@ -1,9 +1,9 @@
 ---
-subcategory: "Macie2"
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_account"
 description: |-
-  Provides a resource to manage an AWS Macie2 Account.
+  Provides a resource to manage Amazon Macie on an AWS Account.
 ---
 
 # Resource: aws_macie2_account
@@ -24,7 +24,7 @@ resource "aws_macie2_account" "test" {
 The following arguments are supported:
 
 * `finding_publishing_frequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
-* `status` - (Optional) Specifies the new status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
+* `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
 ## Attributes Reference
 
@@ -32,8 +32,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique identifier (ID) of the macie account.
 * `service_role` - The Amazon Resource Name (ARN) of the service-linked role that allows Macie to monitor and analyze data in AWS resources for the account.
-* `created_at` - The date and time, in UTC and extended ISO 8601 format, when the Amazon Macie account was created.
-* `updated_at` - The date and time, in UTC and extended ISO 8601 format, of the most recent change to the status of the Macie account.
+* `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
+* `updated_at` - The date and time, in UTC and extended RFC 3339 format, of the most recent change to the status of the Macie account.
 
 ## Import
 
