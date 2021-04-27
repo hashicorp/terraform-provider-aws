@@ -12,6 +12,8 @@ Manages an Service Catalog Product.
 
 ~> **NOTE:** The user or role that uses this resources must have the `cloudformation:GetTemplate` IAM policy permission. This policy permission is required when using the `template_physical_id` argument.
 
+-> A "provisioning artifact" is also referred to as a "version." A "distributor" is also referred to as a "vendor."
+
 ## Example Usage
 
 ### Basic Usage
@@ -38,14 +40,14 @@ The following arguments are required:
 
 * `name` - (Required) Name of the product.
 * `owner` - (Required) Owner of the product.
-* `provisioning_artifact_parameters` - (Required) Configuration block of the provisioning artifact. Detailed below.
+* `provisioning_artifact_parameters` - (Required) Configuration block for provisioning artifact (i.e., version) parameters. Detailed below.
 * `type` - (Required) Type of product. Valid values are `CLOUD_FORMATION_TEMPLATE`, `MARKETPLACE`.
 
 The following arguments are optional:
 
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `description` - (Optional) Description of the product.
-* `distributor` - (Optional) Distributor of the product.
+* `distributor` - (Optional) Distributor (i.e., vendor) of the product.
 * `support_description` - (Optional) Support information about the product.
 * `support_email` - (Optional) Contact email for product support.
 * `support_url` - (Optional) Contact URL for product support.
@@ -55,7 +57,7 @@ The following arguments are optional:
 
 The following arguments are supported:
 
-* `description` - (Optional) Description of the provisioning artifact, including how it differs from the previous provisioning artifact.
+* `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
 * `disable_template_validation` - (Optional) Whether AWS Service Catalog stops validating the specified provisioning artifact template even if it is invalid.
 * `name` - (Optional) Name of the provisioning artifact (for example, `v1`, `v2beta`). No spaces are allowed.
 * `template_physical_id` - (Required if `template_url` is not provided) Template source as the physical ID of the resource that contains the template. Currently only supports CloudFormation stack ARN. Specify the physical ID as `arn:[partition]:cloudformation:[region]:[account ID]:stack/[stack name]/[resource ID]`.
