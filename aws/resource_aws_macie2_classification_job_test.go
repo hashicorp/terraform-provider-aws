@@ -16,7 +16,6 @@ func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	JobType := "ONE_TIME"
 	accountID := os.Getenv("AWS_ACCOUNT_ID")
 
 	resource.Test(t, resource.TestCase{
@@ -26,7 +25,7 @@ func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigNameGenerated(bucketName, accountID, JobType),
+				Config: testaccawsmacieClassificationJobconfigNameGenerated(bucketName, accountID, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -46,7 +45,6 @@ func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	JobType := "ONE_TIME"
 	accountID := os.Getenv("AWS_ACCOUNT_ID")
 	namePrefix := "tf-acc-test-prefix-"
 
@@ -57,7 +55,7 @@ func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigNamePrefix(namePrefix, bucketName, accountID, JobType),
+				Config: testaccawsmacieClassificationJobconfigNamePrefix(namePrefix, bucketName, accountID, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
@@ -78,8 +76,6 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 	accountID := os.Getenv("AWS_ACCOUNT_ID")
-	jobStatus := "RUNNING"
-	jobStatusUpdated := "USER_PAUSED"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -88,33 +84,23 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatus),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_status"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_run_time"),
 				),
 			},
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatusUpdated),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_status"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusUserPaused),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_run_time"),
 				),
 			},
 			{
@@ -126,13 +112,11 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_completeWithTags(t *testing.T) {
+func TestAccAwsMacie2ClassificationJob_WithTags(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
 	accountID := os.Getenv("AWS_ACCOUNT_ID")
-	jobStatus := "RUNNING"
-	jobStatusUpdated := "USER_PAUSED"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -141,33 +125,23 @@ func TestAccAwsMacie2ClassificationJob_completeWithTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieClassificationJobconfigCompleteWithTags(bucketName, accountID, jobStatus),
+				Config: testaccawsmacieClassificationJobconfigCompleteWithTags(bucketName, accountID, macie2.JobStatusRunning),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_status"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_run_time"),
 				),
 			},
 			{
-				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, jobStatusUpdated),
+				Config: testaccawsmacieClassificationJobconfigComplete(bucketName, accountID, macie2.JobStatusUserPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "sampling_percentage"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "initial_run"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_status"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusUserPaused),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_run_time"),
 				),
 			},
 			{

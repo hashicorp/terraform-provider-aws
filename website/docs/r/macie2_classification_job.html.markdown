@@ -1,9 +1,9 @@
 ---
-subcategory: "Macie2"
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_classification_job"
 description: |-
-  Provides a resource to manage an AWS Macie2 Classification Job.
+  Provides a resource to manage an AWS Macie Classification Job.
 ---
 
 # Resource: aws_macie2_classification_job
@@ -93,8 +93,8 @@ The `tag_scope_term` object supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique identifier (ID) of the macie classification job.
-* `last_run_time` - The date and time, in UTC and extended ISO 8601 format, when the job started. If the job is a recurring job, this value indicates when the most recent run started.
-* `created_at` -  The date and time, in UTC and extended ISO 8601 format, when the job was created.
+* `last_run_time` - The date and time, in UTC and extended RFC 3339 format, when the job started. If the job is a recurring job, this value indicates when the most recent run started.
+* `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
 * `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 * `last_run_error_status` - Specifies whether any account- or bucket-level access errors occurred when the job ran. For a recurring job, this value indicates the error status of the job's most recent run.
 * `statistics` - The number of times that the job has run and processing statistics for the job's current run.
