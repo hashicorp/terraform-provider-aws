@@ -81,6 +81,7 @@ Lex
 License Manager
 Lightsail
 MQ
+Macie2
 Macie
 Macie Classic
 Managed Streaming for Kafka (MSK)
