@@ -9,8 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func ProductStatus(conn *servicecatalog.ServiceCatalog,
-	acceptLanguage, productID, sourcePortfolioID string) resource.StateRefreshFunc {
+func ProductStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(productID),
@@ -18,10 +17,6 @@ func ProductStatus(conn *servicecatalog.ServiceCatalog,
 
 		if acceptLanguage != "" {
 			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		if sourcePortfolioID != "" {
-			input.SourcePortfolioId = aws.String(sourcePortfolioID)
 		}
 
 		output, err := conn.DescribeProductAsAdmin(input)

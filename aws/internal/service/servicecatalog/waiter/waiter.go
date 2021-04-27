@@ -19,12 +19,11 @@ const (
 	ProductStatusCreated = "CREATED"
 )
 
-func ProductReady(conn *servicecatalog.ServiceCatalog,
-	acceptLanguage, productID, sourcePortfolioID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+func ProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
 		Target:  []string{servicecatalog.StatusAvailable, ProductStatusCreated},
-		Refresh: ProductStatus(conn, acceptLanguage, productID, sourcePortfolioID),
+		Refresh: ProductStatus(conn, acceptLanguage, productID),
 		Timeout: ProductReadyTimeout,
 	}
 
@@ -37,12 +36,11 @@ func ProductReady(conn *servicecatalog.ServiceCatalog,
 	return nil, err
 }
 
-func ProductDeleted(conn *servicecatalog.ServiceCatalog,
-	acceptLanguage, productID, sourcePortfolioID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+func ProductDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicecatalog.StatusCreating, servicecatalog.StatusAvailable, ProductStatusCreated, StatusUnavailable},
 		Target:  []string{StatusNotFound},
-		Refresh: ProductStatus(conn, acceptLanguage, productID, sourcePortfolioID),
+		Refresh: ProductStatus(conn, acceptLanguage, productID),
 		Timeout: ProductReadyTimeout,
 	}
 
