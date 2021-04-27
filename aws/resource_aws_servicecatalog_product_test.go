@@ -369,7 +369,7 @@ resource "aws_servicecatalog_product" "test" {
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
-	disable_template_validation = true
+    disable_template_validation = true
     name                        = %[1]q
     template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
@@ -398,7 +398,7 @@ resource "aws_servicecatalog_product" "test" {
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
-	disable_template_validation = true
+    disable_template_validation = true
     name                        = %[1]q
     template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
@@ -406,7 +406,7 @@ resource "aws_servicecatalog_product" "test" {
 
   tags = {
     Yak         = %[1]q
-	Environment = "natural"
+    Environment = "natural"
   }
 }
 `, rName))
