@@ -70,12 +70,17 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 			},
 			// Leaving space for `engine_version` for creation and updating.
 			// `engine_version` cannot be used for returning the version because, starting with Redis 6,
-			// version configuration is major-version-only: `engine_version = "6.x"`, while `actual_engine_version`
+			// version configuration is major-version-only: `engine_version = "6.x"`, while `engine_version_actual`
 			// will be e.g. `6.0.5`
 			// See also https://github.com/hashicorp/terraform-provider-aws/issues/15625
-			"actual_engine_version": {
+			"engine_version_actual": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"actual_engine_version": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Use engine_version_actual instead",
 			},
 			"global_replication_group_id": {
 				Type:     schema.TypeString,
@@ -115,9 +120,10 @@ func resourceAwsElasticacheGlobalReplicationGroup() *schema.Resource {
 			// 	},
 			// },
 			"primary_replication_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateReplicationGroupID,
 			},
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
@@ -193,6 +199,7 @@ func resourceAwsElasticacheGlobalReplicationGroupRead(d *schema.ResourceData, me
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
 	d.Set("cluster_enabled", globalReplicationGroup.ClusterEnabled)
 	d.Set("engine", globalReplicationGroup.Engine)
+	d.Set("engine_version_actual", globalReplicationGroup.EngineVersion)
 	d.Set("actual_engine_version", globalReplicationGroup.EngineVersion)
 	d.Set("global_replication_group_description", globalReplicationGroup.GlobalReplicationGroupDescription)
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)

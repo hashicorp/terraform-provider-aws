@@ -126,11 +126,16 @@ func dataSourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta
 		if err != nil {
 			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %w", d.Id(), err)
 		}
-		d.Set("etag", aws.StringValue(resp.ETag))
 
-		originRequestPolicy := *resp.OriginRequestPolicy.OriginRequestPolicyConfig
-		d.Set("comment", aws.StringValue(originRequestPolicy.Comment))
-		d.Set("name", aws.StringValue(originRequestPolicy.Name))
+		if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
+			return nil
+		}
+
+		d.Set("etag", resp.ETag)
+
+		originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
+		d.Set("comment", originRequestPolicy.Comment)
+		d.Set("name", originRequestPolicy.Name)
 		d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
 		d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
 		d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))
@@ -148,7 +153,7 @@ func dataSourceAwsCloudFrontOriginRequestPolicyFindByName(d *schema.ResourceData
 	}
 
 	for _, policySummary := range resp.OriginRequestPolicyList.Items {
-		if *policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name == d.Get("name").(string) {
+		if aws.StringValue(policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name) == d.Get("name").(string) {
 			originRequestPolicy = policySummary.OriginRequestPolicy
 			break
 		}

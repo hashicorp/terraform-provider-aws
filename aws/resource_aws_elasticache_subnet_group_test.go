@@ -31,7 +31,7 @@ func testSweepElasticacheSubnetGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	err = conn.DescribeCacheSubnetGroupsPages(&elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, isLast bool) bool {
+	err = conn.DescribeCacheSubnetGroupsPages(&elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSubnetGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Subnet Groups to sweep")
 			return false
@@ -48,7 +48,7 @@ func testSweepElasticacheSubnetGroups(region string) error {
 				log.Printf("[ERROR] Failed to delete Elasticache Subnet Group (%s): %s", name, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -66,6 +66,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -95,6 +96,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
 		Steps: []resource.TestStep{

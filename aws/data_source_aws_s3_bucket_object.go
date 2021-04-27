@@ -27,6 +27,10 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"bucket_key_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"cache_control": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,6 +161,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(uniqueId)
 
+	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
 	d.Set("content_disposition", out.ContentDisposition)
 	d.Set("content_encoding", out.ContentEncoding)
@@ -216,7 +221,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 		if out.ContentType == nil {
 			contentType = "<EMPTY>"
 		} else {
-			contentType = *out.ContentType
+			contentType = aws.StringValue(out.ContentType)
 		}
 
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)

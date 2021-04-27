@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name                       = "example-websocket-api"
   protocol_type              = "WEBSOCKET"
@@ -30,7 +30,7 @@ resource "aws_apigatewayv2_route" "example" {
 
 ### HTTP Proxy Integration
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_api" "example" {
   name          = "example-http-api"
   protocol_type = "HTTP"
@@ -68,8 +68,14 @@ Defaults to `NONE`.
 * `model_selection_expression` - (Optional) The [model selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-model-selection-expressions) for the route. Supported only for WebSocket APIs.
 * `operation_name` - (Optional) The operation name for the route. Must be between 1 and 64 characters in length.
 * `request_models` - (Optional) The request models for the route. Supported only for WebSocket APIs.
+* `request_parameter` - (Optional) The request parameters for the route. Supported only for WebSocket APIs.
 * `route_response_selection_expression` - (Optional) The [route response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-response-selection-expressions) for the route. Supported only for WebSocket APIs.
 * `target` - (Optional) The target for the route, of the form `integrations/`*`IntegrationID`*, where *`IntegrationID`* is the identifier of an [`aws_apigatewayv2_integration`](apigatewayv2_integration.html) resource.
+
+The `request_parameter` object supports the following:
+
+* `request_parameter_key` - (Required) Request parameter key. This is a [request data mapping parameter](https://docs.aws.amazon.com/apigateway/latest/developerguide/websocket-api-data-mapping.html#websocket-mapping-request-parameters).
+* `required` - (Required) Boolean whether or not the parameter is required.
 
 ## Attributes Reference
 

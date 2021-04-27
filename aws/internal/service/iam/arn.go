@@ -28,13 +28,13 @@ func InstanceProfileARNToName(inputARN string) (string, error) {
 
 	resourceParts := strings.Split(parsedARN.Resource, ARNSeparator)
 
-	if actual, expected := len(resourceParts), 2; actual != expected {
-		return "", fmt.Errorf("expected %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
+	if actual, expected := len(resourceParts), 2; actual < expected {
+		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
 	}
 
 	if actual, expected := resourceParts[0], InstanceProfileResourcePrefix; actual != expected {
 		return "", fmt.Errorf("expected resource prefix %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
-	return resourceParts[1], nil
+	return resourceParts[len(resourceParts)-1], nil
 }

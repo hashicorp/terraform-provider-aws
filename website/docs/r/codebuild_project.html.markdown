@@ -12,7 +12,7 @@ Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` res
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
   acl    = "private"
@@ -240,7 +240,7 @@ The following arguments are optional:
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
 * `service_role` - (Required) Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source_version` - (Optional) Version of the build input to be built for this project. If not specified, the latest version is used.
-* `tags` - (Optional) Map of tags to assign to the resource.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 
 ### artifacts
@@ -316,7 +316,7 @@ Credentials for access to a private Docker registry.
 
 ### secondary_sources
 
-* `auth` - (Optional) Configuration block. Detailed below.
+* `auth` - (Optional, **Deprecated**) Configuration block with the authorization settings for AWS CodeBuild to access the source code to be built. This information is for the AWS CodeBuild console's use only. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead. Auth blocks are documented below.
 * `buildspec` - (Optional) Build specification to use for this build project's related builds.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits. Use `0` for a `Full` checkout which you need to run commands like `git branch --show-current`. See [AWS CodePipeline User Guide: Tutorial: Use full clone with a GitHub pipeline source](https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials-github-gitclone.html) for details.
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
@@ -328,8 +328,8 @@ Credentials for access to a private Docker registry.
 
 #### secondary_sources: auth
 
-* `resource` - (Optional) Resource value that applies to the specified authorization type.
-* `type` - (Required) Authorization type to use. The only valid value is `OAUTH`.
+* `resource` - (Optional, **Deprecated**) Resource value that applies to the specified authorization type. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead.
+* `type` - (Required, **Deprecated**) Authorization type to use. The only valid value is `OAUTH`. This data type is deprecated and is no longer accurate or used. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead.
 
 #### secondary_sources: git_submodules_config
 
@@ -339,7 +339,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 ### source
 
-* `auth` - (Optional) Configuration block. Detailed below.
+* `auth` - (Optional, **Deprecated**) Configuration block with the authorization settings for AWS CodeBuild to access the source code to be built. This information is for the AWS CodeBuild console's use only. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead. Auth blocks are documented below.
 * `buildspec` - (Optional) Build specification to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits. Use `0` for a `Full` checkout which you need to run commands like `git branch --show-current`. See [AWS CodePipeline User Guide: Tutorial: Use full clone with a GitHub pipeline source](https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials-github-gitclone.html) for details.
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
@@ -350,8 +350,8 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 #### source: auth
 
-* `resource` - (Optional) Resource value that applies to the specified authorization type.
-* `type` - (Required) Authorization type to use. The only valid value is `OAUTH`.
+* `resource` - (Optional, **Deprecated**) Resource value that applies to the specified authorization type. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead.
+* `type` - (Required, **Deprecated**) Authorization type to use. The only valid value is `OAUTH`. This data type is deprecated and is no longer accurate or used. Use the [`aws_codebuild_source_credential` resource](codebuild_source_credential.html) instead.
 
 #### source: git_submodules_config
 
@@ -367,11 +367,12 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
 * `id` - Name (if imported via `name`) or ARN (if created via Terraform or imported via ARN) of the CodeBuild project.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

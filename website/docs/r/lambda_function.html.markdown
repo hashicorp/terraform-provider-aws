@@ -22,7 +22,7 @@ For a detailed example of setting up Lambda and API Gateway, see [Serverless App
 
 ### Basic Example
 
-```hcl
+```terraform
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda"
 
@@ -68,7 +68,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 ~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
 
-```hcl
+```terraform
 resource "aws_lambda_layer_version" "example" {
   # ... other configuration ...
 }
@@ -83,7 +83,7 @@ resource "aws_lambda_function" "example" {
 
 Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state.
 
-```hcl
+```terraform
 # A lambda function connected to an EFS file system
 resource "aws_lambda_function" "example" {
   # ... other configuration ...
@@ -145,7 +145,7 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
 
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
-```hcl
+```terraform
 variable "lambda_function_name" {
   default = "lambda_function_name"
 }
@@ -210,9 +210,7 @@ For larger deployment packages it is recommended by Amazon to upload via S3, sin
 The following arguments are required:
 
 * `function_name` - (Required) Unique name for your Lambda Function.
-* `handler` - (Required) Function [entrypoint][3] in your code.
 * `role` - (Required) Amazon Resource Name (ARN) of the function's execution role. The role provides the function's identity and access to AWS services and resources.
-* `runtime` - (Required) Identifier of the function's runtime. See [Runtimes][6] for valid values.
 
 The following arguments are optional:
 
@@ -222,6 +220,7 @@ The following arguments are optional:
 * `environment` - (Optional) Configuration block. Detailed below.
 * `file_system_config` - (Optional) Configuration block. Detailed below.
 * `filename` - (Optional) Path to the function's deployment package within the local filesystem. Conflicts with `image_uri`, `s3_bucket`, `s3_key`, and `s3_object_version`.
+* `handler` - (Optional) Function [entrypoint][3] in your code.
 * `image_config` - (Optional) Configuration block. Detailed below.
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename`, `s3_bucket`, `s3_key`, and `s3_object_version`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
@@ -230,11 +229,12 @@ The following arguments are optional:
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `reserved_concurrent_executions` - (Optional) Amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
+* `runtime` - (Optional) Identifier of the function's runtime. See [Runtimes][6] for valid values.
 * `s3_bucket` - (Optional) S3 bucket location containing the function's deployment package. Conflicts with `filename` and `image_uri`. This bucket must reside in the same AWS region where you are creating the Lambda function.
 * `s3_key` - (Optional) S3 key of an object containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `s3_object_version` - (Optional) Object version containing the function's deployment package. Conflicts with `filename` and `image_uri`.
 * `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
-* `tags` - (Optional) Map of tags to assign to the object.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5].
 * `tracing_config` - (Optional) Configuration block. Detailed below.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
@@ -279,7 +279,7 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 
 ## Attributes Reference
 
-In addition to arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
@@ -288,6 +288,7 @@ In addition to arguments above, the following attributes are exported:
 * `signing_job_arn` - ARN of the signing job.
 * `signing_profile_version_arn` - ARN of the signing profile version.
 * `source_code_size` - Size in bytes of the function .zip file.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `version` - Latest published version of your Lambda Function.
 * `vpc_config.vpc_id` - ID of the VPC.
 

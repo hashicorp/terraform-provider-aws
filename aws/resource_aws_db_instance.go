@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -12,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -415,10 +414,10 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"snapshot_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"username"},
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"auto_minor_version_upgrade": {
@@ -530,27 +529,18 @@ func resourceAwsDbInstance() *schema.Resource {
 				Default:  true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if _, ok := diff.GetOk("snapshot_identifier"); ok {
-					switch strings.ToLower(diff.Get("engine").(string)) {
-					case "mysql", "postgres", "mariadb":
-						if _, ok := diff.GetOk("name"); ok {
-							return fmt.Errorf("name attribute is not supported with snapshot_identifier when engine is %s", diff.Get("engine").(string))
-						}
-					}
-				}
-				return nil
-			},
-		),
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
@@ -567,8 +557,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 	// a database instance reboot to take effect. During resource creation,
 	// we expect everything to be in sync before returning completion.
 	var requiresRebootDbInstance bool
-
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	var identifier string
 	if v, ok := d.GetOk("identifier"); ok {
@@ -592,7 +580,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(v.(string)),
-			Tags:                       tags,
+			Tags:                       tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {
@@ -754,7 +742,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			SourceEngine:            aws.String(s3_bucket["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(s3_bucket["source_engine_version"].(string)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("multi_az"); ok {
@@ -848,7 +836,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] DB Instance S3 Restore configuration: %#v", opts)
 		var err error
 		// Retry for IAM eventual consistency
-		err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err = conn.RestoreDBInstanceFromS3(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
@@ -907,11 +895,18 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBSnapshotIdentifier:    aws.String(d.Get("snapshot_identifier").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 		}
 
 		if attr, ok := d.GetOk("name"); ok {
-			opts.DBName = aws.String(attr.(string))
+			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
+			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
+			switch strings.ToLower(d.Get("engine").(string)) {
+			case "mysql", "postgres", "mariadb":
+				// skip
+			default:
+				opts.DBName = aws.String(attr.(string))
+			}
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {
@@ -1088,7 +1083,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			input.DBInstanceClass = aws.String(d.Get("instance_class").(string))
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
-			input.Tags = tags
+			input.Tags = tags.IgnoreAws().RdsTags()
 			input.TargetDBInstanceIdentifier = aws.String(d.Get("identifier").(string))
 
 			if v, ok := d.GetOk("availability_zone"); ok {
@@ -1197,7 +1192,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    tags,
+			Tags:                    tags.IgnoreAws().RdsTags(),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		}
 
@@ -1393,6 +1388,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
@@ -1486,8 +1482,15 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	// Create an empty schema.Set to hold all vpc security group ids
@@ -1767,7 +1770,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.ModifyDBInstance(req)
 
 			// Retry for IAM eventual consistency
@@ -1819,8 +1822,8 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)

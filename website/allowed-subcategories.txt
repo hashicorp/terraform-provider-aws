@@ -8,6 +8,7 @@ AppMesh
 AppSync
 Application Autoscaling
 Athena
+Audit Manager
 Autoscaling
 Autoscaling Plans
 Amazon Managed Service for Prometheus (AMP)
@@ -35,6 +36,7 @@ Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
 Database Migration Service (DMS)
+Detective
 Device Farm
 Direct Connect
 Directory Service

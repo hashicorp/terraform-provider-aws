@@ -10,7 +10,8 @@ each type of contribution.
 - [Adding Resource Name Generation Support](#adding-resource-name-generation-support)
     - [Resource Name Generation Code Implementation](#resource-name-generation-code-implementation)
     - [Resource Name Generation Testing Implementation](#resource-name-generation-testing-implementation)
-    - [Resource Code Generation Documentation Implementation](#resource-code-generation-documentation-implementation)
+    - [Resource Name Generation Documentation Implementation](#resource-name-generation-documentation-implementation)
+    - [Resource Name Generation With Suffix](#resource-name-generation-with-suffix)
 - [Adding Resource Policy Support](#adding-resource-policy-support)
 - [Adding Resource Tagging Support](#adding-resource-tagging-support)
     - [Adding Service to Tag Generating Code](#adding-service-to-tag-generating-code)
@@ -136,6 +137,7 @@ func TestAccAWSServiceThing_Name_Generated(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
@@ -163,6 +165,7 @@ func TestAccAWSServiceThing_NamePrefix(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:     func() { testAccPreCheck(t) },
+    ErrorCheck:   testAccErrorCheck(t, service.EndpointsID),
     Providers:    testAccProviders,
     CheckDestroy: testAccCheckAWSServiceThingDestroy,
     Steps: []resource.TestStep{
@@ -216,6 +219,24 @@ resource "aws_service_thing" "test" {
 ```markdown
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 ```
+
+### Resource Name Generation With Suffix
+
+Some generated resource names require a fixed suffix (for example Amazon SNS FIFO topic names must end in `.fifo`).
+In these cases use `naming.GenerateWithSuffix()` in the resource `Create` function and `naming.NamePrefixFromNameWithSuffix()` in the resource `Read` function, e.g.
+
+```go
+name := naming.GenerateWithSuffix(d.Get("name").(string), d.Get("name_prefix").(string), ".fifo")
+```
+
+and
+
+```go
+d.Set("name", resp.Name)
+d.Set("name_prefix", naming.NamePrefixFromNameWithSuffix(aws.StringValue(resp.Name), ".fifo"))
+```
+
+There are also functions `naming.TestCheckResourceAttrNameWithSuffixGenerated` and `naming.TestCheckResourceAttrNameWithSuffixFromPrefix` for use in tests.
 
 ## Adding Resource Policy Support
 
@@ -353,6 +374,7 @@ More details about this code generation, including fixes for potential error mes
 
     resource.ParallelTest(t, resource.TestCase{
       PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+      ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
       Providers:    testAccProviders,
       CheckDestroy: testAccCheckAWSEksClusterDestroy,
       Steps: []resource.TestStep{

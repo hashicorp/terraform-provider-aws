@@ -14,7 +14,7 @@ Provides an EventBridge Target resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_target" "yada" {
   target_id = "Yada"
   rule      = aws_cloudwatch_event_rule.console.name
@@ -58,7 +58,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 ## Example SSM Document Usage
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "ssm_lifecycle_trust" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -146,7 +146,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 
 ## Example RunCommand Usage
 
-```hcl
+```terraform
 resource "aws_cloudwatch_event_rule" "stop_instances" {
   name                = "StopInstance"
   description         = "Stop instances nightly"
@@ -169,7 +169,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 
 ## Example ECS Run Task with Role and Task Override Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "ecs_events" {
   name = "ecs_events"
 
@@ -364,6 +364,10 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `dead_letter_config` support the following:
 
 * `arn` - (Optional) - ARN of the SQS queue specified as the target for the dead-letter queue.
+
+## Attributes Reference
+
+No additional attributes are exported.
 
 ## Import
 

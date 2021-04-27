@@ -18,6 +18,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -53,6 +54,7 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -75,6 +77,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -111,6 +114,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -183,6 +187,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -219,6 +224,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -251,6 +257,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -293,6 +300,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -333,6 +341,7 @@ func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation_
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -373,6 +382,7 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -407,6 +417,7 @@ func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -451,6 +462,7 @@ func TestAccAWSAthenaWorkGroup_ForceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{
@@ -479,6 +491,7 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
 		Steps: []resource.TestStep{

@@ -29,9 +29,9 @@ func testSweepGlacierVaults(region string) error {
 	conn := client.(*AWSClient).glacierconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, isLast bool) bool {
+	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, vault := range page.VaultList {
@@ -61,7 +61,7 @@ func testSweepGlacierVaults(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Glacier Vaults sweep for %s: %s", region, err)
@@ -81,6 +81,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -112,6 +113,7 @@ func TestAccAWSGlacierVault_notification(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -157,6 +159,7 @@ func TestAccAWSGlacierVault_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -201,6 +204,7 @@ func TestAccAWSGlacierVault_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
@@ -245,6 +249,7 @@ func TestAccAWSGlacierVault_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{

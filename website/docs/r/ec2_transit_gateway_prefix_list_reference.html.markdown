@@ -14,7 +14,7 @@ Manages an EC2 Transit Gateway Prefix List Reference.
 
 ### Attachment Routing
 
-```hcl
+```terraform
 resource "aws_ec2_transit_gateway_prefix_list_reference" "example" {
   prefix_list_id                 = aws_ec2_managed_prefix_list.example.id
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id
@@ -24,7 +24,7 @@ resource "aws_ec2_transit_gateway_prefix_list_reference" "example" {
 
 ### Blackhole Routing
 
-```hcl
+```terraform
 resource "aws_ec2_transit_gateway_prefix_list_reference" "example" {
   blackhole                      = true
   prefix_list_id                 = aws_ec2_managed_prefix_list.example.id

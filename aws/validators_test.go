@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -163,6 +162,33 @@ func TestValidateCloudWatchEventRuleName(t *testing.T) {
 	}
 	for _, v := range invalidNames {
 		_, errors := validateCloudWatchEventRuleName(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid CW event rule name", v)
+		}
+	}
+}
+
+func TestValidateCloudWatchEventBusNameOrARN(t *testing.T) {
+	validNames := []string{
+		"HelloWorl_d",
+		"hello-world",
+		"hello.World0125",
+		"aws.partner/mongodb.com/stitch.trigger/something",
+		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+	}
+	for _, v := range validNames {
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"special@character",
+		"arn:aw:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+	}
+	for _, v := range invalidNames {
+		_, errors := validateCloudWatchEventBusNameOrARN(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event rule name", v)
 		}
@@ -947,92 +973,6 @@ func TestValidateStringIsJsonOrYaml(t *testing.T) {
 	}
 }
 
-func TestValidateSQSQueueName(t *testing.T) {
-	validNames := []string{
-		"valid-name",
-		"valid02-name",
-		"Valid-Name1",
-		"_",
-		"-",
-		strings.Repeat("W", 80),
-	}
-	for _, v := range validNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS queue Name", v)
-		}
-
-		if errors := validateSQSNonFifoQueueName(v); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS non-fifo queue Name", v)
-		}
-	}
-
-	invalidNames := []string{
-		"Here is a name with: colon",
-		"another * invalid name",
-		"also $ invalid",
-		"This . is also %% invalid@!)+(",
-		"*",
-		"",
-		" ",
-		".",
-		strings.Repeat("W", 81), // length > 80
-	}
-	for _, v := range invalidNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS queue Name", v)
-		}
-
-		if errors := validateSQSNonFifoQueueName(v); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS non-fifo queue Name", v)
-		}
-	}
-}
-
-func TestValidateSQSFifoQueueName(t *testing.T) {
-	validNames := []string{
-		"valid-name.fifo",
-		"valid02-name.fifo",
-		"Valid-Name1.fifo",
-		"_.fifo",
-		"a.fifo",
-		"A.fifo",
-		"9.fifo",
-		"-.fifo",
-		fmt.Sprintf("%s.fifo", strings.Repeat("W", 75)),
-	}
-	for _, v := range validNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS queue Name", v)
-		}
-
-		if errors := validateSQSFifoQueueName(v); len(errors) > 0 {
-			t.Fatalf("%q should be a valid SQS FIFO queue Name: %v", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"Here is a name with: colon",
-		"another * invalid name",
-		"also $ invalid",
-		"This . is also %% invalid@!)+(",
-		".fifo",
-		"*",
-		"",
-		" ",
-		".",
-		strings.Repeat("W", 81), // length > 80
-	}
-	for _, v := range invalidNames {
-		if _, errors := validateSQSQueueName(v, "test_attribute"); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS queue Name", v)
-		}
-
-		if errors := validateSQSFifoQueueName(v); len(errors) == 0 {
-			t.Fatalf("%q should be an invalid SQS FIFO queue Name: %v", v, errors)
-		}
-	}
-}
-
 func TestValidateOnceAWeekWindowFormat(t *testing.T) {
 	cases := []struct {
 		Value    string
@@ -1304,37 +1244,6 @@ func TestValidateDmsEndpointId(t *testing.T) {
 		_, errors := validateDmsEndpointId(s, "endpoint_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid endpoint id: %v", s, errors)
-		}
-	}
-}
-
-func TestValidateDmsCertificateId(t *testing.T) {
-	validIds := []string{
-		"tf-test-certificate-1",
-		"tfTestEndpoint",
-	}
-
-	for _, s := range validIds {
-		_, errors := validateDmsCertificateId(s, "certificate_id")
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid certificate id: %v", s, errors)
-		}
-	}
-
-	invalidIds := []string{
-		"tf_test_certificate_1",
-		"tf.test.certificate.1",
-		"tf test certificate 1",
-		"tf-test-certificate-1!",
-		"tf-test-certificate-1-",
-		"tf-test-certificate--1",
-		"tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1tf-test-certificate-1",
-	}
-
-	for _, s := range invalidIds {
-		_, errors := validateDmsEndpointId(s, "certificate_id")
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid certificate id: %v", s, errors)
 		}
 	}
 }
@@ -3305,6 +3214,35 @@ func TestValidateUTCTimestamp(t *testing.T) {
 		_, errors := validateUTCTimestamp(f, "utc_timestamp")
 		if len(errors) == 0 {
 			t.Fatalf("expected the time %q to fail validation", f)
+		}
+	}
+}
+
+func TestValidateTypeStringIsDateOrInt(t *testing.T) {
+	validT := []string{
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05-07:00",
+		"1234",
+		"0",
+	}
+
+	for _, f := range validT {
+		_, errors := validateTypeStringIsDateOrPositiveInt(f, "parameter")
+		if len(errors) > 0 {
+			t.Fatalf("expected the value %q to be either RFC 3339 or positive integer, got error %q", f, errors)
+		}
+	}
+
+	invalidT := []string{
+		"2018-03-01T00:00:00", // No time zone
+		"ABC",
+		"-789",
+	}
+
+	for _, f := range invalidT {
+		_, errors := validateTypeStringIsDateOrPositiveInt(f, "parameter")
+		if len(errors) == 0 {
+			t.Fatalf("expected the value %q to fail validation", f)
 		}
 	}
 }
