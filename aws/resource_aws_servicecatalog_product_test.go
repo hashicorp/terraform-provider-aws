@@ -172,6 +172,7 @@ func testAccCheckAwsServiceCatalogProductExists(resourceName string) resource.Te
 }
 
 func testAccAWSServiceCatalogProductConfigTemplateURLBase(rName string) string {
+	//lintignore:AWSAT002,AWSAT003
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
