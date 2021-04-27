@@ -407,7 +407,6 @@ func RouteByPrefixListIDDestination(conn *ec2.EC2, routeTableID, prefixListID st
 	return nil, &resource.NotFoundError{}
 }
 
-// SecurityGroupByID looks up a security group by ID. When not found, returns nil and potentially an API error.
 // SecurityGroupByID looks up a security group by ID. Returns a resource.NotFoundError if not found.
 func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
@@ -429,6 +428,7 @@ func SecurityGroupByNameAndVpcID(conn *ec2.EC2, name, vpcID string) (*ec2.Securi
 	return SecurityGroup(conn, input)
 }
 
+// SecurityGroup looks up a security group using an ec2.DescribeSecurityGroupsInput. Returns a resource.NotFoundError if not found.
 func SecurityGroup(conn *ec2.EC2, input *ec2.DescribeSecurityGroupsInput) (*ec2.SecurityGroup, error) {
 	result, err := conn.DescribeSecurityGroups(input)
 	if tfawserr.ErrCodeEquals(err, tfec2.InvalidSecurityGroupIDNotFound) ||
