@@ -375,7 +375,7 @@ resource "aws_elasticache_subnet_group" "test" {
   subnet_ids = [aws_subnet.foo.id]
 
   tags = {
-      %q = %q
+    %q = %q
   }
 }
 `, rInt, tag1Key, tag1Value))
@@ -409,8 +409,8 @@ resource "aws_elasticache_subnet_group" "test" {
   subnet_ids = [aws_subnet.foo.id]
 
   tags = {
-      %q = %q
-      %q = %q
+    %q = %q
+    %q = %q
   }
 }
 `, rInt, tag1Key, tag1Value, tag2Key, tag2Value))
