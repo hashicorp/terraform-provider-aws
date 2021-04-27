@@ -78,6 +78,7 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 						"disable_template_validation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -106,10 +107,6 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 						},
 					},
 				},
-			},
-			"source_portfolio_id": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -226,7 +223,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId))
 
 	if _, err := waiter.ProductReady(conn, aws.StringValue(input.AcceptLanguage),
-		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId), d.Get("source_portfolio_id").(string)); err != nil {
+		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId)); err != nil {
 		return fmt.Errorf("error waiting for product to be ready: %w", err)
 	}
 
@@ -238,12 +235,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	output, err := waiter.ProductReady(
-		conn,
-		d.Get("accept_language").(string),
-		d.Id(),
-		d.Get("source_portfolio_id").(string),
-	)
+	output, err := waiter.ProductReady(conn, d.Get("accept_language").(string), d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
@@ -394,7 +386,7 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error deleting Service Catalog Product (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.ProductDeleted(conn, d.Get("accept_language").(string), d.Id(), d.Get("source_portfolio_id").(string)); err != nil {
+	if _, err := waiter.ProductDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
 		return fmt.Errorf("error waiting for product (%s) to be deleted: %w", d.Id(), err)
 	}
 
