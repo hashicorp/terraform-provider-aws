@@ -62,13 +62,18 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
 				ValidateFunc: validateRoute53ResolverName,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
 		CreatorRequestId:    aws.String(resource.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
@@ -76,14 +81,11 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationCreate(d *schema.Reso
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
+		Tags:                tags.IgnoreAws().Route53resolverTags(),
 	}
 
 	if v, ok := d.GetOk("mutation_protection"); ok {
 		input.MutationProtection = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Route53resolverTags()
 	}
 
 	log.Printf("[DEBUG] Creating Route 53 Resolver DNS Firewall rule group association: %#v", input)
@@ -105,6 +107,7 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationCreate(d *schema.Reso
 
 func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	ruleGroupAssociation, err := finder.FirewallRuleGroupAssociationByID(conn, d.Id())
@@ -138,8 +141,15 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.Resour
 		return fmt.Errorf("error listing tags for Route53 Resolver DNS Firewall rule group association (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -172,8 +182,8 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationUpdate(d *schema.Reso
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver DNS Firewall rule group association (%s) tags: %w", d.Get("arn").(string), err)
 		}
