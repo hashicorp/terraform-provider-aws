@@ -674,8 +674,6 @@ func testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName string) resou
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		fmt.Printf("%#v", rs.Primary.Attributes)
-
 		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
 	}
 }
