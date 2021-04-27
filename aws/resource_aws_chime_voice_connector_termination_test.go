@@ -22,7 +22,7 @@ func TestAccAWSChimeVoiceConnectorTermination_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSChimeVoiceConnectorTerminationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSChimeVoiceConnectorTerminationConfig(vcName),
+				Config: testAccAWSChimeVoiceConnectorTerminationConfig("50.35.78.96/31", vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSChimeVoiceConnectorTerminationExists(resourceName),
 				),
@@ -58,21 +58,21 @@ func testAccCheckAWSChimeVoiceConnectorTerminationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccAWSChimeVoiceConnectorTerminationConfig(vcName string) string {
+func testAccAWSChimeVoiceConnectorTerminationConfig(cidr string, vcName string) string {
 	return fmt.Sprintf(`
-resource "aws_chime_voice_connector_termination" "t" {
-  disabled            = true
-  cps_limit           = 1
-  cidr_allow_list     = ["50.35.78.96/31"]
-  calling_regions     = ["US", "CA"]
-  voice_connector_id  = aws_chime_voice_connector.chime.id
+resource "aws_chime_voice_connector_termination" "default" {
+  disabled           = true
+  cps_limit          = 1
+  cidr_allow_list    = ["%[1]s"]
+  calling_regions    = ["US", "CA"]
+  voice_connector_id = aws_chime_voice_connector.default.id
 }
 
-resource "aws_chime_voice_connector" "chime" {
-  name                = %s
-  require_encryption  = true
+resource "aws_chime_voice_connector" "default" {
+  name               = "%[2]s"
+  require_encryption = true
 }
-`, vcName)
+`, cidr, vcName)
 }
 
 func testAccCheckAWSChimeVoiceConnectorTerminationExists(name string) resource.TestCheckFunc {

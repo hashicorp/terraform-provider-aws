@@ -42,7 +42,8 @@ func TestAccAWSChimeVoiceConnector_basic(t *testing.T) {
 func testAccAWSChimeVoiceConnectorConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
-	name = "voice-connector-test-%s"
+  name               = "voice-connector-test-%s"
+  require_encryption = true
 }
 `, name)
 }
