@@ -13,20 +13,17 @@ Provides a resource to manage an [AWS Macie Findings Filter](https://docs.aws.am
 ## Example Usage
 
 ```terraform
-resource "aws_macie2_account" "example" {
-  client_token = "CLIENT TOKEN"
-}
+resource "aws_macie2_account" "example" {}
 
 resource "aws_macie2_findings_filter" "test" {
-  name = "NAME OF THE FINDINGS FILTER"
-  client_token = aws_macie2_account.test.client_token
+  name        = "NAME OF THE FINDINGS FILTER"
   description = "DESCRIPTION"
-  position = 1
-  action = "ARCHIVE"
+  position    = 1
+  action      = "ARCHIVE"
   finding_criteria {
     criterion {
-      field  = "region"
-      eq = [data.aws_region.current.name]
+      field = "region"
+      eq    = [data.aws_region.current.name]
     }
   }
   depends_on = [aws_macie2_account.test]
@@ -38,8 +35,8 @@ resource "aws_macie2_findings_filter" "test" {
 The following arguments are supported:
 
 * `finding_criteria` - (Required) The criteria to use to filter findings.
-* `client_token` - (Optional) A unique, case-sensitive token that you provide to ensure the idempotency of the request.
-* `name` - (Required) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters.
+* `name` - (Required) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` -  (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A custom description of the filter. The description can contain as many as 512 characters.
 * `action` - (Required) The action to perform on findings that meet the filter criteria (`finding_criteria`). Valid values are: `ARCHIVE`, suppress (automatically archive) the findings; and, `NOOP`, don't perform any action on the findings.
 * `position` - (Optional) The position of the filter in the list of saved filters on the Amazon Macie console. This value also determines the order in which the filter is applied to findings, relative to other filters that are also applied to the findings.
@@ -51,7 +48,7 @@ The `finding_criteria` object supports the following:
 
 The `criterion` object supports the following:
 
-* `field` - (Required) The name of the field to be evaluated. 
+* `field` - (Required) The name of the field to be evaluated.
 * `eq_exact_match` - (Optional) The value for the property exclusively matches (equals an exact match for) all the specified values. If you specify multiple values, Amazon Macie uses AND logic to join the values.
 * `eq` - (Optional) The value for the property matches (equals) the specified value. If you specify multiple values, Macie uses OR logic to join the values.
 * `neq` - (Optional) The value for the property doesn't match (doesn't equal) the specified value. If you specify multiple values, Macie uses OR logic to join the values.
