@@ -80,5 +80,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_servicecatalog_product` can be imported using the product ID, e.g.
 
 ```
-$ terraform import aws_servicecatalog_product.example arn:aws:servicecatalog:us-east-1:123456789012:infrastructure-component/example
+$ terraform import aws_servicecatalog_product.example arn:aws:catalog:us-east-1:123456789012:product/prod-dnigbtea24ste
 ```
