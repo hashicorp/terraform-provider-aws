@@ -214,19 +214,18 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 
 func testaccawsmacieCustomDataIdentifierconfigNameGenerated(regex string) string {
 	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_custom_data_identifier" "test" {
-		regex = "%s"
+resource "aws_macie2_custom_data_identifier" "test" {
+  regex = "%s"
 
-		depends_on = [aws_macie2_account.test]
-	}
+  depends_on = [aws_macie2_account.test]
+}
 `, regex)
 }
 
 func testaccawsmacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
-	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {}
+	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_custom_data_identifier" "test" {
 		name_prefix = %[1]q
@@ -239,69 +238,69 @@ func testaccawsmacieCustomDataIdentifierconfigNamePrefix(name, regex string) str
 
 func testaccawsmacieCustomDataIdentifierconfigComplete(regex, s3AccountID, s3Bucket string) string {
 	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {}
-	
-	resource "aws_macie2_custom_data_identifier" "test" {
-		regex = "%[1]s"
-		description = "this a description"
-		maximum_match_distance = 10
-		keywords = ["test"]
-		ignore_words = ["not testing"]
+resource "aws_macie2_account" "test" {}
 
-		depends_on = [aws_macie2_account.test]
-	}
+resource "aws_macie2_custom_data_identifier" "test" {
+  regex                  = "%[1]s"
+  description            = "this a description"
+  maximum_match_distance = 10
+  keywords               = ["test"]
+  ignore_words           = ["not testing"]
 
-	resource "aws_macie2_classification_job" "test" {
-		custom_data_identifier_ids = [aws_macie2_custom_data_identifier.test.id]
-		job_type = "SCHEDULED"
-		s3_job_definition {
-			bucket_definitions{
-				account_id = "%[2]s"
-				buckets = ["%[3]s"]
-			}
-		}
-		schedule_frequency {
-			daily_schedule = true
-		}
-		sampling_percentage = 100
-		description = "test"
-		initial_run = true
-	}
+  depends_on = [aws_macie2_account.test]
+}
+
+resource "aws_macie2_classification_job" "test" {
+  custom_data_identifier_ids = [aws_macie2_custom_data_identifier.test.id]
+  job_type                   = "SCHEDULED"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%[2]s"
+      buckets    = ["%[3]s"]
+    }
+  }
+  schedule_frequency {
+    daily_schedule = true
+  }
+  sampling_percentage = 100
+  description         = "test"
+  initial_run         = true
+}
 `, regex, s3AccountID, s3Bucket)
 }
 
 func testaccawsmacieCustomDataIdentifierconfigCompleteWithTags(regex, s3AccountID, s3Bucket string) string {
 	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_custom_data_identifier" "test" {
-		regex = "%[1]s"
-		description = "this a description"
-		maximum_match_distance = 10
-		keywords = ["test"]
-		ignore_words = ["not testing"]
-		tags = {
-    		Key = "value"
-		}
+resource "aws_macie2_custom_data_identifier" "test" {
+  regex                  = "%[1]s"
+  description            = "this a description"
+  maximum_match_distance = 10
+  keywords               = ["test"]
+  ignore_words           = ["not testing"]
+  tags = {
+    Key = "value"
+  }
 
-		depends_on = [aws_macie2_account.test]
-	}
+  depends_on = [aws_macie2_account.test]
+}
 
-	resource "aws_macie2_classification_job" "test" {
-		custom_data_identifier_ids = [aws_macie2_custom_data_identifier.test.id]
-		job_type = "SCHEDULED"
-		s3_job_definition {
-			bucket_definitions{
-				account_id = "%[2]s"
-				buckets = ["%[3]s"]
-			}
-		}
-		schedule_frequency {
-			daily_schedule = true
-		}
-		sampling_percentage = 100
-		description = "test"
-		initial_run = true
-	}
+resource "aws_macie2_classification_job" "test" {
+  custom_data_identifier_ids = [aws_macie2_custom_data_identifier.test.id]
+  job_type                   = "SCHEDULED"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%[2]s"
+      buckets    = ["%[3]s"]
+    }
+  }
+  schedule_frequency {
+    daily_schedule = true
+  }
+  sampling_percentage = 100
+  description         = "test"
+  initial_run         = true
+}
 `, regex, s3AccountID, s3Bucket)
 }
