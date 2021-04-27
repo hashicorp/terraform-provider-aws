@@ -2,28 +2,32 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func TestAccAwsMacie2FindingsFilter_basic(t *testing.T) {
+func TestAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
-	name := acctest.RandomWithPrefix("testacc-findings-filter")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigBasic(name),
+				Config: testaccawsmacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 			{
@@ -35,32 +39,98 @@ func TestAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
+func TestAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
-	name := acctest.RandomWithPrefix("testacc-findings-filter")
-	clientToken := acctest.RandString(10)
+	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigComplete(clientToken, name),
+				Config: testaccawsmacieFindingsFilterconfigNamePrefix(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
+	var macie2Output macie2.GetFindingsFilterOutput
+	resourceName := "aws_macie2_findings_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testaccawsmacieFindingsFilterconfigNameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
+	var macie2Output macie2.GetFindingsFilterOutput
+	resourceName := "aws_macie2_findings_filter.test"
+	description := "this is a description"
+	action := "ARCHIVE"
+	descriptionUpdated := "this is a description updated"
+	actionUpdated := "NOOP"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testaccawsmacieFindingsFilterconfigComplete(description, action, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttrSet(resourceName, "action"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "position"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"client_token"},
+				Config: testaccawsmacieFindingsFilterconfigComplete(descriptionUpdated, actionUpdated, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttrSet(resourceName, "action"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, "position"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -69,29 +139,43 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
-	name := acctest.RandomWithPrefix("testacc-findings-filter")
-	clientToken := acctest.RandString(10)
+	description := "this is a description"
+	action := "ARCHIVE"
+	descriptionUpdated := "this is a description updated"
+	actionUpdated := "NOOP"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigWithTags(clientToken, name),
+				Config: testaccawsmacieFindingsFilterconfigWithTags(description, action, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttrSet(resourceName, "action"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrSet(resourceName, "position"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"client_token"},
+				Config: testaccawsmacieFindingsFilterconfigWithTags(descriptionUpdated, actionUpdated, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttrSet(resourceName, "action"),
+					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, "position"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -134,7 +218,7 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 		resp, err := conn.GetFindingsFilter(input)
 
-		if isAWSErr(err, macie2.ErrCodeAccessDeniedException, "") {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			continue
 		}
 
@@ -151,12 +235,26 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 
 }
 
-func testaccawsmacieFindingsFilterconfigBasic(name string) string {
-	return fmt.Sprintf(`
-	resource "aws_macie2_account" "test" {}
+func testaccawsmacieFindingsFilterconfigNameGenerated() string {
+	return `resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_findings_filter" "test" {
-		name = "%s"
+		action = "ARCHIVE"
+		finding_criteria {
+			criterion {
+				field  = "region"
+			}
+		}
+		depends_on = [aws_macie2_account.test]
+	}
+`
+}
+
+func testaccawsmacieFindingsFilterconfigNamePrefix(name string) string {
+	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+
+	resource "aws_macie2_findings_filter" "test" {
+		name_prefix = %q
 		action = "ARCHIVE"
 		finding_criteria {
 			criterion {
@@ -168,20 +266,15 @@ func testaccawsmacieFindingsFilterconfigBasic(name string) string {
 `, name)
 }
 
-func testaccawsmacieFindingsFilterconfigComplete(clientToken, name string) string {
-	return fmt.Sprintf(`
-	data "aws_region" "current" {}
+func testaccawsmacieFindingsFilterconfigComplete(description, action string, position int) string {
+	return fmt.Sprintf(`data "aws_region" "current" {}
 
-	resource "aws_macie2_account" "test" {
-		client_token = "%s"
-	}
+	resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_findings_filter" "test" {
-		name = "%s"
-		client_token = aws_macie2_account.test.client_token
-		description = "this a description"
-		position = 1
-		action = "ARCHIVE"
+		description = "%s"
+		action = "%s"
+		position = %d
 		finding_criteria {
 			criterion {
 				field  = "region"
@@ -190,23 +283,18 @@ func testaccawsmacieFindingsFilterconfigComplete(clientToken, name string) strin
 		}
 		depends_on = [aws_macie2_account.test]
 	}
-`, clientToken, name)
+`, description, action, position)
 }
 
-func testaccawsmacieFindingsFilterconfigWithTags(clientToken, name string) string {
-	return fmt.Sprintf(`
-	data "aws_region" "current" {}
+func testaccawsmacieFindingsFilterconfigWithTags(description, action string, position int) string {
+	return fmt.Sprintf(`data "aws_region" "current" {}
 
-	resource "aws_macie2_account" "test" {
-		client_token = "%s"
-	}
+	resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_findings_filter" "test" {
-		name = "%s"
-		client_token = aws_macie2_account.test.client_token
-		description = "this a description"
-		position = 1
-		action = "ARCHIVE"
+		description = "%s"
+		action = "%s"
+		position = %d
 		finding_criteria {
 			criterion {
 				field  = "region"
@@ -214,9 +302,9 @@ func testaccawsmacieFindingsFilterconfigWithTags(clientToken, name string) strin
 			}
 		}
 		tags = {
-    		Key = "value"
+    		key = "value"
 		}
 		depends_on = [aws_macie2_account.test]
 	}
-`, clientToken, name)
+`, description, action, position)
 }
