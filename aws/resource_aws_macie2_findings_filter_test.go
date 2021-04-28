@@ -23,7 +23,7 @@ func TestAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigNameGenerated(),
+				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -51,7 +51,7 @@ func TestAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigNamePrefix(namePrefix),
+				Config: testAccAwsMacieFindingsFilterconfigNamePrefix(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
@@ -78,7 +78,7 @@ func TestAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigNameGenerated(),
+				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -104,7 +104,7 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -113,7 +113,7 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testaccawsmacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
+				Config: testAccAwsMacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -143,7 +143,7 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigWithTags(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccAwsMacieFindingsFilterconfigWithTags(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -152,7 +152,7 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testaccawsmacieFindingsFilterconfigWithTags(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
+				Config: testAccAwsMacieFindingsFilterconfigWithTags(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -186,7 +186,7 @@ func testAccCheckAwsMacie2FindingsFilterExists(resourceName string, macie2Sessio
 		}
 
 		if resp == nil {
-			return fmt.Errorf("macie2 FindingsFilter %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("macie FindingsFilter %q does not exist", rs.Primary.ID)
 		}
 
 		*macie2Session = *resp
@@ -215,7 +215,7 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 		}
 
 		if resp != nil {
-			return fmt.Errorf("macie2 FindingsFilter %q still exists", rs.Primary.ID)
+			return fmt.Errorf("macie FindingsFilter %q still exists", rs.Primary.ID)
 		}
 	}
 
@@ -223,7 +223,7 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 
 }
 
-func testaccawsmacieFindingsFilterconfigNameGenerated() string {
+func testAccAwsMacieFindingsFilterconfigNameGenerated() string {
 	return `resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_findings_filter" "test" {
@@ -238,7 +238,7 @@ func testaccawsmacieFindingsFilterconfigNameGenerated() string {
 `
 }
 
-func testaccawsmacieFindingsFilterconfigNamePrefix(name string) string {
+func testAccAwsMacieFindingsFilterconfigNamePrefix(name string) string {
 	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_findings_filter" "test" {
@@ -254,7 +254,7 @@ func testaccawsmacieFindingsFilterconfigNamePrefix(name string) string {
 `, name)
 }
 
-func testaccawsmacieFindingsFilterconfigComplete(description, action string, position int) string {
+func testAccAwsMacieFindingsFilterconfigComplete(description, action string, position int) string {
 	return fmt.Sprintf(`data "aws_region" "current" {}
 
 	resource "aws_macie2_account" "test" {}
@@ -274,7 +274,7 @@ func testaccawsmacieFindingsFilterconfigComplete(description, action string, pos
 `, description, action, position)
 }
 
-func testaccawsmacieFindingsFilterconfigWithTags(description, action string, position int) string {
+func testAccAwsMacieFindingsFilterconfigWithTags(description, action string, position int) string {
 	return fmt.Sprintf(`data "aws_region" "current" {}
 
 	resource "aws_macie2_account" "test" {}
