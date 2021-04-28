@@ -25,7 +25,7 @@ func TestAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -53,7 +53,7 @@ func TestAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieCustomDataIdentifierconfigNameGenerated(regex),
+				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -78,7 +78,7 @@ func TestAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieCustomDataIdentifierconfigNamePrefix(namePrefix, regex),
+				Config: testAccAwsMacieCustomDataIdentifierconfigNamePrefix(namePrefix, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
@@ -108,7 +108,7 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieCustomDataIdentifierconfigComplete(regex, accountID, bucketName),
+				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(regex, accountID, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -138,7 +138,7 @@ func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieCustomDataIdentifierconfigCompleteWithTags(regex, accountID, bucketName),
+				Config: testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(regex, accountID, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
@@ -208,7 +208,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 
 }
 
-func testaccawsmacieCustomDataIdentifierconfigNameGenerated(regex string) string {
+func testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -220,7 +220,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
 `, regex)
 }
 
-func testaccawsmacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
+func testAccAwsMacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
 	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
 
 	resource "aws_macie2_custom_data_identifier" "test" {
@@ -232,7 +232,7 @@ func testaccawsmacieCustomDataIdentifierconfigNamePrefix(name, regex string) str
 `, name, regex)
 }
 
-func testaccawsmacieCustomDataIdentifierconfigComplete(regex, s3AccountID, s3Bucket string) string {
+func testAccAwsMacieCustomDataIdentifierconfigComplete(regex, s3AccountID, s3Bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
@@ -265,7 +265,7 @@ resource "aws_macie2_classification_job" "test" {
 `, regex, s3AccountID, s3Bucket)
 }
 
-func testaccawsmacieCustomDataIdentifierconfigCompleteWithTags(regex, s3AccountID, s3Bucket string) string {
+func testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(regex, s3AccountID, s3Bucket string) string {
 	return fmt.Sprintf(`
 resource "aws_macie2_account" "test" {}
 
