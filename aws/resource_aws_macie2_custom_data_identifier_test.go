@@ -98,8 +98,8 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	accountID := os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
+	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -113,8 +113,6 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
 				),
 			},
 			{
@@ -145,8 +143,6 @@ func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
 				),
 			},
 			{

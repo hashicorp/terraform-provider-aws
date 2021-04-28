@@ -1,9 +1,9 @@
 ---
-subcategory: "Macie2"
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_custom_data_identifier"
 description: |-
-  Provides a resource to manage an AWS Macie2 Custom Data Identifier.
+  Provides a resource to manage an AWS Macie Custom Data Identifier.
 ---
 
 # Resource: aws_macie2_custom_data_identifier
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique identifier (ID) of the macie2 custom data identifier.
 * `deleted` - Specifies whether the custom data identifier was deleted. If you delete a custom data identifier, Amazon Macie doesn't delete it permanently. Instead, it soft deletes the identifier.
-* `created_at` - The date and time, in UTC and extended ISO 8601 format, when the Amazon Macie account was created.
+* `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
 * `arn` - The Amazon Resource Name (ARN) of the custom data identifier.
 
 ## Import

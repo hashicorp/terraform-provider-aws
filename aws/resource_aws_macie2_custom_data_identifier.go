@@ -16,13 +16,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-const (
-	errorMacie2CustomDataIdentifierCreate  = "error creating Macie2 CustomDataIdentifier: %w"
-	errorMacie2CustomDataIdentifierRead    = "error reading Macie2 CustomDataIdentifier (%s): %w"
-	errorMacie2CustomDataIdentifierDelete  = "error deleting Macie2 CustomDataIdentifier (%s): %w"
-	errorMacie2CustomDataIdentifierSetting = "error setting `%s` for Macie2 CustomDataIdentifier (%s): %w"
-)
-
 func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2CustomDataIdentifierCreate,
@@ -133,11 +126,11 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 	})
 
 	if isResourceTimeoutError(err) {
-		_, _ = conn.CreateCustomDataIdentifierWithContext(ctx, input)
+		_, err = conn.CreateCustomDataIdentifierWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierCreate, err))
+		return diag.FromErr(fmt.Errorf("error creating Macie CustomDataIdentifier: %w", err))
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
@@ -156,48 +149,32 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 	resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
-		log.Printf("[WARN] Macie2 CustomDataIdentifier does not exist, removing from state: %s", d.Id())
+		log.Printf("[WARN] Macie CustomDataIdentifier does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierRead, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error reading Macie CustomDataIdentifier (%s): %w", d.Id(), err))
 	}
 
-	if err = d.Set("regex", aws.StringValue(resp.Regex)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "regex", d.Id(), err))
-	}
+	d.Set("regex", aws.StringValue(resp.Regex))
 	if err = d.Set("keywords", flattenStringList(resp.Keywords)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "keywords", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "keywords", d.Id(), err))
 	}
 	if err = d.Set("ignore_words", flattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "ignore_words", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
 	}
-	if err = d.Set("name", aws.StringValue(resp.Name)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "name", d.Id(), err))
-	}
-	if err = d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name))); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "name_prefix", d.Id(), err))
-	}
-	if err = d.Set("description", aws.StringValue(resp.Description)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "description", d.Id(), err))
-	}
-	if err = d.Set("maximum_match_distance", aws.Int64Value(resp.MaximumMatchDistance)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "maximum_match_distance", d.Id(), err))
-	}
+	d.Set("name", aws.StringValue(resp.Name))
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set("description", aws.StringValue(resp.Description))
+	d.Set("maximum_match_distance", aws.Int64Value(resp.MaximumMatchDistance))
 	if err = d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "tags", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags", d.Id(), err))
 	}
-	if err = d.Set("deleted", aws.BoolValue(resp.Deleted)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "deleted", d.Id(), err))
-	}
-	if err = d.Set("created_at", resp.CreatedAt.String()); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "created_at", d.Id(), err))
-	}
-	if err = d.Set("arn", resp.Arn); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierSetting, "arn", d.Id(), err))
-	}
+	d.Set("deleted", aws.BoolValue(resp.Deleted))
+	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("arn", aws.StringValue(resp.Arn))
 
 	return nil
 }
@@ -218,7 +195,7 @@ func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.Res
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeInternalError) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf(errorMacie2CustomDataIdentifierDelete, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
 	}
 	return nil
 }
