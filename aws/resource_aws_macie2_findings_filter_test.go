@@ -95,9 +95,7 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	description := "this is a description"
-	action := "ARCHIVE"
 	descriptionUpdated := "this is a description updated"
-	actionUpdated := "NOOP"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -106,25 +104,21 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigComplete(description, action, 1),
+				Config: testaccawsmacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "action"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "position"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 				),
 			},
 			{
-				Config: testaccawsmacieFindingsFilterconfigComplete(descriptionUpdated, actionUpdated, 1),
+				Config: testaccawsmacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "action"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "position"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 				),
 			},
 			{
@@ -140,9 +134,7 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	description := "this is a description"
-	action := "ARCHIVE"
 	descriptionUpdated := "this is a description updated"
-	actionUpdated := "NOOP"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -151,25 +143,21 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testaccawsmacieFindingsFilterconfigWithTags(description, action, 1),
+				Config: testaccawsmacieFindingsFilterconfigWithTags(description, macie2.FindingsFilterActionArchive, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "action"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "position"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 				),
 			},
 			{
-				Config: testaccawsmacieFindingsFilterconfigWithTags(descriptionUpdated, actionUpdated, 1),
+				Config: testaccawsmacieFindingsFilterconfigWithTags(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttrSet(resourceName, "action"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "position"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 				),
 			},
 			{

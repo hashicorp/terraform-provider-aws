@@ -1,9 +1,9 @@
 ---
-subcategory: "Macie2"
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_findings_filter"
 description: |-
-  Provides a resource to manage an AWS Macie2 Findings Filter.
+  Provides a resource to manage an AWS Macie Findings Filter.
 ---
 
 # Resource: aws_macie2_findings_filter
