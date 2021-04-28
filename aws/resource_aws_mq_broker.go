@@ -222,17 +222,10 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional: true,
 						},
 						"audit": {
-							Type:         nullable.TypeNullableBool,
-							Optional:     true,
-							ValidateFunc: nullable.ValidateTypeStringNullableBool,
-							DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-								ov, onull, _ := nullable.Bool(o).Value()
-								nv, nnull, _ := nullable.Bool(n).Value()
-								if !ov && nnull || onull && !nv {
-									return true
-								}
-								return false
-							},
+							Type:             nullable.TypeNullableBool,
+							Optional:         true,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
 						},
 					},
 				},

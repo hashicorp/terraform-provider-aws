@@ -33,8 +33,8 @@ func NewBool(v bool) Bool {
 	return Bool(strconv.FormatBool(v))
 }
 
-// ValidateTypeStringNullableInt provides custom error messaging for TypeString ints
-// Some arguments require an int value or unspecified, empty field.
+// ValidateTypeStringNullableBool provides custom error messaging for TypeString booleans
+// Some arguments require a boolean value or unspecified, empty field.
 func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []error) {
 	value, ok := v.(string)
 	if !ok {
@@ -51,4 +51,16 @@ func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []
 	}
 
 	return
+}
+
+// DiffSuppressNullableBoolFalseAsNull allows false to be treated equivalently to null.
+// This can be used to allow a practitioner to set false when the API requires a null value,
+// as a convenience.
+func DiffSuppressNullableBoolFalseAsNull(k, o, n string, d *schema.ResourceData) bool {
+	ov, onull, _ := Bool(o).Value()
+	nv, nnull, _ := Bool(n).Value()
+	if !ov && nnull || onull && !nv {
+		return true
+	}
+	return false
 }
