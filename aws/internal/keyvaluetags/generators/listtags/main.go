@@ -26,7 +26,9 @@ var serviceNames = []string{
 	"appstream",
 	"appsync",
 	"athena",
+	"autoscaling",
 	"backup",
+	"batch",
 	"cloud9",
 	"cloudfront",
 	"cloudhsmv2",
@@ -34,9 +36,11 @@ var serviceNames = []string{
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
+	"codeartifact",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarconnections",
 	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
@@ -51,6 +55,7 @@ var serviceNames = []string{
 	"dlm",
 	"docdb",
 	"dynamodb",
+	"ec2",
 	"ecr",
 	"ecs",
 	"efs",
@@ -88,6 +93,8 @@ var serviceNames = []string{
 	"mediastore",
 	"mq",
 	"neptune",
+	"networkfirewall",
+	"networkmanager",
 	"opsworks",
 	"organizations",
 	"pinpoint",
@@ -99,17 +106,22 @@ var serviceNames = []string{
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
+	"signer",
 	"sns",
 	"sqs",
 	"ssm",
+	"ssoadmin",
 	"storagegateway",
 	"swf",
 	"transfer",
 	"waf",
 	"wafregional",
 	"wafv2",
+	"worklink",
 	"workspaces",
+	"xray",
 }
 
 type TemplateData struct {
@@ -126,11 +138,13 @@ func main() {
 	templateFuncMap := template.FuncMap{
 		"ClientType":                           keyvaluetags.ServiceClientType,
 		"ListTagsFunction":                     keyvaluetags.ServiceListTagsFunction,
+		"ListTagsInputFilterIdentifierName":    keyvaluetags.ServiceListTagsInputFilterIdentifierName,
 		"ListTagsInputIdentifierField":         keyvaluetags.ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": keyvaluetags.ServiceListTagsInputIdentifierRequiresSlice,
-		"ListTagsInputResourceTypeField":       keyvaluetags.ServiceListTagsInputResourceTypeField,
 		"ListTagsOutputTagsField":              keyvaluetags.ServiceListTagsOutputTagsField,
 		"TagPackage":                           keyvaluetags.ServiceTagPackage,
+		"TagResourceTypeField":                 keyvaluetags.ServiceTagResourceTypeField,
+		"TagTypeIdentifierField":               keyvaluetags.ServiceTagTypeIdentifierField,
 		"Title":                                strings.Title,
 	}
 
@@ -184,15 +198,24 @@ import (
 // {{ . | Title }}ListTags lists {{ . }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
+func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | TagResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
 	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
-		{{- if . | ListTagsInputIdentifierRequiresSlice }}
-		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+		{{- if . | ListTagsInputFilterIdentifierName }}
+		Filters: []*{{ . | TagPackage  }}.Filter{
+			{
+				Name:   aws.String("{{ . | ListTagsInputFilterIdentifierName }}"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
 		{{- else }}
-		{{ . | ListTagsInputIdentifierField }}:   aws.String(identifier),
+		{{- if . | ListTagsInputIdentifierRequiresSlice }}
+		{{ . | ListTagsInputIdentifierField }}: aws.StringSlice([]string{identifier}),
+		{{- else }}
+		{{ . | ListTagsInputIdentifierField }}: aws.String(identifier),
 		{{- end }}
-		{{- if . | ListTagsInputResourceTypeField }}
-		{{ . | ListTagsInputResourceTypeField }}: aws.String(resourceType),
+		{{- if . | TagResourceTypeField }}
+		{{ . | TagResourceTypeField }}:         aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 	}
 
@@ -202,7 +225,7 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 		return New(nil), err
 	}
 
-	return {{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}), nil
+	return {{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}{{ if . | TagTypeIdentifierField }}, identifier{{ if . | TagResourceTypeField }}, resourceType{{ end }}{{ end }}), nil
 }
 {{- end }}
 `

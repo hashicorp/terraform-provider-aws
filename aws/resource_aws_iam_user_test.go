@@ -3,57 +3,19 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"io/ioutil"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/pquerna/otp/totp"
 )
-
-func TestValidateIamUserName(t *testing.T) {
-	validNames := []string{
-		"test-user",
-		"test_user",
-		"testuser123",
-		"TestUser",
-		"Test-User",
-		"test.user",
-		"test.123,user",
-		"testuser@hashicorp",
-		"test+user@hashicorp.com",
-	}
-	for _, v := range validNames {
-		_, errors := validateAwsIamUserName(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid IAM User name: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"!",
-		"/",
-		" ",
-		":",
-		";",
-		"test name",
-		"/slash-at-the-beginning",
-		"slash-at-the-end/",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateAwsIamUserName(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid IAM User name", v)
-		}
-	}
-}
 
 func init() {
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
@@ -70,7 +32,9 @@ func testSweepIamUsers(region string) error {
 	conn := client.(*AWSClient).iamconn
 	prefixes := []string{
 		"test-user",
-		"tf-acc-test",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
 	}
 	users := make([]*iam.User, 0)
 
@@ -241,6 +205,7 @@ func TestAccAWSUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -277,6 +242,7 @@ func TestAccAWSUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -300,6 +266,7 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -329,6 +296,7 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -358,6 +326,7 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -387,6 +356,7 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -416,6 +386,7 @@ func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -447,6 +418,7 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -483,6 +455,7 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -520,6 +493,7 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -594,6 +568,7 @@ func TestAccAWSUser_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSUserDestroy,
 		Steps: []resource.TestStep{
@@ -742,9 +717,12 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-
+		password, err := generateIAMPassword(32)
+		if err != nil {
+			return err
+		}
 		input := &iam.CreateLoginProfileInput{
-			Password: aws.String(generateIAMPassword(32)),
+			Password: aws.String(password),
 			UserName: getUserOutput.User.UserName,
 		}
 
@@ -796,10 +774,9 @@ func testAccCheckAWSUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resou
 }
 
 func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 
-		sshKey, err := ioutil.ReadFile("./test-fixtures/public-ssh-key.pub")
+		sshKey, err := os.ReadFile("./test-fixtures/public-ssh-key.pub")
 		if err != nil {
 			return fmt.Errorf("error reading SSH fixture: %s", err)
 		}
@@ -824,7 +801,7 @@ func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutpu
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
 
-		signingCertificate, err := ioutil.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
+		signingCertificate, err := os.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
 		if err != nil {
 			return fmt.Errorf("error reading signing certificate fixture: %s", err)
 		}

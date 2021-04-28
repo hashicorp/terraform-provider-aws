@@ -3,7 +3,7 @@ package aws
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -65,6 +65,8 @@ func dataSourceAwsKinesisStream() *schema.Resource {
 
 func dataSourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	sn := d.Get("name").(string)
 
 	state, err := readKinesisStreamState(conn, sn)
@@ -84,11 +86,11 @@ func dataSourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) er
 	tags, err := keyvaluetags.KinesisListTags(conn, sn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %s", sn, err)
+		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil

@@ -12,7 +12,7 @@ Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amaz
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "dlm_lifecycle_role" {
   name = "dlm-lifecycle-role"
 
@@ -35,7 +35,7 @@ EOF
 
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
-  role = "${aws_iam_role.dlm_lifecycle_role.id}"
+  role = aws_iam_role.dlm_lifecycle_role.id
 
   policy = <<EOF
 {
@@ -45,7 +45,9 @@ resource "aws_iam_role_policy" "dlm_lifecycle" {
          "Effect": "Allow",
          "Action": [
             "ec2:CreateSnapshot",
+            "ec2:CreateSnapshots",
             "ec2:DeleteSnapshot",
+            "ec2:DescribeInstances",
             "ec2:DescribeVolumes",
             "ec2:DescribeSnapshots"
          ],
@@ -65,7 +67,7 @@ EOF
 
 resource "aws_dlm_lifecycle_policy" "example" {
   description        = "example DLM lifecycle policy"
-  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+  execution_role_arn = aws_iam_role.dlm_lifecycle_role.arn
   state              = "ENABLED"
 
   policy_details {
@@ -106,7 +108,7 @@ The following arguments are supported:
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
-* `tags` - (Optional) Key-value map of resource tags.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Policy Details arguments
 
@@ -140,6 +142,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
 * `id` - Identifier of the DLM Lifecycle Policy.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

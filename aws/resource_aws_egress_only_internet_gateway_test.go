@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -67,6 +67,7 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +75,7 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 				Config: testAccAWSEgressOnlyInternetGatewayConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSEgressOnlyInternetGatewayExists(resourceName, &igw),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -90,10 +92,10 @@ func TestAccAWSEgressOnlyInternetGateway_Tags(t *testing.T) {
 	resourceName := "aws_egress_only_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSEgressOnlyInternetGatewayDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEgressOnlyInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEgressOnlyInternetGatewayConfigTags1("key1", "value1"),
@@ -193,7 +195,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 `
 

@@ -12,7 +12,7 @@ Use this data source to get information about an EBS Snapshot for use when provi
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ebs_snapshot" "ebs_volume" {
   most_recent = true
   owners      = ["self"]
@@ -50,6 +50,7 @@ several valid keys, for a full reference, check out
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g. snap-59fcb34e).
 * `snapshot_id` - The snapshot ID (e.g. snap-59fcb34e).
 * `description` - A description for the snapshot

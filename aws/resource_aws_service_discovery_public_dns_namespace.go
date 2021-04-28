@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 )
 
@@ -14,6 +15,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsServiceDiscoveryPublicDnsNamespaceCreate,
 		Read:   resourceAwsServiceDiscoveryPublicDnsNamespaceRead,
+		Update: resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate,
 		Delete: resourceAwsServiceDiscoveryPublicDnsNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -22,15 +24,18 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateServiceDiscoveryNamespaceName,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -40,11 +45,15 @@ func resourceAwsServiceDiscoveryPublicDnsNamespace() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	// The CreatorRequestId has a limit of 64 bytes
@@ -57,6 +66,7 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
 		Name:             aws.String(name),
+		Tags:             tags.IgnoreAws().ServicediscoveryTags(),
 		CreatorRequestId: aws.String(requestId),
 	}
 
@@ -97,6 +107,8 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceCreate(d *schema.ResourceData,
 
 func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sdconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &servicediscovery.GetNamespaceInput{
 		Id: aws.String(d.Id()),
@@ -111,13 +123,45 @@ func resourceAwsServiceDiscoveryPublicDnsNamespaceRead(d *schema.ResourceData, m
 		return err
 	}
 
+	arn := aws.StringValue(resp.Namespace.Arn)
 	d.Set("name", resp.Namespace.Name)
 	d.Set("description", resp.Namespace.Description)
-	d.Set("arn", resp.Namespace.Arn)
+	d.Set("arn", arn)
 	if resp.Namespace.Properties != nil {
 		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
 	}
+
+	tags, err := keyvaluetags.ServicediscoveryListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
+}
+
+func resourceAwsServiceDiscoveryPublicDnsNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).sdconn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.ServicediscoveryUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Service Discovery Public DNS Namespace (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsServiceDiscoveryHttpNamespaceRead(d, meta)
 }
 
 func resourceAwsServiceDiscoveryPublicDnsNamespaceDelete(d *schema.ResourceData, meta interface{}) error {

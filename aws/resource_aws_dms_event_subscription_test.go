@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
@@ -19,6 +19,7 @@ func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -30,8 +31,8 @@ func TestAccAWSDmsEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.1475249524", "creation"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.563807169", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
 				),
@@ -52,6 +53,7 @@ func TestAccAWSDmsEventSubscription_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +76,7 @@ func TestAccAWSDmsEventSubscription_Enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -114,6 +117,7 @@ func TestAccAWSDmsEventSubscription_EventCategories(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -122,8 +126,8 @@ func TestAccAWSDmsEventSubscription_EventCategories(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.1475249524", "creation"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.563807169", "failure"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
 				),
 			},
 			{
@@ -136,8 +140,8 @@ func TestAccAWSDmsEventSubscription_EventCategories(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.2890955135", "configuration change"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.769513765", "deletion"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
 				),
 			},
 		},
@@ -151,6 +155,7 @@ func TestAccAWSDmsEventSubscription_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
 		Steps: []resource.TestStep{

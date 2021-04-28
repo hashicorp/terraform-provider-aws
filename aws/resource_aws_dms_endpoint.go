@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -114,6 +115,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"docdb",
 					"dynamodb",
 					"elasticsearch",
+					"kafka",
 					"kinesis",
 					"mariadb",
 					"mongodb",
@@ -127,9 +129,35 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				}, false),
 			},
 			"extra_connection_attributes": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Computed:         true,
+				Optional:         true,
+				DiffSuppressFunc: suppressExtraConnectionAttributesDiffs,
+			},
+			"kafka_settings": {
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"topic": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "kafka-default-topic",
+						},
+					},
+				},
 			},
 			"kinesis_settings": {
 				Type:     schema.TypeList,
@@ -273,6 +301,11 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "NONE",
 						},
+						"date_partition_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -295,23 +328,28 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					dms.DmsSslModeValueVerifyFull,
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatabasemigrationserviceTags(),
+		Tags:               tags.IgnoreAws().DatabasemigrationserviceTags(),
 	}
 
 	switch d.Get("engine_name").(string) {
@@ -326,6 +364,11 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+		}
+	case "kafka":
+		request.KafkaSettings = &dms.KafkaSettings{
+			Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
+			Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
 		}
 	case "kinesis":
 		request.KinesisSettings = &dms.KinesisSettings{
@@ -365,6 +408,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
 			BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
 			CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
+			DatePartitionEnabled:    aws.Bool(d.Get("s3_settings.0.date_partition_enabled").(bool)),
 		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
@@ -375,9 +419,7 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		if v, ok := d.GetOk("database_name"); ok {
 			request.DatabaseName = aws.String(v.(string))
 		}
-		if v, ok := d.GetOk("extra_connection_attributes"); ok {
-			request.ExtraConnectionAttributes = aws.String(v.(string))
-		}
+
 		if v, ok := d.GetOk("kms_key_arn"); ok {
 			request.KmsKeyId = aws.String(v.(string))
 		}
@@ -386,6 +428,13 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("certificate_arn"); ok {
 		request.CertificateArn = aws.String(v.(string))
 	}
+
+	// Send ExtraConnectionAttributes in the API request for all resource types
+	// per https://github.com/hashicorp/terraform-provider-aws/issues/8009
+	if v, ok := d.GetOk("extra_connection_attributes"); ok {
+		request.ExtraConnectionAttributes = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("ssl_mode"); ok {
 		request.SslMode = aws.String(v.(string))
 	}
@@ -417,6 +466,8 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	response, err := conn.DescribeEndpoints(&dms.DescribeEndpointsInput{
 		Filters: []*dms.Filter{
@@ -446,8 +497,15 @@ func resourceAwsDmsEndpointRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -498,9 +556,9 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		hasChanges = true
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags_all") {
 		arn := d.Get("endpoint_arn").(string)
-		o, n := d.GetChange("tags")
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatabasemigrationserviceUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating DMS Endpoint (%s) tags: %s", arn, err)
@@ -530,6 +588,17 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			request.EngineName = aws.String(d.Get("engine_name").(string))
 			hasChanges = true
 		}
+	case "kafka":
+		if d.HasChanges(
+			"kafka_settings.0.broker",
+			"kafka_settings.0.topic") {
+			request.KafkaSettings = &dms.KafkaSettings{
+				Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
+				Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string))
+			hasChanges = true
+		}
 	case "kinesis":
 		if d.HasChanges(
 			"kinesis_settings.0.service_access_role_arn",
@@ -545,17 +614,10 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			hasChanges = true
 		}
 	case "mongodb":
-		if d.HasChange("username") ||
-			d.HasChange("password") ||
-			d.HasChange("server_name") ||
-			d.HasChange("port") ||
-			d.HasChange("database_name") ||
-			d.HasChange("mongodb_settings.0.auth_type") ||
-			d.HasChange("mongodb_settings.0.auth_mechanism") ||
-			d.HasChange("mongodb_settings.0.nesting_level") ||
-			d.HasChange("mongodb_settings.0.extract_doc_id") ||
-			d.HasChange("mongodb_settings.0.docs_to_investigate") ||
-			d.HasChange("mongodb_settings.0.auth_source") {
+		if d.HasChanges(
+			"username", "password", "server_name", "port", "database_name", "mongodb_settings.0.auth_type",
+			"mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id",
+			"mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source") {
 			request.MongoDbSettings = &dms.MongoDbSettings{
 				Username:     aws.String(d.Get("username").(string)),
 				Password:     aws.String(d.Get("password").(string)),
@@ -583,13 +645,10 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			hasChanges = true
 		}
 	case "s3":
-		if d.HasChange("s3_settings.0.service_access_role_arn") ||
-			d.HasChange("s3_settings.0.external_table_definition") ||
-			d.HasChange("s3_settings.0.csv_row_delimiter") ||
-			d.HasChange("s3_settings.0.csv_delimiter") ||
-			d.HasChange("s3_settings.0.bucket_folder") ||
-			d.HasChange("s3_settings.0.bucket_name") ||
-			d.HasChange("s3_settings.0.compression_type") {
+		if d.HasChanges(
+			"s3_settings.0.service_access_role_arn", "s3_settings.0.external_table_definition",
+			"s3_settings.0.csv_row_delimiter", "s3_settings.0.csv_delimiter", "s3_settings.0.bucket_folder",
+			"s3_settings.0.bucket_name", "s3_settings.0.compression_type") {
 			request.S3Settings = &dms.S3Settings{
 				ServiceAccessRoleArn:    aws.String(d.Get("s3_settings.0.service_access_role_arn").(string)),
 				ExternalTableDefinition: aws.String(d.Get("s3_settings.0.external_table_definition").(string)),
@@ -657,7 +716,7 @@ func resourceAwsDmsEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
-	d.SetId(*endpoint.EndpointIdentifier)
+	d.SetId(aws.StringValue(endpoint.EndpointIdentifier))
 
 	d.Set("certificate_arn", endpoint.CertificateArn)
 	d.Set("endpoint_arn", endpoint.EndpointArn)
@@ -665,6 +724,7 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 	// For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("endpoint_type", strings.ToLower(*endpoint.EndpointType))
 	d.Set("engine_name", endpoint.EngineName)
+	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 
 	switch *endpoint.EngineName {
 	case "dynamodb":
@@ -676,6 +736,10 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 	case "elasticsearch":
 		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
+		}
+	case "kafka":
+		if err := d.Set("kafka_settings", flattenDmsKafkaSettings(endpoint.KafkaSettings)); err != nil {
+			return fmt.Errorf("Error setting kafka_settings for DMS: %s", err)
 		}
 	case "kinesis":
 		if err := d.Set("kinesis_settings", flattenDmsKinesisSettings(endpoint.KinesisSettings)); err != nil {
@@ -729,6 +793,19 @@ func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[
 	return []map[string]interface{}{m}
 }
 
+func flattenDmsKafkaSettings(settings *dms.KafkaSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"broker": aws.StringValue(settings.Broker),
+		"topic":  aws.StringValue(settings.Topic),
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
@@ -773,7 +850,95 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 		"bucket_folder":             aws.StringValue(settings.BucketFolder),
 		"bucket_name":               aws.StringValue(settings.BucketName),
 		"compression_type":          aws.StringValue(settings.CompressionType),
+		"date_partition_enabled":    aws.BoolValue(settings.DatePartitionEnabled),
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func suppressExtraConnectionAttributesDiffs(_, old, new string, d *schema.ResourceData) bool {
+	if d.Id() != "" {
+		o := extraConnectionAttributesToSet(old)
+		n := extraConnectionAttributesToSet(new)
+
+		var config *schema.Set
+		// when the engine is "s3" or "mongodb", the extra_connection_attributes
+		// can consist of a subset of the attributes configured in the {engine}_settings block;
+		// fields such as service_access_role_arn (in the case of "s3") are not returned from the API in
+		// extra_connection_attributes thus we take the Set difference to ensure
+		// the returned attributes were set in the {engine}_settings block or originally
+		// in the extra_connection_attributes field
+		if v, ok := d.GetOk("mongodb_settings"); ok {
+			config = engineSettingsToSet(v.([]interface{}))
+		} else if v, ok := d.GetOk("s3_settings"); ok {
+			config = engineSettingsToSet(v.([]interface{}))
+		}
+
+		if o != nil && config != nil {
+			diff := o.Difference(config)
+
+			return diff.Len() == 0 || diff.Equal(n)
+		}
+	}
+	return false
+}
+
+// extraConnectionAttributesToSet accepts an extra_connection_attributes
+// string in the form of "key=value;key2=value2;" and returns
+// the Set representation, with each element being the key/value pair
+func extraConnectionAttributesToSet(extra string) *schema.Set {
+	if extra == "" {
+		return nil
+	}
+
+	s := &schema.Set{F: schema.HashString}
+
+	parts := strings.Split(extra, ";")
+	for _, part := range parts {
+		kvParts := strings.Split(part, "=")
+		if len(kvParts) != 2 {
+			continue
+		}
+
+		k, v := kvParts[0], kvParts[1]
+		// normalize key, from camelCase to snake_case,
+		// and value where hyphens maybe used in a config
+		// but the API returns with underscores
+		matchAllCap := regexp.MustCompile("([a-z])([A-Z])")
+		key := matchAllCap.ReplaceAllString(k, "${1}_${2}")
+		normalizedVal := strings.Replace(strings.ToLower(v), "-", "_", -1)
+
+		s.Add(fmt.Sprintf("%s=%s", strings.ToLower(key), normalizedVal))
+	}
+
+	return s
+}
+
+// engineSettingsToSet accepts the {engine}_settings block as a list
+// and returns the Set representation, with each element being the key/value pair
+func engineSettingsToSet(l []interface{}) *schema.Set {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	s := &schema.Set{F: schema.HashString}
+
+	for k, v := range tfMap {
+		switch t := v.(type) {
+		case string:
+			// normalize value for changes in case or where hyphens
+			// maybe used in a config but the API returns with underscores
+			normalizedVal := strings.Replace(strings.ToLower(t), "-", "_", -1)
+			s.Add(fmt.Sprintf("%s=%v", k, normalizedVal))
+		default:
+			s.Add(fmt.Sprintf("%s=%v", k, t))
+		}
+	}
+
+	return s
 }

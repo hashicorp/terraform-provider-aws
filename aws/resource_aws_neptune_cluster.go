@@ -9,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const (
@@ -21,6 +22,8 @@ const (
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
 	CloudwatchLogsExportsAudit = "audit"
+
+	neptuneDefaultPort = 8182
 )
 
 func resourceAwsNeptuneCluster() *schema.Resource {
@@ -194,7 +197,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  8182,
+				Default:  neptuneDefaultPort,
 				ForceNew: true,
 			},
 
@@ -246,7 +249,8 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
@@ -260,12 +264,15 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 				Optional: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Check if any of the parameters that require a cluster modification after creation are set
 	clusterUpdate := false
@@ -290,7 +297,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		StorageEncrypted:    aws.Bool(d.Get("storage_encrypted").(bool)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                tags,
+		Tags:                tags.IgnoreAws().NeptuneTags(),
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
@@ -298,12 +305,12 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		Port:                aws.Int64(int64(d.Get("port").(int))),
 		SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 		DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:                tags,
+		Tags:                tags.IgnoreAws().NeptuneTags(),
 	}
 
 	if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.AvailabilityZones = expandStringList(attr.List())
-		restoreDBClusterFromSnapshotInput.AvailabilityZones = expandStringList(attr.List())
+		createDbClusterInput.AvailabilityZones = expandStringSet(attr)
+		restoreDBClusterFromSnapshotInput.AvailabilityZones = expandStringSet(attr)
 	}
 
 	if attr, ok := d.GetOk("backup_retention_period"); ok {
@@ -314,8 +321,8 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr := d.Get("enable_cloudwatch_logs_exports").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
-		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = expandStringList(attr.List())
+		createDbClusterInput.EnableCloudwatchLogsExports = expandStringSet(attr)
+		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = expandStringSet(attr)
 	}
 
 	if attr, ok := d.GetOk("engine_version"); ok {
@@ -357,11 +364,11 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.VpcSecurityGroupIds = expandStringList(attr.List())
+		createDbClusterInput.VpcSecurityGroupIds = expandStringSet(attr)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
 		}
-		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = expandStringList(attr.List())
+		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = expandStringSet(attr)
 	}
 
 	if restoreDBClusterFromSnapshot {
@@ -370,7 +377,7 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)
@@ -468,6 +475,8 @@ func resourceAwsNeptuneClusterRead(d *schema.ResourceData, meta interface{}) err
 
 func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
 		return fmt.Errorf("Error saving AvailabilityZones to state for Neptune Cluster (%s): %s", d.Id(), err)
@@ -531,8 +540,15 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -549,7 +565,7 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = expandStringList(attr.List())
+			req.VpcSecurityGroupIds = expandStringSet(attr)
 		} else {
 			req.VpcSecurityGroupIds = []*string{}
 		}
@@ -564,13 +580,13 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		disableLogTypes := old.(*schema.Set).Difference(new.(*schema.Set))
 
 		if disableLogTypes.Len() > 0 {
-			logs.SetDisableLogTypes(expandStringList(disableLogTypes.List()))
+			logs.SetDisableLogTypes(expandStringSet(disableLogTypes))
 		}
 
 		enableLogTypes := new.(*schema.Set).Difference(old.(*schema.Set))
 
 		if enableLogTypes.Len() > 0 {
-			logs.SetEnableLogTypes(expandStringList(enableLogTypes.List()))
+			logs.SetEnableLogTypes(expandStringSet(enableLogTypes))
 		}
 
 		req.CloudwatchLogsExportConfiguration = logs
@@ -672,8 +688,8 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %s", d.Get("arn").(string), err)

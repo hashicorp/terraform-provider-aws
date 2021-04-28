@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -43,13 +43,6 @@ func resourceAwsDxLag() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"number_of_connections": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Removed:  "Use `aws_dx_connection` and `aws_dx_connection_association` resources instead",
-			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -59,17 +52,22 @@ func resourceAwsDxLag() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
@@ -78,8 +76,8 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 		NumberOfConnections:  aws.Int64(int64(1)),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		req.Tags = keyvaluetags.New(v).IgnoreAws().DirectconnectTags()
+	if len(tags) > 0 {
+		req.Tags = tags.IgnoreAws().DirectconnectTags()
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %#v", req)
@@ -106,6 +104,8 @@ func resourceAwsDxLagCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeLags(&directconnect.DescribeLagsInput{
 		LagId: aws.String(d.Id()),
@@ -158,8 +158,15 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Direct Connect LAG (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -182,8 +189,8 @@ func resourceAwsDxLagUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DirectconnectUpdateTags(conn, arn, o, n); err != nil {
 			return fmt.Errorf("error updating Direct Connect LAG (%s) tags: %s", arn, err)

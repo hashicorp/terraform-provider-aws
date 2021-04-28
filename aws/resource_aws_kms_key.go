@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -25,6 +27,8 @@ func resourceAwsKmsKey() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -70,7 +74,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"is_enabled": {
@@ -88,13 +92,16 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Allow aws to chose default values if we don't pass them
 	req := &kms.CreateKeyInput{
@@ -107,8 +114,8 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, exists := d.GetOk("policy"); exists {
 		req.Policy = aws.String(v.(string))
 	}
-	if v, exists := d.GetOk("tags"); exists {
-		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
+	if len(tags) > 0 {
+		req.Tags = tags.IgnoreAws().KmsTags()
 	}
 
 	var resp *kms.CreateKeyOutput
@@ -116,13 +123,16 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateKey(req)
 		if isAWSErr(err, kms.ErrCodeMalformedPolicyDocumentException, "") {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = conn.CreateKey(req)
@@ -151,6 +161,8 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
@@ -237,8 +249,15 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -279,8 +298,8 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS Key (%s) tags: %s", d.Id(), err)
@@ -471,39 +490,24 @@ func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		req.PendingWindowInDays = aws.Int64(int64(v.(int)))
 	}
 	_, err := conn.ScheduleKeyDeletion(req)
+
+	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error scheduling deletion for KMS Key (%s): %w", d.Id(), err)
 	}
 
-	// Wait for propagation since KMS is eventually consistent
-	wait := resource.StateChangeConf{
-		Pending:                   []string{kms.KeyStateEnabled, kms.KeyStateDisabled},
-		Target:                    []string{kms.KeyStatePendingDeletion},
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                2 * time.Second,
-		ContinuousTargetOccurence: 10,
-		Refresh: func() (interface{}, string, error) {
-			log.Printf("[DEBUG] Checking if KMS key %s state is PendingDeletion", keyId)
-			resp, err := conn.DescribeKey(&kms.DescribeKeyInput{
-				KeyId: aws.String(keyId),
-			})
-			if err != nil {
-				return resp, "Failed", err
-			}
+	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
 
-			metadata := *resp.KeyMetadata
-			log.Printf("[DEBUG] KMS key %s state is %s, retrying", keyId, *metadata.KeyState)
-
-			return resp, *metadata.KeyState, nil
-		},
+	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		return nil
 	}
 
-	_, err = wait.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Failed deactivating KMS key %s: %s", keyId, err)
+		return fmt.Errorf("error waiting for KMS Key (%s) to schedule deletion: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] KMS Key %s deactivated.", keyId)
 
 	return nil
 }

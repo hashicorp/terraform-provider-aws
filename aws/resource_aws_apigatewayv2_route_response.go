@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
@@ -60,7 +60,7 @@ func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta int
 		req.ModelSelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("response_models"); ok {
-		req.ResponseModels = stringMapToPointers(v.(map[string]interface{}))
+		req.ResponseModels = expandStringMap(v.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 route response: %s", req)
@@ -112,7 +112,7 @@ func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta int
 		req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
 	}
 	if d.HasChange("response_models") {
-		req.ResponseModels = stringMapToPointers(d.Get("response_models").(map[string]interface{}))
+		req.ResponseModels = expandStringMap(d.Get("response_models").(map[string]interface{}))
 	}
 	if d.HasChange("route_response_key") {
 		req.RouteResponseKey = aws.String(d.Get("route_response_key").(string))
