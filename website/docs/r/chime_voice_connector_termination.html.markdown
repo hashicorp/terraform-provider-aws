@@ -36,3 +36,11 @@ The following arguments are supported:
 * `disabled` - (Optional) When termination settings are disabled, outbound calls can not be made.
 * `default_phone_number` - (Optional) The default caller ID phone number.
 * `cps_limit` - (Optional) The limit on calls per second. Max value based on account service quota. Default value of `1`.
+
+## Import
+
+Configuration Recorder can be imported using the name, e.g.
+
+```
+$ terraform import aws_chime_voice_connector_termination.default example
+```

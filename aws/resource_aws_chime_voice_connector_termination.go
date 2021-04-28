@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -95,7 +96,7 @@ func resourceAwsChimeVoiceConnectorTerminationPut(d *schema.ResourceData, meta i
 		return fmt.Errorf("Error creating Chime Voice connector termination: %s", vcId)
 	}
 
-	d.SetId(fmt.Sprintf("%s-termination", vcId))
+	d.SetId(resource.UniqueId())
 
 	return resourceAwsChimeVoiceConnectorTerminationRead(d, meta)
 }

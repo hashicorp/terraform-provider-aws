@@ -32,3 +32,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `outbound_host_name` - The outbound host name for the Amazon Chime Voice Connector.
+
+## Import
+
+Configuration Recorder can be imported using the name, e.g.
+
+```
+$ terraform import aws_chime_voice_connector.test example
+```
