@@ -663,7 +663,7 @@ func TestAccAWSEIP_carrierIP(t *testing.T) {
 func TestAccAWSEIP_BYOIPAddress_default(t *testing.T) {
 	// Test case address not set
 	var conf ec2.Address
-	resourceName := "aws_eip.bar"
+	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -691,7 +691,7 @@ func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
 	}
 
 	var conf ec2.Address
-	resourceName := "aws_eip.bar"
+	resourceName := "aws_eip.test"
 
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 
@@ -725,7 +725,7 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 	}
 
 	var conf ec2.Address
-	resourceName := "aws_eip.bar"
+	resourceName := "aws_eip.test"
 
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
@@ -997,7 +997,7 @@ func testAccEIPPublicIPv4PoolCustomConfig(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc              = true
-  public_ipv4_pool = "%s"
+  public_ipv4_pool = %[1]q
 }
 `, poolName)
 }
@@ -1020,14 +1020,14 @@ resource "aws_eip" "test" {
 }
 
 const testAccAWSEIPConfig_BYOIPAddress_custom_default = `
-resource "aws_eip" "bar" {
+resource "aws_eip" "test" {
   vpc = true
 }
 `
 
 func testAccAWSEIPConfig_BYOIPAddress_custom(address string) string {
 	return fmt.Sprintf(`
-resource "aws_eip" "bar" {
+resource "aws_eip" "test" {
   vpc     = true
   address = %[1]q
 }
@@ -1036,7 +1036,7 @@ resource "aws_eip" "bar" {
 
 func testAccAWSEIPConfig_BYOIPAddress_custom_with_PublicIpv4Pool(address string, poolname string) string {
 	return fmt.Sprintf(`
-resource "aws_eip" "bar" {
+resource "aws_eip" "test" {
   vpc              = true
   address          = %[1]q
   public_ipv4_pool = %[2]q
