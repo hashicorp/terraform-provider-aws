@@ -36,7 +36,7 @@ The following arguments are required:
 * `artifact_s3_location` - (Required) Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `execution_role_arn` - (Required) ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
-* `name` - (Required) Name for this canary.
+* `name` - (Required) Name for this canary. Has a maximum length of 21 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
 * `runtime_version` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
 * `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
 

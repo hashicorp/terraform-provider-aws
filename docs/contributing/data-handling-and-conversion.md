@@ -34,7 +34,7 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
     - [Nested TypeList of TypeString and AWS List of String](#nested-typelist-of-typestring-and-aws-list-of-string)
     - [Nested TypeMap of TypeString and AWS Map of String](#nested-typemap-of-typestring-and-aws-map-of-string)
     - [Nested TypeSet of Resource and AWS List of Structure](#nested-typeset-of-resource-and-aws-list-of-structure)
-    - [Nested TypeList of TypeString and AWS List of String](#nested-typelist-of-typestring-and-aws-list-of-string-1)
+    - [Nested TypeSet of TypeString and AWS List of String](#nested-typeset-of-typestring-and-aws-list-of-string)
     - [Nested TypeString and AWS String](#nested-typestring-and-aws-string)
     - [Nested TypeString and AWS Timestamp](#nested-typestring-and-aws-timestamp)
 - [Further Guidelines](#further-guidelines)
@@ -608,7 +608,7 @@ func expandServiceStructure(tfMap map[string]interface{}) *service.Structure {
     // ...
 
     if v, ok := tfMap["nested_attribute_name"].([]interface{}); ok && len(v) > 0 {
-        apiObject.NestedAttributeName = expandServiceStructure(v[0].map[string]interface{})
+        apiObject.NestedAttributeName = expandServiceStructure(v[0].(map[string]interface{}))
     }
 
     // ...
@@ -715,7 +715,7 @@ func flattenServiceStructure(apiObject *service.Structure) map[string]interface{
 }
 ```
 
-### Nested TypeList of TypeString and AWS List of String
+### Nested TypeSet of TypeString and AWS List of String
 
 To read:
 
