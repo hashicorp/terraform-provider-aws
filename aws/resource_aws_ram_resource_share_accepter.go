@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ram/finder"
@@ -129,8 +130,8 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 
 	invitation, err := finder.ResourceShareInvitationByResourceShareArnAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
-	if err != nil {
-		return fmt.Errorf("Error retrieving invitation for resource share %s: %s", d.Id(), err)
+	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceShareInvitationArnNotFoundException) {
+		return fmt.Errorf("error retrieving invitation for resource share %s: %w", d.Id(), err)
 	}
 
 	if invitation != nil {
@@ -142,14 +143,18 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 
 	resourceShare, err := finder.ResourceShareOwnerOtherAccountsByArn(conn, d.Id())
 
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException) || tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException)) {
+		log.Printf("[WARN] No RAM resource share with ARN (%s) found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error retrieving resource share: %w", err)
 	}
 
 	if resourceShare == nil {
-		log.Printf("[WARN] No RAM resource share with ARN (%s) found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error getting resource share (%s): empty result", d.Id())
 	}
 
 	d.Set("status", resourceShare.Status)
