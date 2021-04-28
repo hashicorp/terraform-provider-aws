@@ -17,14 +17,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-const (
-	errorMacie2FindingsFilterCreate   = "error creating Macie2 FindingsFilter: %w"
-	errorMacie2FindingsFilterRead     = "error reading Macie2 FindingsFilter (%s): %w"
-	errorMacie2FindingsFilterDelete   = "error deleting Macie2 FindingsFilter (%s): %w"
-	errorMacie2FindingsFilterUpdating = "error updating Macie2 FindingsFilter (%s): %w"
-	errorMacie2FindingsFilterSetting  = "error setting `%s` for Macie2 FindingsFilter (%s): %w"
-)
-
 func resourceAwsMacie2FindingsFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMacie2FindingsFilterCreate,
@@ -108,7 +100,7 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 			"action": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"ARCHIVE", "NOOP"}, false),
+				ValidateFunc: validation.StringInSlice(macie2.FindingsFilterAction_Values(), false),
 			},
 			"position": {
 				Type:     schema.TypeInt,
@@ -162,11 +154,11 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 	})
 
 	if isResourceTimeoutError(err) {
-		_, _ = conn.CreateFindingsFilterWithContext(ctx, input)
+		_, err = conn.CreateFindingsFilterWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterCreate, err))
+		return diag.FromErr(fmt.Errorf("error creating Macie2 FindingsFilter: %w", err))
 	}
 
 	d.SetId(aws.StringValue(output.Id))
@@ -189,33 +181,21 @@ func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceDat
 			d.SetId("")
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterRead, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error reading Macie2 FindingsFilter (%s): %w", d.Id(), err))
 	}
 
 	if err = d.Set("finding_criteria", flattenFindingCriteriaFindingsFilter(resp.FindingCriteria)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "finding_criteria", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie2 FindingsFilter (%s): %w", "finding_criteria", d.Id(), err))
 	}
-	if err = d.Set("name", aws.StringValue(resp.Name)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "name", d.Id(), err))
-	}
-	if err = d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name))); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "name_prefix", d.Id(), err))
-	}
-	if err = d.Set("description", aws.StringValue(resp.Description)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "description", d.Id(), err))
-	}
-	if err = d.Set("action", aws.StringValue(resp.Action)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "description", d.Id(), err))
-	}
-	if err = d.Set("position", aws.Int64Value(resp.Position)); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "position", d.Id(), err))
-	}
+	d.Set("name", aws.StringValue(resp.Name))
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set("description", aws.StringValue(resp.Description))
+	d.Set("action", aws.StringValue(resp.Action))
+	d.Set("position", aws.Int64Value(resp.Position))
 	if err = d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "tags", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie2 FindingsFilter (%s): %w", "tags", d.Id(), err))
 	}
-	if err = d.Set("arn", resp.Arn); err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterSetting, "arn", d.Id(), err))
-	}
+	d.Set("arn", aws.StringValue(resp.Arn))
 
 	return nil
 }
@@ -248,7 +228,7 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 
 	_, err := conn.UpdateFindingsFilterWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterUpdating, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error updating Macie2 FindingsFilter (%s): %w", d.Id(), err))
 	}
 
 	return resourceMacie2FindingsFilterRead(ctx, d, meta)
@@ -266,7 +246,7 @@ func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceD
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeInternalError) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf(errorMacie2FindingsFilterDelete, d.Id(), err))
+		return diag.FromErr(fmt.Errorf("error deleting Macie2 FindingsFilter (%s): %w", d.Id(), err))
 	}
 	return nil
 }
