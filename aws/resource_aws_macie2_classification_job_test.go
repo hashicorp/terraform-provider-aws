@@ -170,7 +170,7 @@ func testAccCheckAwsMacie2ClassificationJobExists(resourceName string, macie2Ses
 		}
 
 		if resp == nil {
-			return fmt.Errorf("macie2 ClassificationJob %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("macie ClassificationJob %q does not exist", rs.Primary.ID)
 		}
 
 		*macie2Session = *resp
