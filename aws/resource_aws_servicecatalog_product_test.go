@@ -87,7 +87,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
@@ -137,12 +137,46 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
+	resourceName := "aws_servicecatalog_product.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceCatalogProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceCatalogProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
+					resource.TestCheckResourceAttr(resourceName, "support_description", "ny supportbeskrivning"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
 			},
 		},
 	})
@@ -159,7 +193,7 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName),
+				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -167,7 +201,7 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProductConfig_updateTags(rName),
+				Config: testAccAWSServiceCatalogProductConfig_updateTags(rName, "beskrivning", "supportbeskrivning"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -315,17 +349,17 @@ EOF
 `, rName)
 }
 
-func testAccAWSServiceCatalogProductConfig_basic(rName string) string {
+func testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription string) string {
 	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = "beskrivning"
+  description         = %[2]q
   distributor         = "distributör"
   name                = %[1]q
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = "supportbeskrivning"
+  support_description = %[3]q
   support_email       = "support@example.com"
   support_url         = "http://example.com"
 
@@ -341,20 +375,20 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, description, supportDescription))
 }
 
-func testAccAWSServiceCatalogProductConfig_updateTags(rName string) string {
+func testAccAWSServiceCatalogProductConfig_updateTags(rName, description, supportDescription string) string {
 	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = "beskrivning"
+  description         = %[2]q
   distributor         = "distributör"
   name                = %[1]q
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = "supportbeskrivning"
+  support_description = %[3]q
   support_email       = "support@example.com"
   support_url         = "http://example.com"
 
@@ -371,7 +405,7 @@ resource "aws_servicecatalog_product" "test" {
     Environment = "natural"
   }
 }
-`, rName))
+`, rName, description, supportDescription))
 }
 
 func testAccAWSServiceCatalogProductConfig_physicalID(rName string) string {
