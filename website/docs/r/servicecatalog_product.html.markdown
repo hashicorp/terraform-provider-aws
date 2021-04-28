@@ -3,12 +3,12 @@ subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_product"
 description: |-
-  Manages an Service Catalog Product
+  Manages a Service Catalog Product
 ---
 
 # Resource: aws_servicecatalog_product
 
-Manages an Service Catalog Product.
+Manages a Service Catalog Product.
 
 ~> **NOTE:** The user or role that uses this resources must have the `cloudformation:GetTemplate` IAM policy permission. This policy permission is required when using the `template_physical_id` argument.
 
