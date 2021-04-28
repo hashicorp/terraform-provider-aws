@@ -171,7 +171,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName string, macie2
 		}
 
 		if resp == nil {
-			return fmt.Errorf("macie2 CustomDataIdentifier %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("macie CustomDataIdentifier %q does not exist", rs.Primary.ID)
 		}
 
 		*macie2Session = *resp
@@ -200,7 +200,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 		}
 
 		if resp != nil {
-			return fmt.Errorf("macie2 CustomDataIdentifier %q still exists", rs.Primary.ID)
+			return fmt.Errorf("macie CustomDataIdentifier %q still exists", rs.Primary.ID)
 		}
 	}
 
