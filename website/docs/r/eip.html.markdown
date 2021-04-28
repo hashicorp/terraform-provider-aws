@@ -16,7 +16,7 @@ Provides an Elastic IP resource.
 
 ## Example Usage
 
-Single EIP associated with an instance:
+### Single EIP associated with an instance
 
 ```terraform
 resource "aws_eip" "lb" {
@@ -25,7 +25,7 @@ resource "aws_eip" "lb" {
 }
 ```
 
-Multiple EIPs associated with a single network interface:
+### Multiple EIPs associated with a single network interface
 
 ```terraform
 resource "aws_network_interface" "multi-ip" {
@@ -46,7 +46,7 @@ resource "aws_eip" "two" {
 }
 ```
 
-Attaching an EIP to an Instance with a pre-assigned private ip (VPC Only):
+### Attaching an EIP to an Instance with a pre-assigned private ip (VPC Only)
 
 ```terraform
 resource "aws_vpc" "default" {
@@ -84,7 +84,7 @@ resource "aws_eip" "bar" {
 }
 ```
 
-Allocating EIP from the BYOIP pool:
+### Allocating EIP from the BYOIP pool
 
 ```terraform
 resource "aws_eip" "byoip-ip" {
