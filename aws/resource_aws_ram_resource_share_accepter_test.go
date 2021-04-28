@@ -53,6 +53,32 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_ram_resource_share_accepter.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareAccepterBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ramconn
 
