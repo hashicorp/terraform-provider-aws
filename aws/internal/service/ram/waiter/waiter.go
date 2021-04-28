@@ -7,6 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+const (
+	PrincipalAssociationTimeout    = 3 * time.Minute
+	PrincipalDisassociationTimeout = 3 * time.Minute
+)
+
 // ResourceShareInvitationAccepted waits for a ResourceShareInvitation to return ACCEPTED
 func ResourceShareInvitationAccepted(conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShareInvitation, error) {
 	stateConf := &resource.StateChangeConf{
@@ -73,6 +78,40 @@ func ResourceShareOwnedBySelfDeleted(conn *ram.RAM, arn string, timeout time.Dur
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*ram.ResourceShare); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func ResourceSharePrincipalAssociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ram.ResourceShareAssociationStatusAssociating, PrincipalAssociationStatusNotFound},
+		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
+		Refresh: ResourceSharePrincipalAssociationStatus(conn, resourceShareARN, principal),
+		Timeout: PrincipalAssociationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ram.ResourceShareAssociation); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func ResourceSharePrincipalDisassociated(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
+		Target:  []string{ram.ResourceShareAssociationStatusDisassociated, PrincipalAssociationStatusNotFound},
+		Refresh: ResourceSharePrincipalAssociationStatus(conn, resourceShareARN, principal),
+		Timeout: PrincipalDisassociationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ram.ResourceShareAssociation); ok {
 		return v, err
 	}
 

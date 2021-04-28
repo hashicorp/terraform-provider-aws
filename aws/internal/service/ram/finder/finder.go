@@ -10,6 +10,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
+const (
+	FindInvitationTimeout    = 2 * time.Minute
+	FindResourceShareTimeout = 1 * time.Minute
+)
+
 // ResourceShareOwnerOtherAccountsByArn returns the resource share owned by other accounts corresponding to the specified ARN.
 // Returns nil if no configuration is found.
 func ResourceShareOwnerOtherAccountsByArn(conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
@@ -38,7 +43,7 @@ func ResourceShareInvitationByResourceShareArnAndStatus(conn *ram.RAM, resourceS
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
 		i, err := resourceShareInvitationByResourceShareArnAndStatus(conn, resourceShareArn, status)
 		invitation = i
 
@@ -74,7 +79,7 @@ func ResourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShare
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(FindInvitationTimeout, func() *resource.RetryError {
 		i, err := resourceShareInvitationByArn(conn, arn)
 		invitation = i
 
@@ -108,7 +113,7 @@ func resourceShare(conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.Resou
 	var shares *ram.GetResourceSharesOutput
 
 	// Retry for Ram resource share eventual consistency
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(FindResourceShareTimeout, func() *resource.RetryError {
 		ss, err := conn.GetResourceShares(input)
 		shares = ss
 
@@ -183,4 +188,24 @@ func resourceShareInvitationByArn(conn *ram.RAM, arn string) (*ram.ResourceShare
 	}
 
 	return output.ResourceShareInvitations[0], nil
+}
+
+func ResourceSharePrincipalAssociationByShareARNPrincipal(conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+	input := &ram.GetResourceShareAssociationsInput{
+		AssociationType:   aws.String(ram.ResourceShareAssociationTypePrincipal),
+		Principal:         aws.String(principal),
+		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
+	}
+
+	output, err := conn.GetResourceShareAssociations(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ResourceShareAssociations) == 0 || output.ResourceShareAssociations[0] == nil {
+		return nil, nil
+	}
+
+	return output.ResourceShareAssociations[0], nil
 }
