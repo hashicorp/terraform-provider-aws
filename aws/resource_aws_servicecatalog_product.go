@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -36,7 +37,7 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "en",
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"created_time": {
 				Type:     schema.TypeString,
@@ -224,7 +225,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 
 	if _, err := waiter.ProductReady(conn, aws.StringValue(input.AcceptLanguage),
 		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId)); err != nil {
-		return fmt.Errorf("error waiting for product to be ready: %w", err)
+		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be ready: %w", d.Id(), err)
 	}
 
 	return resourceAwsServiceCatalogProductRead(d, meta)
@@ -285,16 +286,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	if d.HasChanges(
-		"accept_language",
-		"description",
-		"distributor",
-		"name",
-		"owner",
-		"support_description",
-		"support_email",
-		"support_url",
-	) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
 			Id: aws.String(d.Id()),
 		}
@@ -387,24 +379,10 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err := waiter.ProductDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
-		return fmt.Errorf("error waiting for product (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-const (
-	ServiceCatalogAcceptLanguageEnglish  = "en"
-	ServiceCatalogAcceptLanguageJapanese = "jp"
-	ServiceCatalogAcceptLanguageChinese  = "zh"
-)
-
-func AcceptLanguage_Values() []string {
-	return []string{
-		ServiceCatalogAcceptLanguageEnglish,
-		ServiceCatalogAcceptLanguageJapanese,
-		ServiceCatalogAcceptLanguageChinese,
-	}
 }
 
 func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *servicecatalog.ProvisioningArtifactProperties {
