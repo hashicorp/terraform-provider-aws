@@ -156,7 +156,7 @@ func TestAccAWSEIP_Instance(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPInstanceConfig(),
+				Config: testAccAWSEIPInstanceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
@@ -675,7 +675,7 @@ func TestAccAWSEIP_BYOIPAddress_default(t *testing.T) {
 			{
 				Config: testAccAWSEIPConfig_BYOIPAddress_custom_default,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 				),
 			},
@@ -705,7 +705,7 @@ func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
 			{
 				Config: testAccAWSEIPConfig_BYOIPAddress_custom(address),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", address),
 				),
@@ -740,7 +740,7 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 			{
 				Config: testAccAWSEIPConfig_BYOIPAddress_custom_with_PublicIpv4Pool(address, poolName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPExists(resourceName, false, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", address),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", poolName),
