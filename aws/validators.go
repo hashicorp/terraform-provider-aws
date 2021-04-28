@@ -26,17 +26,23 @@ const (
 	awsAccountIDRegexpInternalPattern = `(aws|\d{12})`
 	awsPartitionRegexpInternalPattern = `aws(-[a-z]+)*`
 	awsRegionRegexpInternalPattern    = `[a-z]{2}(-[a-z]+)+-\d`
+
+	versionStringRegexpInternalPattern = `[[:digit:]]+(\.[[:digit:]]+){2}`
 )
 
 const (
 	awsAccountIDRegexpPattern = "^" + awsAccountIDRegexpInternalPattern + "$"
 	awsPartitionRegexpPattern = "^" + awsPartitionRegexpInternalPattern + "$"
 	awsRegionRegexpPattern    = "^" + awsRegionRegexpInternalPattern + "$"
+
+	versionStringRegexpPattern = "^" + versionStringRegexpInternalPattern + "$"
 )
 
 var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)
 var awsPartitionRegexp = regexp.MustCompile(awsPartitionRegexpPattern)
 var awsRegionRegexp = regexp.MustCompile(awsRegionRegexpPattern)
+
+var versionStringRegexp = regexp.MustCompile(versionStringRegexpPattern)
 
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
@@ -2444,3 +2450,13 @@ var validateTypeStringIsDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
+
+func validateVersionString(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !versionStringRegexp.MatchString(value) {
+		errors = append(errors, fmt.Errorf("%s: must be a version string matching x.y.z", k))
+	}
+
+	return
+}

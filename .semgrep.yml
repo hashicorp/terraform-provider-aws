@@ -415,3 +415,21 @@ rules:
           metavariable: '$Z'
           regex: '.*Pages$'
     severity: WARNING
+
+  - id: calling-fmt.Print-and-variants
+    languages: [go]
+    message: Do not call `fmt.Print` and variant
+    paths:
+      exclude:
+        - awsproviderlint/vendor/
+      include:
+        - aws/
+    patterns:
+      - pattern-either:
+        - pattern: |
+            fmt.Print(...)
+        - pattern: |
+            fmt.Printf(...)
+        - pattern: |
+            fmt.Println(...)
+    severity: WARNING

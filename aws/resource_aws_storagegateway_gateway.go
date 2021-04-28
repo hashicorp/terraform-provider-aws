@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -570,14 +571,15 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Reading Storage Gateway Bandwidth rate limit: %s", bandwidthInput)
 	bandwidthOutput, err := conn.DescribeBandwidthRateLimit(bandwidthInput)
-	if err != nil && !isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") {
-		return fmt.Errorf("error reading Storage Gateway Bandwidth rate limit: %s", err)
+	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified operation is not supported") ||
+		tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "This operation is not valid for the specified gateway") {
+		return nil
 	}
-	if err == nil {
-		d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
-		d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
+	if err != nil {
+		return fmt.Errorf("error reading Storage Gateway Bandwidth rate limit: %w", err)
 	}
-
+	d.Set("average_download_rate_limit_in_bits_per_sec", bandwidthOutput.AverageDownloadRateLimitInBitsPerSec)
+	d.Set("average_upload_rate_limit_in_bits_per_sec", bandwidthOutput.AverageUploadRateLimitInBitsPerSec)
 	return nil
 }
 
