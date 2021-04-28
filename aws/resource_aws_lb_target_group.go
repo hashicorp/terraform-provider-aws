@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,7 +25,10 @@ import (
 func resourceAwsLbTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time
-		CustomizeDiff: resourceAwsLbTargetGroupCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsLbTargetGroupCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Create: resourceAwsLbTargetGroupCreate,
 		Read:   resourceAwsLbTargetGroupRead,
@@ -262,7 +266,8 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 					elbv2.TargetTypeEnumLambda,
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -426,8 +431,8 @@ func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
 			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
@@ -692,6 +697,7 @@ func lbTargetGroupSuffixFromARN(arn *string) string {
 // flattenAwsLbTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	conn := meta.(*AWSClient).elbv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
@@ -774,8 +780,15 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

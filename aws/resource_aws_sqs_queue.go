@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -50,7 +51,10 @@ func resourceAwsSqsQueue() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		CustomizeDiff: resourceAwsSqsQueueCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceAwsSqsQueueCustomizeDiff,
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -132,13 +136,16 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
 	fifoQueue := d.Get("fifo_queue").(bool)
@@ -156,8 +163,8 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Tag-on-create is currently only supported in AWS Commercial
-	if v, ok := d.GetOk("tags"); ok && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
-		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SqsTags()
+	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		req.Tags = tags.IgnoreAws().SqsTags()
 	}
 
 	attributes := make(map[string]*string)
@@ -216,8 +223,8 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.SqsUpdateTags(sqsconn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %s", d.Id(), err)
@@ -260,6 +267,7 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	attributeOutput, err := sqsconn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
@@ -418,8 +426,15 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

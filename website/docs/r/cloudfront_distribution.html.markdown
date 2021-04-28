@@ -241,7 +241,7 @@ of several sub-resources - these resources are laid out below.
 * `restrictions` (Required) - The [restriction
     configuration](#restrictions-arguments) for this distribution (maximum one).
 
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `viewer_certificate` (Required) - The [SSL
     configuration](#viewer-certificate-arguments) for this distribution (maximum
@@ -541,6 +541,8 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The current status of the distribution. `Deployed` if the
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
+
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs
     * `enabled` - `true` if any of the key groups have public keys that CloudFront can use to verify the signatures of signed URLs and signed cookies

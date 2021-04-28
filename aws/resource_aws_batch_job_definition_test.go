@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,6 +92,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -151,6 +153,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "EC2"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -188,6 +191,7 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -213,6 +217,10 @@ func TestAccAWSBatchJobDefinition_ContainerProperties_Advanced(t *testing.T) {
 		},
 		RetryStrategy: &batch.RetryStrategy{
 			Attempts: aws.Int64(int64(1)),
+			EvaluateOnExit: []*batch.EvaluateOnExit{
+				{Action: aws.String(strings.ToLower(batch.RetryActionRetry)), OnStatusReason: aws.String("Host EC2*")},
+				{Action: aws.String(strings.ToLower(batch.RetryActionExit)), OnReason: aws.String("*")},
+			},
 		},
 		Timeout: &batch.JobTimeout{
 			AttemptDurationSeconds: aws.Int64(int64(60)),
@@ -345,6 +353,38 @@ func TestAccAWSBatchJobDefinition_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_PropagateTags(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionPropagateTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBatchJobDefinitionExists(n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -385,6 +425,9 @@ func testAccCheckBatchJobDefinitionAttributes(jd *batch.JobDefinition, compare *
 				}
 				if compare.RetryStrategy != nil && aws.Int64Value(compare.RetryStrategy.Attempts) != aws.Int64Value(jd.RetryStrategy.Attempts) {
 					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %d\n\tgot: %d\n", aws.Int64Value(compare.RetryStrategy.Attempts), aws.Int64Value(jd.RetryStrategy.Attempts))
+				}
+				if compare.RetryStrategy != nil && !reflect.DeepEqual(compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit) {
+					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %v\n\tgot: %v\n", compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit)
 				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
 					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)
@@ -438,6 +481,14 @@ resource "aws_batch_job_definition" "test" {
   }
   retry_strategy {
     attempts = 1
+    evaluate_on_exit {
+      action           = "RETRY"
+      on_status_reason = "Host EC2*"
+    }
+    evaluate_on_exit {
+      action    = "exit"
+      on_reason = "*"
+    }
   }
   timeout {
     attempt_duration_seconds = 60
@@ -646,4 +697,21 @@ resource "aws_batch_job_definition" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccBatchJobDefinitionPropagateTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+
+  propagate_tags = true
+}
+`, rName)
 }

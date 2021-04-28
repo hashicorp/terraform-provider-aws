@@ -63,6 +63,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				}
 				return nil
 			},
+			SetTagsDiff,
 		),
 
 		SchemaVersion: 1,
@@ -283,7 +284,8 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 					dynamodb.StreamViewTypeKeysOnly,
 				}, false),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -299,6 +301,12 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validateArn,
+						},
 					},
 				},
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
@@ -313,6 +321,8 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 
 func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
@@ -323,13 +333,11 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DynamodbTags()
-
 	req := &dynamodb.CreateTableInput{
 		TableName:   aws.String(d.Get("name").(string)),
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
-		Tags:        tags,
+		Tags:        tags.IgnoreAws().DynamodbTags(),
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -463,6 +471,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
@@ -575,8 +584,15 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -745,8 +761,8 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %w", d.Id(), err)
 		}
