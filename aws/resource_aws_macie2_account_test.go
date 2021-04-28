@@ -205,7 +205,7 @@ func testAccCheckAwsMacie2AccountDestroy(s *terraform.State) error {
 		}
 
 		if resp != nil {
-			return fmt.Errorf("macie2 account %q still enabled", rs.Primary.ID)
+			return fmt.Errorf("macie account %q still enabled", rs.Primary.ID)
 		}
 	}
 
@@ -230,7 +230,7 @@ func testAccCheckAwsMacie2AccountExists(resourceName string, macie2Session *maci
 		}
 
 		if resp == nil {
-			return fmt.Errorf("macie2 account %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("macie account %q does not exist", rs.Primary.ID)
 		}
 
 		*macie2Session = *resp
