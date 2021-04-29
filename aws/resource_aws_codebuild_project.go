@@ -1489,23 +1489,23 @@ func flattenAwsCodeBuildProjectFileSystemLocation(fileSystemLocation codebuild.P
 	values := map[string]interface{}{}
 
 	if fileSystemLocation.Identifier != nil {
-		values["identifier"] = *fileSystemLocation.Identifier
+		values["identifier"] = aws.StringValue(fileSystemLocation.Identifier)
 	}
 
 	if fileSystemLocation.Location != nil {
-		values["location"] = *fileSystemLocation.Location
+		values["location"] = aws.StringValue(fileSystemLocation.Location)
 	}
 
 	if fileSystemLocation.MountOptions != nil {
-		values["mount_options"] = *fileSystemLocation.MountOptions
+		values["mount_options"] = aws.StringValue(fileSystemLocation.MountOptions)
 	}
 
 	if fileSystemLocation.MountPoint != nil {
-		values["mount_point"] = *fileSystemLocation.MountPoint
+		values["mount_point"] = aws.StringValue(fileSystemLocation.MountPoint)
 	}
 
 	if fileSystemLocation.Type != nil {
-		values["type"] = *fileSystemLocation.Type
+		values["type"] = aws.StringValue(fileSystemLocation.Type)
 	}
 
 	return values
