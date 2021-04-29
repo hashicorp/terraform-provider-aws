@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_macie2_classification_job
 
-Provides a resource to manage an [AWS Macie Classification Job](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-prop-s3jobdefinition-bucketdefinitions).
+Provides a resource to manage an [AWS Macie Classification Job](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html).
 
 ## Example Usage
 
