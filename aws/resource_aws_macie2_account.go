@@ -149,7 +149,8 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DisableMacieWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error disabling Macie Account (%s): %w", d.Id(), err))
