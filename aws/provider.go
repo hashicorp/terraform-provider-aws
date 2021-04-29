@@ -578,6 +578,7 @@ func Provider() *schema.Provider {
 			"aws_codepipeline":                                        resourceAwsCodePipeline(),
 			"aws_codepipeline_webhook":                                resourceAwsCodePipelineWebhook(),
 			"aws_codestarconnections_connection":                      resourceAwsCodeStarConnectionsConnection(),
+			"aws_codestarconnections_host":                            resourceAwsCodeStarConnectionsHost(),
 			"aws_codestarnotifications_notification_rule":             resourceAwsCodeStarNotificationsNotificationRule(),
 			"aws_cur_report_definition":                               resourceAwsCurReportDefinition(),
 			"aws_customer_gateway":                                    resourceAwsCustomerGateway(),
