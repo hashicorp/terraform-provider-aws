@@ -200,7 +200,6 @@ func FirewallDomainListDeleted(conn *route53resolver.Route53Resolver, firewallDo
 // FirewallRuleGroupAssociationCreated waits for a FirewallRuleGroupAssociation to return COMPLETE
 func FirewallRuleGroupAssociationCreated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
 	stateConf := &resource.StateChangeConf{
-		// TODO: What should this be?
 		Pending: []string{route53resolver.FirewallRuleGroupAssociationStatusUpdating},
 		Target:  []string{route53resolver.FirewallRuleGroupAssociationStatusComplete},
 		Refresh: FirewallRuleGroupAssociationStatus(conn, firewallRuleGroupAssociationId),
