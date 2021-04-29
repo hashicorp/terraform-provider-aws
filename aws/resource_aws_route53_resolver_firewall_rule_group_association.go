@@ -123,6 +123,10 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociationRead(d *schema.Resour
 	}
 
 	if ruleGroupAssociation == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error getting Route 53 Resolver DNS Firewall rule group association (%s): not found after creation", d.Id())
+		}
+
 		log.Printf("[WARN] Route 53 Resolver DNS Firewall rule group association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
