@@ -115,6 +115,50 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 					},
 				},
 			},
+			"build_batch_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"combine_artifacts": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"restrictions": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"compute_types_allowed": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(codebuild.ComputeType_Values(), false),
+										},
+									},
+									"maximum_builds_allowed": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(1, 100),
+									},
+								},
+							},
+						},
+						"service_role": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"timeout_in_mins": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(5, 480),
+						},
+					},
+				},
+			},
 			"cache": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -675,6 +719,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	projectSecondaryArtifacts := expandProjectSecondaryArtifacts(d)
 	projectSecondarySources := expandProjectSecondarySources(d)
 	projectLogsConfig := expandProjectLogsConfig(d)
+	projectBatchConfig := expandCodeBuildBuildBatchConfig(d)
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
 		if aws.StringValue(projectSource.Buildspec) == "" {
@@ -694,6 +739,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		SecondaryArtifacts: projectSecondaryArtifacts,
 		SecondarySources:   projectSecondarySources,
 		LogsConfig:         projectLogsConfig,
+		BuildBatchConfig:   projectBatchConfig,
 		Tags:               tags.IgnoreAws().CodebuildTags(),
 	}
 
@@ -963,6 +1009,49 @@ func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
 	return logsConfig
 }
 
+func expandCodeBuildBuildBatchConfig(d *schema.ResourceData) *codebuild.ProjectBuildBatchConfig {
+	configs, ok := d.Get("build_batch_config").([]interface{})
+	if !ok || len(configs) == 0 || configs[0] == nil {
+		return nil
+	}
+
+	data := configs[0].(map[string]interface{})
+
+	projectBuildBatchConfig := &codebuild.ProjectBuildBatchConfig{
+		Restrictions: expandCodeBuildBatchRestrictions(data),
+		ServiceRole:  aws.String(data["service_role"].(string)),
+	}
+
+	if v, ok := data["combine_artifacts"]; ok {
+		projectBuildBatchConfig.CombineArtifacts = aws.Bool(v.(bool))
+	}
+
+	if v, ok := data["timeout_in_mins"]; ok && v != 0 {
+		projectBuildBatchConfig.TimeoutInMins = aws.Int64(int64(v.(int)))
+	}
+
+	return projectBuildBatchConfig
+}
+
+func expandCodeBuildBatchRestrictions(data map[string]interface{}) *codebuild.BatchRestrictions {
+	if v, ok := data["restrictions"]; !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+		return nil
+	}
+
+	restrictionsData := data["restrictions"].([]interface{})[0].(map[string]interface{})
+
+	restrictions := &codebuild.BatchRestrictions{}
+	if v, ok := restrictionsData["compute_types_allowed"]; ok && len(v.([]interface{})) != 0 {
+		restrictions.ComputeTypesAllowed = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := restrictionsData["maximum_builds_allowed"]; ok && v != 0 {
+		restrictions.MaximumBuildsAllowed = aws.Int64(int64(v.(int)))
+	}
+
+	return restrictions
+}
+
 func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.CloudWatchLogsConfig {
 	if len(configList) == 0 || configList[0] == nil {
 		return nil
@@ -1183,6 +1272,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
 
+	if err := d.Set("build_batch_config", flattenAwsCodeBuildBuildBatchConfig(project.BuildBatchConfig)); err != nil {
+		return fmt.Errorf("error setting build_batch_config: %s", err)
+	}
+
 	d.Set("arn", project.Arn)
 	d.Set("description", project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
@@ -1254,6 +1347,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("logs_config") {
 		logsConfig := expandProjectLogsConfig(d)
 		params.LogsConfig = logsConfig
+	}
+
+	if d.HasChange("build_batch_config") {
+		params.BuildBatchConfig = expandCodeBuildBuildBatchConfig(d)
 	}
 
 	if d.HasChange("cache") {
@@ -1561,6 +1658,43 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 		return []interface{}{values}
 	}
 	return nil
+}
+
+func flattenAwsCodeBuildBuildBatchConfig(buildBatchConfig *codebuild.ProjectBuildBatchConfig) []interface{} {
+	if buildBatchConfig == nil {
+		return nil
+	}
+
+	values := map[string]interface{}{}
+
+	values["service_role"] = aws.StringValue(buildBatchConfig.ServiceRole)
+
+	if buildBatchConfig.CombineArtifacts != nil {
+		values["combine_artifacts"] = aws.BoolValue(buildBatchConfig.CombineArtifacts)
+	}
+
+	if buildBatchConfig.Restrictions != nil {
+		values["restrictions"] = flattenAwsCodeBuildBuildBatchConfigRestrictions(buildBatchConfig.Restrictions)
+	}
+
+	if buildBatchConfig.TimeoutInMins != nil {
+		values["timeout_in_mins"] = aws.Int64Value(buildBatchConfig.TimeoutInMins)
+	}
+
+	return []interface{}{values}
+}
+
+func flattenAwsCodeBuildBuildBatchConfigRestrictions(restrictions *codebuild.BatchRestrictions) []interface{} {
+	if restrictions == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"compute_types_allowed":  aws.StringValueSlice(restrictions.ComputeTypesAllowed),
+		"maximum_builds_allowed": aws.Int64Value(restrictions.MaximumBuildsAllowed),
+	}
+
+	return []interface{}{values}
 }
 
 func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {

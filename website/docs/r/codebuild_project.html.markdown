@@ -230,6 +230,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
+* `build_batch_config` - (Optional) Defines the batch build options for the project.
 * `build_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes.
 * `cache` - (Optional) Configuration block. Detailed below.
 * `description` - (Optional) Short description of the project.
@@ -254,6 +255,18 @@ The following arguments are optional:
 * `packaging` - (Optional) Type of build output artifact to create. If `type` is set to `S3`, valid values are `NONE`, `ZIP`
 * `path` - (Optional) If `type` is set to `S3`, this is the path to the output artifact.
 * `type` - (Required) Build output artifact's type. Valid values: `CODEPIPELINE`, `NO_ARTIFACTS`, `S3`.
+
+### build_batch_config
+
+* `combine_artifacts` - (Optional) Specifies if the build artifacts for the batch build should be combined into a single artifact location.
+* `restrictions` - (Optional) Specifies the restrictions for the batch build.
+* `service_role` - (Required) Specifies the service role ARN for the batch build project.
+* `timeout_in_mins` - (Optional) Specifies the maximum amount of time, in minutes, that the batch build must be completed in.
+
+#### restrictions
+
+* `compute_types_allowed` - (Optional) An array of strings that specify the compute types that are allowed for the batch build. See [Build environment compute types](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html) in the AWS CodeBuild User Guide for these values.
+* `maximum_builds_allowed` - (Optional) Specifies the maximum number of builds allowed.
 
 ### cache
 
