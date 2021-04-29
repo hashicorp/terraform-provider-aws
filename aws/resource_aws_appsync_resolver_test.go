@@ -520,7 +520,7 @@ EOF
 resource "aws_appsync_datasource" "test" {
   api_id           = aws_appsync_graphql_api.test.id
   name             = %q
-  service_role_arn = "${aws_iam_role.test.arn}"
+  service_role_arn = aws_iam_role.test.arn
   type             = "AWS_LAMBDA"
 
   lambda_config {
