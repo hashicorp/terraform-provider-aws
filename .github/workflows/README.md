@@ -17,8 +17,4 @@ steps:
 
 The tool [`act`](https://github.com/nektos/act) can be used to test GitHub workflows locally. The default container [intentionally does not have feature parity](https://github.com/nektos/act#default-runners-are-intentionally-incomplete) with the containers used in GitHub due to the size of a full container.
 
-A fully-featured container can be used by specifying a different container.
-
-```console
-act -P ubuntu-latest=nektos/act-environments-ubuntu:18.04
-```
+The file `./actrc` configures `act` to use a fully-featured container.

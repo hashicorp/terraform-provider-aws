@@ -14,7 +14,7 @@ Creates a WAFv2 Rule Group resource.
 
 ### Simple
 
-```hcl
+```terraform
 resource "aws_wafv2_rule_group" "example" {
   name     = "example-rule"
   scope    = "REGIONAL"
@@ -52,7 +52,7 @@ resource "aws_wafv2_rule_group" "example" {
 
 ### Complex
 
-```hcl
+```terraform
 resource "aws_wafv2_ip_set" "test" {
   name               = "test"
   scope              = "REGIONAL"
@@ -275,8 +275,8 @@ resource "aws_wafv2_rule_group" "example" {
   }
 
   tags = {
-    "Name" = "example-and-statement"
-    "Code" = "123456"
+    Name = "example-and-statement"
+    Code = "123456"
   }
 }
 ```
@@ -290,7 +290,7 @@ The following arguments are supported:
 * `name` - (Required, Forces new resource) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `tags` - (Optional) An array of key:value pairs to associate with the resource.
+* `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
 ### Rules
@@ -307,7 +307,7 @@ Each `rule` supports the following arguments:
 
 The `action` block supports the following arguments:
 
-~> **NOTE**: One of `allow`, `block`, or `count`, expressed as an empty configuration block `{}`, is required when specifying an `action`
+~> **NOTE:** One of `allow`, `block`, or `count`, expressed as an empty configuration block `{}`, is required when specifying an `action`
 
 * `allow` - (Optional) Instructs AWS WAF to allow the web request.
 * `block` - (Optional) Instructs AWS WAF to block the web request.
@@ -356,6 +356,7 @@ The `byte_match_statement` block supports the following arguments:
 The `geo_match_statement` block supports the following arguments:
 
 * `country_codes` - (Required) An array of two-character country codes, for example, [ "US", "CN" ], from the alpha-2 country ISO codes of the `ISO 3166` international standard. See the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_GeoMatchStatement.html) for valid values.
+* `forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below for details.
 
 ### IP Set Reference Statement
 
@@ -364,6 +365,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 The `ip_set_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
+* `ip_set_forwarded_ip_config` - (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset-forwarded-ip-config) below for more details.
 
 ### NOT Statement
 
@@ -393,7 +395,7 @@ The `regex_pattern_set_reference_statement` block supports the following argumen
 
 ### Size Constraint Statement
 
-A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in 
+A rule statement that uses a comparison operator to compare a number of bytes against the size of a request component. AWS WAFv2 inspects up to the first 8192 bytes (8 KB) of a request body, and when inspecting the request URI Path, the slash `/` in
 the URI counts as one character.
 
 The `size_constraint_statement` block supports the following arguments:
@@ -427,7 +429,8 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE**: An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
@@ -436,6 +439,27 @@ The `field_to_match` block supports the following arguments:
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
 * `single_query_argument` - (Optional) Inspect a single query argument. See [Single Query Argument](#single-query-argument) below for details.
 * `uri_path` - (Optional) Inspect the request URI path. This is the part of a web request that identifies a resource, for example, `/images/daily-ad.jpg`.
+
+### Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify
+any header name. If the specified header isn't present in the request, AWS WAFv2 doesn't apply the rule to the web request at all.
+AWS WAFv2 only evaluates the first IP address found in the specified HTTP header.
+
+The `forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+
+### IPSet Forwarded IP Config
+
+The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. Commonly, this is the X-Forwarded-For (XFF) header, but you can specify any header name.
+
+The `ip_set_forwarded_ip_config` block supports the following arguments:
+
+* `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
+* `header_name` - (Required) - The name of the HTTP header to use for the IP address.
+* `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
 
 ### Single Header
 
@@ -474,6 +498,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule group.
 * `arn` - The ARN of the WAF rule group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

@@ -16,6 +16,7 @@ func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
 		Steps: []resource.TestStep{
@@ -44,6 +45,7 @@ func TestAccAWSAutoscalingLifecycleHook_omitDefaultResult(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingLifecycleHookDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +159,7 @@ EOF
 
 resource "aws_iam_role_policy" "foobar" {
   name = "foobar"
-  role = "${aws_iam_role.foobar.id}"
+  role = aws_iam_role.foobar.id
 
   policy = <<EOF
 {
@@ -195,7 +197,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -206,7 +208,7 @@ resource "aws_autoscaling_group" "foobar" {
 
 resource "aws_autoscaling_lifecycle_hook" "foobar" {
   name                   = "foobar"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
   default_result         = "CONTINUE"
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
@@ -217,8 +219,8 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 }
 EOF
 
-  notification_target_arn = "${aws_sqs_queue.foobar.arn}"
-  role_arn                = "${aws_iam_role.foobar.arn}"
+  notification_target_arn = aws_sqs_queue.foobar.arn
+  role_arn                = aws_iam_role.foobar.arn
 }
 `, name, name)
 }
@@ -256,7 +258,7 @@ EOF
 
 resource "aws_iam_role_policy" "foobar" {
   name = "foobar-%d"
-  role = "${aws_iam_role.foobar.id}"
+  role = aws_iam_role.foobar.id
 
   policy = <<EOF
 {
@@ -294,7 +296,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -305,7 +307,7 @@ resource "aws_autoscaling_group" "foobar" {
 
 resource "aws_autoscaling_lifecycle_hook" "foobar" {
   name                   = "foobar-%d"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
@@ -315,8 +317,8 @@ resource "aws_autoscaling_lifecycle_hook" "foobar" {
 }
 EOF
 
-  notification_target_arn = "${aws_sqs_queue.foobar.arn}"
-  role_arn                = "${aws_iam_role.foobar.arn}"
+  notification_target_arn = aws_sqs_queue.foobar.arn
+  role_arn                = aws_iam_role.foobar.arn
 }
 `, name, rInt, rInt, rInt, name, rInt)
 }

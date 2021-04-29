@@ -16,7 +16,8 @@ func TestAccAWSOpsworksUserProfile_basic(t *testing.T) {
 	rName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	updateRName := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(opsworks.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, opsworks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksUserProfileDestroy,
 		Steps: []resource.TestStep{
@@ -133,8 +134,8 @@ func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
 func testAccAwsOpsworksUserProfileCreate(rn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn     = "${aws_iam_user.user.arn}"
-  ssh_username = "${aws_iam_user.user.name}"
+  user_arn     = aws_iam_user.user.arn
+  ssh_username = aws_iam_user.user.name
 }
 
 resource "aws_iam_user" "user" {
@@ -147,8 +148,8 @@ resource "aws_iam_user" "user" {
 func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn     = "${aws_iam_user.new-user.arn}"
-  ssh_username = "${aws_iam_user.new-user.name}"
+  user_arn     = aws_iam_user.new-user.arn
+  ssh_username = aws_iam_user.new-user.name
 }
 
 resource "aws_iam_user" "user" {

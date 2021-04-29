@@ -14,7 +14,7 @@ Provides a Load Balancer Listener Rule resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lb" "front_end" {
   # ...
 }
@@ -181,7 +181,7 @@ resource "aws_lb_listener_rule" "admin" {
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener_rule" "admin" {
+resource "aws_lb_listener_rule" "oidc" {
   listener_arn = aws_lb_listener.front_end.arn
 
   action {
@@ -322,7 +322,7 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the rule (matches `arn`)
 * `arn` - The ARN of the rule (matches `id`)

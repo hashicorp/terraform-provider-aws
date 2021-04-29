@@ -30,9 +30,9 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 	conn := client.(*AWSClient).neptuneconn
 	var sweeperErrs *multierror.Error
 
-	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, isLast bool) bool {
+	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
@@ -64,7 +64,7 @@ func testSweepNeptuneEventSubscriptions(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if testSweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Neptune Event Subscriptions sweep for %s: %s", region, err)
@@ -86,6 +86,7 @@ func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -129,6 +130,7 @@ func TestAccAWSNeptuneEventSubscription_withPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -157,6 +159,7 @@ func TestAccAWSNeptuneEventSubscription_withSourceIds(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -194,6 +197,7 @@ func TestAccAWSNeptuneEventSubscription_withCategories(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNeptuneEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
@@ -294,7 +298,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_neptune_event_subscription" "test" {
   name          = %[2]q
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "db-instance"
 
   event_categories = [
@@ -320,7 +324,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_neptune_event_subscription" "test" {
   name          = %[2]q
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   enabled       = false
   source_type   = "db-parameter-group"
 
@@ -343,7 +347,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_neptune_event_subscription" "test" {
   name_prefix   = "tf-acc-test-neptune-event-subs-"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "db-instance"
 
   event_categories = [
@@ -375,9 +379,9 @@ resource "aws_neptune_parameter_group" "test" {
 
 resource "aws_neptune_event_subscription" "test" {
   name          = "tf-acc-test-neptune-event-subs-with-ids-%[1]d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "db-parameter-group"
-  source_ids    = ["${aws_neptune_parameter_group.test.id}"]
+  source_ids    = [aws_neptune_parameter_group.test.id]
 
   event_categories = [
     "configuration change",
@@ -410,9 +414,9 @@ resource "aws_neptune_parameter_group" "test_2" {
 
 resource "aws_neptune_event_subscription" "test" {
   name          = "tf-acc-test-neptune-event-subs-with-ids-%[1]d"
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "db-parameter-group"
-  source_ids    = ["${aws_neptune_parameter_group.test.id}", "${aws_neptune_parameter_group.test_2.id}"]
+  source_ids    = [aws_neptune_parameter_group.test.id, aws_neptune_parameter_group.test_2.id]
 
   event_categories = [
     "configuration change",
@@ -433,7 +437,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_neptune_event_subscription" "test" {
   name          = %[2]q
-  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic_arn = aws_sns_topic.aws_sns_topic.arn
   source_type   = "db-instance"
 
   event_categories = [

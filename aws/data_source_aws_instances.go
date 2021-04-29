@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -90,7 +89,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading EC2 instances: %s", params)
 
 	var instanceIds, privateIps, publicIps []string
-	err := conn.DescribeInstancesPages(params, func(resp *ec2.DescribeInstancesOutput, isLast bool) bool {
+	err := conn.DescribeInstancesPages(params, func(resp *ec2.DescribeInstancesOutput, lastPage bool) bool {
 		for _, res := range resp.Reservations {
 			for _, instance := range res.Instances {
 				instanceIds = append(instanceIds, *instance.InstanceId)
@@ -102,7 +101,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 				}
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		return err
@@ -114,7 +113,8 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Found %d instances via given filter", len(instanceIds))
 
-	d.SetId(resource.UniqueId())
+	d.SetId(meta.(*AWSClient).region)
+
 	err = d.Set("ids", instanceIds)
 	if err != nil {
 		return err

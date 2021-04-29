@@ -15,6 +15,7 @@ func testAccAWSSecurityHubStandardsSubscription_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityHubAccountDestroy,
 		Steps: []resource.TestStep{
@@ -100,8 +101,10 @@ resource "aws_securityhub_account" "example" {}
 const testAccAWSSecurityHubStandardsSubscriptionConfig_basic = `
 resource "aws_securityhub_account" "example" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_securityhub_standards_subscription" "example" {
-  depends_on    = ["aws_securityhub_account.example"]
-  standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
+  depends_on    = [aws_securityhub_account.example]
+  standards_arn = "arn:${data.aws_partition.current.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 }
 `

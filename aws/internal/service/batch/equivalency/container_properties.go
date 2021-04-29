@@ -30,6 +30,13 @@ func (cp *containerProperties) Reduce() error {
 	}
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
+	if cp.LogConfiguration != nil {
+		if len(cp.LogConfiguration.SecretOptions) == 0 {
+			cp.LogConfiguration.SecretOptions = nil
+		}
+	}
+
+	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.MountPoints) == 0 {
 		cp.MountPoints = nil
 	}
@@ -37,6 +44,11 @@ func (cp *containerProperties) Reduce() error {
 	// Prevent difference of API response that adds an empty array when not configured during the request
 	if len(cp.ResourceRequirements) == 0 {
 		cp.ResourceRequirements = nil
+	}
+
+	// Prevent difference of API response that adds an empty array when not configured during the request
+	if len(cp.Secrets) == 0 {
+		cp.Secrets = nil
 	}
 
 	// Prevent difference of API response that adds an empty array when not configured during the request

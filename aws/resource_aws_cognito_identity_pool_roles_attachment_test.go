@@ -15,11 +15,12 @@ import (
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	updatedName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
+	updatedName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -50,10 +51,11 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -104,10 +106,11 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 	resourceName := "aws_cognito_identity_pool_roles_attachment.test"
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -124,10 +127,11 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleResolutionError(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -140,10 +144,11 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleR
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -156,10 +161,11 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError
 }
 
 func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t *testing.T) {
-	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		ErrorCheck:   testAccErrorCheck(t, cognitoidentity.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoIdentityPoolRolesAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -252,7 +258,6 @@ resource "aws_iam_role" "unauthenticated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "unauthenticated" {
@@ -276,7 +281,6 @@ resource "aws_iam_role_policy" "unauthenticated" {
   ]
 }
 EOF
-
 }
 
 # Authenticated Role
@@ -305,7 +309,6 @@ resource "aws_iam_role" "authenticated" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_role_policy" "authenticated" {
@@ -330,7 +333,6 @@ resource "aws_iam_role_policy" "authenticated" {
   ]
 }
 EOF
-
 }
 `, name)
 }

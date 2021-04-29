@@ -84,6 +84,7 @@ func TestAccAWSDataSyncTask_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -125,6 +126,7 @@ func TestAccAWSDataSyncTask_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -147,6 +149,7 @@ func TestAccAWSDataSyncTask_CloudWatchLogGroupARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -173,6 +176,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_AtimeMtime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -211,6 +215,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_BytesPerSecond(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -247,6 +252,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Gid(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -276,6 +282,43 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Gid(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSyncTask_DefaultSyncOptions_LogLevel(t *testing.T) {
+	var task1, task2 datasync.DescribeTaskOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSyncTaskConfigDefaultSyncOptionsLogLevel(rName, "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDataSyncTaskConfigDefaultSyncOptionsLogLevel(rName, "BASIC"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task2),
+					testAccCheckAWSDataSyncTaskNotRecreated(&task1, &task2),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "BASIC"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDataSyncTask_DefaultSyncOptions_PosixPermissions(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -283,6 +326,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PosixPermissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -319,6 +363,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDeletedFiles(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -355,6 +400,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_PreserveDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -391,6 +437,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Uid(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -427,6 +474,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -473,6 +521,7 @@ func TestAccAWSDataSyncTask_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataSyncTaskDestroy,
 		Steps: []resource.TestStep{
@@ -672,15 +721,13 @@ resource "aws_datasync_location_s3" "destination" {
 }
 
 func testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "source-aws-thinstaller" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["aws-thinstaller-*"]
-  }
+	return composeConfig(
+		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.source.availability_zone", "m5.2xlarge", "m5.4xlarge"),
+		fmt.Sprintf(`
+# Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
+data "aws_ssm_parameter" "aws_service_datasync_ami" {
+  name = "/aws/service/datasync/ami"
 }
 
 resource "aws_vpc" "source" {
@@ -691,15 +738,6 @@ resource "aws_vpc" "source" {
   tags = {
     Name = "tf-acc-test-datasync-task"
   }
-}
-
-resource "aws_vpc_dhcp_options" "source" {
-  domain_name_servers = ["AmazonProvidedDNS"]
-}
-
-resource "aws_vpc_dhcp_options_association" "source" {
-  dhcp_options_id = aws_vpc_dhcp_options.source.id
-  vpc_id          = aws_vpc.source.id
 }
 
 resource "aws_subnet" "source" {
@@ -719,8 +757,8 @@ resource "aws_internet_gateway" "source" {
   }
 }
 
-resource "aws_route_table" "source" {
-  vpc_id = aws_vpc.source.id
+resource "aws_default_route_table" "source" {
+  default_route_table_id = aws_vpc.source.default_route_table_id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -730,11 +768,6 @@ resource "aws_route_table" "source" {
   tags = {
     Name = "tf-acc-test-datasync-task"
   }
-}
-
-resource "aws_route_table_association" "source" {
-  subnet_id      = aws_subnet.source.id
-  route_table_id = aws_route_table.source.id
 }
 
 resource "aws_security_group" "source" {
@@ -771,17 +804,14 @@ resource "aws_efs_mount_target" "source" {
 
 resource "aws_instance" "source" {
   depends_on = [
-    aws_internet_gateway.source,
-    aws_vpc_dhcp_options_association.source,
+    aws_default_route_table.source,
   ]
 
-  ami                         = data.aws_ami.source-aws-thinstaller.id
+  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
   associate_public_ip_address = true
-
-  # Default instance type from sync.sh
-  instance_type          = "c5.2xlarge"
-  vpc_security_group_ids = [aws_security_group.source.id]
-  subnet_id              = aws_subnet.source.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.source.id]
+  subnet_id                   = aws_subnet.source.id
 
   tags = {
     Name = "tf-acc-test-datasync-task"
@@ -793,18 +823,15 @@ resource "aws_datasync_agent" "source" {
   name       = %q
 }
 
-# Using EFS File System DNS name due to DNS propagation delays
 resource "aws_datasync_location_nfs" "source" {
-  depends_on = [aws_efs_mount_target.source]
-
-  server_hostname = aws_efs_file_system.source.dns_name
+  server_hostname = aws_efs_mount_target.source.dns_name
   subdirectory    = "/"
 
   on_prem_config {
     agent_arns = [aws_datasync_agent.source.arn]
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSDataSyncTaskConfig(rName string) string {
@@ -873,6 +900,25 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, gid)
+}
+
+func testAccAWSDataSyncTaskConfigDefaultSyncOptionsLogLevel(rName, logLevel string) string {
+	return testAccAWSDataSyncTaskConfigDestinationLocationS3Base(rName) + testAccAWSDataSyncTaskConfigSourceLocationNfsBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_datasync_task" "test" {
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  options {
+    log_level = %[2]q
+  }
+}
+`, rName, logLevel)
 }
 
 func testAccAWSDataSyncTaskConfigDefaultSyncOptionsPosixPermissions(rName, posixPermissions string) string {

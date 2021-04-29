@@ -22,6 +22,7 @@ func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
@@ -60,6 +61,7 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
@@ -168,13 +170,13 @@ resource "aws_s3_bucket" "test" {
 resource "aws_s3_bucket_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
-  bucket  = "${aws_s3_bucket.test.id}"
+  bucket  = aws_s3_bucket.test.id
   key     = "%s"
 }
 
 resource "aws_guardduty_ipset" "test" {
   name        = "%s"
-  detector_id = "${aws_guardduty_detector.test.id}"
+  detector_id = aws_guardduty_detector.test.id
   format      = "TXT"
   location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
   activate    = %t

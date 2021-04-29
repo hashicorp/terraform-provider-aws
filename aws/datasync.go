@@ -71,6 +71,7 @@ func expandDataSyncOptions(l []interface{}) *datasync.Options {
 	options := &datasync.Options{
 		Atime:                aws.String(m["atime"].(string)),
 		Gid:                  aws.String(m["gid"].(string)),
+		LogLevel:             aws.String(m["log_level"].(string)),
 		Mtime:                aws.String(m["mtime"].(string)),
 		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
 		PreserveDevices:      aws.String(m["preserve_devices"].(string)),
@@ -106,7 +107,7 @@ func flattenDataSyncEc2Config(ec2Config *datasync.Ec2Config) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"security_group_arns": schema.NewSet(schema.HashString, flattenStringList(ec2Config.SecurityGroupArns)),
+		"security_group_arns": flattenStringSet(ec2Config.SecurityGroupArns),
 		"subnet_arn":          aws.StringValue(ec2Config.SubnetArn),
 	}
 
@@ -131,7 +132,7 @@ func flattenDataSyncOnPremConfig(onPremConfig *datasync.OnPremConfig) []interfac
 	}
 
 	m := map[string]interface{}{
-		"agent_arns": schema.NewSet(schema.HashString, flattenStringList(onPremConfig.AgentArns)),
+		"agent_arns": flattenStringSet(onPremConfig.AgentArns),
 	}
 
 	return []interface{}{m}
@@ -146,6 +147,7 @@ func flattenDataSyncOptions(options *datasync.Options) []interface{} {
 		"atime":                  aws.StringValue(options.Atime),
 		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
 		"gid":                    aws.StringValue(options.Gid),
+		"log_level":              aws.StringValue(options.LogLevel),
 		"mtime":                  aws.StringValue(options.Mtime),
 		"posix_permissions":      aws.StringValue(options.PosixPermissions),
 		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),

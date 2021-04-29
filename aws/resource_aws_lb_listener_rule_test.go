@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
@@ -22,17 +21,17 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 	}{
 		{
 			name:     "valid listener rule arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234",
-			expected: "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234", //lintignore:AWSAT003,AWSAT005
+			expected: "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",                       //lintignore:AWSAT003,AWSAT005
 		},
 		{
 			name:     "listener arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789", //lintignore:AWSAT003,AWSAT005
 			expected: "",
 		},
 		{
 			name:     "some other arn",
-			arn:      "arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067",
+			arn:      "arn:aws:elasticloadbalancing:us-east-1:123456:targetgroup/my-targets/73e2d6bc24d8a067", //lintignore:AWSAT003,AWSAT005
 			expected: "",
 		},
 		{
@@ -66,6 +65,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":           "0",
 						"http_header.#":           "0",
 						"http_request_method.#":   "0",
@@ -94,7 +94,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 						"query_string.#":          "0",
 						"source_ip.#":             "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
 				),
 			},
 		},
@@ -113,6 +113,7 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -191,6 +192,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -210,7 +212,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":           "0",
 						"http_header.#":           "0",
 						"http_request_method.#":   "0",
@@ -219,7 +221,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 						"query_string.#":          "0",
 						"source_ip.#":             "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
 				),
 			},
 		},
@@ -235,6 +237,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -275,6 +278,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -312,6 +316,7 @@ func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -342,6 +347,7 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -372,6 +378,7 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -399,6 +406,7 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -480,6 +488,7 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -520,6 +529,7 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -560,6 +570,7 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -576,7 +587,7 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	var rule elbv2.Rule
 	key := tlsRsaPrivateKeyPem(2048)
@@ -586,6 +597,7 @@ func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -609,6 +621,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -645,6 +658,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -657,7 +671,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":          "1",
 						"host_header.0.values.#": "2",
 						"http_header.#":          "0",
@@ -666,8 +680,8 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 						"query_string.#":         "0",
 						"source_ip.#":            "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "www.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "www.example.com"),
 				),
 			},
 		},
@@ -683,6 +697,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -695,7 +710,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":                  "0",
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
@@ -705,9 +720,9 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "10.0.0.*"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "10.0.0.*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":                  "0",
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "Zz9~|_^.-+*'&%$#!0aA",
@@ -717,7 +732,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "RFC7230 Validity"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "RFC7230 Validity"),
 				),
 			},
 		},
@@ -727,6 +742,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -747,6 +763,7 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -759,7 +776,7 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":                  "0",
 						"http_header.#":                  "0",
 						"http_request_method.#":          "1",
@@ -768,8 +785,8 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "POST"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "POST"),
 				),
 			},
 		},
@@ -785,6 +802,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -797,7 +815,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":           "0",
 						"http_header.#":           "0",
 						"http_request_method.#":   "0",
@@ -806,8 +824,8 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 						"query_string.#":          "0",
 						"source_ip.#":             "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/cgi-bin/*"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/cgi-bin/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
 				),
 			},
 		},
@@ -823,6 +841,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -835,7 +854,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":         "0",
 						"http_header.#":         "0",
 						"http_request_method.#": "0",
@@ -843,18 +862,18 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 						"query_string.#":        "2",
 						"source_ip.#":           "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
 						"key":   "",
 						"value": "surprise",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
 						"key":   "",
 						"value": "blank",
 					}),
 					// TODO: TypeSet check helpers cannot make distinction between the 2 set items
 					// because we had to write a new check for the "downstream" nested set
 					// a distinguishing attribute on the outer set would be solve this.
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":         "0",
 						"http_header.#":         "0",
 						"http_request_method.#": "0",
@@ -862,11 +881,11 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 						"query_string.#":        "2",
 						"source_ip.#":           "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
 						"key":   "foo",
 						"value": "baz",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*.query_string.*", map[string]string{
 						"key":   "foo",
 						"value": "bar",
 					}),
@@ -885,6 +904,7 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -897,7 +917,7 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":         "0",
 						"http_header.#":         "0",
 						"http_request_method.#": "0",
@@ -906,8 +926,8 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 						"source_ip.#":           "1",
 						"source_ip.0.values.#":  "2",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
 				),
 			},
 		},
@@ -923,6 +943,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -934,15 +955,15 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"path_pattern.#":          "1",
 						"path_pattern.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"source_ip.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
 				),
 			},
 			{
@@ -953,15 +974,15 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"path_pattern.#":          "1",
 						"path_pattern.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"source_ip.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
 				),
 			},
 			{
@@ -972,15 +993,15 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"path_pattern.#":          "1",
 						"path_pattern.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/cgi-bin/*"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/cgi-bin/*"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"source_ip.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "dead:cafe::/64"),
 				),
 			},
 		},
@@ -996,6 +1017,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -1008,7 +1030,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":                  "0",
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
@@ -1018,9 +1040,9 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":         "0",
 						"http_header.#":         "0",
 						"http_request_method.#": "0",
@@ -1029,9 +1051,9 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 						"source_ip.#":           "1",
 						"source_ip.0.values.#":  "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":                  "0",
 						"http_header.#":                  "0",
 						"http_request_method.#":          "1",
@@ -1040,9 +1062,9 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 						"query_string.#":                 "0",
 						"source_ip.#":                    "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":           "0",
 						"http_header.#":           "0",
 						"http_request_method.#":   "0",
@@ -1051,9 +1073,9 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 						"query_string.#":          "0",
 						"source_ip.#":             "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":          "1",
 						"host_header.0.values.#": "1",
 						"http_header.#":          "0",
@@ -1062,7 +1084,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 						"query_string.#":         "0",
 						"source_ip.#":            "0",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 				),
 			},
 		},
@@ -1078,6 +1100,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -1089,36 +1112,36 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
 						"http_header.0.values.#":         "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.1.*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"source_ip.#":          "1",
 						"source_ip.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/16"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"http_request_method.#":          "1",
 						"http_request_method.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "GET"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"path_pattern.#":          "1",
 						"path_pattern.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":          "1",
 						"host_header.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "example.com"),
 				),
 			},
 			{
@@ -1129,36 +1152,36 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"http_header.#":                  "1",
 						"http_header.0.http_header_name": "X-Forwarded-For",
 						"http_header.0.values.#":         "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.2.*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_header.0.values.*", "192.168.2.*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"source_ip.#":          "1",
 						"source_ip.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.source_ip.0.values.*", "192.168.0.0/24"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"http_request_method.#":          "1",
 						"http_request_method.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "POST"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.http_request_method.0.values.*", "POST"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"path_pattern.#":          "1",
 						"path_pattern.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/2/*"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/2/*"),
 
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "condition.*", map[string]string{
 						"host_header.#":          "1",
 						"host_header.0.values.#": "1",
 					}),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "foobar.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.host_header.0.values.*", "foobar.com"),
 				),
 			},
 		},
@@ -1267,12 +1290,12 @@ func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
 func testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -1283,12 +1306,12 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1296,8 +1319,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1311,7 +1334,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1327,7 +1350,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1349,10 +1372,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-basic-${count.index}"
@@ -1362,7 +1385,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1388,18 +1411,20 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_forwardWeighted(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type = "forward"
+
     forward {
       target_group {
-        arn    = "${aws_lb_target_group.test1.arn}"
+        arn    = aws_lb_target_group.test1.arn
         weight = 1
       }
+
       target_group {
-        arn    = "${aws_lb_target_group.test2.arn}"
+        arn    = aws_lb_target_group.test2.arn
         weight = 1
       }
     }
@@ -1413,12 +1438,12 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test1.arn}"
+    target_group_arn = aws_lb_target_group.test1.arn
     type             = "forward"
   }
 }
@@ -1426,8 +1451,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1441,7 +1466,7 @@ resource "aws_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1459,7 +1484,7 @@ resource "aws_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1475,7 +1500,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1497,10 +1522,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-basic-${count.index}"
@@ -1510,7 +1535,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1536,20 +1561,23 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type = "forward"
+
     forward {
       target_group {
-        arn    = "${aws_lb_target_group.test1.arn}"
+        arn    = aws_lb_target_group.test1.arn
         weight = 1
       }
+
       target_group {
-        arn    = "${aws_lb_target_group.test2.arn}"
+        arn    = aws_lb_target_group.test2.arn
         weight = 1
       }
+
       stickiness {
         enabled  = true
         duration = 3600
@@ -1565,12 +1593,12 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test1.arn}"
+    target_group_arn = aws_lb_target_group.test1.arn
     type             = "forward"
   }
 }
@@ -1578,8 +1606,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1593,7 +1621,7 @@ resource "aws_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1611,7 +1639,7 @@ resource "aws_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1627,7 +1655,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1649,10 +1677,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-basic-${count.index}"
@@ -1662,7 +1690,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1688,12 +1716,12 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1 string, targetGroupName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test1.arn}"
+    target_group_arn = aws_lb_target_group.test1.arn
   }
 
   condition {
@@ -1704,12 +1732,12 @@ resource "aws_lb_listener_rule" "weighted" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test1.arn}"
+    target_group_arn = aws_lb_target_group.test1.arn
     type             = "forward"
   }
 }
@@ -1717,8 +1745,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1732,7 +1760,7 @@ resource "aws_lb_target_group" "test1" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1750,7 +1778,7 @@ resource "aws_lb_target_group" "test2" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1766,7 +1794,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1788,10 +1816,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-basic-${count.index}"
@@ -1801,7 +1829,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1827,12 +1855,12 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_listener_rule" "static" {
-  listener_arn = "${aws_alb_listener.front_end.arn}"
+  listener_arn = aws_alb_listener.front_end.arn
   priority     = 100
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_alb_target_group.test.arn}"
+    target_group_arn = aws_alb_target_group.test.arn
   }
 
   condition {
@@ -1843,12 +1871,12 @@ resource "aws_alb_listener_rule" "static" {
 }
 
 resource "aws_alb_listener" "front_end" {
-  load_balancer_arn = "${aws_alb.alb_test.id}"
+  load_balancer_arn = aws_alb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_alb_target_group.test.id}"
+    target_group_arn = aws_alb_target_group.test.id
     type             = "forward"
   }
 }
@@ -1856,8 +1884,8 @@ resource "aws_alb_listener" "front_end" {
 resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1871,7 +1899,7 @@ resource "aws_alb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -1887,7 +1915,7 @@ resource "aws_alb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1909,10 +1937,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-bc-${count.index}"
@@ -1922,7 +1950,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -1948,7 +1976,7 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -1969,7 +1997,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -1987,8 +2015,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2000,7 +2028,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2022,10 +2050,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-redirect-${count.index}"
@@ -2035,7 +2063,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2061,7 +2089,7 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName, response string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -2082,7 +2110,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -2100,8 +2128,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2113,7 +2141,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2135,10 +2163,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-fixedresponse-${count.index}"
@@ -2148,7 +2176,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2174,12 +2202,12 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 101
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2190,12 +2218,12 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2203,8 +2231,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2218,7 +2246,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -2234,7 +2262,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2256,10 +2284,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-update-rule-priority-${count.index}"
@@ -2269,7 +2297,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2295,12 +2323,12 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_changeRuleArn(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end_ruleupdate.arn}"
+  listener_arn = aws_lb_listener.front_end_ruleupdate.arn
   priority     = 101
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2311,23 +2339,23 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
 
 resource "aws_lb_listener" "front_end_ruleupdate" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "8080"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2335,8 +2363,8 @@ resource "aws_lb_listener" "front_end_ruleupdate" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2350,7 +2378,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -2366,7 +2394,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2388,10 +2416,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-change-rule-arn-${count.index}"
@@ -2401,7 +2429,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2427,12 +2455,12 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2440,8 +2468,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2455,7 +2483,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -2471,7 +2499,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2493,10 +2521,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-priority-${count.index}"
@@ -2506,7 +2534,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2530,13 +2558,13 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "first" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2547,12 +2575,12 @@ resource "aws_lb_listener_rule" "first" {
 }
 
 resource "aws_lb_listener_rule" "third" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 3
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 3
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2561,19 +2589,19 @@ resource "aws_lb_listener_rule" "third" {
     }
   }
 
-  depends_on = ["aws_lb_listener_rule.first"]
+  depends_on = [aws_lb_listener_rule.first]
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityLast(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "last" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2582,18 +2610,18 @@ resource "aws_lb_listener_rule" "last" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "last" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 7
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 7
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2602,19 +2630,19 @@ resource "aws_lb_listener_rule" "last" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "parallelism" {
   count = 10
 
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2623,18 +2651,18 @@ resource "aws_lb_listener_rule" "parallelism" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50000" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 50000
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2643,18 +2671,18 @@ resource "aws_lb_listener_rule" "priority50000" {
     }
   }
 }
-`
+`)
 }
 
 // priority out of range (1, 50000)
 func testAccAWSLBListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50001" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2663,18 +2691,18 @@ resource "aws_lb_listener_rule" "priority50001" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50000_in_use" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 50000
 
   action {
-    type = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2683,22 +2711,22 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "cognito" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
     type = "authenticate-cognito"
 
     authenticate_cognito {
-      user_pool_arn       = "${aws_cognito_user_pool.test.arn}"
-      user_pool_client_id = "${aws_cognito_user_pool_client.test.id}"
-      user_pool_domain    = "${aws_cognito_user_pool_domain.test.domain}"
+      user_pool_arn       = aws_cognito_user_pool.test.arn
+      user_pool_client_id = aws_cognito_user_pool_client.test.id
+      user_pool_domain    = aws_cognito_user_pool_domain.test.domain
 
       authentication_request_extra_params = {
         param = "test"
@@ -2708,7 +2736,7 @@ resource "aws_lb_listener_rule" "cognito" {
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2725,14 +2753,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
+  certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2740,8 +2768,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2755,7 +2783,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -2771,7 +2799,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2793,10 +2821,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-cognito-${count.index}"
@@ -2806,7 +2834,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -2833,7 +2861,7 @@ resource "aws_cognito_user_pool" "test" {
 
 resource "aws_cognito_user_pool_client" "test" {
   name                                 = "%[1]s-pool-client"
-  user_pool_id                         = "${aws_cognito_user_pool.test.id}"
+  user_pool_id                         = aws_cognito_user_pool.test.id
   generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_flows                  = ["code", "implicit"]
@@ -2845,7 +2873,7 @@ resource "aws_cognito_user_pool_client" "test" {
 
 resource "aws_cognito_user_pool_domain" "test" {
   domain       = "%[1]s-pool-domain"
-  user_pool_id = "${aws_cognito_user_pool.test.id}"
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
@@ -2853,7 +2881,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 func testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "oidc" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -2875,7 +2903,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -2892,14 +2920,14 @@ resource "aws_iam_server_certificate" "test" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
+  certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
@@ -2907,8 +2935,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%[1]s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2922,7 +2950,7 @@ resource "aws_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id   = aws_vpc.alb_test.id
 
   health_check {
     path                = "/health"
@@ -2938,7 +2966,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2960,10 +2988,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "tf-acc-lb-listener-rule-cognito-${count.index}"
@@ -2973,7 +3001,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -3012,7 +3040,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_lb_listener_rule" "test" {
-  listener_arn = "${aws_lb_listener.test.arn}"
+  listener_arn = aws_lb_listener.test.arn
 
   action {
     order = 1
@@ -3035,7 +3063,7 @@ resource "aws_lb_listener_rule" "test" {
   action {
     order            = 2
     type             = "forward"
-    target_group_arn = "${aws_lb_target_group.test.arn}"
+    target_group_arn = aws_lb_target_group.test.arn
   }
 
   condition {
@@ -3047,35 +3075,35 @@ resource "aws_lb_listener_rule" "test" {
 
 resource "aws_iam_server_certificate" "test" {
   certificate_body = "%[2]s"
-  name             = "${var.rName}"
+  name             = var.rName
   private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.test.id}"
+  load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
   port              = "443"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
+  certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
+    target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
 }
 
 resource "aws_lb" "test" {
   internal        = true
-  name            = "${var.rName}"
-  security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  name            = var.rName
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "${var.rName}"
+  name     = var.rName
   port     = 8080
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id   = aws_vpc.test.id
 
   health_check {
     path                = "/health"
@@ -3093,26 +3121,26 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "${var.rName}"
+    Name = var.rName
   }
 }
 
 resource "aws_subnet" "test" {
   count = 2
 
-  availability_zone       = "${data.aws_availability_zones.available.names[count.index]}"
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   cidr_block              = "10.0.${count.index}.0/24"
   map_public_ip_on_launch = true
-  vpc_id                  = "${aws_vpc.test.id}"
+  vpc_id                  = aws_vpc.test.id
 
   tags = {
-    Name = "${var.rName}"
+    Name = var.rName
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = "${var.rName}"
-  vpc_id = "${aws_vpc.test.id}"
+  name   = var.rName
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -3129,7 +3157,7 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = "${var.rName}"
+    Name = var.rName
   }
 }
 `, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
@@ -3137,8 +3165,12 @@ resource "aws_security_group" "test" {
 
 func testAccAWSLBListenerRuleConfig_condition_error(condition string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_lb_listener_rule" "error" {
-  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
   priority     = 100
 
   action {
@@ -3162,11 +3194,13 @@ condition {
   host_header {
     values = ["example.com"]
   }
+
   http_header {
     http_header_name = "X-Clacks-Overhead"
     values           = ["GNU Terry Pratchett"]
   }
-}`)
+}
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionAttributesCount_http_request_method() string {
@@ -3175,10 +3209,12 @@ condition {
   host_header {
     values = ["example.com"]
   }
+
   http_request_method {
     values = ["POST"]
   }
-}`)
+}
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionAttributesCount_path_pattern() string {
@@ -3187,10 +3223,12 @@ condition {
   host_header {
     values = ["example.com"]
   }
+
   path_pattern {
     values = ["/"]
   }
-}`)
+}
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionAttributesCount_query_string() string {
@@ -3199,11 +3237,13 @@ condition {
   host_header {
     values = ["example.com"]
   }
+
   query_string {
     key   = "foo"
     value = "bar"
   }
-}`)
+}
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionAttributesCount_source_ip() string {
@@ -3212,16 +3252,18 @@ condition {
   host_header {
     values = ["example.com"]
   }
+
   source_ip {
     values = ["192.168.0.0/16"]
   }
-}`)
+}
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_condition_base(condition, name, lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
+  listener_arn = aws_lb_listener.front_end.arn
   priority     = 100
 
   action {
@@ -3238,7 +3280,7 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
+  load_balancer_arn = aws_lb.alb_test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -3256,8 +3298,8 @@ resource "aws_lb_listener" "front_end" {
 resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -3269,7 +3311,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -3291,10 +3333,10 @@ resource "aws_vpc" "alb_test" {
 
 resource "aws_subnet" "alb_test" {
   count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
     Name = "TestAccAWSALB_condition%s-${count.index}"
@@ -3304,7 +3346,7 @@ resource "aws_subnet" "alb_test" {
 resource "aws_security_group" "alb_test" {
   name        = "allow_all_alb_test"
   description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
+  vpc_id      = aws_vpc.alb_test.id
 
   ingress {
     from_port   = 0
@@ -3357,8 +3399,12 @@ condition {
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid() string {
 	return `
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
 resource "aws_lb_listener_rule" "static" {
-  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  listener_arn = "arn:${data.aws_partition.current.partition}:elasticloadbalancing:${data.aws_region.current.name}:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
   priority     = 100
 
   action {
@@ -3407,6 +3453,7 @@ condition {
   query_string {
     value = "surprise"
   }
+
   query_string {
     key   = ""
     value = "blank"
@@ -3418,6 +3465,7 @@ condition {
     key   = "foo"
     value = "bar"
   }
+
   query_string {
     key   = "foo"
     value = "baz"

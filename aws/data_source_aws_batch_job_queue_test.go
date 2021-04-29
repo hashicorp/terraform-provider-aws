@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
@@ -15,55 +15,29 @@ func TestAccDataSourceAwsBatchJobQueue_basic(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck: testAccErrorCheck(t, batch.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsBatchJobQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsBatchJobQueueCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
+					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsBatchJobQueueCheck(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		ds, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no data source called %s", datasourceName)
-		}
-
-		jobQueueRs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		attrNames := []string{
-			"arn",
-			"name",
-			"state",
-			"priority",
-		}
-
-		for _, attrName := range attrNames {
-			if ds.Primary.Attributes[attrName] != jobQueueRs.Primary.Attributes[attrName] {
-				return fmt.Errorf(
-					"%s is %s; want %s",
-					attrName,
-					ds.Primary.Attributes[attrName],
-					jobQueueRs.Primary.Attributes[attrName],
-				)
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccDataSourceAwsBatchJobQueueConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_%[1]s"
 
@@ -75,7 +49,7 @@ resource "aws_iam_role" "ecs_instance_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       }
     }
   ]
@@ -85,7 +59,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
   role       = aws_iam_role.ecs_instance_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
@@ -104,7 +78,7 @@ resource "aws_iam_role" "aws_batch_service_role" {
       "Action": "sts:AssumeRole",
       "Effect": "Allow",
       "Principal": {
-        "Service": "batch.amazonaws.com"
+        "Service": "batch.${data.aws_partition.current.dns_suffix}"
       }
     }
   ]
@@ -114,7 +88,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
   role       = aws_iam_role.aws_batch_service_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
 resource "aws_security_group" "sample" {
@@ -156,7 +130,7 @@ resource "aws_batch_compute_environment" "sample" {
 
   service_role = aws_iam_role.aws_batch_service_role.arn
   type         = "MANAGED"
-  depends_on   = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
 }
 
 resource "aws_batch_job_queue" "test" {

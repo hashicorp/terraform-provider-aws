@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsVpnGateway() *schema.Resource {
@@ -50,17 +52,25 @@ func resourceAwsVpnGateway() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateVpnGatewayInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		Type:             aws.String(ec2.GatewayTypeIpsec1),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		Type:              aws.String(ec2.GatewayTypeIpsec1),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnGateway),
 	}
+
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
 		i, err := strconv.ParseInt(asn.(string), 10, 64)
 		if err != nil {
@@ -84,17 +94,12 @@ func resourceAwsVpnGatewayCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceAwsVpnGatewayRead(d, meta)
 }
 
 func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
@@ -131,13 +136,20 @@ func resourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vpnGateway.AmazonSideAsn), 10))
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpnGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(vpnGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
@@ -163,8 +175,8 @@ func resourceAwsVpnGatewayUpdate(d *schema.ResourceData, meta interface{}) error
 
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
@@ -237,7 +249,7 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
-			if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+			if isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -254,14 +266,10 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 
 	// Wait for it to be fully attached before continuing
 	log.Printf("[DEBUG] Waiting for VPN gateway (%s) to attach", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetached, ec2.AttachmentStatusAttaching},
-		Target:  []string{ec2.AttachmentStatusAttached},
-		Refresh: vpnGatewayAttachmentStateRefresh(conn, vpcId, d.Id()),
-		Timeout: 15 * time.Minute,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for VPN gateway (%s) to attach: %s", d.Id(), err)
+	_, err = waiter.VpnGatewayVpcAttachmentAttached(conn, d.Id(), vpcId)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become attached: %w", d.Id(), vpcId, err)
 	}
 
 	return nil
@@ -286,40 +294,24 @@ func resourceAwsVpnGatewayDetach(d *schema.ResourceData, meta interface{}) error
 		d.Id(),
 		vpcId)
 
-	wait := true
 	_, err := conn.DetachVpnGateway(&ec2.DetachVpnGatewayInput{
 		VpnGatewayId: aws.String(d.Id()),
 		VpcId:        aws.String(vpcId),
 	})
-	if err != nil {
-		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
-			err = nil
-			wait = false
-		}
-		if isAWSErr(err, "InvalidVpnGatewayAttachment.NotFound", "") {
-			err = nil
-			wait = false
-		}
 
-		if err != nil {
-			return err
-		}
-	}
-
-	if !wait {
+	if isAWSErr(err, tfec2.InvalidVpnGatewayAttachmentNotFound, "") || isAWSErr(err, tfec2.InvalidVpnGatewayIDNotFound, "") {
 		return nil
 	}
 
-	// Wait for it to be fully detached before continuing
-	log.Printf("[DEBUG] Waiting for VPN gateway (%s) to detach", d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching, "available"},
-		Target:  []string{ec2.AttachmentStatusDetached},
-		Refresh: vpnGatewayAttachmentStateRefresh(conn, vpcId, d.Id()),
-		Timeout: 10 * time.Minute,
+	if err != nil {
+		return fmt.Errorf("error deleting VPN Gateway (%s) Attachment (%s): %w", d.Id(), vpcId, err)
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for vpn gateway (%s) to detach: %s", d.Id(), err)
+
+	// Wait for it to be fully detached before continuing
+	_, err = waiter.VpnGatewayVpcAttachmentDetached(conn, d.Id(), vpcId)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for VPN Gateway (%s) Attachment (%s) to become detached: %w", d.Id(), vpcId, err)
 	}
 
 	return nil

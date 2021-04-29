@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -39,8 +40,9 @@ func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData),
@@ -57,8 +59,9 @@ func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData),
@@ -75,8 +78,9 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData),
@@ -107,8 +111,10 @@ resource "aws_iam_role" "lambda_role" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role_policy.json
 }
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
   role       = aws_iam_role.lambda_role.name
 }
 `, roleName)
@@ -117,7 +123,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 func testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
@@ -148,7 +154,7 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"
@@ -181,7 +187,7 @@ JSON
 func testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData string) string {
 	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
-  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+  depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
 
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = "%s"

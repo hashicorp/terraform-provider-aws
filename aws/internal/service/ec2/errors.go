@@ -1,26 +1,103 @@
 package ec2
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 )
 
-// Copied from aws-sdk-go-base
-// Can be removed when aws-sdk-go-base v0.6+ is merged
-// TODO:
-func ErrCodeEquals(err error, code string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return awsErr.Code() == code
+const (
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
+)
+
+const (
+	ErrCodeInvalidCarrierGatewayIDNotFound = "InvalidCarrierGatewayID.NotFound"
+)
+
+const (
+	ErrCodeInvalidNetworkInterfaceIDNotFound = "InvalidNetworkInterfaceID.NotFound"
+)
+
+const (
+	ErrCodeInvalidPrefixListIDNotFound = "InvalidPrefixListID.NotFound"
+)
+
+const (
+	ErrCodeInvalidRouteNotFound        = "InvalidRoute.NotFound"
+	ErrCodeInvalidRouteTableIDNotFound = "InvalidRouteTableID.NotFound"
+)
+
+const (
+	ErrCodeInvalidTransitGatewayIDNotFound = "InvalidTransitGatewayID.NotFound"
+)
+
+const (
+	ErrCodeClientVpnEndpointIdNotFound        = "InvalidClientVpnEndpointId.NotFound"
+	ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	ErrCodeClientVpnAssociationIdNotFound     = "InvalidClientVpnAssociationId.NotFound"
+	ErrCodeClientVpnRouteNotFound             = "InvalidClientVpnRouteNotFound"
+)
+
+const (
+	ErrCodeInvalidInstanceIDNotFound = "InvalidInstanceID.NotFound"
+)
+
+const (
+	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
+	InvalidGroupNotFound           = "InvalidGroup.NotFound"
+)
+
+const (
+	ErrCodeInvalidSpotInstanceRequestIDNotFound = "InvalidSpotInstanceRequestID.NotFound"
+)
+
+const (
+	ErrCodeInvalidSubnetIDNotFound = "InvalidSubnetID.NotFound"
+)
+
+const (
+	ErrCodeInvalidVpcIDNotFound = "InvalidVpcID.NotFound"
+)
+
+const (
+	ErrCodeInvalidVpcEndpointIdNotFound        = "InvalidVpcEndpointId.NotFound"
+	ErrCodeInvalidVpcEndpointServiceIdNotFound = "InvalidVpcEndpointServiceId.NotFound"
+)
+
+const (
+	ErrCodeInvalidVpcPeeringConnectionIDNotFound = "InvalidVpcPeeringConnectionID.NotFound"
+)
+
+const (
+	InvalidVpnGatewayAttachmentNotFound = "InvalidVpnGatewayAttachment.NotFound"
+	InvalidVpnGatewayIDNotFound         = "InvalidVpnGatewayID.NotFound"
+)
+
+func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
+	if apiObject == nil {
+		return nil
 	}
-	return false
+
+	return fmt.Errorf("%s: %s", aws.StringValue(apiObject.Code), aws.StringValue(apiObject.Message))
 }
 
-const ErrCodeClientVpnEndpointIdNotFound = "InvalidClientVpnEndpointId.NotFound"
+func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
+	var errors *multierror.Error
 
-const ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
 
-const ErrCodeClientVpnAssociationIdNotFound = "InvalidClientVpnAssociationId.NotFound"
+		err := UnsuccessfulItemError(apiObject.Error)
 
-const ErrCodeClientVpnRouteNotFound = "InvalidClientVpnRouteNotFound"
+		if err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}

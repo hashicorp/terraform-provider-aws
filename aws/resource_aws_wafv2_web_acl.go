@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -110,7 +111,6 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
 						"override_action": {
@@ -134,13 +134,18 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 				},
 			},
 			"tags":              tagsSchema(),
+			"tags_all":          tagsSchemaComputed(),
 			"visibility_config": wafv2VisibilityConfigSchema(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var resp *wafv2.CreateWebACLOutput
 
 	params := &wafv2.CreateWebACLInput{
@@ -155,8 +160,8 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		params.Description = aws.String(v.(string))
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().Wafv2Tags()
 	}
 
 	err := resource.Retry(Wafv2WebACLCreateTimeout, func() *resource.RetryError {
@@ -190,6 +195,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetWebACLInput{
@@ -212,11 +218,11 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error getting WAFv2 WebACL")
 	}
 
-	d.Set("name", aws.StringValue(resp.WebACL.Name))
-	d.Set("capacity", aws.Int64Value(resp.WebACL.Capacity))
-	d.Set("description", aws.StringValue(resp.WebACL.Description))
-	d.Set("arn", aws.StringValue(resp.WebACL.ARN))
-	d.Set("lock_token", aws.StringValue(resp.LockToken))
+	d.Set("name", resp.WebACL.Name)
+	d.Set("capacity", resp.WebACL.Capacity)
+	d.Set("description", resp.WebACL.Description)
+	d.Set("arn", resp.WebACL.ARN)
+	d.Set("lock_token", resp.LockToken)
 
 	if err := d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("Error setting default_action: %w", err)
@@ -236,8 +242,15 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error listing tags for WAFv2 WebACL (%s): %w", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("Error setting tags: %w", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -253,11 +266,11 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 			Scope:            aws.String(d.Get("scope").(string)),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			Rules:            expandWafv2WebACLRules(d.Get("rule").(*schema.Set).List()),
 			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
-		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+		if v, ok := d.GetOk("description"); ok {
 			u.Description = aws.String(v.(string))
 		}
 
@@ -284,8 +297,8 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %w", err)
 		}
@@ -309,10 +322,10 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(Wafv2WebACLDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteWebACL(r)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -322,6 +335,10 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteWebACL(r)
+	}
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil
 	}
 
 	if err != nil {
@@ -402,15 +419,14 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				// Required field but currently only supports "IP"
+				// Required field
 				"aggregate_key_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.RateBasedStatementAggregateKeyTypeIp,
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
+				"forwarded_ip_config": wafv2ForwardedIPConfig(),
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -628,6 +644,10 @@ func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 		Limit:            aws.Int64(int64(m["limit"].(int))),
 	}
 
+	if v, ok := m["forwarded_ip_config"]; ok {
+		r.ForwardedIPConfig = expandWafv2ForwardedIPConfig(v.([]interface{}))
+	}
+
 	s := m["scope_down_statement"].([]interface{})
 	if len(s) > 0 && s[0] != nil {
 		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
@@ -820,6 +840,7 @@ func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
 	m := map[string]interface{}{
 		"limit":                int(aws.Int64Value(r.Limit)),
 		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"forwarded_ip_config":  flattenWafv2ForwardedIPConfig(r.ForwardedIPConfig),
 		"scope_down_statement": nil,
 	}
 

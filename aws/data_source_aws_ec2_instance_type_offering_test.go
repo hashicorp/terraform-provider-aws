@@ -13,6 +13,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_Filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceTypeOffering(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -31,6 +32,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_LocationType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceTypeOffering(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -49,6 +51,7 @@ func TestAccAWSEc2InstanceTypeOfferingDataSource_PreferredInstanceTypes(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2InstanceTypeOffering(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -96,16 +99,7 @@ data "aws_ec2_instance_type_offering" "test" {
 }
 
 func testAccAWSEc2InstanceTypeOfferingDataSourceConfigLocationType() string {
-	return `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return testAccAvailableAZsNoOptInConfig() + `
 # Rather than hardcode an instance type in the testing,
 # use the first result from all available offerings.
 data "aws_ec2_instance_type_offerings" "test" {

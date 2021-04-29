@@ -21,7 +21,7 @@ Doing so will cause a conflict of associations and will overwrite the associatio
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.main.id
   service_name = "com.amazonaws.us-west-2.s3"
@@ -30,7 +30,7 @@ resource "aws_vpc_endpoint" "s3" {
 
 ### Basic w/ Tags
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.main.id
   service_name = "com.amazonaws.us-west-2.s3"
@@ -43,7 +43,7 @@ resource "aws_vpc_endpoint" "s3" {
 
 ### Interface Endpoint Type
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint" "ec2" {
   vpc_id            = aws_vpc.main.id
   service_name      = "com.amazonaws.us-west-2.ec2"
@@ -57,9 +57,28 @@ resource "aws_vpc_endpoint" "ec2" {
 }
 ```
 
+### Gateway Load Balancer Endpoint Type
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_vpc_endpoint_service" "example" {
+  acceptance_required        = false
+  allowed_principals         = [data.aws_caller_identity.current.arn]
+  gateway_load_balancer_arns = [aws_lb.example.arn]
+}
+
+resource "aws_vpc_endpoint" "example" {
+  service_name      = aws_vpc_endpoint_service.example.service_name
+  subnet_ids        = [aws_subnet.example.id]
+  vpc_endpoint_type = aws_vpc_endpoint_service.example.service_type
+  vpc_id            = aws_vpc.example.id
+}
+```
+
 ### Non-AWS Service
 
-```hcl
+```terraform
 resource "aws_vpc_endpoint" "ptfe_service" {
   vpc_id            = var.vpc_id
   service_name      = var.ptfe_service
@@ -101,15 +120,15 @@ The following arguments are supported:
 * `private_dns_enabled` - (Optional; AWS services and AWS Marketplace partner services only) Whether or not to associate a private hosted zone with the specified VPC. Applicable for endpoints of type `Interface`.
 Defaults to `false`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
-* `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `Interface`.
+* `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`.
 * `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Required for endpoints of type `Interface`.
-* `tags` - (Optional) A map of tags to assign to the resource.
-* `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway` or `Interface`. Defaults to `Gateway`.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway`, `GatewayLoadBalancer`, or `Interface`. Defaults to `Gateway`.
 
 ### Timeouts
 
 `aws_vpc_endpoint` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `10 minutes`) Used for creating a VPC endpoint
 - `update` - (Default `10 minutes`) Used for VPC endpoint modifications
@@ -128,6 +147,7 @@ In addition to all arguments above, the following attributes are exported:
 * `prefix_list_id` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `state` - The state of the VPC endpoint.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 DNS blocks (for `dns_entry`) support the following attributes:
 

@@ -20,6 +20,7 @@ func TestAccAWSRedshiftSnapshotScheduleAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, redshift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -108,12 +109,11 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationExists(n string) resource
 func testAccAWSRedshiftSnapshotScheduleAssociationConfig(rInt int, rName, definition string) string {
 	return fmt.Sprintf(`
 %s
-
 %s
 
 resource "aws_redshift_snapshot_schedule_association" "default" {
-	schedule_identifier = "${aws_redshift_snapshot_schedule.default.id}"
-	cluster_identifier = "${aws_redshift_cluster.default.id}"
+  schedule_identifier = aws_redshift_snapshot_schedule.default.id
+  cluster_identifier  = aws_redshift_cluster.default.id
 }
 `, testAccAWSRedshiftClusterConfig_basic(rInt), testAccAWSRedshiftSnapshotScheduleConfig(rName, definition))
 }

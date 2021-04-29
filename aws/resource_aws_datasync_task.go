@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/waiter"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -85,6 +85,12 @@ func resourceAwsDataSyncTask() *schema.Resource {
 								datasync.GidNone,
 							}, false),
 						},
+						"log_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.LogLevelOff,
+							ValidateFunc: validation.StringInSlice(datasync.LogLevel_Values(), false),
+						},
 						"mtime": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -151,19 +157,24 @@ func resourceAwsDataSyncTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandDataSyncOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatasyncTags(),
+		Tags:                   tags.IgnoreAws().DatasyncTags(),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -176,55 +187,15 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Creating DataSync Task: %s", input)
 	output, err := conn.CreateTask(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Task: %s", err)
+		return fmt.Errorf("error creating DataSync Task: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	// Task creation can take a few minutes\
-	taskInput := &datasync.DescribeTaskInput{
-		TaskArn: aws.String(d.Id()),
-	}
-	var taskOutput *datasync.DescribeTaskOutput
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		taskOutput, err := conn.DescribeTask(taskInput)
-
-		if isAWSErr(err, "InvalidRequestException", "not found") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusAvailable || aws.StringValue(taskOutput.Status) == datasync.TaskStatusRunning {
-			return nil
-		}
-
-		err = fmt.Errorf("waiting for DataSync Task (%s) creation: last status (%s), error code (%s), error detail: %s",
-			d.Id(), aws.StringValue(taskOutput.Status), aws.StringValue(taskOutput.ErrorCode), aws.StringValue(taskOutput.ErrorDetail))
-
-		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
-			return resource.RetryableError(err)
-		}
-
-		return resource.NonRetryableError(err) // should only happen if err != nil
-	})
-	if isResourceTimeoutError(err) {
-		taskOutput, err = conn.DescribeTask(taskInput)
-		if isAWSErr(err, "InvalidRequestException", "not found") {
-			return fmt.Errorf("Task not found after creation: %s", err)
-		}
-		if err != nil {
-			return fmt.Errorf("Error describing task after creation: %s", err)
-		}
-		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
-			return fmt.Errorf("Data sync task status has not finished creating")
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %s", d.Id(), err)
+	if _, err := waiter.TaskStatusAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsDataSyncTaskRead(d, meta)
@@ -232,6 +203,7 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeTaskInput{
@@ -268,8 +240,15 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -291,8 +270,8 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Task (%s) tags: %s", d.Id(), err)

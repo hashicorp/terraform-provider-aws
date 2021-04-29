@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSKmsGrant_basic(t *testing.T) {
@@ -18,6 +17,7 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -27,8 +27,8 @@ func TestAccAWSKmsGrant_basic(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 				),
@@ -49,6 +49,7 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_equals.%":   "2",
 						"encryption_context_equals.baz": "kaz",
 						"encryption_context_equals.foo": "bar",
@@ -79,7 +80,7 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_subset.%":   "2",
 						"encryption_context_subset.baz": "kaz",
 						"encryption_context_subset.foo": "bar",
@@ -96,6 +97,7 @@ func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -122,6 +124,7 @@ func TestAccAWSKmsGrant_bare(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +153,7 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -159,10 +163,36 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 					testAccCheckAWSKmsGrantExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
-					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
+			},
+		},
+	})
+}
+
+func TestAccAWSKmsGrant_AsymmetricKey(t *testing.T) {
+	resourceName := "aws_kms_grant.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKmsGrant_AsymmetricKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKmsGrantExists(resourceName),
 				),
 			},
 			{
@@ -181,6 +211,7 @@ func TestAccAWSKmsGrant_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, kms.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
 		Steps: []resource.TestStep{
@@ -244,17 +275,18 @@ func testAccCheckAWSKmsGrantDisappears(name string) resource.TestCheckFunc {
 func testAccAWSKmsGrantConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-    description = "Terraform acc test key %[1]s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test key %[1]s"
+  deletion_window_in_days = 7
 }
 
 data "aws_iam_policy_document" "test" {
   statement {
     effect  = "Allow"
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = [ "ec2.amazonaws.com" ]
+      identifiers = ["ec2.amazonaws.com"]
     }
   }
 }
@@ -262,7 +294,7 @@ data "aws_iam_policy_document" "test" {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/service-role/"
-  assume_role_policy = "${data.aws_iam_policy_document.test.json}"
+  assume_role_policy = data.aws_iam_policy_document.test.json
 }
 `, rName)
 }
@@ -270,10 +302,10 @@ resource "aws_iam_role" "test" {
 func testAccAWSKmsGrant_Basic(rName string, operations string) string {
 	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-	name = %[1]q
-	key_id = "${aws_kms_key.test.key_id}"
-	grantee_principal = "${aws_iam_role.test.arn}"
-	operations = [ %[2]s ]
+  name              = %[1]q
+  key_id            = aws_kms_key.test.key_id
+  grantee_principal = aws_iam_role.test.arn
+  operations        = [%[2]s]
 }
 `, rName, operations)
 }
@@ -281,15 +313,16 @@ resource "aws_kms_grant" "test" {
 func testAccAWSKmsGrant_withConstraints(rName string, constraintName string, encryptionContext string) string {
 	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-	name = "%[1]s"
-	key_id = "${aws_kms_key.test.key_id}"
-	grantee_principal = "${aws_iam_role.test.arn}"
-	operations = [ "RetireGrant", "DescribeKey" ]
-	constraints {
-		%[2]s = {
-			%[3]s
-		}
-	}
+  name              = "%[1]s"
+  key_id            = aws_kms_key.test.key_id
+  grantee_principal = aws_iam_role.test.arn
+  operations        = ["RetireGrant", "DescribeKey"]
+
+  constraints {
+    %[2]s = {
+      %[3]s
+    }
+  }
 }
 `, rName, constraintName, encryptionContext)
 }
@@ -298,10 +331,10 @@ func testAccAWSKmsGrant_withRetiringPrincipal(rName string) string {
 	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name               = "%[1]s"
-  key_id             = "${aws_kms_key.test.key_id}"
-  grantee_principal  = "${aws_iam_role.test.arn}"
+  key_id             = aws_kms_key.test.key_id
+  grantee_principal  = aws_iam_role.test.arn
   operations         = ["ReEncryptTo", "CreateGrant"]
-  retiring_principal = "${aws_iam_role.test.arn}"
+  retiring_principal = aws_iam_role.test.arn
 }
 `, rName)
 }
@@ -309,8 +342,8 @@ resource "aws_kms_grant" "test" {
 func testAccAWSKmsGrant_bare(rName string) string {
 	return testAccAWSKmsGrantConfigBase(rName) + `
 resource "aws_kms_grant" "test" {
-  key_id            = "${aws_kms_key.test.key_id}"
-  grantee_principal = "${aws_iam_role.test.arn}"
+  key_id            = aws_kms_key.test.key_id
+  grantee_principal = aws_iam_role.test.arn
   operations        = ["ReEncryptTo", "CreateGrant"]
 }
 `
@@ -319,10 +352,47 @@ resource "aws_kms_grant" "test" {
 func testAccAWSKmsGrant_ARN(rName string, operations string) string {
 	return testAccAWSKmsGrantConfigBase(rName) + fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
-	name = "%[1]s"
-	key_id = "${aws_kms_key.test.arn}"
-	grantee_principal = "${aws_iam_role.test.arn}"
-	operations = [ %[2]s ]
+  name              = "%[1]s"
+  key_id            = aws_kms_key.test.arn
+  grantee_principal = aws_iam_role.test.arn
+  operations        = [%[2]s]
 }
 `, rName, operations)
+}
+
+func testAccAWSKmsGrant_AsymmetricKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_grant" "test" {
+  name              = "%[1]s"
+  key_id            = aws_kms_key.test.key_id
+  grantee_principal = aws_iam_role.test.arn
+  operations        = ["GetPublicKey", "Sign", "Verify"]
+}
+
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test key %[1]s"
+  deletion_window_in_days = 7
+
+  key_usage                = "SIGN_VERIFY"
+  customer_master_key_spec = "RSA_2048"
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+`, rName)
 }

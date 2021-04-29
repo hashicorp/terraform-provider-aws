@@ -209,7 +209,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 			ExpectEquivalent: true,
 		},
 		{
-			Name: "empty command, mountPoints, resourceRequirements, ulimits, volumes",
+			Name: "empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes",
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -219,9 +219,14 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	"jobRoleArn": "arn:aws:iam::123:role/role-test",
 	"volumes": [],
 	"environment": [{"name":"ENVIRONMENT","value":"test"}],
+	"logConfiguration": {
+		"logDriver": "awslogs",
+		"secretOptions": []
+	},
 	"mountPoints": [],
 	"ulimits": [],
-	"resourceRequirements": []
+	"resourceRequirements": [],
+	"secrets": []
 }
 `,
 			ConfigurationJson: `
@@ -235,7 +240,10 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
         "name": "ENVIRONMENT",
         "value": "test"
       }
-   ]
+   ],
+   "logConfiguration": {
+		"logDriver": "awslogs"
+	}
 }
 `,
 			ExpectEquivalent: true,

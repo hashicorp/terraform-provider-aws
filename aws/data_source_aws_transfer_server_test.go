@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -13,8 +14,9 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_basic,
@@ -35,8 +37,9 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
@@ -57,8 +60,9 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_apigateway(rName),
@@ -86,7 +90,7 @@ data "aws_transfer_server" "test" {
 func testAccDataSourceAwsTransferServerConfig_service_managed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "tf-test-transfer-server-iam-role-%s"
+  name = "tf-test-transfer-server-iam-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -105,7 +109,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-test-transfer-server-iam-policy-%s"
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
   role = aws_iam_role.test.id
 
   policy = <<POLICY
@@ -133,7 +137,7 @@ resource "aws_transfer_server" "test" {
 data "aws_transfer_server" "test" {
   server_id = aws_transfer_server.test.id
 }
-`, rName, rName)
+`, rName)
 }
 
 func testAccDataSourceAwsTransferServerConfig_apigateway(rName string) string {
@@ -180,12 +184,12 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id       = aws_api_gateway_rest_api.test.id
   stage_name        = "test"
-  description       = "%s"
-  stage_description = "%s"
+  description       = "%[1]s"
+  stage_description = "%[1]s"
 
   variables = {
     "a" = "2"
@@ -193,7 +197,7 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-test-transfer-server-iam-role-for-apigateway-%s"
+  name = "tf-test-transfer-server-iam-role-for-apigateway-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -212,7 +216,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "tf-test-transfer-server-iam-policy-%s"
+  name = "tf-test-transfer-server-iam-policy-%[1]s"
   role = aws_iam_role.test.id
 
   policy = <<POLICY
@@ -232,9 +236,11 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 
+data "aws_region" "current" {}
+
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.us-west-2.amazonaws.com${aws_api_gateway_resource.test.path}"
+  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 }
@@ -242,5 +248,5 @@ resource "aws_transfer_server" "test" {
 data "aws_transfer_server" "test" {
   server_id = aws_transfer_server.test.id
 }
-`, rName, rName, rName, rName)
+`, rName)
 }

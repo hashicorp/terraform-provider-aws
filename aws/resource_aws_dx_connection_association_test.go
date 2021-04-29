@@ -14,6 +14,7 @@ import (
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -30,6 +31,7 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, directconnect.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -85,13 +87,13 @@ func testAccDxConnectionAssociationConfig(rName string) string {
 resource "aws_dx_connection" "test" {
   name      = "tf-dx-%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "test" {
   name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
   force_destroy         = true
 }
 
@@ -107,19 +109,19 @@ func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
 resource "aws_dx_connection" "test1" {
   name      = "tf-dxconn1-%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_connection" "test2" {
   name      = "tf-dxconn2-%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "test" {
   name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
   force_destroy         = true
 }
 

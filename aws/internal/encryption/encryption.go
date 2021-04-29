@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/errwrap"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/vault/helper/pgpkeys"
 )
 
@@ -19,7 +18,7 @@ func RetrieveGPGKey(pgpKey string) (string, error) {
 	if strings.HasPrefix(pgpKey, keybasePrefix) {
 		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
 		if err != nil {
-			return "", errwrap.Wrapf(fmt.Sprintf("Error retrieving Public Key for %s: {{err}}", pgpKey), err)
+			return "", fmt.Errorf("Error retrieving Public Key for %s: %w", pgpKey, err)
 		}
 		encryptionKey = publicKeys[pgpKey]
 	}
@@ -33,7 +32,7 @@ func EncryptValue(encryptionKey, value, description string) (string, string, err
 	fingerprints, encryptedValue, err :=
 		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
 	if err != nil {
-		return "", "", errwrap.Wrapf(fmt.Sprintf("Error encrypting %s: {{err}}", description), err)
+		return "", "", fmt.Errorf("Error encrypting %s: %w", description, err)
 	}
 
 	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil

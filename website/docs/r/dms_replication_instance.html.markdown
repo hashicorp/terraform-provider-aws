@@ -12,10 +12,10 @@ Provides a DMS (Data Migration Service) replication instance resource. DMS repli
 
 ## Example Usage
 
-```hcl
+```terraform
 # Database Migration Service requires the below IAM Roles to be created before
 # replication instances can be created. See the DMS Documentation for
-# additional information: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html
+# additional information: https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.APIRole
 #  * dms-vpc-role
 #  * dms-cloudwatch-logs-role
 #  * dms-access-for-endpoint
@@ -91,6 +91,7 @@ resource "aws_dms_replication_instance" "test" {
 The following arguments are supported:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
+* `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
 * `apply_immediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
 * `auto_minor_version_upgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availability_zone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
@@ -114,7 +115,7 @@ The following arguments are supported:
     - Cannot contain two consecutive hyphens.
 
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
 ## Attributes Reference
@@ -124,11 +125,12 @@ In addition to all arguments above, the following attributes are exported:
 * `replication_instance_arn` - The Amazon Resource Name (ARN) of the replication instance.
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
 `aws_dms_replication_instance` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for Creating Instances
 - `update` - (Default `30 minutes`) Used for Database modifications

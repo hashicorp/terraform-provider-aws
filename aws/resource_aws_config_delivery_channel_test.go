@@ -79,6 +79,7 @@ func testAccConfigDeliveryChannel_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -104,6 +105,7 @@ func testAccConfigDeliveryChannel_allParams(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -129,6 +131,7 @@ func testAccConfigDeliveryChannel_importBasic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckConfigDeliveryChannelDestroy,
 		Steps: []resource.TestStep{
@@ -235,7 +238,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -259,7 +261,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "b" {
@@ -300,7 +301,6 @@ resource "aws_iam_role" "r" {
   ]
 }
 POLICY
-
 }
 
 resource "aws_iam_role_policy" "p" {
@@ -324,7 +324,6 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-
 }
 
 resource "aws_s3_bucket" "b" {

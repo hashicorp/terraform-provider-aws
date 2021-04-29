@@ -93,7 +93,12 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	uTimeoutInSeconds := int64(600)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			testAccPreCheckAWSGamelift(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +157,12 @@ func TestAccAWSGameliftGameSessionQueue_tags(t *testing.T) {
 	queueName := testAccGameliftGameSessionQueuePrefix + acctest.RandString(8)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			testAccPreCheckAWSGamelift(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -208,7 +218,12 @@ func TestAccAWSGameliftGameSessionQueue_disappears(t *testing.T) {
 	timeoutInSeconds := int64(124)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(gamelift.EndpointsID, t)
+			testAccPreCheckAWSGamelift(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, gamelift.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -350,7 +365,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 func testAccAWSGameliftGameSessionQueueBasicConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
-  name         = %[1]q 
+  name         = %[1]q
   destinations = []
 
   player_latency_policy {
@@ -374,7 +389,7 @@ resource "aws_gamelift_game_session_queue" "test" {
 func testAccAWSGameliftGameSessionQueueBasicConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
-  name         = %[1]q 
+  name         = %[1]q
   destinations = []
 
   player_latency_policy {

@@ -19,6 +19,7 @@ func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -118,7 +119,7 @@ resource "aws_neptune_cluster" "test" {
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
-  db_cluster_identifier          = "${aws_neptune_cluster.test.id}"
+  db_cluster_identifier          = aws_neptune_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
 }
 `, rName)

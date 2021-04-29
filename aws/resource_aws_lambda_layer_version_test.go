@@ -69,6 +69,7 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -83,6 +84,8 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
 					testAccCheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "signing_profile_version_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "signing_job_arn", ""),
 				),
 			},
 
@@ -102,6 +105,7 @@ func TestAccAWSLambdaLayerVersion_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -133,6 +137,7 @@ func TestAccAWSLambdaLayerVersion_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +163,7 @@ func TestAccAWSLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -187,6 +193,7 @@ func TestAccAWSLambdaLayerVersion_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -216,6 +223,7 @@ func TestAccAWSLambdaLayerVersion_licenseInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaLayerVersionDestroy,
 		Steps: []resource.TestStep{
@@ -312,14 +320,14 @@ resource "aws_s3_bucket" "lambda_bucket" {
 }
 
 resource "aws_s3_bucket_object" "lambda_code" {
-  bucket = "${aws_s3_bucket.lambda_bucket.id}"
+  bucket = aws_s3_bucket.lambda_bucket.id
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-  s3_bucket  = "${aws_s3_bucket.lambda_bucket.id}"
-  s3_key     = "${aws_s3_bucket_object.lambda_code.id}"
+  s3_bucket  = aws_s3_bucket.lambda_bucket.id
+  s3_key     = aws_s3_bucket_object.lambda_code.id
   layer_name = "%s"
 }
 `, bucketName, layerName)
@@ -330,7 +338,7 @@ func testAccAWSLambdaLayerVersionCreateBeforeDestroy(layerName string, filename 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename         = "%s"
   layer_name       = "%s"
-  source_code_hash = "${filebase64sha256("%s")}"
+  source_code_hash = filebase64sha256("%s")
 
   lifecycle {
     create_before_destroy = true

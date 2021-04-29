@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awspolicy "github.com/jen20/awspolicyequivalence"
@@ -97,15 +98,15 @@ func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
 	return oldUrl.String() == newUrl.String()
 }
 
-func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	normalizedOld, err := normalizeCloudFormationTemplate(old)
+func suppressEquivalentJsonOrYamlDiffs(k, old, new string, d *schema.ResourceData) bool {
+	normalizedOld, err := normalizeJsonOrYamlString(old)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform state CloudFormation template body: %s", err)
 		return false
 	}
 
-	normalizedNew, err := normalizeCloudFormationTemplate(new)
+	normalizedNew, err := normalizeJsonOrYamlString(new)
 
 	if err != nil {
 		log.Printf("[WARN] Unable to normalize Terraform configuration CloudFormation template body: %s", err)
@@ -119,4 +120,20 @@ func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.Resou
 // that have different string values but represent the same CIDR.
 func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {
 	return cidrBlocksEqual(old, new)
+}
+
+// suppressEquivalentTime suppresses differences for time values that represent the same
+// instant in different timezones.
+func suppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
+	oldTime, err := time.Parse(time.RFC3339, old)
+	if err != nil {
+		return false
+	}
+
+	newTime, err := time.Parse(time.RFC3339, new)
+	if err != nil {
+		return false
+	}
+
+	return oldTime.Equal(newTime)
 }

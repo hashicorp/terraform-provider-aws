@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -13,8 +14,9 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
@@ -25,6 +27,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "throughput", resourceName, "throughput"),
 				),
 			},
 		},
@@ -36,8 +39,9 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 	dataSourceName := "data.aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters,
@@ -66,16 +70,7 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckAwsEbsVolumeDataSourceConfig = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfig = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"
@@ -101,16 +96,7 @@ data "aws_ebs_volume" "test" {
 }
 `
 
-const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+var testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = testAccAvailableAZsNoOptInConfig() + `
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   type              = "gp2"

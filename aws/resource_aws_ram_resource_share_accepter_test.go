@@ -5,32 +5,31 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
 )
 
 func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
-
-	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsRamResourceShareAccepterBasic(shareName),
+				Config: testAccAwsRamResourceShareAccepterBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -39,15 +38,41 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexp.MustCompile(`\d{12}`)),
-					resource.TestCheckResourceAttr(resourceName, "share_name", shareName),
+					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 			{
-				Config:            testAccAwsRamResourceShareAccepterBasic(shareName),
+				Config:            testAccAwsRamResourceShareAccepterBasic(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsRamResourceShareAccepter_disappears(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_ram_resource_share_accepter.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, ram.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsRamResourceShareAccepterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsRamResourceShareAccepterBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRamResourceShareAccepter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -106,10 +131,10 @@ func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestChe
 	}
 }
 
-func testAccAwsRamResourceShareAccepterBasic(shareName string) string {
+func testAccAwsRamResourceShareAccepterBasic(rName string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
-  share_arn = "${aws_ram_principal_association.test.resource_share_arn}"
+  share_arn = aws_ram_principal_association.test.resource_share_arn
 }
 
 resource "aws_ram_resource_share" "test" {
@@ -119,17 +144,17 @@ resource "aws_ram_resource_share" "test" {
   allow_external_principals = true
 
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 
 resource "aws_ram_principal_association" "test" {
   provider = "awsalternate"
 
-  principal          = "${data.aws_caller_identity.receiver.account_id}"
-  resource_share_arn = "${aws_ram_resource_share.test.arn}"
+  principal          = data.aws_caller_identity.receiver.account_id
+  resource_share_arn = aws_ram_resource_share.test.arn
 }
 
 data "aws_caller_identity" "receiver" {}
-`, shareName)
+`, rName)
 }

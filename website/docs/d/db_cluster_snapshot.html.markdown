@@ -10,12 +10,12 @@ description: |-
 
 Use this data source to get information about a DB Cluster Snapshot for use when provisioning DB clusters.
 
-~> **NOTE:** This data source does not apply to snapshots created on DB Instances. 
+~> **NOTE:** This data source does not apply to snapshots created on DB Instances.
 See the [`aws_db_snapshot` data source](/docs/providers/aws/d/db_snapshot.html) for DB Instance snapshots.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_db_cluster_snapshot" "development_final_snapshot" {
   db_cluster_identifier = "development_cluster"
   most_recent           = true

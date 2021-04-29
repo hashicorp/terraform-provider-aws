@@ -16,7 +16,7 @@ The following adds a route for a particular cidr block to every (private
 kops) route table in a specified vpc to use a particular vpc peering
 connection.
 
-```hcl
+```terraform
 data "aws_route_tables" "rts" {
   vpc_id = var.vpc_id
 
@@ -54,4 +54,5 @@ which take the following arguments:
 
 ## Attributes Reference
 
+* `id` - AWS Region.
 * `ids` - A set of all the route table ids found. This data source will fail if none are found.
