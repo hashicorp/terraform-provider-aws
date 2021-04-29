@@ -10,6 +10,8 @@ FEATURES:
 * **New Data Source:** `aws_kms_public_key` ([#18873](https://github.com/hashicorp/terraform-provider-aws/issues/18873))
 * **New Resource:** `aws_cloudformation_type` ([#18579](https://github.com/hashicorp/terraform-provider-aws/issues/18579))
 * **New Resource:** `aws_codestarconnections_host` ([#16918](https://github.com/hashicorp/terraform-provider-aws/issues/16918))
+* **New Resource:** `aws_macie2_account` ([#19069](https://github.com/hashicorp/terraform-provider-aws/issues/19069))
+* **New Resource:** `aws_rds_proxy_endpoint` ([#18881](https://github.com/hashicorp/terraform-provider-aws/issues/18881))
 * **New Resource:** `aws_route53_resolver_firewall_rule` ([#18712](https://github.com/hashicorp/terraform-provider-aws/issues/18712))
 * **New Resource:** `aws_servicecatalog_product` ([#19122](https://github.com/hashicorp/terraform-provider-aws/issues/19122))
 
