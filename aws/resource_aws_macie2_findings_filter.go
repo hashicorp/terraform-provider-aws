@@ -243,7 +243,7 @@ func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceD
 
 	_, err := conn.DeleteFindingsFilterWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeInternalError) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie2 FindingsFilter (%s): %w", d.Id(), err))
