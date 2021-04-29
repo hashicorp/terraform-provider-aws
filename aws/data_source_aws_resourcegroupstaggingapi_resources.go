@@ -26,7 +26,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"filter"},
+				ConflictsWith: []string{"tag_filter"},
 			},
 			"resource_type_filters": {
 				Type:          schema.TypeSet,
