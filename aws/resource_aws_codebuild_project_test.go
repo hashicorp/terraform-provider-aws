@@ -623,6 +623,10 @@ func TestAccAWSCodeBuildProject_BuildBatchConfig(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("CodeBuild Project build batch config is not supported in GovCloud partition")
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
