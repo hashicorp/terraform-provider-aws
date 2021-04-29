@@ -261,6 +261,58 @@ rules:
           - pattern: d.Set($ATTRIBUTE, aws.StringValue($APIOBJECT))
     severity: WARNING
 
+  - id: helper-schema-ResourceData-DataSource-Set-tags
+    languages: [go]
+    message: (schema.ResourceData).Set() call with the tags key should include IgnoreConfig in the value
+    paths:
+      include:
+        - aws/data_source*.go
+      exclude:
+        - aws/resource*.go
+    patterns:
+      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+      - pattern: if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+      - pattern-not: if err := d.Set("tags", $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG).Map()); err != nil { ... }
+    severity: WARNING
+
+  - id: helper-schema-ResourceData-Resource-Set-tags
+    languages: [go]
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    paths:
+      include:
+        - aws/resource*.go
+      exclude:
+        - aws/data_source*.go
+    patterns:
+      - pattern-inside: func $READMETHOD(...) $ERRORTYPE { ... }
+      - pattern-either:
+          - pattern: |
+              tags := $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+          - pattern: |
+              tags = $TAGS
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+          - pattern: |
+              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
+              ...
+              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
+      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
+      - pattern-not: |
+          tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+      - pattern-not: |
+          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
+          ...
+    severity: WARNING
+
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
     message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is checked first
