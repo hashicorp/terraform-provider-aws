@@ -13,6 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func init() {
+	RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkipCodebuild)
+}
+
+func testAccErrorCheckSkipCodebuild(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"InvalidInputException: Region",
+	)
+}
+
 // This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
 // The Terraform AWS user must have done the manual Bitbucket OAuth dance for this
 // functionality to work. Additionally, the Bitbucket user that the Terraform AWS
@@ -862,6 +872,10 @@ func TestAccAWSCodeBuildProject_Source_BuildStatusConfig_GitHubEnterprise(t *tes
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("CodeBuild Project build status config is not supported in GovCloud partition")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
