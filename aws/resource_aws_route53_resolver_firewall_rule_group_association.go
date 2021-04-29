@@ -37,10 +37,9 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
 			},
 
 			"firewall_rule_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRoute53ResolverName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"mutation_protection": {
@@ -56,10 +55,9 @@ func resourceAwsRoute53ResolverFirewallRuleGroupAssociation() *schema.Resource {
 			},
 
 			"vpc_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRoute53ResolverName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"tags":     tagsSchema(),
