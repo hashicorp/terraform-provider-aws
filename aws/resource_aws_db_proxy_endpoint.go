@@ -25,7 +25,7 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
+		CustomizeDiff: SetTagsDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -57,7 +57,8 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"target_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -87,6 +88,8 @@ func resourceAwsDbProxyEndpoint() *schema.Resource {
 
 func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	dbProxyName := d.Get("db_proxy_name").(string)
 	dbProxyEndpointName := d.Get("db_proxy_endpoint_name").(string)
@@ -96,7 +99,7 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 		DBProxyEndpointName: aws.String(dbProxyEndpointName),
 		TargetRole:          aws.String(d.Get("target_role").(string)),
 		VpcSubnetIds:        expandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
-		Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags(),
+		Tags:                tags.IgnoreAws().RdsTags(),
 	}
 
 	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
@@ -120,17 +123,18 @@ func resourceAwsDbProxyEndpointCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	dbProxyEndpoint, err := finder.DBProxyEndpoint(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyEndpointNotFoundFault) {
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -141,6 +145,10 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if dbProxyEndpoint == nil {
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading RDS DB Proxy Endpoint (%s): not found after creation")
+		}
+
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -164,8 +172,15 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error listing tags for RDS DB Proxy Endpoint (%s): %w", endpointArn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("Error setting tags: %w", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
