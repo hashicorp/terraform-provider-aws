@@ -42,7 +42,7 @@ func resourceAwsEksAddon() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validateEKSClusterName,
 			},
 			"arn": {
 				Type:     schema.TypeString,
