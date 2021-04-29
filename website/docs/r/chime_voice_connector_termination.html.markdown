@@ -10,7 +10,6 @@ Enable Termination settings to control outbound calling from your SIP infrastruc
 
 Enable Termination settings to control outbound calling from your SIP infrastructure.
 
-
 ```terraform
 resource "aws_chime_voice_connector" "default" {
   name               = "test"

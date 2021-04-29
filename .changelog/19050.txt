@@ -5,3 +5,7 @@ aws_chime_voice_connector
 ```release-note:new-resource
 aws_chime_voice_connector_group
 ```
+
+```release-note:new-resource
+aws_chime_voice_connector_origination
+```
