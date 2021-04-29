@@ -207,12 +207,10 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).appsyncconn
 
 	input := &appsync.UpdateResolverInput{
-		ApiId:                   aws.String(d.Get("api_id").(string)),
-		FieldName:               aws.String(d.Get("field").(string)),
-		TypeName:                aws.String(d.Get("type").(string)),
-		RequestMappingTemplate:  aws.String(d.Get("request_template").(string)),
-		ResponseMappingTemplate: aws.String(d.Get("response_template").(string)),
-		Kind:                    aws.String(d.Get("kind").(string)),
+		ApiId:     aws.String(d.Get("api_id").(string)),
+		FieldName: aws.String(d.Get("field").(string)),
+		TypeName:  aws.String(d.Get("type").(string)),
+		Kind:      aws.String(d.Get("kind").(string)),
 	}
 
 	if v, ok := d.GetOk("data_source"); ok {
@@ -224,6 +222,14 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 		input.PipelineConfig = &appsync.PipelineConfig{
 			Functions: expandStringList(config["functions"].([]interface{})),
 		}
+	}
+
+	if v, ok := d.GetOk("request_template"); ok {
+		input.RequestMappingTemplate = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("response_template"); ok {
+		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("caching_config"); ok {

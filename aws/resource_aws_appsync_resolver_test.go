@@ -107,7 +107,7 @@ func TestAccAwsAppsyncResolver_DataSource_lambda(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
