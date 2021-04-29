@@ -931,6 +931,7 @@ func Provider() *schema.Provider {
 			"aws_route53_resolver_firewall_domain_list":               resourceAwsRoute53ResolverFirewallDomainList(),
 			"aws_route53_resolver_firewall_rule":                      resourceAwsRoute53ResolverFirewallRule(),
 			"aws_route53_resolver_firewall_rule_group":                resourceAwsRoute53ResolverFirewallRuleGroup(),
+			"aws_route53_resolver_firewall_rule_group_association":    resourceAwsRoute53ResolverFirewallRuleGroupAssociation(),
 			"aws_route53_resolver_query_log_config":                   resourceAwsRoute53ResolverQueryLogConfig(),
 			"aws_route53_resolver_query_log_config_association":       resourceAwsRoute53ResolverQueryLogConfigAssociation(),
 			"aws_route53_resolver_rule_association":                   resourceAwsRoute53ResolverRuleAssociation(),
