@@ -35,7 +35,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResources() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"resource_arn_list"},
 			},
-			"filter": {
+			"tag_filter": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 50,
@@ -110,7 +110,7 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 		input.ResourceARNList = expandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk("tag_filter"); ok {
 		input.TagFilters = expandAwsResourceGroupsTaggingAPITagFilters(v.([]interface{}))
 	}
 
@@ -129,12 +129,12 @@ func dataSourceAwsResourceGroupsTaggingAPIResourcesRead(d *schema.ResourceData, 
 		return !lastPage
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting Resource Groups Tags API Resources: %w", err)
 	}
 
 	d.SetId(meta.(*AWSClient).partition)
 
-	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings, meta)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(taggings)); err != nil {
 		return fmt.Errorf("error setting resource tag mapping list: %w", err)
 	}
 
@@ -159,14 +159,13 @@ func expandAwsResourceGroupsTaggingAPITagFilters(filters []interface{}) []*resou
 	return result
 }
 
-func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping, meta interface{}) []map[string]interface{} {
+func flattenAwsResourceGroupsTaggingAPIResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         keyvaluetags.ResourcegroupstaggingapiKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map(),
+			"tags":         keyvaluetags.ResourcegroupstaggingapiKeyValueTags(i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
