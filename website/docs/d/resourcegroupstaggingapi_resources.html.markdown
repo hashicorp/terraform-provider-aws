@@ -62,12 +62,10 @@ If you don't specify a `tag_filter`, the response includes all resources that we
 
 In addition to all arguments above, the following attributes are exported:
 
-* `resource_tag_mapping_list` - A [Resource Tag Mapping List](#resource-tag-mapping-list)`resource_tag_mapping_list` block. documented below.
-
-### Resource Tag Mapping List
-
-A `resource_tag_mapping_list` block supports the following attributes:
-
-* `resource_arn` - The ARN of the resource.
-* `compliance_details` - Information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys. Documented below.
-* `tags` - tags assigned to the resource.
+* `resource_tag_mapping_list` - List of objects matching the search criteria.
+    * `compliance_details` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.
+        * `compliance_status` - Whether the resource is compliant.
+        * `keys_with_noncompliant_values ` - Set of tag keys with non-compliant tag values.
+        * `non_compliant_keys ` - Set of non-compliant tag keys.
+    * `resource_arn` - ARN of the resource.
+    * `tags` - Map of tags assigned to the resource.
