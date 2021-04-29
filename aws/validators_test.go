@@ -394,10 +394,17 @@ func TestValidatePrincipal(t *testing.T) {
 
 	validNames := []string{
 		"IAM_ALLOWED_PRINCIPALS", // Special principal
+		"123456789012",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		"111122223333",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
 		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
 		"arn:aws-us-gov:iam:us-west-2:357342307427:role/tf-acc-test-3217321001347236965", // lintignore:AWSAT003,AWSAT005 // Non-global IAM Role?
 		"arn:aws:iam:us-east-1:123456789012:user/David",                                  // lintignore:AWSAT003,AWSAT005 // Non-global IAM User?
+		"arn:aws:iam::111122223333:saml-provider/idp1:group/data-scientists",             // lintignore:AWSAT005          // SAML group
+		"arn:aws:iam::111122223333:saml-provider/idp1:user/Paul",                         // lintignore:AWSAT005          // SAML user
+		"arn:aws:quicksight:us-east-1:111122223333:group/default/data_scientists",        // lintignore:AWSAT003,AWSAT005 // quicksight group
+		"arn:aws:organizations::111122223333:organization/o-abcdefghijkl",                // lintignore:AWSAT005          // organization
+		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",           // lintignore:AWSAT005          // ou
 	}
 	for _, v := range validNames {
 		_, errors := validatePrincipal(v, "arn")
@@ -409,7 +416,7 @@ func TestValidatePrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
 		"arn",
-		"123456789012",
+		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005

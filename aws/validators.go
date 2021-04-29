@@ -673,13 +673,25 @@ func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
+	// https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html
+	// Principal is an AWS account
+	// --principal DataLakePrincipalIdentifier=111122223333
+	wsAccount, errorsAccount := validateAwsAccountId(v, k)
+	if len(errorsAccount) == 0 {
+		return wsAccount, errorsAccount
+	}
+
 	wsARN, errorsARN := validateArn(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
-	pattern := `\d{12}:(role|user)/`
+	pattern := `:(role|user|group|ou|organization)/`
 	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role: %q", k, value))
+		errors = append(errors, fmt.Errorf("%q does not look like a user, role, group, OU, or organization: %q", k, value))
+	}
+
+	if len(errors) > 0 {
+		errors = append(errors, errorsAccount...)
 	}
 
 	return ws, errors
