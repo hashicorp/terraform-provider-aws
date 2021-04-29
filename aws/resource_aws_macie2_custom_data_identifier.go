@@ -192,8 +192,7 @@ func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.Res
 
 	_, err := conn.DeleteCustomDataIdentifierWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
