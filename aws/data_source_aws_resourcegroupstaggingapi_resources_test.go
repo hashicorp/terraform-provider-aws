@@ -9,28 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_basic(t *testing.T) {
+func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_TagFilter(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesBasicConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.0.resource_arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *testing.T) {
-	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,7 +20,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *tes
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesTagKeyFilterConfig(rName),
+				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -51,8 +32,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_tag_key_filter(t *tes
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_compliance(t *testing.T) {
+func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_IncludeComplianceDetails(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
@@ -60,20 +42,19 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_compliance(t *testing
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesComplianceConfig,
+				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.0.compliance_status", "true"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.0.resource_arn"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters(t *testing.T) {
+func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceTypeFilters(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +63,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeFiltersConfig(rName),
+				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -94,9 +75,9 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_type_filters
 	})
 }
 
-func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_arn_list(t *testing.T) {
+func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_ResourceArnList(t *testing.T) {
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
-	resourceName := "aws_api_gateway_rest_api.test"
+	resourceName := "aws_vpc.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +86,7 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_arn_list(t *
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceARNListConfig(rName),
+				Config: testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -117,14 +98,10 @@ func TestAccDataSourceAwsResourceGroupsTaggingAPIResources_resource_arn_list(t *
 	})
 }
 
-const testAccDataSourceAwsResourceGroupsTaggingAPIResourcesBasicConfig = `
-data "aws_resourcegroupstaggingapi_resources" "test" {}
-`
-
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesTagKeyFilterConfig(rName string) string {
+func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigTagFilter(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Key = %[1]q
@@ -133,18 +110,17 @@ resource "aws_api_gateway_rest_api" "test" {
 
 data "aws_resourcegroupstaggingapi_resources" "test" {
   tag_filter {
-    key = "Key"
+    key    = "Key"
+    values = [aws_vpc.test.tags["Key"]]
   }
-
-  depends_on = [aws_api_gateway_rest_api.test]
 }
 `, rName)
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceTypeFiltersConfig(rName string) string {
+func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceTypeFilters(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Key = %[1]q
@@ -152,17 +128,17 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  resource_type_filters = ["apigateway"]
+  resource_type_filters = ["ec2:vpc"]
 
-  depends_on = [aws_api_gateway_rest_api.test]
+  depends_on = [aws_vpc.test]
 }
 `, rName)
 }
 
-func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesResourceARNListConfig(rName string) string {
+func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigResourceARNList(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Key = %[1]q
@@ -170,14 +146,25 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 data "aws_resourcegroupstaggingapi_resources" "test" {
-  resource_arn_list = [aws_api_gateway_rest_api.test.arn]
+  resource_arn_list = [aws_vpc.test.arn]
 }
 `, rName)
 }
 
-const testAccDataSourceAwsResourceGroupsTaggingAPIResourcesComplianceConfig = `
+func testAccDataSourceAwsResourceGroupsTaggingAPIResourcesConfigIncludeComplianceDetails(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Key = %[1]q
+  }
+}
+
 data "aws_resourcegroupstaggingapi_resources" "test" {
   include_compliance_details  = true
   exclude_compliant_resources = false
+  resource_arn_list           = [aws_vpc.test.arn]
 }
-`
+`, rName)
+}
