@@ -146,7 +146,7 @@ func resourceAwsDbProxyEndpointRead(d *schema.ResourceData, meta interface{}) er
 
 	if dbProxyEndpoint == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading RDS DB Proxy Endpoint (%s): not found after creation")
+			return fmt.Errorf("error reading RDS DB Proxy Endpoint (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] RDS DB Proxy Endpoint (%s) not found, removing from state", d.Id())
