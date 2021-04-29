@@ -1220,6 +1220,7 @@ func init() {
 		"acmpca",
 		"amplify",
 		"apigateway",
+		"appconfig",
 		"applicationautoscaling",
 		"applicationinsights",
 		"appmesh",
