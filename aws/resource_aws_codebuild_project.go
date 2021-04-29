@@ -470,6 +470,23 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"build_status_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"context": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"target_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -553,6 +570,23 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"report_build_status": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"build_status_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"context": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"target_url": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1072,6 +1106,24 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
+	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE source types.
+	if sourceType == codebuild.SourceTypeBitbucket || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
+		if v, ok := data["build_status_config"]; ok && len(v.([]interface{})) > 0 {
+			config := v.([]interface{})[0].(map[string]interface{})
+
+			buildStatusConfig := &codebuild.BuildStatusConfig{}
+
+			if v, ok := config["context"]; ok {
+				buildStatusConfig.Context = aws.String(v.(string))
+			}
+			if v, ok := config["target_url"]; ok {
+				buildStatusConfig.TargetUrl = aws.String(v.(string))
+			}
+
+			projectSource.BuildStatusConfig = buildStatusConfig
+		}
+	}
+
 	return projectSource
 }
 
@@ -1461,6 +1513,8 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 
 	m["git_submodules_config"] = flattenAwsCodebuildProjectGitSubmodulesConfig(source.GitSubmodulesConfig)
 
+	m["build_status_config"] = flattenAwsCodebuildProjectBuildStatusConfig(source.BuildStatusConfig)
+
 	if source.Auth != nil {
 		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
 	}
@@ -1478,6 +1532,19 @@ func flattenAwsCodebuildProjectGitSubmodulesConfig(config *codebuild.GitSubmodul
 
 	values := map[string]interface{}{
 		"fetch_submodules": aws.BoolValue(config.FetchSubmodules),
+	}
+
+	return []interface{}{values}
+}
+
+func flattenAwsCodebuildProjectBuildStatusConfig(config *codebuild.BuildStatusConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"context":    aws.StringValue(config.Context),
+		"target_url": aws.StringValue(config.TargetUrl),
 	}
 
 	return []interface{}{values}
