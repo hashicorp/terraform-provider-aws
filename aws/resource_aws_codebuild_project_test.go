@@ -815,6 +815,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
 						"git_submodules_config.#":                  "1",
@@ -836,6 +837,7 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
 						"git_submodules_config.#":                  "1",
@@ -846,6 +848,13 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 						"git_submodules_config.#":                  "1",
 						"git_submodules_config.0.fetch_submodules": "false",
 					}),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_none(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
 				),
 			},
 		},
@@ -1785,6 +1794,13 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_none(rName, bName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
+				),
 			},
 		},
 	})
@@ -3175,6 +3191,34 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
+func testAccAWSCodeBuildProjectConfig_SecondarySources_none(rName string, fetchSubmodules bool) string {
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%[1]s"
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+
+    git_submodules_config {
+      fetch_submodules = %[2]t
+    }
+  }
+}
+`, rName, fetchSubmodules))
+}
+
 func testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_GitHub(rName string, fetchSubmodules bool) string {
 	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -3992,6 +4036,34 @@ resource "aws_codebuild_project" "test" {
     artifact_identifier = "secondaryArtifact2"
     location            = aws_s3_bucket.test.bucket
     type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName))
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_none(rName string, bName string) string {
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
+		testAccAWSCodeBuildProjectConfig_Base_Bucket(bName),
+		fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
   }
 
   environment {
