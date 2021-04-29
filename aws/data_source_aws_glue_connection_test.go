@@ -48,9 +48,13 @@ func testAccDataSourceAwsGlueConnectionCheck(name string) resource.TestCheckFunc
 func testAccDataSourceAwsGlueConnectionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_connection" "test" {
-  name                  = %[1]q
-  connection_type       = "NETWORK"
-  connection_properties = {}
+  connection_properties = {
+    JDBC_CONNECTION_URL = "jdbc:mysql://terraformacctesting.com/testdatabase"
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+
+  name = "%s"
 }
 
 data "aws_glue_connection" "test" {
