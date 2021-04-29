@@ -326,7 +326,7 @@ func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", iName),
-					testAccMatchResourceAttrRegionalHostname(resourceName, "file_system_locations.0.location", "efs", regexp.MustCompile(`[^.]+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "file_system_locations.0.location"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
 				),
 			},
@@ -2475,6 +2475,22 @@ resource "aws_iam_role_policy" "test" {
         "s3:*"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "codebuild:*",
+        "iam:PassRole"
+      ],
+      "Resource": "*"
+    }
+	,
+    {
+      "Effect": "Allow",
+      "Action": [
+        "efs:*"
+      ],
+      "Resource": "*"
     }
   ]
 }
@@ -4455,7 +4471,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_BuildStatusConfig_GitHubEnterprise(rName string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4480,7 +4496,7 @@ resource "aws_codebuild_project" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSCodeBuildProjectConfig_ConcurrentBuildLimit(rName string, concurrentBuildLimit int) string {
@@ -4509,7 +4525,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName string) string {
-	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {}
 
 resource "aws_codebuild_project" "test" {
@@ -4533,9 +4549,9 @@ resource "aws_codebuild_project" "test" {
 
   file_system_locations {
     identifier = "test"
-    location   = aws_efs_file_system.test.dns_name
+    location   = "${aws_efs_file_system.test.dns_name}:/directory-path"
     type       = "EFS"
   }
 }
-`, rName)
+`, rName))
 }
