@@ -14,7 +14,7 @@ Provides a CodeStar Host.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codestarconnections_host" "example" {
   name              = "example-host"
   provider_endpoint = "https://example.com"
