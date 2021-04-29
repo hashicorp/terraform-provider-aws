@@ -35,7 +35,7 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
+					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#\/]+$`), ""),
 				),
 			},
 			"arn": {
