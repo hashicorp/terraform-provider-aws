@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/codestarconnections/waiter"
 )
 
 func resourceAwsCodeStarConnectionsHost() *schema.Resource {
@@ -38,12 +37,10 @@ func resourceAwsCodeStarConnectionsHost() *schema.Resource {
 				Required: true,
 			},
 			"provider_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					codestarconnections.ProviderTypeGitHubEnterpriseServer,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -93,15 +90,15 @@ func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta inter
 	}
 
 	resp, err := conn.CreateHost(params)
+
 	if err != nil {
-		return fmt.Errorf("error creating CodeStar host: %w", err)
+		return fmt.Errorf("error creating CodeStar Connections Host: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.HostArn))
-	d.Set("arn", aws.StringValue(resp.HostArn))
 
-	if err := waitForCodeStarConnectionsHost(conn, d.Id()); err != nil {
-		return err
+	if _, err := waiter.HostPendingOrAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for CodeStar Connections Host (%s) creation: %w", d.Id(), err)
 	}
 
 	return resourceAwsCodeStarConnectionsHostRead(d, meta)
@@ -110,19 +107,24 @@ func resourceAwsCodeStarConnectionsHostCreate(d *schema.ResourceData, meta inter
 func resourceAwsCodeStarConnectionsHostRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarconnectionsconn
 
-	resp, err := conn.GetHost(&codestarconnections.GetHostInput{
+	input := &codestarconnections.GetHostInput{
 		HostArn: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] CodeStar host (%s) not found, removing from state", d.Id())
+	}
+
+	resp, err := conn.GetHost(input)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] CodeStar Connections Host (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading CodeStar host: %w", err)
+		return fmt.Errorf("error reading CodeStar Connections Host (%s): %w", d.Id(), err)
 	}
+
 	if resp == nil {
-		return fmt.Errorf("error reading CodeStar host (%s): empty response", d.Id())
+		return fmt.Errorf("error reading CodeStar Connections Host (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", d.Id())
@@ -146,12 +148,13 @@ func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta inter
 		}
 
 		_, err := conn.UpdateHost(&input)
+
 		if err != nil {
-			return fmt.Errorf("error updating CodeStar host: %w", err)
+			return fmt.Errorf("error updating CodeStar Connections Host (%s): %w", d.Id(), err)
 		}
 
-		if err := waitForCodeStarConnectionsHost(conn, d.Id()); err != nil {
-			return err
+		if _, err := waiter.HostPendingOrAvailable(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for CodeStar Connections Host (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -161,14 +164,18 @@ func resourceAwsCodeStarConnectionsHostUpdate(d *schema.ResourceData, meta inter
 func resourceAwsCodeStarConnectionsHostDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codestarconnectionsconn
 
-	_, err := conn.DeleteHost(&codestarconnections.DeleteHostInput{
+	input := &codestarconnections.DeleteHostInput{
 		HostArn: aws.String(d.Id()),
-	})
+	}
+
+	_, err := conn.DeleteHost(input)
+
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting CodeStar host: %w", err)
+		return fmt.Errorf("error deleting CodeStar Connections Host (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -187,7 +194,7 @@ func expandCodeStarConnectionsHostVpcConfiguration(l []interface{}) *codestarcon
 		VpcId:            aws.String(m["vpc_id"].(string)),
 	}
 
-	if v := m["tls_certificate"].(string); len(v) != 0 {
+	if v, ok := m["tls_certificate"].(string); ok && v != "" {
 		vc.TlsCertificate = aws.String(v)
 	}
 
@@ -210,33 +217,4 @@ func flattenCodeStarConnectionsHostVpcConfiguration(vpcConfig *codestarconnectio
 	}
 
 	return []interface{}{m}
-}
-
-func waitForCodeStarConnectionsHost(conn *codestarconnections.CodeStarConnections, arn string) error {
-	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			"VPC_CONFIG_INITIALIZING",
-			"VPC_CONFIG_DELETING",
-		},
-		Target: []string{
-			"VPC_CONFIG_FAILED_INITIALIZATION",
-			"PENDING",
-			"AVAILABLE",
-		},
-		Timeout: 30 * time.Minute,
-		Delay:   1 * time.Minute,
-		Refresh: func() (interface{}, string, error) {
-			out, err := conn.GetHost(&codestarconnections.GetHostInput{
-				HostArn: aws.String(arn),
-			})
-
-			if err != nil {
-				return nil, "", err
-			}
-
-			return out, *out.Status, nil
-		},
-	}
-	_, err := stateConf.WaitForState()
-	return err
 }

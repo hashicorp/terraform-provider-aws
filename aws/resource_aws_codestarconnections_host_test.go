@@ -20,6 +20,7 @@ func TestAccAWSCodeStarConnectionsHost_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
@@ -50,6 +51,7 @@ func TestAccAWSCodeStarConnectionsHost_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
@@ -72,6 +74,7 @@ func TestAccAWSCodeStarConnectionsHost_vpcConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, codestarconnections.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeStarConnectionsHostDestroy,
 		Steps: []resource.TestStep{
