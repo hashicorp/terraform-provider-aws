@@ -1,5 +1,9 @@
 ## 3.39.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_msk_cluster: Support in-place `instance_type` updates ([#17447](https://github.com/hashicorp/terraform-provider-aws/issues/17447))
+
 ## 3.38.0 (April 30, 2021)
 
 NOTES:
