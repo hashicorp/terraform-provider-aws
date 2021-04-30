@@ -2456,7 +2456,7 @@ func MapKeyInSlice(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
 
 		for key := range v {
 			for _, str := range valid {
-				if key == str || (ignoreCase && strings.ToLower(key) == strings.ToLower(str)) {
+				if key == str || (ignoreCase && strings.EqualFold(key, str)) {
 					return warnings, errors
 				}
 			}
