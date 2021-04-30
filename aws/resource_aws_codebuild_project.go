@@ -274,6 +274,36 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 					},
 				},
 			},
+			"file_system_locations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"location": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"mount_options": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"mount_point": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      codebuild.FileSystemTypeEfs,
+							ValidateFunc: validation.StringInSlice(codebuild.FileSystemType_Values(), false),
+						},
+					},
+				},
+			},
 			"logs_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -659,6 +689,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	projectSecondarySources := expandProjectSecondarySources(d)
 	projectLogsConfig := expandProjectLogsConfig(d)
 	projectBatchConfig := expandCodeBuildBuildBatchConfig(d)
+	projectFileSystemLocations := expandProjectFileSystemLocations(d)
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
 		if aws.StringValue(projectSource.Buildspec) == "" {
@@ -671,15 +702,16 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	params := &codebuild.CreateProjectInput{
-		Environment:        projectEnv,
-		Name:               aws.String(d.Get("name").(string)),
-		Source:             &projectSource,
-		Artifacts:          &projectArtifacts,
-		SecondaryArtifacts: projectSecondaryArtifacts,
-		SecondarySources:   projectSecondarySources,
-		LogsConfig:         projectLogsConfig,
-		BuildBatchConfig:   projectBatchConfig,
-		Tags:               tags.IgnoreAws().CodebuildTags(),
+		Environment:         projectEnv,
+		Name:                aws.String(d.Get("name").(string)),
+		Source:              &projectSource,
+		Artifacts:           &projectArtifacts,
+		SecondaryArtifacts:  projectSecondaryArtifacts,
+		SecondarySources:    projectSecondarySources,
+		LogsConfig:          projectLogsConfig,
+		BuildBatchConfig:    projectBatchConfig,
+		FileSystemLocations: projectFileSystemLocations,
+		Tags:                tags.IgnoreAws().CodebuildTags(),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -751,6 +783,47 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(aws.StringValue(resp.Project.Arn))
 
 	return resourceAwsCodeBuildProjectRead(d, meta)
+}
+
+func expandProjectFileSystemLocations(d *schema.ResourceData) []*codebuild.ProjectFileSystemLocation {
+	fileSystemLocations := make([]*codebuild.ProjectFileSystemLocation, 0)
+
+	configsList := d.Get("file_system_locations").(*schema.Set).List()
+
+	if len(configsList) == 0 {
+		return nil
+	}
+
+	for _, config := range configsList {
+		art := expandProjectFileSystemLocation(config.(map[string]interface{}))
+		fileSystemLocations = append(fileSystemLocations, &art)
+	}
+
+	return fileSystemLocations
+}
+
+func expandProjectFileSystemLocation(data map[string]interface{}) codebuild.ProjectFileSystemLocation {
+	projectFileSystemLocation := codebuild.ProjectFileSystemLocation{
+		Type: aws.String(data["type"].(string)),
+	}
+
+	if data["identifier"].(string) != "" {
+		projectFileSystemLocation.Identifier = aws.String(data["identifier"].(string))
+	}
+
+	if data["location"].(string) != "" {
+		projectFileSystemLocation.Location = aws.String(data["location"].(string))
+	}
+
+	if data["mount_options"].(string) != "" {
+		projectFileSystemLocation.MountOptions = aws.String(data["mount_options"].(string))
+	}
+
+	if data["mount_point"].(string) != "" {
+		projectFileSystemLocation.MountPoint = aws.String(data["mount_point"].(string))
+	}
+
+	return projectFileSystemLocation
 }
 
 func expandProjectSecondaryArtifacts(d *schema.ResourceData) []*codebuild.ProjectArtifacts {
@@ -1191,6 +1264,10 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting environment: %s", err)
 	}
 
+	if err := d.Set("file_system_locations", flattenAwsCodeBuildProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
+		return fmt.Errorf("error setting file_system_locations: %s", err)
+	}
+
 	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
 		return fmt.Errorf("error setting cache: %s", err)
 	}
@@ -1262,6 +1339,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("environment") {
 		projectEnv := expandProjectEnvironment(d)
 		params.Environment = projectEnv
+	}
+
+	if d.HasChange("file_system_locations") {
+		projectFileSystemLocations := expandProjectFileSystemLocations(d)
+		params.FileSystemLocations = projectFileSystemLocations
 	}
 
 	if d.HasChange("source") {
@@ -1392,6 +1474,54 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 		Name: aws.String(d.Id()),
 	})
 	return err
+}
+
+func flattenAwsCodeBuildProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAwsCodeBuildProjectFileSystemLocation(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenAwsCodeBuildProjectFileSystemLocation(apiObject *codebuild.ProjectFileSystemLocation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Identifier; v != nil {
+		tfMap["identifier"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Location; v != nil {
+		tfMap["location"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.MountOptions; v != nil {
+		tfMap["mount_options"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.MountPoint; v != nil {
+		tfMap["mount_point"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface{} {
