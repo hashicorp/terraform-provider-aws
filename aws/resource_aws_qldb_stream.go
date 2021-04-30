@@ -14,11 +14,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+// TODO:  Account for fact that streams can become "completed" and may impact future plans if this is not recognized as a valid state that does not need a re-apply to resolve...
+
 func resourceAwsQLDBStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQLDBStreamCreate,
 		Read:   resourceAwsQLDBStreamRead,
-		Update: resourceAwsQLDBStreamUpdate,
+		// Update: resourceAwsQLDBStreamUpdate,
 		Delete: resourceAwsQLDBStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -120,7 +122,7 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 		name = resource.PrefixedUniqueId("tf")
 	}
 
-	if err := d.Set("name", name); err != nil {
+	if err := d.Set("ledger_name", name); err != nil {
 		return fmt.Errorf("error setting name: %s", err)
 	}
 
@@ -129,26 +131,26 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 	createOpts := &qldb.StreamJournalToKinesisInput{
 		ExclusiveEndTime:     d.Get("exclusive_end_time").(*time.Time),
 		InclusiveStartTime:   d.Get("inclusive_start_time").(*time.Time),
-		KinesisConfiguration: d.Get("kinesis_configuration").(*KinesisConfiguration),
+		KinesisConfiguration: d.Get("kinesis_configuration").(*(qldb.KinesisConfiguration)),
 		RoleArn:              aws.String(d.Get("role_arn").(string)),
 		StreamName:           aws.String(d.Get("stream_name").(string)),
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
-	qldbResp, err := conn.CreateLedger(createOpts)
+	qldbResp, err := conn.StreamJournalToKinesis(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating QLDB Ledger: %s", err)
+		return fmt.Errorf("Error creating QLDB Ledger Stream: %s", err)
 	}
 
-	// Set QLDB ledger name
-	d.SetId(aws.StringValue(qldbResp.Name))
+	// Set QLDB ledger name  TODO: Confirm what this should be...  d.Set("???", aws.StringValue(qldbResp.StreamId)) ???
+	d.SetId(aws.StringValue(qldbResp.StreamId))
 
-	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
+	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{qldb.LedgerStateCreating},
-		Target:     []string{qldb.LedgerStateActive},
+		Pending:    []string{qldb.StreamStatusImpaired},
+		Target:     []string{qldb.StreamStatusActive},
 		Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
 		Timeout:    8 * time.Minute,
 		MinTimeout: 3 * time.Second,
@@ -169,8 +171,8 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Refresh the QLDB Stream state
 	input := &qldb.DescribeJournalKinesisStreamInput{
-		LedgerName: aws.String(d.Get("ledger_name")),
-		StreamId:   aws.String(d.Get("stream_id")),
+		LedgerName: aws.String(d.Get("ledger_name").(string)),
+		StreamId:   aws.String(d.Get("stream_id").(string)),
 	}
 
 	qldbStream, err := conn.DescribeJournalKinesisStream(input)
@@ -245,40 +247,44 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).qldbconn
+// func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+// 	conn := meta.(*AWSClient).qldbconn
 
-	// if d.HasChange("deletion_protection") {
-	// 	val := d.Get("deletion_protection").(bool)
-	// 	modifyOpts := &qldb.UpdateLedgerInput{
-	// 		Name:               aws.String(d.Id()),
-	// 		DeletionProtection: aws.Bool(val),
-	// 	}
-	// 	log.Printf(
-	// 		"[INFO] Modifying deletion_protection QLDB attribute for %s: %#v",
-	// 		d.Id(), modifyOpts)
-	// 	if _, err := conn.UpdateLedger(modifyOpts); err != nil {
+// 	if d.HasChange("deletion_protection") {
+// 		val := d.Get("deletion_protection").(bool)
+// 		modifyOpts := &qldb.UpdateJournalKinesisStreamInput{
+// 			LedgerName: aws.String(d.Get("ledger_name").(string)),
+// 			StreamName: aws.String(d.Get("stream_name").(string)),
+// 		}
+// 		modifyOpts := &qldb.UpdateLedgerInput{
+// 			Name:               aws.String(d.Id()),
+// 			DeletionProtection: aws.Bool(val),
+// 		}
+// 		log.Printf(
+// 			"[INFO] Modifying deletion_protection QLDB attribute for %s: %#v",
+// 			d.Id(), modifyOpts)
+// 		if _, err := conn.UpdateLedger(modifyOpts); err != nil {
 
-	// 		return err
-	// 	}
-	// }
+// 			return err
+// 		}
+// 	}
 
-	// if d.HasChange("tags") {
-	// 	o, n := d.GetChange("tags")
-	// 	if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-	// 		return fmt.Errorf("error updating tags: %s", err)
-	// 	}
-	// }
+// 	if d.HasChange("tags") {
+// 		o, n := d.GetChange("tags")
+// 		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+// 			return fmt.Errorf("error updating tags: %s", err)
+// 		}
+// 	}
 
-	// return resourceAwsQLDBLedgerRead(d, meta)
-}
+// 	return resourceAwsQLDBLedgerRead(d, meta)
+// }
 
 // TODO: You cannot actually "delete" a stream, it can only be "cancelled".  Not sure about naming preferences here...
 func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
-		LedgerName: aws.String(d.Get("ledger_name")),
-		StreamId:   aws.String(d.Get("stream_id")),
+		LedgerName: aws.String(d.Get("ledger_name").(string)),
+		StreamId:   aws.String(d.Get("stream_id").(string)),
 	}
 	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Get("stream_id"))
 
@@ -309,7 +315,7 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Get("stream_id"), err)
 	}
 
-	if err := waitForQLDBStreamDeletion(conn, d.LedgerName(), d.StreamID()); err != nil {
+	if err := waitForQLDBStreamDeletion(conn, d.Get("ledger_name").(string), d.Get("stream_id").(string)); err != nil {
 		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get("ledger_name"), d.Get("stream_id"), err)
 	}
 
