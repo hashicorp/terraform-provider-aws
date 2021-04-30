@@ -755,8 +755,8 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   cloudwatch_logs {
-    log_group_name   = "mylogs"
-    role_arn     = aws_iam_role.iot_role.arn
+    log_group_name = "mylogs"
+    role_arn       = aws_iam_role.iot_role.arn
   }
 }
 `, rName)
