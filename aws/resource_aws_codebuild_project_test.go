@@ -203,6 +203,8 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
+	s3Location1 := rName + "-1"
+	s3Location2 := rName + "-2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
@@ -236,20 +238,20 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_Cache(rName, "some-bucket", "S3"),
+				Config: testAccAWSCodeBuildProjectConfig_Cache(rName, s3Location1, "S3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache.0.location", "some-bucket"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location1),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
 				),
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_Cache(rName, "some-new-bucket", "S3"),
+				Config: testAccAWSCodeBuildProjectConfig_Cache(rName, s3Location2, "S3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cache.0.location", "some-new-bucket"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
 				),
 			},
@@ -2597,6 +2599,16 @@ resource "aws_codebuild_project" "test" {
 
 func testAccAWSCodeBuildProjectConfig_Cache(rName, cacheLocation, cacheType string) string {
 	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test1" {
+  bucket        = "%[1]s-1"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket        = "%[1]s-2"
+  force_destroy = true
+}
+
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -2620,6 +2632,8 @@ resource "aws_codebuild_project" "test" {
     type     = "GITHUB"
     location = "https://github.com/hashicorp/packer.git"
   }
+
+  depends_on = [aws_s3_bucket.test1, aws_s3_bucket.test2]
 }
 `, rName, cacheLocation, cacheType))
 }
