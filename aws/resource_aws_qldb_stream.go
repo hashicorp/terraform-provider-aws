@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsQLDBStream() *schema.Resource {
@@ -94,7 +95,8 @@ func resourceAwsQLDBStream() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
-					validation.StringMatch(regexp.MustCompile(`(?!^.*--)(?!^[0-9]+$)(?!^-)(?!.*-$)^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),				)
+					validation.StringMatch(regexp.MustCompile(`(?!^.*--)(?!^[0-9]+$)(?!^-)(?!.*-$)^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+				),
 			},
 
 			"deletion_protection": {
@@ -109,54 +111,56 @@ func resourceAwsQLDBStream() *schema.Resource {
 }
 
 func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	// conn := meta.(*AWSClient).qldbconn
+	conn := meta.(*AWSClient).qldbconn
 
-	// var name string
-	// if v, ok := d.GetOk("name"); ok {
-	// 	name = v.(string)
-	// } else {
-	// 	name = resource.PrefixedUniqueId("tf")
-	// }
+	var name string
+	if v, ok := d.GetOk("name"); ok {
+		name = v.(string)
+	} else {
+		name = resource.PrefixedUniqueId("tf")
+	}
 
-	// if err := d.Set("name", name); err != nil {
-	// 	return fmt.Errorf("error setting name: %s", err)
-	// }
+	if err := d.Set("name", name); err != nil {
+		return fmt.Errorf("error setting name: %s", err)
+	}
 
-	// // Create the QLDB Ledger
-	// // The qldb.PermissionsModeAllowAll is currently hardcoded because AWS doesn't support changing the mode.
-	// createOpts := &qldb.CreateLedgerInput{
-	// 	Name:               aws.String(d.Get("name").(string)),
-	// 	PermissionsMode:    aws.String(qldb.PermissionsModeAllowAll),
-	// 	DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-	// 	Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
-	// }
+	// Create the QLDB Ledger
+	// The qldb.PermissionsModeAllowAll is currently hardcoded because AWS doesn't support changing the mode.
+	createOpts := &qldb.StreamJournalToKinesisInput{
+		ExclusiveEndTime:     d.Get("exclusive_end_time").(*time.Time),
+		InclusiveStartTime:   d.Get("inclusive_start_time").(*time.Time),
+		KinesisConfiguration: d.Get("kinesis_configuration").(*KinesisConfiguration),
+		RoleArn:              aws.String(d.Get("role_arn").(string)),
+		StreamName:           aws.String(d.Get("stream_name").(string)),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
+	}
 
-	// log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
-	// qldbResp, err := conn.CreateLedger(createOpts)
-	// if err != nil {
-	// 	return fmt.Errorf("Error creating QLDB Ledger: %s", err)
-	// }
+	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
+	qldbResp, err := conn.CreateLedger(createOpts)
+	if err != nil {
+		return fmt.Errorf("Error creating QLDB Ledger: %s", err)
+	}
 
-	// // Set QLDB ledger name
-	// d.SetId(aws.StringValue(qldbResp.Name))
+	// Set QLDB ledger name
+	d.SetId(aws.StringValue(qldbResp.Name))
 
-	// log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
+	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
 
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{qldb.LedgerStateCreating},
-	// 	Target:     []string{qldb.LedgerStateActive},
-	// 	Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
-	// 	Timeout:    8 * time.Minute,
-	// 	MinTimeout: 3 * time.Second,
-	// }
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.LedgerStateCreating},
+		Target:     []string{qldb.LedgerStateActive},
+		Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
+		Timeout:    8 * time.Minute,
+		MinTimeout: 3 * time.Second,
+	}
 
-	// _, err = stateConf.WaitForState()
-	// if err != nil {
-	// 	return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
-	// }
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
+	}
 
-	// // Update our attributes and return
-	// return resourceAwsQLDBStreamRead(d, meta)
+	// Update our attributes and return
+	return resourceAwsQLDBStreamRead(d, meta)
 }
 
 func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
@@ -217,7 +221,7 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("status", qldbStream.Stream.Status); err != nil {
 		return fmt.Errorf("error setting Status: %s", err)
 	}
-	
+
 	if err := d.Set("stream_id", qldbStream.Stream.StreamId); err != nil {
 		return fmt.Errorf("error setting Stream Id: %s", err)
 	}
