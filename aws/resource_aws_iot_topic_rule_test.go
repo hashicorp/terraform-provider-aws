@@ -418,6 +418,8 @@ func TestAccAWSIoTTopicRule_s3_canned_acl(t *testing.T) {
 				Config: testAccAWSIoTTopicRule_s3_canned_acl(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3.0.canned_acl", "private"),
 				),
 			},
 			{
