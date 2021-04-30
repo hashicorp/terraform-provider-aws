@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-datasource-db-instance"
 description: |-
   Get information on an RDS Database Instance.
 ---
@@ -12,7 +12,7 @@ Use this data source to get information about an RDS instance
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_db_instance" "database" {
   db_instance_identifier = "my-test-database"
 }

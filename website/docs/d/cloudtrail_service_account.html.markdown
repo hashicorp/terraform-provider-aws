@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail_service_account"
-sidebar_current: "docs-aws-datasource-cloudtrail-service-account"
 description: |-
   Get AWS CloudTrail Service Account ID for storing trail data in S3.
 ---
@@ -13,7 +13,7 @@ in a given region for the purpose of allowing CloudTrail to store trail data in 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudtrail_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {

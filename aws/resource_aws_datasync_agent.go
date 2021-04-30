@@ -9,8 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDataSyncAgent() *schema.Resource {
@@ -49,17 +50,18 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*AWSClient).region
 
 	activationKey := d.Get("activation_key").(string)
@@ -128,7 +130,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+		Tags:          tags.IgnoreAws().DatasyncTags(),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -150,7 +152,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.DescribeAgent(descAgentInput)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return resource.RetryableError(err)
 		}
 
@@ -172,6 +174,8 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeAgentInput{
 		AgentArn: aws.String(d.Id()),
@@ -180,7 +184,7 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading DataSync Agent: %s", input)
 	output, err := conn.DescribeAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		log.Printf("[WARN] DataSync Agent %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -190,22 +194,24 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.AgentArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Agent tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading DataSync Agent (%s) tags: %s", d.Id(), err)
-	}
-
 	d.Set("arn", output.AgentArn)
 	d.Set("name", output.Name)
 
-	if err := d.Set("tags", flattenDataSyncTagListEntry(tagsOutput.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DataSync Agent (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -227,32 +233,11 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("tags") {
-		oldRaw, newRaw := d.GetChange("tags")
-		createTags, removeTags := dataSyncTagsDiff(expandDataSyncTagListEntry(oldRaw.(map[string]interface{})), expandDataSyncTagListEntry(newRaw.(map[string]interface{})))
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if len(removeTags) > 0 {
-			input := &datasync.UntagResourceInput{
-				Keys:        dataSyncTagsKeys(removeTags),
-				ResourceArn: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Untagging DataSync Agent: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging DataSync Agent (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &datasync.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging DataSync Agent: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging DataSync Agent (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating DataSync Agent (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -269,7 +254,7 @@ func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", input)
 	_, err := conn.DeleteAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		return nil
 	}
 

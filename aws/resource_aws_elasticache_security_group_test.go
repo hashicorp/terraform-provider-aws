@@ -3,15 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -32,7 +31,7 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, isLast bool) bool {
+	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSecurityGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Cache Security Groups to sweep")
 			return false
@@ -54,7 +53,7 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 				log.Printf("[ERROR] Failed to delete Elasticache Cache Security Group (%s): %s", name, err)
 			}
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -67,40 +66,24 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheSecurityGroupConfig,
+				Config: testAccAWSElasticacheSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_security_group.bar", "description", "Managed by Terraform"),
+					testAccCheckAWSElasticacheSecurityGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
-	// Use EC2-Classic enabled us-east-1 for testing
-	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheSecurityGroupConfig,
-			},
-
-			{
-				ResourceName:      "aws_elasticache_security_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -109,7 +92,7 @@ func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_security_group" {
@@ -141,7 +124,7 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 			return fmt.Errorf("No cache security group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+		conn := testAccProviderEc2Classic.Meta().(*AWSClient).elasticacheconn
 		_, err := conn.DescribeCacheSecurityGroups(&elasticache.DescribeCacheSecurityGroupsInput{
 			CacheSecurityGroupName: aws.String(rs.Primary.ID),
 		})
@@ -152,13 +135,12 @@ func testAccCheckAWSElasticacheSecurityGroupExists(n string) resource.TestCheckF
 	}
 }
 
-var testAccAWSElasticacheSecurityGroupConfig = fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_security_group" "bar" {
-  name = "tf-test-security-group-%03d"
+func testAccAWSElasticacheSecurityGroupConfig(rName string) string {
+	return composeConfig(
+		testAccEc2ClassicRegionProviderConfig(),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
 
   ingress {
     from_port   = -1
@@ -168,8 +150,9 @@ resource "aws_security_group" "bar" {
   }
 }
 
-resource "aws_elasticache_security_group" "bar" {
-  name                 = "tf-test-security-group-%03d"
-  security_group_names = ["${aws_security_group.bar.name}"]
+resource "aws_elasticache_security_group" "test" {
+  name                 = %[1]q
+  security_group_names = [aws_security_group.test.name]
 }
-`, acctest.RandInt(), acctest.RandInt())
+`, rName))
+}

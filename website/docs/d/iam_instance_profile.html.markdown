@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_instance_profile"
-sidebar_current: "docs-aws-datasource-iam-instance-profile"
 description: |-
   Get information on a Amazon IAM Instance Profile
 ---
@@ -14,7 +14,7 @@ instance profile properties without having to hard code ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_instance_profile" "example" {
   name = "an_example_instance_profile_name"
 }

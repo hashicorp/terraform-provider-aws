@@ -5,9 +5,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsSesTemplate() *schema.Resource {
@@ -22,6 +23,10 @@ func resourceAwsSesTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -46,7 +51,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 	}
 }
 func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	templateName := d.Get("name").(string)
 
@@ -81,7 +86,7 @@ func resourceAwsSesTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}
@@ -89,12 +94,12 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading SES template: %#v", input)
 	gto, err := conn.GetTemplate(&input)
 	if err != nil {
-		if isAWSErr(err, "TemplateDoesNotExist", "") {
+		if isAWSErr(err, ses.ErrCodeTemplateDoesNotExistException, "") {
 			log.Printf("[WARN] SES template %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading SES template '%s' failed: %s", *input.TemplateName, err.Error())
+		return fmt.Errorf("Reading SES template '%s' failed: %s", aws.StringValue(input.TemplateName), err.Error())
 	}
 
 	d.Set("html", gto.Template.HtmlPart)
@@ -102,11 +107,20 @@ func resourceAwsSesTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("subject", gto.Template.SubjectPart)
 	d.Set("text", gto.Template.TextPart)
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ses",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("template/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	return nil
 }
 
 func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	templateName := d.Id()
 
@@ -140,7 +154,7 @@ func resourceAwsSesTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSesTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}

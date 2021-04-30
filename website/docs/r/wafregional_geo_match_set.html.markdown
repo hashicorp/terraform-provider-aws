@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_geo_match_set"
-sidebar_current: "docs-aws-resource-wafregional-geo-match-set"
 description: |-
   Provides a AWS WAF Regional Geo Match Set resource.
 ---
@@ -12,7 +12,7 @@ Provides a WAF Regional Geo Match Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_geo_match_set" "geo_match_set" {
   name = "geo_match_set"
 

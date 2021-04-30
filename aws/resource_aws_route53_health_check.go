@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRoute53HealthCheck() *schema.Resource {
@@ -56,6 +57,9 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return net.ParseIP(old).Equal(net.ParseIP(new))
+				},
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -113,11 +117,22 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 			"insufficient_data_health_status": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.InsufficientDataHealthStatusHealthy,
+					route53.InsufficientDataHealthStatusLastKnownStatus,
+					route53.InsufficientDataHealthStatusUnhealthy,
+				}, true),
 			},
 			"reference_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				// The max length of the reference name is 64 characters for the API.
+				// Terraform appends a 37-character unique ID to the provided
+				// reference_name. This limits the length of the resource argument to 27.
+				//
+				// Example generated suffix: -terraform-20190122200019880700000001
+				ValidateFunc: validation.StringLenBetween(0, (64 - resource.UniqueIDSuffixLength - 11)),
 			},
 			"enable_sni": {
 				Type:     schema.TypeBool,
@@ -132,8 +147,17 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"tags": tagsSchema(),
+			"disabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -165,7 +189,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("child_healthchecks") {
-		updateHealthCheck.ChildHealthChecks = expandStringList(d.Get("child_healthchecks").(*schema.Set).List())
+		updateHealthCheck.ChildHealthChecks = expandStringSet(d.Get("child_healthchecks").(*schema.Set))
 
 	}
 	if d.HasChange("child_health_threshold") {
@@ -176,7 +200,7 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		updateHealthCheck.SearchString = aws.String(d.Get("search_string").(string))
 	}
 
-	if d.HasChange("cloudwatch_alarm_name") || d.HasChange("cloudwatch_alarm_region") {
+	if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
 		cloudwatchAlarm := &route53.AlarmIdentifier{
 			Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
 			Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
@@ -194,7 +218,11 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("regions") {
-		updateHealthCheck.Regions = expandStringList(d.Get("regions").(*schema.Set).List())
+		updateHealthCheck.Regions = expandStringSet(d.Get("regions").(*schema.Set))
+	}
+
+	if d.HasChange("disabled") {
+		updateHealthCheck.Disabled = aws.Bool(d.Get("disabled").(bool))
 	}
 
 	_, err := conn.UpdateHealthCheck(updateHealthCheck)
@@ -202,8 +230,12 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	if err := setTagsR53(conn, d, "healthcheck"); err != nil {
-		return err
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, o, n); err != nil {
+			return fmt.Errorf("error updating Route53 Health Check (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRoute53HealthCheckRead(d, meta)
@@ -211,6 +243,8 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 
 func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	healthConfig := &route53.HealthCheckConfig{
 		Type: aws.String(d.Get("type").(string)),
@@ -260,7 +294,7 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 	if *healthConfig.Type == route53.HealthCheckTypeCalculated {
 		if v, ok := d.GetOk("child_healthchecks"); ok {
-			healthConfig.ChildHealthChecks = expandStringList(v.(*schema.Set).List())
+			healthConfig.ChildHealthChecks = expandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("child_health_threshold"); ok {
@@ -287,12 +321,16 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("regions"); ok {
-		healthConfig.Regions = expandStringList(v.(*schema.Set).List())
+		healthConfig.Regions = expandStringSet(v.(*schema.Set))
 	}
 
 	callerRef := resource.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = fmt.Sprintf("%s-%s", v.(string), callerRef)
+	}
+
+	if v, ok := d.GetOk("disabled"); ok {
+		healthConfig.Disabled = aws.Bool(v.(bool))
 	}
 
 	input := &route53.CreateHealthCheckInput{
@@ -306,10 +344,10 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	d.SetId(*resp.HealthCheck.Id)
+	d.SetId(aws.StringValue(resp.HealthCheck.Id))
 
-	if err := setTagsR53(conn, d, "healthcheck"); err != nil {
-		return err
+	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHealthcheck, nil, tags); err != nil {
+		return fmt.Errorf("error setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceAwsRoute53HealthCheckRead(d, meta)
@@ -317,6 +355,8 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	read, err := conn.GetHealthCheck(&route53.GetHealthCheckInput{HealthCheckId: aws.String(d.Id())})
 	if err != nil {
@@ -343,6 +383,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_path", updated.ResourcePath)
 	d.Set("measure_latency", updated.MeasureLatency)
 	d.Set("invert_healthcheck", updated.Inverted)
+	d.Set("disabled", updated.Disabled)
 
 	if err := d.Set("child_healthchecks", flattenStringList(updated.ChildHealthChecks)); err != nil {
 		return fmt.Errorf("error setting child_healthchecks: %s", err)
@@ -359,24 +400,21 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 		d.Set("cloudwatch_alarm_region", updated.AlarmIdentifier.Region)
 	}
 
-	// read the tags
-	req := &route53.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String("healthcheck"),
-	}
+	tags, err := keyvaluetags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHealthcheck)
 
-	resp, err := conn.ListTagsForResource(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing tags for Route53 Health Check (%s): %s", d.Id(), err)
 	}
 
-	var tags []*route53.Tag
-	if resp.ResourceTagSet != nil {
-		tags = resp.ResourceTagSet.Tags
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	if err := d.Set("tags", tagsToMapR53(tags)); err != nil {
-		return err
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil

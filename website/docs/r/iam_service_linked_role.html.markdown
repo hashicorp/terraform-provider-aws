@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_service_linked_role"
-sidebar_current: "docs-aws-resource-iam-service-linked-role"
 description: |-
   Provides an IAM service-linked role.
 ---
@@ -12,7 +12,7 @@ Provides an [IAM service-linked role](https://docs.aws.amazon.com/IAM/latest/Use
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_service_linked_role" "elasticbeanstalk" {
   aws_service_name = "elasticbeanstalk.amazonaws.com"
 }

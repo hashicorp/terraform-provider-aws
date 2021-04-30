@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_parameter_group"
-sidebar_current: "docs-aws-resource-elasticache-parameter-group"
 description: |-
   Provides an ElastiCache parameter group resource.
 ---
@@ -14,7 +14,7 @@ Provides an ElastiCache parameter group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elasticache_parameter_group" "default" {
   name   = "cache-params"
   family = "redis2.8"

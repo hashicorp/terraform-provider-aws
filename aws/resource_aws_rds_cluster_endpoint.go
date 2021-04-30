@@ -7,12 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
+	AWSRDSClusterEndpointCreateTimeout   = 30 * time.Minute
 	AWSRDSClusterEndpointRetryDelay      = 5 * time.Second
 	AWSRDSClusterEndpointRetryMinTimeout = 3 * time.Second
 )
@@ -70,12 +72,18 @@ func resourceAwsRDSClusterEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterId := d.Get("cluster_identifier").(string)
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
@@ -85,6 +93,7 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 		DBClusterIdentifier:         aws.String(clusterId),
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 		EndpointType:                aws.String(endpointType),
+		Tags:                        tags.IgnoreAws().RdsTags(),
 	}
 
 	if v := d.Get("static_members"); v != nil {
@@ -101,7 +110,7 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 
 	d.SetId(endpointId)
 
-	err = resourceAwsRDSClusterEndpointWaitForAvailable(d.Timeout(schema.TimeoutDelete), d.Id(), conn)
+	err = resourceAwsRDSClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -111,6 +120,8 @@ func resourceAwsRDSClusterEndpointCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterEndpointsInput{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
@@ -140,9 +151,10 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
+	arn := clusterEp.DBClusterEndpointArn
 	d.Set("cluster_endpoint_identifier", clusterEp.DBClusterEndpointIdentifier)
 	d.Set("cluster_identifier", clusterEp.DBClusterIdentifier)
-	d.Set("arn", clusterEp.DBClusterEndpointArn)
+	d.Set("arn", arn)
 	d.Set("endpoint", clusterEp.Endpoint)
 	d.Set("custom_endpoint_type", clusterEp.CustomEndpointType)
 
@@ -154,6 +166,23 @@ func resourceAwsRDSClusterEndpointRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting static_members: %s", err)
 	}
 
+	tags, err := keyvaluetags.RdsListTags(conn, *arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster Endpoint (%s): %s", *arn, err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
@@ -163,18 +192,26 @@ func resourceAwsRDSClusterEndpointUpdate(d *schema.ResourceData, meta interface{
 		DBClusterEndpointIdentifier: aws.String(d.Id()),
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS Cluster Endpoint (%s) tags: %s", d.Get("arn").(string), err)
+		}
+	}
+
 	if v, ok := d.GetOk("custom_endpoint_type"); ok {
 		input.EndpointType = aws.String(v.(string))
 	}
 
 	if attr := d.Get("excluded_members").(*schema.Set); attr.Len() > 0 {
-		input.ExcludedMembers = expandStringList(attr.List())
+		input.ExcludedMembers = expandStringSet(attr)
 	} else {
 		input.ExcludedMembers = make([]*string, 0)
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
-		input.StaticMembers = expandStringList(attr.List())
+		input.StaticMembers = expandStringSet(attr)
 	} else {
 		input.StaticMembers = make([]*string, 0)
 	}

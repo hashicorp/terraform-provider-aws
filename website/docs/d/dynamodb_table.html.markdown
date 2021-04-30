@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table"
-sidebar_current: "docs-aws-datasource-dynamodb-table"
 description: |-
   Provides a DynamoDB table data source.
 ---
@@ -12,7 +12,7 @@ Provides information about a DynamoDB table.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dynamodb_table" "tableName" {
   name = "tableName"
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret"
-sidebar_current: "docs-aws-datasource-secretsmanager-secret"
 description: |-
   Retrieve metadata information about a Secrets Manager secret
 ---
@@ -14,7 +14,7 @@ Retrieve metadata information about a Secrets Manager secret. To retrieve a secr
 
 ### ARN
 
-```hcl
+```terraform
 data "aws_secretsmanager_secret" "by-arn" {
   arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
 }
@@ -22,7 +22,7 @@ data "aws_secretsmanager_secret" "by-arn" {
 
 ### Name
 
-```hcl
+```terraform
 data "aws_secretsmanager_secret" "by-name" {
   name = "example"
 }

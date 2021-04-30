@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -37,6 +37,32 @@ func resourceAwsTransferUser() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"home_directory_mappings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"entry": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+						"target": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+
+			"home_directory_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      transfer.HomeDirectoryTypePath,
+				ValidateFunc: validation.StringInSlice([]string{transfer.HomeDirectoryTypePath, transfer.HomeDirectoryTypeLogical}, false),
+			},
+
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -59,6 +85,8 @@ func resourceAwsTransferUser() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"tags_all": tagsSchemaComputed(),
+
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -66,11 +94,15 @@ func resourceAwsTransferUser() *schema.Resource {
 				ValidateFunc: validateTransferUserName,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -84,12 +116,20 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.HomeDirectory = aws.String(attr.(string))
 	}
 
+	if attr, ok := d.GetOk("home_directory_type"); ok {
+		createOpts.HomeDirectoryType = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("home_directory_mappings"); ok {
+		createOpts.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(attr.([]interface{}))
+	}
+
 	if attr, ok := d.GetOk("policy"); ok {
 		createOpts.Policy = aws.String(attr.(string))
 	}
 
-	if attr, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapTransfer(attr.(map[string]interface{}))
+	if len(tags) > 0 {
+		createOpts.Tags = tags.IgnoreAws().TransferTags()
 	}
 
 	log.Printf("[DEBUG] Create Transfer User Option: %#v", createOpts)
@@ -106,6 +146,9 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	serverID, userName, err := decodeTransferUserId(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
@@ -132,11 +175,23 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("user_name", resp.User.UserName)
 	d.Set("arn", resp.User.Arn)
 	d.Set("home_directory", resp.User.HomeDirectory)
+	d.Set("home_directory_type", resp.User.HomeDirectoryType)
 	d.Set("policy", resp.User.Policy)
 	d.Set("role", resp.User.Role)
 
-	if err := d.Set("tags", tagsToMapTransfer(resp.User.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	if err := d.Set("home_directory_mappings", flattenAwsTransferHomeDirectoryMappings(resp.User.HomeDirectoryMappings)); err != nil {
+		return fmt.Errorf("Error setting home_directory_mappings: %s", err)
+	}
+
+	tags := keyvaluetags.TransferKeyValueTags(resp.User.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 	return nil
 }
@@ -156,6 +211,16 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 
 	if d.HasChange("home_directory") {
 		updateOpts.HomeDirectory = aws.String(d.Get("home_directory").(string))
+		updateFlag = true
+	}
+
+	if d.HasChange("home_directory_mappings") {
+		updateOpts.HomeDirectoryMappings = expandAwsTransferHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+		updateFlag = true
+	}
+
+	if d.HasChange("home_directory_type") {
+		updateOpts.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
 		updateFlag = true
 	}
 
@@ -181,8 +246,11 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if err := setTagsTransfer(conn, d); err != nil {
-		return fmt.Errorf("Error update tags: %s", err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsTransferUserRead(d, meta)
@@ -255,4 +323,32 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 		return fmt.Errorf("Error decoding transfer user ID: %s", err)
 	}
 	return nil
+}
+
+func expandAwsTransferHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
+	mappings := make([]*transfer.HomeDirectoryMapEntry, 0)
+
+	for _, tConfig := range in {
+		config := tConfig.(map[string]interface{})
+
+		m := &transfer.HomeDirectoryMapEntry{
+			Entry:  aws.String(config["entry"].(string)),
+			Target: aws.String(config["target"].(string)),
+		}
+
+		mappings = append(mappings, m)
+	}
+
+	return mappings
+}
+
+func flattenAwsTransferHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []interface{} {
+	l := make([]interface{}, len(mappings))
+	for i, m := range mappings {
+		l[i] = map[string]interface{}{
+			"entry":  aws.StringValue(m.Entry),
+			"target": aws.StringValue(m.Target),
+		}
+	}
+	return l
 }

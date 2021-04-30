@@ -1,7 +1,7 @@
 ---
+subcategory: "Transfer"
 layout: "aws"
 page_title: "AWS: aws_transfer_server"
-sidebar_current: "docs-aws-datasource-transfer-server"
 description: |-
   Get information on an AWS Transfer Server resource
 ---
@@ -13,7 +13,7 @@ resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_transfer_server" "example" {
   server_id = "s-1234567"
 }

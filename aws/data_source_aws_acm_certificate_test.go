@@ -7,7 +7,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const ACMCertificateRe = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
@@ -35,42 +36,49 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, acm.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfig(domain),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithStatus(domain, acm.CertificateStatusIssued),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithTypes(domain, acm.CertificateTypeAmazonIssued),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecent(domain, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
@@ -101,8 +109,9 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 	resourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, acm.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsAcmCertificateDataSourceConfig(domain),
@@ -119,18 +128,21 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecent(domain, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
 				Config: testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
 				Check: resource.ComposeTestCheckFunc(
+					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
@@ -146,8 +158,9 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, acm.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCheckAwsAcmCertificateDataSourceConfig(domain),
@@ -180,15 +193,20 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
+	key := tlsRsaPrivateKeyPem(4096)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProvidersWithTLS,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, acm.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(),
+				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
 				),
 			},
 		},
@@ -224,8 +242,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecent(domain string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	most_recent = %v
+  domain      = "%s"
+  most_recent = %t
 }
 `, domain, mostRecent)
 }
@@ -233,9 +251,9 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndStatus(domain, status string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	statuses = ["%s"]
-	most_recent = %v
+  domain      = "%s"
+  statuses    = ["%s"]
+  most_recent = %t
 }
 `, domain, status, mostRecent)
 }
@@ -243,45 +261,27 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithMostRecentAndTypes(domain, certType string, mostRecent bool) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	types = ["%s"]
-	most_recent = %v
+  domain      = "%s"
+  types       = ["%s"]
+  most_recent = %t
 }
 `, domain, certType, mostRecent)
 }
 
-func testAccAwsAcmCertificateDataSourceConfigKeyTypes() string {
+func testAccAwsAcmCertificateDataSourceConfigKeyTypes(certificate, key, rName string) string {
 	return fmt.Sprintf(`
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
 
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
+  tags = {
+    Name = %[3]q
   }
 }
 
-resource "aws_acm_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
 data "aws_acm_certificate" "test" {
-  domain    = "${aws_acm_certificate.test.domain_name}"
+  domain    = aws_acm_certificate.test.domain_name
   key_types = ["RSA_4096"]
 }
-`)
+`, certificate, key, rName)
 }

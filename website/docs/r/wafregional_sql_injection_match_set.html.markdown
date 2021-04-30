@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_sql_injection_match_set"
-sidebar_current: "docs-aws-resource-wafregional-sql-injection-match-set"
 description: |-
   Provides a AWS WAF Regional SqlInjectionMatchSet resource for use with ALB.
 ---
@@ -12,7 +12,7 @@ Provides a WAF Regional SQL Injection Match Set Resource for use with Applicatio
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "tf-sql_injection_match_set"
 

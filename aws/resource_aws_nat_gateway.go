@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsNatGateway() *schema.Resource {
@@ -51,18 +52,24 @@ func resourceAwsNatGateway() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the NAT Gateway
 	createOpts := &ec2.CreateNatGatewayInput{
-		AllocationId: aws.String(d.Get("allocation_id").(string)),
-		SubnetId:     aws.String(d.Get("subnet_id").(string)),
+		AllocationId:      aws.String(d.Get("allocation_id").(string)),
+		SubnetId:          aws.String(d.Get("subnet_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNatgateway),
 	}
 
 	log.Printf("[DEBUG] Create NAT Gateway: %s", *createOpts)
@@ -73,14 +80,14 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Get the ID and store it
 	ng := natResp.NatGateway
-	d.SetId(*ng.NatGatewayId)
+	d.SetId(aws.StringValue(ng.NatGatewayId))
 	log.Printf("[INFO] NAT Gateway ID: %s", d.Id())
 
 	// Wait for the NAT Gateway to become available
 	log.Printf("[DEBUG] Waiting for NAT Gateway (%s) to become available", d.Id())
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"pending"},
-		Target:  []string{"available"},
+		Pending: []string{ec2.NatGatewayStatePending},
+		Target:  []string{ec2.NatGatewayStateAvailable},
 		Refresh: NGStateRefreshFunc(conn, d.Id()),
 		Timeout: 10 * time.Minute,
 	}
@@ -89,12 +96,13 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error waiting for NAT Gateway (%s) to become available: %s", d.Id(), err)
 	}
 
-	// Update our attributes and return
-	return resourceAwsNatGatewayUpdate(d, meta)
+	return resourceAwsNatGatewayRead(d, meta)
 }
 
 func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the NAT Gateway state
 	ngRaw, state, err := NGStateRefreshFunc(conn, d.Id())()
@@ -103,9 +111,9 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	status := map[string]bool{
-		"deleted":  true,
-		"deleting": true,
-		"failed":   true,
+		ec2.NatGatewayStateDeleted:  true,
+		ec2.NatGatewayStateDeleting: true,
+		ec2.NatGatewayStateFailed:   true,
 	}
 
 	if _, ok := status[strings.ToLower(state)]; ngRaw == nil || ok {
@@ -125,8 +133,16 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_ip", address.PrivateIp)
 	d.Set("public_ip", address.PublicIp)
 
-	// Tags
-	d.Set("tags", tagsToMap(ng.Tags))
+	tags := keyvaluetags.Ec2KeyValueTags(ng.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -134,15 +150,14 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsNatGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	// Turn on partial mode
-	d.Partial(true)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	if err := setTags(conn, d); err != nil {
-		return err
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
+		}
 	}
-	d.SetPartial("tags")
 
-	d.Partial(false)
 	return resourceAwsNatGatewayRead(d, meta)
 }
 
@@ -168,8 +183,8 @@ func resourceAwsNatGatewayDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{"deleted"},
+		Pending:    []string{ec2.NatGatewayStateDeleting},
+		Target:     []string{ec2.NatGatewayStateDeleted},
 		Refresh:    NGStateRefreshFunc(conn, d.Id()),
 		Timeout:    30 * time.Minute,
 		Delay:      10 * time.Second,
@@ -193,7 +208,7 @@ func NGStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 		}
 		resp, err := conn.DescribeNatGateways(opts)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "NatGatewayNotFound" {
+			if isAWSErr(err, "NatGatewayNotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on NGStateRefresh: %s", err)

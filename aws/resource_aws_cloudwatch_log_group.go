@@ -3,13 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudWatchLogGroup() *schema.Resource {
@@ -39,9 +41,10 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 			},
 
 			"retention_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653}),
 			},
 
 			"kms_key_id": {
@@ -54,13 +57,18 @@ func resourceAwsCloudWatchLogGroup() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var logGroupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -81,9 +89,13 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 		params.KmsKeyId = aws.String(v.(string))
 	}
 
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().CloudwatchlogsTags()
+	}
+
 	_, err := conn.CreateLogGroup(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceAlreadyExistsException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cloudwatchlogs.ErrCodeResourceAlreadyExistsException {
 			return fmt.Errorf("Creating CloudWatch Log Group failed: %s:  The CloudWatch Log Group '%s' already exists.", err, d.Get("name").(string))
 		}
 		return fmt.Errorf("Creating CloudWatch Log Group failed: %s '%s'", err, d.Get("name"))
@@ -93,11 +105,27 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 
 	log.Println("[INFO] CloudWatch Log Group created")
 
-	return resourceAwsCloudWatchLogGroupUpdate(d, meta)
+	if v, ok := d.GetOk("retention_in_days"); ok {
+		input := cloudwatchlogs.PutRetentionPolicyInput{
+			LogGroupName:    aws.String(logGroupName),
+			RetentionInDays: aws.Int64(int64(v.(int))),
+		}
+		log.Printf("[DEBUG] Setting retention for CloudWatch Log Group: %q: %s", logGroupName, input)
+		_, err = conn.PutRetentionPolicy(&input)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsCloudWatchLogGroupRead(d, meta)
 }
 
 func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
 	lg, err := lookupCloudWatchLogGroup(conn, d.Id())
 	if err != nil {
@@ -110,24 +138,27 @@ func resourceAwsCloudWatchLogGroupRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	log.Printf("[DEBUG] Found Log Group: %#v", *lg)
-
-	d.Set("arn", lg.Arn)
+	d.Set("arn", strings.TrimSuffix(aws.StringValue(lg.Arn), ":*"))
 	d.Set("name", lg.LogGroupName)
 	d.Set("kms_key_id", lg.KmsKeyId)
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags := make(map[string]string)
-	tagsOutput, err := conn.ListTagsLogGroup(&cloudwatchlogs.ListTagsLogGroupInput{
-		LogGroupName: aws.String(d.Id()),
-	})
+	tags, err := keyvaluetags.CloudwatchlogsListTags(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error listing CloudWatch Logs Group %q tags: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
 	}
-	if tagsOutput != nil {
-		tags = aws.StringValueMap(tagsOutput.Tags)
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	d.Set("tags", tags)
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	return nil
 }
@@ -181,32 +212,11 @@ func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffCloudWatchTags(o, n)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags from %s", name)
-			_, err := conn.UntagLogGroup(&cloudwatchlogs.UntagLogGroupInput{
-				LogGroupName: aws.String(name),
-				Tags:         remove,
-			})
-			if err != nil {
-				return err
-			}
-		}
-
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags on %s", name)
-			_, err := conn.TagLogGroup(&cloudwatchlogs.TagLogGroupInput{
-				LogGroupName: aws.String(name),
-				Tags:         create,
-			})
-			if err != nil {
-				return err
-			}
+		if err := keyvaluetags.CloudwatchlogsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -232,23 +242,6 @@ func resourceAwsCloudWatchLogGroupUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	return resourceAwsCloudWatchLogGroupRead(d, meta)
-}
-
-func diffCloudWatchTags(oldTags map[string]interface{}, newTags map[string]interface{}) (map[string]*string, []*string) {
-	create := make(map[string]*string)
-	for k, v := range newTags {
-		create[k] = aws.String(v.(string))
-	}
-
-	var remove []*string
-	for t := range oldTags {
-		_, ok := create[t]
-		if !ok {
-			remove = append(remove, aws.String(t))
-		}
-	}
-
-	return create, remove
 }
 
 func resourceAwsCloudWatchLogGroupDelete(d *schema.ResourceData, meta interface{}) error {

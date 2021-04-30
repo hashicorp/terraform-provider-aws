@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_cluster"
-sidebar_current: "docs-aws-datasource-elasticache-cluster"
 description: |-
   Get information on an ElastiCache Cluster resource.
 ---
@@ -12,7 +12,7 @@ Use this data source to get information about an Elasticache Cluster
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elasticache_cluster" "my_cluster" {
   cluster_id = "my-cluster-id"
 }
