@@ -200,15 +200,15 @@ func testAccAwsMacieClassificationJobconfigNamePrefix(namePrefix, nameBucket, ac
 	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_classification_job" "test" {
-	name_prefix = %[1]q
-	job_type = "%s"
-	s3_job_definition {
-		bucket_definitions{
-			account_id = "%s"
-			buckets = ["%s"]
-		}
-	}
-	depends_on = [aws_macie2_account.test]
+  name_prefix = "%[1]s"
+  job_type    = "%s"
+  s3_job_definition {
+    bucket_definitions {
+      account_id = "%s"
+      buckets    = ["%s"]
+    }
+  }
+  depends_on = [aws_macie2_account.test]
 }
 `, namePrefix, jobType, accountID, nameBucket)
 }
