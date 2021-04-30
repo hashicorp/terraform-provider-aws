@@ -8,7 +8,7 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-In February 2020 to April 2021 846 Pull Requests were opened in the provider and we merged 947(as of April 13th), adding support for:
+In the period spanning February to April 2021 846 Pull Requests were opened in the provider and 947 were merged, adding support for:
 
 - Default Tags
 - CloudFront Origin Request and Cache Policies
