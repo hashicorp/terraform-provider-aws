@@ -466,21 +466,21 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "schedule_frequency", d.Id(), err))
 	}
-	d.Set("sampling_percentage", aws.Int64Value(resp.SamplingPercentage))
-	d.Set("name", aws.StringValue(resp.Name))
+	d.Set("sampling_percentage", resp.SamplingPercentage)
+	d.Set("name", resp.Name)
 	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(resp.Name)))
-	d.Set("description", aws.StringValue(resp.Description))
-	d.Set("initial_run", aws.BoolValue(resp.InitialRun))
-	d.Set("job_type", aws.StringValue(resp.JobType))
+	d.Set("description", resp.Description)
+	d.Set("initial_run", resp.InitialRun)
+	d.Set("job_type", resp.JobType)
 	if err = d.Set("s3_job_definition", flattenS3JobDefinition(resp.S3JobDefinition)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "s3_job_definition", d.Id(), err))
 	}
 	if err = d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie ClassificationJob (%s): %w", "tags", d.Id(), err))
 	}
-	d.Set("job_id", aws.StringValue(resp.JobId))
-	d.Set("job_arn", aws.StringValue(resp.JobArn))
-	d.Set("job_status", aws.StringValue(resp.JobStatus))
+	d.Set("job_id", resp.JobId)
+	d.Set("job_arn", resp.JobArn)
+	d.Set("job_status", resp.JobStatus)
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("last_run_time", aws.TimeValue(resp.LastRunTime).Format(time.RFC3339))
 	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
