@@ -308,7 +308,7 @@ The following arguments are supported:
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
-* `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter conifg. Documented below. A maximum of 1 are allowed.
+* `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
 
 `run_command_targets` support the following:
 
