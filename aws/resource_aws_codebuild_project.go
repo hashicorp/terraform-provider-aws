@@ -1476,39 +1476,52 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	return err
 }
 
-func flattenAwsCodeBuildProjectFileSystemLocations(fileSystemLocationsList []*codebuild.ProjectFileSystemLocation) *schema.Set {
-	fileSystemLocationsSet := schema.Set{}
-
-	for _, fileSystemLocation := range fileSystemLocationsList {
-		fileSystemLocationsSet.Add(flattenAwsCodeBuildProjectFileSystemLocation(*fileSystemLocation))
+func flattenAwsCodeBuildProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
-	return &fileSystemLocationsSet
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAwsCodeBuildProjectFileSystemLocation(apiObject))
+	}
+
+	return tfList
 }
 
-func flattenAwsCodeBuildProjectFileSystemLocation(fileSystemLocation codebuild.ProjectFileSystemLocation) map[string]interface{} {
-	values := map[string]interface{}{}
-
-	if fileSystemLocation.Identifier != nil {
-		values["identifier"] = aws.StringValue(fileSystemLocation.Identifier)
+func flattenAwsCodeBuildProjectFileSystemLocation(apiObject *codebuild.ProjectFileSystemLocation) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	if fileSystemLocation.Location != nil {
-		values["location"] = aws.StringValue(fileSystemLocation.Location)
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Identifier; v != nil {
+		tfMap["identifier"] = aws.StringValue(v)
 	}
 
-	if fileSystemLocation.MountOptions != nil {
-		values["mount_options"] = aws.StringValue(fileSystemLocation.MountOptions)
+	if v := apiObject.Location; v != nil {
+		tfMap["location"] = aws.StringValue(v)
 	}
 
-	if fileSystemLocation.MountPoint != nil {
-		values["mount_point"] = aws.StringValue(fileSystemLocation.MountPoint)
+	if v := apiObject.MountOptions; v != nil {
+		tfMap["mount_options"] = aws.StringValue(v)
 	}
 
-	if fileSystemLocation.Type != nil {
-		values["type"] = aws.StringValue(fileSystemLocation.Type)
+	if v := apiObject.MountPoint; v != nil {
+		tfMap["mount_point"] = aws.StringValue(v)
 	}
 
-	return values
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface{} {

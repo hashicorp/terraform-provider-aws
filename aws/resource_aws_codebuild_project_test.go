@@ -311,10 +311,7 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	iName := acctest.RandomWithPrefix("tf-acc-test-identifier")
 	resourceName := "aws_codebuild_project.test"
-
-	t.Skip("FileSystemLocations not yet working")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
@@ -323,12 +320,37 @@ func TestAccAWSCodeBuildProject_FileSystemLocations(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName),
+				Config: testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName, "/mount1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", codebuild.ComputeTypeBuildGeneral1Small),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.type", codebuild.EnvironmentTypeLinuxContainer),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName, "/mount2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", iName),
-					resource.TestCheckResourceAttrSet(resourceName, "file_system_locations.0.location"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount2"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
 				),
 			},
@@ -4597,9 +4619,114 @@ resource "aws_codebuild_project" "test" {
 `, concurrentBuildLimit, rName))
 }
 
-func testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName string) string {
-	return composeConfig(testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {}
+func testAccAWSCodeBuildProjectConfig_FileSystemLocations(rName, mountPoint string) string {
+	return composeConfig(
+		testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName),
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "public" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-public"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-public"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  route_table_id = aws_route_table.public.id
+  subnet_id      = aws_subnet.public.id
+}
+
+resource "aws_route" "public" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_subnet" "private" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.1.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-private"
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  allocation_id = aws_eip.test.id
+  subnet_id     = aws_subnet.public.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_route.public]
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-private"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  route_table_id = aws_route.private.route_table_id
+  subnet_id      = aws_subnet.private.id
+}
+
+resource "aws_route" "private" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.test.id
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
 
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -4613,6 +4740,8 @@ resource "aws_codebuild_project" "test" {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
+
+    privileged_mode = true
   }
 
   source {
@@ -4620,11 +4749,19 @@ resource "aws_codebuild_project" "test" {
     location = "https://github.com/hashicorp/packer.git"
   }
 
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.private.id]
+    vpc_id             = aws_vpc.test.id
+  }
+
   file_system_locations {
-    identifier = "test"
-    location   = "${aws_efs_file_system.test.dns_name}:/directory-path"
-    type       = "EFS"
+    identifier    = "test"
+    location      = "${aws_efs_file_system.test.dns_name}:/directory-path"
+    type          = "EFS"
+    mount_point   = %[2]q
+    mount_options = "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"
   }
 }
-`, rName))
+`, rName, mountPoint))
 }
