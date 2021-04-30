@@ -1,4 +1,4 @@
-## 3.38.0 (Unreleased)
+## 3.38.0 (April 30, 2021)
 
 NOTES:
 
