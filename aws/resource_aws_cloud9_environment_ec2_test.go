@@ -430,6 +430,8 @@ resource "aws_cloud9_environment_ec2" "test" {
 
 func testAccAWSCloud9EnvironmentEc2SSMConfig(name, description, userName string) string {
 	return testAccAWSCloud9EnvironmentEc2ConfigBase() + fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "cloud9_ssm_access" {
   statement {
     effect = "Allow"
@@ -451,7 +453,7 @@ resource "aws_iam_role" "cloud9_ssm_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "cloud9_ssm_access" {
-  policy_arn = "arn:aws:iam::aws:policy/AWSCloud9SSMInstanceProfile"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSCloud9SSMInstanceProfile"
   role       = aws_iam_role.cloud9_ssm_access.name
 }
 
