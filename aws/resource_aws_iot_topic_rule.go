@@ -339,6 +339,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"canned_acl": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice(iot.CannedAccessControlList_Values(), false),
 						},
 						"key": {
 							Type:     schema.TypeString,
@@ -931,6 +932,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 									"canned_acl": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice(iot.CannedAccessControlList_Values(), false),
 									},
 									"key": {
 										Type:     schema.TypeString,
