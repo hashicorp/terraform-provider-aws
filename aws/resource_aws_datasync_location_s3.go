@@ -53,9 +53,8 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 			},
 			"s3_storage_class": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Default:      datasync.S3StorageClassStandard,
 				ValidateFunc: validation.StringInSlice(datasync.S3StorageClass_Values(), false),
 			},
 			"subdirectory": {
