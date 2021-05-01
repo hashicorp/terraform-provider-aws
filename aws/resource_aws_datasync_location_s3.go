@@ -51,6 +51,12 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 					},
 				},
 			},
+			"s3_storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(datasync.S3StorageClass_Values(), false),
+			},
 			"subdirectory": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -88,6 +94,10 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		Tags:         tags.IgnoreAws().DatasyncTags(),
+	}
+
+	if v, ok := d.GetOk("s3_storage_class"); ok {
+		input.S3StorageClass = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
@@ -165,6 +175,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
+	d.Set("s3_storage_class", output.S3StorageClass)
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
