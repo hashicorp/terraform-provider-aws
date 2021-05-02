@@ -847,6 +847,7 @@ func Provider() *schema.Provider {
 			"aws_macie2_custom_data_identifier":                       resourceAwsMacie2CustomDataIdentifier(),
 			"aws_macie2_findings_filter":                              resourceAwsMacie2FindingsFilter(),
 			"aws_macie2_member":                                       resourceAwsMacie2Member(),
+			"aws_macie2_organization_admin_account":                   resourceAwsMacie2OrganizationAdminAccount(),
 			"aws_macie_member_account_association":                    resourceAwsMacieMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":                         resourceAwsMacieS3BucketAssociation(),
 			"aws_main_route_table_association":                        resourceAwsMainRouteTableAssociation(),
