@@ -19,7 +19,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQLDBStreamCreate,
 		Read:   resourceAwsQLDBStreamRead,
-		// Update: resourceAwsQLDBStreamUpdate,
+		Update: resourceAwsQLDBStreamUpdate,
 		Delete: resourceAwsQLDBStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -96,12 +96,6 @@ func resourceAwsQLDBStream() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 32),
 				),
-			},
-
-			"deletion_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
 			},
 
 			"tags": tagsSchema(),
@@ -244,37 +238,19 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*AWSClient).qldbconn
+func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).qldbconn
 
-// 	if d.HasChange("deletion_protection") {
-// 		val := d.Get("deletion_protection").(bool)
-// 		modifyOpts := &qldb.UpdateJournalKinesisStreamInput{
-// 			LedgerName: aws.String(d.Get("ledger_name").(string)),
-// 			StreamName: aws.String(d.Get("stream_name").(string)),
-// 		}
-// 		modifyOpts := &qldb.UpdateLedgerInput{
-// 			Name:               aws.String(d.Id()),
-// 			DeletionProtection: aws.Bool(val),
-// 		}
-// 		log.Printf(
-// 			"[INFO] Modifying deletion_protection QLDB attribute for %s: %#v",
-// 			d.Id(), modifyOpts)
-// 		if _, err := conn.UpdateLedger(modifyOpts); err != nil {
+	// TODO: Confirm this works for streams, as well
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
-// 			return err
-// 		}
-// 	}
-
-// 	if d.HasChange("tags") {
-// 		o, n := d.GetChange("tags")
-// 		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-// 			return fmt.Errorf("error updating tags: %s", err)
-// 		}
-// 	}
-
-// 	return resourceAwsQLDBLedgerRead(d, meta)
-// }
+	return resourceAwsQLDBLedgerRead(d, meta)
+}
 
 // TODO: You cannot actually "delete" a stream, it can only be "cancelled".  Not sure about naming preferences here...
 func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error {
