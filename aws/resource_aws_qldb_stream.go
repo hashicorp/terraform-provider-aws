@@ -34,9 +34,10 @@ func resourceAwsQLDBStream() *schema.Resource {
 
 			"exlusive_end_time": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
+					// TODO: Get this to validate ISO 8601
 					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
 				),
 			},
@@ -50,22 +51,22 @@ func resourceAwsQLDBStream() *schema.Resource {
 			},
 
 			"kinesis_configuration": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				ForceNew: true,
 				Required: true,
-				MaxItems: 1,
+
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"aggregation_enabled": {
-							Type:         schema.TypeBool,
-							Required:     false,
-							ForceNew:     true,
-							ValidateFunc: validateArn,
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							Default:  true,
 						},
 
-						"role_arn": {
+						"stream_arn": {
 							Type:         schema.TypeString,
-							Required:     false,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validateArn,
 						},
@@ -87,6 +88,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+				Optional:     false,
 			},
 
 			"stream_name": {
@@ -118,14 +120,36 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Create the QLDB Ledger
-	// The qldb.PermissionsModeAllowAll is currently hardcoded because AWS doesn't support changing the mode.
 	createOpts := &qldb.StreamJournalToKinesisInput{
-		ExclusiveEndTime:     d.Get("exclusive_end_time").(*time.Time),
-		InclusiveStartTime:   d.Get("inclusive_start_time").(*time.Time),
 		KinesisConfiguration: d.Get("kinesis_configuration").(*(qldb.KinesisConfiguration)),
 		RoleArn:              aws.String(d.Get("role_arn").(string)),
 		StreamName:           aws.String(d.Get("stream_name").(string)),
 		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
+	}
+
+	if v, ok := d.GetOk("exclusive_end_time"); ok {
+		exclusiveEndTimeValue, _ := time.Parse("2006-01-02T15:04:05-0700", v.(string))
+		createOpts.ExclusiveEndTime = &exclusiveEndTimeValue
+	}
+
+	if v, ok := d.GetOk("inclusive_start_time"); ok {
+		inclusiveStartTimeValue, _ := time.Parse("2006-01-02T15:04:05-0700", v.(string))
+		createOpts.InclusiveStartTime = &inclusiveStartTimeValue
+	}
+
+	if v, ok := d.GetOk("kinesis_configuration"); ok {
+		createOpts.KinesisConfiguration = &qldb.KinesisConfiguration{}
+
+		values := v.(map[string]interface{})
+		if value, ok := values["aggregation_enabled"]; ok {
+			aggregationEnabled := value.(bool)
+			createOpts.KinesisConfiguration.AggregationEnabled = &aggregationEnabled
+		}
+
+		if value, ok := values["stream_arn"]; ok {
+			streamArn := value.(string)
+			createOpts.KinesisConfiguration.StreamArn = &streamArn
+		}
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
