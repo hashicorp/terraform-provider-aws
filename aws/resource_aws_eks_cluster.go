@@ -388,6 +388,31 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
+	if d.HasChange("encryption_config") {
+		input := &eks.AssociateEncryptionConfigInput{
+			ClusterName:      aws.String(d.Id()),
+			EncryptionConfig: expandEksEncryptionConfig(d.Get("encryption_config").([]interface{})),
+		}
+
+		log.Printf("[DEBUG] Updating EKS Cluster (%s) version: %s", d.Id(), input)
+		output, err := conn.AssociateEncryptionConfig(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EKS Cluster (%s) version: %s", d.Id(), err)
+		}
+
+		if output == nil || output.Update == nil || output.Update.Id == nil {
+			return fmt.Errorf("error determining EKS Cluster (%s) version update ID: empty response", d.Id())
+		}
+
+		updateID := aws.StringValue(output.Update.Id)
+
+		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
 	if d.HasChange("version") {
 		input := &eks.UpdateClusterVersionInput{
 			Name:    aws.String(d.Id()),
