@@ -79,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
@@ -2608,6 +2609,33 @@ func (tags KeyValueTags) SfnTags() []*sfn.Tag {
 
 // SfnKeyValueTags creates KeyValueTags from sfn service tags.
 func SfnKeyValueTags(tags []*sfn.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// ShieldTags returns shield service tags.
+func (tags KeyValueTags) ShieldTags() []*shield.Tag {
+	result := make([]*shield.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &shield.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ShieldKeyValueTags creates KeyValueTags from shield service tags.
+func ShieldKeyValueTags(tags []*shield.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
