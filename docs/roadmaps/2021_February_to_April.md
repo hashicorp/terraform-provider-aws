@@ -49,6 +49,7 @@ New Resource(s):
 - aws_synthetics_canary
 
 New Datasource(s):
+
 - aws_synthetics_canary_runs
 
 ### Managed Workflows for Apache Airflow
