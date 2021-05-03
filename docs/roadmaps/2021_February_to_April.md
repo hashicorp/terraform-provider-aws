@@ -45,6 +45,7 @@ _[CloudWatch Synthetics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/mon
 Support for CloudWatch Synthetics will include:
 
 New Resource(s):
+
 - aws_synthetics_canary
 
 New Datasource(s):
