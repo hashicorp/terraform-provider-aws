@@ -75,6 +75,32 @@ func TestAccAWSShieldProtection_ElasticIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSShieldProtection_disappears(t *testing.T) {
+	resourceName := "aws_shield_protection.acctest"
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(shield.EndpointsID, t)
+			testAccPreCheckAWSShield(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, shield.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSShieldProtectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSShieldProtectionExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsShieldProtection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSShieldProtection_Alb(t *testing.T) {
 	resourceName := "aws_shield_protection.acctest"
 	rName := acctest.RandString(10)
