@@ -95,6 +95,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -1667,6 +1668,23 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 	}
 
 	return SfnKeyValueTags(output.Tags), nil
+}
+
+// ShieldListTags lists shield service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ShieldListTags(conn *shield.Shield, identifier string) (KeyValueTags, error) {
+	input := &shield.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ShieldKeyValueTags(output.Tags), nil
 }
 
 // SignerListTags lists signer service tags.
