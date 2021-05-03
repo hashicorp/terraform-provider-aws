@@ -1313,7 +1313,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err := d.Set("file_system_locations", flattenAwsCodeBuildProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
-		return fmt.Errorf("error setting file_system_locations: %s", err)
+		return fmt.Errorf("error setting file_system_locations: %w", err)
 	}
 
 	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
@@ -1434,6 +1434,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		psv := d.Get("secondary_source_version")
 
 		if psv.(*schema.Set).Len() > 0 {
+			log.Printf("%#v", psv)
 			params.SecondarySourceVersions = expandProjectSecondarySourceVersions(psv.(*schema.Set))
 		} else {
 			params.SecondarySourceVersions = []*codebuild.ProjectSourceVersion{}
