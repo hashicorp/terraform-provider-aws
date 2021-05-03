@@ -15,7 +15,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ### Basic
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_integration" "example" {
   api_id           = aws_apigatewayv2_api.example.id
   integration_type = "MOCK"
@@ -24,7 +24,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ### Lambda Integration
 
-```hcl
+```terraform
 resource "aws_lambda_function" "example" {
   filename      = "example.zip"
   function_name = "Example"
@@ -48,7 +48,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ### AWS Service Integration
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_integration" "example" {
   api_id              = aws_apigatewayv2_api.example.id
   credentials_arn     = aws_iam_role.example.arn
@@ -65,7 +65,7 @@ resource "aws_apigatewayv2_integration" "example" {
 
 ### Private Integration
 
-```hcl
+```terraform
 resource "aws_apigatewayv2_integration" "example" {
   api_id           = aws_apigatewayv2_api.example.id
   credentials_arn  = aws_iam_role.example.arn
@@ -73,11 +73,31 @@ resource "aws_apigatewayv2_integration" "example" {
   integration_type = "HTTP_PROXY"
   integration_uri  = aws_lb_listener.example.arn
 
-  connection_type = "VPC_LINK"
-  connection_id   = aws_apigatewayv2_vpc_link.example.id
+  integration_method = "ANY"
+  connection_type    = "VPC_LINK"
+  connection_id      = aws_apigatewayv2_vpc_link.example.id
 
   tls_config {
     server_name_to_verify = "example.com"
+  }
+
+  request_parameters = {
+    "append:header.authforintegration" = "$context.authorizer.authorizerResponse"
+    "overwrite:path"                   = "staticValueForIntegration"
+  }
+
+  response_parameters {
+    status_code = 403
+    mappings = {
+      "append:header.auth" = "$context.authorizer.authorizerResponse"
+    }
+  }
+
+  response_parameters {
+    status_code = 200
+    mappings = {
+      "overwrite:statuscode" = "204"
+    }
   }
 }
 ```

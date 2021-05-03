@@ -8,27 +8,38 @@ description: |-
 
 # Resource: aws_elasticache_global_replication_group
 
-Provides an ElastiCache Global Replication Group resource, which manage a replication between 2 or more redis replication group in different regions. For more information, see the [ElastiCache User Guide](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Redis-Global-Datastore.html).
+Provides an ElastiCache Global Replication Group resource, which manages replication between two or more Replication Groups in different regions. For more information, see the [ElastiCache User Guide](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Redis-Global-Datastore.html).
 
 ## Example Usage
 
-### Global replication group with a single instance redis replication group
+### Global replication group with one secondary replication group
 
-To create a single shard primary with single read replica:
+The global replication group depends on the primary group existing. Secondary replication groups depend on the global replication group. Terraform dependency management will handle this transparently using resource value references.
 
-```hcl
-resource "aws_elasticache_global_replication_group" "replication_group" {
+```terraform
+resource "aws_elasticache_global_replication_group" "example" {
   global_replication_group_id_suffix = "example"
   primary_replication_group_id       = aws_elasticache_replication_group.primary.id
 }
 
 resource "aws_elasticache_replication_group" "primary" {
-  replication_group_id          = "example"
-  replication_group_description = "test example"
+  replication_group_id          = "example-primary"
+  replication_group_description = "primary replication group"
 
-  engine                = "redis"
-  engine_version        = "5.0.6"
-  node_type             = "cache.m5.large"
+  engine         = "redis"
+  engine_version = "5.0.6"
+  node_type      = "cache.m5.large"
+
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = aws.other_region
+
+  replication_group_id          = "example-secondary"
+  replication_group_description = "secondary replication group"
+  global_replication_group_id   = aws_elasticache_global_replication_group.example.global_replication_group_id
+
   number_cache_clusters = 1
 }
 ```
@@ -47,7 +58,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the ElastiCache Global Replication Group.
 * `arn` - The ARN of the ElastiCache Global Replication Group.
-* `actual_engine_version` - The full version number of the cache engine running on the members of this global replication group.
+* `actual_engine_version` - (**DEPRECATED** use `engine_version_actual` instead) The full version number of the cache engine running on the members of this global replication group.
+* `engine_version_actual` - The full version number of the cache engine running on the members of this global replication group.
 * `at_rest_encryption_enabled` - A flag that indicate whether the encryption at rest is enabled.
 * `auth_token_enabled` - A flag that indicate whether AuthToken (password) is enabled.
 * `cache_node_type` - The instance class used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).

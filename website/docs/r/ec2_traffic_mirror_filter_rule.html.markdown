@@ -15,7 +15,7 @@ Read [limits and considerations](https://docs.aws.amazon.com/vpc/latest/mirrorin
 
 To create a basic traffic mirror session
 
-```hcl
+```terraform
 resource "aws_ec2_traffic_mirror_filter" "filter" {
   description      = "traffic mirror filter - terraform example"
   network_services = ["amazon-dns"]

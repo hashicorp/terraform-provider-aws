@@ -18,7 +18,7 @@ Provides an IAM role.
 
 ### Basic Example
 
-```hcl
+```terraform
 resource "aws_iam_role" "test_role" {
   name = "test_role"
 
@@ -46,7 +46,7 @@ resource "aws_iam_role" "test_role" {
 
 ### Example of Using Data Source for Assume Role Policy
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "instance-assume-role-policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -69,7 +69,7 @@ resource "aws_iam_role" "instance" {
 
 This example creates an IAM role with two inline IAM policies. If someone adds another inline policy out-of-band, on the next apply, Terraform will remove that policy. If someone deletes these policies out-of-band, Terraform will recreate them.
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name               = "yak_role"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
@@ -108,7 +108,7 @@ data "aws_iam_policy_document" "inline_policy" {
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name               = "yak_role"
   assume_role_policy = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
@@ -121,7 +121,7 @@ resource "aws_iam_role" "example" {
 
 This example creates an IAM role and attaches two managed IAM policies. If someone attaches another managed policy out-of-band, on the next apply, Terraform will detach that policy. If someone detaches these policies out-of-band, Terraform will attach them again.
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name                = "yak_role"
   assume_role_policy  = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
@@ -163,7 +163,7 @@ resource "aws_iam_policy" "policy_two" {
 
 This example creates an IAM role with an empty `managed_policy_arns` argument. If someone attaches a policy out-of-band, on the next apply, Terraform will detach that policy.
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name                = "yak_role"
   assume_role_policy  = data.aws_iam_policy_document.instance_assume_role_policy.json # (not shown)
@@ -190,7 +190,7 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissions_boundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
@@ -201,12 +201,13 @@ This configuration block supports the following:
 
 ## Attributes Reference
 
-In addition to the arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) specifying the role.
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
 
 ## Import

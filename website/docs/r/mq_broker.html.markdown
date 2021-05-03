@@ -21,7 +21,9 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ## Example Usage
 
-```hcl
+### Basic Example
+
+```terraform
 resource "aws_mq_broker" "example" {
   broker_name = "example"
 
@@ -31,8 +33,34 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.0"
+  engine_version     = "5.15.9"
   host_instance_type = "mq.t2.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  user {
+    username = "ExampleUser"
+    password = "MindTheGap"
+  }
+}
+```
+
+### High-throughput Optimized Example
+
+This example shows the use of EBS storage for high-throughput optimized performance.
+
+```terraform
+resource "aws_mq_broker" "example" {
+  broker_name = "example"
+
+  configuration {
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
+  }
+
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.9"
+  storage_type       = "ebs"
+  host_instance_type = "mq.m5.large"
   security_groups    = [aws_security_group.test.id]
 
   user {
@@ -49,7 +77,7 @@ The following arguments are required:
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
-* `host_instance_type` - (Required) Broker's instance type. For example, `mq.t2.micro`, `mq.m4.large`.
+* `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
 The following arguments are optional:
@@ -60,14 +88,14 @@ The following arguments are optional:
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` only. Detailed below.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
-* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below.
+* `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
 * `logs` - (Optional) Configuration block for the logging configuration of the broker. Detailed below.
 * `maintenance_window_start_time` - (Optional) Configuration block for the maintenance window start time. Detailed below.
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
-* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`. For `engine_type` `RabbitMQ`, only `EBS` is supported.
+* `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
-* `tags` - (Optional) Map of tags to assign to the broker.
+* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration
 
@@ -143,6 +171,7 @@ In addition to all arguments above, the following attributes are exported:
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

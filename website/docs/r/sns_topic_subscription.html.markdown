@@ -24,7 +24,7 @@ Provides a resource for subscribing to SNS topics. Requires that an SNS topic ex
 
 You can directly supply a topic and ARN by hand in the `topic_arn` property along with the queue ARN:
 
-```hcl
+```terraform
 resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
   topic_arn = "arn:aws:sns:us-west-2:432981146916:user-updates-topic"
   protocol  = "sqs"
@@ -34,7 +34,7 @@ resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
 
 Alternatively you can use the ARN properties of a managed SNS topic and SQS queue:
 
-```hcl
+```terraform
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
@@ -52,7 +52,7 @@ resource "aws_sns_topic_subscription" "user_updates_sqs_target" {
 
 You can subscribe SNS topics to SQS queues in different Amazon accounts and regions:
 
-```hcl
+```terraform
 variable "sns" {
   default = {
     account-id   = "111111111111"
@@ -236,7 +236,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `confirmation_timeout_in_minutes` - (Optional) Integer indicating number of minutes to wait in retying mode for fetching subscription arn before marking it as failure. Only applicable for http and https protocols. Default is `1`.
+* `confirmation_timeout_in_minutes` - (Optional) Integer indicating number of minutes to wait in retrying mode for fetching subscription arn before marking it as failure. Only applicable for http and https protocols. Default is `1`.
 * `delivery_policy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
 * `endpoint_auto_confirms` - (Optional) Whether the endpoint is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) (e.g., PagerDuty). Default is `false`.
 * `filter_policy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
