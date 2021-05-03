@@ -1,8 +1,10 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,26 +53,11 @@ func resourceAwsQLDBStream() *schema.Resource {
 			},
 
 			"kinesis_configuration": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeMap,
 				ForceNew: true,
 				Required: true,
-
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aggregation_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  true,
-						},
-
-						"stream_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validateArn,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 
@@ -108,23 +95,12 @@ func resourceAwsQLDBStream() *schema.Resource {
 func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else {
-		name = resource.PrefixedUniqueId("tf")
-	}
-
-	if err := d.Set("ledger_name", name); err != nil {
-		return fmt.Errorf("error setting name: %s", err)
-	}
-
 	// Create the QLDB Ledger
 	createOpts := &qldb.StreamJournalToKinesisInput{
-		KinesisConfiguration: d.Get("kinesis_configuration").(*(qldb.KinesisConfiguration)),
-		RoleArn:              aws.String(d.Get("role_arn").(string)),
-		StreamName:           aws.String(d.Get("stream_name").(string)),
-		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
+		LedgerName: aws.String(d.Get("ledger_name").(string)),
+		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		StreamName: aws.String(d.Get("stream_name").(string)),
+		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
 	}
 
 	if v, ok := d.GetOk("exclusive_end_time"); ok {
@@ -133,16 +109,23 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("inclusive_start_time"); ok {
+		log.Printf("DEBUG - inclusive_start_time_value: %#v", v)
 		inclusiveStartTimeValue, _ := time.Parse("2006-01-02T15:04:05-0700", v.(string))
 		createOpts.InclusiveStartTime = &inclusiveStartTimeValue
+	} else if !ok {
+		return errors.New("Missing 'inclusive_start_time'")
 	}
 
 	if v, ok := d.GetOk("kinesis_configuration"); ok {
 		createOpts.KinesisConfiguration = &qldb.KinesisConfiguration{}
 
 		values := v.(map[string]interface{})
+		// values := v.(*schema.TypeMap)
 		if value, ok := values["aggregation_enabled"]; ok {
-			aggregationEnabled := value.(bool)
+			aggregationEnabled, err := strconv.ParseBool(value.(string))
+			if err != nil {
+				return errors.New("Error parsing kinesis_configuration.aggregation_enabled")
+			}
 			createOpts.KinesisConfiguration.AggregationEnabled = &aggregationEnabled
 		}
 
@@ -150,6 +133,8 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 			streamArn := value.(string)
 			createOpts.KinesisConfiguration.StreamArn = &streamArn
 		}
+	} else if !ok {
+		return errors.New("Missing 'kinesis_configuration'")
 	}
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
@@ -160,6 +145,7 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Set QLDB ledger name  TODO: Confirm what this should be...  d.Set("???", aws.StringValue(qldbResp.StreamId)) ???
 	d.SetId(aws.StringValue(qldbResp.StreamId))
+	d.Set("stream_id", aws.StringValue(qldbResp.StreamId))
 
 	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
 
@@ -184,11 +170,22 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
+	var ledgerName, streamId string
+	if ledgerNameValue, ok := d.GetOk("ledger_name"); ok {
+		ledgerName = ledgerNameValue.(string)
+	}
+
+	if streamIdValue, ok := d.GetOk("stream_id"); ok {
+		streamId = streamIdValue.(string)
+	}
+
 	// Refresh the QLDB Stream state
 	input := &qldb.DescribeJournalKinesisStreamInput{
-		LedgerName: aws.String(d.Get("ledger_name").(string)),
-		StreamId:   aws.String(d.Get("stream_id").(string)),
+		LedgerName: aws.String(ledgerName),
+		StreamId:   aws.String(streamId),
 	}
+
+	log.Printf("DEBUG - DescribeJournalKinesisStreamInput: %#v", input)
 
 	qldbStream, err := conn.DescribeJournalKinesisStream(input)
 
