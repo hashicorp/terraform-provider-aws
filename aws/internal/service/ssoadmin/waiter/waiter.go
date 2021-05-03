@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	AWSSSOAdminAccountAssignmentCreateTimeout      = 5 * time.Minute
-	AWSSSOAdminAccountAssignmentDeleteTimeout      = 5 * time.Minute
-	AWSSSOAdminAccountAssignmentDelay              = 5 * time.Second
-	AWSSSOAdminAccountAssignmentMinTimeout         = 3 * time.Second
-	AWSSSOAdminPermissionSetProvisioningRetryDelay = 5 * time.Second
-	AWSSSOAdminPermissionSetProvisionTimeout       = 10 * time.Minute
+	AWSSSOAdminAccountAssignmentCreateTimeout            = 5 * time.Minute
+	AWSSSOAdminAccountAssignmentDeleteTimeout            = 5 * time.Minute
+	AWSSSOAdminAccountAssignmentDelay                    = 5 * time.Second
+	AWSSSOAdminAccountAssignmentMinTimeout               = 3 * time.Second
+	AWSSSOAdminPermissionSetProvisioningRetryDelay       = 5 * time.Second
+	AWSSSOAdminPermissionSetProvisionTimeout             = 10 * time.Minute
+	AWSSSOAdminManagedPolicyAttachmentPropagationTimeout = 2 * time.Minute
 )
 
 func AccountAssignmentCreated(conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {

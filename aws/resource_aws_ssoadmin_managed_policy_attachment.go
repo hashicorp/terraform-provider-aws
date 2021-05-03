@@ -8,8 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/waiter"
 )
 
 func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
@@ -63,7 +65,19 @@ func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, me
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	_, err := conn.AttachManagedPolicyToPermissionSet(input)
+	err := resource.Retry(waiter.AWSSSOAdminManagedPolicyAttachmentPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.AttachManagedPolicyToPermissionSet(input)
+		if tfawserr.ErrMessageContains(err, ssoadmin.ErrCodeConflictException, "There is a conflicting operation in process") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf("error attaching Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
@@ -126,7 +140,18 @@ func resourceAwsSsoAdminManagedPolicyAttachmentDelete(d *schema.ResourceData, me
 		ManagedPolicyArn: aws.String(managedPolicyArn),
 	}
 
-	_, err = conn.DetachManagedPolicyFromPermissionSet(input)
+	err = resource.Retry(waiter.AWSSSOAdminManagedPolicyAttachmentPropagationTimeout, func() *resource.RetryError {
+		_, err = conn.DetachManagedPolicyFromPermissionSet(input)
+		if tfawserr.ErrMessageContains(err, ssoadmin.ErrCodeConflictException, "There is a conflicting operation in process") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
