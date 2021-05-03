@@ -33,7 +33,7 @@ From February-April ‘21, we will be prioritizing the following areas of work:
 
 Issue: [#7926](https://github.com/hashicorp/terraform-provider-aws/issues/7926)
 
-Default Tags builds on the workflows in Ignore Tags to provide additional control over the ways Terraform manages tagging capabilities. Users will be able to specify lists of tags to apply to all resources in a configuration at the provider level. Our goal in offering this use case is to assist in tidying up configuration files, decreasing development efforts, and streamlining cost allocation and resource attribution within organizations of all sizes. 
+Default Tags builds on the workflows in Ignore Tags to provide additional control over the ways Terraform manages tagging capabilities. Users will be able to specify lists of tags to apply to all resources in a configuration at the provider level. Our goal in offering this use case is to assist in tidying up configuration files, decreasing development efforts, and streamlining cost allocation and resource attribution within organizations of all sizes.
 
 ## New Services
 
