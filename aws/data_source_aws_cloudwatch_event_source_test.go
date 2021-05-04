@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAwsCloudWatchEventSource(t *testing.T) {
+func TestAccDataSourceAwsCloudWatchEventSource_basic(t *testing.T) {
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {
