@@ -432,7 +432,8 @@ func resourceMacie2ClassificationJobRead(ctx context.Context, d *schema.Resource
 	resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
 		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -517,7 +518,8 @@ func resourceMacie2ClassificationJobDelete(ctx context.Context, d *schema.Resour
 	_, err := conn.UpdateClassificationJobWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie ClassificationJob (%s): %w", d.Id(), err))
