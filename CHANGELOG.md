@@ -1,5 +1,9 @@
 ## 3.39.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_cloudwatch_event_source` ([#19219](https://github.com/hashicorp/terraform-provider-aws/issues/19219))
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_bus: Support partner event bus creation ([#19072](https://github.com/hashicorp/terraform-provider-aws/issues/19072))
