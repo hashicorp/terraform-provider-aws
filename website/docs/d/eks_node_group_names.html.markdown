@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_eks_node_group_names
 
-Retrieve information about an EKS Node Group names.
+Retrieve the names of the EKS Node Group associated with a named EKS cluster. This will allow you to pass a list of Node Group names to other resources.
 
 ## Example Usage
 
