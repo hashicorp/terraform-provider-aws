@@ -99,6 +99,28 @@ func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAwsMacie2ClassificationJob_disappears(t *testing.T) {
+	var macie2Output macie2.DescribeClassificationJobOutput
+	resourceName := "aws_macie2_classification_job.test"
+	bucketName := "test-bucket-name-aws"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2ClassificationJobDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieClassificationJobconfigNameGenerated(bucketName, macie2.JobTypeOneTime),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2ClassificationJobExists(resourceName, &macie2Output),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2ClassificationJob(), resourceName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsMacie2ClassificationJob_Status(t *testing.T) {
 	var macie2Output, macie2Output2 macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
@@ -262,7 +284,8 @@ func testAccCheckAwsMacie2ClassificationJobDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeClassificationJob(input)
 
-		if tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		if tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
 			continue
 		}
 
