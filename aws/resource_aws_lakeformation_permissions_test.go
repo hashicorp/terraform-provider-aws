@@ -846,10 +846,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+	
     columns {
       name = "value"
       type = "double"
@@ -917,10 +919,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+
     columns {
       name = "value"
       type = "double"
@@ -990,10 +994,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+
     columns {
       name = "value"
       type = "double"
@@ -1062,10 +1068,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+
     columns {
       name = "value"
       type = "double"
@@ -1134,10 +1142,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+
     columns {
       name = "value"
       type = "double"
@@ -1206,10 +1216,12 @@ resource "aws_glue_catalog_table" "test" {
       name = "event"
       type = "string"
     }
+
     columns {
       name = "timestamp"
       type = "date"
     }
+
     columns {
       name = "value"
       type = "double"
@@ -1227,7 +1239,7 @@ resource "aws_lakeformation_permissions" "test" {
 
   table_with_columns {
     database_name = aws_glue_catalog_table.test.database_name
-	name          = aws_glue_catalog_table.test.name
+    name          = aws_glue_catalog_table.test.name
     wildcard      = true
   }
 
