@@ -43,18 +43,21 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"daily_schedule": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ConflictsWith: []string{"schedule_frequency.0.weekly_schedule", "schedule_frequency.0.monthly_schedule"},
 						},
 						"weekly_schedule": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.monthly_schedule"},
 						},
 						"monthly_schedule": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Computed:      true,
+							ConflictsWith: []string{"schedule_frequency.0.daily_schedule", "schedule_frequency.0.weekly_schedule"},
 						},
 					},
 				},
@@ -71,6 +74,7 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(0, 500),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -78,12 +82,14 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(0, 500),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"initial_run": {
 				Type:     schema.TypeBool,
@@ -335,7 +341,7 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Computed: true,
 			},
 			"user_paused_details": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
