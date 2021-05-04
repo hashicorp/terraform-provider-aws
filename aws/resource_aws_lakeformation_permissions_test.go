@@ -851,7 +851,7 @@ resource "aws_glue_catalog_table" "test" {
       name = "timestamp"
       type = "date"
     }
-	
+
     columns {
       name = "value"
       type = "double"
