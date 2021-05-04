@@ -335,6 +335,16 @@ func LambdaKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// Macie2Tags returns macie2 service tags.
+func (tags KeyValueTags) Macie2Tags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// Macie2KeyValueTags creates KeyValueTags from macie2 service tags.
+func Macie2KeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // MediaconnectTags returns mediaconnect service tags.
 func (tags KeyValueTags) MediaconnectTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -2940,14 +2950,4 @@ func XrayKeyValueTags(tags []*xray.Tag) KeyValueTags {
 	}
 
 	return New(m)
-}
-
-// Macie2Tags returns macie service tags.
-func (tags KeyValueTags) Macie2Tags() map[string]*string {
-	return aws.StringMap(tags.Map())
-}
-
-// Macie2TagsKeyValueTags creates KeyValueTags from macie2 service tags.
-func Macie2KeyValueTags(tags map[string]*string) KeyValueTags {
-	return New(tags)
 }

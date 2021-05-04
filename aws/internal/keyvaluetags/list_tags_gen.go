@@ -73,7 +73,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
@@ -1926,21 +1925,4 @@ func XrayListTags(conn *xray.XRay, identifier string) (KeyValueTags, error) {
 	}
 
 	return XrayKeyValueTags(output.Tags), nil
-}
-
-// Macie2ListTags lists macie2 service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func Macie2ListTags(conn *macie2.Macie2, identifier string) (KeyValueTags, error) {
-	input := &macie2.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(input)
-
-	if err != nil {
-		return New(nil), err
-	}
-
-	return Macie2KeyValueTags(output.Tags), nil
 }
