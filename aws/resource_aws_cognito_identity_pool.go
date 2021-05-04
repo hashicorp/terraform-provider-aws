@@ -72,6 +72,12 @@ func resourceAwsCognitoIdentityPool() *schema.Resource {
 				Default:  false,
 			},
 
+			"allow_classic_flow": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"openid_connect_provider_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -116,6 +122,7 @@ func resourceAwsCognitoIdentityPoolCreate(d *schema.ResourceData, meta interface
 	params := &cognitoidentity.CreateIdentityPoolInput{
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 		AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
+		AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
 	}
 
 	if v, ok := d.GetOk("developer_provider_name"); ok {
@@ -180,6 +187,7 @@ func resourceAwsCognitoIdentityPoolRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", arn.String())
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
+	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
 	tags := keyvaluetags.CognitoidentityKeyValueTags(ip.IdentityPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -218,6 +226,7 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 	params := &cognitoidentity.IdentityPool{
 		IdentityPoolId:                 aws.String(d.Id()),
 		AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
+		AllowClassicFlow:               aws.Bool(d.Get("allow_classic_flow").(bool)),
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 	}
 
