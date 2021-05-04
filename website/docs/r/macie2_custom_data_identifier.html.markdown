@@ -44,7 +44,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique identifier (ID) of the macie2 custom data identifier.
+* `id` - The unique identifier (ID) of the macie custom data identifier.
 * `deleted` - Specifies whether the custom data identifier was deleted. If you delete a custom data identifier, Amazon Macie doesn't delete it permanently. Instead, it soft deletes the identifier.
 * `created_at` - The date and time, in UTC and extended RFC 3339 format, when the Amazon Macie account was created.
 * `arn` - The Amazon Resource Name (ARN) of the custom data identifier.

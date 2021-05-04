@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +11,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
+
+func TestAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
+	var macie2Output macie2.GetCustomDataIdentifierOutput
+	resourceName := "aws_macie2_custom_data_identifier.test"
+	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2CustomDataIdentifierDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "regex", regex),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
@@ -98,8 +127,9 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-	bucketName := "mdbatlas-test" //os.Getenv("AWS_S3_BUCKET_NAME")
-	accountID := "520983883852"   //os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := "test-bucket-name-aws"
+	description := "this is a description"
+	descriptionUpdated := "this is a updated description"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -108,11 +138,21 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(regex, accountID, bucketName),
+				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+				),
+			},
+			{
+				Config: testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 				),
 			},
 			{
@@ -128,8 +168,7 @@ func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-	bucketName := os.Getenv("AWS_S3_BUCKET_NAME")
-	accountID := os.Getenv("AWS_ACCOUNT_ID")
+	bucketName := "test-bucket-name-aws"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -138,11 +177,16 @@ func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(regex, accountID, bucketName),
+				Config: testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "value3"),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 				),
 			},
 			{
@@ -191,7 +235,8 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 		input := &macie2.GetCustomDataIdentifierInput{Id: aws.String(rs.Primary.ID)}
 		resp, err := conn.GetCustomDataIdentifier(input)
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			continue
 		}
 
@@ -232,13 +277,19 @@ func testAccAwsMacieCustomDataIdentifierconfigNamePrefix(name, regex string) str
 `, name, regex)
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigComplete(regex, s3AccountID, s3Bucket string) string {
+func testAccAwsMacieCustomDataIdentifierconfigComplete(bucketName, regex, description string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_macie2_account" "test" {}
 
+resource "aws_s3_bucket" "test" {
+  bucket = %q
+}
+
 resource "aws_macie2_custom_data_identifier" "test" {
-  regex                  = "%[1]s"
-  description            = "this a description"
+  regex                  = %q
+  description            = %q
   maximum_match_distance = 10
   keywords               = ["test"]
   ignore_words           = ["not testing"]
@@ -251,8 +302,8 @@ resource "aws_macie2_classification_job" "test" {
   job_type                   = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = "%[2]s"
-      buckets    = ["%[3]s"]
+      account_id = data.aws_caller_identity.current.account_id
+      buckets    = [aws_s3_bucket.test.bucket]
     }
   }
   schedule_frequency {
@@ -262,21 +313,29 @@ resource "aws_macie2_classification_job" "test" {
   description         = "test"
   initial_run         = true
 }
-`, regex, s3AccountID, s3Bucket)
+`, bucketName, regex, description)
 }
 
-func testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(regex, s3AccountID, s3Bucket string) string {
+func testAccAwsMacieCustomDataIdentifierconfigCompleteWithTags(bucketName, regex string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_macie2_account" "test" {}
 
+resource "aws_s3_bucket" "test" {
+  bucket = %q
+}
+
 resource "aws_macie2_custom_data_identifier" "test" {
-  regex                  = "%[1]s"
+  regex                  = %q
   description            = "this a description"
   maximum_match_distance = 10
   keywords               = ["test"]
   ignore_words           = ["not testing"]
   tags = {
     Key = "value"
+    Key2 = "value2"
+    Key3 = "value3"
   }
 
   depends_on = [aws_macie2_account.test]
@@ -287,8 +346,8 @@ resource "aws_macie2_classification_job" "test" {
   job_type                   = "SCHEDULED"
   s3_job_definition {
     bucket_definitions {
-      account_id = "%[2]s"
-      buckets    = ["%[3]s"]
+      account_id = data.aws_caller_identity.current.account_id
+      buckets    = [aws_s3_bucket.test.bucket]
     }
   }
   schedule_frequency {
@@ -298,5 +357,5 @@ resource "aws_macie2_classification_job" "test" {
   description         = "test"
   initial_run         = true
 }
-`, regex, s3AccountID, s3Bucket)
+`, bucketName, regex)
 }
