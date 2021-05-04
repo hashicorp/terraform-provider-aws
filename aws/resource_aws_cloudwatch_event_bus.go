@@ -34,7 +34,6 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 			},
 			"event_source_name": {
 				Type:         schema.TypeString,
-				Required:     false,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateCloudWatchEventCustomEventBusEventSourceName,
@@ -107,10 +106,6 @@ func resourceAwsCloudWatchEventBusRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("arn", output.Arn)
 	d.Set("name", output.Name)
-	// EventSourceName is an input field only, faking it on output if the event bus is a partner bus
-	if output.Name != nil && partnerEventBusPattern.MatchString(*output.Name) {
-		d.Set("event_source_name", output.Name)
-	}
 
 	tags, err := keyvaluetags.CloudwatcheventsListTags(conn, aws.StringValue(output.Arn))
 	if err != nil {
