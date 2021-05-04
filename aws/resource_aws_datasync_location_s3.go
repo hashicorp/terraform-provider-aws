@@ -91,10 +91,10 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationS3Input{
-		S3BucketArn:    aws.String(d.Get("s3_bucket_arn").(string)),
-		S3Config:       expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
-		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           tags.IgnoreAws().DatasyncTags(),
+		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
+		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
+		Subdirectory: aws.String(d.Get("subdirectory").(string)),
+		Tags:         tags.IgnoreAws().DatasyncTags(),
 	}
 
 	if v, ok := d.GetOk("s3_storage_class"); ok {
