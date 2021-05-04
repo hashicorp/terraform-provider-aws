@@ -3,16 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-)
-
-var (
-	partnerEventBusPattern = regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
 )
 
 func resourceAwsCloudWatchEventBus() *schema.Resource {
