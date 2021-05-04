@@ -22,7 +22,7 @@ func TestAccDataSourceAwsCloudWatchEventSource(t *testing.T) {
 	if len(parts) < 2 {
 		t.Errorf("unable to parse partner event bus name %s", busName)
 	}
-	namePrefix := parts[0] + "/" + parts[1]
+	createdBy := parts[0] + "/" + parts[1]
 
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
@@ -32,10 +32,10 @@ func TestAccDataSourceAwsCloudWatchEventSource(t *testing.T) {
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataSourcePartnerEventSourceConfig(namePrefix),
+				Config: testAccAwsDataSourcePartnerEventSourceConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", busName),
-					resource.TestCheckResourceAttr(dataSourceName, "created_by", namePrefix),
+					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
 					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 				),
 			},
