@@ -230,27 +230,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err = conn.CreateRoute(input)
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateRoute(input)
-	}
+	err = createRoute(conn, input, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return fmt.Errorf("error creating Route for Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
@@ -522,4 +502,33 @@ func routeTargetAttribute(d *schema.ResourceData) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("route target attribute not specified")
+}
+
+// createRoute attempts to create a route.
+// The specified eventual consistency timeout is respected.
+// Any error is returned.
+func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Duration) error {
+	err := resource.Retry(timeout, func() *resource.RetryError {
+		_, err := conn.CreateRoute(input)
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidParameterException) {
+			return resource.RetryableError(err)
+		}
+
+		if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidTransitGatewayIDNotFound) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateRoute(input)
+	}
+
+	return nil
 }
