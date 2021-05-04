@@ -24,12 +24,13 @@ data "aws_cloudwatch_event_source" "examplepartner" {
 
 The following arguments are supported:
 
-* `name_prefix` - (Optional) A name prefix to filter results returned. Only API destinations with a name that starts with the prefix are returned
+* `name_prefix` - (Optional) Specifying this limits the results to only those partner event sources with names that start with the specified prefix
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the Partner event source
-* `created_by` - The name of the SaaS partner that created the event source.
+* `arn` - The ARN of the partner event source
+* `created_by` - The name of the SaaS partner that created the event source
+* `name` - The name of the event source
 * `state` - The state of the event source (`ACTIVE` or `PENDING`)
