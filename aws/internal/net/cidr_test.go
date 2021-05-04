@@ -24,3 +24,20 @@ func Test_CIDRBlocksEqual(t *testing.T) {
 		}
 	}
 }
+
+func Test_CanonicalCIDRBlock(t *testing.T) {
+	for _, ts := range []struct {
+		cidr     string
+		expected string
+	}{
+		{"10.2.2.0/24", "10.2.2.0/24"},
+		{"::/0", "::/0"},
+		{"::0/0", "::/0"},
+		{"", ""},
+	} {
+		got := CanonicalCIDRBlock(ts.cidr)
+		if ts.expected != got {
+			t.Fatalf("CanonicalCIDRBlock(%q) should be: %q, got: %q", ts.cidr, ts.expected, got)
+		}
+	}
+}
