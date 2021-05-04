@@ -8,7 +8,7 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur .
 
-From [November through January](docs/roadmaps/2020_November_to_January.md), we added support for (among other things):
+From [November through January](2020_November_to_January.md), we added support for (among other things):
 
 - SSO Permission Sets
 - EC2 Managed Prefix Lists
