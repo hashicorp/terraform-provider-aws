@@ -12,7 +12,6 @@ import (
 )
 
 func TestAccDataSourceAwsCloudWatchEventSource(t *testing.T) {
-	//resourceName := "aws_cloudwatch_event_bus.test"
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
 	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
