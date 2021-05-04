@@ -3143,12 +3143,12 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   "aws.partner/test/test",
-			IsValid: false,
+			Value:   "aws.partner/example.com/test/12345ab-cdef-1235",
+			IsValid: true,
 		},
 		{
 			Value:   "/test0._1-",
-			IsValid: false,
+			IsValid: true,
 		},
 		{
 			Value:   "test0._1-",
@@ -3157,6 +3157,51 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 	}
 	for _, tc := range cases {
 		_, errors := validateCloudWatchEventCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
+		}
+	}
+}
+
+func TestCloudWatchEventCustomEventBusEventSourceName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   "default",
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(227, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(228, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/example.com/test/12345ab-cdef-1235",
+			IsValid: true,
+		},
+		{
+			Value:   "/test0._1-",
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: false,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventCustomEventBusEventSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)

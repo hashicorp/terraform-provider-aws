@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 
@@ -90,8 +91,9 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventBusConfig(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", busName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", busName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -104,9 +106,10 @@ func TestAccAWSCloudWatchEventBus_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventBusConfig(busNameModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventBusExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 					testAccCheckCloudWatchEventBusRecreated(&v1, &v2),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -218,6 +221,36 @@ func TestAccAWSCloudWatchEventBus_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventBus_PartnerEventSource(t *testing.T) {
+	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
+	busName := os.Getenv(key)
+	if busName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var busOutput events.DescribeEventBusOutput
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventBusDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventBusPartnerEventSourceConfig(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventBusExists(resourceName, &busOutput),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "name", busName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCloudWatchEventBusDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 
@@ -314,4 +347,13 @@ resource "aws_cloudwatch_event_bus" "test" {
   }
 }
 `, name, key1, value1, key2, value2)
+}
+
+func testAccAWSCloudWatchEventBusPartnerEventSourceConfig(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name              = %[1]q
+  event_source_name = %[1]q
+}
+`, name)
 }
