@@ -12,18 +12,20 @@ import (
 )
 
 func TestAccDataSourceAwsCloudWatchEventSource(t *testing.T) {
-	dataSourceName := "data.aws_cloudwatch_event_source.test"
-
-	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
+	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
+
 	parts := strings.Split(busName, "/")
 	if len(parts) < 2 {
 		t.Errorf("unable to parse partner event bus name %s", busName)
 	}
 	namePrefix := parts[0] + "/" + parts[1]
+
+	dataSourceName := "data.aws_cloudwatch_event_source.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { testAccPreCheck(t) },
 		ErrorCheck: testAccErrorCheck(t, cloudwatchevents.EndpointsID),
