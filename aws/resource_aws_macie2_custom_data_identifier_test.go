@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func TestAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -42,7 +42,7 @@ func TestAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -70,7 +70,7 @@ func TestAccAwsMacie2CustomDataIdentifier_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -94,7 +94,7 @@ func TestAccAwsMacie2CustomDataIdentifier_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -123,7 +123,7 @@ func TestAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -164,7 +164,7 @@ func TestAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
+func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
@@ -186,6 +186,10 @@ func TestAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "value3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "value3"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 				),
 			},
@@ -258,7 +262,7 @@ func testAccAwsMacieCustomDataIdentifierconfigNameGenerated(regex string) string
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_custom_data_identifier" "test" {
-  regex = "%s"
+  regex = %[1]q
 
   depends_on = [aws_macie2_account.test]
 }
@@ -266,14 +270,15 @@ resource "aws_macie2_custom_data_identifier" "test" {
 }
 
 func testAccAwsMacieCustomDataIdentifierconfigNamePrefix(name, regex string) string {
-	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_custom_data_identifier" "test" {
-		name_prefix = %[1]q
-		regex = "%s"
+resource "aws_macie2_custom_data_identifier" "test" {
+  name_prefix = %[1]q
+  regex =  %[2]q
 
-		depends_on = [aws_macie2_account.test]
-	}
+  depends_on = [aws_macie2_account.test]
+}
 `, name, regex)
 }
 
@@ -284,12 +289,12 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_macie2_custom_data_identifier" "test" {
-  regex                  = %q
-  description            = %q
+  regex                  = %[2]q
+  description            = %[3]q
   maximum_match_distance = 10
   keywords               = ["test"]
   ignore_words           = ["not testing"]
@@ -323,11 +328,11 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_macie2_custom_data_identifier" "test" {
-  regex                  = %q
+  regex                  = %[2]q
   description            = "this a description"
   maximum_match_distance = 10
   keywords               = ["test"]
