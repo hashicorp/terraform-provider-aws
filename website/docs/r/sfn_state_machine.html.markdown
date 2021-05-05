@@ -115,7 +115,7 @@ The following arguments are supported:
 
 ### `tracing_configuration` Configuration Block
 
-* `enabled` - (Optional) When set to `true`, AWS X-Ray tracing is enabled.
+* `enabled` - (Optional) When set to `true`, AWS X-Ray tracing is enabled. Make sure the State Machine has the correct IAM policies for logging. See the [AWS Step Functions Developer Guide](https://docs.aws.amazon.com/step-functions/latest/dg/xray-iam.html) for details.
 
 ## Attributes Reference
 

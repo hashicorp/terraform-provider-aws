@@ -255,10 +255,9 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
-		definition := d.Get("definition").(string)
 		input := &sfn.UpdateStateMachineInput{
 			StateMachineArn: aws.String(d.Id()),
-			Definition:      aws.String(definition),
+			Definition:      aws.String(d.Get("definition").(string)),
 			RoleArn:         aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -288,7 +287,9 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 				return resource.NonRetryableError(err)
 			}
 
-			if !jsonBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(definition)) {
+			if d.HasChange("definition") && !jsonBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
+				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
+				d.HasChange("tracing_configuration.0.enabled") && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) {
 				return resource.RetryableError(fmt.Errorf("Step Function State Machine (%s) eventual consistency", d.Id()))
 			}
 

@@ -29,7 +29,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -55,7 +55,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "states", regexp.MustCompile(`stateMachine:.+`)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
@@ -200,7 +200,7 @@ func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnStateMachine_Tracing_Config(t *testing.T) {
+func TestAccAWSSfnStateMachine_TracingConfiguration(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -215,7 +215,8 @@ func TestAccAWSSfnStateMachine_Tracing_Config(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfigTracingConfigDisable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
 				),
 			},
 			{
@@ -227,7 +228,8 @@ func TestAccAWSSfnStateMachine_Tracing_Config(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfigTracingConfigEnable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "true"),
 				),
 			},
 		},
@@ -417,7 +419,11 @@ resource "aws_iam_role_policy" "for_sfn" {
       "logs:ListLogDeliveries",
       "logs:PutResourcePolicy",
       "logs:DescribeResourcePolicies",
-      "logs:DescribeLogGroups"
+      "logs:DescribeLogGroups",
+      "xray:PutTraceSegments",
+      "xray:PutTelemetryRecords",
+      "xray:GetSamplingRules",
+      "xray:GetSamplingTargets"
     ],
     "Resource": "*"
   }]
@@ -620,13 +626,9 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   logging_configuration {
-    log_destination        = aws_cloudwatch_log_group.log_group_for_sfn.arn
+    log_destination        = aws_cloudwatch_log_group.test.arn
     include_execution_data = false
     level                  = %[2]q
-  }
-
-  tags = {
-    "key1" = "value1"
   }
 }
 `, rName, rLevel))
