@@ -324,7 +324,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error setting topics: %w", err)
 	}
 
-	if aws.StringValue(eventSourceMappingConfiguration.StartingPosition) != nil {
+	if eventSourceMappingConfiguration.StartingPositionTimestamp != nil {
 		d.Set("starting_position_timestamp", aws.TimeValue(eventSourceMappingConfiguration.StartingPositionTimestamp).Format(time.RFC3339))
 	}
 
