@@ -53,7 +53,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName, funcName, uFuncName),
@@ -106,7 +106,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_removeBatchSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName, funcName, uFuncName),
@@ -159,7 +159,7 @@ func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName, funcName, uFuncName),
@@ -210,7 +210,7 @@ func TestAccAWSLambdaEventSourceMapping_sqs_withFunctionName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 		},
 	})
@@ -241,7 +241,7 @@ func TestAccAWSLambdaEventSourceMapping_SQSBatchWindow(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigSqsWithBatchWindow(rName, batchWindowUpdate),
@@ -336,10 +336,6 @@ func TestAccAWSLambdaEventSourceMapping_StartingPositionTimestamp(t *testing.T) 
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 		},
 	})
@@ -369,10 +365,6 @@ func TestAccAWSLambdaEventSourceMapping_KinesisBatchWindow(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName, batchWindowUpdate),
@@ -409,10 +401,6 @@ func TestAccAWSLambdaEventSourceMapping_ParallelizationFactor(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName, parallelizationFactorUpdate),
@@ -449,10 +437,6 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttempts(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
@@ -489,10 +473,6 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttemptsZero(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
@@ -536,10 +516,6 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRetryAttemptsNegativeOne(t *testi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName, maximumRetryAttemptsUpdate),
@@ -583,10 +559,6 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRecordAgeInSeconds(t *testing.T) 
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSecondsUpdate),
@@ -623,10 +595,6 @@ func TestAccAWSLambdaEventSourceMapping_MaximumRecordAgeInSecondsNegativeOne(t *
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName, maximumRecordAgeInSecondsUpdate),
@@ -663,10 +631,6 @@ func TestAccAWSLambdaEventSourceMapping_BisectBatch(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName, bisectBatchUpdate),
@@ -708,10 +672,6 @@ func TestAccAWSLambdaEventSourceMapping_KinesisDestinationConfig(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"starting_position",
-					"starting_position_timestamp",
-				},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName, streamNameUpdated),
@@ -755,7 +715,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"enabled", "starting_position"},
+				ImportStateVerifyIgnore: []string{"enabled"},
 			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigMsk(rName, "9999"),
