@@ -15,6 +15,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(transfer.EndpointsID, testAccErrorCheckSkipTransfer)
+
 	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
 		Name: "aws_transfer_server",
 		F:    testSweepTransferServers,
@@ -64,6 +66,12 @@ func testSweepTransferServers(region string) error {
 	return nil
 }
 
+func testAccErrorCheckSkipTransfer(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Invalid server type: PUBLIC",
+	)
+}
+
 func TestAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
@@ -110,10 +118,10 @@ func TestAccAWSTransferServer_securityPolicy(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferServerSecurityPolicyConfig("TransferSecurityPolicy-2020-06"),
@@ -259,6 +267,10 @@ func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("Transfer Server VPC_ENDPOINT endpoint type is not supported in GovCloud partition")
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
