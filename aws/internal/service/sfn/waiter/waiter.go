@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for an Operation to return Success
+	PropagationTimeout = 5 * time.Minute
+
 	StateMachineDeleteTimeout = 5 * time.Minute
 )
 
-// StateMachineDeleted waits for an Operation to return Success
 func StateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
