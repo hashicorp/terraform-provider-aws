@@ -1751,11 +1751,12 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size       = %[2]s
-  event_source_arn = aws_msk_cluster.test.arn
-  enabled          = true
-  function_name    = aws_lambda_function.test.arn
-  topics           = ["test"]
+  batch_size        = %[2]s
+  event_source_arn  = aws_msk_cluster.test.arn
+  enabled           = true
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
 
   depends_on = [aws_iam_policy_attachment.test]
 }
