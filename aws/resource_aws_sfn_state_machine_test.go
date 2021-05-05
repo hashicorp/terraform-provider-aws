@@ -626,7 +626,7 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 
   logging_configuration {
-    log_destination        = aws_cloudwatch_log_group.test.arn
+    log_destination        = "${aws_cloudwatch_log_group.test.arn}:*"
     include_execution_data = false
     level                  = %[2]q
   }
@@ -637,8 +637,8 @@ EOF
 func testAccAWSSfnStateMachineConfigTracingConfigEnable(rName string) string {
 	return composeConfig(testAccAWSSfnStateMachineConfigBase(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
-  name           = %[1]q
-  role_arn       = aws_iam_role.for_sfn.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.for_sfn.arn
 
   tracing_configuration {
     enabled = true

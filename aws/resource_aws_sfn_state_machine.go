@@ -280,6 +280,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("error updating Step Function State Machine (%s): %w", d.Id(), err)
 		}
 
+		// Handle eventual consistency after update.
 		err = resource.Retry(waiter.StateMachineUpdatedTimeout, func() *resource.RetryError {
 			output, err := finder.StateMachineByARN(conn, d.Id())
 
@@ -289,7 +290,9 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 
 			if d.HasChange("definition") && !jsonBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(d.Get("definition").(string))) ||
 				d.HasChange("role_arn") && aws.StringValue(output.RoleArn) != d.Get("role_arn").(string) ||
-				d.HasChange("tracing_configuration.0.enabled") && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) {
+				d.HasChange("tracing_configuration.0.enabled") && aws.BoolValue(output.TracingConfiguration.Enabled) != d.Get("tracing_configuration.0.enabled").(bool) ||
+				d.HasChange("logging_configuration.0.include_execution_data") && aws.BoolValue(output.LoggingConfiguration.IncludeExecutionData) != d.Get("logging_configuration.0.include_execution_data").(bool) ||
+				d.HasChange("logging_configuration.0.level") && aws.StringValue(output.LoggingConfiguration.Level) != d.Get("logging_configuration.0.level").(string) {
 				return resource.RetryableError(fmt.Errorf("Step Function State Machine (%s) eventual consistency", d.Id()))
 			}
 
