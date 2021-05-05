@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsMacie2Member_basic(t *testing.T) {
+func testAccAwsMacie2Member_basic(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520983883852"
-	email := "labs@digitalonus.com"
+	accountID := "520433213222"
+	email := "test@test.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -41,11 +41,11 @@ func TestAccAwsMacie2Member_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Member_disappears(t *testing.T) {
+func testAccAwsMacie2Member_disappears(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
-	email := "labs@digitalonus.com"
+	accountID := "520433213222"
+	email := "test@test.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -65,11 +65,11 @@ func TestAccAwsMacie2Member_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Member_withTags(t *testing.T) {
+func testAccAwsMacie2Member_withTags(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
-	email := "labs@digitalonus.com"
+	accountID := "520433213222"
+	email := "test@test.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -85,6 +85,8 @@ func TestAccAwsMacie2Member_withTags(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
 				),
 			},
 			{
@@ -158,9 +160,9 @@ func testAccAwsMacieMemberConfigBasic(accountID, email string) string {
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
-	account_id = %q
-	email = %q
-	depends_on = [aws_macie2_account.test]
+  account_id = %[1]q
+  email = %[2]q
+  depends_on = [aws_macie2_account.test]
 }
 `, accountID, email)
 }
@@ -170,12 +172,12 @@ func testAccAwsMacieMemberConfigWithTags(accountID, email string) string {
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
-	account_id = %q
-	email = %q
-	tags = {
-		Key = "value"
-	}
-	depends_on = [aws_macie2_account.test]
+  account_id = %[1]q
+  email = %[2]q
+  tags = {
+    Key = "value"
+  }
+  depends_on = [aws_macie2_account.test]
 }
 `, accountID, email)
 }
