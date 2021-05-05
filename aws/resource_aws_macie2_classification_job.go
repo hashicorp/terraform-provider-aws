@@ -334,7 +334,7 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(macie2.JobStatus_Values(), false),
+				ValidateFunc: validation.StringInSlice([]string{macie2.JobStatusCancelled, macie2.JobStatusRunning, macie2.JobStatusUserPaused}, false),
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -414,7 +414,7 @@ func resourceMacie2ClassificationJobCreate(ctx context.Context, d *schema.Resour
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.CreateClassificationJobWithContext(ctx, input)
+		output, err = conn.CreateClassificationJobWithContext(ctx, input)
 	}
 
 	if err != nil {

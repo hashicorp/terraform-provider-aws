@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func TestAccAwsMacie2ClassificationJob_basic(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_basic(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -42,7 +42,7 @@ func TestAccAwsMacie2ClassificationJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -70,7 +70,7 @@ func TestAccAwsMacie2ClassificationJob_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -99,7 +99,7 @@ func TestAccAwsMacie2ClassificationJob_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_disappears(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_disappears(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -121,7 +121,7 @@ func TestAccAwsMacie2ClassificationJob_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_Status(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_Status(t *testing.T) {
 	var macie2Output, macie2Output2 macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -162,7 +162,7 @@ func TestAccAwsMacie2ClassificationJob_Status(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
 	bucketName := "test-bucket-name-aws"
@@ -221,10 +221,10 @@ func TestAccAwsMacie2ClassificationJob_complete(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2ClassificationJob_WithTags(t *testing.T) {
+func testAccAwsMacie2ClassificationJob_WithTags(t *testing.T) {
 	var macie2Output macie2.DescribeClassificationJobOutput
 	resourceName := "aws_macie2_classification_job.test"
-	bucketName := "test-bucket-name-aws"
+	bucketName := "test-bucket-name-aws2"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -241,6 +241,8 @@ func TestAccAwsMacie2ClassificationJob_WithTags(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
 				),
 			},
 			{
@@ -252,6 +254,8 @@ func TestAccAwsMacie2ClassificationJob_WithTags(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
 				),
 			},
 			{
@@ -334,12 +338,12 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket = %[1]q
 }
 
 resource "aws_macie2_classification_job" "test" {
   depends_on = [aws_macie2_account.test]
-  job_type   = "%s"
+  job_type   = %[2]q
   s3_job_definition {
     bucket_definitions {
       account_id = data.aws_caller_identity.current.account_id
@@ -357,12 +361,12 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_macie2_classification_job" "test" {
   name_prefix = %[2]q
-  job_type    = %q
+  job_type    = %[3]q
   s3_job_definition {
     bucket_definitions {
       account_id = data.aws_caller_identity.current.account_id
@@ -381,7 +385,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_macie2_classification_job" "test" {
@@ -417,8 +421,8 @@ resource "aws_macie2_classification_job" "test" {
   }
   sampling_percentage = 100
   initial_run         = true
-  job_status          = %q
-  description         = %q
+  job_status          = %[2]q
+  description         = %[3]q
 
   depends_on = [aws_macie2_account.test]
 }
@@ -482,7 +486,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_s3_bucket" "test" {
-  bucket = %q
+  bucket = %[1]q
 }
 
 resource "aws_macie2_classification_job" "test" {
@@ -519,7 +523,7 @@ resource "aws_macie2_classification_job" "test" {
   sampling_percentage = 100
   description         = "test"
   initial_run         = true
-  job_status          = %q
+  job_status          = %[2]q
   tags = {
     Key = "value"
   }
