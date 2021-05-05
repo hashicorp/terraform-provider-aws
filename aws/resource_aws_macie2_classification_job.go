@@ -82,7 +82,7 @@ func resourceAwsMacie2ClassificationJob() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 500),
+				ValidateFunc:  validation.StringLenBetween(0, 500-resource.UniqueIDSuffixLength),
 			},
 			"description": {
 				Type:         schema.TypeString,
