@@ -38,6 +38,11 @@ func TestAccAWSMacie2_serial(t *testing.T) {
 			"complete":       testAccAwsMacie2FindingsFilter_complete,
 			"tags":           testAccAwsMacie2FindingsFilter_withTags,
 		},
+		"Member": {
+			"basic":      testAccAwsMacie2Member_basic,
+			"disappears": testAccAwsMacie2Member_disappears,
+			"tags":       testAccAwsMacie2Member_withTags,
+		},
 	}
 
 	for group, m := range testCases {
