@@ -130,6 +130,7 @@ var mapServiceNames = []string{
 	"kinesisvideo",
 	"imagebuilder",
 	"lambda",
+	"macie2",
 	"mediaconnect",
 	"mediaconvert",
 	"medialive",
