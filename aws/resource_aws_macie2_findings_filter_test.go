@@ -12,6 +12,34 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
+func TestAccAwsMacie2FindingsFilter_basic(t *testing.T) {
+	var macie2Output macie2.GetFindingsFilterOutput
+	resourceName := "aws_macie2_findings_filter.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieFindingsFilterconfigNameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
@@ -110,6 +138,7 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
 				),
 			},
 			{
@@ -149,6 +178,8 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 				),
 			},
 			{
@@ -158,6 +189,8 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 				),
 			},
 			{
@@ -206,7 +239,8 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 		resp, err := conn.GetFindingsFilter(input)
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			continue
 		}
 
@@ -226,73 +260,76 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 func testAccAwsMacieFindingsFilterconfigNameGenerated() string {
 	return `resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_findings_filter" "test" {
-		action = "ARCHIVE"
-		finding_criteria {
-			criterion {
-				field  = "region"
-			}
-		}
-		depends_on = [aws_macie2_account.test]
-	}
+resource "aws_macie2_findings_filter" "test" {
+  action = "ARCHIVE"
+  finding_criteria {
+    criterion {
+      field = "region"
+    }
+  }
+  depends_on = [aws_macie2_account.test]
+}
 `
 }
 
 func testAccAwsMacieFindingsFilterconfigNamePrefix(name string) string {
-	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_findings_filter" "test" {
-		name_prefix = %q
-		action = "ARCHIVE"
-		finding_criteria {
-			criterion {
-				field  = "region"
-			}
+resource "aws_macie2_findings_filter" "test" {
+	name_prefix = %q
+	action = "ARCHIVE"
+	finding_criteria {
+		criterion {
+			field  = "region"
 		}
-		depends_on = [aws_macie2_account.test]
 	}
+	depends_on = [aws_macie2_account.test]
+}
 `, name)
 }
 
 func testAccAwsMacieFindingsFilterconfigComplete(description, action string, position int) string {
-	return fmt.Sprintf(`data "aws_region" "current" {}
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
-	resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_findings_filter" "test" {
-		description = "%s"
-		action = "%s"
-		position = %d
-		finding_criteria {
-			criterion {
-				field  = "region"
-      			eq = [data.aws_region.current.name]
-			}
+resource "aws_macie2_findings_filter" "test" {
+	description = %q
+	action      = %q
+	position    = %d
+	finding_criteria {
+		criterion {
+		  field = "region"
+		  eq    = [data.aws_region.current.name]
 		}
-		depends_on = [aws_macie2_account.test]
 	}
+	depends_on = [aws_macie2_account.test]
+}
 `, description, action, position)
 }
 
 func testAccAwsMacieFindingsFilterconfigWithTags(description, action string, position int) string {
-	return fmt.Sprintf(`data "aws_region" "current" {}
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
 
-	resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_findings_filter" "test" {
-		description = "%s"
-		action = "%s"
-		position = %d
-		finding_criteria {
-			criterion {
-				field  = "region"
-      			eq = [data.aws_region.current.name]
-			}
-		}
-		tags = {
-    		key = "value"
-		}
-		depends_on = [aws_macie2_account.test]
-	}
+resource "aws_macie2_findings_filter" "test" {
+  description = %q
+  action      = %q
+  position    = %d
+  finding_criteria {
+    criterion {
+      field = "region"
+      eq    = [data.aws_region.current.name]
+    }
+  }
+  tags = {
+    Key = "value"
+  }
+  depends_on = [aws_macie2_account.test]
+}
 `, description, action, position)
 }

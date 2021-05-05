@@ -62,7 +62,7 @@ The `criterion` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique identifier (ID) of the macie2 Findings Filter.
+* `id` - The unique identifier (ID) of the macie Findings Filter.
 * `arn` - The Amazon Resource Name (ARN) of the Findings Filter.
 
 ## Import
