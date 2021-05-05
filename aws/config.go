@@ -810,6 +810,15 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19215
+	client.ssoadminconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "AttachManagedPolicyToPermissionSet" || r.Operation.Name == "DetachManagedPolicyFromPermissionSet" {
+			if tfawserr.ErrCodeEquals(r.Error, ssoadmin.ErrCodeConflictException) {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
