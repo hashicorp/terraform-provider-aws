@@ -310,7 +310,6 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("last_processing_result", eventSourceMappingConfiguration.LastProcessingResult)
 	d.Set("state", eventSourceMappingConfiguration.State)
 	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
-	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
@@ -322,6 +321,10 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	}
 	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
 		return fmt.Errorf("error setting topics: %w", err)
+	}
+
+	if eventSourceMappingConfiguration.StartingPosition != nil {
+		d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
 	}
 
 	if eventSourceMappingConfiguration.StartingPositionTimestamp != nil {
