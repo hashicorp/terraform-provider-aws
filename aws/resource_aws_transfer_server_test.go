@@ -80,10 +80,8 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestMatchResourceAttr(
-						resourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
-					resource.TestCheckResourceAttr(
-						resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					testAccMatchResourceAttrRegionalHostname(resourceName, "endpoint", "server.transfer", regexp.MustCompile(`s-[a-z0-9]+`)),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
@@ -156,12 +154,9 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 				Config: testAccAWSTransferServerConfig_Vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_type", "VPC"),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_details.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 				),
 			},
 			{
@@ -174,10 +169,8 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 				Config: testAccAWSTransferServerConfig_VpcUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_type", "VPC"),
-					resource.TestCheckResourceAttr(
-						resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
 				),
 			},
 		},
@@ -443,15 +436,13 @@ resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "transfer.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
 }
 EOF
 }
@@ -463,16 +454,14 @@ resource "aws_iam_role_policy" "test" {
   policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowFullAccesstoCloudWatchLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:*"
-      ],
-      "Resource": "*"
-    }
-  ]
+  "Statement": [{
+    "Sid": "AllowFullAccesstoCloudWatchLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
+  }]
 }
 POLICY
 }
@@ -540,75 +529,49 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 
-<<<<<<< HEAD
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-for-apigateway-%[1]s"
-=======
 resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "transfer.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
 }
 EOF
 }
 
-<<<<<<< HEAD
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%[1]s"
-  role = aws_iam_role.foo.id
-=======
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.id
->>>>>>> 3fe05e3e5 (add Security Policy test)
 
   policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowFullAccesstoCloudWatchLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:*"
-      ],
-      "Resource": "*"
-    }
-  ]
+  "Statement": [{
+    "Sid": "AllowFullAccesstoCloudWatchLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
+  }]
 }
 POLICY
 }
 
-<<<<<<< HEAD
-data "aws_region" "current" {}
-
-resource "aws_transfer_server" "foo" {
-  identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
-  invocation_role        = aws_iam_role.foo.arn
-  logging_role           = aws_iam_role.foo.arn
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-    TYPE = "apigateway"
-  }
-=======
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
   url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
->>>>>>> 3fe05e3e5 (add Security Policy test)
 }
 `, rName)
-
 }
 
 func testAccAWSTransferServerConfig_forcedestroy(rName string) string {
@@ -617,53 +580,38 @@ resource "aws_transfer_server" "test" {
   force_destroy = true
 }
 
-<<<<<<< HEAD
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%[1]s"
-=======
 resource "aws_iam_role" "test" {
   name = %[1]q
->>>>>>> 3fe05e3e5 (add Security Policy test)
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "transfer.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
 }
 EOF
 }
 
-<<<<<<< HEAD
-resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%[1]s"
-  role = aws_iam_role.foo.id
-=======
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.id
->>>>>>> 3fe05e3e5 (add Security Policy test)
 
   policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowFullAccesstoS3",
-      "Effect": "Allow",
-      "Action": [
-        "s3:*"
-      ],
-      "Resource": "*"
-    }
-  ]
+  "Statement": [{
+    "Sid": "AllowFullAccesstoS3",
+    "Effect": "Allow",
+    "Action": [
+      "s3:*"
+    ],
+    "Resource": "*"
+  }]
 }
 POLICY
 }
@@ -680,7 +628,7 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_internet_gateway" "igw" {
+resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -688,7 +636,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_security_group" "sg" {
+resource "aws_security_group" "test" {
   name        = %[1]q
   description = "Allow TLS inbound traffic"
   vpc_id      = aws_vpc.test.id
@@ -709,13 +657,13 @@ data "aws_vpc_endpoint_service" "test" {
   service = "transfer.server"
 }
 
-resource "aws_vpc_endpoint" "transfer" {
+resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
   vpc_endpoint_type = "Interface"
   service_name      = data.aws_vpc_endpoint_service.test.service_name
 
   security_group_ids = [
-    aws_security_group.sg.id,
+    aws_security_group.test.id,
   ]
 
   tags = {
@@ -732,7 +680,7 @@ resource "aws_default_route_table" "test" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
+    gateway_id = aws_internet_gateway.test.id
   }
 }
 
@@ -740,7 +688,7 @@ resource "aws_transfer_server" "test" {
   endpoint_type = "VPC_ENDPOINT"
 
   endpoint_details {
-    vpc_endpoint_id = aws_vpc_endpoint.transfer.id
+    vpc_endpoint_id = aws_vpc_endpoint.test.id
   }
 }
 `, rName)
@@ -798,15 +746,9 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_eip" "testa" {
-  vpc = true
+resource "aws_eip" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_eip" "testb" {
   vpc = true
 
   tags = {
@@ -817,37 +759,37 @@ resource "aws_eip" "testb" {
 }
 
 func testAccAWSTransferServerConfig_Vpc(rName string) string {
-	return testAccAWSTransferServerConfig_VpcDefault(rName) + `
+	return composeConfig(testAccAWSTransferServerConfig_VpcDefault(rName), `
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
   endpoint_details {
-    address_allocation_ids = [aws_eip.testa.id]
+    address_allocation_ids = [aws_eip.test[0].id]
     subnet_ids             = [aws_subnet.test.id]
     vpc_id                 = aws_vpc.test.id
   }
 }
-`
+`)
 }
 
 func testAccAWSTransferServerConfig_VpcUpdate(rName string) string {
-	return testAccAWSTransferServerConfig_VpcDefault(rName) + `
+	return composeConfig(testAccAWSTransferServerConfig_VpcDefault(rName), `
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
   endpoint_details {
-    address_allocation_ids = [aws_eip.testb.id]
+    address_allocation_ids = [aws_eip.test[1].id]
     subnet_ids             = [aws_subnet.test.id]
     vpc_id                 = aws_vpc.test.id
   }
 }
-`
+`)
 }
 
 func testAccAWSTransferServerConfig_hostKey(hostKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
-  host_key = file("%s")
+  host_key = file(%[1]q)
 }
 `, hostKey)
 }
