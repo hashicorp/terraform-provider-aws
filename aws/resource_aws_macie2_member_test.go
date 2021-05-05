@@ -14,8 +14,8 @@ import (
 func TestAccAwsMacie2Member_basic(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
-	email := "test@test.com"
+	accountID := "520983883852"
+	email := "labs@digitalonus.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -27,7 +27,7 @@ func TestAccAwsMacie2Member_basic(t *testing.T) {
 				Config: testAccAwsMacieMemberConfigBasic(accountID, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
 				),
@@ -45,7 +45,7 @@ func TestAccAwsMacie2Member_disappears(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
 	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
-	email := "test@test.com"
+	email := "labs@digitalonus.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -57,7 +57,7 @@ func TestAccAwsMacie2Member_disappears(t *testing.T) {
 				Config: testAccAwsMacieMemberConfigBasic(accountID, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Member(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +69,7 @@ func TestAccAwsMacie2Member_withTags(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
 	accountID := "520983883852" //os.Getenv("AWS_ACCOUNT_ID")
-	email := "test@test.com"
+	email := "labs@digitalonus.com"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -78,21 +78,13 @@ func TestAccAwsMacie2Member_withTags(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigWithTags(accountID, email, macie2.MacieStatusEnabled),
+				Config: testAccAwsMacieMemberConfigWithTags(accountID, email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
-				),
-			},
-			{
-				Config: testAccAwsMacieMemberConfigWithTags(accountID, email, macie2.MacieStatusPaused),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
-					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
-					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 				),
 			},
 			{
@@ -141,7 +133,10 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 		resp, err := conn.GetMember(input)
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			continue
 		}
 
@@ -159,27 +154,28 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 }
 
 func testAccAwsMacieMemberConfigBasic(accountID, email string) string {
-	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_member" "test" {
-		account_id = "%s"
-		email = "%s"
-		depends_on = [aws_macie2_account.test]
-	}
+resource "aws_macie2_member" "test" {
+	account_id = %q
+	email = %q
+	depends_on = [aws_macie2_account.test]
+}
 `, accountID, email)
 }
 
-func testAccAwsMacieMemberConfigWithTags(accountID, email, status string) string {
-	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+func testAccAwsMacieMemberConfigWithTags(accountID, email string) string {
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_member" "test" {
-		account_id = "%s"
-		email = "%s"
-		status = "%s"
-		tags = {
-    		key = "value"
-		}
-		depends_on = [aws_macie2_account.test]
+resource "aws_macie2_member" "test" {
+	account_id = %q
+	email = %q
+	tags = {
+		Key = "value"
 	}
-`, accountID, email, status)
+	depends_on = [aws_macie2_account.test]
+}
+`, accountID, email)
 }

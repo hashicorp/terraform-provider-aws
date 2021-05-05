@@ -34,7 +34,8 @@ func resourceAwsMacie2Member() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -67,15 +68,19 @@ func resourceAwsMacie2Member() *schema.Resource {
 func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
 
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
+	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
 		Account: &macie2.AccountDetail{
-			AccountId: aws.String(d.Get("account_id").(string)),
+			AccountId: aws.String(accountId),
 			Email:     aws.String(d.Get("email").(string)),
 		},
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.SetTags(keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().AppsyncTags())
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().Macie2Tags()
 	}
 
 	var err error
@@ -101,7 +106,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error creating Macie Member: %w", err))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(accountId)
 
 	return resourceMacie2MemberRead(ctx, d, meta)
 }
@@ -109,6 +114,7 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
 
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	input := &macie2.GetMemberInput{
 		Id: aws.String(d.Id()),
@@ -116,23 +122,32 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	resp, err := conn.GetMemberWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
-			log.Printf("[WARN] Macie Member does not exist, removing from state: %s", d.Id())
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
+			log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error reading Macie Member (%s): %w", d.Id(), err))
 	}
 
-	d.Set("account_id", aws.StringValue(resp.AccountId))
-	d.Set("email", aws.StringValue(resp.Email))
-	d.Set("relationship_status", aws.StringValue(resp.RelationshipStatus))
-	d.Set("administrator_account_id", aws.StringValue(resp.AdministratorAccountId))
+	d.Set("account_id", resp.AccountId)
+	d.Set("email", resp.Email)
+	d.Set("relationship_status", resp.RelationshipStatus)
+	d.Set("administrator_account_id", resp.AdministratorAccountId)
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
-	d.Set("arn", aws.StringValue(resp.Arn))
-	if err = d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	d.Set("arn", resp.Arn)
+	tags := keyvaluetags.Macie2KeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags", d.Id(), err))
+	}
+
+	if err = d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags_all", d.Id(), err))
 	}
 
 	return nil
@@ -146,7 +161,7 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("status") {
-		input.SetStatus(d.Get("status").(string))
+		input.Status = aws.String(d.Get("status").(string))
 	}
 
 	_, err := conn.UpdateMemberSessionWithContext(ctx, input)
@@ -166,7 +181,10 @@ func resourceMacie2MemberDelete(ctx context.Context, d *schema.ResourceData, met
 
 	_, err := conn.DeleteMemberWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie Member (%s): %w", d.Id(), err))
