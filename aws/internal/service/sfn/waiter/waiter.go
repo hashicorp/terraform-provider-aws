@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	PropagationTimeout = 5 * time.Minute
-
-	StateMachineDeleteTimeout = 5 * time.Minute
+	StateMachineCreatedTimeout = 5 * time.Minute
+	StateMachineDeletedTimeout = 5 * time.Minute
+	StateMachineUpdatedTimeout = 1 * time.Minute
 )
 
 func StateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
@@ -18,7 +18,7 @@ func StateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeSt
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
 		Refresh: StateMachineStatus(conn, stateMachineArn),
-		Timeout: StateMachineDeleteTimeout,
+		Timeout: StateMachineDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()

@@ -144,7 +144,7 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 	var output *sfn.CreateStateMachineOutput
 
 	log.Printf("[DEBUG] Creating Step Function State Machine: %s", input)
-	err := resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(waiter.StateMachineCreatedTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateStateMachine(input)
@@ -255,9 +255,10 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		// "You must include at least one of definition or roleArn or you will receive a MissingRequiredParameter error"
+		definition := d.Get("definition").(string)
 		input := &sfn.UpdateStateMachineInput{
 			StateMachineArn: aws.String(d.Id()),
-			Definition:      aws.String(d.Get("definition").(string)),
+			Definition:      aws.String(definition),
 			RoleArn:         aws.String(d.Get("role_arn").(string)),
 		}
 
@@ -279,6 +280,24 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("error updating Step Function State Machine (%s): %w", d.Id(), err)
 		}
+
+		err = resource.Retry(waiter.StateMachineUpdatedTimeout, func() *resource.RetryError {
+			output, err := finder.StateMachineByARN(conn, d.Id())
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			if !jsonBytesEqual([]byte(aws.StringValue(output.Definition)), []byte(definition)) {
+				return resource.RetryableError(fmt.Errorf("Step Function State Machine (%s) eventual consistency", d.Id()))
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			return fmt.Errorf("timed out waiting for Step Function State Machine (%s) update", d.Id())
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -293,23 +312,17 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sfnconn
-	log.Printf("[DEBUG] Deleting Step Function State Machine: %s", d.Id())
 
-	input := &sfn.DeleteStateMachineInput{
+	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteStateMachine(input)
+	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting SFN state machine: %s", err)
+		return fmt.Errorf("error deleting Step Function State Machine (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waiter.StateMachineDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
-			return nil
-		}
-		return fmt.Errorf("error waiting for SFN State Machine (%s) deletion: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for Step Function State Machine (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
