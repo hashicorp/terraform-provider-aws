@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsMacie2Account_basic(t *testing.T) {
+func testAccAwsMacie2Account_basic(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
@@ -40,7 +40,7 @@ func TestAccAwsMacie2Account_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
+func testAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
@@ -81,7 +81,7 @@ func TestAccAwsMacie2Account_FindingPublishingFrequency(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Account_WithStatus(t *testing.T) {
+func testAccAwsMacie2Account_WithStatus(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
@@ -122,7 +122,7 @@ func TestAccAwsMacie2Account_WithStatus(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
+func testAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
@@ -163,7 +163,7 @@ func TestAccAwsMacie2Account_WithFindingAndStatus(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2Account_disappears(t *testing.T) {
+func testAccAwsMacie2Account_disappears(t *testing.T) {
 	var macie2Output macie2.GetMacieSessionOutput
 	resourceName := "aws_macie2_account.test"
 
