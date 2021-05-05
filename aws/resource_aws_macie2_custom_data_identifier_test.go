@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
@@ -127,7 +128,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-	bucketName := "test-bucket-name-aws"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 	description := "this is a description"
 	descriptionUpdated := "this is a updated description"
 
@@ -168,7 +169,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 	var macie2Output macie2.GetCustomDataIdentifierOutput
 	resourceName := "aws_macie2_custom_data_identifier.test"
 	regex := "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-	bucketName := "test-bucket-name-aws"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -338,7 +339,7 @@ resource "aws_macie2_custom_data_identifier" "test" {
   keywords               = ["test"]
   ignore_words           = ["not testing"]
   tags = {
-    Key = "value"
+    Key  = "value"
     Key2 = "value2"
     Key3 = "value3"
   }

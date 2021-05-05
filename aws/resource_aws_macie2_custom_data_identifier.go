@@ -61,7 +61,7 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 500),
+				ValidateFunc:  validation.StringLenBetween(0, 500-resource.UniqueIDSuffixLength),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -165,7 +165,7 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 		tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
-		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -212,7 +212,7 @@ func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.Res
 	_, err := conn.DeleteCustomDataIdentifierWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
