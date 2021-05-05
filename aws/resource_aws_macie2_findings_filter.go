@@ -160,7 +160,7 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.CreateFindingsFilterWithContext(ctx, input)
+		output, err = conn.CreateFindingsFilterWithContext(ctx, input)
 	}
 
 	if err != nil {

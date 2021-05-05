@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
-func TestAccAwsMacie2FindingsFilter_basic(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 
@@ -40,7 +40,7 @@ func TestAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 
@@ -67,7 +67,7 @@ func TestAccAwsMacie2FindingsFilter_Name_Generated(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	namePrefix := "tf-acc-test-prefix-"
@@ -95,7 +95,7 @@ func TestAccAwsMacie2FindingsFilter_NamePrefix(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 
@@ -119,7 +119,7 @@ func TestAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	description := "this is a description"
@@ -159,7 +159,7 @@ func TestAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
+func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	description := "this is a description"
@@ -180,6 +180,8 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
 				),
 			},
 			{
@@ -191,6 +193,8 @@ func TestAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
 				),
 			},
 			{
@@ -277,14 +281,14 @@ func testAccAwsMacieFindingsFilterconfigNamePrefix(name string) string {
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_findings_filter" "test" {
-	name_prefix = %q
-	action = "ARCHIVE"
-	finding_criteria {
-		criterion {
-			field  = "region"
-		}
-	}
-	depends_on = [aws_macie2_account.test]
+  name_prefix = %[1]q
+  action = "ARCHIVE"
+  finding_criteria {
+    criterion {
+      field  = "region"
+    }
+  }
+  depends_on = [aws_macie2_account.test]
 }
 `, name)
 }
@@ -296,16 +300,16 @@ data "aws_region" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_findings_filter" "test" {
-	description = %q
-	action      = %q
-	position    = %d
-	finding_criteria {
-		criterion {
-		  field = "region"
-		  eq    = [data.aws_region.current.name]
-		}
-	}
-	depends_on = [aws_macie2_account.test]
+  description = %[1]q
+  action      = %[2]q
+  position    = %[3]d
+  finding_criteria {
+    criterion {
+      field = "region"
+      eq    = [data.aws_region.current.name]
+    }
+  }
+  depends_on = [aws_macie2_account.test]
 }
 `, description, action, position)
 }
@@ -317,9 +321,9 @@ data "aws_region" "current" {}
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_findings_filter" "test" {
-  description = %q
-  action      = %q
-  position    = %d
+  description = %[1]q
+  action      = %[2]q
+  position    = %[3]d
   finding_criteria {
     criterion {
       field = "region"
