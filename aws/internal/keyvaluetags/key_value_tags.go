@@ -55,6 +55,15 @@ func (tags KeyValueTags) IgnoreAws() KeyValueTags {
 	return result
 }
 
+// GetTags is convenience method that returns the DefaultConfig's Tags, if any
+func (dc *DefaultConfig) GetTags() KeyValueTags {
+	if dc == nil {
+		return nil
+	}
+
+	return dc.Tags
+}
+
 // MergeTags returns the result of keyvaluetags.Merge() on the given
 // DefaultConfig.Tags with KeyValueTags provided as an argument,
 // overriding the value of any tag with a matching key.
