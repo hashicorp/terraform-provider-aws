@@ -140,6 +140,28 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferServer_disappears(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerBasicConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsTransferServer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSTransferServer_securityPolicy(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
@@ -174,7 +196,7 @@ func TestAccAWSTransferServer_securityPolicy(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferServer_Vpc(t *testing.T) {
+func TestAccAWSTransferServer_vpc(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -186,7 +208,7 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerConfig_Vpc(rName),
+				Config: testAccAWSTransferServerVpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
@@ -201,7 +223,7 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccAWSTransferServerConfig_VpcUpdate(rName),
+				Config: testAccAWSTransferServerVpcUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
@@ -212,8 +234,7 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 	})
 }
 
-/*
-func TestAccAWSTransferServer_protocols_basic(t *testing.T) {
+func TestAccAWSTransferServer_protocols(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -225,40 +246,26 @@ func TestAccAWSTransferServer_protocols_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerConfig_protocols_basic(rName),
+				Config: testAccAWSTransferServerProtocolsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`server/.+`)),
-					resource.TestMatchResourceAttr(
-						resourceName, "endpoint", regexp.MustCompile(fmt.Sprintf("^s-[a-z0-9]+.server.transfer.%s.amazonaws.com$", testAccGetRegion()))),
-					resource.TestCheckResourceAttr(
-						resourceName, "identity_provider_type", "SERVICE_MANAGED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", transfer.ProtocolSftp),
+					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
 				),
 			},
 			{
-				ResourceName:            "aws_transfer_server.foo",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
-			{
-				Config: testAccAWSTransferServerConfig_protocols_update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", transfer.ProtocolFtp),
-				),
-			},
 		},
 	})
 }
-*/
 
-func TestAccAWSTransferServer_apigateway(t *testing.T) {
+func TestAccAWSTransferServer_apiGateway(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -270,7 +277,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerConfig_apigateway(rName),
+				Config: testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
@@ -281,29 +288,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSTransferServer_disappears(t *testing.T) {
-	var conf transfer.DescribedServer
-	resourceName := "aws_transfer_server.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSTransferServerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSTransferServerBasicConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsTransferServer(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
+func TestAccAWSTransferServer_forceDestroy(t *testing.T) {
 	var s transfer.DescribedServer
 	var u transfer.DescribedUser
 	var k transfer.SshPublicKey
@@ -319,12 +304,40 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerConfig_forcedestroy(rName),
+				Config: testAccAWSTransferServerForceDestroyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &s),
 					testAccCheckAWSTransferUserExists(userResourceName, &u),
 					testAccCheckAWSTransferSshKeyExists(sshKeyResourceName, &k),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
+			},
+		},
+	})
+}
+
+func TestAccAWSTransferServer_hostKey(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.test"
+	hostKey := "test-fixtures/transfer-ssh-rsa-key"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerHostKeyConfig(hostKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "host_key_fingerprint", "SHA256:Z2pW9sPKDD/T34tVfCoolsRcECNTlekgaKvDn9t+9sg="),
 				),
 			},
 			{
@@ -353,38 +366,10 @@ func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSTransferServerConfig_VpcEndPoint(rName),
+				Config: testAccAWSTransferServerVpcEndPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "host_key"},
-			},
-		},
-	})
-}
-
-func TestAccAWSTransferServer_hostKey(t *testing.T) {
-	var conf transfer.DescribedServer
-	resourceName := "aws_transfer_server.test"
-	hostKey := "test-fixtures/transfer-ssh-rsa-key"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSTransferServerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSTransferServerConfig_hostKey(hostKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "host_key_fingerprint", "SHA256:Z2pW9sPKDD/T34tVfCoolsRcECNTlekgaKvDn9t+9sg="),
 				),
 			},
 			{
@@ -462,6 +447,118 @@ func testAccPreCheckAWSTransfer(t *testing.T) {
 	}
 }
 
+func testAccAWSTransferServerConfigBaseVpc(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccAWSTransferServerConfigBaseApiGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "error" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+  status_code = "400"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = "GET"
+}
+
+resource "aws_api_gateway_integration_response" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_integration.test.http_method
+  status_code = aws_api_gateway_method_response.error.status_code
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id       = aws_api_gateway_rest_api.test.id
+  stage_name        = "test"
+  description       = %[1]q
+  stage_description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+`, rName)
+}
+
 func testAccAWSTransferServerBasicConfig() string {
 	return `
 resource "aws_transfer_server" "test" {}
@@ -521,62 +618,10 @@ resource "aws_transfer_server" "test" {
 `, rName)
 }
 
-func testAccAWSTransferServerConfig_apigateway(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = %[1]q
-}
-
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
-  path_part   = "test"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
-  status_code = "400"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
-
-  type                    = "HTTP"
-  uri                     = "https://www.google.de"
-  integration_http_method = "GET"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
-
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_name        = "test"
-  description       = %[1]q
-  stage_description = %[1]q
-
-  variables = {
-    "a" = "2"
-  }
-}
-
+func testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseApiGateway(rName),
+		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -619,10 +664,10 @@ resource "aws_transfer_server" "test" {
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSTransferServerConfig_forcedestroy(rName string) string {
+func testAccAWSTransferServerForceDestroyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   force_destroy = true
@@ -678,41 +723,10 @@ resource "aws_transfer_ssh_key" "test" {
 `, rName)
 }
 
-func testAccAWSTransferServerConfig_VpcEndPoint(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow TLS inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccAWSTransferServerVpcEndPointConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service = "transfer.server"
 }
@@ -731,19 +745,6 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  tags = {
-    Name = %[1]q
-  }
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-}
-
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC_ENDPOINT"
 
@@ -751,61 +752,13 @@ resource "aws_transfer_server" "test" {
     vpc_endpoint_id = aws_vpc_endpoint.test.id
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSTransferServerConfig_VpcDefault(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.0.0/24"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = %[1]q
-  }
-
-  depends_on = [aws_internet_gateway.test]
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccAWSTransferServerVpcConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		`
 resource "aws_eip" "test" {
   count = 2
 
@@ -815,11 +768,7 @@ resource "aws_eip" "test" {
     Name = %[1]q
   }
 }
-`, rName)
-}
 
-func testAccAWSTransferServerConfig_Vpc(rName string) string {
-	return composeConfig(testAccAWSTransferServerConfig_VpcDefault(rName), `
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
@@ -832,8 +781,20 @@ resource "aws_transfer_server" "test" {
 `)
 }
 
-func testAccAWSTransferServerConfig_VpcUpdate(rName string) string {
-	return composeConfig(testAccAWSTransferServerConfig_VpcDefault(rName), `
+func testAccAWSTransferServerVpcUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		`
+resource "aws_eip" "test" {
+  count = 2
+
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_transfer_server" "test" {
   endpoint_type = "VPC"
 
@@ -846,7 +807,7 @@ resource "aws_transfer_server" "test" {
 `)
 }
 
-func testAccAWSTransferServerConfig_hostKey(hostKey string) string {
+func testAccAWSTransferServerHostKeyConfig(hostKey string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   host_key = file(%[1]q)
@@ -854,9 +815,11 @@ resource "aws_transfer_server" "test" {
 `, hostKey)
 }
 
-/*
-func testAccAWSTransferServerConfig_protocols_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccAWSTransferServerProtocolsConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		testAccAWSTransferServerConfigBaseApiGateway(rName),
+		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -894,159 +857,10 @@ POLICY
 }
 
 resource "aws_transfer_server" "test" {
-  identity_provider_type = "SERVICE_MANAGED"
-  logging_role           = aws_iam_role.test.arn
-  protocols              = ["SFTP"]
-}
-`, rName, rName)
-}
-
-func testAccAWSTransferServerConfig_protocols_update(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowFullAccesstoCloudWatchLogs",
-    "Effect": "Allow",
-    "Action": [
-      "logs:*"
-    ],
-    "Resource": "*"
-  }]
-}
-POLICY
-}
-
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
-}
-
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
-  path_part   = "test"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  resource_id   = aws_api_gateway_resource.test.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
-  status_code = "400"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_method.test.http_method
-
-  type                    = "HTTP"
-  uri                     = "https://www.google.de"
-  integration_http_method = "GET"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  resource_id = aws_api_gateway_resource.test.id
-  http_method = aws_api_gateway_integration.test.http_method
-  status_code = aws_api_gateway_method_response.error.status_code
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = [aws_api_gateway_integration.test]
-
-  rest_api_id       = aws_api_gateway_rest_api.test.id
-  stage_name        = "test"
-  description       = "%[1]s"
-  stage_description = "%[1]s"
-
-  variables = {
-    "a" = "2"
-  }
-}
-
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-vpc"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = "terraform-testacc-igw"
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.0.0/24"
-  map_public_ip_on_launch = true
-
-  depends_on = [aws_internet_gateway.test]
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = "terraform-testacc-subnet"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = "terraform-testacc-security-group"
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = "terraform-testacc-security-group"
-  }
-}
-
-
-resource "aws_transfer_server" "foo" {
   identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.${data.aws_region.current.name}.amazonaws.com${aws_api_gateway_resource.test.path}"
-  invocation_role        = aws_iam_role.foo.arn
-  logging_role           = aws_iam_role.foo.arn
+  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role        = aws_iam_role.test.arn
+  logging_role           = aws_iam_role.test.arn
   protocols              = ["FTP"]
 
   endpoint_type = "VPC"
@@ -1054,13 +868,6 @@ resource "aws_transfer_server" "foo" {
     subnet_ids = [aws_subnet.test.id]
     vpc_id     = aws_vpc.test.id
   }
-
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-    TYPE = "apigateway"
-  }
 }
-`, rName)
-
+`, rName))
 }
-*/
