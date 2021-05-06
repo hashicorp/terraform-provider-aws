@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_macie2_member
 
-Provides a resource to manage an [AWS Macie Member](https://docs.aws.amazon.com/macie/latest/APIReference/members-id.htmll).
+Provides a resource to manage an [AWS Macie Member](https://docs.aws.amazon.com/macie/latest/APIReference/members-id.html).
 
 ## Example Usage
 
