@@ -11,6 +11,22 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 )
 
+func DynamoDBKinesisStreamingDestinationStatus(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := finder.DynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if result == nil {
+			return nil, "", nil
+		}
+
+		return result, aws.StringValue(result.DestinationStatus), nil
+	}
+}
+
 func DynamoDBTableStatus(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := finder.DynamoDBTableByName(conn, tableName)
@@ -167,21 +183,5 @@ func DynamoDBTableSESStatus(conn *dynamodb.DynamoDB, tableName string) resource.
 		}
 
 		return table, aws.StringValue(table.SSEDescription.Status), nil
-	}
-}
-
-func KinesisStreamingDestinationStatus(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := finder.KinesisDataStreamDestination(ctx, conn, streamArn, tableName)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if result == nil {
-			return nil, "", nil
-		}
-
-		return result, aws.StringValue(result.DestinationStatus), nil
 	}
 }

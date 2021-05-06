@@ -20,6 +20,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -46,6 +47,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -69,6 +71,7 @@ func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -129,7 +132,7 @@ func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) 
 
 		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
 
-		output, err := finder.KinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if err != nil {
 			return err
@@ -157,7 +160,7 @@ func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.Stat
 			return err
 		}
 
-		output, err := finder.KinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+		output, err := finder.DynamoDBKinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			continue

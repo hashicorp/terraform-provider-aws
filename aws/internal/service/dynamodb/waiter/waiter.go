@@ -9,15 +9,43 @@ import (
 )
 
 const (
-	CreateTableTimeout                  = 20 * time.Minute
-	UpdateTableTimeoutTotal             = 60 * time.Minute
-	ReplicaUpdateTimeout                = 30 * time.Minute
-	UpdateTableTimeout                  = 20 * time.Minute
-	UpdateTableContinuousBackupsTimeout = 20 * time.Minute
-	DeleteTableTimeout                  = 10 * time.Minute
-	PITRUpdateTimeout                   = 30 * time.Second
-	TTLUpdateTimeout                    = 30 * time.Second
+	KinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
+	KinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
+	CreateTableTimeout                         = 20 * time.Minute
+	UpdateTableTimeoutTotal                    = 60 * time.Minute
+	ReplicaUpdateTimeout                       = 30 * time.Minute
+	UpdateTableTimeout                         = 20 * time.Minute
+	UpdateTableContinuousBackupsTimeout        = 20 * time.Minute
+	DeleteTableTimeout                         = 10 * time.Minute
+	PITRUpdateTimeout                          = 30 * time.Second
+	TTLUpdateTimeout                           = 30 * time.Second
 )
+
+func DynamoDBKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.DestinationStatusDisabled, dynamodb.DestinationStatusEnabling},
+		Target:  []string{dynamodb.DestinationStatusActive},
+		Timeout: KinesisStreamingDestinationActiveTimeout,
+		Refresh: DynamoDBKinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func DynamoDBKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.DestinationStatusActive, dynamodb.DestinationStatusDisabling},
+		Target:  []string{dynamodb.DestinationStatusDisabled},
+		Timeout: KinesisStreamingDestinationDisabledTimeout,
+		Refresh: DynamoDBKinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
 
 func DynamoDBTableActive(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.TableDescription, error) {
 	stateConf := &resource.StateChangeConf{
@@ -229,30 +257,4 @@ func DynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.Ta
 	}
 
 	return nil, err
-}
-
-func KinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{dynamodb.DestinationStatusDisabled, dynamodb.DestinationStatusEnabling},
-		Target:  []string{dynamodb.DestinationStatusActive},
-		Timeout: 5 * time.Minute,
-		Refresh: KinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func KinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{dynamodb.DestinationStatusActive, dynamodb.DestinationStatusDisabling},
-		Target:  []string{dynamodb.DestinationStatusDisabled},
-		Timeout: 5 * time.Minute,
-		Refresh: KinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
 }
