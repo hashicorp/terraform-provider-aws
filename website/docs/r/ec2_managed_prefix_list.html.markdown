@@ -55,7 +55,7 @@ The following arguments are supported:
 ### `entry`
 
 * `cidr` - (Required) CIDR block of this entry.
-* `description` - (Optional) Description of this entry.
+* `description` - (Optional) Description of this entry. Due to API limitations, updating only the description of an existing entry requires temporarily removing and re-adding the entry.
 
 ## Attributes Reference
 

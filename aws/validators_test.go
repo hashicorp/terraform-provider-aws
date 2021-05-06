@@ -394,10 +394,17 @@ func TestValidatePrincipal(t *testing.T) {
 
 	validNames := []string{
 		"IAM_ALLOWED_PRINCIPALS", // Special principal
+		"123456789012",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		"111122223333",           // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
 		"arn:aws:iam::123456789012:user/David",                                           // lintignore:AWSAT005          // IAM User
 		"arn:aws-us-gov:iam:us-west-2:357342307427:role/tf-acc-test-3217321001347236965", // lintignore:AWSAT003,AWSAT005 // Non-global IAM Role?
 		"arn:aws:iam:us-east-1:123456789012:user/David",                                  // lintignore:AWSAT003,AWSAT005 // Non-global IAM User?
+		"arn:aws:iam::111122223333:saml-provider/idp1:group/data-scientists",             // lintignore:AWSAT005          // SAML group
+		"arn:aws:iam::111122223333:saml-provider/idp1:user/Paul",                         // lintignore:AWSAT005          // SAML user
+		"arn:aws:quicksight:us-east-1:111122223333:group/default/data_scientists",        // lintignore:AWSAT003,AWSAT005 // quicksight group
+		"arn:aws:organizations::111122223333:organization/o-abcdefghijkl",                // lintignore:AWSAT005          // organization
+		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",           // lintignore:AWSAT005          // ou
 	}
 	for _, v := range validNames {
 		_, errors := validatePrincipal(v, "arn")
@@ -409,7 +416,7 @@ func TestValidatePrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
 		"arn",
-		"123456789012",
+		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
@@ -3136,12 +3143,12 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 			IsValid: false,
 		},
 		{
-			Value:   "aws.partner/test/test",
-			IsValid: false,
+			Value:   "aws.partner/example.com/test/12345ab-cdef-1235",
+			IsValid: true,
 		},
 		{
 			Value:   "/test0._1-",
-			IsValid: false,
+			IsValid: true,
 		},
 		{
 			Value:   "test0._1-",
@@ -3150,6 +3157,51 @@ func TestCloudWatchEventCustomEventBusName(t *testing.T) {
 	}
 	for _, tc := range cases {
 		_, errors := validateCloudWatchEventCustomEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid && !isValid {
+			t.Errorf("expected %q to return valid, but did not", tc.Value)
+		} else if !tc.IsValid && isValid {
+			t.Errorf("expected %q to not return valid, but did", tc.Value)
+		}
+	}
+}
+
+func TestCloudWatchEventCustomEventBusEventSourceName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   "default",
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(227, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   "aws.partner/example.com/test/" + acctest.RandStringFromCharSet(228, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/example.com/test/12345ab-cdef-1235",
+			IsValid: true,
+		},
+		{
+			Value:   "/test0._1-",
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: false,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventCustomEventBusEventSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -3243,6 +3295,58 @@ func TestValidateTypeStringIsDateOrInt(t *testing.T) {
 		_, errors := validateTypeStringIsDateOrPositiveInt(f, "parameter")
 		if len(errors) == 0 {
 			t.Fatalf("expected the value %q to fail validation", f)
+		}
+	}
+}
+
+func TestResourceAWSEKSClusterNameValidation(t *testing.T) {
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "my-valid-eks-cluster_1_dev",
+			ErrCount: 0,
+		},
+		{
+			Value:    `_invalid`,
+			ErrCount: 1,
+		},
+		{
+			Value:    `-invalid`,
+			ErrCount: 1,
+		},
+		{
+			Value:    `invalid@`,
+			ErrCount: 1,
+		},
+		{
+			Value:    `invalid*`,
+			ErrCount: 1,
+		},
+		{
+			Value:    `invalid:`,
+			ErrCount: 1,
+		},
+		{
+			Value:    `invalid$`,
+			ErrCount: 1,
+		},
+		{
+			Value:    ``,
+			ErrCount: 2,
+		},
+		{
+			Value:    acctest.RandStringFromCharSet(101, acctest.CharSetAlpha),
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validateEKSClusterName(tc.Value, "cluster_name")
+
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("Expected the EKS Cluster Name to trigger a validation error: %s, expected %d, got %d errors", tc.Value, tc.ErrCount, len(errors))
 		}
 	}
 }

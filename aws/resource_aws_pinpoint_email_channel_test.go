@@ -16,11 +16,10 @@ func TestAccAWSPinpointEmailChannel_basic(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointEmailChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointEmailChannelConfig_FromAddress("user@example.com"),
@@ -55,11 +54,10 @@ func TestAccAWSPinpointEmailChannel_configurationSet(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointEmailChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointEmailChannelConfigConfigurationSet("user@example.com", rName),
@@ -81,11 +79,10 @@ func TestAccAWSPinpointEmailChannel_disappears(t *testing.T) {
 	resourceName := "aws_pinpoint_email_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		ErrorCheck:    testAccErrorCheck(t, pinpoint.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointEmailChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointEmailChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointEmailChannelConfig_FromAddress("user@example.com"),

@@ -391,7 +391,7 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChangesExcept("tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChange("airflow_configuration_options") {
 			options, ok := d.GetOk("airflow_configuration_options")
 			if !ok {

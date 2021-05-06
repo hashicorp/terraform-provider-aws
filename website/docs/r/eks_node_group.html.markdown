@@ -115,7 +115,7 @@ resource "aws_subnet" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
+* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `node_group_name` – (Required) Name of the EKS Node Group.
 * `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. Detailed below.

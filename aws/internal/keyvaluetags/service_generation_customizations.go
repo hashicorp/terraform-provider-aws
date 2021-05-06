@@ -106,6 +106,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -330,6 +331,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(servicediscovery.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
+	case "shield":
+		funcType = reflect.TypeOf(shield.New)
 	case "signer":
 		funcType = reflect.TypeOf(signer.New)
 	case "sns":
@@ -623,6 +626,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
+	case "shield":
+		return "TagResource"
 	case "sqs":
 		return "TagQueue"
 	case "ssm":
@@ -738,6 +743,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "secretsmanager":
 		return "SecretId"
 	case "servicediscovery":
+		return "ResourceARN"
+	case "shield":
 		return "ResourceARN"
 	case "sqs":
 		return "QueueUrl"

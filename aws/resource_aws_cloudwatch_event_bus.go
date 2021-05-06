@@ -27,6 +27,12 @@ func resourceAwsCloudWatchEventBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateCloudWatchEventCustomEventBusName,
 			},
+			"event_source_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudWatchEventCustomEventBusEventSourceName,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -47,6 +53,10 @@ func resourceAwsCloudWatchEventBusCreate(d *schema.ResourceData, meta interface{
 	eventBusName := d.Get("name").(string)
 	input := &events.CreateEventBusInput{
 		Name: aws.String(eventBusName),
+	}
+
+	if v, ok := d.GetOk("event_source_name"); ok {
+		input.EventSourceName = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {

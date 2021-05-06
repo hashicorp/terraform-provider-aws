@@ -76,7 +76,6 @@ func resourceAwsMskCluster() *schema.Resource {
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"security_groups": {
 							Type:     schema.TypeList,
@@ -537,6 +536,30 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if output == nil {
 			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: empty response", d.Id())
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.instance_type") {
+		input := &kafka.UpdateBrokerTypeInput{
+			ClusterArn:         aws.String(d.Id()),
+			CurrentVersion:     aws.String(d.Get("current_version").(string)),
+			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
+		}
+
+		output, err := conn.UpdateBrokerType(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) broker type: %s", d.Id(), err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) broker type: empty response", d.Id())
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)

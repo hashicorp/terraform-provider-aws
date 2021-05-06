@@ -125,6 +125,53 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
+	var csg elasticache.CacheSubnetGroup
+	resourceName := "aws_elasticache_subnet_group.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheSubnetGroupTags1(rInt, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"description"},
+			},
+			{
+				Config: testAccAWSElasticacheSubnetGroupTags2(rInt, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheSubnetGroupTags1(rInt, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSElasticacheSubnetGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
 
@@ -298,4 +345,73 @@ resource "aws_elasticache_subnet_group" "test" {
   ]
 }
 `, rInt))
+}
+
+func testAccAWSElasticacheSubnetGroupTags1(rInt int, tag1Key, tag1Value string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-subnet-group"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id            = aws_vpc.foo.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-subnet-group"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  # Including uppercase letters in this name to ensure
+  # that we correctly handle the fact that the API
+  # normalizes names to lowercase.
+  name       = "tf-TEST-cache-subnet-%03d"
+  subnet_ids = [aws_subnet.foo.id]
+
+  tags = {
+    %q = %q
+  }
+}
+`, rInt, tag1Key, tag1Value))
+}
+
+func testAccAWSElasticacheSubnetGroupTags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-subnet-group"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id            = aws_vpc.foo.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-subnet-group"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "test" {
+  # Including uppercase letters in this name to ensure
+  # that we correctly handle the fact that the API
+  # normalizes names to lowercase.
+  name       = "tf-TEST-cache-subnet-%03d"
+  subnet_ids = [aws_subnet.foo.id]
+
+  tags = {
+    %q = %q
+    %q = %q
+  }
+}
+`, rInt, tag1Key, tag1Value, tag2Key, tag2Value))
 }

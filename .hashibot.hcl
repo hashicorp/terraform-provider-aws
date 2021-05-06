@@ -117,6 +117,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_api_gateway_v2_",
       "aws_apigatewayv2_",
     ],
+    "service/appconfig" = [
+      "aws_appconfig_",
+    ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
     ],
@@ -717,6 +720,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_apigatewayv2_*",
       "**/api_gateway_v2_*",
       "**/apigatewayv2_*"
+    ]
+    "service/appconfig" = [
+      "aws/internal/service/appconfig/**/*",
+      "**/*_appconfig_*",
+      "**/appconfig_*"
     ]
     "service/applicationautoscaling" = [
       "aws/internal/service/applicationautoscaling/**/*",
