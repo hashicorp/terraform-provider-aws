@@ -255,35 +255,8 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 			EndpointDetails: expandTransferEndpointDetails(d.Get("endpoint_details").([]interface{})[0].(map[string]interface{})),
 		}
 
-		// EIPs cannot be assigned directly on server creation, so the server must
-		// be created, stopped, and updated. The Transfer API will return a state
-		// of ONLINE before the underlying VPC Endpoint is available and attempting
-		// to assign the EIPs will return an error until that EC2 API process is
-		// complete:
-		//   ConflictException: VPC Endpoint state is not yet available
-		// To prevent accessing the EC2 API directly to check the VPC Endpoint
-		// state, which can require confusing IAM permissions and have other
-		// eventual consistency consideration, we retry only via the Transfer API.
-		err := resource.Retry(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
-			_, err := conn.UpdateServer(input)
-
-			if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateServer(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
+		if err := updateTransferServer(conn, input); err != nil {
+			return err
 		}
 
 		if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -385,15 +358,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("endpoint_type") {
-			if attr, ok := d.GetOk("endpoint_type"); ok {
-				input.EndpointType = aws.String(attr.(string))
-			}
+			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
 		}
 
 		if d.HasChange("certificate") {
-			if attr, ok := d.GetOk("certificate"); ok {
-				input.Certificate = aws.String(attr.(string))
-			}
+			input.Certificate = aws.String(d.Get("certificate").(string))
 		}
 
 		if d.HasChange("protocols") {
@@ -424,8 +393,8 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
-		if _, err := conn.UpdateServer(input); err != nil {
-			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
+		if err := updateTransferServer(conn, input); err != nil {
+			return err
 		}
 
 		if stopFlag {
@@ -588,6 +557,39 @@ func startTransferServer(conn *transfer.Transfer, serverID string, timeout time.
 
 	if _, err := waiter.ServerStarted(conn, serverID, timeout); err != nil {
 		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %w", serverID, err)
+	}
+
+	return nil
+}
+
+func updateTransferServer(conn *transfer.Transfer, input *transfer.UpdateServerInput) error {
+	// The Transfer API will return a state of ONLINE for a server before the
+	// underlying VPC Endpoint is available and attempting to update the server
+	// will return an error until that EC2 API process is complete:
+	//   ConflictException: VPC Endpoint state is not yet available
+	// To prevent accessing the EC2 API directly to check the VPC Endpoint
+	// state, which can require confusing IAM permissions and have other
+	// eventual consistency consideration, we retry only via the Transfer API.
+	err := resource.Retry(Ec2VpcEndpointCreationTimeout, func() *resource.RetryError {
+		_, err := conn.UpdateServer(input)
+
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeConflictException, "VPC Endpoint state is not yet available") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.UpdateServer(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error updating Transfer Server (%s): %w", aws.StringValue(input.ServerId), err)
 	}
 
 	return nil

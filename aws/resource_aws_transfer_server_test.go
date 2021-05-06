@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -234,11 +235,53 @@ func TestAccAWSTransferServer_vpc(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16556
 /*
-func TestAccAWSTransferServer_protocols(t *testing.T) {
+func TestAccAWSTransferServer_updateEndpointType(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
-	certificateResourceName := "aws_acm_certificate.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerBasicConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+				),
+			},
+			{
+				Config: testAccAWSTransferServerVpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.address_allocation_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+*/
+
+func TestAccAWSTransferServer_protocols(t *testing.T) {
+	var s transfer.DescribedServer
+	var ca acmpca.CertificateAuthority
+	resourceName := "aws_transfer_server.test"
+	acmCAResourceName := "aws_acmpca_certificate_authority.test"
+	acmCertificateResourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -250,7 +293,7 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 			{
 				Config: testAccAWSTransferServerProtocolsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					testAccCheckAWSTransferServerExists(resourceName, &s),
 					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
@@ -264,11 +307,19 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
+			// We need to create and activate the CA before issuing a certificate.
+			{
+				Config: testAccAWSTransferServerConfigRootCA(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+				),
+			},
 			{
 				Config: testAccAWSTransferServerProtocolsUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate", certificateResourceName, "arn"),
+					testAccCheckAWSTransferServerExists(resourceName, &s),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate", acmCertificateResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
@@ -276,10 +327,17 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTPS"),
 				),
 			},
+			{
+				Config: testAccAWSTransferServerProtocolsUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				),
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
-*/
 
 func TestAccAWSTransferServer_apiGateway(t *testing.T) {
 	var conf transfer.DescribedServer
@@ -802,7 +860,6 @@ resource "aws_transfer_server" "test" {
 `, hostKey)
 }
 
-/*
 func testAccAWSTransferServerProtocolsConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
@@ -825,12 +882,8 @@ resource "aws_transfer_server" "test" {
 `)
 }
 
-func testAccAWSTransferServerProtocolsUpdateConfig(rName string) string {
-	return composeConfig(
-		testAccAWSTransferServerConfigBaseVpc(rName),
-		testAccAWSTransferServerConfigBaseApiGateway(rName),
-		testAccAWSTransferServerConfigBaseLoggingRole(rName),
-		fmt.Sprintf(`
+func testAccAWSTransferServerConfigRootCA(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
@@ -844,7 +897,16 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
 }
+`, rName)
+}
 
+func testAccAWSTransferServerProtocolsUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		testAccAWSTransferServerConfigBaseApiGateway(rName),
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		testAccAWSTransferServerConfigRootCA(rName),
+		fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = "test.%[1]s.com"
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -866,4 +928,3 @@ resource "aws_transfer_server" "test" {
 }
 `, rName))
 }
-*/
