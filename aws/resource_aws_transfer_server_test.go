@@ -285,7 +285,7 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
