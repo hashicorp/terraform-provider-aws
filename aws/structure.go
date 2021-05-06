@@ -523,6 +523,73 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 	return result
 }
 
+func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *autoscaling.PredictiveScalingConfiguration {
+	if predictiveScalingConfigSlice == nil || len(predictiveScalingConfigSlice) < 1 {
+		return nil
+	}
+	predictiveScalingConfigFlat := predictiveScalingConfigSlice[0].(map[string]interface{})
+	predictiveScalingConfig := &autoscaling.PredictiveScalingConfiguration{
+		MetricSpecifications:      expandPredictiveScalingMetricSpecifications(predictiveScalingConfigFlat["metric_specification"].([]interface{})),
+		MaxCapacityBreachBehavior: aws.String(predictiveScalingConfigFlat["max_capacity_breach_behavior"].(string)),
+		Mode:                      aws.String(predictiveScalingConfigFlat["mode"].(string)),
+		SchedulingBufferTime:      aws.Int64(int64(predictiveScalingConfigFlat["scheduling_buffer_time"].(int))),
+	}
+	if predictiveScalingConfigFlat["max_capacity_buffer"].(int) != 0 {
+		predictiveScalingConfig.MaxCapacityBuffer = aws.Int64(int64(predictiveScalingConfigFlat["max_capacity_buffer"].(int)))
+	}
+	return predictiveScalingConfig
+}
+
+func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []interface{}) []*autoscaling.PredictiveScalingMetricSpecification {
+	if metricSpecificationsSlice == nil || len(metricSpecificationsSlice) < 1 {
+		return nil
+	}
+	metricSpecificationsFlat := metricSpecificationsSlice[0].(map[string]interface{})
+	metricSpecification := &autoscaling.PredictiveScalingMetricSpecification{
+		PredefinedLoadMetricSpecification:    expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
+		PredefinedMetricPairSpecification:    expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
+		PredefinedScalingMetricSpecification: expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
+		TargetValue:                          aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+	}
+	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
+}
+
+func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSlice []interface{}) *autoscaling.PredefinedLoadMetricSpecification {
+	if predefinedLoadMetricSpecificationSlice == nil || len(predefinedLoadMetricSpecificationSlice) < 1 {
+		return nil
+	}
+	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
+	predefinedLoadMetricSpecification := &autoscaling.PredefinedLoadMetricSpecification{
+		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
+		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
+	}
+	return predefinedLoadMetricSpecification
+}
+
+func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSlice []interface{}) *autoscaling.PredefinedMetricPairSpecification {
+	if predefinedMetricPairSpecificationSlice == nil || len(predefinedMetricPairSpecificationSlice) < 1 {
+		return nil
+	}
+	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
+	predefinedMetricPairSpecification := &autoscaling.PredefinedMetricPairSpecification{
+		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
+		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
+	}
+	return predefinedMetricPairSpecification
+}
+
+func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecificationSlice []interface{}) *autoscaling.PredefinedScalingMetricSpecification {
+	if predefinedScalingMetricSpecificationSlice == nil || len(predefinedScalingMetricSpecificationSlice) < 1 {
+		return nil
+	}
+	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
+	predefinedScalingMetricSpecification := &autoscaling.PredefinedScalingMetricSpecification{
+		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
+		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
+	}
+	return predefinedScalingMetricSpecification
+}
+
 // Takes the result of flatmap.Expand for an array of step adjustments and
 // returns a []*autoscaling.StepAdjustment.
 func expandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
@@ -1219,6 +1286,79 @@ func flattenDaxSecurityGroupIds(securityGroups []*dax.SecurityGroupMembership) [
 		}
 	}
 	return result
+}
+
+func flattenPredictiveScalingConfig(predictiveScalingConfig *autoscaling.PredictiveScalingConfiguration) []map[string]interface{} {
+	predictiveScalingConfigFlat := map[string]interface{}{}
+	if predictiveScalingConfig == nil {
+		return nil
+	}
+	if predictiveScalingConfig.MetricSpecifications != nil && len(predictiveScalingConfig.MetricSpecifications) > 0 {
+		predictiveScalingConfigFlat["metric_specification"] = flattenPredictiveScalingMetricSpecifications(predictiveScalingConfig.MetricSpecifications)
+	}
+	if predictiveScalingConfig.Mode != nil {
+		predictiveScalingConfigFlat["mode"] = aws.StringValue(predictiveScalingConfig.Mode)
+	}
+	if predictiveScalingConfig.SchedulingBufferTime != nil {
+		predictiveScalingConfigFlat["scheduling_buffer_time"] = aws.Int64Value(predictiveScalingConfig.SchedulingBufferTime)
+	}
+	if predictiveScalingConfig.MaxCapacityBreachBehavior != nil {
+		predictiveScalingConfigFlat["max_capacity_breach_behavior"] = aws.StringValue(predictiveScalingConfig.MaxCapacityBreachBehavior)
+	}
+	if predictiveScalingConfig.MaxCapacityBuffer != nil {
+		predictiveScalingConfigFlat["max_capacity_buffer"] = aws.Int64Value(predictiveScalingConfig.MaxCapacityBuffer)
+	}
+	return []map[string]interface{}{predictiveScalingConfigFlat}
+}
+
+func flattenPredictiveScalingMetricSpecifications(metricSpecification []*autoscaling.PredictiveScalingMetricSpecification) []map[string]interface{} {
+	metricSpecificationFlat := map[string]interface{}{}
+	if metricSpecification == nil || len(metricSpecification) < 1 {
+		return []map[string]interface{}{metricSpecificationFlat}
+	}
+	if metricSpecification[0].TargetValue != nil {
+		metricSpecificationFlat["target_value"] = aws.Float64Value(metricSpecification[0].TargetValue)
+	}
+	if metricSpecification[0].PredefinedLoadMetricSpecification != nil {
+		metricSpecificationFlat["predefined_load_metric_specification"] = flattenPredefinedLoadMetricSpecification(metricSpecification[0].PredefinedLoadMetricSpecification)
+	}
+	if metricSpecification[0].PredefinedMetricPairSpecification != nil {
+		metricSpecificationFlat["predefined_metric_pair_specification"] = flattenPredefinedMetricPairSpecification(metricSpecification[0].PredefinedMetricPairSpecification)
+	}
+	if metricSpecification[0].PredefinedScalingMetricSpecification != nil {
+		metricSpecificationFlat["predefined_scaling_metric_specification"] = flattenPredefinedScalingMetricSpecification(metricSpecification[0].PredefinedScalingMetricSpecification)
+	}
+	return []map[string]interface{}{metricSpecificationFlat}
+}
+
+func flattenPredefinedScalingMetricSpecification(predefinedScalingMetricSpecification *autoscaling.PredefinedScalingMetricSpecification) []map[string]interface{} {
+	predefinedScalingMetricSpecificationFlat := map[string]interface{}{}
+	if predefinedScalingMetricSpecification == nil {
+		return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
+	}
+	predefinedScalingMetricSpecificationFlat["predefined_metric_type"] = aws.StringValue(predefinedScalingMetricSpecification.PredefinedMetricType)
+	predefinedScalingMetricSpecificationFlat["resource_label"] = aws.StringValue(predefinedScalingMetricSpecification.ResourceLabel)
+	return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
+}
+
+func flattenPredefinedLoadMetricSpecification(predefinedLoadMetricSpecification *autoscaling.PredefinedLoadMetricSpecification) []map[string]interface{} {
+	predefinedLoadMetricSpecificationFlat := map[string]interface{}{}
+	if predefinedLoadMetricSpecification == nil {
+		return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
+	}
+	predefinedLoadMetricSpecificationFlat["predefined_metric_type"] = aws.StringValue(predefinedLoadMetricSpecification.PredefinedMetricType)
+	predefinedLoadMetricSpecificationFlat["resource_label"] = aws.StringValue(predefinedLoadMetricSpecification.ResourceLabel)
+	return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
+}
+
+func flattenPredefinedMetricPairSpecification(predefinedMetricPairSpecification *autoscaling.PredefinedMetricPairSpecification) []map[string]interface{} {
+	predefinedMetricPairSpecificationFlat := map[string]interface{}{}
+	if predefinedMetricPairSpecification == nil {
+		return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
+	}
+	predefinedMetricPairSpecificationFlat["predefined_metric_type"] = aws.StringValue(predefinedMetricPairSpecification.PredefinedMetricType)
+	predefinedMetricPairSpecificationFlat["resource_label"] = aws.StringValue(predefinedMetricPairSpecification.ResourceLabel)
+	return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
 }
 
 // Flattens step adjustments into a list of map[string]interface.

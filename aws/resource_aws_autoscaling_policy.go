@@ -43,16 +43,6 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"policy_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
-				ValidateFunc: validation.StringInSlice([]string{
-					"SimpleScaling",
-					"StepScaling",
-					"TargetTrackingScaling",
-				}, false),
-			},
 			"cooldown": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -70,6 +60,131 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"policy_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "SimpleScaling", // preserve AWS's default to make validation easier.
+				ValidateFunc: validation.StringInSlice([]string{
+					"SimpleScaling",
+					"StepScaling",
+					"TargetTrackingScaling",
+					"PredictiveScaling",
+				}, false),
+			},
+			"predictive_scaling_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_specification": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"predefined_metric_pair_specification": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"predefined_metric_type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"ASGCPUUtilization",
+														"ASGNetworkIn",
+														"ASGNetworkOut",
+														"ALBRequestCount",
+													}, false),
+												},
+												"resource_label": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"predefined_scaling_metric_specification": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"predefined_metric_type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"ASGAverageCPUUtilization",
+														"ASGAverageNetworkIn",
+														"ASGAverageNetworkOut",
+														"ALBRequestCountPerTarget",
+													}, false),
+												},
+												"resource_label": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"predefined_load_metric_specification": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"predefined_metric_type": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														"ASGTotalCPUUtilization",
+														"ASGTotalNetworkIn",
+														"ASGTotalNetworkOut",
+														"ALBTargetGroupRequestCount",
+													}, false),
+												},
+												"resource_label": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+									"target_value": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+						"max_capacity_breach_behavior": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "HonorMaxCapacity",
+							ValidateFunc: validation.StringInSlice([]string{
+								"HonorMaxCapacity",
+								"IncreaseMaxCapacity",
+							}, false),
+						},
+						"max_capacity_buffer": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(-1, 100),
+						},
+						"mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ForecastOnly",
+								"ForecastAndScale",
+							}, false),
+						},
+						"scheduling_buffer_time": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+					},
+				},
 			},
 			"scaling_adjustment": {
 				Type:          schema.TypeInt,
@@ -226,6 +341,9 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", p.PolicyARN)
 	d.Set("name", p.PolicyName)
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
+	if err := d.Set("predictive_scaling_config", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
+		return fmt.Errorf("error setting config: %s", err)
+	}
 	if err := d.Set("step_adjustment", flattenStepAdjustments(p.StepAdjustments)); err != nil {
 		return fmt.Errorf("error setting step_adjustment: %s", err)
 	}
@@ -307,6 +425,10 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	// This parameter is supported if the policy type is SimpleScaling or StepScaling.
 	if v, ok := d.GetOk("adjustment_type"); ok && (policyType == "SimpleScaling" || policyType == "StepScaling") {
 		params.AdjustmentType = aws.String(v.(string))
+	}
+
+	if predictiveScalingConfigFlat := d.Get("predictive_scaling_config").([]interface{}); len(predictiveScalingConfigFlat) > 0 {
+		params.PredictiveScalingConfiguration = expandPredictiveScalingConfig(predictiveScalingConfigFlat)
 	}
 
 	// This parameter is supported if the policy type is SimpleScaling.

@@ -103,6 +103,108 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
+	var policy autoscaling.ScalingPolicy
+
+	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+
+	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
+	var policy autoscaling.ScalingPolicy
+
+	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+
+	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
+	var policy autoscaling.ScalingPolicy
+
+	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+
+	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSAutoscalingPolicyConfig_predictiveScalingUpdated(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoscalingPolicy_disappears(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
@@ -431,6 +533,72 @@ resource "aws_autoscaling_policy" "foobar_target_tracking" {
   }
 }
 `, name, name, name)
+}
+
+func testAccAWSAutoscalingPolicyConfig_predictiveScaling(name string) string {
+	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+resource "aws_autoscaling_policy" "policy_predictive" {
+  name                   = "%[1]s-policcy_predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_config {
+    metric_specification {
+      target_value = 32
+      predefined_scaling_metric_specification {
+       predefined_metric_type = "ASGAverageCPUUtilization"
+       resource_label         = "testLabel"
+      }
+      predefined_load_metric_specification {
+       predefined_metric_type = "ASGTotalCPUUtilization"
+       resource_label         = "testLabel"
+      }
+    }
+    mode                          = "ForecastAndScale"
+    scheduling_buffer_time        = 10
+    max_capacity_breach_behavior  = "IncreaseMaxCapacity"
+    max_capacity_buffer           = 10
+  }
+}
+`, name)
+}
+
+func testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name string) string {
+	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+resource "aws_autoscaling_policy" "policy_predictive" {
+  name                   = "%[1]s-foobar_simple"
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  policy_type            = "SimpleScaling"
+  scaling_adjustment     = 2
+  autoscaling_group_name = aws_autoscaling_group.test.name
+}
+`, name)
+}
+
+func testAccAWSAutoscalingPolicyConfig_predictiveScalingUpdated(name string) string {
+	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+resource "aws_autoscaling_policy" "policy_predictive" {
+  name                   = "%[1]s-policcy_predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_config {
+    metric_specification {
+      target_value = 32
+      predefined_scaling_metric_specification {
+       predefined_metric_type = "ASGAverageNetworkIn"
+       resource_label         = "testLabel"
+      }
+      predefined_load_metric_specification {
+       predefined_metric_type = "ASGTotalNetworkIn"
+       resource_label         = "testLabel"
+      }
+    }
+    mode                          = "ForecastOnly"
+    scheduling_buffer_time        = 5
+    max_capacity_breach_behavior  = "HonorMaxCapacity"
+  }
+}
+`, name)
 }
 
 func testAccAWSAutoscalingPolicyConfig_basicUpdate(name string) string {
