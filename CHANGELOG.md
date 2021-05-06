@@ -1,4 +1,4 @@
-## 3.39.0 (Unreleased)
+## 3.39.0 (May 06, 2021)
 
 FEATURES:
 
