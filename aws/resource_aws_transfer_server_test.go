@@ -234,9 +234,11 @@ func TestAccAWSTransferServer_vpc(t *testing.T) {
 	})
 }
 
+/*
 func TestAccAWSTransferServer_protocols(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
+	certificateResourceName := "aws_acm_certificate.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -249,6 +251,7 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 				Config: testAccAWSTransferServerProtocolsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
@@ -261,9 +264,22 @@ func TestAccAWSTransferServer_protocols(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
+			{
+				Config: testAccAWSTransferServerProtocolsUpdateConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate", certificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTPS"),
+				),
+			},
 		},
 	})
 }
+*/
 
 func TestAccAWSTransferServer_apiGateway(t *testing.T) {
 	var conf transfer.DescribedServer
@@ -501,6 +517,46 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
+func testAccAWSTransferServerConfigBaseLoggingRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowFullAccesstoCloudWatchLogs",
+    "Effect": "Allow",
+    "Action": [
+      "logs:*"
+    ],
+    "Resource": "*"
+  }]
+}
+POLICY
+}
+`, rName)
+}
+
 func testAccAWSTransferServerConfigBaseApiGateway(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
@@ -574,97 +630,28 @@ resource "aws_transfer_server" "test" {
 }
 
 func testAccAWSTransferServerUpdatedConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowFullAccesstoCloudWatchLogs",
-    "Effect": "Allow",
-    "Action": [
-      "logs:*"
-    ],
-    "Resource": "*"
-  }]
-}
-POLICY
-}
-
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "SERVICE_MANAGED"
   logging_role           = aws_iam_role.test.arn
 }
-`, rName)
+`)
 }
 
 func testAccAWSTransferServerApiGatewayIdentityProviderTypeConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseApiGateway(rName),
-		fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowFullAccesstoCloudWatchLogs",
-    "Effect": "Allow",
-    "Action": [
-      "logs:*"
-    ],
-    "Resource": "*"
-  }]
-}
-POLICY
-}
-
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
   url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
   invocation_role        = aws_iam_role.test.arn
   logging_role           = aws_iam_role.test.arn
 }
-`, rName))
+`)
 }
 
 func testAccAWSTransferServerForceDestroyConfig(rName string) string {
@@ -758,7 +745,7 @@ resource "aws_transfer_server" "test" {
 func testAccAWSTransferServerVpcConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
-		`
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   count = 2
 
@@ -778,13 +765,13 @@ resource "aws_transfer_server" "test" {
     vpc_id                 = aws_vpc.test.id
   }
 }
-`)
+`, rName))
 }
 
 func testAccAWSTransferServerVpcUpdateConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
-		`
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   count = 2
 
@@ -804,7 +791,7 @@ resource "aws_transfer_server" "test" {
     vpc_id                 = aws_vpc.test.id
   }
 }
-`)
+`, rName))
 }
 
 func testAccAWSTransferServerHostKeyConfig(hostKey string) string {
@@ -815,47 +802,13 @@ resource "aws_transfer_server" "test" {
 `, hostKey)
 }
 
+/*
 func testAccAWSTransferServerProtocolsConfig(rName string) string {
 	return composeConfig(
 		testAccAWSTransferServerConfigBaseVpc(rName),
 		testAccAWSTransferServerConfigBaseApiGateway(rName),
-		fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "transfer.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowFullAccesstoCloudWatchLogs",
-    "Effect": "Allow",
-    "Action": [
-      "logs:*"
-    ],
-    "Resource": "*"
-  }]
-}
-POLICY
-}
-
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		`
 resource "aws_transfer_server" "test" {
   identity_provider_type = "API_GATEWAY"
   url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
@@ -869,5 +822,48 @@ resource "aws_transfer_server" "test" {
     vpc_id     = aws_vpc.test.id
   }
 }
+`)
+}
+
+func testAccAWSTransferServerProtocolsUpdateConfig(rName string) string {
+	return composeConfig(
+		testAccAWSTransferServerConfigBaseVpc(rName),
+		testAccAWSTransferServerConfigBaseApiGateway(rName),
+		testAccAWSTransferServerConfigBaseLoggingRole(rName),
+		fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "%[1]s.com"
+    }
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name               = "test.%[1]s.com"
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}
+
+resource "aws_transfer_server" "test" {
+  identity_provider_type = "API_GATEWAY"
+  url                    = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role        = aws_iam_role.test.arn
+  logging_role           = aws_iam_role.test.arn
+  protocols              = ["FTP", "FTPS"]
+  certificate            = aws_acm_certificate.test.arn
+
+  endpoint_type = "VPC"
+  endpoint_details {
+    subnet_ids = [aws_subnet.test.id]
+    vpc_id     = aws_vpc.test.id
+  }
+}
 `, rName))
 }
+*/

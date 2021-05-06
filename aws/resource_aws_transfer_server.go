@@ -246,7 +246,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if updateAfterCreate {
-		if err := stopAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 
@@ -286,7 +286,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
 		}
 
-		if err := startAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
@@ -418,18 +418,18 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if stopFlag {
-			if err := stopAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := stopTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
 		}
 
-		log.Printf("[DEBUG] Creating Transfer Server: %s", input)
+		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
 		if _, err := conn.UpdateServer(input); err != nil {
 			return fmt.Errorf("error updating Transfer Server (%s): %w", d.Id(), err)
 		}
 
 		if stopFlag {
-			if err := startAndWaitForTransferServer(d.Id(), conn, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := startTransferServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return err
 			}
 		}
@@ -561,75 +561,34 @@ func flattenTransferEndpointDetails(apiObject *transfer.EndpointDetails) map[str
 	return tfMap
 }
 
-func stopAndWaitForTransferServer(serverId string, conn *transfer.Transfer, timeout time.Duration) error {
-	stopReq := &transfer.StopServerInput{
-		ServerId: aws.String(serverId),
-	}
-	if _, err := conn.StopServer(stopReq); err != nil {
-		return fmt.Errorf("error stopping Transfer Server (%s): %s", serverId, err)
+func stopTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+	input := &transfer.StopServerInput{
+		ServerId: aws.String(serverID),
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{transfer.StateStarting, transfer.StateOnline, transfer.StateStopping},
-		Target:  []string{transfer.StateOffline},
-		Refresh: refreshTransferServerStatus(conn, serverId),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
+	if _, err := conn.StopServer(input); err != nil {
+		return fmt.Errorf("error stopping Transfer Server (%s): %w", serverID, err)
 	}
 
-	if _, err := stateChangeConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to stop: %s", serverId, err)
+	if _, err := waiter.ServerStopped(conn, serverID, timeout); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s) to stop: %w", serverID, err)
 	}
 
 	return nil
 }
 
-func startAndWaitForTransferServer(serverId string, conn *transfer.Transfer, timeout time.Duration) error {
-	stopReq := &transfer.StartServerInput{
-		ServerId: aws.String(serverId),
+func startTransferServer(conn *transfer.Transfer, serverID string, timeout time.Duration) error {
+	input := &transfer.StartServerInput{
+		ServerId: aws.String(serverID),
 	}
 
-	if _, err := conn.StartServer(stopReq); err != nil {
-		return fmt.Errorf("error starting Transfer Server (%s): %s", serverId, err)
+	if _, err := conn.StartServer(input); err != nil {
+		return fmt.Errorf("error starting Transfer Server (%s): %w", serverID, err)
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
-		Pending: []string{transfer.StateStarting, transfer.StateOffline, transfer.StateStopping},
-		Target:  []string{transfer.StateOnline},
-		Refresh: refreshTransferServerStatus(conn, serverId),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
-	}
-
-	if _, err := stateChangeConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %s", serverId, err)
+	if _, err := waiter.ServerStarted(conn, serverID, timeout); err != nil {
+		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %w", serverID, err)
 	}
 
 	return nil
-}
-
-func refreshTransferServerStatus(conn *transfer.Transfer, serverId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		server, err := describeTransferServer(conn, serverId)
-
-		if server == nil {
-			return 42, "destroyed", nil
-		}
-
-		return server, aws.StringValue(server.State), err
-	}
-}
-
-func describeTransferServer(conn *transfer.Transfer, serverId string) (*transfer.DescribedServer, error) {
-	params := &transfer.DescribeServerInput{
-		ServerId: aws.String(serverId),
-	}
-
-	resp, err := conn.DescribeServer(params)
-
-	if resp == nil {
-		return nil, err
-	}
-
-	return resp.Server, err
 }

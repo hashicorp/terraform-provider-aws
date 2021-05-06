@@ -44,3 +44,37 @@ func ServerDeleted(conn *transfer.Transfer, id string) (*transfer.DescribedServe
 
 	return nil, err
 }
+
+func ServerStarted(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{transfer.StateStarting, transfer.StateOffline, transfer.StateStopping},
+		Target:  []string{transfer.StateOnline},
+		Refresh: ServerState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*transfer.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ServerStopped(conn *transfer.Transfer, id string, timeout time.Duration) (*transfer.DescribedServer, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{transfer.StateStarting, transfer.StateOnline, transfer.StateStopping},
+		Target:  []string{transfer.StateOffline},
+		Refresh: ServerState(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*transfer.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
