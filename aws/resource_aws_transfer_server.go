@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -447,8 +449,40 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).transferconn
 
 	if d.Get("force_destroy").(bool) {
-		log.Printf("[DEBUG] Transfer Server (%s) attempting to forceDestroy", d.Id())
-		if err := deleteTransferUsers(conn, d.Id(), nil); err != nil {
+		input := &transfer.ListUsersInput{
+			ServerId: aws.String(d.Id()),
+		}
+		var deletionErrs *multierror.Error
+
+		err := conn.ListUsersPages(input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, user := range page.Users {
+				resourceID := tftransfer.UserCreateResourceID(d.Id(), aws.StringValue(user.UserName))
+
+				r := resourceAwsTransferUser()
+				d := r.Data(nil)
+				d.SetId(resourceID)
+				err := r.Delete(d, meta)
+
+				if err != nil {
+					deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error deleting Transfer User (%s): %w", resourceID, err))
+					continue
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error listing Transfer Users: %w", err))
+		}
+
+		err = deletionErrs.ErrorOrNil()
+
+		if err != nil {
 			return err
 		}
 	}
@@ -470,44 +504,6 @@ func resourceAwsTransferServerDelete(d *schema.ResourceData, meta interface{}) e
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Transfer Server (%s) delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *string) error {
-	listOpts := &transfer.ListUsersInput{
-		ServerId:  aws.String(serverID),
-		NextToken: nextToken,
-	}
-
-	log.Printf("[DEBUG] List Transfer User Option: %#v", listOpts)
-
-	resp, err := conn.ListUsers(listOpts)
-	if err != nil {
-		return err
-	}
-
-	for _, user := range resp.Users {
-
-		delOpts := &transfer.DeleteUserInput{
-			ServerId: aws.String(serverID),
-			UserName: user.UserName,
-		}
-
-		log.Printf("[DEBUG] Delete Transfer User Option: %#v", delOpts)
-
-		_, err = conn.DeleteUser(delOpts)
-		if err != nil {
-			if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
-				continue
-			}
-			return fmt.Errorf("error deleting Transfer User (%s) for Server(%s): %s", *user.UserName, serverID, err)
-		}
-	}
-
-	if resp.NextToken != nil {
-		return deleteTransferUsers(conn, serverID, resp.NextToken)
 	}
 
 	return nil

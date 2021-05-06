@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -44,6 +43,7 @@ func testSweepTransferServers(region string) error {
 			r := resourceAwsTransferServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
+			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
 			err = r.Delete(d, client)
 
 			if err != nil {
@@ -304,9 +304,12 @@ func TestAccAWSTransferServer_disappears(t *testing.T) {
 }
 
 func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
-	var conf transfer.DescribedServer
-	var roleConf iam.GetRoleOutput
+	var s transfer.DescribedServer
+	var u transfer.DescribedUser
+	var k transfer.SshPublicKey
 	resourceName := "aws_transfer_server.test"
+	userResourceName := "aws_transfer_user.test"
+	sshKeyResourceName := "aws_transfer_ssh_key.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -318,12 +321,10 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 			{
 				Config: testAccAWSTransferServerConfig_forcedestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSTransferServerExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "SERVICE_MANAGED"),
+					testAccCheckAWSTransferServerExists(resourceName, &s),
+					testAccCheckAWSTransferUserExists(userResourceName, &u),
+					testAccCheckAWSTransferSshKeyExists(sshKeyResourceName, &k),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
-					testAccCheckAWSRoleExists("aws_iam_role.test", &roleConf),
-					testAccCheckAWSTransferCreateUser(&conf, &roleConf, rName),
-					testAccCheckAWSTransferCreateSshKey(&conf, rName),
 				),
 			},
 			{
@@ -443,42 +444,6 @@ func testAccCheckAWSTransferServerDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSTransferCreateUser(describedServer *transfer.DescribedServer, getRoleOutput *iam.GetRoleOutput, userName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
-
-		input := &transfer.CreateUserInput{
-			ServerId: describedServer.ServerId,
-			UserName: aws.String(userName),
-			Role:     getRoleOutput.Role.Arn,
-		}
-
-		if _, err := conn.CreateUser(input); err != nil {
-			return fmt.Errorf("error creating Transfer User (%s) on Server (%s): %s", userName, aws.StringValue(describedServer.ServerId), err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSTransferCreateSshKey(describedServer *transfer.DescribedServer, userName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
-
-		input := &transfer.ImportSshPublicKeyInput{
-			ServerId:         describedServer.ServerId,
-			UserName:         aws.String(userName),
-			SshPublicKeyBody: aws.String("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"),
-		}
-
-		if _, err := conn.ImportSshPublicKey(input); err != nil {
-			return fmt.Errorf("error creating Transfer SSH Public Key for  (%s/%s): %s", userName, aws.StringValue(describedServer.ServerId), err)
-		}
-
-		return nil
-	}
 }
 
 func testAccPreCheckAWSTransfer(t *testing.T) {
@@ -697,6 +662,18 @@ resource "aws_iam_role_policy" "test" {
   }]
 }
 POLICY
+}
+
+resource "aws_transfer_user" "test" {
+  server_id = aws_transfer_server.test.id
+  user_name = %[1]q
+  role      = aws_iam_role.test.arn
+}
+
+resource "aws_transfer_ssh_key" "test" {
+  server_id = aws_transfer_server.test.id
+  user_name = aws_transfer_user.test.user_name
+  body      = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 `, rName)
 }

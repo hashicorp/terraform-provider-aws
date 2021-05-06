@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tftransfer "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/transfer"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -139,7 +139,7 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error creating Transfer User: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", serverID, userName))
+	d.SetId(tftransfer.UserCreateResourceID(serverID, userName))
 
 	return resourceAwsTransferUserRead(d, meta)
 }
@@ -149,7 +149,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	serverID, userName, err := decodeTransferUserId(d.Id())
+	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
 	}
@@ -199,7 +199,7 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
 	updateFlag := false
-	serverID, userName, err := decodeTransferUserId(d.Id())
+	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
 	}
@@ -258,7 +258,7 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	serverID, userName, err := decodeTransferUserId(d.Id())
+	serverID, userName, err := tftransfer.UserParseResourceID(d.Id())
 	if err != nil {
 		return fmt.Errorf("error parsing Transfer User ID: %s", err)
 	}
@@ -283,14 +283,6 @@ func resourceAwsTransferUserDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-}
-
-func decodeTransferUserId(id string) (string, string, error) {
-	idParts := strings.SplitN(id, "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected SERVERID/USERNAME", id)
-	}
-	return idParts[0], idParts[1], nil
 }
 
 func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName string) error {
