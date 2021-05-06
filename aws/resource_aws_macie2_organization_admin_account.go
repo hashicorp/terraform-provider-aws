@@ -42,9 +42,9 @@ func resourceAwsMacie2OrganizationAdminAccount() *schema.Resource {
 
 func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
-
+	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
-		AdminAccountId: aws.String(d.Get("admin_account_id").(string)),
+		AdminAccountId: aws.String(adminAccountID),
 		ClientToken:    aws.String(resource.UniqueId()),
 	}
 
@@ -71,7 +71,7 @@ func resourceMacie2OrganizationAdminAccountCreate(ctx context.Context, d *schema
 		return diag.FromErr(fmt.Errorf("error creating Macie OrganizationAdminAccount: %w", err))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(adminAccountID)
 
 	return resourceMacie2OrganizationAdminAccountRead(ctx, d, meta)
 }
@@ -84,7 +84,7 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 
 	err = conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		for _, account := range page.AdminAccounts {
-			if aws.StringValue(account.AccountId) != d.Get("admin_account_id").(string) {
+			if aws.StringValue(account.AccountId) == d.Id() {
 				res = account
 				return false
 			}
@@ -94,8 +94,9 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Macie OrganizationAdminAccount does not exist, removing from state: %s", d.Id())
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -123,7 +124,8 @@ func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema
 
 	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))

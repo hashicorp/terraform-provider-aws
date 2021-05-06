@@ -3,7 +3,7 @@ subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_organization_admin_account"
 description: |-
-  Provides a resource to manage an AWS Macie Organization Admin Account.
+Provides a resource to manage an AWS Macie Organization Admin Account.
 ---
 
 # Resource: aws_macie2_organization_admin_account
@@ -18,7 +18,7 @@ resource "aws_macie2_account" "example" {}
 
 resource "aws_macie2_organization_admin_account" "test" {
   admin_account_id = "ID OF THE ADMIN ACCOUNT"
-  depends_on = [aws_macie2_account.test]
+  depends_on       = [aws_macie2_account.test]
 }
 ```
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique identifier (ID) of the macie Member.
+* `id` - The unique identifier (ID) of the macie organization admin account.
 * `status` - The current status of the account as the delegated administrator of Amazon Macie for the organization.
 * `account_id` - The AWS account ID for the account.
 

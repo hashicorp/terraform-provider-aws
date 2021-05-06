@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
+func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
-	adminAccountID := os.Getenv("AWS_ADMIN_ACCOUNT_ID")
+	adminAccountID := "123471550386"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -37,9 +36,9 @@ func TestAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
+func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
-	adminAccountID := os.Getenv("AWS_ADMIN_ACCOUNT_ID")
+	adminAccountID := "123471550386"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -111,7 +110,8 @@ func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) er
 			return true
 		})
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
 			continue
 		}
 
@@ -129,11 +129,12 @@ func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) er
 }
 
 func testAccAwsMacieOrganizationAdminAccountConfigBasic(accountID string) string {
-	return fmt.Sprintf(`resource "aws_macie2_account" "test" {}
+	return fmt.Sprintf(`
+resource "aws_macie2_account" "test" {}
 
-	resource "aws_macie2_organization_admin_account" "test" {
-		admin_account_id = "%s"
-		depends_on = [aws_macie2_account.test]
-	}
+resource "aws_macie2_organization_admin_account" "test" {
+  admin_account_id = %[1]q
+  depends_on = [aws_macie2_account.test]
+}
 `, accountID)
 }

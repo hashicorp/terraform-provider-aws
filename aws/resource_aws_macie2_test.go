@@ -43,6 +43,10 @@ func TestAccAWSMacie2_serial(t *testing.T) {
 			"disappears": testAccAwsMacie2Member_disappears,
 			"tags":       testAccAwsMacie2Member_withTags,
 		},
+		"OrganizationAdminAccount": {
+			"basic":      testAccAwsMacie2OrganizationAdminAccount_basic,
+			"disappears": testAccAwsMacie2OrganizationAdminAccount_disappears,
+		},
 	}
 
 	for group, m := range testCases {
