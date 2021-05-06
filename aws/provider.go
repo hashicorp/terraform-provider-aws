@@ -515,6 +515,7 @@ func Provider() *schema.Provider {
 			"aws_chime_voice_connector":                               resourceAwsChimeVoiceConnector(),
 			"aws_chime_voice_connector_group":                         resourceAwsChimeVoiceConnectorGroup(),
 			"aws_chime_voice_connector_origination":                   resourceAwsChimeVoiceConnectorOrigination(),
+			"aws_chime_voice_connector_streaming":                     resourceAwsChimeVoiceConnectorStreaming(),
 			"aws_chime_voice_connector_termination":                   resourceAwsChimeVoiceConnectorTermination(),
 			"aws_cloud9_environment_ec2":                              resourceAwsCloud9EnvironmentEc2(),
 			"aws_cloudformation_stack":                                resourceAwsCloudFormationStack(),
