@@ -62,6 +62,10 @@ func resourceAwsMacie2Member() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(macie2.MacieStatus_Values(), false),
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Second),
+			Update: schema.DefaultTimeout(60 * time.Second),
+		},
 	}
 }
 
