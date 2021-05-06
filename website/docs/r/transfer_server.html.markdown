@@ -12,55 +12,72 @@ Provides a AWS Transfer Server resource.
 
 ## Example Usage
 
+### Basic
+
 ```terraform
 resource "aws_transfer_server" "example" {
-  identity_provider_type = "SERVICE_MANAGED"
-  logging_role           = aws_iam_role.example.arn
-
   tags = {
-    NAME = "tf-acc-test-transfer-server"
-    ENV  = "test"
+    Name = "Example"
   }
 }
+```
 
-resource "aws_iam_role" "example" {
-  name = "tf-test-transfer-server-iam-role"
+### Basic
 
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "transfer.amazonaws.com"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
+```terraform
+resource "aws_transfer_server" "example" {
+  tags = {
+    Name = "Example"
+  }
 }
-EOF
-}
+```
 
-resource "aws_iam_role_policy" "example" {
-  name = "tf-test-transfer-server-iam-policy"
-  role = aws_iam_role.example.id
+### Security Policy Name
 
-  policy = <<POLICY
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Sid": "AllowFullAccesstoCloudWatchLogs",
-		"Effect": "Allow",
-		"Action": [
-			"logs:*"
-		],
-		"Resource": "*"
-		}
-	]
+```terraform
+resource "aws_transfer_server" "example" {
+  security_policy_name = "TransferSecurityPolicy-2020-06"
 }
-POLICY
+```
+
+### Security Policy Name
+
+```terraform
+resource "aws_transfer_server" "example" {
+  security_policy_name = "TransferSecurityPolicy-2020-06"
+}
+```
+
+### VPC Endpoint
+
+```terraform
+resource "aws_transfer_server" "example" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    address_allocation_ids = [aws_eip.example.id]
+    subnet_ids             = [aws_subnet.example.id]
+    vpc_id                 = aws_vpc.example.id
+  }
+}
+```
+
+### Protocols
+
+```terraform
+resource "aws_transfer_server" "example" {
+  endpoint_type = "VPC"
+
+  endpoint_details {
+    subnet_ids = [aws_subnet.example.id]
+    vpc_id     = aws_vpc.example.id
+  }
+
+  protocols   = ["FTP", "FTPS"]
+  certificate = aws_acm_certificate.example.arn
+
+  identity_provider_type = "API_GATEWAY"
+  url                    = "${aws_api_gateway_deployment.example.invoke_url}${aws_api_gateway_resource.example.path}"
 }
 ```
 
@@ -68,6 +85,11 @@ POLICY
 
 The following arguments are supported:
 
+* `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
+* `protocols` - (Optional) Specifies the file transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint. This defaults to `SFTP` . The available protocols are:
+    * `SFTP`: File transfer over SSH
+    * `FTPS`: File transfer with TLS encryption
+    * `FTP`: Unencrypted file transfer
 * `endpoint_details` - (Optional) The virtual private cloud (VPC) endpoint settings that you want to configure for your SFTP server. Fields documented below.
 * `endpoint_type` - (Optional) The type of endpoint that you want your SFTP server connect to. If you connect to a `VPC` (or `VPC_ENDPOINT`), your SFTP server isn't accessible over the public internet. If you want to connect your SFTP server via public internet, set `PUBLIC`.  Defaults to `PUBLIC`.
 * `invocation_role` - (Optional) Amazon Resource Name (ARN) of the IAM role used to authenticate the user account with an `identity_provider_type` of `API_GATEWAY`.
