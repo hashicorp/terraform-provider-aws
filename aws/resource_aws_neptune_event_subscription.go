@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -78,13 +78,18 @@ func resourceAwsNeptuneEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -94,13 +99,11 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 		d.Set("name", resource.PrefixedUniqueId("tf-"))
 	}
 
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
-
 	request := &neptune.CreateEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             tags,
+		Tags:             tags.IgnoreAws().NeptuneTags(),
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok {
@@ -156,6 +159,8 @@ func resourceAwsNeptuneEventSubscriptionCreate(d *schema.ResourceData, meta inte
 
 func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sub, err := resourceAwsNeptuneEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
@@ -196,8 +201,15 @@ func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error listing tags for Neptune Event Subscription (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -263,8 +275,8 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
@@ -282,8 +294,8 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
-		remove := expandStringList(os.Difference(ns).List())
-		add := expandStringList(ns.Difference(os).List())
+		remove := expandStringSet(os.Difference(ns))
+		add := expandStringSet(ns.Difference(os))
 
 		if len(remove) > 0 {
 			for _, removing := range remove {

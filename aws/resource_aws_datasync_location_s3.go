@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsDataSyncLocationS3() *schema.Resource {
@@ -51,6 +51,13 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 					},
 				},
 			},
+			"s3_storage_class": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(datasync.S3StorageClass_Values(), false),
+			},
 			"subdirectory": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -66,29 +73,38 @@ func resourceAwsDataSyncLocationS3() *schema.Resource {
 					return false
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationS3Input{
 		S3BucketArn:  aws.String(d.Get("s3_bucket_arn").(string)),
 		S3Config:     expandDataSyncS3Config(d.Get("s3_config").([]interface{})),
 		Subdirectory: aws.String(d.Get("subdirectory").(string)),
-		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatasyncTags(),
+		Tags:         tags.IgnoreAws().DatasyncTags(),
+	}
+
+	if v, ok := d.GetOk("s3_storage_class"); ok {
+		input.S3StorageClass = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
 
 	var output *datasync.CreateLocationS3Output
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateLocationS3(input)
 
@@ -126,6 +142,8 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 
 func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeLocationS3Input{
 		LocationArn: aws.String(d.Id()),
@@ -158,6 +176,7 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
+	d.Set("s3_storage_class", output.S3StorageClass)
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
@@ -165,8 +184,15 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error listing tags for DataSync Location S3 (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -175,8 +201,8 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 func resourceAwsDataSyncLocationS3Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating DataSync Location S3 (%s) tags: %s", d.Id(), err)

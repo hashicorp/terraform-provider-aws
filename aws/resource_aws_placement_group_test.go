@@ -2,15 +2,73 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_placement_group", &resource.Sweeper{
+		Name: "aws_placement_group",
+		F:    testSweepEc2PlacementGroups,
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_instance",
+			"aws_launch_template",
+			"aws_spot_fleet_request",
+		},
+	})
+}
+
+func testSweepEc2PlacementGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).ec2conn
+	sweepResources := make([]*testSweepResource, 0)
+	var errs *multierror.Error
+
+	input := &ec2.DescribePlacementGroupsInput{}
+
+	// EC2 API provides no NextToken/Marker
+	output, err := conn.DescribePlacementGroups(input)
+
+	if err != nil {
+		err := fmt.Errorf("error reading EC2 Placement Group: %w", err)
+		log.Printf("[ERROR] %s", err)
+		errs = multierror.Append(errs, err)
+		return errs.ErrorOrNil()
+	}
+
+	for _, placementGroup := range output.PlacementGroups {
+		r := resourceAwsPlacementGroup()
+		d := r.Data(nil)
+
+		d.SetId(aws.StringValue(placementGroup.GroupName))
+
+		sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+	}
+
+	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Placement Group for %s: %w", region, err))
+	}
+
+	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
 
 func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	var pg ec2.PlacementGroup
@@ -19,6 +77,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
@@ -28,6 +87,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("placement-group/%s", rName)),
 				),
 			},
 			{
@@ -46,6 +106,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
@@ -89,6 +150,7 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
 		Steps: []resource.TestStep{
@@ -96,7 +158,7 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
-					testAccCheckAWSPlacementGroupDisappears(&pg),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsPlacementGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,16 +189,6 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 		return fmt.Errorf("still exists")
 	}
 	return nil
-}
-
-func testAccCheckAWSPlacementGroupDisappears(pg *ec2.PlacementGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		req := &ec2.DeletePlacementGroupInput{GroupName: pg.GroupName}
-		_, err := conn.DeletePlacementGroup(req)
-
-		return err
-	}
 }
 
 func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resource.TestCheckFunc {

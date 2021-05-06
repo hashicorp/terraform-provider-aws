@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -42,25 +42,6 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Default:  true,
 			},
 
-			"stage_key": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Removed:  "Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"rest_api_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"stage_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-
 			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -83,13 +64,18 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway API Key")
 
 	apiKey, err := conn.CreateApiKey(&apigateway.CreateApiKeyInput{
@@ -97,7 +83,7 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Value:       aws.String(d.Get("value").(string)),
-		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ApigatewayTags(),
+		Tags:        tags.IgnoreAws().ApigatewayTags(),
 	})
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
@@ -110,6 +96,9 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	log.Printf("[DEBUG] Reading API Gateway API Key: %s", d.Id())
 
 	apiKey, err := conn.GetApiKey(&apigateway.GetApiKeyInput{
@@ -126,8 +115,15 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -162,7 +158,7 @@ func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apig
 			isEnabled = "true"
 		}
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/enabled"),
 			Value: aws.String(isEnabled),
 		})
@@ -170,7 +166,7 @@ func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apig
 
 	if d.HasChange("description") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
@@ -184,8 +180,8 @@ func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}

@@ -12,7 +12,7 @@ Use this data source to get information about an AWS Cloudwatch Log Group
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudwatch_log_group" "example" {
   name = "MyImportantLogs"
 }
@@ -32,4 +32,4 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - The creation time of the log group, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC.
 * `retention_in_days` - The number of days log events retained in the specified log group.
 * `kms_key_id` - The ARN of the KMS Key to use when encrypting log data.
-* `tags` - A mapping of tags to assign to the resource.
+* `tags` - A map of tags to assign to the resource.

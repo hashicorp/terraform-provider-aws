@@ -3,12 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsRoute53ResolverRules() *schema.Resource {
@@ -68,7 +67,7 @@ func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interfac
 	resolverRuleIds := []*string{}
 
 	log.Printf("[DEBUG] Listing Route53 Resolver rules: %s", req)
-	err := conn.ListResolverRulesPages(req, func(page *route53resolver.ListResolverRulesOutput, isLast bool) bool {
+	err := conn.ListResolverRulesPages(req, func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
 		for _, rule := range page.ResolverRules {
 			if v, ok := d.GetOk("owner_id"); ok && aws.StringValue(rule.OwnerId) != v.(string) {
 				continue
@@ -85,16 +84,17 @@ func dataSourceAwsRoute53ResolverRulesRead(d *schema.ResourceData, meta interfac
 
 			resolverRuleIds = append(resolverRuleIds, rule.Id)
 		}
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error getting Route53 Resolver rules: %s", err)
+		return fmt.Errorf("error getting Route53 Resolver rules: %w", err)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(meta.(*AWSClient).region)
+
 	err = d.Set("resolver_rule_ids", flattenStringSet(resolverRuleIds))
 	if err != nil {
-		return fmt.Errorf("error setting resolver_rule_ids: %s", err)
+		return fmt.Errorf("error setting resolver_rule_ids: %w", err)
 	}
 
 	return nil

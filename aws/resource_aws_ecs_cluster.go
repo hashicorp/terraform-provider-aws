@@ -8,10 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 const (
@@ -29,6 +31,8 @@ func resourceAwsEcsCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsEcsClusterImport,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -91,7 +95,8 @@ func resourceAwsEcsCluster() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -110,29 +115,52 @@ func resourceAwsEcsClusterImport(d *schema.ResourceData, meta interface{}) ([]*s
 
 func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
 
-	input := ecs.CreateClusterInput{
-		ClusterName: aws.String(clusterName),
-		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
-	}
-
-	if v, ok := d.GetOk("setting"); ok {
-		input.Settings = expandEcsSettings(v.(*schema.Set))
+	input := &ecs.CreateClusterInput{
+		ClusterName:                     aws.String(clusterName),
+		DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
+		Tags:                            tags.IgnoreAws().EcsTags(),
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
 		input.CapacityProviders = expandStringSet(v.(*schema.Set))
 	}
 
-	input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
-
-	out, err := conn.CreateCluster(&input)
-	if err != nil {
-		return err
+	if v, ok := d.GetOk("setting"); ok {
+		input.Settings = expandEcsSettings(v.(*schema.Set))
 	}
+
+	// CreateCluster will create the ECS IAM Service Linked Role on first ECS provision
+	// This process does not complete before the initial API call finishes.
+	var out *ecs.CreateClusterOutput
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateCluster(input)
+
+		if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateCluster(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error creating ECS Cluster (%s): %w", clusterName, err)
+	}
+
 	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
@@ -146,6 +174,8 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(d.Id())},
@@ -220,8 +250,15 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting setting: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -248,15 +285,15 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("capacity_providers") || d.HasChange("default_capacity_provider_strategy") {
+	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
 			CapacityProviders:               expandStringSet(d.Get("capacity_providers").(*schema.Set)),

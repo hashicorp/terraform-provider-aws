@@ -12,7 +12,7 @@ Provides information about a Launch Template.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_launch_template" "default" {
   name = "my-launch-template"
 }
@@ -20,7 +20,7 @@ data "aws_launch_template" "default" {
 
 ### Filter
 
-```hcl
+```terraform
 data "aws_launch_template" "test" {
   filter {
     name   = "launch-template-name"
@@ -34,8 +34,9 @@ data "aws_launch_template" "test" {
 The following arguments are supported:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `id` - (Optional) The ID of the specific launch template to retrieve.
 * `name` - (Optional) The name of the launch template.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Launch Template.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Launch Template.
 
 ### filter Configuration Block
 
@@ -72,9 +73,9 @@ In addition to all arguments above, the following attributes are exported:
 * `kernel_id` - The kernel ID.
 * `key_name` - The key name to use for the instance.
 * `metadata_options` - The metadata options for the instance.
-  * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
-  * `http_tokens` - If session tokens are required: `optional`, `required`.
-  * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+    * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
+    * `http_tokens` - If session tokens are required: `optional`, `required`.
+    * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `monitoring` - The monitoring option for the instance.
 * `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
   Interfaces](#network-interfaces) below for more details.
@@ -84,7 +85,9 @@ In addition to all arguments above, the following attributes are exported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch.
-* `tags` - (Optional) A mapping of tags to assign to the launch template.
+* `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance.
+* `enclave_options` - The enclave options of the Instance.
+    * `enabled` - Whether Nitro Enclaves are enabled.
 
