@@ -276,7 +276,7 @@ resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_custom_data_identifier" "test" {
   name_prefix = %[1]q
-  regex =  %[2]q
+  regex       = %[2]q
 
   depends_on = [aws_macie2_account.test]
 }
