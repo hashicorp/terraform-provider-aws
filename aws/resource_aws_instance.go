@@ -784,17 +784,19 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("instance_state", instance.State.Name)
 	}
 
+	// If instance.Placement exists, set AZ then check for additional children attributes.
 	if instance.Placement != nil {
 		d.Set("availability_zone", instance.Placement.AvailabilityZone)
-	}
-	if instance.Placement.GroupName != nil {
-		d.Set("placement_group", instance.Placement.GroupName)
-	}
-	if instance.Placement.Tenancy != nil {
-		d.Set("tenancy", instance.Placement.Tenancy)
-	}
-	if instance.Placement.HostId != nil {
-		d.Set("host_id", instance.Placement.HostId)
+
+		if instance.Placement.GroupName != nil {
+			d.Set("placement_group", instance.Placement.GroupName)
+		}
+		if instance.Placement.Tenancy != nil {
+			d.Set("tenancy", instance.Placement.Tenancy)
+		}
+		if instance.Placement.HostId != nil {
+			d.Set("host_id", instance.Placement.HostId)
+		}
 	}
 
 	if instance.CpuOptions != nil {
@@ -979,14 +981,22 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Instance attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String("disableApiTermination"),
-			InstanceId: aws.String(d.Id()),
-		})
-		if err != nil {
-			return err
+		// Check instance ID to see if it is an SBE instance, SBE ID includes "s.",
+		// if so, explicitly set disable_api_termination to false and skip checking instance.
+		// Needed because disablerApiTermination attribute does not exist on SBE instance and
+		// will cause an error if passed to the DesribeInstanceAttribute() function.
+		if strings.Contains(*aws.String(d.Id()), "s.") {
+			d.Set("disable_api_termination", false)
+		} else {
+			attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+				Attribute:  aws.String("disableApiTermination"),
+				InstanceId: aws.String(d.Id()),
+			})
+			if err != nil {
+				return err
+			}
+			d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 		}
-		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
 		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
