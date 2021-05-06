@@ -212,6 +212,7 @@ func TestAccAWSTransferServer_Vpc(t *testing.T) {
 	})
 }
 
+/*
 func TestAccAWSTransferServer_protocols_basic(t *testing.T) {
 	var conf transfer.DescribedServer
 	resourceName := "aws_transfer_server.test"
@@ -255,6 +256,7 @@ func TestAccAWSTransferServer_protocols_basic(t *testing.T) {
 		},
 	})
 }
+*/
 
 func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	var conf transfer.DescribedServer
@@ -875,6 +877,7 @@ resource "aws_transfer_server" "test" {
 `, hostKey)
 }
 
+/*
 func testAccAWSTransferServerConfig_protocols_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -1083,3 +1086,4 @@ resource "aws_transfer_server" "foo" {
 `, rName)
 
 }
+*/
