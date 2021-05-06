@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
@@ -85,4 +87,35 @@ func DynamoDBTTLRDescriptionByTableName(conn *dynamodb.DynamoDB, tableName strin
 	}
 
 	return output.TimeToLiveDescription, nil
+}
+
+func KinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
+	input := &dynamodb.DescribeKinesisStreamingDestinationInput{
+		TableName: aws.String(tableName),
+	}
+
+	output, err := conn.DescribeKinesisStreamingDestinationWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	var result *dynamodb.KinesisDataStreamDestination
+
+	for _, destination := range output.KinesisDataStreamDestinations {
+		if destination == nil {
+			continue
+		}
+
+		if aws.StringValue(destination.StreamArn) == streamArn {
+			result = destination
+			break
+		}
+	}
+
+	return result, nil
 }

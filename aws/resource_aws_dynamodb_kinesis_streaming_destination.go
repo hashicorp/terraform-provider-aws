@@ -4,172 +4,134 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/waiter"
 )
 
-func resourceAwsDynamodbKinesisStreamingDestination() *schema.Resource {
+func resourceAwsDynamoDbKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAwsDynamodbKinesisStreamingDestinationCreate,
-		ReadContext:   resourceAwsDynamodbKinesisStreamingDestinationRead,
-		DeleteContext: resourceAwsDynamodbKinesisStreamingDestinationDelete,
+		CreateContext: resourceAwsDynamoDbKinesisStreamingDestinationCreate,
+		ReadContext:   resourceAwsDynamoDbKinesisStreamingDestinationRead,
+		DeleteContext: resourceAwsDynamoDbKinesisStreamingDestinationDelete,
 
 		Schema: map[string]*schema.Schema{
+			"stream_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"table_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"stream_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
 
-func resourceAwsDynamodbKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsDynamoDbKinesisStreamingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).dynamodbconn
 
-	tableName := d.Get("table_name").(string)
 	streamArn := d.Get("stream_arn").(string)
+	tableName := d.Get("table_name").(string)
 
-	_, err := conn.EnableKinesisStreamingDestination(&dynamodb.EnableKinesisStreamingDestinationInput{
-		TableName: aws.String(tableName),
+	input := &dynamodb.EnableKinesisStreamingDestinationInput{
 		StreamArn: aws.String(streamArn),
-	})
+		TableName: aws.String(tableName),
+	}
+
+	output, err := conn.EnableKinesisStreamingDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error enabling Dynamodb Kinesis streaming destination: %s", err))
+		return diag.FromErr(fmt.Errorf("error enabling DynamoDB Kinesis streaming destination for stream (%s) and  table (%s): %w", streamArn, tableName, err))
 	}
 
-	if err := waitForDynamodbKinesisStreamingDestinationToBeActive(ctx, tableName, streamArn, d.Timeout(schema.TimeoutCreate), conn); err != nil {
-		return diag.FromErr(fmt.Errorf("failed waiting for Kinesis streaming destination to become active: %s", err))
+	if err := waiter.KinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Kinesis Streaming Destination to become active: %w", err))
 	}
 
-	d.SetId(createDynamodbKinesisStreamingDestinationResourceId(tableName, streamArn))
+	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.TableName), aws.StringValue(output.StreamArn)))
 
-	return resourceAwsDynamodbKinesisStreamingDestinationRead(ctx, d, meta)
+	return resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx, d, meta)
 }
 
-func resourceAwsDynamodbKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAwsDynamoDbKinesisStreamingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).dynamodbconn
 
-	tableName := d.Get("table_name").(string)
-	streamArn := d.Get("stream_arn").(string)
-
-	result, err := conn.DescribeKinesisStreamingDestination(&dynamodb.DescribeKinesisStreamingDestinationInput{
-		TableName: aws.String(tableName),
-	})
+	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
 
 	if err != nil {
-		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Dynamodb Table (%s) not found, error code (404)", tableName)
-			d.SetId("")
-			return nil
-		}
-
-		return diag.FromErr(fmt.Errorf("error retrieving DynamoDB table item: %s", err))
+		return diag.FromErr(err)
 	}
 
-	for _, destination := range result.KinesisDataStreamDestinations {
-		if *destination.StreamArn == streamArn {
-			if *destination.DestinationStatus == dynamodb.DestinationStatusActive ||
-				*destination.DestinationStatus == dynamodb.DestinationStatusEnabling {
-				d.SetId(createDynamodbKinesisStreamingDestinationResourceId(tableName, streamArn))
-			} else {
-				log.Printf("[WARN] Dynamodb Kinesis streaming destination (%s, %s) not active: %s", tableName, streamArn, *destination.DestinationStatus)
-				d.SetId("")
-			}
-			return nil
-		}
+	output, err := finder.KinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] Kinesis Data Stream Destination (%s) not found for DynamoDB table (%s), removing from state", streamArn, tableName)
+		d.SetId("")
+		return nil
 	}
-
-	log.Printf("[WARN] Dynamodb Kinesis streaming destination (%s, %s) not found", tableName, streamArn)
-	d.SetId("")
-	return nil
-}
-
-func resourceAwsDynamodbKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).dynamodbconn
-
-	tableName := d.Get("table_name").(string)
-	streamArn := d.Get("stream_arn").(string)
-
-	_, err := conn.DisableKinesisStreamingDestination(&dynamodb.DisableKinesisStreamingDestinationInput{
-		TableName: aws.String(tableName),
-		StreamArn: aws.String(streamArn),
-	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error disabling Dynamodb Kinesis streaming destination: %s", err))
+		return diag.FromErr(fmt.Errorf("error retrieving Kinesis Streaming Destination for DynamoDB table (%s): %w", tableName, err))
 	}
 
-	if err := waitForDynamodbKinesisStreamingDestinationToBeDisabled(ctx, tableName, streamArn, d.Timeout(schema.TimeoutDelete), conn); err != nil {
-		return diag.FromErr(fmt.Errorf("failed waiting for Kinesis streaming destination to be disabled: %s", err))
+	if output == nil {
+		if d.IsNewResource() {
+			return diag.FromErr(fmt.Errorf("error retrieving Kinesis Streaming Destination for DynamoDB table (%s): empty output", tableName))
+		}
+		log.Printf("[WARN] Kinesis Data Stream Destination (%s) not found for DynamoDB table (%s), removing from state", streamArn, tableName)
+		d.SetId("")
+		return nil
 	}
+
+	d.Set("stream_arn", output.StreamArn)
+	d.Set("table_name", tableName)
 
 	return nil
 }
 
-func createDynamodbKinesisStreamingDestinationResourceId(tableName string, streamArn string) string {
-	return fmt.Sprintf("%s_%s", tableName, streamArn)
+func resourceAwsDynamoDbKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).dynamodbconn
+
+	tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	input := &dynamodb.DisableKinesisStreamingDestinationInput{
+		TableName: aws.String(tableName),
+		StreamArn: aws.String(streamArn),
+	}
+
+	_, err = conn.DisableKinesisStreamingDestinationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error disabling Kinesis Streaming Destination (%s) for DynamoDB table (%s): %w", streamArn, tableName, err))
+	}
+
+	if err := waiter.KinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Kinesis Streaming Destination for DynamoDB table (%s) to be disabled: %w", tableName, err))
+	}
+
+	return nil
 }
 
-func waitForDynamodbKinesisStreamingDestinationToBeActive(ctx context.Context, tableName string, streamArn string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{dynamodb.DestinationStatusDisabled, dynamodb.DestinationStatusEnabling},
-		Target:  []string{dynamodb.DestinationStatusActive},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeKinesisStreamingDestination(&dynamodb.DescribeKinesisStreamingDestinationInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
+func dynamoDbKinesisStreamingDestinationParseId(id string) (string, string, error) {
+	parts := strings.SplitN(id, ",", 2)
 
-			for _, destination := range result.KinesisDataStreamDestinations {
-				if *destination.StreamArn == streamArn {
-					return destination, *destination.DestinationStatus, nil
-				}
-			}
-			return 42, "", fmt.Errorf("Kinesis streaming destination %s not found for table %s", streamArn, tableName)
-		},
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected TABLE_NAME,STREAM_ARN", id)
 	}
-	_, err := stateConf.WaitForStateContext(ctx)
 
-	return err
-}
-
-func waitForDynamodbKinesisStreamingDestinationToBeDisabled(ctx context.Context, tableName string, streamArn string, timeout time.Duration, conn *dynamodb.DynamoDB) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{dynamodb.DestinationStatusActive, dynamodb.DestinationStatusDisabling},
-		Target:  []string{dynamodb.DestinationStatusDisabled},
-		Timeout: timeout,
-		Refresh: func() (interface{}, string, error) {
-			result, err := conn.DescribeKinesisStreamingDestination(&dynamodb.DescribeKinesisStreamingDestinationInput{
-				TableName: aws.String(tableName),
-			})
-			if err != nil {
-				return 42, "", err
-			}
-
-			for _, destination := range result.KinesisDataStreamDestinations {
-				if *destination.StreamArn == streamArn {
-					return destination, *destination.DestinationStatus, nil
-				}
-			}
-			return 42, "", fmt.Errorf("Kinesis streaming destination %s not found for table %s", streamArn, tableName)
-		},
-	}
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
+	return parts[0], parts[1], nil
 }

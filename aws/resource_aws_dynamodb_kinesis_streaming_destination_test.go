@@ -1,66 +1,59 @@
 package aws
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/dynamodb/finder"
 )
 
-func TestAccAwsDynamodbKinesisStreamingDestination_basic(t *testing.T) {
-	var conf dynamodb.DescribeKinesisStreamingDestinationOutput
-
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	streamName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+func TestAccAwsDynamoDbKinesisStreamingDestination_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSDynamodbKinesisStreamingDestinationDestroy,
+		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(tableName, streamName),
+				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbKinesisStreamingDestinationExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "table_name", tableName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", streamName))),
+					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexp.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 				),
 			},
 			{
-				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBase(tableName, streamName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDynamodbKinesisStreamingDestinationNotExist,
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAwsDynamodbKinesisStreamingDestination_disappears(t *testing.T) {
-	var conf dynamodb.DescribeKinesisStreamingDestinationOutput
-
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	streamName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+func TestAccAwsDynamoDbKinesisStreamingDestination_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSDynamodbKinesisStreamingDestinationDestroy,
+		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(tableName, streamName),
+				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbKinesisStreamingDestinationExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamodbKinesisStreamingDestination(), resourceName),
+					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,24 +61,22 @@ func TestAccAwsDynamodbKinesisStreamingDestination_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDynamodbKinesisStreamingDestination_disappears_DynamoTable(t *testing.T) {
-	var conf dynamodb.DescribeKinesisStreamingDestinationOutput
+func TestAccAwsDynamoDbKinesisStreamingDestination_disappears_DynamoDbTable(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
-	streamName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
-	parentResourceName := "aws_dynamodb_table.test"
+	tableResourceName := "aws_dynamodb_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
-		CheckDestroy:      testAccCheckAWSDynamodbKinesisStreamingDestinationDestroy,
+		CheckDestroy:      testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(tableName, streamName),
+				Config: testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamodbKinesisStreamingDestinationExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), parentResourceName),
+					testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDynamoDbTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,10 +84,10 @@ func TestAccAwsDynamodbKinesisStreamingDestination_disappears_DynamoTable(t *tes
 	})
 }
 
-func testAccAwsDynamodbKinesisStreamingDestinationConfigBase(tableName string, streamName string) string {
+func testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name           = "%s"
+  name           = %[1]q
   read_capacity  = 10
   write_capacity = 10
   hash_key       = "hk"
@@ -108,49 +99,51 @@ resource "aws_dynamodb_table" "test" {
 }
 
 resource "aws_kinesis_stream" "test" {
-  name        = "%s"
+  name        = %[1]q
   shard_count = 2
 }
-`, tableName, streamName)
-}
 
-func testAccAwsDynamodbKinesisStreamingDestinationConfigBasic(tableName string, streamName string) string {
-	return composeConfig(testAccAwsDynamodbKinesisStreamingDestinationConfigBase(tableName, streamName),
-		`
 resource "aws_dynamodb_kinesis_streaming_destination" "test" {
   table_name = aws_dynamodb_table.test.name
   stream_arn = aws_kinesis_stream.test.arn
 }
-`)
+`, rName)
 }
 
-func testAccCheckDynamodbKinesisStreamingDestinationExists(n string, conf *dynamodb.DescribeKinesisStreamingDestinationOutput) resource.TestCheckFunc {
+func testAccCheckDynamoDbKinesisStreamingDestinationExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
-		describeOpts := &dynamodb.DescribeKinesisStreamingDestinationInput{
-			TableName: aws.String(rs.Primary.Attributes["table_name"]),
-		}
-		resp, err := conn.DescribeKinesisStreamingDestination(describeOpts)
+		tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*conf = *resp
+		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+		output, err := finder.KinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil {
+			return fmt.Errorf("DynamoDB Kinesis Streaming Destination (%s) not found", rs.Primary.ID)
+		}
 
 		return nil
 	}
 }
 
-func testAccCheckAWSDynamodbKinesisStreamingDestinationNotExist(s *terraform.State) error {
+func testAccCheckAWSDynamoDbKinesisStreamingDestinationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -158,51 +151,25 @@ func testAccCheckAWSDynamodbKinesisStreamingDestinationNotExist(s *terraform.Sta
 			continue
 		}
 
-		log.Printf("[DEBUG] Checking if DynamoDB kinesis streaming destination %s exists", rs.Primary.ID)
-		describeOpts := &dynamodb.DescribeKinesisStreamingDestinationInput{
-			TableName: aws.String(rs.Primary.Attributes["table_name"]),
-		}
+		tableName, streamArn, err := dynamoDbKinesisStreamingDestinationParseId(rs.Primary.ID)
 
-		resp, err := conn.DescribeKinesisStreamingDestination(describeOpts)
 		if err != nil {
 			return err
 		}
 
-		if len(resp.KinesisDataStreamDestinations) > 0 {
-			return fmt.Errorf("Error: DynamoDB kinesis streaming destination still exists %s", rs.Primary.ID)
-		}
+		output, err := finder.KinesisDataStreamDestination(context.Background(), conn, streamArn, tableName)
 
-		return nil
-	}
-
-	return nil
-}
-
-func testAccCheckAWSDynamodbKinesisStreamingDestinationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_table" {
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
-		log.Printf("[DEBUG] Checking if DynamoDB table %s exists", rs.Primary.ID)
-		// Check if queue exists by checking for its attributes
-		params := &dynamodb.DescribeTableInput{
-			TableName: aws.String(rs.Primary.ID),
+		if err != nil {
+			return err
 		}
 
-		_, err := conn.DescribeTable(params)
-		if err == nil {
-			return fmt.Errorf("DynamoDB table %s still exists. Failing!", rs.Primary.ID)
+		if output != nil {
+			return fmt.Errorf("DynamoDB Kinesis Streaming Destination (%s) still exists", rs.Primary.ID)
 		}
-
-		// Verify the error is what we want
-		if dbErr, ok := err.(awserr.Error); ok && dbErr.Code() == "ResourceNotFoundException" {
-			return nil
-		}
-
-		return err
 	}
 
 	return nil

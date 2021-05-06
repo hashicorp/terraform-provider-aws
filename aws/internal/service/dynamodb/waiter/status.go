@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -166,5 +167,21 @@ func DynamoDBTableSESStatus(conn *dynamodb.DynamoDB, tableName string) resource.
 		}
 
 		return table, aws.StringValue(table.SSEDescription.Status), nil
+	}
+}
+
+func KinesisStreamingDestinationStatus(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := finder.KinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if result == nil {
+			return nil, "", nil
+		}
+
+		return result, aws.StringValue(result.DestinationStatus), nil
 	}
 }

@@ -1,6 +1,7 @@
 package waiter
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -228,4 +229,30 @@ func DynamoDBSSEUpdated(conn *dynamodb.DynamoDB, tableName string) (*dynamodb.Ta
 	}
 
 	return nil, err
+}
+
+func KinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.DestinationStatusDisabled, dynamodb.DestinationStatusEnabling},
+		Target:  []string{dynamodb.DestinationStatusActive},
+		Timeout: 5 * time.Minute,
+		Refresh: KinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func KinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{dynamodb.DestinationStatusActive, dynamodb.DestinationStatusDisabling},
+		Target:  []string{dynamodb.DestinationStatusDisabled},
+		Timeout: 5 * time.Minute,
+		Refresh: KinesisStreamingDestinationStatus(ctx, conn, streamArn, tableName),
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
