@@ -1,5 +1,13 @@
 ## 3.40.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_macie2_custom_data_identifier` ([#19254](https://github.com/hashicorp/terraform-provider-aws/issues/19254))
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_event_source_mapping: Support reading `starting_position` and `starting_position_timestamp` attributes ([#19253](https://github.com/hashicorp/terraform-provider-aws/issues/19253))
+
 ## 3.39.0 (May 06, 2021)
 
 FEATURES:
