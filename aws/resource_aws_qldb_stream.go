@@ -143,14 +143,14 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error creating QLDB Ledger Stream: %s", err)
 	}
 
-	// Set QLDB ledger name  TODO: Confirm what this should be...  d.Set("???", aws.StringValue(qldbResp.StreamId)) ???
+	// Set QLDB ledger name
 	d.SetId(aws.StringValue(qldbResp.StreamId))
 	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{qldb.StreamStatusImpaired},
 		Target:     []string{qldb.StreamStatusActive},
-		Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
+		Refresh:    qldbStreamRefreshStatusFunc(conn, d.Get("ledger_name").(string), d.Id()),
 		Timeout:    8 * time.Minute,
 		MinTimeout: 3 * time.Second,
 	}
