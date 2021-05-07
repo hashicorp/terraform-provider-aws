@@ -34,7 +34,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Computed: true,
 			},
 
-			"exlusive_end_time": {
+			"exclusive_end_time": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -170,22 +170,16 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	var ledgerName, streamId string
+	var ledgerName string
 	if ledgerNameValue, ok := d.GetOk("ledger_name"); ok {
 		ledgerName = ledgerNameValue.(string)
-	}
-
-	if streamIdValue, ok := d.GetOk("stream_id"); ok {
-		streamId = streamIdValue.(string)
 	}
 
 	// Refresh the QLDB Stream state
 	input := &qldb.DescribeJournalKinesisStreamInput{
 		LedgerName: aws.String(ledgerName),
-		StreamId:   aws.String(streamId),
+		StreamId:   aws.String(d.Id()),
 	}
-
-	log.Printf("DEBUG - DescribeJournalKinesisStreamInput: %#v", input)
 
 	qldbStream, err := conn.DescribeJournalKinesisStream(input)
 
@@ -196,6 +190,17 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	/*
+		"arn"
+		"exlusive_end_time"
+		"inclusive_start_time"
+		"kinesis_configuration"
+		"ledger_name"
+		"role_arn"
+		"stream_name"
+		"tags"
+	*/
+
 	if err != nil {
 		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Get("stream_id"), err)
 	}
@@ -204,24 +209,33 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting ARN: %s", err)
 	}
 
-	if err := d.Set("creation_time", qldbStream.Stream.CreationTime); err != nil {
-		return fmt.Errorf("error setting Creation Time: %s", err)
+	// if err := d.Set("creation_time", qldbStream.Stream.CreationTime); err != nil {
+	// 	return fmt.Errorf("error setting Creation Time: %s", err)
+	// }
+
+	// if err := d.Set("error_cause", qldbStream.Stream.ErrorCause); err != nil {
+	// 	return fmt.Errorf("error setting Error Cause: %s", err)
+	// }
+
+	if qldbStream.Stream.ExclusiveEndTime != nil {
+		if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime.String()); err != nil {
+			return fmt.Errorf("error setting Exclusive End Time: %s", err)
+		}
 	}
 
-	if err := d.Set("error_cause", qldbStream.Stream.ErrorCause); err != nil {
-		return fmt.Errorf("error setting Error Cause: %s", err)
-	}
-
-	if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime); err != nil {
-		return fmt.Errorf("error setting Exclusive End Time: %s", err)
-	}
-
-	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime); err != nil {
+	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime.String()); err != nil {
 		return fmt.Errorf("error setting Inclusive Start Time: %s", err)
 	}
 
-	if err := d.Set("kinesis_configuration", qldbStream.Stream.KinesisConfiguration); err != nil {
-		return fmt.Errorf("error setting Kinesis Configuration: %s", err)
+	if qldbStream.Stream.KinesisConfiguration != nil {
+		kinesisConfiguration := map[string]interface{}{
+			"aggregation_enabled": strconv.FormatBool(*qldbStream.Stream.KinesisConfiguration.AggregationEnabled),
+			"stream_arn":          *qldbStream.Stream.KinesisConfiguration.StreamArn,
+		}
+
+		if err := d.Set("kinesis_configuration", kinesisConfiguration); err != nil {
+			return fmt.Errorf("error setting Kinesis Configuration: %s", err)
+		}
 	}
 
 	if err := d.Set("ledger_name", qldbStream.Stream.LedgerName); err != nil {
@@ -232,13 +246,13 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting Role Arn: %s", err)
 	}
 
-	if err := d.Set("status", qldbStream.Stream.Status); err != nil {
-		return fmt.Errorf("error setting Status: %s", err)
-	}
+	// if err := d.Set("status", qldbStream.Stream.Status); err != nil {
+	// 	return fmt.Errorf("error setting Status: %s", err)
+	// }
 
-	if err := d.Set("stream_id", qldbStream.Stream.StreamId); err != nil {
-		return fmt.Errorf("error setting Stream Id: %s", err)
-	}
+	// if err := d.Set("stream_id", qldbStream.Stream.StreamId); err != nil {
+	// 	return fmt.Errorf("error setting Stream Id: %s", err)
+	// }
 
 	if err := d.Set("stream_name", qldbStream.Stream.StreamName); err != nil {
 		return fmt.Errorf("error setting Stream Name: %s", err)
