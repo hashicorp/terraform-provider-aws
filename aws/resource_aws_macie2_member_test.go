@@ -161,7 +161,7 @@ resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
   account_id = %[1]q
-  email = %[2]q
+  email      = %[2]q
   depends_on = [aws_macie2_account.test]
 }
 `, accountID, email)
@@ -173,7 +173,7 @@ resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
   account_id = %[1]q
-  email = %[2]q
+  email      = %[2]q
   tags = {
     Key = "value"
   }
