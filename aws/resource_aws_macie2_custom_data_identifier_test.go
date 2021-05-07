@@ -247,7 +247,7 @@ func testAccCheckAwsMacie2CustomDataIdentifierDestroy(s *terraform.State) error 
 		resp, err := conn.GetCustomDataIdentifier(input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			continue
 		}
 
