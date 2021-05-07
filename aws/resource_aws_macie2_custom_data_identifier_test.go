@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,6 +33,7 @@ func testAccAwsMacie2CustomDataIdentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "regex", regex),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -113,6 +115,7 @@ func testAccAwsMacie2CustomDataIdentifier_NamePrefix(t *testing.T) {
 					testAccCheckAwsMacie2CustomDataIdentifierExists(resourceName, &macie2Output),
 					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", namePrefix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", namePrefix),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -145,6 +148,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -154,6 +158,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithClassificationJob(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -192,6 +197,7 @@ func testAccAwsMacie2CustomDataIdentifier_WithTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "value3"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_at"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
