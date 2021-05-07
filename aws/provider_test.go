@@ -698,10 +698,10 @@ func testAccGetThirdRegionPartition() string {
 }
 
 func testAccAlternateAccountPreCheck(t *testing.T) {
-	envvar.TestFailIfAllEmpty(t, []string{envvar.AwsAlternateProfile, envvar.AwsAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
+	envvar.TestSkipIfAllEmpty(t, []string{envvar.AwsAlternateProfile, envvar.AwsAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
 
 	if os.Getenv(envvar.AwsAlternateAccessKeyId) != "" {
-		envvar.TestFailIfEmpty(t, envvar.AwsAlternateSecretAccessKey, "static credentials value when using "+envvar.AwsAlternateAccessKeyId)
+		envvar.TestSkipIfEmpty(t, envvar.AwsAlternateSecretAccessKey, "static credentials value when using "+envvar.AwsAlternateAccessKeyId)
 	}
 }
 
