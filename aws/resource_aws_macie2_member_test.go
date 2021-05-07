@@ -136,7 +136,7 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 		resp, err := conn.GetMember(input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			continue
