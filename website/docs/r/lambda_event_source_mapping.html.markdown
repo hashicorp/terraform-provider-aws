@@ -102,7 +102,3 @@ Lambda event source mappings can be imported using the `UUID` (event source mapp
 ```
 $ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
-
-~> **Note:** Terraform will recreate the imported resource as AWS does not expose `startingPosition` information for existing Lambda event source mappings. For information about retrieving event source mappings, see [GetEventSourceMapping][3] in the API docs.
-
-[3]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html
