@@ -14,6 +14,7 @@ import (
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
+	compareName := "aws_servicecatalog_portfolio.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,11 +29,8 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
-					resource.TestCheckResourceAttr(resourceName, "account_id", "distributör"),
-					resource.TestCheckResourceAttr(resourceName, "organization_node.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "organization_node.0.type", servicecatalog.DescribePortfolioShareTypeOrganization),
-					resource.TestCheckResourceAttr(resourceName, "organization_node.0.value", "true"),
-					resource.TestCheckResourceAttr(resourceName, "portfolio_id", "8675309"),
+					resource.TestCheckResourceAttr(resourceName, "principal_id", "arn:aws:organizations::111122223333:organization/o-abcdefghijkl"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganization),
 				),
@@ -62,8 +60,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) erro
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["share_type"],
-			rs.Primary.Attributes["account_id"],
-			rs.Primary.Attributes["organization_node.0.value"],
+			rs.Primary.Attributes["principal_id"],
 		)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
@@ -96,8 +93,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["share_type"],
-			rs.Primary.Attributes["account_id"],
-			rs.Primary.Attributes["organization_node.0.value"],
+			rs.Primary.Attributes["principal_id"],
 		)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
@@ -129,11 +125,7 @@ resource "aws_servicecatalog_portfolio_share" "test" {
   portfolio_id      = aws_servicecatalog_portfolio.test.id
   share_tag_options = true
   type              = "ORGANIZATION"
-
-  organization_node {
-    type            = "ORGANIZATION"
-    value           = "arn:aws:organizations::111122223333:organization/o-abcdefghijkl"
-  }
+  principal_id      = "arn:aws:organizations::111122223333:organization/o-abcdefghijkl"
 }
 `, rName)
 }
