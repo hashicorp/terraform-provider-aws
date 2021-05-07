@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,6 +30,7 @@ func testAccAwsMacie2FindingsFilter_basic(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 				),
 			},
 			{
@@ -139,6 +141,9 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 				),
 			},
 			{
@@ -148,6 +153,9 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 				),
 			},
 			{
@@ -182,6 +190,9 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
@@ -195,6 +206,9 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 				),
 			},
 			{
@@ -244,7 +258,7 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 		resp, err := conn.GetFindingsFilter(input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			continue
 		}
 
@@ -282,10 +296,10 @@ resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_findings_filter" "test" {
   name_prefix = %[1]q
-  action = "ARCHIVE"
+  action      = "ARCHIVE"
   finding_criteria {
     criterion {
-      field  = "region"
+      field = "region"
     }
   }
   depends_on = [aws_macie2_account.test]
