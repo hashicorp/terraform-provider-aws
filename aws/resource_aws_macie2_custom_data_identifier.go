@@ -60,7 +60,7 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -68,7 +68,7 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 500-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
 			},
 			"description": {
 				Type:         schema.TypeString,
