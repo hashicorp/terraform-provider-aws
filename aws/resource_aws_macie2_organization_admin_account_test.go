@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,7 +12,6 @@ import (
 
 func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
-	adminAccountID := "123471550386"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -22,9 +20,10 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(adminAccountID),
+				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -38,7 +37,6 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 
 func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
-	adminAccountID := "123471550386"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -47,7 +45,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(adminAccountID),
+				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
@@ -67,23 +65,14 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 
 		conn := testAccProvider.Meta().(*AWSClient).macie2conn
 
-		exists := false
-		err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-			for _, account := range page.AdminAccounts {
-				if aws.StringValue(account.AccountId) != rs.Primary.Attributes["admin_account_id"] {
-					exists = true
-					return false
-				}
-			}
+		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
 
-			return true
-		})
 		if err != nil {
 			return err
 		}
 
-		if !exists {
-			return fmt.Errorf("macie OrganizationAdminAccount %q does not exist", rs.Primary.ID)
+		if adminAccount == nil {
+			return fmt.Errorf("macie OrganizationAdminAccount (%s) not found", rs.Primary.ID)
 		}
 
 		return nil
@@ -98,20 +87,14 @@ func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) er
 			continue
 		}
 
-		deleted := true
-		err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-			for _, account := range page.AdminAccounts {
-				if aws.StringValue(account.AccountId) != rs.Primary.Attributes["admin_account_id"] {
-					deleted = false
-					return false
-				}
-			}
-
-			return true
-		})
+		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			continue
+		}
+
+		if adminAccount == nil {
 			continue
 		}
 
@@ -119,22 +102,22 @@ func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) er
 			return err
 		}
 
-		if !deleted {
-			return fmt.Errorf("macie OrganizationAdminAccount %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("macie OrganizationAdminAccount %q still exists", rs.Primary.ID)
 	}
 
 	return nil
 
 }
 
-func testAccAwsMacieOrganizationAdminAccountConfigBasic(accountID string) string {
-	return fmt.Sprintf(`
+func testAccAwsMacieOrganizationAdminAccountConfigBasic() string {
+	return `
+data "aws_caller_identity" "current" {}
+
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_organization_admin_account" "test" {
-  admin_account_id = %[1]q
-  depends_on = [aws_macie2_account.test]
+  admin_account_id = data.aws_caller_identity.current.account_id
+  depends_on       = [aws_macie2_account.test]
 }
-`, accountID)
+`
 }

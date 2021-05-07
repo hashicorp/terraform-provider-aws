@@ -28,14 +28,6 @@ func resourceAwsMacie2OrganizationAdminAccount() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -80,22 +72,12 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 	conn := meta.(*AWSClient).macie2conn
 
 	var err error
-	var res *macie2.AdminAccount
 
-	err = conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-		for _, account := range page.AdminAccounts {
-			if aws.StringValue(account.AccountId) == d.Id() {
-				res = account
-				return false
-			}
-		}
-
-		return !lastPage
-	})
+	res, err := getMacie2OrganizationAdminAccount(conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -109,8 +91,7 @@ func resourceMacie2OrganizationAdminAccountRead(ctx context.Context, d *schema.R
 		return nil
 	}
 
-	d.Set("account_id", res.AccountId)
-	d.Set("status", res.Status)
+	d.Set("admin_account_id", res.AccountId)
 
 	return nil
 }
@@ -131,4 +112,32 @@ func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema
 		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
 	}
 	return nil
+}
+
+func getMacie2OrganizationAdminAccount(conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
+	var res *macie2.AdminAccount
+
+	err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, adminAccount := range page.AdminAccounts {
+			if adminAccount == nil {
+				continue
+			}
+
+			log.Printf("[DEBUG] imprimo adminAccount : %+v", adminAccount)
+			log.Printf("[DEBUG] imprimo adminAccount.AccountId : %+v", adminAccount.AccountId)
+			log.Printf("[DEBUG] imprimo adminAccountID : %+v", adminAccountID)
+			if aws.StringValue(adminAccount.AccountId) == adminAccountID {
+				res = adminAccount
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return res, err
 }
