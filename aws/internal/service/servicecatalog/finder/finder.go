@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 )
 
-func PortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, accountID, orgNodeValue string) (*servicecatalog.PortfolioShareDetail, error) {
+func PortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) (*servicecatalog.PortfolioShareDetail, error) {
 	input := &servicecatalog.DescribePortfolioSharesInput{
 		PortfolioId: aws.String(portfolioID),
 		Type:        aws.String(shareType),
@@ -22,12 +22,7 @@ func PortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType,
 				continue
 			}
 
-			if aws.StringValue(deet.PrincipalId) == accountID && accountID != "" {
-				result = deet
-				return false
-			}
-
-			if aws.StringValue(deet.PrincipalId) == orgNodeValue && orgNodeValue != "" {
+			if aws.StringValue(deet.PrincipalId) == principalID {
 				result = deet
 				return false
 			}
