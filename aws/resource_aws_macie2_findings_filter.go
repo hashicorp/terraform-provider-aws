@@ -36,7 +36,7 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 						"criterion": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"field": {
@@ -44,17 +44,17 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 										Required: true,
 									},
 									"eq_exact_match": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"eq": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"neq": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -85,19 +85,18 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 500),
+				ValidateFunc:  validation.StringLenBetween(3, 64),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 500-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(3, 64-resource.UniqueIDSuffixLength),
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"action": {
@@ -184,7 +183,7 @@ func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceDat
 	resp, err := conn.GetFindingsFilterWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -259,7 +258,7 @@ func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceD
 	_, err := conn.DeleteFindingsFilterWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie FindingsFilter (%s): %w", d.Id(), err))
@@ -281,40 +280,40 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) *macie2.Finding
 		field := crit["field"].(string)
 		conditional := macie2.CriterionAdditionalProperties{}
 
-		if v, ok := crit["eq"].([]interface{}); ok && len(v) > 0 {
-			foo := make([]*string, len(v))
-			for i := range v {
-				s := v[i].(string)
+		if v, ok := crit["eq"].(*schema.Set); ok && v.Len() != 0 {
+			foo := make([]*string, v.Len())
+			for i, v1 := range v.List() {
+				s := v1.(string)
 				foo[i] = &s
 			}
 			conditional.Eq = foo
 		}
-		if v, ok := crit["neq"].([]interface{}); ok && len(v) > 0 {
-			foo := make([]*string, len(v))
-			for i := range v {
-				s := v[i].(string)
+		if v, ok := crit["neq"].(*schema.Set); ok && v.Len() != 0 {
+			foo := make([]*string, v.Len())
+			for i, v1 := range v.List() {
+				s := v1.(string)
 				foo[i] = &s
 			}
 			conditional.Neq = foo
 		}
-		if v, ok := crit["eq_exact_match"].([]interface{}); ok && len(v) > 0 {
-			foo := make([]*string, len(v))
-			for i := range v {
-				s := v[i].(string)
+		if v, ok := crit["eq_exact_match"].(*schema.Set); ok && v.Len() != 0 {
+			foo := make([]*string, v.Len())
+			for i, v1 := range v.List() {
+				s := v1.(string)
 				foo[i] = &s
 			}
 			conditional.EqExactMatch = foo
 		}
-		if v, ok := crit["lt"].(int); ok && v > 0 {
+		if v, ok := crit["lt"].(int); ok && v != 0 {
 			conditional.Lt = aws.Int64(int64(v))
 		}
-		if v, ok := crit["lte"].(int); ok && v > 0 {
+		if v, ok := crit["lte"].(int); ok && v != 0 {
 			conditional.Lte = aws.Int64(int64(v))
 		}
-		if v, ok := crit["gt"].(int); ok && v > 0 {
+		if v, ok := crit["gt"].(int); ok && v != 0 {
 			conditional.Gt = aws.Int64(int64(v))
 		}
-		if v, ok := crit["gte"].(int); ok && v > 0 {
+		if v, ok := crit["gte"].(int); ok && v != 0 {
 			conditional.Gte = aws.Int64(int64(v))
 		}
 		criteria[field] = &conditional
@@ -334,25 +333,25 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteri
 		criterion := map[string]interface{}{
 			"field": field,
 		}
-		if len(conditions.Eq) > 0 {
+		if len(conditions.Eq) != 0 {
 			criterion["eq"] = aws.StringValueSlice(conditions.Eq)
 		}
-		if len(conditions.Neq) > 0 {
+		if len(conditions.Neq) != 0 {
 			criterion["neq"] = aws.StringValueSlice(conditions.Neq)
 		}
-		if len(conditions.EqExactMatch) > 0 {
+		if len(conditions.EqExactMatch) != 0 {
 			criterion["eq_exact_match"] = aws.StringValueSlice(conditions.EqExactMatch)
 		}
-		if v := aws.Int64Value(conditions.Lt); v > 0 {
+		if v := aws.Int64Value(conditions.Lt); v != 0 {
 			criterion["lt"] = aws.Int64Value(conditions.Lt)
 		}
-		if v := aws.Int64Value(conditions.Lt); v > 0 {
+		if v := aws.Int64Value(conditions.Lt); v != 0 {
 			criterion["lte"] = aws.Int64Value(conditions.Lte)
 		}
-		if v := aws.Int64Value(conditions.Lt); v > 0 {
+		if v := aws.Int64Value(conditions.Lt); v != 0 {
 			criterion["gt"] = aws.Int64Value(conditions.Gt)
 		}
-		if v := aws.Int64Value(conditions.Lt); v > 0 {
+		if v := aws.Int64Value(conditions.Lt); v != 0 {
 			criterion["gte"] = aws.Int64Value(conditions.Gte)
 		}
 		flatCriteria = append(flatCriteria, criterion)
