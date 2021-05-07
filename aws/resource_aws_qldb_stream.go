@@ -39,7 +39,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					// TODO: Get this to validate ISO 8601
+					// TODO: Get this to validate ISO 8601 -> time.RFC3339 ?
 					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
 				),
 			},
@@ -190,6 +190,8 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	log.Printf("DEBUG - QLDB Stream: %#v", qldbStream)
+
 	/*
 		"arn"
 		"exlusive_end_time"
@@ -223,7 +225,7 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime.String()); err != nil {
+	if err := d.Set("inclusive_start_time", qldbStream.Stream.InclusiveStartTime.Format("2006-01-02T15:04:05Z")); err != nil {
 		return fmt.Errorf("error setting Inclusive Start Time: %s", err)
 	}
 
