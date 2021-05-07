@@ -18,6 +18,7 @@ func TestAccAWSTimestreamWriteDatabase_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -47,6 +48,7 @@ func TestAccAWSTimestreamWriteDatabase_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
@@ -73,6 +75,7 @@ func TestAccAWSTimestreamWriteDatabase_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, timestreamwrite.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTimestreamWriteDatabaseDestroy,
 		Steps: []resource.TestStep{
