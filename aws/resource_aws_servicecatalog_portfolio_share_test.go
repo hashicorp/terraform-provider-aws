@@ -21,7 +21,11 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+		},
 		ErrorCheck:        testAccErrorCheck(t, servicecatalog.EndpointsID),
 		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsServiceCatalogPortfolioShareDestroy,
@@ -56,7 +60,11 @@ func TestAccAWSServiceCatalogPortfolioShare_organization(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsAccountPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
