@@ -62,6 +62,11 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(servicecatalog.DescribePortfolioShareType_Values(), false),
 			},
+			"wait_for_acceptance": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -128,13 +133,18 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 
 	d.SetId(strings.Join([]string{d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)}, ":"))
 
+	waitForAcceptance := false
+	if v, ok := d.GetOk("wait_for_acceptance"); ok {
+		waitForAcceptance = v.(bool)
+	}
+
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
-		if _, err := waiter.PortfolioShareCreatedWithToken(conn, aws.StringValue(output.PortfolioShareToken)); err != nil {
+		if _, err := waiter.PortfolioShareCreatedWithToken(conn, aws.StringValue(output.PortfolioShareToken), waitForAcceptance); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	} else {
-		if _, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)); err != nil {
+		if _, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	}
@@ -145,7 +155,18 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	output, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string))
+	portfolioID, shareType, principalID, err := resourceServiceCatalogPortfolioShareParseId(d.Id())
+
+	if err != nil {
+		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
+	}
+
+	waitForAcceptance := false
+	if v, ok := d.GetOk("wait_for_acceptance"); ok {
+		waitForAcceptance = v.(bool)
+	}
+
+	output, err := waiter.PortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
@@ -162,9 +183,11 @@ func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta in
 	}
 
 	d.Set("accepted", output.Accepted)
+	d.Set("portfolio_id", portfolioID)
+	d.Set("principal_id", output.PrincipalId)
 	d.Set("share_tag_options", output.ShareTagOptions)
 	d.Set("type", output.Type)
-	d.Set("principal_id", output.PrincipalId)
+	d.Set("wait_for_acceptance", waitForAcceptance)
 
 	return nil
 }
@@ -260,4 +283,14 @@ func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta 
 	}
 
 	return nil
+}
+
+func resourceServiceCatalogPortfolioShareParseId(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, ":", 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected portfolioID:type:principalID", id)
+	}
+
+	return parts[0], parts[1], parts[2], nil
 }
