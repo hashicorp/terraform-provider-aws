@@ -545,18 +545,18 @@ resource "aws_autoscaling_policy" "policy_predictive" {
     metric_specification {
       target_value = 32
       predefined_scaling_metric_specification {
-       predefined_metric_type = "ASGAverageCPUUtilization"
-       resource_label         = "testLabel"
+        predefined_metric_type = "ASGAverageCPUUtilization"
+        resource_label         = "testLabel"
       }
       predefined_load_metric_specification {
-       predefined_metric_type = "ASGTotalCPUUtilization"
-       resource_label         = "testLabel"
+        predefined_metric_type = "ASGTotalCPUUtilization"
+        resource_label         = "testLabel"
       }
     }
-    mode                          = "ForecastAndScale"
-    scheduling_buffer_time        = 10
-    max_capacity_breach_behavior  = "IncreaseMaxCapacity"
-    max_capacity_buffer           = 10
+    mode                         = "ForecastAndScale"
+    scheduling_buffer_time       = 10
+    max_capacity_breach_behavior = "IncreaseMaxCapacity"
+    max_capacity_buffer          = 10
   }
 }
 `, name)
@@ -585,17 +585,17 @@ resource "aws_autoscaling_policy" "policy_predictive" {
     metric_specification {
       target_value = 32
       predefined_scaling_metric_specification {
-       predefined_metric_type = "ASGAverageNetworkIn"
-       resource_label         = "testLabel"
+        predefined_metric_type = "ASGAverageNetworkIn"
+        resource_label         = "testLabel"
       }
       predefined_load_metric_specification {
-       predefined_metric_type = "ASGTotalNetworkIn"
-       resource_label         = "testLabel"
+        predefined_metric_type = "ASGTotalNetworkIn"
+        resource_label         = "testLabel"
       }
     }
-    mode                          = "ForecastOnly"
-    scheduling_buffer_time        = 5
-    max_capacity_breach_behavior  = "HonorMaxCapacity"
+    mode                         = "ForecastOnly"
+    scheduling_buffer_time       = 5
+    max_capacity_breach_behavior = "HonorMaxCapacity"
   }
 }
 `, name)
