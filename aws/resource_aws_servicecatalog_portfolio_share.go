@@ -38,41 +38,18 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateAwsAccountId,
-				ExactlyOneOf: []string{
-					"organization_node",
-					"account_id",
-				},
-			},
-			"organization_node": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ExactlyOneOf: []string{
-					"organization_node",
-					"account_id",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(servicecatalog.OrganizationNodeType_Values(), false),
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
 			"portfolio_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			// maintaining organization_node as a separate config block makes weird configs with duplicate types
+			// also, principal_id is true to API since describe gives "PrincipalId"
+			"principal_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateServiceCatalogSharePrincipal,
 			},
 			"share_tag_options": {
 				Type:     schema.TypeBool,
@@ -82,6 +59,7 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(servicecatalog.DescribePortfolioShareType_Values(), false),
 			},
 		},
@@ -99,12 +77,20 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
-		input.AccountId = aws.String(v.(string))
-	}
+	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+		input.AccountId = aws.String(d.Get("principal_id").(string))
+	} else {
+		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-	if v, ok := d.GetOk("organization_node"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OrganizationNode = expandServiceCatalogOrganizationNode(v.([]interface{})[0].(map[string]interface{}))
+		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
+			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+		} else {
+			orgNode.Type = aws.String(d.Get("type").(string))
+		}
+
+		input.OrganizationNode = orgNode
 	}
 
 	if v, ok := d.GetOk("share_tag_options"); ok {
@@ -140,11 +126,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(serviceCatalogPortfolioShareID(
-		d.Get("portfolio_id").(string),
-		d.Get("account_id").(string),
-		input.OrganizationNode,
-	))
+	d.SetId(strings.Join([]string{d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)}, ":"))
 
 	// only get a token if organization node, otherwise check without token
 	if output.PortfolioShareToken != nil {
@@ -152,13 +134,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	} else {
-		orgNodeValue := ""
-
-		if input.OrganizationNode != nil && input.OrganizationNode.Value != nil {
-			orgNodeValue = aws.StringValue(input.OrganizationNode.Value)
-		}
-
-		if _, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("account_id").(string), orgNodeValue); err != nil {
+		if _, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be ready: %w", d.Id(), err)
 		}
 	}
@@ -169,17 +145,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	orgNodeValue := ""
-
-	if v, ok := d.GetOk("organization_node"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		orgNode := expandServiceCatalogOrganizationNode(v.([]interface{})[0].(map[string]interface{}))
-
-		if orgNode.Value != nil {
-			orgNodeValue = aws.StringValue(orgNode.Value)
-		}
-	}
-
-	output, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("account_id").(string), orgNodeValue)
+	output, err := waiter.PortfolioShareReady(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
@@ -198,23 +164,7 @@ func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta in
 	d.Set("accepted", output.Accepted)
 	d.Set("share_tag_options", output.ShareTagOptions)
 	d.Set("type", output.Type)
-
-	switch aws.StringValue(output.Type) {
-	case servicecatalog.DescribePortfolioShareTypeAccount:
-		d.Set("account_id", output.PrincipalId)
-		d.Set("organization_node", nil)
-	default:
-		d.Set("account_id", nil)
-
-		orgNode := &servicecatalog.OrganizationNode{
-			Type:  output.Type,
-			Value: output.PrincipalId,
-		}
-
-		if err := d.Set("organization_node", flattenServiceCatalogOrganizationNode(orgNode)); err != nil {
-			return fmt.Errorf("error setting organization_node: %w", err)
-		}
-	}
+	d.Set("principal_id", output.PrincipalId)
 
 	return nil
 }
@@ -222,21 +172,13 @@ func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta in
 func resourceAwsServiceCatalogPortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	if d.HasChanges("accept_language", "account_id", "organization_node", "share_tag_options") {
+	if d.HasChanges("accept_language", "share_tag_options") {
 		input := &servicecatalog.UpdatePortfolioShareInput{
 			PortfolioId: aws.String(d.Get("portfolio_id").(string)),
 		}
 
 		if v, ok := d.GetOk("accept_language"); ok {
 			input.AcceptLanguage = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("account_id"); ok {
-			input.AccountId = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("organization_node"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.OrganizationNode = expandServiceCatalogOrganizationNode(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("share_tag_options"); ok {
@@ -280,12 +222,20 @@ func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta 
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("account_id"); ok {
-		input.AccountId = aws.String(v.(string))
-	}
+	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+		input.AccountId = aws.String(d.Get("principal_id").(string))
+	} else {
+		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode.Value = aws.String(d.Get("principal_id").(string))
 
-	if v, ok := d.GetOk("organization_node"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OrganizationNode = expandServiceCatalogOrganizationNode(v.([]interface{})[0].(map[string]interface{}))
+		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
+			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+		} else {
+			orgNode.Type = aws.String(d.Get("type").(string))
+		}
+
+		input.OrganizationNode = orgNode
 	}
 
 	output, err := conn.DeletePortfolioShare(input)
@@ -304,76 +254,10 @@ func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta 
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
 		}
 	} else {
-		orgNodeValue := ""
-
-		if input.OrganizationNode != nil && input.OrganizationNode.Value != nil {
-			orgNodeValue = aws.StringValue(input.OrganizationNode.Value)
-		}
-
-		if _, err := waiter.PortfolioShareDeleted(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("account_id").(string), orgNodeValue); err != nil {
+		if _, err := waiter.PortfolioShareDeleted(conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)); err != nil {
 			return fmt.Errorf("error waiting for Service Catalog Portfolio Share (%s) to be deleted: %w", d.Id(), err)
 		}
 	}
 
 	return nil
-}
-
-func expandServiceCatalogOrganizationNode(tfMap map[string]interface{}) *servicecatalog.OrganizationNode {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &servicecatalog.OrganizationNode{}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	if v, ok := tfMap["value"].(string); ok && v != "" {
-		apiObject.Value = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenServiceCatalogOrganizationNode(apiObject *servicecatalog.OrganizationNode) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func serviceCatalogPortfolioShareID(portfolioID, accountID string, orgNode *servicecatalog.OrganizationNode) string {
-	var pieces []string
-
-	if portfolioID != "" {
-		pieces = append(pieces, portfolioID)
-	}
-
-	if accountID != "" {
-		pieces = append(pieces, accountID)
-	}
-
-	if orgNode != nil {
-		if orgNode.Type != nil {
-			pieces = append(pieces, aws.StringValue(orgNode.Type))
-		}
-
-		if orgNode.Value != nil {
-			pieces = append(pieces, aws.StringValue(orgNode.Value))
-		}
-	}
-
-	return strings.Join(pieces, ":")
 }
