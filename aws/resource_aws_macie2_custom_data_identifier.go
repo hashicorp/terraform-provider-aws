@@ -29,14 +29,12 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 			"regex": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"keywords": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 50,
@@ -46,9 +44,8 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 				},
 			},
 			"ignore_words": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 10,
@@ -63,7 +60,7 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
+				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -76,23 +73,18 @@ func resourceAwsMacie2CustomDataIdentifier() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"maximum_match_distance": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 300),
 			},
 			"tags":     tagsSchemaForceNew(),
 			"tags_all": tagsSchemaComputed(),
-			"deleted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -119,10 +111,10 @@ func resourceMacie2CustomDataIdentifierCreate(ctx context.Context, d *schema.Res
 		input.Regex = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("keywords"); ok {
-		input.Keywords = expandStringList(v.([]interface{}))
+		input.Keywords = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("ignore_words"); ok {
-		input.IgnoreWords = expandStringList(v.([]interface{}))
+		input.IgnoreWords = expandStringSet(v.(*schema.Set))
 	}
 	input.Name = aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string)))
 	if v, ok := d.GetOk("description"); ok {
@@ -175,7 +167,7 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 	resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -206,7 +198,11 @@ func resourceMacie2CustomDataIdentifierRead(ctx context.Context, d *schema.Resou
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags_all", d.Id(), err))
 	}
 
-	d.Set("deleted", resp.Deleted)
+	if aws.BoolValue(resp.Deleted) {
+		log.Printf("[WARN] Macie CustomDataIdentifier (%s) is soft deleted, removing from state", d.Id())
+		d.SetId("")
+	}
+
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
 
@@ -223,7 +219,7 @@ func resourceMacie2CustomDataIdentifierDelete(ctx context.Context, d *schema.Res
 	_, err := conn.DeleteCustomDataIdentifierWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
