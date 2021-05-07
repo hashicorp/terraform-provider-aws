@@ -22,6 +22,14 @@ func TestAccAWSMacie2_serial(t *testing.T) {
 			"complete":       testAccAwsMacie2ClassificationJob_complete,
 			"tags":           testAccAwsMacie2ClassificationJob_WithTags,
 		},
+		"CustomDataIdentifier": {
+			"basic":              testAccAwsMacie2CustomDataIdentifier_basic,
+			"name_generated":     testAccAwsMacie2CustomDataIdentifier_Name_Generated,
+			"name_prefix":        testAccAwsMacie2CustomDataIdentifier_disappears,
+			"disappears":         testAccAwsMacie2CustomDataIdentifier_NamePrefix,
+			"classification_job": testAccAwsMacie2CustomDataIdentifier_WithClassificationJob,
+			"tags":               testAccAwsMacie2CustomDataIdentifier_WithTags,
+		},
 	}
 
 	for group, m := range testCases {
