@@ -93,9 +93,9 @@ func PortfolioShareStatusWithToken(conn *servicecatalog.ServiceCatalog, token st
 	}
 }
 
-func PortfolioShareStatus(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, accountID, orgNodeValue string) resource.StateRefreshFunc {
+func PortfolioShareStatus(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := finder.PortfolioShare(conn, portfolioID, shareType, accountID, orgNodeValue)
+		output, err := finder.PortfolioShare(conn, portfolioID, shareType, principalID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, err
