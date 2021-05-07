@@ -29,10 +29,12 @@ func resourceAwsMacie2Member() *schema.Resource {
 			"account_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"email": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -127,7 +129,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := conn.GetMemberWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
@@ -186,7 +188,7 @@ func resourceMacie2MemberDelete(ctx context.Context, d *schema.ResourceData, met
 	_, err := conn.DeleteMemberWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) ||
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
 			return nil
