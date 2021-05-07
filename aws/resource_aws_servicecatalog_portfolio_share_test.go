@@ -8,11 +8,49 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 )
 
 func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_servicecatalog_portfolio_share.test"
+	compareName := "aws_servicecatalog_portfolio.test"
+	dataSourceName := "data.aws_caller_identity.alternate"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t); testAccAlternateAccountPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, servicecatalog.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsServiceCatalogPortfolioShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServiceCatalogPortfolioShareConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accepted", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", dataSourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
+					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeAccount),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceCatalogPortfolioShare_organization(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -24,7 +62,7 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioShareConfig_basic(rName),
+				Config: testAccAWSServiceCatalogPortfolioShareConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
@@ -41,7 +79,6 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
 				},
 			},
 		},
@@ -59,7 +96,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareDestroy(s *terraform.State) erro
 		output, err := finder.PortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
-			rs.Primary.Attributes["share_type"],
+			rs.Primary.Attributes["type"],
 			rs.Primary.Attributes["principal_id"],
 		)
 
@@ -92,7 +129,7 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 		_, err := finder.PortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
-			rs.Primary.Attributes["share_type"],
+			rs.Primary.Attributes["type"],
 			rs.Primary.Attributes["principal_id"],
 		)
 
@@ -109,6 +146,29 @@ func testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName string) reso
 }
 
 func testAccAWSServiceCatalogPortfolioShareConfig_basic(rName string) string {
+	return composeConfig(testAccAlternateAccountProviderConfig(), fmt.Sprintf(`
+data "aws_caller_identity" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_servicecatalog_portfolio" "test" {
+  name          = %[1]q
+  description   = %[1]q
+  provider_name = %[1]q
+}
+
+resource "aws_servicecatalog_portfolio_share" "test" {
+  accept_language     = "en"
+  portfolio_id        = aws_servicecatalog_portfolio.test.id
+  share_tag_options   = true
+  type                = "ACCOUNT"
+  principal_id        = data.aws_caller_identity.alternate.account_id
+  wait_for_acceptance = false
+}
+`, rName))
+}
+
+func testAccAWSServiceCatalogPortfolioShareConfig_organization(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_organizations_access" "test" {
   enabled = "true"
