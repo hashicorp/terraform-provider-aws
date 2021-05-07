@@ -145,8 +145,6 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 
 	// Set QLDB ledger name  TODO: Confirm what this should be...  d.Set("???", aws.StringValue(qldbResp.StreamId)) ???
 	d.SetId(aws.StringValue(qldbResp.StreamId))
-	d.Set("stream_id", aws.StringValue(qldbResp.StreamId))
-
 	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
 
 	stateConf := &resource.StateChangeConf{
@@ -294,7 +292,7 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).qldbconn
 	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
 		LedgerName: aws.String(d.Get("ledger_name").(string)),
-		StreamId:   aws.String(d.Get("stream_id").(string)),
+		StreamId:   aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Get("stream_id"))
 
@@ -325,8 +323,8 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Get("stream_id"), err)
 	}
 
-	if err := waitForQLDBStreamDeletion(conn, d.Get("ledger_name").(string), d.Get("stream_id").(string)); err != nil {
-		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get("ledger_name"), d.Get("stream_id"), err)
+	if err := waitForQLDBStreamDeletion(conn, d.Get("ledger_name").(string), d.Id()); err != nil {
+		return fmt.Errorf("error waiting for QLDB Stream (%s, %s) deletion: %s", d.Get("ledger_name"), d.Id(), err)
 	}
 
 	return nil
@@ -350,12 +348,13 @@ func waitForQLDBStreamDeletion(conn *qldb.QLDB, ledgerName string, streamID stri
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			qldb.StreamStatusActive,
-			qldb.StreamStatusCanceled,
 			qldb.StreamStatusCompleted,
 			qldb.StreamStatusFailed,
 			qldb.StreamStatusImpaired,
 		},
-		Target:     []string{""},
+		Target: []string{
+			qldb.StreamStatusCanceled,
+		},
 		Timeout:    5 * time.Minute,
 		MinTimeout: 1 * time.Second,
 		Refresh: func() (interface{}, string, error) {
