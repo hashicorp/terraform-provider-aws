@@ -182,8 +182,7 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	qldbStream, err := conn.DescribeJournalKinesisStream(input)
 
 	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QLDB Stream (%s) not found, removing from state", d.Get("stream_id"))
-		d.Set("stream_id", "")
+		log.Printf("[WARN] QLDB Stream (%s) not found, removing from state", d.Id())
 		d.Set("ledger_name", "")
 		return nil
 	}
@@ -202,7 +201,7 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	*/
 
 	if err != nil {
-		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Get("stream_id"), err)
+		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("arn", qldbStream.Stream.Arn); err != nil {
@@ -250,10 +249,6 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	// 	return fmt.Errorf("error setting Status: %s", err)
 	// }
 
-	// if err := d.Set("stream_id", qldbStream.Stream.StreamId); err != nil {
-	// 	return fmt.Errorf("error setting Stream Id: %s", err)
-	// }
-
 	if err := d.Set("stream_name", qldbStream.Stream.StreamName); err != nil {
 		return fmt.Errorf("error setting Stream Name: %s", err)
 	}
@@ -294,7 +289,7 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 		LedgerName: aws.String(d.Get("ledger_name").(string)),
 		StreamId:   aws.String(d.Id()),
 	}
-	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Get("stream_id"))
+	log.Printf("[INFO] Cancelling QLDB Ledger: %s %s", d.Get("ledger_name"), d.Id())
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
@@ -320,7 +315,7 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Get("stream_id"), err)
+		return fmt.Errorf("error cancelling QLDB Stream (%s, %s): %s", d.Get("ledger_name"), d.Id(), err)
 	}
 
 	if err := waitForQLDBStreamDeletion(conn, d.Get("ledger_name").(string), d.Id()); err != nil {
