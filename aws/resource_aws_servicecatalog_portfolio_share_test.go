@@ -178,6 +178,8 @@ resource "aws_servicecatalog_portfolio_share" "test" {
 
 func testAccAWSServiceCatalogPortfolioShareConfig_organization(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_servicecatalog_organizations_access" "test" {
   enabled = "true"
 }
@@ -193,7 +195,7 @@ resource "aws_servicecatalog_portfolio_share" "test" {
   portfolio_id      = aws_servicecatalog_portfolio.test.id
   share_tag_options = true
   type              = "ORGANIZATION"
-  principal_id      = "arn:aws:organizations::111122223333:organization/o-abcdefghijkl"
+  principal_id      = "arn:${data.aws_partition.current.partition}:organizations::111122223333:organization/o-abcdefghijkl"
 }
 `, rName)
 }
