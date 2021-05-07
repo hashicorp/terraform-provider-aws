@@ -1726,7 +1726,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	err := resourceInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+	err := resourceInstanceDisableAPITermination(conn, d.Id(), false)
 
 	if err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
