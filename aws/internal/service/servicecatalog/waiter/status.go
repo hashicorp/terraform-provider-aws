@@ -106,7 +106,9 @@ func PortfolioShareStatus(conn *servicecatalog.ServiceCatalog, portfolioID, shar
 		}
 
 		if output == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error finding portfolio share: empty response")
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("error finding portfolio share (%s:%s:%s): empty response", portfolioID, shareType, principalID),
+			}
 		}
 
 		if !aws.BoolValue(output.Accepted) {
