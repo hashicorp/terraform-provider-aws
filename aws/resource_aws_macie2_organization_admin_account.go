@@ -106,7 +106,7 @@ func resourceMacie2OrganizationAdminAccountDelete(ctx context.Context, d *schema
 	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, macie2.ErrCodeAccessDeniedException) {
+			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
 		return diag.FromErr(fmt.Errorf("error deleting Macie OrganizationAdminAccount (%s): %w", d.Id(), err))
@@ -127,9 +127,6 @@ func getMacie2OrganizationAdminAccount(conn *macie2.Macie2, adminAccountID strin
 				continue
 			}
 
-			log.Printf("[DEBUG] imprimo adminAccount : %+v", adminAccount)
-			log.Printf("[DEBUG] imprimo adminAccount.AccountId : %+v", adminAccount.AccountId)
-			log.Printf("[DEBUG] imprimo adminAccountID : %+v", adminAccountID)
 			if aws.StringValue(adminAccount.AccountId) == adminAccountID {
 				res = adminAccount
 				return false
