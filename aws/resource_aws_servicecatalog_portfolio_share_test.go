@@ -75,7 +75,7 @@ func TestAccAWSServiceCatalogPortfolioShare_organization(t *testing.T) {
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
-					resource.TestCheckResourceAttr(resourceName, "principal_id", "arn:aws:organizations::111122223333:organization/o-abcdefghijkl"),
+					resource.TestCheckResourceAttr(resourceName, "principal_id", fmt.Sprintf("arn:%s:organizations::111122223333:organization/o-abcdefghijkl", testAccGetPartition())),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganization),
