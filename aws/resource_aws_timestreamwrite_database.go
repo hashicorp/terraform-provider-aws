@@ -43,9 +43,13 @@ func resourceAwsTimestreamWriteDatabase() *schema.Resource {
 			},
 
 			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				// The Timestream API accepts the KmsKeyId as an ID, ARN, alias, or alias ARN but always returns the ARN of the key.
+				// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'. Appropriate diff suppression
+				// would require an extra API call to the kms service's DescribeKey method to decipher aliases.
+				// To avoid importing an extra service in this resource, input here is restricted to only ARNs.
 				ValidateFunc: validateArn,
 			},
 
