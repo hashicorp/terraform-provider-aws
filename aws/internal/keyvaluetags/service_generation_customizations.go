@@ -115,6 +115,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -349,6 +350,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(swf.New)
 	case "synthetics":
 		funcType = reflect.TypeOf(synthetics.New)
+	case "timestreamwrite":
+		funcType = reflect.TypeOf(timestreamwrite.New)
 	case "transfer":
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
@@ -751,6 +754,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
+		return "ResourceARN"
+	case "timestreamwrite":
 		return "ResourceARN"
 	case "transfer":
 		return "Arn"

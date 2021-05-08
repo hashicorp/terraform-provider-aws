@@ -116,6 +116,7 @@ var serviceNames = []string{
 	"ssoadmin",
 	"storagegateway",
 	"swf",
+	"timestreamwrite",
 	"transfer",
 	"waf",
 	"wafregional",

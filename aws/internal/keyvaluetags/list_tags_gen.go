@@ -103,6 +103,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -1806,6 +1807,23 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 	}
 
 	return SwfKeyValueTags(output.Tags), nil
+}
+
+// TimestreamwriteListTags lists timestreamwrite service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func TimestreamwriteListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (KeyValueTags, error) {
+	input := &timestreamwrite.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return TimestreamwriteKeyValueTags(output.Tags), nil
 }
 
 // TransferListTags lists transfer service tags.

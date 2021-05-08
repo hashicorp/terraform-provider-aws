@@ -85,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafv2"
@@ -2781,6 +2782,33 @@ func (tags KeyValueTags) SwfTags() []*swf.ResourceTag {
 
 // SwfKeyValueTags creates KeyValueTags from swf service tags.
 func SwfKeyValueTags(tags []*swf.ResourceTag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// TimestreamwriteTags returns timestreamwrite service tags.
+func (tags KeyValueTags) TimestreamwriteTags() []*timestreamwrite.Tag {
+	result := make([]*timestreamwrite.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &timestreamwrite.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// TimestreamwriteKeyValueTags creates KeyValueTags from timestreamwrite service tags.
+func TimestreamwriteKeyValueTags(tags []*timestreamwrite.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
