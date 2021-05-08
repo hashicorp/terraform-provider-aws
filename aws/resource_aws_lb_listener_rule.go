@@ -148,9 +148,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{port}",
-										ValidateFunc: validation.Any(
-											validation.StringInSlice([]string{"#{port}"}, false),
-										),
 									},
 
 									"protocol": {
