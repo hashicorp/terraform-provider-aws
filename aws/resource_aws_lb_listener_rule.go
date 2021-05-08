@@ -150,7 +150,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Default:  "#{port}",
 										ValidateFunc: validation.Any(
 											validation.StringInSlice([]string{"#{port}"}, false),
-											validation.IsPortNumber,
 										),
 									},
 
