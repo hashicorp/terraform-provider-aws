@@ -95,6 +95,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 						"source_ip.#":             "0",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
