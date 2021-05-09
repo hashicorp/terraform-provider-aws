@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,9 +35,9 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"criterion": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
-							MaxItems: 1,
+							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"field": {
@@ -59,20 +60,36 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"lt": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.Any(
+											validation.IsRFC3339Time,
+											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
+										),
 									},
 									"lte": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.Any(
+											validation.IsRFC3339Time,
+											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
+										),
 									},
 									"gt": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.Any(
+											validation.IsRFC3339Time,
+											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
+										),
 									},
 									"gte": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.Any(
+											validation.IsRFC3339Time,
+											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
+										),
 									},
 								},
 							},
@@ -126,10 +143,15 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateFindingsFilterInput{
-		ClientToken:     aws.String(resource.UniqueId()),
-		FindingCriteria: expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{})),
-		Name:            aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
-		Action:          aws.String(d.Get("action").(string)),
+		ClientToken: aws.String(resource.UniqueId()),
+		Name:        aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))),
+		Action:      aws.String(d.Get("action").(string)),
+	}
+
+	var err error
+	input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -142,7 +164,6 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 		input.Tags = tags.IgnoreAws().Macie2Tags()
 	}
 
-	var err error
 	var output *macie2.CreateFindingsFilterOutput
 	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
 		output, err = conn.CreateFindingsFilterWithContext(ctx, input)
@@ -221,8 +242,12 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 		Id: aws.String(d.Id()),
 	}
 
+	var err error
 	if d.HasChange("finding_criteria") {
-		input.FindingCriteria = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
+		input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange("name") {
 		input.Name = aws.String(naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string)))
@@ -240,7 +265,7 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 		input.Position = aws.Int64(int64(d.Get("position").(int)))
 	}
 
-	_, err := conn.UpdateFindingsFilterWithContext(ctx, input)
+	_, err = conn.UpdateFindingsFilterWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
 	}
@@ -266,14 +291,14 @@ func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandFindingCriteriaFilter(findingCriterias []interface{}) *macie2.FindingCriteria {
+func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.FindingCriteria, error) {
 	if len(findingCriterias) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	criteria := map[string]*macie2.CriterionAdditionalProperties{}
 	findingCriteria := findingCriterias[0].(map[string]interface{})
-	inputFindingCriteria := findingCriteria["criterion"].([]interface{})
+	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
 	for _, criterion := range inputFindingCriteria {
 		crit := criterion.(map[string]interface{})
@@ -304,22 +329,38 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) *macie2.Finding
 			}
 			conditional.EqExactMatch = foo
 		}
-		if v, ok := crit["lt"].(int); ok && v != 0 {
-			conditional.Lt = aws.Int64(int64(v))
+		if v, ok := crit["lt"].(string); ok && v != "" {
+			i, err := expandConditionIntField(field, v)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lt", field, err)
+			}
+			conditional.Lt = aws.Int64(i)
 		}
-		if v, ok := crit["lte"].(int); ok && v != 0 {
-			conditional.Lte = aws.Int64(int64(v))
+		if v, ok := crit["lte"].(string); ok && v != "" {
+			i, err := expandConditionIntField(field, v)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lte", field, err)
+			}
+			conditional.Lte = aws.Int64(i)
 		}
-		if v, ok := crit["gt"].(int); ok && v != 0 {
-			conditional.Gt = aws.Int64(int64(v))
+		if v, ok := crit["gt"].(string); ok && v != "" {
+			i, err := expandConditionIntField(field, v)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gt", field, err)
+			}
+			conditional.Gt = aws.Int64(i)
 		}
-		if v, ok := crit["gte"].(int); ok && v != 0 {
-			conditional.Gte = aws.Int64(int64(v))
+		if v, ok := crit["gte"].(string); ok && v != "" {
+			i, err := expandConditionIntField(field, v)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gte", field, err)
+			}
+			conditional.Gte = aws.Int64(i)
 		}
 		criteria[field] = &conditional
 	}
 
-	return &macie2.FindingCriteria{Criterion: criteria}
+	return &macie2.FindingCriteria{Criterion: criteria}, nil
 }
 
 func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteria) []interface{} {
@@ -343,16 +384,16 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteri
 			criterion["eq_exact_match"] = aws.StringValueSlice(conditions.EqExactMatch)
 		}
 		if v := aws.Int64Value(conditions.Lt); v != 0 {
-			criterion["lt"] = aws.Int64Value(conditions.Lt)
+			criterion["lt"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Lt); v != 0 {
-			criterion["lte"] = aws.Int64Value(conditions.Lte)
+		if v := aws.Int64Value(conditions.Lte); v != 0 {
+			criterion["lte"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Lt); v != 0 {
-			criterion["gt"] = aws.Int64Value(conditions.Gt)
+		if v := aws.Int64Value(conditions.Gt); v != 0 {
+			criterion["gt"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Lt); v != 0 {
-			criterion["gte"] = aws.Int64Value(conditions.Gte)
+		if v := aws.Int64Value(conditions.Gte); v != 0 {
+			criterion["gte"] = flattenConditionIntField(field, v)
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
