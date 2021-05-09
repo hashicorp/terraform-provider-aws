@@ -124,6 +124,7 @@ func testAccAwsMacie2FindingsFilter_disappears(t *testing.T) {
 func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
+	dataSourceRegion := "data.aws_region.current"
 	description := "this is a description"
 	descriptionUpdated := "this is a description updated"
 
@@ -141,6 +142,12 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
@@ -156,6 +163,179 @@ func testAccAwsMacie2FindingsFilter_complete(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+				),
+			},
+			{
+				Config: testAccAwsMacieFindingsFilterconfigComplete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsMacie2FindingsFilter_WithDate(t *testing.T) {
+	var macie2Output macie2.GetFindingsFilterOutput
+	resourceName := "aws_macie2_findings_filter.test"
+	dataSourceRegion := "data.aws_region.current"
+	description := "this is a description"
+	descriptionUpdated := "this is a description updated"
+	startDate := "2020-01-01T00:00:00Z"
+	endDate := "2020-02-01T00:00:00Z"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+				),
+			},
+			{
+				Config: testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterion(descriptionUpdated, macie2.FindingsFilterActionNoop, startDate, endDate, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", "region"),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "updatedAt",
+						"gte":   startDate,
+						"lt":    endDate,
+					}),
+					testAccCheckResourceAttrRfc3339(resourceName, "finding_criteria.0.criterion.2.gte"),
+					testAccCheckResourceAttrRfc3339(resourceName, "finding_criteria.0.criterion.2.lt"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "sample",
+						"neq.#": "2",
+						"neq.0": "another-sample",
+						"neq.1": "some-sample",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsMacie2FindingsFilter_WithNumber(t *testing.T) {
+	var macie2Output macie2.GetFindingsFilterOutput
+	resourceName := "aws_macie2_findings_filter.test"
+	dataSourceRegion := "data.aws_region.current"
+	description := "this is a description"
+	descriptionUpdated := "this is a description updated"
+	firstNumber := "-12"
+	secondNumber := "13"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsMacie2FindingsFilterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieFindingsFilterconfigComplete(description, macie2.FindingsFilterActionArchive, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, "name"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+				),
+			},
+			{
+				Config: testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterionNumber(descriptionUpdated, macie2.FindingsFilterActionNoop, firstNumber, secondNumber, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "count",
+						"gte":   firstNumber,
+						"lt":    secondNumber,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "sample",
+						"neq.#": "2",
+						"neq.0": "another-sample",
+						"neq.1": "some-sample",
+					}),
 				),
 			},
 			{
@@ -171,7 +351,6 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 	var macie2Output macie2.GetFindingsFilterOutput
 	resourceName := "aws_macie2_findings_filter.test"
 	description := "this is a description"
-	descriptionUpdated := "this is a description updated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -193,22 +372,11 @@ func testAccAwsMacie2FindingsFilter_withTags(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-				),
-			},
-			{
-				Config: testAccAwsMacieFindingsFilterconfigWithTags(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2FindingsFilterExists(resourceName, &macie2Output),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "action", macie2.FindingsFilterActionNoop),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "macie2", regexp.MustCompile(`findings-filter/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "position", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
+						"field": "region",
+						"eq.#":  "1",
+						"eq.0":  testAccGetRegion(),
+					}),
 				),
 			},
 			{
@@ -276,7 +444,8 @@ func testAccCheckAwsMacie2FindingsFilterDestroy(s *terraform.State) error {
 }
 
 func testAccAwsMacieFindingsFilterconfigNameGenerated() string {
-	return `resource "aws_macie2_account" "test" {}
+	return `
+resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_findings_filter" "test" {
   action = "ARCHIVE"
@@ -326,6 +495,66 @@ resource "aws_macie2_findings_filter" "test" {
   depends_on = [aws_macie2_account.test]
 }
 `, description, action, position)
+}
+
+func testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterion(description, action, startDate, endDate string, position int) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_macie2_account" "test" {}
+
+resource "aws_macie2_findings_filter" "test" {
+  description = %[1]q
+  action      = %[2]q
+  position    = %[3]d
+  finding_criteria {
+    criterion {
+      field = "region"
+      eq    = [data.aws_region.current.name]
+    }
+    criterion {
+      field = "sample"
+      neq   = ["some-sample", "another-sample"]
+    }
+    criterion {
+      field = "updatedAt"
+      gte   = %[4]q
+      lt    = %[5]q
+    }
+  }
+  depends_on = [aws_macie2_account.test]
+}
+`, description, action, position, startDate, endDate)
+}
+
+func testAccAwsMacieFindingsFilterconfigCompleteMultipleCriterionNumber(description, action, firstNum, secondNum string, position int) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_macie2_account" "test" {}
+
+resource "aws_macie2_findings_filter" "test" {
+  description = %[1]q
+  action      = %[2]q
+  position    = %[3]d
+  finding_criteria {
+    criterion {
+      field = "region"
+      eq    = [data.aws_region.current.name]
+    }
+    criterion {
+      field = "sample"
+      neq   = ["some-sample", "another-sample"]
+    }
+    criterion {
+      field = "count"
+      gte   = %[4]q
+      lt    = %[5]q
+    }
+  }
+  depends_on = [aws_macie2_account.test]
+}
+`, description, action, position, firstNum, secondNum)
 }
 
 func testAccAwsMacieFindingsFilterconfigWithTags(description, action string, position int) string {

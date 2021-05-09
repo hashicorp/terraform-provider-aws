@@ -36,6 +36,8 @@ func TestAccAWSMacie2_serial(t *testing.T) {
 			"name_prefix":    testAccAwsMacie2FindingsFilter_NamePrefix,
 			"disappears":     testAccAwsMacie2FindingsFilter_disappears,
 			"complete":       testAccAwsMacie2FindingsFilter_complete,
+			"date":           testAccAwsMacie2FindingsFilter_WithDate,
+			"number":         testAccAwsMacie2FindingsFilter_WithNumber,
 			"tags":           testAccAwsMacie2FindingsFilter_withTags,
 		},
 	}
