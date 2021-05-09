@@ -623,7 +623,7 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||
 				tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
+				log.Printf("[DEBUG] Retrying tagging of LB Listener (%s) after error: %s", d.Id(), err)
 				return resource.RetryableError(err)
 			}
 
