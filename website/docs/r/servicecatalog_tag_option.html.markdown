@@ -28,13 +28,16 @@ The following arguments are required:
 * `key` - (Required) Tag option key.
 * `value` - (Required) Tag option value.
 
+The following arguments are optional:
+
+* `active` - (Optional) Whether tag option is active. Default is `true`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `active` - Active state.
-* `id` - Identifier.
-* `owner` - AWS account ID of the owner account that created the tag option.
+* `id` - Identifier (e.g., `tag-pjtvagohlyo3m`).
+* `owner_id` - AWS account ID of the owner account that created the tag option.
 
 ## Import
 
