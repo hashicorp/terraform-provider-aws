@@ -19,7 +19,7 @@ resource "aws_qldb_stream" "sample-ledger-stream" {
   ledger_name          = "existing-ledger-name"
   stream_name          = "sample-ledger-stream"
   role_arn             = "sample-role-arn"
-  inclusive_start_time = ""
+  inclusive_start_time = "2021-01-01T00:00:00Z"
 
   kinesis_configuration = {
     aggegation_enabled = false
