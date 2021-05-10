@@ -39,7 +39,6 @@ func resourceAwsQLDBStream() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					// TODO: Get this to validate ISO 8601 -> time.RFC3339 ?
 					validateUTCTimestamp, // The ExclusiveEndTime must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: 2019-06-13T21:36:34Z.
 				),
 			},
@@ -95,7 +94,7 @@ func resourceAwsQLDBStream() *schema.Resource {
 func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 
-	// Create the QLDB Ledger
+	// Create the QLDB Stream
 	createOpts := &qldb.StreamJournalToKinesisInput{
 		LedgerName: aws.String(d.Get("ledger_name").(string)),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
@@ -143,7 +142,7 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error creating QLDB Ledger Stream: %s", err)
 	}
 
-	// Set QLDB ledger name
+	// Set QLDB Stream ID
 	d.SetId(aws.StringValue(qldbResp.StreamId))
 	log.Printf("[INFO] QLDB Ledger Stream Id: %s", d.Id())
 
@@ -189,17 +188,6 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("DEBUG - QLDB Stream: %#v", qldbStream)
 
-	/*
-		"arn"
-		"exlusive_end_time"
-		"inclusive_start_time"
-		"kinesis_configuration"
-		"ledger_name"
-		"role_arn"
-		"stream_name"
-		"tags"
-	*/
-
 	if err != nil {
 		return fmt.Errorf("error describing QLDB Stream (%s): %s", d.Id(), err)
 	}
@@ -207,14 +195,6 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("arn", qldbStream.Stream.Arn); err != nil {
 		return fmt.Errorf("error setting ARN: %s", err)
 	}
-
-	// if err := d.Set("creation_time", qldbStream.Stream.CreationTime); err != nil {
-	// 	return fmt.Errorf("error setting Creation Time: %s", err)
-	// }
-
-	// if err := d.Set("error_cause", qldbStream.Stream.ErrorCause); err != nil {
-	// 	return fmt.Errorf("error setting Error Cause: %s", err)
-	// }
 
 	if qldbStream.Stream.ExclusiveEndTime != nil {
 		if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime.String()); err != nil {
@@ -245,16 +225,16 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting Role Arn: %s", err)
 	}
 
-	// if err := d.Set("status", qldbStream.Stream.Status); err != nil {
-	// 	return fmt.Errorf("error setting Status: %s", err)
-	// }
-
 	if err := d.Set("stream_name", qldbStream.Stream.StreamName); err != nil {
 		return fmt.Errorf("error setting Stream Name: %s", err)
 	}
 
-	// TODO: Check this is working.  Seems like it should be the same regardless of resource type...
-	// Tags
+	// TODO: Set the atributes in the right place.  Confirm where the right place is...
+	// qldbStream.Stream.Arn
+	// qldbStream.Stream.CreationTime
+	// qldbStream.Stream.Status
+	// qldbStream.Stream.StreamId
+
 	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
 	if err != nil {
@@ -271,7 +251,6 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 
-	// TODO: Confirm this works for streams, as well
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
