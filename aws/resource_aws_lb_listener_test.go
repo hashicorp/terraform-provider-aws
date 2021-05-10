@@ -1640,7 +1640,7 @@ resource "aws_lb_listener" "test" {
 
   tags = {
     %[2]q = %[3]q
-  }  
+  }
 }
 
 resource "aws_lb" "test" {
@@ -1696,7 +1696,7 @@ resource "aws_lb_listener" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-  }  
+  }
 }
 
 resource "aws_lb" "test" {
