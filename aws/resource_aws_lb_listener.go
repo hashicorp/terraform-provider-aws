@@ -556,7 +556,7 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	if d.HasChangeExcept("tags_all") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		params := &elbv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
