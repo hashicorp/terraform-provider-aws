@@ -3,18 +3,17 @@ subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_member"
 description: |-
-  Provides a resource to manage an AWS Macie Member.
+  Provides a resource to manage an Amazon Macie Member.
 ---
 
 # Resource: aws_macie2_member
 
-Provides a resource to manage an [AWS Macie Member](https://docs.aws.amazon.com/macie/latest/APIReference/members-id.html).
+Provides a resource to manage an [Amazon Macie Member](https://docs.aws.amazon.com/macie/latest/APIReference/members-id.html).
 
 ## Example Usage
 
 ```terraform
 resource "aws_macie2_account" "example" {}
-
 
 resource "aws_macie2_member" "test" {
   account_id = "NAME OF THE MEMBER"
