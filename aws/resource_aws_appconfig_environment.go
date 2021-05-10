@@ -46,11 +46,33 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 					validation.StringLenBetween(0, 1024),
 				),
 			},
-			// TODO monitors
 			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"monitors": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(20, 2048),
+							),
+						},
+						"alarm_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(20, 2048),
+							),
+						},
+					},
+				},
 			},
 		},
 	}
@@ -64,7 +86,7 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 		Description:   aws.String(d.Get("description").(string)),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
 		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
-		// TODO monitors
+		Monitors:      expandAppconfigEnvironmentMonitors(d.Get("monitors").([]interface{})),
 	}
 
 	environment, err := conn.CreateEnvironment(input)
@@ -75,6 +97,29 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 	d.SetId(aws.StringValue(environment.Id))
 
 	return resourceAwsAppconfigEnvironmentRead(d, meta)
+}
+
+func expandAppconfigEnvironmentMonitors(list []interface{}) []*appconfig.Monitor {
+	monitors := make([]*appconfig.Monitor, len(list))
+	for i, monitorInterface := range list {
+		m := monitorInterface.(map[string]interface{})
+		monitors[i] = &appconfig.Monitor{
+			AlarmArn:     aws.String(m["alarm_arn"].(string)),
+			AlarmRoleArn: aws.String(m["alarm_role_arn"].(string)),
+		}
+	}
+	return monitors
+}
+
+func flattenAwsAppconfigEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+	list := make([]interface{}, len(monitors))
+	for i, monitor := range monitors {
+		list[i] = map[string]interface{}{
+			"alarm_arn":      aws.StringValue(monitor.AlarmArn),
+			"alarm_role_arn": aws.StringValue(monitor.AlarmRoleArn),
+		}
+	}
+	return list
 }
 
 func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
@@ -107,7 +152,7 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 	d.Set("name", output.Name)
 	d.Set("description", output.Description)
 	d.Set("application_id", output.ApplicationId)
-	// TODO monitors
+	d.Set("monitors", flattenAwsAppconfigEnvironmentMonitors(output.Monitors))
 
 	environmentARN := arn.ARN{
 		AccountID: meta.(*AWSClient).accountid,
@@ -139,13 +184,11 @@ func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("description") {
-		_, n := d.GetChange("description")
-		updateInput.Description = aws.String(n.(string))
+		updateInput.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("name") {
-		_, n := d.GetChange("name")
-		updateInput.Name = aws.String(n.(string))
+		updateInput.Name = aws.String(d.Get("name").(string))
 	}
 
 	if d.HasChange("tags") {
@@ -154,7 +197,10 @@ func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating AppConfig (%s) tags: %s", d.Id(), err)
 		}
 	}
-	// TODO monitors
+
+	if d.HasChange("monitors") {
+		updateInput.Monitors = expandAppconfigEnvironmentMonitors(d.Get("monitors").([]interface{}))
+	}
 
 	_, err := conn.UpdateEnvironment(updateInput)
 	if err != nil {
