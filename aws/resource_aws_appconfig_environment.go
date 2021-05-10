@@ -6,9 +6,11 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAppconfigEnvironment() *schema.Resource {
@@ -46,6 +48,10 @@ func resourceAwsAppconfigEnvironment() *schema.Resource {
 			},
 			// TODO monitors
 			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -57,7 +63,7 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 		Name:          aws.String(d.Get("name").(string)),
 		Description:   aws.String(d.Get("description").(string)),
 		ApplicationId: aws.String(d.Get("application_id").(string)),
-		// TODO tags
+		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
 		// TODO monitors
 	}
 
@@ -73,9 +79,12 @@ func resourceAwsAppconfigEnvironmentCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appconfigconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	appID := d.Get("application_id").(string)
 
 	input := &appconfig.GetEnvironmentInput{
-		ApplicationId: aws.String(d.Get("application_id").(string)),
+		ApplicationId: aws.String(appID),
 		EnvironmentId: aws.String(d.Id()),
 	}
 
@@ -98,8 +107,25 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 	d.Set("name", output.Name)
 	d.Set("description", output.Description)
 	d.Set("application_id", output.ApplicationId)
-	// TODO tags
 	// TODO monitors
+
+	environmentARN := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, d.Id()),
+		Service:   "appconfig",
+	}.String()
+	d.Set("arn", environmentARN)
+
+	tags, err := keyvaluetags.AppconfigListTags(conn, environmentARN)
+	if err != nil {
+		return fmt.Errorf("error getting tags for AppConfig Environment (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -122,7 +148,12 @@ func resourceAwsAppconfigEnvironmentUpdate(d *schema.ResourceData, meta interfac
 		updateInput.Name = aws.String(n.(string))
 	}
 
-	// TODO tags
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating AppConfig (%s) tags: %s", d.Id(), err)
+		}
+	}
 	// TODO monitors
 
 	_, err := conn.UpdateEnvironment(updateInput)
