@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_macie2_member
+```
+
+```release-note:new-resource
+aws_macie2_invitation
+```
+
+```release-note:new-resource
+aws_macie2_invitation_accepter
+```
