@@ -517,6 +517,10 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 }
 
 func TestAccAWSLBListenerRule_cognito(t *testing.T) {
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("LB Listener Rule action type 'authenticate-cognito' type is not supported in GovCloud partition")
+	}
+
 	var conf elbv2.Rule
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
