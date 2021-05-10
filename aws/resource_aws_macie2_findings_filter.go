@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -60,36 +59,24 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"lt": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IsRFC3339Time,
-											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
 									},
 									"lte": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IsRFC3339Time,
-											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
 									},
 									"gt": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IsRFC3339Time,
-											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
 									},
 									"gte": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.Any(
-											validation.IsRFC3339Time,
-											validation.StringMatch(regexp.MustCompile(`-?[0-9]{0,10}`), "must be a positive integer value"),
-										),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateTypeStringIsDateOrPositiveInt,
 									},
 								},
 							},
@@ -246,7 +233,7 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("finding_criteria") {
 		input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("error updating Macie FindingsFilter (%s): %w", d.Id(), err))
 		}
 	}
 	if d.HasChange("name") {
