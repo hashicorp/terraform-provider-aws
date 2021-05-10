@@ -16,28 +16,18 @@ Provides an AWS Quantum Ledger Database (QLDB) Stream resource
 
 ```terraform
 resource "aws_qldb_stream" "sample-ledger-stream" {
-  ledger_name = "existing-ledger-name"
-  stream_name = "sample-ledger-stream"
-  role_arn    = "sample-role-arn"
-
+  ledger_name          = "existing-ledger-name"
+  stream_name          = "sample-ledger-stream"
+  role_arn             = "sample-role-arn"
   inclusive_start_time = ""
-  kinesis_configuration = {}
-}
-
-resource "aws_qldb_stream" "sample-ledger-stream" {
-  stream_name = "sample-stream-name"
-  ledger_name = "sample-existing-ledger"
-  inclusive_start_time = "2021-01-01T00:00:00Z"
-
-  role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/sample-role-arn"
 
   kinesis_configuration = {
-    aggregation_enabled = false
-    stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/sample-kinesis-stream"
+    aggegation_enabled = false
+    stream_arn         = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
   }
 
   tags = {
-    "example-tag" = "value"
+    "example" = "tag"
   }
 }
 ```
