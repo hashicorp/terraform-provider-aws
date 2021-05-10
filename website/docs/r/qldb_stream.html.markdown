@@ -29,11 +29,11 @@ resource "aws_qldb_stream" "sample-ledger-stream" {
   ledger_name = "sample-existing-ledger"
   inclusive_start_time = "2021-01-01T00:00:00Z"
 
-  role_arn = "arn:aws:iam::123456789000:role/service-role/sample-role-arn"
+  role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/sample-role-arn"
 
   kinesis_configuration = {
     aggregation_enabled = false
-    stream_arn          = "arn:aws:kinesis:us-east-1:123456789000:stream/sample-kinesis-stream"
+    stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/sample-kinesis-stream"
   }
 
   tags = {

@@ -257,11 +257,11 @@ func testAccAWSQLDBStreamConfigTags1(rLedgerName, rStreamName, tagKey1, tagValue
 		inclusive_start_time = "2021-01-01T00:00:00Z"
 		deletion_protection  = false
 	
-		role_arn = "arn:aws:iam::123456789000:role/service-role/test-qldb-role"
+		role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/test-qldb-role"
 	
 		kinesis_configuration = {
 			aggregation_enabled = false
-			stream_arn          = "arn:aws:kinesis:us-east-1:123456789000:stream/test-kinesis-stream"
+			stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/test-kinesis-stream"
 		}
 	
 		tags = {
@@ -279,11 +279,11 @@ resource "aws_qldb_stream" "test" {
 	inclusive_start_time = "2021-01-01T00:00:00Z"
 	deletion_protection  = false
 
-	role_arn = "arn:aws:iam::123456789000:role/service-role/test-qldb-role"
+	role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/test-qldb-role"
 
 	kinesis_configuration = {
 		aggregation_enabled = false
-		stream_arn          = "arn:aws:kinesis:us-east-1:123456789000:stream/test-kinesis-stream"
+		stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/test-kinesis-stream"
 	}
 
 	tags = {
