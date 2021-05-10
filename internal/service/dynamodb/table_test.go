@@ -2614,8 +2614,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dynamodb_table" "test" {
-  name       = "%[1]s-target"
-  restore_source_name = "%[1]s-source"
+  name                   = "%[1]s-target"
+  restore_source_name    = "%[1]s-source"
   restore_to_latest_time = true
 
   server_side_encryption {
@@ -2655,8 +2655,8 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dynamodb_table" "test" {
-  name       = "%[1]s-target"
-  restore_source_name = "%[1]s-source"
+  name                   = "%[1]s-target"
+  restore_source_name    = "%[1]s-source"
   restore_to_latest_time = true
 
   server_side_encryption {
