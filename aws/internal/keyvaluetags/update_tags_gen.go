@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -327,6 +328,42 @@ func Apigatewayv2UpdateTags(conn *apigatewayv2.ApiGatewayV2, identifier string, 
 		input := &apigatewayv2.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().Apigatewayv2Tags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// AppconfigUpdateTags updates appconfig service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AppconfigUpdateTags(conn *appconfig.AppConfig, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &appconfig.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.IgnoreAws().Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &appconfig.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().AppconfigTags(),
 		}
 
 		_, err := conn.TagResource(input)

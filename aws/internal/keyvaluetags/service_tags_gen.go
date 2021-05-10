@@ -136,6 +136,16 @@ func Apigatewayv2KeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// AppconfigTags returns appconfig service tags.
+func (tags KeyValueTags) AppconfigTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AppconfigKeyValueTags creates KeyValueTags from appconfig service tags.
+func AppconfigKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // AppstreamTags returns appstream service tags.
 func (tags KeyValueTags) AppstreamTags() map[string]*string {
 	return aws.StringMap(tags.Map())

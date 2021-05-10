@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
@@ -196,6 +197,23 @@ func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (K
 	}
 
 	return Apigatewayv2KeyValueTags(output.Tags), nil
+}
+
+// AppconfigListTags lists appconfig service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AppconfigListTags(conn *appconfig.AppConfig, identifier string) (KeyValueTags, error) {
+	input := &appconfig.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AppconfigKeyValueTags(output.Tags), nil
 }
 
 // AppmeshListTags lists appmesh service tags.
