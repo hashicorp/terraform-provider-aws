@@ -138,7 +138,7 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 	var err error
 	input.FindingCriteria, err = expandFindingCriteriaFilter(d.Get("finding_criteria").([]interface{}))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error creating Macie FindingsFilter: %w", err))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
