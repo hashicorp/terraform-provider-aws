@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-QLDB Streams can be imported using the `ledger_name` and `stream_name`, e.g.
+QLDB Streams can be imported using the `ledger_name` and `stream_id`, e.g.
 
 ```
 $ terraform import aws_qldb_stream.sample-stream sample-ledger sample-stream
