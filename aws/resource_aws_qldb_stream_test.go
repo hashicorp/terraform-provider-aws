@@ -66,11 +66,11 @@ func waitForQLDBStreamCancellation(conn *qldb.QLDB, ledgerName string, streamID 
 		Pending: []string{
 			// qldb.StreamStatusFailed,
 			qldb.StreamStatusActive,
-			qldb.StreamStatusCompleted,
 			qldb.StreamStatusImpaired,
 		},
 		Target: []string{
 			qldb.StreamStatusCanceled,
+			qldb.StreamStatusCompleted,
 			qldb.StreamStatusFailed, // TODO: Double check, but this is also a terminal state?
 		},
 		Timeout:    5 * time.Minute,
