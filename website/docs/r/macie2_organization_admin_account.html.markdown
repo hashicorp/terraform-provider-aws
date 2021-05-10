@@ -3,7 +3,7 @@ subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie2_organization_admin_account"
 description: |-
-Provides a resource to manage an Amazon Macie Organization Admin Account.
+  Provides a resource to manage an Amazon Macie Organization Admin Account.
 ---
 
 # Resource: aws_macie2_organization_admin_account
