@@ -268,8 +268,8 @@ func testAccCheckAwsServiceCatalogTagOptionExists(resourceName string) resource.
 func testAccAWSServiceCatalogTagOptionConfig_basic(key, value, active string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_tag_option" "test" {
-  key    = %[1]q
-  value  = %[2]q
+  key   = %[1]q
+  value = %[2]q
   %[3]s
 }
 `, key, value, active)
