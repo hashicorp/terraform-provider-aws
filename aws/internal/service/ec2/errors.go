@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	ErrCodeInvalidParameterException = "InvalidParameterException"
-	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
+	ErrCodeGatewayNotAttached           = "Gateway.NotAttached"
+	ErrCodeInvalidAssociationIDNotFound = "InvalidAssociationID.NotFound"
+	ErrCodeInvalidParameterException    = "InvalidParameterException"
+	ErrCodeInvalidParameterValue        = "InvalidParameterValue"
 )
 
 const (

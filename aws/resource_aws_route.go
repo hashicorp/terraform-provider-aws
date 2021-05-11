@@ -530,5 +530,5 @@ func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Durati
 		_, err = conn.CreateRoute(input)
 	}
 
-	return nil
+	return err
 }
