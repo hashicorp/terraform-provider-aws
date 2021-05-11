@@ -18,6 +18,7 @@ func TestAccAWSAppConfigApplication_basic(t *testing.T) {
 	resourceName := "aws_appconfig_application.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -49,6 +50,7 @@ func TestAccAWSAppConfigApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -72,6 +74,7 @@ func TestAccAWSAppConfigApplication_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, appconfig.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppConfigApplicationDestroy,
 		Steps: []resource.TestStep{
