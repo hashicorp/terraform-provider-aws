@@ -45,7 +45,7 @@ resource "aws_autoscaling_group" "bar" {
 * `autoscaling_group_name` - (Required) The name of the autoscaling group.
 * `adjustment_type` - (Optional) Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
 * `policy_type` - (Optional) The policy type, either "SimpleScaling", "StepScaling", "TargetTrackingScaling", or "PredictiveScaling". If this value isn't provided, AWS will default to "SimpleScaling."
-* `predictive_scaling_config` - (Optional) The predictive scaling policy configuration to use with Amazon EC2 Auto Scaling.
+* `predictive_scaling_configuration` - (Optional) The predictive scaling policy configuration to use with Amazon EC2 Auto Scaling.
 * `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance will contribute CloudWatch metrics. Without a value, AWS will default to the group's specified cooldown period.
 
 The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
@@ -160,7 +160,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the dimension.
 * `value` - (Required) The value of the dimension.
 
-### predictive_scaling_config
+### predictive_scaling_configuration
 
 The following arguments are supported:
 
@@ -182,21 +182,21 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `predefinied_metric_type` - (Required) The metric type. Valid values are `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`, or `ALBTargetGroupRequestCount`.
+* `predefined_metric_type` - (Required) The metric type. Valid values are `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`, or `ALBTargetGroupRequestCount`.
 * `resource_label` - (Optional) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### predefined_metric_pair_specification
 
 The following arguments are supported:
 
-* `predefinied_metric_type` - (Required) Indicates which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `ASGCPUUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `ASGCPUUtilization`, `ASGNetworkIn`, `ASGNetworkOut`, or `ALBRequestCount`.
+* `predefined_metric_type` - (Required) Indicates which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `ASGCPUUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `ASGCPUUtilization`, `ASGNetworkIn`, `ASGNetworkOut`, or `ALBRequestCount`.
 * `resource_label` - (Optional) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### predefined_scaling_metric_specification
 
 The following arguments are supported:
 
-* `predefinied_metric_type` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
+* `predefined_metric_type` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
 * `resource_label` - (Optional) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ## Attributes Reference

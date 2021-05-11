@@ -106,9 +106,9 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
-	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := acctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -120,7 +120,15 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_buffer", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.predefined_metric_type", "ASGAverageCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.resource_label", "testLabel"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.predefined_metric_type", "ASGTotalCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.resource_label", "testLabel"),
 				),
 			},
 			{
@@ -136,9 +144,9 @@ func TestAccAWSAutoscalingPolicy_predictiveScaling(t *testing.T) {
 func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
-	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := acctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -150,13 +158,14 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.#", "0"),
 				),
 			},
 			{
@@ -172,9 +181,9 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingRemoved(t *testing.T) {
 func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	var policy autoscaling.ScalingPolicy
 
-	resourceSimpleName := "aws_autoscaling_policy.policy_predictive"
+	resourceSimpleName := "aws_autoscaling_policy.test"
 
-	name := fmt.Sprintf("terraform-testacc-asp-%s", acctest.RandString(5))
+	name := acctest.RandomWithPrefix("terraform-testacc-asp")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -186,13 +195,29 @@ func TestAccAWSAutoscalingPolicy_predictiveScalingUpdated(t *testing.T) {
 				Config: testAccAWSAutoscalingPolicyConfig_predictiveScaling(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
-					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_buffer", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.predefined_metric_type", "ASGAverageCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.resource_label", "testLabel"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.predefined_metric_type", "ASGTotalCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.resource_label", "testLabel"),
 				),
 			},
 			{
 				Config: testAccAWSAutoscalingPolicyConfig_predictiveScalingUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingPolicyExists(resourceSimpleName, &policy),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "5"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "HonorMaxCapacity"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.predefined_metric_type", "ASGAverageNetworkIn"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.resource_label", "testLabel"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.predefined_metric_type", "ASGTotalNetworkIn"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.resource_label", "testLabel"),
 				),
 			},
 			{
@@ -494,7 +519,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccAWSAutoscalingPolicyConfig_basic(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
+	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "foobar_simple" {
   name                   = "%s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
@@ -532,16 +557,16 @@ resource "aws_autoscaling_policy" "foobar_target_tracking" {
     target_value = 40.0
   }
 }
-`, name, name, name)
+`, name, name, name))
 }
 
 func testAccAWSAutoscalingPolicyConfig_predictiveScaling(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
-resource "aws_autoscaling_policy" "policy_predictive" {
-  name                   = "%[1]s-policcy_predictive"
+	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-policy_predictive"
   policy_type            = "PredictiveScaling"
   autoscaling_group_name = aws_autoscaling_group.test.name
-  predictive_scaling_config {
+  predictive_scaling_configuration {
     metric_specification {
       target_value = 32
       predefined_scaling_metric_specification {
@@ -559,12 +584,12 @@ resource "aws_autoscaling_policy" "policy_predictive" {
     max_capacity_buffer          = 10
   }
 }
-`, name)
+`, name))
 }
 
 func testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name string) string {
-	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
-resource "aws_autoscaling_policy" "policy_predictive" {
+	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
   name                   = "%[1]s-foobar_simple"
   adjustment_type        = "ChangeInCapacity"
   cooldown               = 300
@@ -572,16 +597,16 @@ resource "aws_autoscaling_policy" "policy_predictive" {
   scaling_adjustment     = 2
   autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, name)
+`, name))
 }
 
 func testAccAWSAutoscalingPolicyConfig_predictiveScalingUpdated(name string) string {
 	return testAccAWSAutoscalingPolicyConfig_base(name) + fmt.Sprintf(`
-resource "aws_autoscaling_policy" "policy_predictive" {
-  name                   = "%[1]s-policcy_predictive"
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-policy_predictive"
   policy_type            = "PredictiveScaling"
   autoscaling_group_name = aws_autoscaling_group.test.name
-  predictive_scaling_config {
+  predictive_scaling_configuration {
     metric_specification {
       target_value = 32
       predefined_scaling_metric_specification {
