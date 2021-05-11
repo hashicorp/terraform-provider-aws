@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: breathingdust/github-asana-tidy@v1
-        id: filter
         with:
           asana_pat: ${{ secrets.asana_pat }}
           asana_target_section_gid: ${{ secrets.asana_target_section_gid }}
