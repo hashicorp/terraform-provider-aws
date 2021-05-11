@@ -19,6 +19,7 @@ variable "service_labels" {
     "applicationdiscoveryservice",
     "applicationinsights",
     "appmesh",
+    "apprunner",
     "appstream",
     "appsync",
     "athena",

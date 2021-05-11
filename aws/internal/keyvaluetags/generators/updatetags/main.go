@@ -24,6 +24,7 @@ var serviceNames = []string{
 	"apigateway",
 	"apigatewayv2",
 	"appmesh",
+	"apprunner",
 	"appstream",
 	"appsync",
 	"athena",

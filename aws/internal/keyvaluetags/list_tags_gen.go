@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -213,6 +214,23 @@ func AppmeshListTags(conn *appmesh.AppMesh, identifier string) (KeyValueTags, er
 	}
 
 	return AppmeshKeyValueTags(output.Tags), nil
+}
+
+// ApprunnerListTags lists apprunner service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ApprunnerListTags(conn *apprunner.AppRunner, identifier string) (KeyValueTags, error) {
+	input := &apprunner.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ApprunnerKeyValueTags(output.Tags), nil
 }
 
 // AppstreamListTags lists appstream service tags.

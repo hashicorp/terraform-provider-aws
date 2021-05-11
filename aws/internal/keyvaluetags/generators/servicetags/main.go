@@ -21,6 +21,7 @@ var sliceServiceNames = []string{
 	"acm",
 	"acmpca",
 	"appmesh",
+	"apprunner",
 	"athena",
 	"autoscaling",
 	"cloud9",

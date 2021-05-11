@@ -132,6 +132,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/appmesh" = [
       "aws_appmesh_",
     ],
+    "service/apprunner" = [
+      "aws_apprunner_",
+    ],
     "service/appstream" = [
       "aws_appstream_",
     ],
@@ -740,6 +743,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/appmesh/**/*",
       "**/*_appmesh_*",
       "**/appmesh_*"
+    ]
+    "service/apprunner" = [
+      "aws/internal/service/apprunner/**/*",
+      "**/*_apprunner_*",
+      "**/apprunner_*"
     ]
     "service/appstream" = [
       "aws/internal/service/appstream/**/*",

@@ -1236,6 +1236,7 @@ func init() {
 		"applicationautoscaling",
 		"applicationinsights",
 		"appmesh",
+		"apprunner",
 		"appstream",
 		"appsync",
 		"athena",
