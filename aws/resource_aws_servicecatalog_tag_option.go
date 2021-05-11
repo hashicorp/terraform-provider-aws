@@ -198,7 +198,7 @@ func resourceAwsServiceCatalogTagOptionDelete(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error deleting Service Catalog Tag Option (%s): %w", d.Id(), err)
 	}
 
-	if _, err := waiter.TagOptionDeleted(conn, d.Id()); err != nil {
+	if err := waiter.TagOptionDeleted(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option (%s) to be deleted: %w", d.Id(), err)
 	}
 

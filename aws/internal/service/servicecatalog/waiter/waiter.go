@@ -73,7 +73,7 @@ func TagOptionReady(conn *servicecatalog.ServiceCatalog, id string) (*servicecat
 	return nil, err
 }
 
-func TagOptionDeleted(conn *servicecatalog.ServiceCatalog, id string) (*servicecatalog.TagOptionDetail, error) {
+func TagOptionDeleted(conn *servicecatalog.ServiceCatalog, id string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicecatalog.StatusAvailable},
 		Target:  []string{StatusNotFound, StatusUnavailable},
@@ -84,8 +84,8 @@ func TagOptionDeleted(conn *servicecatalog.ServiceCatalog, id string) (*servicec
 	_, err := stateConf.WaitForState()
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		return nil, nil
+		return nil
 	}
 
-	return nil, err
+	return err
 }
