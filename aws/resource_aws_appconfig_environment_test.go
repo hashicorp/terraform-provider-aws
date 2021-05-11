@@ -53,7 +53,7 @@ func TestAccAWSAppConfigEnvironment_disappears(t *testing.T) {
 	appDesc := acctest.RandomWithPrefix("desc")
 	envName := acctest.RandomWithPrefix("tf-acc-test")
 	envDesc := acctest.RandomWithPrefix("desc")
-	resourceName := "aws_appconfig_application.test"
+	resourceName := "aws_appconfig_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
