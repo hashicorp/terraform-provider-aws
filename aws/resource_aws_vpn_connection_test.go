@@ -129,6 +129,40 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpnConnection_updateVpnGateway(t *testing.T) {
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.vpn_gateway", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsVpnConnectionConfigUpdateVPNGateway(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.vpn_gateway2", "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 	var vpn ec2.VpnConnection
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
@@ -780,6 +814,39 @@ resource "aws_vpn_connection" "test" {
   static_routes_only  = false
 }
 `, rBgpAsn, rInt)
+}
+
+func testAccAwsVpnConnectionConfigUpdateVPNGateway(rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "vpn_gateway" {
+  tags = {
+    Name = "vpn_gateway"
+  }
+}
+
+resource "aws_vpn_gateway" "vpn_gateway2" {
+  tags = {
+    Name = "vpn_gateway2"
+  }
+}
+
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = %d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "main-customer-gateway"
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gateway2.id
+  customer_gateway_id = aws_customer_gateway.customer_gateway.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+}
+`, rBgpAsn)
 }
 
 func testAccAwsVpnConnectionConfigEnableAcceleration(rBgpAsn int) string {
