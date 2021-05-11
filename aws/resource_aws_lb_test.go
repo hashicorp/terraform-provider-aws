@@ -33,6 +33,7 @@ func init() {
 func testAccErrorCheckSkipELBv2(t *testing.T) resource.ErrorCheckFunc {
 	return testAccErrorCheckSkipMessagesContaining(t,
 		"ValidationError: Type must be one of: 'application, network'",
+		"ValidationError: Action type 'authenticate-cognito' must be one of 'redirect,fixed-response,forward,authenticate-oidc'",
 	)
 }
 

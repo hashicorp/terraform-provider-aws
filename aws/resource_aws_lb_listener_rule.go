@@ -12,9 +12,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsLbbListenerRule() *schema.Resource {
@@ -33,9 +38,10 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Computed: true,
 			},
 			"listener_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"priority": {
 				Type:         schema.TypeInt,
@@ -50,15 +56,9 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elbv2.ActionTypeEnumAuthenticateCognito,
-								elbv2.ActionTypeEnumAuthenticateOidc,
-								elbv2.ActionTypeEnumFixedResponse,
-								elbv2.ActionTypeEnumForward,
-								elbv2.ActionTypeEnumRedirect,
-							}, true),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elbv2.ActionTypeEnum_Values(), true),
 						},
 						"order": {
 							Type:         schema.TypeInt,
@@ -71,6 +71,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
+							ValidateFunc:     validateArn,
 						},
 
 						"forward": {
@@ -88,8 +89,9 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"arn": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateArn,
 												},
 												"weight": {
 													Type:         schema.TypeInt,
@@ -132,15 +134,17 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{host}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{host}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
 									"path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/#{path}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/#{path}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
 									"port": {
@@ -161,18 +165,16 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 									},
 
 									"query": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{query}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{query}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
 									"status_code": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"HTTP_301",
-											"HTTP_302",
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(elbv2.RedirectActionStatusCodeEnum_Values(), false),
 									},
 								},
 							},
@@ -198,8 +200,9 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 									},
 
 									"message_body": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 
 									"status_code": {
@@ -225,33 +228,30 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumDeny,
-											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumAllow,
-											elbv2.AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate,
-										}, true),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(elbv2.AuthenticateCognitoActionConditionalBehaviorEnum_Values(), true),
 									},
 									"scope": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "openid",
 									},
 									"session_cookie_name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "AWSELBAuthSessionCookie",
 									},
 									"session_timeout": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										Computed: true,
+										Default:  604800,
 									},
 									"user_pool_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 									"user_pool_client_id": {
 										Type:     schema.TypeString,
@@ -295,29 +295,25 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										Required: true,
 									},
 									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											elbv2.AuthenticateOidcActionConditionalBehaviorEnumDeny,
-											elbv2.AuthenticateOidcActionConditionalBehaviorEnumAllow,
-											elbv2.AuthenticateOidcActionConditionalBehaviorEnumAuthenticate,
-										}, true),
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice(elbv2.AuthenticateOidcActionConditionalBehaviorEnum_Values(), true),
 									},
 									"scope": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "openid",
 									},
 									"session_cookie_name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "AWSELBAuthSessionCookie",
 									},
 									"session_timeout": {
 										Type:     schema.TypeInt,
 										Optional: true,
-										Computed: true,
+										Default:  604800,
 									},
 									"token_endpoint": {
 										Type:     schema.TypeString,
@@ -454,7 +450,12 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 					},
 				},
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+		),
 	}
 }
 
@@ -476,9 +477,14 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 	listenerArn := d.Get("listener_arn").(string)
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerArn),
+	}
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().Elbv2Tags()
 	}
 
 	var err error
@@ -543,6 +549,8 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var resp *elbv2.DescribeRulesOutput
 	var req = &elbv2.DescribeRulesInput{
@@ -580,6 +588,23 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	rule := resp.Rules[0]
 
 	d.Set("arn", rule.RuleArn)
+
+	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
 
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", lbListenerARNFromRuleARN(aws.StringValue(rule.RuleArn)))
@@ -813,6 +838,33 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 
 		if len(resp.Rules) == 0 {
 			return errors.New("Error modifying creating LB Listener Rule: no rules returned in response")
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB Listener Rule (%s) after error: %s", d.Id(), err)
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
 		}
 	}
 
