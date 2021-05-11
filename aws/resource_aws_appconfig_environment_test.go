@@ -197,7 +197,7 @@ func testAccAWSAppConfigEnvironmentWithMonitors(roleName, alarmName, appName, ap
 resource "aws_appconfig_environment" "test" {
   name           = %[1]q
   description    = %[2]q
-	application_id = aws_appconfig_application.test
+  application_id = aws_appconfig_application.test.id
 
   monitors {
     alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
@@ -212,7 +212,7 @@ func testAccAWSAppConfigEnvironment(appName, appDesc, envName, envDesc string) s
 resource "aws_appconfig_environment" "test" {
   name           = %[1]q
   description    = %[2]q
-	application_id = aws_appconfig_application.test
+  application_id = aws_appconfig_application.test.id
 }
 `, envName, envDesc)
 }
@@ -221,7 +221,7 @@ func testAccAWSAppConfigEnvironmentTags1(rName, tagKey1, tagValue1 string) strin
 	return testAccAWSAppConfigApplicationTags1(rName, tagKey1, tagValue1) + fmt.Sprintf(`
 resource "aws_appconfig_environment" "test" {
   name           = %[1]q
-	application_id = aws_appconfig_application.test.id
+  application_id = aws_appconfig_application.test.id
 
   tags = {
     %[2]q = %[3]q
@@ -234,7 +234,7 @@ func testAccAWSAppConfigEnvironmentTags2(rName, tagKey1, tagValue1, tagKey2, tag
 	return testAccAWSAppConfigApplicationTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2) + fmt.Sprintf(`
 resource "aws_appconfig_environment" "test" {
   name           = %[1]q
-	application_id = aws_appconfig_application.test.id
+  application_id = aws_appconfig_application.test.id
 
   tags = {
     %[2]q = %[3]q
