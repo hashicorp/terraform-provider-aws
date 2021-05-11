@@ -35,7 +35,7 @@ func resourceAwsServiceCatalogTagOption() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,7 +124,7 @@ func resourceAwsServiceCatalogTagOptionRead(d *schema.ResourceData, meta interfa
 
 	d.Set("active", output.Active)
 	d.Set("key", output.Key)
-	d.Set("owner_id", output.Owner)
+	d.Set("owner", output.Owner)
 	d.Set("value", output.Value)
 
 	return nil

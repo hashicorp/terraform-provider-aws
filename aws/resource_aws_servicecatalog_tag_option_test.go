@@ -90,7 +90,7 @@ func TestAccAWSServiceCatalogTagOption_basic(t *testing.T) {
 					testAccCheckAwsServiceCatalogTagOptionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde ett"),
 				),
 			},
@@ -153,7 +153,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde två"),
 				),
 			},
@@ -162,7 +162,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName), // cannot be updated in place
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde två"),
 				),
 			},
@@ -171,7 +171,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName), // cannot be updated in place
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde två"),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccAWSServiceCatalogTagOption_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName2),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde ett"),
 				),
 			},
@@ -203,7 +203,7 @@ func TestAccAWSServiceCatalogTagOption_notActive(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "value", "värde ett"),
 				),
 			},
