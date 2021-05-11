@@ -17,7 +17,7 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
@@ -42,7 +42,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
@@ -54,6 +54,12 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccErrorCheckSkipMacie2OrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"AccessDeniedException: The request failed because you must be a user of the management account for your AWS organization to perform this operation",
+	)
 }
 
 func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) resource.TestCheckFunc {
