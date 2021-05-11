@@ -163,6 +163,7 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 	return resourceAwsQLDBStreamRead(d, meta)
 }
 
+//TODO: Another edge case to account for?:  Stream resources that are in a terminal state (CANCELED, COMPLETED, and FAILED) are subject to a 7-day retention period. They are automatically hard-deleted after this limit expires.
 func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
