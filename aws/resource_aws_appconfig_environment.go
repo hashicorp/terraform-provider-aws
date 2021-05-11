@@ -135,7 +135,7 @@ func resourceAwsAppconfigEnvironmentRead(d *schema.ResourceData, meta interface{
 
 	output, err := conn.GetEnvironment(input)
 
-	if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Appconfig Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

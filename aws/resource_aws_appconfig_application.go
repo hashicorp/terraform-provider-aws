@@ -81,7 +81,7 @@ func resourceAwsAppconfigApplicationRead(d *schema.ResourceData, meta interface{
 
 	output, err := conn.GetApplication(input)
 
-	if isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && isAWSErr(err, appconfig.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] Appconfig Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
