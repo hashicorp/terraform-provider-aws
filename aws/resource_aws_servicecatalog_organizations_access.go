@@ -29,6 +29,8 @@ func resourceAwsServiceCatalogOrganizationsAccess() *schema.Resource {
 func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
+	d.SetId(meta.(*AWSClient).accountid)
+
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
@@ -45,10 +47,8 @@ func resourceAwsServiceCatalogOrganizationsAccessCreate(d *schema.ResourceData, 
 	_, err := conn.DisableAWSOrganizationsAccess(&servicecatalog.DisableAWSOrganizationsAccessInput{})
 
 	if err != nil {
-		return fmt.Errorf("error enabling Service Catalog AWS Organizations Access: %w", err)
+		return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
 	}
-
-	d.SetId(meta.(*AWSClient).accountid)
 
 	return resourceAwsServiceCatalogOrganizationsAccessRead(d, meta)
 }
@@ -92,10 +92,10 @@ func resourceAwsServiceCatalogOrganizationsAccessDelete(d *schema.ResourceData, 
 		_, err := conn.EnableAWSOrganizationsAccess(&servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {
-			return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
+			return fmt.Errorf("error enabling Service Catalog AWS Organizations Access: %w", err)
 		}
 
-		return resourceAwsServiceCatalogOrganizationsAccessRead(d, meta)
+		return nil
 	}
 
 	_, err := conn.DisableAWSOrganizationsAccess(&servicecatalog.DisableAWSOrganizationsAccessInput{})
@@ -104,5 +104,5 @@ func resourceAwsServiceCatalogOrganizationsAccessDelete(d *schema.ResourceData, 
 		return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
 	}
 
-	return resourceAwsServiceCatalogOrganizationsAccessRead(d, meta)
+	return nil
 }
