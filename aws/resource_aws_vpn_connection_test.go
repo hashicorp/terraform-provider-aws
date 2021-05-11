@@ -193,7 +193,7 @@ func TestAccAWSVpnConnection_VpnGatewayToTransitGateway(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn),
+				Config: testAccAwsVpnConnectionConfigVGWToTGW(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test", "id"),
@@ -201,7 +201,7 @@ func TestAccAWSVpnConnection_VpnGatewayToTransitGateway(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn),
+				Config: testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", "aws_vpn_gateway.test", "id"),
@@ -1031,7 +1031,7 @@ resource "aws_vpn_connection" "test" {
 `, rBgpAsn)
 }
 
-func testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn int) string {
+func testAccAwsVpnConnectionConfigVGWToTGW(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -1059,7 +1059,7 @@ resource "aws_vpn_connection" "test" {
 `, rBgpAsn)
 }
 
-func testAccAwsVpnConnectionConfigVGWToTGW(rBgpAsn int) string {
+func testAccAwsVpnConnectionConfigTGWToVGW(rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
