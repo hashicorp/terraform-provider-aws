@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -131,7 +130,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(strings.Join([]string{d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)}, ":"))
+	d.SetId(tfservicecatalog.PortfolioShareID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
 
 	waitForAcceptance := false
 	if v, ok := d.GetOk("wait_for_acceptance"); ok {
@@ -155,7 +154,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	portfolioID, shareType, principalID, err := resourceServiceCatalogPortfolioShareParseId(d.Id())
+	portfolioID, shareType, principalID, err := tfservicecatalog.ParsePortfolioShareID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)
@@ -283,14 +282,4 @@ func resourceAwsServiceCatalogPortfolioShareDelete(d *schema.ResourceData, meta 
 	}
 
 	return nil
-}
-
-func resourceServiceCatalogPortfolioShareParseId(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, ":", 3)
-
-	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected portfolioID:type:principalID", id)
-	}
-
-	return parts[0], parts[1], parts[2], nil
 }
