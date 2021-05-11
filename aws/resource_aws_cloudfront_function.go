@@ -105,7 +105,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 	d.SetId(d.Get("name").(string))
 	d.Set("version", CreateFunctionOutput.ETag)
 	d.Set("arn", CreateFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", CreateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.String())
+	d.Set("last_modified", CreateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	d.Set("stage", CreateFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
 	d.Set("status", CreateFunctionOutput.FunctionSummary.Status)
 
@@ -124,7 +124,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 			return err
 		}
 		d.Set("status", PublishFunctionOutput.FunctionSummary.Status)
-		d.Set("last_modified", PublishFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.String())
+		d.Set("last_modified", PublishFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	}
 
 	return nil
@@ -165,11 +165,12 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("version", DescribeFunctionOutput.ETag)
 	d.Set("arn", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.String())
+	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
 	d.Set("stage", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
 	d.Set("comment", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
 	d.Set("runtime", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
 	d.Set("status", DescribeFunctionOutput.FunctionSummary.Status)
+	d.Set("publish", true)
 
 	return nil
 }
@@ -225,7 +226,7 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("version", UpdateFunctionOutput.ETag)
-	d.Set("last_modified", UpdateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.String())
+	d.Set("last_modified", UpdateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 
 	publish := d.Get("publish").(bool)
 	if publish {

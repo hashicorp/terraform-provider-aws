@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -87,7 +88,7 @@ func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{
 
 	d.Set("version", DescribeFunctionOutput.ETag)
 	d.Set("arn", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.String())
+	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	d.Set("stage", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
 	d.Set("comment", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
 	d.Set("runtime", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)

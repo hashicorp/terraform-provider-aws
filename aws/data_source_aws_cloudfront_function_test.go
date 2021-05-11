@@ -40,9 +40,9 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 func testAccDataSourceAWSCloudfrontFunctionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name = %s
+  name = "%s"
   runtime = "cloudfront-js-1.0"
-  comment = %s
+  comment = "%s"
   code    = <<-EOT
 function handler(event) {
 	var response = {
