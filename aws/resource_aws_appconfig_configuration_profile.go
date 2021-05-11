@@ -61,13 +61,29 @@ func resourceAwsAppconfigConfigurationProfile() *schema.Resource {
 					validation.StringLenBetween(20, 2048),
 				),
 			},
-			// "validators": {
-			// 	Type:     schema.TypeString,
-			// 	Optional: true,
-			// 	ValidateFunc: validation.All(
-			// 		validation.StringLenBetween(20, 2048),
-			// 	),
-			// },
+			"validators": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 2,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"content": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(0, 32768),
+							),
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"JSON_SCHEMA", "LAMBDA",
+							}, false),
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
@@ -86,6 +102,7 @@ func resourceAwsAppconfigConfigurationProfileCreate(d *schema.ResourceData, meta
 		LocationUri:      aws.String(d.Get("location_uri").(string)),
 		RetrievalRoleArn: aws.String(d.Get("retrieval_role_arn").(string)),
 		ApplicationId:    aws.String(d.Get("application_id").(string)),
+		Validators:       expandAppconfigValidators(d.Get("validators").([]interface{})),
 		Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
 	}
 
@@ -97,6 +114,29 @@ func resourceAwsAppconfigConfigurationProfileCreate(d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(profile.Id))
 
 	return resourceAwsAppconfigConfigurationProfileRead(d, meta)
+}
+
+func expandAppconfigValidators(list []interface{}) []*appconfig.Validator {
+	validators := make([]*appconfig.Validator, len(list))
+	for i, validatorInterface := range list {
+		m := validatorInterface.(map[string]interface{})
+		validators[i] = &appconfig.Validator{
+			Content: aws.String(m["content"].(string)),
+			Type:    aws.String(m["type"].(string)),
+		}
+	}
+	return validators
+}
+
+func flattenAwsAppconfigValidators(validators []*appconfig.Validator) []interface{} {
+	list := make([]interface{}, len(validators))
+	for i, validator := range validators {
+		list[i] = map[string]interface{}{
+			"content": aws.StringValue(validator.Content),
+			"type":    aws.StringValue(validator.Type),
+		}
+	}
+	return list
 }
 
 func resourceAwsAppconfigConfigurationProfileRead(d *schema.ResourceData, meta interface{}) error {
@@ -131,6 +171,7 @@ func resourceAwsAppconfigConfigurationProfileRead(d *schema.ResourceData, meta i
 	d.Set("application_id", output.ApplicationId)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
+	d.Set("validators", flattenAwsAppconfigValidators(output.Validators))
 
 	profileARN := arn.ARN{
 		AccountID: meta.(*AWSClient).accountid,
@@ -178,6 +219,10 @@ func resourceAwsAppconfigConfigurationProfileUpdate(d *schema.ResourceData, meta
 		if err := keyvaluetags.AppconfigUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating AppConfig (%s) tags: %s", d.Id(), err)
 		}
+	}
+
+	if d.HasChange("validators") {
+		updateInput.Validators = expandAppconfigValidators(d.Get("validators").([]interface{}))
 	}
 
 	_, err := conn.UpdateConfigurationProfile(updateInput)
