@@ -95,7 +95,6 @@ func resourceAwsVpnConnection() *schema.Resource {
 			"transit_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 
@@ -973,6 +972,11 @@ func resourceAwsVpnConnectionUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("vpn_gateway_id") {
 		input.VpnGatewayId = aws.String(d.Get("vpn_gateway_id").(string))
+		modifyConnection = true
+	}
+
+	if d.HasChange("transit_gateway_id") {
+		input.TransitGatewayId = aws.String(d.Get("transit_gateway_id").(string))
 		modifyConnection = true
 	}
 

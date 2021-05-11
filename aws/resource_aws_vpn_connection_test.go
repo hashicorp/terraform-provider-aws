@@ -191,6 +191,14 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAwsVpnConnectionConfigTransitGatewayIDUpdated(rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", "aws_ec2_transit_gateway.test2", "id"),
+				),
+			},
 		},
 	})
 }
@@ -945,6 +953,30 @@ resource "aws_customer_gateway" "test" {
 resource "aws_vpn_connection" "test" {
   customer_gateway_id = aws_customer_gateway.test.id
   transit_gateway_id  = aws_ec2_transit_gateway.test.id
+  type                = aws_customer_gateway.test.type
+}
+`, rBgpAsn)
+}
+
+func testAccAwsVpnConnectionConfigTransitGatewayIDUpdated(rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {}
+
+resource "aws_ec2_transit_gateway" "test2" {}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "tf-acc-test-ec2-vpn-connection-transit-gateway-id"
+  }
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  transit_gateway_id  = aws_ec2_transit_gateway.test2.id
   type                = aws_customer_gateway.test.type
 }
 `, rBgpAsn)
