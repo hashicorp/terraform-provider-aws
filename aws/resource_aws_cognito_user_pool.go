@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -305,7 +306,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"schema": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				MinItems: 1,
 				MaxItems: 50,
 				Elem: &schema.Resource{
@@ -313,41 +313,34 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"attribute_data_type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AttributeDataType_Values(), false),
 						},
 						"developer_only_attribute": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
 						},
 						"mutable": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
 						},
 						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ForceNew:     true,
 							ValidateFunc: validateCognitoUserPoolSchemaName,
 						},
 						"number_attribute_constraints": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_value": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"max_value": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -355,24 +348,20 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"required": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
 						},
 						"string_attribute_constraints": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_length": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"max_length": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -425,7 +414,8 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"username_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -514,11 +504,15 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	params := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: aws.String(d.Get("name").(string)),
@@ -684,15 +678,15 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		params.SmsVerificationMessage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
+	if len(tags) > 0 {
+		params.UserPoolTags = tags.IgnoreAws().CognitoidentityproviderTags()
 	}
 	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
 	var resp *cognitoidentityprovider.CreateUserPoolOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateUserPool(params)
 		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -735,7 +729,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -767,6 +761,7 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
@@ -863,8 +858,15 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("creation_date", resp.UserPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", resp.UserPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", resp.UserPool.Name)
-	if err := d.Set("tags", keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	tags := keyvaluetags.CognitoidentityKeyValueTags(resp.UserPool.UserPoolTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	input := &cognitoidentityprovider.GetUserPoolMfaConfigInput{
@@ -894,6 +896,8 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Multi-Factor Authentication updates
 	if d.HasChanges(
@@ -923,7 +927,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 
 		// IAM Roles and Policies can take some time to propagate
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			_, err := conn.SetUserPoolMfaConfig(input)
 
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -967,6 +971,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		"sms_configuration",
 		"sms_verification_message",
 		"tags",
+		"tags_all",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
@@ -1116,15 +1121,15 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 			params.SmsVerificationMessage = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("tags"); ok {
-			params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
+		if len(tags) > 0 {
+			params.UserPoolTags = tags.IgnoreAws().CognitoidentityproviderTags()
 		}
 
 		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 			var err error
 			_, err = conn.UpdateUserPool(params)
 			if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role") {
@@ -1150,6 +1155,22 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if err != nil {
 			return fmt.Errorf("error updating Cognito User pool (%s): %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("schema") {
+		oldSchema, newSchema := d.GetChange("schema")
+		if oldSchema.(*schema.Set).Difference(newSchema.(*schema.Set)).Len() == 0 {
+			params := &cognitoidentityprovider.AddCustomAttributesInput{
+				UserPoolId:       aws.String(d.Id()),
+				CustomAttributes: expandCognitoUserPoolSchema(newSchema.(*schema.Set).Difference(oldSchema.(*schema.Set)).List()),
+			}
+			_, err := conn.AddCustomAttributes(params)
+			if err != nil {
+				return fmt.Errorf("error updating Cognito User Pool (%s): unable to add custom attributes from schema: %w", d.Id(), err)
+			}
+		} else {
+			return fmt.Errorf("error updating Cognito User Pool (%s): cannot modify or remove schema items", d.Id())
 		}
 	}
 

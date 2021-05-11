@@ -151,6 +151,41 @@ func IamOpenIDConnectProviderUpdateTags(conn *iam.IAM, identifier string, oldTag
 	return nil
 }
 
+// IamPolicyUpdateTags updates IAM Policy tags.
+// The identifier is the Policy ARN.
+func IamPolicyUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &iam.UntagPolicyInput{
+			PolicyArn: aws.String(identifier),
+			TagKeys:   aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagPolicy(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &iam.TagPolicyInput{
+			PolicyArn: aws.String(identifier),
+			Tags:      updatedTags.IgnoreAws().IamTags(),
+		}
+
+		_, err := conn.TagPolicy(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // IamSAMLProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
 func IamSAMLProviderUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {

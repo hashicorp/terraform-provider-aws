@@ -85,6 +85,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -105,6 +106,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -113,6 +115,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/synthetics"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -287,6 +290,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mediastore.New)
 	case "mq":
 		funcType = reflect.TypeOf(mq.New)
+	case "mwaa":
+		funcType = reflect.TypeOf(mwaa.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
 	case "networkfirewall":
@@ -327,6 +332,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(servicediscovery.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
+	case "shield":
+		funcType = reflect.TypeOf(shield.New)
 	case "signer":
 		funcType = reflect.TypeOf(signer.New)
 	case "sns":
@@ -343,6 +350,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(swf.New)
 	case "synthetics":
 		funcType = reflect.TypeOf(synthetics.New)
+	case "timestreamwrite":
+		funcType = reflect.TypeOf(timestreamwrite.New)
 	case "transfer":
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
@@ -414,6 +423,8 @@ func ServiceListTagsFunction(serviceName string) string {
 	case "lambda":
 		return "ListTags"
 	case "mq":
+		return "ListTags"
+	case "mwaa":
 		return "ListTags"
 	case "opsworks":
 		return "ListTags"
@@ -618,6 +629,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
+	case "shield":
+		return "TagResource"
 	case "sqs":
 		return "TagQueue"
 	case "ssm":
@@ -734,11 +747,15 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "SecretId"
 	case "servicediscovery":
 		return "ResourceARN"
+	case "shield":
+		return "ResourceARN"
 	case "sqs":
 		return "QueueUrl"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
+		return "ResourceARN"
+	case "timestreamwrite":
 		return "ResourceARN"
 	case "transfer":
 		return "Arn"

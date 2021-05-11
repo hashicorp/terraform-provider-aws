@@ -95,6 +95,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -102,6 +103,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -1669,6 +1671,23 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 	return SfnKeyValueTags(output.Tags), nil
 }
 
+// ShieldListTags lists shield service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ShieldListTags(conn *shield.Shield, identifier string) (KeyValueTags, error) {
+	input := &shield.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ShieldKeyValueTags(output.Tags), nil
+}
+
 // SignerListTags lists signer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1788,6 +1807,23 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 	}
 
 	return SwfKeyValueTags(output.Tags), nil
+}
+
+// TimestreamwriteListTags lists timestreamwrite service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func TimestreamwriteListTags(conn *timestreamwrite.TimestreamWrite, identifier string) (KeyValueTags, error) {
+	input := &timestreamwrite.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return TimestreamwriteKeyValueTags(output.Tags), nil
 }
 
 // TransferListTags lists transfer service tags.

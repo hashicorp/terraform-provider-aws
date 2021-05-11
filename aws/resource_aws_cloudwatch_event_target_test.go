@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -39,9 +40,9 @@ func testSweepCloudWatchEventTargets(region string) error {
 
 	rulesInput := &events.ListRulesInput{}
 
-	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastRulesPage bool) bool {
+	err = lister.ListRulesPages(conn, rulesInput, func(rulesPage *events.ListRulesOutput, lastPage bool) bool {
 		if rulesPage == nil {
-			return !lastRulesPage
+			return !lastPage
 		}
 
 		for _, rule := range rulesPage.Rules {
@@ -54,9 +55,9 @@ func testSweepCloudWatchEventTargets(region string) error {
 				Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 			}
 
-			err := lister.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastTargetsPage bool) bool {
+			err := lister.ListTargetsByRulePages(conn, targetsInput, func(targetsPage *events.ListTargetsByRuleOutput, lastPage bool) bool {
 				if targetsPage == nil {
-					return !lastTargetsPage
+					return !lastPage
 				}
 
 				for _, target := range targetsPage.Targets {
@@ -77,7 +78,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 					}
 				}
 
-				return !lastTargetsPage
+				return !lastPage
 			})
 
 			if testSweepSkipSweepError(err) {
@@ -89,7 +90,7 @@ func testSweepCloudWatchEventTargets(region string) error {
 			}
 		}
 
-		return !lastRulesPage
+		return !lastPage
 	})
 
 	if testSweepSkipSweepError(err) {
@@ -630,6 +631,44 @@ func TestAccAWSCloudWatchEventTarget_inputTransformerJsonString(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchEventTarget_PartnerEventBus(t *testing.T) {
+	key := "EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME"
+	busName := os.Getenv(key)
+	if busName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var target events.Target
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudwatch_event_target.test"
+	snsTopicResourceName := "aws_sns_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetPartnerEventBusConfig(rName, busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -673,8 +712,6 @@ func testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName string) resou
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-
-		fmt.Printf("%#v", rs.Primary.Attributes)
 
 		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
 	}
@@ -1573,4 +1610,30 @@ EOF
 
 data "aws_partition" "current" {}
 `, name)
+}
+
+func testAccAWSCloudWatchEventTargetPartnerEventBusConfig(rName, eventBusName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name           = %[1]q
+  event_bus_name = %[2]q
+
+  event_pattern = <<PATTERN
+{
+  "source": ["aws.ec2"]
+}
+PATTERN
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  rule           = aws_cloudwatch_event_rule.test.name
+  event_bus_name = aws_cloudwatch_event_rule.test.event_bus_name
+  target_id      = %[1]q
+  arn            = aws_sns_topic.test.arn
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+`, rName, eventBusName)
 }

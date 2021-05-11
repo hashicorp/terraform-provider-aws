@@ -35,6 +35,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -128,6 +129,7 @@ func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -177,6 +179,7 @@ func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -221,6 +224,7 @@ func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -265,6 +269,7 @@ func TestAccAWSRoute_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -309,6 +314,7 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -353,6 +359,7 @@ func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6VpnGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -397,6 +404,7 @@ func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4VpnGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -441,6 +449,7 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -485,6 +494,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Unattached(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceUnattached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -530,6 +540,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -576,6 +587,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni1ResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -597,6 +609,7 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni2ResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -641,6 +654,7 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -685,6 +699,7 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4NatGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -760,6 +775,7 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -804,6 +820,7 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -817,6 +834,51 @@ func TestAccAWSRoute_IPv6_To_TransitGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_IPv4_To_CarrierGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	cgwResourceName := "aws_ec2_carrier_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "172.16.1.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWavelengthZoneAvailable(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4CarrierGateway(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
@@ -848,6 +910,7 @@ func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 				Config: testAccAWSRouteResourceConfigIpv4LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -892,6 +955,7 @@ func TestAccAWSRoute_IPv6_To_LocalGateway(t *testing.T) {
 				Config: testAccAWSRouteResourceConfigIpv6LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -982,6 +1046,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1003,6 +1068,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1024,6 +1090,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1045,6 +1112,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "nat_gateway_id", ngwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1066,6 +1134,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1088,6 +1157,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1109,6 +1179,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_endpoint_id", vpcEndpointResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1130,6 +1201,7 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1179,6 +1251,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1200,6 +1273,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1221,6 +1295,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1242,6 +1317,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "egress_only_gateway_id", eoigwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1263,6 +1339,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1284,6 +1361,7 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1319,7 +1397,7 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 	destinationCidr := "172.16.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckElbv2GatewayLoadBalancer(t) },
 		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
@@ -1328,6 +1406,7 @@ func TestAccAWSRoute_IPv4_To_VpcEndpoint(t *testing.T) {
 				Config: testAccAWSRouteResourceConfigIpv4VpcEndpoint(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -1395,6 +1474,510 @@ func TestAccAWSRoute_LocalRoute(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_PrefixList_To_InternetGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	igwResourceName := "aws_internet_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListInternetGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_VpnGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	vgwResourceName := "aws_vpn_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListVpnGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_Instance(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	instanceResourceName := "aws_instance.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListInstance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_NetworkInterface_Unattached(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	eniResourceName := "aws_network_interface.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListNetworkInterfaceUnattached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_NetworkInterface_Attached(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	eniResourceName := "aws_network_interface.test"
+	instanceResourceName := "aws_instance.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListNetworkInterfaceAttached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_VpcPeeringConnection(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListVpcPeeringConnection(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_NatGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	ngwResourceName := "aws_nat_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListNatGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_TransitGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	tgwResourceName := "aws_ec2_transit_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListTransitGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_CarrierGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	cgwResourceName := "aws_ec2_carrier_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckAWSWavelengthZoneAvailable(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListCarrierGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttrPair(resourceName, "carrier_gateway_id", cgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_LocalGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckAWSOutpostsOutposts(t)
+		},
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListLocalGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute_PrefixList_To_EgressOnlyInternetGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	eoigwResourceName := "aws_egress_only_internet_gateway.test"
+	plResourceName := "aws_ec2_managed_prefix_list.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckEc2ManagedPrefixList(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigPrefixListEgressOnlyInternetGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1414,6 +1997,8 @@ func testAccCheckAWSRouteExists(n string, v *ec2.Route) resource.TestCheckFunc {
 			route, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
 			route, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
+			route, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if err != nil {
@@ -1439,6 +2024,8 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 			_, err = finder.RouteByIPv4Destination(conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
 			_, err = finder.RouteByIPv6Destination(conn, rs.Primary.Attributes["route_table_id"], v)
+		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
+			_, err = finder.RouteByPrefixListIDDestination(conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if tfresource.NotFound(err) {
@@ -1464,6 +2051,9 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 
 		destination := rs.Primary.Attributes["destination_cidr_block"]
 		if v, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok && v != "" {
+			destination = v
+		}
+		if v, ok := rs.Primary.Attributes["destination_prefix_list_id"]; ok && v != "" {
 			destination = v
 		}
 
@@ -2839,4 +3429,613 @@ resource "aws_route" "test" {
   gateway_id             = "local"
 }
 `)
+}
+
+func testAccAWSRouteConfigPrefixListInternetGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  gateway_id                 = aws_internet_gateway.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListVpnGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  gateway_id                 = aws_vpn_gateway.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListInstance(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  instance_id                = aws_instance.test.id
+}
+`, rName))
+}
+
+func testAccAWSRouteConfigPrefixListNetworkInterfaceUnattached(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  network_interface_id       = aws_network_interface.test.id
+}
+`, rName))
+}
+
+func testAccAWSRouteConfigPrefixListNetworkInterfaceAttached(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonNatInstanceAmiConfig(),
+		testAccAvailableAZsNoOptInConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  network_interface {
+    device_index         = 0
+    network_interface_id = aws_network_interface.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  network_interface_id       = aws_network_interface.test.id
+
+  # Wait for the ENI attachment.
+  depends_on = [aws_instance.test]
+}
+`, rName))
+}
+
+func testAccAWSRouteConfigPrefixListVpcPeeringConnection(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.target.id
+  auto_accept = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  vpc_peering_connection_id  = aws_vpc_peering_connection.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListNatGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  allocation_id = aws_eip.test.id
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  nat_gateway_id             = aws_nat_gateway.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListTransitGateway(rName string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInDefaultExcludeConfig(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  transit_gateway_id         = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
+}
+`, rName))
+}
+
+func testAccAWSRouteConfigPrefixListCarrierGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_carrier_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  carrier_gateway_id         = aws_ec2_carrier_gateway.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListLocalGateway(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ec2_local_gateways" "all" {}
+
+data "aws_ec2_local_gateway" "first" {
+  id = tolist(data.aws_ec2_local_gateways.all.ids)[0]
+}
+
+data "aws_ec2_local_gateway_route_tables" "all" {}
+
+data "aws_ec2_local_gateway_route_table" "first" {
+  local_gateway_route_table_id = tolist(data.aws_ec2_local_gateway_route_tables.all.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
+  local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
+  vpc_id                       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  local_gateway_id           = data.aws_ec2_local_gateway.first.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigPrefixListEgressOnlyInternetGateway(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv6"
+  max_entries    = 1
+  name           = %[1]q
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id             = aws_route_table.test.id
+  destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
+  egress_only_gateway_id     = aws_egress_only_internet_gateway.test.id
+}
+`, rName)
+}
+
+func testAccAWSRouteConfigIpv4CarrierGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_carrier_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  destination_cidr_block = %[2]q
+  route_table_id         = aws_route_table.test.id
+  carrier_gateway_id     = aws_ec2_carrier_gateway.test.id
+}
+`, rName, destinationCidr)
 }

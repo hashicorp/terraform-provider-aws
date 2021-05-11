@@ -79,12 +79,12 @@ The following arguments are optional:
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_configuration).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
 * `password_policy` - (Optional) Configuration blocked for information about the user pool password policy. [Detailed below](#password_policy).
-* `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Maximum of 50 attributes.
+* `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
 * `sms_authentication_message` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 * `sms_verification_message` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
 * `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. [Detailed below](#software_token_mfa_configuration).
-* `tags` - (Optional) Map of tags to assign to the User Pool.
+* `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
@@ -224,6 +224,7 @@ In addition to all arguments above, the following attributes are exported:
 * `endpoint` - Endpoint name of the user pool. Example format: `cognito-idp.REGION.amazonaws.com/xxxx_yyyyy`
 * `id` - ID of the user pool.
 * `last_modified_date` - Date the user pool was last modified.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

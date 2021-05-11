@@ -29,9 +29,9 @@ func testSweepEc2NetworkInterfaces(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	err = conn.DescribeNetworkInterfacesPages(&ec2.DescribeNetworkInterfacesInput{}, func(page *ec2.DescribeNetworkInterfacesOutput, isLast bool) bool {
+	err = conn.DescribeNetworkInterfacesPages(&ec2.DescribeNetworkInterfacesInput{}, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, networkInterface := range page.NetworkInterfaces {
@@ -54,7 +54,7 @@ func testSweepEc2NetworkInterfaces(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -72,11 +72,10 @@ func TestAccAWSENI_basic(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfig(),
@@ -107,11 +106,10 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIIPV6Config(rName),
@@ -155,11 +153,10 @@ func TestAccAWSENI_tags(t *testing.T) {
 	var conf ec2.NetworkInterface
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENITagsConfig1(rName, "key1", "value1"),
@@ -201,11 +198,10 @@ func TestAccAWSENI_ipv6_count(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIIPV6CountConfig(1, rName),
@@ -271,11 +267,10 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfig(),
@@ -305,11 +300,10 @@ func TestAccAWSENI_attached(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfigWithAttachment(),
@@ -334,11 +328,10 @@ func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfigExternalAttachment(),
@@ -363,11 +356,10 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfigWithSourceDestCheck(false),
@@ -404,11 +396,10 @@ func TestAccAWSENI_computedIPs(t *testing.T) {
 	resourceName := "aws_network_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		ErrorCheck:    testAccErrorCheck(t, ec2.EndpointsID),
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSENIDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSENIConfigWithNoPrivateIPs(),

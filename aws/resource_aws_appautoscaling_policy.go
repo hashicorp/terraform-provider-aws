@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -209,7 +210,7 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
 	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
@@ -301,7 +302,7 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Application Autoscaling Update Scaling Policy: %#v", params)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutScalingPolicy(&params)
 		if err != nil {
 			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
@@ -341,7 +342,7 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err = conn.DeleteScalingPolicy(&params)
 
 		if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {

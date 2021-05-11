@@ -98,6 +98,143 @@ func InstanceByID(conn *ec2.EC2, id string) (*ec2.Instance, error) {
 	return output.Reservations[0].Instances[0], nil
 }
 
+// NetworkAclByID looks up a NetworkAcl by ID. When not found, returns nil and potentially an API error.
+func NetworkAclByID(conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		NetworkAclIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeNetworkAcls(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkAcl := range output.NetworkAcls {
+		if networkAcl == nil {
+			continue
+		}
+
+		if aws.StringValue(networkAcl.NetworkAclId) != id {
+			continue
+		}
+
+		return networkAcl, nil
+	}
+
+	return nil, nil
+}
+
+// NetworkAclEntry looks up a NetworkAclEntry by Network ACL ID, Egress, and Rule Number. When not found, returns nil and potentially an API error.
+func NetworkAclEntry(conn *ec2.EC2, networkAclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("entry.egress"),
+				Values: aws.StringSlice([]string{fmt.Sprintf("%t", egress)}),
+			},
+			{
+				Name:   aws.String("entry.rule-number"),
+				Values: aws.StringSlice([]string{fmt.Sprintf("%d", ruleNumber)}),
+			},
+		},
+		NetworkAclIds: aws.StringSlice([]string{networkAclID}),
+	}
+
+	output, err := conn.DescribeNetworkAcls(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkAcl := range output.NetworkAcls {
+		if networkAcl == nil {
+			continue
+		}
+
+		if aws.StringValue(networkAcl.NetworkAclId) != networkAclID {
+			continue
+		}
+
+		for _, entry := range output.NetworkAcls[0].Entries {
+			if entry == nil {
+				continue
+			}
+
+			if aws.BoolValue(entry.Egress) != egress || aws.Int64Value(entry.RuleNumber) != int64(ruleNumber) {
+				continue
+			}
+
+			return entry, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// NetworkInterfaceByID looks up a NetworkInterface by ID. When not found, returns nil and potentially an API error.
+func NetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeNetworkInterfaces(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, networkInterface := range output.NetworkInterfaces {
+		if networkInterface == nil {
+			continue
+		}
+
+		if aws.StringValue(networkInterface.NetworkInterfaceId) != id {
+			continue
+		}
+
+		return networkInterface, nil
+	}
+
+	return nil, nil
+}
+
+// NetworkInterfaceSecurityGroup returns the associated GroupIdentifier if found
+func NetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string, securityGroupID string) (*ec2.GroupIdentifier, error) {
+	var result *ec2.GroupIdentifier
+
+	networkInterface, err := NetworkInterfaceByID(conn, networkInterfaceID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, nil
+	}
+
+	for _, groupIdentifier := range networkInterface.Groups {
+		if aws.StringValue(groupIdentifier.GroupId) == securityGroupID {
+			result = groupIdentifier
+			break
+		}
+	}
+
+	return result, err
+}
+
 // RouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
 func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
@@ -140,6 +277,7 @@ type RouteFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
 // Returns NotFoundError if no route is found.
 func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +295,30 @@ func RouteByIPv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string)
 // Returns NotFoundError if no route is found.
 func RouteByIPv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
 	routeTable, err := RouteTableByID(conn, routeTableID)
+
 	if err != nil {
 		return nil, err
 	}
 
 	for _, route := range routeTable.Routes {
 		if tfnet.CIDRBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+			return route, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{}
+}
+
+// RouteByPrefixListIDDestination returns the route corresponding to the specified prefix list destination.
+// Returns NotFoundError if no route is found.
+func RouteByPrefixListIDDestination(conn *ec2.EC2, routeTableID, prefixListID string) (*ec2.Route, error) {
+	routeTable, err := RouteTableByID(conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if aws.StringValue(route.DestinationPrefixListId) == prefixListID {
 			return route, nil
 		}
 	}
@@ -185,6 +341,37 @@ func SecurityGroupByID(conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	}
 
 	return result.SecurityGroups[0], nil
+}
+
+// SpotInstanceRequestByID looks up a SpotInstanceRequest by ID. When not found, returns nil and potentially an API error.
+func SpotInstanceRequestByID(conn *ec2.EC2, id string) (*ec2.SpotInstanceRequest, error) {
+	input := &ec2.DescribeSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeSpotInstanceRequests(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, spotInstanceRequest := range output.SpotInstanceRequests {
+		if spotInstanceRequest == nil {
+			continue
+		}
+
+		if aws.StringValue(spotInstanceRequest.SpotInstanceRequestId) != id {
+			continue
+		}
+
+		return spotInstanceRequest, nil
+	}
+
+	return nil, nil
 }
 
 // SubnetByID looks up a Subnet by ID. When not found, returns nil and potentially an API error.
@@ -248,6 +435,41 @@ func TransitGatewayPrefixListReferenceByID(conn *ec2.EC2, resourceID string) (*e
 	}
 
 	return TransitGatewayPrefixListReference(conn, transitGatewayRouteTableID, prefixListID)
+}
+
+func TransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("transit-gateway-attachment-id"),
+				Values: aws.StringSlice([]string{transitGatewayAttachmentID}),
+			},
+		},
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	var result *ec2.TransitGatewayRouteTablePropagation
+
+	err := conn.GetTransitGatewayRouteTablePropagationsPages(input, func(page *ec2.GetTransitGatewayRouteTablePropagationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, transitGatewayRouteTablePropagation := range page.TransitGatewayRouteTablePropagations {
+			if transitGatewayRouteTablePropagation == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayRouteTablePropagation.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
+				result = transitGatewayRouteTablePropagation
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return result, err
 }
 
 // VpcAttribute looks up a VPC attribute.
@@ -314,6 +536,61 @@ func VpcByID(conn *ec2.EC2, id string) (*ec2.Vpc, error) {
 	}
 
 	return nil, nil
+}
+
+// VpcEndpointByID looks up a VpcEndpoint by ID. When not found, returns nil and potentially an API error.
+func VpcEndpointByID(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeVpcEndpoints(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, nil
+	}
+
+	for _, vpcEndpoint := range output.VpcEndpoints {
+		if vpcEndpoint == nil {
+			continue
+		}
+
+		if aws.StringValue(vpcEndpoint.VpcEndpointId) != id {
+			continue
+		}
+
+		return vpcEndpoint, nil
+	}
+
+	return nil, nil
+}
+
+// VpcEndpointRouteTableAssociation returns the associated Route Table ID if found
+func VpcEndpointRouteTableAssociation(conn *ec2.EC2, vpcEndpointID string, routeTableID string) (*string, error) {
+	var result *string
+
+	vpcEndpoint, err := VpcEndpointByID(conn, vpcEndpointID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if vpcEndpoint == nil {
+		return nil, nil
+	}
+
+	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
+		if aws.StringValue(vpcEndpointRouteTableID) == routeTableID {
+			result = vpcEndpointRouteTableID
+			break
+		}
+	}
+
+	return result, err
 }
 
 // VpcPeeringConnectionByID returns the VPC peering connection corresponding to the specified identifier.

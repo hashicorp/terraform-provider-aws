@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -132,7 +132,8 @@ func resourceAwsCloudTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"insight_selector": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -147,12 +148,15 @@ func resourceAwsCloudTrail() *schema.Resource {
 				},
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudtrailTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
@@ -160,7 +164,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(tags) > 0 {
-		input.TagsList = tags
+		input.TagsList = tags.IgnoreAws().CloudtrailTags()
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -192,7 +196,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var t *cloudtrail.CreateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
@@ -243,6 +247,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
@@ -297,8 +302,15 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -377,7 +389,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Updating CloudTrail: %s", input)
 	var t *cloudtrail.UpdateTrailOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
@@ -398,8 +410,8 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error updating CloudTrail: %s", err)
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)

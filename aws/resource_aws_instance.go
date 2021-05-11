@@ -24,6 +24,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	tfiam "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -272,6 +273,7 @@ func resourceAwsInstance() *schema.Resource {
 			"instance_initiated_shutdown_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"instance_state": {
 				Type:     schema.TypeString,
@@ -497,7 +499,8 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"tenancy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -557,6 +560,8 @@ func resourceAwsInstance() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
@@ -578,13 +583,15 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 
 func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	instanceOpts, err := buildAwsInstanceOpts(d, meta)
 	if err != nil {
 		return err
 	}
 
-	tagSpecifications := ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeInstance)
+	tagSpecifications := ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
 	tagSpecifications = append(tagSpecifications, ec2TagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	// Build the creation struct
@@ -628,7 +635,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Run configuration: %s", runOpts)
 
 	var runResp *ec2.Reservation
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 		runResp, err = conn.RunInstances(runOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -745,6 +752,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	instance, err := resourceAwsInstanceFindByID(conn, d.Id())
@@ -920,8 +928,15 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
@@ -936,6 +951,11 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := readSecurityGroups(d, instance, conn); err != nil {
+		return err
+	}
+
+	// Retrieve instance shutdown behavior
+	if err := readInstanceShutdownBehavior(d, conn); err != nil {
 		return err
 	}
 
@@ -1023,8 +1043,8 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") && !d.IsNewResource() {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") && !d.IsNewResource() {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
@@ -1092,7 +1112,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							return err
 						}
 					} else {
-						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+						err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
 								if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1317,14 +1337,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
-		_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-			InstanceId: aws.String(d.Id()),
-			DisableApiTermination: &ec2.AttributeBooleanValue{
-				Value: aws.Bool(d.Get("disable_api_termination").(bool)),
-			},
-		})
+		err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error modifying instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 	}
 
@@ -1535,10 +1551,39 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	err := awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err := resourceAwsInstanceDisableAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool))
+
+	if err != nil {
+		log.Printf("[WARN] attempting to terminate EC2 instance (%s) despite error modifying attribute (%s): %s", d.Id(), ec2.InstanceAttributeNameDisableApiTermination, err)
+	}
+
+	err = awsTerminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return fmt.Errorf("error terminating EC2 Instance (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsInstanceDisableAPITermination(conn *ec2.EC2, id string, disableAPITermination bool) error {
+	// false = enable api termination
+	// true = disable api termination (protected)
+
+	_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+		InstanceId: aws.String(id),
+		DisableApiTermination: &ec2.AttributeBooleanValue{
+			Value: aws.Bool(disableAPITermination),
+		},
+	})
+
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "not supported for spot instances") {
+		log.Printf("[WARN] failed to modify instance (%s) attribute (%s): %s", id, ec2.InstanceAttributeNameDisableApiTermination, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error modify instance (%s) attribute (%s) to value %t: %w", id, ec2.InstanceAttributeNameDisableApiTermination, disableAPITermination, err)
 	}
 
 	return nil
@@ -1716,7 +1761,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.AssociateIamInstanceProfile(input)
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -2184,6 +2229,23 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 			return err
 		}
 	}
+	return nil
+}
+
+func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
+	output, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		InstanceId: aws.String(d.Id()),
+		Attribute:  aws.String(ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error while describing instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
+	}
+
+	if output != nil && output.InstanceInitiatedShutdownBehavior != nil {
+		d.Set("instance_initiated_shutdown_behavior", output.InstanceInitiatedShutdownBehavior.Value)
+	}
+
 	return nil
 }
 
