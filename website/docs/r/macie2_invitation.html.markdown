@@ -32,7 +32,7 @@ resource "aws_macie2_invitation" "test" {
 The following arguments are supported:
 
 * `account_ids` - (Required) An array that lists AWS account IDs, one for each account to send the invitation to.
-* `administrator_account_id` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
+* `disable_email_notification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
 * `message` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
 
 ## Attributes Reference

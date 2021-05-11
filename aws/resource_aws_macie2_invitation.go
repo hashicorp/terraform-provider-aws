@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -25,20 +26,20 @@ func resourceAwsMacie2Invitation() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"account_ids": {
-				Type:     schema.TypeList,
+			"account_id": {
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"message": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
+			"invited_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -46,8 +47,9 @@ func resourceAwsMacie2Invitation() *schema.Resource {
 func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
 
+	accountID := d.Get("account_id").(string)
 	input := &macie2.CreateInvitationsInput{
-		AccountIds: expandStringList(d.Get("account_ids").([]interface{})),
+		AccountIds: []*string{aws.String(accountID)},
 	}
 
 	if v, ok := d.GetOk("disable_email_notification"); ok {
@@ -58,8 +60,9 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	var err error
+	var output *macie2.CreateInvitationsOutput
 	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateInvitationsWithContext(ctx, input)
+		output, err = conn.CreateInvitationsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
 			return resource.RetryableError(err)
@@ -69,15 +72,23 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 			return resource.NonRetryableError(err)
 		}
 
+		if len(output.UnprocessedAccounts) > 0 {
+			return resource.NonRetryableError(err)
+		}
+
 		return nil
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.CreateInvitationsWithContext(ctx, input)
+		output, err = conn.CreateInvitationsWithContext(ctx, input)
 	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating Macie Invitation: %w", err))
+	}
+
+	if len(output.UnprocessedAccounts) != 0 {
+		return diag.FromErr(fmt.Errorf("error creating Macie Invitation: %w", fmt.Errorf("%s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))))
 	}
 
 	d.SetId(meta.(*AWSClient).accountid)
@@ -85,7 +96,39 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 	return resourceMacie2InvitationRead(ctx, d, meta)
 }
 
-func resourceMacie2InvitationRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*AWSClient).macie2conn
+
+	var err error
+
+	input := &macie2.ListMembersInput{
+		OnlyAssociated: aws.String("false"),
+	}
+	var result *macie2.Member
+	err = conn.ListMembersPages(input, func(page *macie2.ListMembersOutput, lastPage bool) bool {
+		for _, member := range page.Members {
+			if aws.StringValue(member.AdministratorAccountId) == d.Id() {
+				result = member
+				return false
+			}
+		}
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		log.Printf("[WARN] Macie Invitation (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading Macie Invitation (%s): %w", d.Id(), err))
+	}
+
+	d.Set("invited_at", aws.TimeValue(result.InvitedAt).Format(time.RFC3339))
+	d.Set("account_id", result.AccountId)
+
 	return nil
 }
 
@@ -93,7 +136,7 @@ func resourceMacie2InvitationDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*AWSClient).macie2conn
 
 	input := &macie2.DeleteInvitationsInput{
-		AccountIds: expandStringList(d.Get("account_ids").([]interface{})),
+		AccountIds: []*string{aws.String(d.Id())},
 	}
 
 	output, err := conn.DeleteInvitationsWithContext(ctx, input)
@@ -110,5 +153,10 @@ func resourceMacie2InvitationDelete(ctx context.Context, d *schema.ResourceData,
 			return nil
 		}
 	}
+
+	if len(output.UnprocessedAccounts) != 0 {
+		return diag.FromErr(fmt.Errorf("error deleting Macie Invitation: %w", fmt.Errorf("%s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))))
+	}
+
 	return nil
 }

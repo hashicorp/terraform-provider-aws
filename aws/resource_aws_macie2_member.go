@@ -50,6 +50,10 @@ func resourceAwsMacie2Member() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"invited_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -143,6 +147,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("email", resp.Email)
 	d.Set("relationship_status", resp.RelationshipStatus)
 	d.Set("administrator_account_id", resp.AdministratorAccountId)
+	d.Set("master_account_id", resp.MasterAccountId)
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)

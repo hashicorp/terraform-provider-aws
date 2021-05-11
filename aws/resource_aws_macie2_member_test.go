@@ -8,23 +8,27 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsMacie2Member_basic(t *testing.T) {
+	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520433213222"
-	email := "test@test.com"
+	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(accountID, email),
+				Config: testAccAwsMacieMemberConfigBasic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
@@ -33,6 +37,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 				),
 			},
 			{
+				Config:            testAccAwsMacieMemberConfigBasic(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -42,19 +47,22 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 }
 
 func testAccAwsMacie2Member_disappears(t *testing.T) {
+	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520433213222"
-	email := "test@test.com"
+	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigBasic(accountID, email),
+				Config: testAccAwsMacieMemberConfigBasic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Member(), resourceName),
@@ -66,19 +74,22 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 }
 
 func testAccAwsMacie2Member_withTags(t *testing.T) {
+	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.test"
-	accountID := "520433213222"
-	email := "test@test.com"
+	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2MemberDestroy,
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigWithTags(accountID, email),
+				Config: testAccAwsMacieMemberConfigWithTags(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
@@ -155,29 +166,37 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsMacieMemberConfigBasic(accountID, email string) string {
-	return fmt.Sprintf(`
+func testAccAwsMacieMemberConfigBasic(accountID string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "inviter" {
+  provider = "awsalternate"
+}
+
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
-  account_id = %[1]q
-  email      = %[2]q
+  account_id = data.aws_caller_identity.inviter.account_id
+  email      = %[1]q
   depends_on = [aws_macie2_account.test]
 }
-`, accountID, email)
+`, accountID)
 }
 
-func testAccAwsMacieMemberConfigWithTags(accountID, email string) string {
-	return fmt.Sprintf(`
+func testAccAwsMacieMemberConfigWithTags(email string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "inviter" {
+  provider = "awsalternate"
+}
+
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
-  account_id = %[1]q
-  email      = %[2]q
+  account_id = data.aws_caller_identity.inviter.account_id
+  email      = %[1]q
   tags = {
     Key = "value"
   }
   depends_on = [aws_macie2_account.test]
 }
-`, accountID, email)
+`, email)
 }

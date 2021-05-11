@@ -15,9 +15,8 @@ Provides a resource to manage an [Amazon Macie Member](https://docs.aws.amazon.c
 ```terraform
 resource "aws_macie2_account" "example" {}
 
-
 resource "aws_macie2_member" "test" {
-  account_id = "NAME OF THE MEMBER"
+  account_id = "AWS ACCOUNT ID"
   email      = "EMAIL"
   depends_on = [aws_macie2_account.test]
 }

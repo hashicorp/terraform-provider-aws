@@ -4,49 +4,97 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsMacie2Invitation_basic(t *testing.T) {
-	accountID, email := testAccAWSMacie2MemberFromEnv(t)
-	accountIds := []string{accountID}
+	var providers []*schema.Provider
+	resourceName := "aws_macie2_invitation.test"
+	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2InvitationDestroy,
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieInvitationConfigBasic(accountID, email, accountIds),
-				Check:  resource.ComposeTestCheckFunc(),
+				Config: testAccAwsMacieInvitationConfigBasic(email),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2InvitationExists(resourceName),
+					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
+				),
 			},
 		},
 	})
 }
 
 func testAccAwsMacie2Invitation_disappears(t *testing.T) {
+	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation.test"
-	accountID, email := testAccAWSMacie2MemberFromEnv(t)
-	accountIds := []string{accountID}
+	email := "required@example.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsMacie2InvitationDestroy,
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieInvitationConfigBasic(accountID, email, accountIds),
+				Config: testAccAwsMacieInvitationConfigBasic(email),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2InvitationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Invitation(), resourceName),
 				),
 			},
 		},
 	})
+}
+
+func testAccCheckAwsMacie2InvitationExists(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource (%s) has empty ID", resourceName)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		exists := false
+		err := conn.ListMembersPages(&macie2.ListMembersInput{OnlyAssociated: aws.String("false")}, func(page *macie2.ListMembersOutput, lastPage bool) bool {
+			for _, member := range page.Members {
+				if aws.StringValue(member.AdministratorAccountId) == rs.Primary.ID {
+					exists = true
+					return false
+				}
+			}
+			return true
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			return fmt.Errorf("no administrator account found for: %s", resourceName)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAwsMacie2InvitationDestroy(s *terraform.State) error {
@@ -58,12 +106,13 @@ func testAccCheckAwsMacie2InvitationDestroy(s *terraform.State) error {
 		}
 
 		empty := true
-		err := conn.ListInvitationsPages(&macie2.ListInvitationsInput{}, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
-			if len(page.Invitations) > 0 {
-				empty = false
-				return false
+		err := conn.ListMembersPages(&macie2.ListMembersInput{OnlyAssociated: aws.String("false")}, func(page *macie2.ListMembersOutput, lastPage bool) bool {
+			for _, member := range page.Members {
+				if aws.StringValue(member.AdministratorAccountId) == rs.Primary.ID {
+					empty = false
+					return false
+				}
 			}
-
 			return true
 		})
 
@@ -85,19 +134,23 @@ func testAccCheckAwsMacie2InvitationDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsMacieInvitationConfigBasic(accountID, email string, accountIDs []string) string {
-	return fmt.Sprintf(`
+func testAccAwsMacieInvitationConfigBasic(email string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "inviter" {
+  provider = "awsalternate"
+}
+
 resource "aws_macie2_account" "test" {}
 
 resource "aws_macie2_member" "test" {
-  account_id = %[1]q
-  email      = %[2]q
+  account_id = data.aws_caller_identity.inviter.account_id
+  email      = %[1]q
   depends_on = [aws_macie2_account.test]
 }
 
 resource "aws_macie2_invitation" "test" {
-  account_ids = %[3]q
-  depends_on  = [aws_macie2_member.test]
+  account_id = data.aws_caller_identity.inviter.account_id
+  depends_on = [aws_macie2_member.test]
 }
-`, accountID, email, accountIDs)
+`, email)
 }
