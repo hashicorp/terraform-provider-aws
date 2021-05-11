@@ -19,9 +19,11 @@ import (
 // add sweeper to delete known test servicecat products
 func init() {
 	resource.AddTestSweepers("aws_servicecatalog_product", &resource.Sweeper{
-		Name:         "aws_servicecatalog_product",
-		Dependencies: []string{},
-		F:            testSweepServiceCatalogProducts,
+		Name: "aws_servicecatalog_product",
+		Dependencies: []string{
+			"aws_servicecatalog_provisioning_artifact",
+		},
+		F: testSweepServiceCatalogProducts,
 	})
 }
 
@@ -104,7 +106,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-					resource.TestCheckResourceAttr(resourceName, "status", waiter.ProductStatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", "support@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "support_url", "http://example.com"),
