@@ -103,15 +103,16 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("exclusive_end_time"); ok {
-		exclusiveEndTimeValue, _ := time.Parse("2006-01-02T15:04:05-0700", v.(string))
+		log.Printf("DEBUG - exclusive_end_time: %#v", v)
+		exclusiveEndTimeValue, _ := time.Parse("2006-01-02T15:04:05Z", v.(string))
 		createOpts.ExclusiveEndTime = &exclusiveEndTimeValue
 	}
 
 	if v, ok := d.GetOk("inclusive_start_time"); ok {
-		log.Printf("DEBUG - inclusive_start_time_value: %#v", v)
-		inclusiveStartTimeValue, _ := time.Parse("2006-01-02T15:04:05-0700", v.(string))
+		log.Printf("DEBUG - inclusive_start_time: %#v", v)
+		inclusiveStartTimeValue, _ := time.Parse("2006-01-02T15:04:05Z", v.(string))
 		createOpts.InclusiveStartTime = &inclusiveStartTimeValue
-	} else if !ok {
+	} else {
 		return errors.New("Missing 'inclusive_start_time'")
 	}
 
@@ -136,7 +137,7 @@ func resourceAwsQLDBStreamCreate(d *schema.ResourceData, meta interface{}) error
 		return errors.New("Missing 'kinesis_configuration'")
 	}
 
-	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
+	log.Printf("[DEBUG] QLDB Stream create config: %#v", *createOpts)
 	qldbResp, err := conn.StreamJournalToKinesis(createOpts)
 	if err != nil {
 		return fmt.Errorf("Error creating QLDB Ledger Stream: %s", err)
@@ -198,7 +199,7 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if qldbStream.Stream.ExclusiveEndTime != nil {
-		if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime.String()); err != nil {
+		if err := d.Set("exclusive_end_time", qldbStream.Stream.ExclusiveEndTime.Format("2006-01-02T15:04:05Z")); err != nil {
 			return fmt.Errorf("error setting Exclusive End Time: %s", err)
 		}
 	}
@@ -259,7 +260,7 @@ func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsQLDBLedgerRead(d, meta)
+	return resourceAwsQLDBStreamRead(d, meta)
 }
 
 // TODO: You cannot actually "delete" a stream, it can only be "cancelled".  Not sure about naming preferences here...
