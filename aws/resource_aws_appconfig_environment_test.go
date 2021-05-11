@@ -38,6 +38,7 @@ func TestAccAWSAppConfigEnvironment_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -94,6 +95,7 @@ func TestAccAWSAppConfigEnvironment_Tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -287,4 +289,15 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 `, rName)
+}
+
+func testAccAWSAppConfigEnvironmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not Found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["application_id"], rs.Primary.ID), nil
+	}
 }
