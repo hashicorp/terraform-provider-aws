@@ -237,6 +237,39 @@ DOC
 }
 ```
 
+## Example API Gateway target
+
+```terraform
+resource "aws_cloudwatch_event_target" "example" {
+  arn  = "${aws_api_gateway_stage.example.execution_arn}/GET"
+  rule = aws_cloudwatch_event_rule.example.id
+
+  http_target {
+    query_string_parameters = {
+      Body = "$.detail.body"
+    }
+    header_parameters = {
+      Env = "Test"
+    }
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  # ...
+}
+
+resource "aws_api_gateway_deployment" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  # ...
+}
+
+resource "aws_api_gateway_stage" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  deployment_id = aws_api_gateway_deployment.example.id
+  # ...
+}
+```
+
 ## Example Input Transformer Usage - JSON Object
 
 ```terraform
@@ -306,6 +339,7 @@ The following arguments are supported:
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
+* `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maxium of 1 are allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
@@ -346,6 +380,12 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `sqs_target` support the following:
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
+
+`http_target`support the following:
+
+* `path_parameter_values` - (Optional) The list of values that correspond sequentially to any path variables in your endpoint ARN (for example `arn:aws:execute-api:us-east-1:123456:myapi/*/POST/pets/*`).
+* `query_string_parameters` - (Optional) Represents keys/values of query string parameters that are appended to the invoked endpoint.
+* `header_parameters` - (Optional) Enables you to specify HTTP headers to add to the request.
 
 `input_transformer` support the following:
 

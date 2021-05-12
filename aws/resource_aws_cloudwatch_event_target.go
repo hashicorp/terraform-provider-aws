@@ -106,6 +106,31 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 				},
 			},
 
+			"http_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"header_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"query_string_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"path_parameter_values": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+
 			"ecs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -354,6 +379,12 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if t.HttpParameters != nil {
+		if err := d.Set("http_target", flattenAwsCloudWatchEventTargetHttpParameters(t.HttpParameters)); err != nil {
+			return fmt.Errorf("Error setting http_target error: %w", err)
+		}
+	}
+
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenAwsCloudWatchEventTargetEcsParameters(t.EcsParameters)); err != nil {
 			return fmt.Errorf("Error setting ecs_target error: %w", err)
@@ -461,9 +492,15 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	if v, ok := d.GetOk("run_command_targets"); ok {
 		e.RunCommandParameters = expandAwsCloudWatchEventTargetRunParameters(v.([]interface{}))
 	}
+
 	if v, ok := d.GetOk("ecs_target"); ok {
 		e.EcsParameters = expandAwsCloudWatchEventTargetEcsParameters(v.([]interface{}))
 	}
+
+	if v, ok := d.GetOk("http_target"); ok {
+		e.HttpParameters = expandAwsCloudWatchEventTargetHttpParameters(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("batch_target"); ok {
 		e.BatchParameters = expandAwsCloudWatchEventTargetBatchParameters(v.([]interface{}))
 	}
@@ -636,6 +673,36 @@ func expandAwsCloudWatchEventTargetSqsParameters(config []interface{}) *events.S
 
 	return sqsParameters
 }
+func expandAwsCloudWatchEventTargetHttpParameters(config []interface{}) *events.HttpParameters {
+	httpParameters := &events.HttpParameters{}
+
+	headerParametersMap := map[string]*string{}
+	queryStringParametersMap := map[string]*string{}
+	pathParameterValues := []*string{}
+
+	for _, c := range config {
+		param := c.(map[string]interface{})
+
+		headerParameters := param["header_parameters"].(map[string]interface{})
+		for k, v := range headerParameters {
+			headerParametersMap[k] = aws.String(v.(string))
+		}
+
+		queryStringParameters := param["query_string_parameters"].(map[string]interface{})
+		for k, v := range queryStringParameters {
+			queryStringParametersMap[k] = aws.String(v.(string))
+		}
+
+		pathParameters := expandStringSet(param["path_parameter_values"].(*schema.Set))
+		pathParameterValues = append(pathParameterValues, pathParameters...)
+	}
+
+	httpParameters.SetHeaderParameters(headerParametersMap)
+	httpParameters.SetQueryStringParameters(queryStringParametersMap)
+	httpParameters.SetPathParameterValues(pathParameterValues)
+
+	return httpParameters
+}
 
 func expandAwsCloudWatchEventTransformerParameters(config []interface{}) *events.InputTransformer {
 	transformerParameters := &events.InputTransformer{}
@@ -670,6 +737,7 @@ func flattenAwsCloudWatchEventTargetRunParameters(runCommand *events.RunCommandP
 
 	return result
 }
+
 func flattenAwsCloudWatchEventTargetEcsParameters(ecsParameters *events.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
@@ -728,6 +796,27 @@ func flattenAwsCloudWatchEventTargetKinesisParameters(kinesisParameters *events.
 func flattenAwsCloudWatchEventTargetSqsParameters(sqsParameters *events.SqsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	config["message_group_id"] = aws.StringValue(sqsParameters.MessageGroupId)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func flattenAwsCloudWatchEventTargetHttpParameters(httpParameters *events.HttpParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+
+	headerParametersMap := make(map[string]string)
+	for k, v := range httpParameters.HeaderParameters {
+		headerParametersMap[k] = aws.StringValue(v)
+	}
+
+	queryStringParametersMap := make(map[string]string)
+	for k, v := range httpParameters.QueryStringParameters {
+		queryStringParametersMap[k] = aws.StringValue(v)
+	}
+
+	config["header_parameters"] = headerParametersMap
+	config["path_parameter_values"] = flattenStringSet(httpParameters.PathParameterValues)
+	config["query_string_parameters"] = queryStringParametersMap
+
 	result := []map[string]interface{}{config}
 	return result
 }
