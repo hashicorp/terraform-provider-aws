@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v2.1.5
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v2.1.5
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -88,7 +88,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v2.1.5
         continue-on-error: true
         timeout-minutes: 2
         with:
