@@ -1,0 +1,17 @@
+name: Post Publish
+on:
+  release:
+    types: [published]
+jobs:
+  tidy:
+    name: Tidy Asana
+    runs-on: ubuntu-latest
+    steps:
+      - uses: breathingdust/github-asana-tidy@v1
+        with:
+          asana_pat: ${{ secrets.asana_pat }}
+          asana_target_section_gid: ${{ secrets.asana_target_section_gid }}
+          asana_workspace_gid: ${{ secrets.asana_workspace_gid }}
+          asana_project_gid: ${{ secrets.asana_project_gid }}
+          asana_github_url_field_gid: ${{ secrets.asana_github_url_field_gid }}
+          github_release_name: ${{ github.event.release.tag_name }}
