@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/macie2/waiter"
 )
 
 func resourceAwsMacie2Invitation() *schema.Resource {
@@ -96,6 +97,10 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(meta.(*AWSClient).accountid)
 
+	if _, err = waiter.MemberInvited(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Macie Invitation (%s) creation: %w", d.Id(), err))
+	}
+
 	return resourceMacie2InvitationRead(ctx, d, meta)
 }
 
@@ -128,17 +133,6 @@ func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Macie Invitation (%s): %w", d.Id(), err))
-	}
-
-	if aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusRemoved ||
-		aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusResigned {
-		log.Printf("[WARN] Macie InvitationAccepter (%s) %s, removing from state", d.Id(), aws.StringValue(result.RelationshipStatus))
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusEmailVerificationFailed {
-		log.Printf("[WARN] Macie InvitationAccepter (%s) %s", d.Id(), aws.StringValue(result.RelationshipStatus))
 	}
 
 	d.Set("invited_at", aws.TimeValue(result.InvitedAt).Format(time.RFC3339))
