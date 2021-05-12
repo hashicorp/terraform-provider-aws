@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -48,26 +49,17 @@ func resourceAwsDataSyncTask() *schema.Resource {
 				Optional: true,
 			},
 			"options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				// Ignore missing configuration block
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"atime": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.AtimeBestEffort,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.AtimeBestEffort,
-								datasync.AtimeNone,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.AtimeBestEffort,
+							ValidateFunc: validation.StringInSlice(datasync.Atime_Values(), false),
 						},
 						"bytes_per_second": {
 							Type:         schema.TypeInt,
@@ -76,15 +68,10 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							ValidateFunc: validation.IntAtLeast(-1),
 						},
 						"gid": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.GidIntValue,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.GidBoth,
-								datasync.GidIntValue,
-								datasync.GidName,
-								datasync.GidNone,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.GidIntValue,
+							ValidateFunc: validation.StringInSlice(datasync.Gid_Values(), false),
 						},
 						"log_level": {
 							Type:         schema.TypeString,
@@ -93,61 +80,40 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(datasync.LogLevel_Values(), false),
 						},
 						"mtime": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.MtimePreserve,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.MtimeNone,
-								datasync.MtimePreserve,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.MtimePreserve,
+							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
 						"posix_permissions": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.PosixPermissionsPreserve,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PosixPermissionsNone,
-								datasync.PosixPermissionsPreserve,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.PosixPermissionsPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.PosixPermissions_Values(), false),
 						},
 						"preserve_deleted_files": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.PreserveDeletedFilesPreserve,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PreserveDeletedFilesPreserve,
-								datasync.PreserveDeletedFilesRemove,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.PreserveDeletedFilesPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.PreserveDeletedFiles_Values(), false),
 						},
 						"preserve_devices": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.PreserveDevicesNone,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PreserveDevicesNone,
-								datasync.PreserveDevicesPreserve,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.PreserveDevicesNone,
+							ValidateFunc: validation.StringInSlice(datasync.PreserveDevices_Values(), false),
 						},
 						"uid": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.UidIntValue,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.UidBoth,
-								datasync.UidIntValue,
-								datasync.UidName,
-								datasync.UidNone,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.UidIntValue,
+							ValidateFunc: validation.StringInSlice(datasync.Uid_Values(), false),
 						},
 						"verify_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  datasync.VerifyModePointInTimeConsistent,
-							ValidateFunc: validation.StringInSlice([]string{
-								datasync.VerifyModeNone,
-								datasync.VerifyModePointInTimeConsistent,
-								datasync.VerifyModeOnlyFilesTransferred,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.VerifyModePointInTimeConsistent,
+							ValidateFunc: validation.StringInSlice(datasync.VerifyMode_Values(), false),
 						},
 					},
 				},
@@ -236,8 +202,8 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading DataSync Task: %s", input)
 	output, err := conn.DescribeTask(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		log.Printf("[WARN] DataSync Task %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -250,15 +216,12 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	d.Set("name", output.Name)
-
 	if err := d.Set("options", flattenDataSyncOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
 	}
-
 	if err := d.Set("schedule", flattenAwsDataSyncTaskSchedule(output.Schedule)); err != nil {
 		return fmt.Errorf("error setting schedule: %w", err)
 	}
-
 	d.Set("source_location_arn", output.SourceLocationArn)
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
@@ -284,35 +247,30 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
 
-	input := &datasync.UpdateTaskInput{
-		TaskArn: aws.String(d.Id()),
-	}
-	needsUpdate := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &datasync.UpdateTaskInput{
+			TaskArn: aws.String(d.Id()),
+		}
 
-	if d.HasChanges("options") {
-		input.Options = expandDataSyncOptions(d.Get("options").([]interface{}))
-		needsUpdate = true
-	}
+		if d.HasChanges("cloudwatch_log_group_arn") {
+			input.CloudWatchLogGroupArn = aws.String(d.Get("cloudwatch_log_group_arn").(string))
+		}
 
-	if d.HasChanges("name") {
-		input.Name = aws.String(d.Get("name").(string))
-		needsUpdate = true
-	}
+		if d.HasChanges("schedule") {
+			input.Schedule = expandAwsDataSyncTaskSchedule(d.Get("schedule").([]interface{}))
+		}
 
-	if d.HasChanges("cloudwatch_log_group_arn") {
-		input.CloudWatchLogGroupArn = aws.String(d.Get("cloudwatch_log_group_arn").(string))
-		needsUpdate = true
-	}
+		if d.HasChanges("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
 
-	if d.HasChanges("schedule") {
-		input.Schedule = expandAwsDataSyncTaskSchedule(d.Get("schedule").([]interface{}))
-		needsUpdate = true
-	}
+		if d.HasChanges("options") {
+			input.Options = expandDataSyncOptions(d.Get("options").([]interface{}))
+		}
 
-	if needsUpdate {
 		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
 		if _, err := conn.UpdateTask(input); err != nil {
-			return fmt.Errorf("error creating DataSync Task: %w", err)
+			return fmt.Errorf("error updating DataSync Task (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -337,7 +295,7 @@ func resourceAwsDataSyncTaskDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Deleting DataSync Task: %s", input)
 	_, err := conn.DeleteTask(input)
 
-	if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return nil
 	}
 
