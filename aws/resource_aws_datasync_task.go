@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/waiter"
 )
 
@@ -183,7 +184,7 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	if _, err := waiter.TaskStatusAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waiter.TaskAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
 	}
 
@@ -195,12 +196,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &datasync.DescribeTaskInput{
-		TaskArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Task: %s", input)
-	output, err := conn.DescribeTask(input)
+	output, err := finder.TaskByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())

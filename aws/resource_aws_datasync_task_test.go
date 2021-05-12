@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -613,19 +615,17 @@ func testAccCheckAWSDataSyncTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &datasync.DescribeTaskInput{
-			TaskArn: aws.String(rs.Primary.ID),
-		}
+		_, err := finder.TaskByARN(conn, rs.Primary.ID)
 
-		_, err := conn.DescribeTask(input)
-
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -639,18 +639,11 @@ func testAccCheckAWSDataSyncTaskExists(resourceName string, task *datasync.Descr
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
-		input := &datasync.DescribeTaskInput{
-			TaskArn: aws.String(rs.Primary.ID),
-		}
 
-		output, err := conn.DescribeTask(input)
+		output, err := finder.TaskByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
-		}
-
-		if output == nil {
-			return fmt.Errorf("Task %q does not exist", rs.Primary.ID)
 		}
 
 		if aws.StringValue(output.Status) != datasync.TaskStatusAvailable && aws.StringValue(output.Status) != datasync.TaskStatusRunning {
