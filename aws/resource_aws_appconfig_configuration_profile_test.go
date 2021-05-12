@@ -203,10 +203,10 @@ resource "aws_appconfig_configuration_profile" "test" {
   validators {
     type = "JSON_SCHEMA"
     content = jsonencode({
-      "$schema" = "http://json-schema.org/draft-04/schema#"
-      title = "$id$"
-      description = "BasicFeatureToggle-1"
-      type = "object"
+      "$schema"            = "http://json-schema.org/draft-04/schema#"
+      title                = "$id$"
+      description          = "BasicFeatureToggle-1"
+      type                 = "object"
       additionalProperties = false
       patternProperties = {
         "[^\\s]+$" = {
