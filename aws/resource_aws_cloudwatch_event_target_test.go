@@ -1103,7 +1103,7 @@ data "aws_partition" "current" {}
 func testAccAWSCloudWatchEventTargetConfigHttp(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "schedule_http_test"
 
   schedule_expression = "rate(5 minutes)"
@@ -1116,7 +1116,7 @@ resource "aws_cloudwatch_event_target" "test" {
   http_target {
     path_parameter_values = []
     query_string_parameters = {
-	  Env = "test"
+      Env  = "test"
       Path = "$.detail.path"
     }
     header_parameters = {
@@ -1129,22 +1129,22 @@ resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
   body = jsonencode({
     openapi = "3.0.1"
-  	info = {
-		title = "example"
-		version = "1.0"
-	}
-	paths = {
-		"/" = {
-			get = {
-				x-amazon-apigateway-integration = {
-					httpMethod = "GET"
-					payloadFormatVersion = "1.0"
-					type = "HTTP_PROXY"
-					uri = "https://ip-ranges.amazonaws.com"
-				}
-			}
-		}
-	}
+    info = {
+      title = "example"
+      version = "1.0"
+    }
+    paths = {
+      "/" = {
+        get = {
+          x-amazon-apigateway-integration = {
+            httpMethod           = "GET"
+            payloadFormatVersion = "1.0"
+            type                 = "HTTP_PROXY"
+            uri                  = "https://ip-ranges.amazonaws.com"
+          }
+        }
+      }
+    }
   })
 }
 
