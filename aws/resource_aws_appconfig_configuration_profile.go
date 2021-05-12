@@ -211,7 +211,7 @@ func resourceAwsAppconfigConfigurationProfileUpdate(d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("retrieval_role_arn") {
-		updateInput.Name = aws.String(d.Get("retrieval_role_arn").(string))
+		updateInput.RetrievalRoleArn = aws.String(d.Get("retrieval_role_arn").(string))
 	}
 
 	if d.HasChange("tags") {
