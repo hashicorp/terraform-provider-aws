@@ -1153,7 +1153,7 @@ resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
 
   triggers = {
-	redeployment = sha1(jsonencode(aws_api_gateway_rest_api.test.body))
+    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.test.body))
   }
 
   lifecycle {
@@ -1163,8 +1163,8 @@ resource "aws_api_gateway_deployment" "test" {
 
 resource "aws_api_gateway_stage" "test" {
   deployment_id = aws_api_gateway_deployment.test.id
-  rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name = "test"
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
 }
 
 data "aws_partition" "current" {}
