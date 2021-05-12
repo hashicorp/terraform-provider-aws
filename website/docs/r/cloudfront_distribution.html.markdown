@@ -398,7 +398,7 @@ resource "aws_cloudfront_distribution" "example" {
     function_association {
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.example.arn
-     }
+    }
   }
 }
 ```

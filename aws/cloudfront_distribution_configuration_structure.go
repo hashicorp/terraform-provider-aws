@@ -451,7 +451,7 @@ func functionAssociationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
-	buf.WriteString(m["lambda_arn"].(string))
+	buf.WriteString(m["function_arn"].(string))
 	return hashcode.String(buf.String())
 }
 
