@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,7 +16,10 @@ import (
 func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.test"
-	email := "required@example.com"
+	email := os.Getenv("AWS_MACIE_MEMBER_EMAIL")
+	if email == "" {
+		email = "required@example.com"
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,7 +49,10 @@ func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.test"
-	email := "required@example.com"
+	email := os.Getenv("AWS_MACIE_MEMBER_EMAIL")
+	if email == "" {
+		email = "required@example.com"
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
