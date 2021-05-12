@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	tfeks "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/eks"
 )
 
 func init() {
@@ -54,7 +55,7 @@ func testSweepEksNodeGroups(region string) error {
 
 					d.Set("cluster_name", clusterName)
 					d.Set("node_group_name", nodeGroupName)
-					d.SetId(resourceAwsEksNodeGroupCreateId(clusterName, nodeGroupName))
+					d.SetId(tfeks.NodeGroupCreateResourceID(clusterName, nodeGroupName))
 
 					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
@@ -869,7 +870,7 @@ func testAccCheckAWSEksNodeGroupExists(resourceName string, nodeGroup *eks.Nodeg
 			return fmt.Errorf("No EKS Node Group ID is set")
 		}
 
-		clusterName, nodeGroupName, err := resourceAwsEksNodeGroupParseId(rs.Primary.ID)
+		clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -913,7 +914,7 @@ func testAccCheckAWSEksNodeGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		clusterName, nodeGroupName, err := resourceAwsEksNodeGroupParseId(rs.Primary.ID)
+		clusterName, nodeGroupName, err := tfeks.NodeGroupParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
