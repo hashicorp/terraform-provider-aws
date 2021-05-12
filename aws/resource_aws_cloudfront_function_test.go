@@ -300,10 +300,10 @@ func testAccCheckAwsCloudfrontFunctionETag(function *cloudfront.GetFunctionOutpu
 func testAccAWSCloudfrontConfigBasic(funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-	name = "%s"
-	runtime = "cloudfront-js-1.0"
-	comment = "%s"
-	code    = <<-EOT
+  name = "%s"
+  runtime = "cloudfront-js-1.0"
+  comment = "%s"
+  code    = <<-EOT
 function handler(event) {
 	var response = {
 		statusCode: 302,
@@ -323,10 +323,10 @@ EOT
 func testAccAWSCloudfrontConfigCodeUpdate(funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-	name = "%s"
-	runtime = "cloudfront-js-1.0"
-	comment = "%s"
-	code    = <<-EOT
+  name = "%s"
+  runtime = "cloudfront-js-1.0"
+  comment = "%s"
+  code    = <<-EOT
 function handler(event) {
 	// updated code
 	var response = {
