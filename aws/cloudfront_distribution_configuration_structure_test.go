@@ -55,12 +55,12 @@ func lambdaFunctionAssociationsConf() *schema.Set {
 func functionAssociationsConf() *schema.Set {
 	x := []interface{}{
 		map[string]interface{}{
-			"event_type":  "viewer-request",
-			"funtion_arn": "arn:aws:cloudfront::999999999:function/function1", //lintignore:AWSAT003,AWSAT005
+			"event_type":   "viewer-request",
+			"function_arn": "arn:aws:cloudfront::999999999:function/function1", //lintignore:AWSAT003,AWSAT005
 		},
 		map[string]interface{}{
-			"event_type":  "origin-response",
-			"funtion_arn": "arn:aws:cloudfront::999999999:function/function2", //lintignore:AWSAT003,AWSAT005
+			"event_type":   "viewer-response",
+			"function_arn": "arn:aws:cloudfront::999999999:function/function2", //lintignore:AWSAT003,AWSAT005
 		},
 	}
 

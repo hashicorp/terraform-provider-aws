@@ -329,7 +329,7 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
 	}
 	if len(dcb.FunctionAssociations.Items) > 0 {
-		m["function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
+		m["function_association"] = flattenFunctionAssociations(dcb.FunctionAssociations)
 	}
 	if dcb.MaxTTL != nil {
 		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)

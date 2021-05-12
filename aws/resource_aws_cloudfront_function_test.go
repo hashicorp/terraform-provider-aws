@@ -237,20 +237,6 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsCloudfrontFunctionDisappears(function *cloudfront.DescribeFunctionOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
-
-		input := &cloudfront.DeleteFunctionInput{
-			Name: function.FunctionSummary.Name,
-		}
-
-		_, err := conn.DeleteFunction(input)
-
-		return err
-	}
-}
-
 func testAccCheckAwsCloudfrontFunctionExists(res, funcName string, function *cloudfront.DescribeFunctionOutput, getfunction *cloudfront.GetFunctionOutput) resource.TestCheckFunc {
 	// Wait for IAM role
 	return func(s *terraform.State) error {

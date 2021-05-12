@@ -150,7 +150,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"function_association": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							MaxItems: 4,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
@@ -350,7 +350,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 						"function_association": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							MaxItems: 4,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {

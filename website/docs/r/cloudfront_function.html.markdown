@@ -1,16 +1,16 @@
 ---
-subcategory: "Cloudfront"
+subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_function"
 description: |-
-  Provides a Cloudfront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. 
+  Provides a CloudFront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. 
 ---
 
 # Resource: aws_cloudfront_function
 
-Provides a Cloudfront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations.
+Provides a CloudFront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations.
 
-See [Cloudfront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
+See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
 
 ## Example Usage
 
@@ -30,20 +30,20 @@ resource "aws_cloudfront_function" "test" {
 
 The following arguments are required:
 
-* `name` - (Required) Unique name for your Cloudfront Function.
+* `name` - (Required) Unique name for your CloudFront Function.
 * `code` - (Required) Source code of the function
 * `runtime` - (Required) Identifier of the function's runtime. Currently only `cloudfront-js-1.0` is valid.
 
 The following arguments are optional:
 
 * `comment` - (Optional) Comment.
-* `publish` - (Optional) Whether to publish creation/change as Live Cloudfront Function Version. Defaults to `true`.
+* `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) identifying your Cloudfront Function.
+* `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
 * `version` - ETag hash of the function
 * `last_modified` - Date this resource was last modified.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Functions can be imported using the `name`, e.g.
+CloudFront Functions can be imported using the `name`, e.g.
 
 ```
 $ terraform import aws_cloudfront_function.test my_test_function

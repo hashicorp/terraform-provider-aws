@@ -291,7 +291,7 @@ of several sub-resources - these resources are laid out below.
     function with specific actions (maximum 4).
 
 * `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront
-    function with specific actions (maximum 4).
+    function with specific actions (maximum 2).
 
 * `max_ttl` (Optional) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
@@ -397,15 +397,14 @@ resource "aws_cloudfront_distribution" "example" {
 
     function_association {
       event_type   = "viewer-request"
-      function_arn   = aws_cloudfront_function.example.arn
+      function_arn = aws_cloudfront_function.example.arn
      }
   }
 }
 ```
 
 * `event_type` (Required) - The specific event to trigger this function.
-  Valid values: `viewer-request`, `origin-request`, `viewer-response`,
-  `origin-response`
+  Valid values: `viewer-request` or `viewer-response`
 * `function_arn` (Required) - ARN of the Cloudfront function.
 
 ##### Cookies Arguments
