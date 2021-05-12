@@ -33,6 +33,12 @@ func testAccAwsMacie2Invitation_basic(t *testing.T) {
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 				),
 			},
+			{
+				Config:            testAccAwsMacieInvitationConfigBasic(email),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -57,6 +63,12 @@ func testAccAwsMacie2Invitation_disappears(t *testing.T) {
 					testAccCheckAwsMacie2InvitationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Invitation(), resourceName),
 				),
+			},
+			{
+				Config:            testAccAwsMacieInvitationConfigBasic(email),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

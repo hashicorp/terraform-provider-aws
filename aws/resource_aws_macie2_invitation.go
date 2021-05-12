@@ -20,6 +20,9 @@ func resourceAwsMacie2Invitation() *schema.Resource {
 		CreateWithoutTimeout: resourceMacie2InvitationCreate,
 		ReadWithoutTimeout:   resourceMacie2InvitationRead,
 		DeleteWithoutTimeout: resourceMacie2InvitationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"disable_email_notification": {
 				Type:     schema.TypeString,
