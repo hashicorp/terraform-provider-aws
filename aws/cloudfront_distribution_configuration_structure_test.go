@@ -422,7 +422,7 @@ func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
 	if et := "viewer-request"; *lfa.Items[0].EventType != et {
 		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, *lfa.Items[0].EventType)
 	}
-	if et := "origin-response"; *lfa.Items[1].EventType != et {
+	if et := "viewer-response"; *lfa.Items[1].EventType != et {
 		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, *lfa.Items[1].EventType)
 	}
 }
