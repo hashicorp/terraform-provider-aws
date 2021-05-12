@@ -1131,7 +1131,7 @@ resource "aws_api_gateway_rest_api" "test" {
   body = jsonencode({
     openapi = "3.0.1"
     info = {
-      title = "example"
+      title   = "example"
       version = "1.0"
     }
     paths = {
