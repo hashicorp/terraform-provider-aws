@@ -300,7 +300,7 @@ func testAccCheckAwsCloudfrontFunctionETag(function *cloudfront.GetFunctionOutpu
 func testAccAWSCloudfrontConfigBasic(funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name = "%s"
+  name    = "%s"
   runtime = "cloudfront-js-1.0"
   comment = "%s"
   code    = <<-EOT
@@ -323,7 +323,7 @@ EOT
 func testAccAWSCloudfrontConfigCodeUpdate(funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name = "%s"
+  name    = "%s"
   runtime = "cloudfront-js-1.0"
   comment = "%s"
   code    = <<-EOT
