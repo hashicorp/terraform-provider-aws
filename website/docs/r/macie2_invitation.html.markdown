@@ -40,3 +40,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique identifier (ID) of the macie invitation.
+
+## Import
+
+`aws_macie2_invitation` can be imported using the id, e.g.
+
+```
+$ terraform import aws_macie2_invitation.example abcd1
+```
