@@ -513,8 +513,12 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 	for _, v := range routeTable.Associations {
 		v := aws.StringValue(v.RouteTableAssociationId)
 
-		if err := disassociateRouteTable(conn, v); err != nil {
-			return fmt.Errorf("error disassociating Route Table (%s) %s: %w", d.Id(), v, err)
+		r := resourceAwsRouteTableAssociation()
+		d := r.Data(nil)
+		d.SetId(v)
+
+		if err := r.Delete(d, meta); err != nil {
+			return err
 		}
 	}
 
@@ -604,18 +608,6 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	}
 
 	return hashcode.String(buf.String())
-}
-
-func disassociateRouteTable(conn *ec2.EC2, associationID string) error {
-	_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
-		AssociationId: aws.String(associationID),
-	})
-
-	if tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidAssociationIDNotFound) {
-		return nil
-	}
-
-	return nil
 }
 
 // enableVgwRoutePropagation attempts to enable VGW route propagation.
