@@ -339,7 +339,7 @@ The following arguments are supported:
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `kinesis_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Kinesis Stream. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
-* `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maxium of 1 are allowed.
+* `http_target` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input_transformer` - (Optional) Parameters used when you are providing a custom input to a target based on certain event data. Conflicts with `input` and `input_path`.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
