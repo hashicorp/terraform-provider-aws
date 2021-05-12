@@ -419,10 +419,10 @@ func TestCloudFrontStructure_expandFunctionAssociations(t *testing.T) {
 	if len(lfa.Items) != 2 {
 		t.Fatalf("Expected Items to be len 2, got %v", len(lfa.Items))
 	}
-	if et := "viewer-request"; *lfa.Items[0].EventType != et {
+	if et := "viewer-response"; *lfa.Items[0].EventType != et {
 		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, *lfa.Items[0].EventType)
 	}
-	if et := "viewer-response"; *lfa.Items[1].EventType != et {
+	if et := "viewer-request"; *lfa.Items[1].EventType != et {
 		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, *lfa.Items[1].EventType)
 	}
 }
