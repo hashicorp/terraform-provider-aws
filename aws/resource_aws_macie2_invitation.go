@@ -116,7 +116,8 @@ func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+		result == nil {
 		log.Printf("[WARN] Macie Invitation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -124,6 +125,17 @@ func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error reading Macie Invitation (%s): %w", d.Id(), err))
+	}
+
+	if aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusRemoved ||
+		aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusResigned {
+		log.Printf("[WARN] Macie InvitationAccepter (%s) %s, removing from state", d.Id(), aws.StringValue(result.RelationshipStatus))
+		d.SetId("")
+		return nil
+	}
+
+	if aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusEmailVerificationFailed {
+		return diag.FromErr(fmt.Errorf("error reading Macie Invitation: %s", macie2.RelationshipStatusEmailVerificationFailed))
 	}
 
 	d.Set("invited_at", aws.TimeValue(result.InvitedAt).Format(time.RFC3339))
