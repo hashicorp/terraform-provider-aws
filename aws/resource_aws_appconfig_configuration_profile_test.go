@@ -199,6 +199,7 @@ resource "aws_appconfig_configuration_profile" "test" {
   name           = %[1]q
   description    = %[2]q
   application_id = aws_appconfig_application.test.id
+  location_uri   = "hosted"
   validators {
     type = "JSON_SCHEMA"
     content = jsonencode({
@@ -224,6 +225,7 @@ func testAccAWSAppConfigConfigurationProfileTags1(rName, tagKey1, tagValue1 stri
 resource "aws_appconfig_configuration_profile" "test" {
   name           = %[1]q
   application_id = aws_appconfig_application.test.id
+  location_uri   = "hosted"
 
   tags = {
     %[2]q = %[3]q
@@ -237,6 +239,7 @@ func testAccAWSAppConfigConfigurationProfileTags2(rName, tagKey1, tagValue1, tag
 resource "aws_appconfig_configuration_profile" "test" {
   name           = %[1]q
   application_id = aws_appconfig_application.test.id
+  location_uri   = "hosted"
 
   tags = {
     %[2]q = %[3]q
