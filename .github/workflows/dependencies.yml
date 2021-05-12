@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Find Existing PR Comment
         id: prc
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v1.2.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
