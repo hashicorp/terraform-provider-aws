@@ -140,20 +140,12 @@ func resourceAwsServiceCatalogTagOptionUpdate(d *schema.ResourceData, meta inter
 	// UpdateTagOption() is very particular about what it receives. Only fields that change should
 	// be included or it will throw servicecatalog.ErrCodeDuplicateResourceException, "already exists"
 
-	makeChange := false
-
 	if d.HasChange("active") {
 		input.Active = aws.Bool(d.Get("active").(bool))
-		makeChange = true
 	}
 
 	if d.HasChange("value") {
 		input.Value = aws.String(d.Get("value").(string))
-		makeChange = true
-	}
-
-	if !makeChange {
-		return resourceAwsServiceCatalogTagOptionRead(d, meta)
 	}
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
