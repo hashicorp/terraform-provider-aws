@@ -380,7 +380,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	}
 
 	if t.HttpParameters != nil {
-		if err := d.Set("attribute_name", []interface{}{flattenAwsCloudWatchEventTargetHttpParameters(t.HttpParameters)}); err != nil {
+		if err := d.Set("http_target", []interface{}{flattenAwsCloudWatchEventTargetHttpParameters(t.HttpParameters)}); err != nil {
 			return fmt.Errorf("error setting http_target: %w", err)
 		}
 	} else {
