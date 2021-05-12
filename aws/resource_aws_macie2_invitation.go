@@ -138,7 +138,7 @@ func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if aws.StringValue(result.RelationshipStatus) == macie2.RelationshipStatusEmailVerificationFailed {
-		return diag.FromErr(fmt.Errorf("error reading Macie Invitation: %s", macie2.RelationshipStatusEmailVerificationFailed))
+		log.Printf("[WARN] Macie InvitationAccepter (%s) %s", d.Id(), aws.StringValue(result.RelationshipStatus))
 	}
 
 	d.Set("invited_at", aws.TimeValue(result.InvitedAt).Format(time.RFC3339))
