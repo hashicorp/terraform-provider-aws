@@ -24,6 +24,20 @@ resource "aws_datasync_task" "example" {
 }
 ```
 
+## Example Usage with Scheduling
+
+```terraform
+resource "aws_datasync_task" "example" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = "example"
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  schedule {
+    schedule_expression = "cron(0 12 ? * SUN,WED *)"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -33,6 +47,7 @@ The following arguments are supported:
 * `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.
 * `name` - (Optional) Name of the DataSync Task.
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
+* `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options Argument Reference
@@ -51,6 +66,10 @@ The following arguments are supported inside the `options` configuration block:
 * `preserve_devices` - (Optional) Whether the DataSync Task should preserve the metadata of block and character devices in the source files system, and recreate the files with that device name and metadata on the destination. The DataSync Task can’t sync the actual contents of such devices, because many of the devices are non-terminal and don’t return an end of file (EOF) marker. Valid values: `NONE`, `PRESERVE`. Default: `NONE` (ignore special devices).
 * `uid` - (Optional) User identifier of the file's owners. Valid values: `BOTH`, `INT_VALUE`, `NAME`, `NONE`. Default: `INT_VALUE` (preserve integer value of the ID).
 * `verify_mode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `NONE`, `POINT_IN_TIME_CONSISTENT`, `ONLY_FILES_TRANSFERRED`. Default: `POINT_IN_TIME_CONSISTENT`.
+
+### Schedule
+
+* `schedule_expression` - (Required) Specifies the schedule you want your task to use for repeated executions. For more information, see [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
 
 ## Attributes Reference
 
