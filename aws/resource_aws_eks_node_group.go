@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func resourceAwsEksNodeGroup() *schema.Resource {
@@ -35,15 +36,11 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					eks.AMITypesAl2X8664,
-					eks.AMITypesAl2X8664Gpu,
-					eks.AMITypesAl2Arm64,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(eks.AMITypes_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -117,17 +114,16 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 			"node_group_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name_prefix"},
-				ValidateFunc:  validation.NoZeroValues,
 			},
 			"node_group_name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"node_group_name"},
-				ValidateFunc:  validation.NoZeroValues,
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
@@ -235,18 +231,9 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).eksconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
+
 	clusterName := d.Get("cluster_name").(string)
-
-	var nodeGroupName string
-
-	if v, ok := d.GetOk("node_group_name"); ok {
-		nodeGroupName = v.(string)
-	} else if v, ok := d.GetOk("node_group_name_prefix"); ok {
-		nodeGroupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		nodeGroupName = resource.PrefixedUniqueId("tf-")
-	}
-
+	nodeGroupName := naming.Generate(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	input := &eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),
 		ClusterName:        aws.String(clusterName),
@@ -376,6 +363,7 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	d.Set("node_group_name", nodeGroup.NodegroupName)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(nodeGroup.NodegroupName)))
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 

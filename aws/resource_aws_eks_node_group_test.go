@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 )
 
 func init() {
@@ -111,6 +112,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "node_role_arn", iamRoleResourceName, "arn"),
 					resource.TestMatchResourceAttr(resourceName, "release_version", regexp.MustCompile(`^\d+\.\d+\.\d+-\d{8}$`)),
 					resource.TestCheckResourceAttr(resourceName, "remote_access.#", "0"),
@@ -135,29 +137,57 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
+func TestAccAWSEksNodeGroup_Name_Generated(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rNamePrefix := "tf-acc-test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, rNamePrefix),
+				Config: testAccAWSEksNodeGroupConfigNodeGroupNameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
-					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", rNamePrefix),
+					naming.TestCheckResourceAttrNameGenerated(resourceName, "node_group_name"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "terraform-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"node_group_name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
+	var nodeGroup eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, "tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1022,13 +1052,17 @@ resource "aws_vpc" "test" {
   enable_dns_support   = true
 
   tags = {
-    Name                          = "tf-acc-test-eks-node-group"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -1037,6 +1071,10 @@ resource "aws_route_table" "test" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -1062,6 +1100,10 @@ resource "aws_security_group" "test" {
     protocol    = -1
     to_port     = 0
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -1073,7 +1115,7 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
 
   tags = {
-    Name                          = "tf-acc-test-eks-node-group"
+    Name                          = %[1]q
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
@@ -1122,7 +1164,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigNodeGroupName(rName string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1141,16 +1183,38 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
 
-func testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, rNamePrefix string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+func testAccAWSEksNodeGroupConfigNodeGroupNameGenerated(rName string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), `
 resource "aws_eks_node_group" "test" {
-  cluster_name    				= aws_eks_cluster.test.name
-  node_group_name_prefix 	= %[1]q
-  node_role_arn   				= aws_iam_role.node.arn
-  subnet_ids      				= aws_subnet.test[*].id
+  cluster_name  = aws_eks_cluster.test.name
+  node_role_arn = aws_iam_role.node.arn
+  subnet_ids    = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 1
+    min_size     = 1
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`)
+}
+
+func testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, namePrefix string) string {
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  node_group_name_prefix = %[1]q
+  node_role_arn          = aws_iam_role.node.arn
+  subnet_ids             = aws_subnet.test[*].id
 
   scaling_config {
     desired_size = 1
@@ -1164,11 +1228,11 @@ resource "aws_eks_node_group" "test" {
     "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
   ]
 }
-`, rNamePrefix)
+`, namePrefix))
 }
 
 func testAccAWSEksNodeGroupConfigAmiType(rName, amiType string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   ami_type        = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1188,11 +1252,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, amiType)
+`, rName, amiType))
 }
 
 func testAccAWSEksNodeGroupConfigCapacityType(rName, capacityType string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   capacity_type   = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1212,11 +1276,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, capacityType)
+`, rName, capacityType))
 }
 
 func testAccAWSEksNodeGroupConfigDiskSize(rName string, diskSize int) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   disk_size       = %[2]d
@@ -1236,11 +1300,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, diskSize)
+`, rName, diskSize))
 }
 
 func testAccAWSEksNodeGroupConfigForceUpdateVersion(rName, version string) string {
-	return testAccAWSEksNodeGroupConfigBaseVersion(rName, version) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name         = aws_eks_cluster.test.name
   force_update_version = true
@@ -1261,7 +1325,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigInstanceTypesMultiple(rName string) string {
@@ -1333,7 +1397,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigLabels1(rName, labelKey1, labelValue1 string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1356,11 +1420,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, labelKey1, labelValue1)
+`, rName, labelKey1, labelValue1))
 }
 
 func testAccAWSEksNodeGroupConfigLabels2(rName, labelKey1, labelValue1, labelKey2, labelValue2 string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1384,7 +1448,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, labelKey1, labelValue1, labelKey2, labelValue2)
+`, rName, labelKey1, labelValue1, labelKey2, labelValue2))
 }
 
 func testAccAWSEksNodeGroupConfigLaunchTemplateId1(rName string) string {
@@ -1664,7 +1728,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigReleaseVersion(rName string, version string) string {
-	return testAccAWSEksNodeGroupConfigBaseVersion(rName, version) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/release_version"
 }
@@ -1689,11 +1753,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigRemoteAccessEc2SshKey(rName string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
@@ -1721,11 +1785,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigRemoteAccessSourceSecurityGroupIds1(rName string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 example@example.com"
@@ -1754,11 +1818,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
 
 func testAccAWSEksNodeGroupConfigScalingConfigSizes(rName string, desiredSize, maxSize, minSize int) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1777,11 +1841,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, desiredSize, maxSize, minSize)
+`, rName, desiredSize, maxSize, minSize))
 }
 
 func testAccAWSEksNodeGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1804,11 +1868,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAWSEksNodeGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1832,11 +1896,11 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {
-	return testAccAWSEksNodeGroupConfigBaseVersion(rName, version) + fmt.Sprintf(`
+	return composeConfig(testAccAWSEksNodeGroupConfigBaseVersion(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1856,5 +1920,5 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-`, rName)
+`, rName))
 }
