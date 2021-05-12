@@ -10,12 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+)
+
+const (
+	EnvVarMacie2MemberEmail             = "AWS_MACIE2_MEMBER_EMAIL"
+	EnvVarMacie2MemberEmailMessageError = "Environment variable AWS_MACIE2_MEMBER_EMAIL is not set. " +
+		"To properly test inviting Macie member account must be provided."
 )
 
 func testAccAwsMacie2Invitation_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation.test"
-	email := "required@example.com"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,7 +53,7 @@ func testAccAwsMacie2Invitation_basic(t *testing.T) {
 func testAccAwsMacie2Invitation_disappears(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation.test"
-	email := "required@example.com"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

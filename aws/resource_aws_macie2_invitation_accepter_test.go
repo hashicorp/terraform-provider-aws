@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,15 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 )
 
 func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.test"
-	email := os.Getenv("AWS_MACIE_MEMBER_EMAIL")
-	if email == "" {
-		email = "required@example.com"
-	}
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -49,10 +46,7 @@ func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_invitation_accepter.test"
-	email := os.Getenv("AWS_MACIE_MEMBER_EMAIL")
-	if email == "" {
-		email = "required@example.com"
-	}
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
