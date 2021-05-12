@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: avto-dev/markdown-lint@v1
+      - uses: avto-dev/markdown-lint@v1.5.0
         with:
           config: '.markdownlint.yml'
           args: 'docs'
