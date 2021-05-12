@@ -73,6 +73,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>backup</code></li>
   <li><code>batch</code></li>
   <li><code>budgets</code></li>
+  <li><code>chime</code></li>
   <li><code>cloud9</code></li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>

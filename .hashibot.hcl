@@ -91,6 +91,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/budgets" = [
       "aws_budgets_",
     ],
+    "service/chime" = [
+      "aws_chime_",
+    ],
     "service/cloud9" = [
       "aws_cloud9_",
     ],

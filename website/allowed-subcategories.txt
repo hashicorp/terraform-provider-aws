@@ -17,6 +17,7 @@ Amazon Managed Service for Prometheus (AMP)
 Backup
 Batch
 Budgets
+Chime
 Cloud9
 CloudFormation
 CloudFront
