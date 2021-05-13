@@ -15,7 +15,7 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
+		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:  testAccProviders,
 		Steps: []resource.TestStep{

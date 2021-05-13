@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,7 +104,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 
 		params := &cloudfront.PublishFunctionInput{
 			Name:    aws.String(d.Id()),
-			IfMatch: aws.String(etag),
+			IfMatch: aws.String(&etag),
 		}
 
 		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", params)
@@ -220,7 +219,7 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 
 		params := &cloudfront.PublishFunctionInput{
 			Name:    aws.String(d.Id()),
-			IfMatch: aws.String(UpdateFunctionOutput.ETag),
+			IfMatch: aws.String(&UpdateFunctionOutput.ETag),
 		}
 
 		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())

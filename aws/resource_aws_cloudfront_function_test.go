@@ -80,7 +80,7 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 	funcName := fmt.Sprintf("tf_acc_cloudfront_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
@@ -110,7 +110,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSCloudfrontFunction_codeUpdate(t *testing.T) {
 	var timeBeforeUpdate time.Time
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
@@ -183,7 +183,7 @@ func TestAccAWSCloudfrontFunction_Update_nameOnly(t *testing.T) {
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
