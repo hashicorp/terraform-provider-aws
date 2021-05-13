@@ -48,6 +48,7 @@ func testSweepTimestreamWriteTables(region string) error {
 			tableName := aws.StringValue(table.TableName)
 			dbName := aws.StringValue(table.TableName)
 
+			log.Printf("[INFO] Deleting Timestream Table (%s) from Database (%s)", tableName, dbName)
 			r := resourceAwsTimestreamWriteTable()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", tableName, dbName))
