@@ -103,10 +103,6 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 		Tags:         tags.IgnoreAws().DatasyncTags(),
 	}
 
-	if v, ok := d.GetOk("s3_storage_class"); ok {
-		input.S3StorageClass = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("agent_arns"); ok {
 		input.AgentArns = expandStringSet(v.(*schema.Set))
 	}
@@ -182,18 +178,14 @@ func resourceAwsDataSyncLocationS3Read(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error parsing Location S3 (%s) URI (%s): %s", d.Id(), aws.StringValue(output.LocationUri), err)
 	}
 
-	d.Set("arn", output.LocationArn)
-
 	d.Set("agent_arns", flattenStringSet(output.AgentArns))
-
+	d.Set("arn", output.LocationArn)
 	if err := d.Set("s3_config", flattenDataSyncS3Config(output.S3Config)); err != nil {
 		return fmt.Errorf("error setting s3_config: %s", err)
 	}
-
 	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
-	d.Set("s3_storage_class", output.S3StorageClass)
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
