@@ -48,6 +48,7 @@ func testSweepTimestreamWriteDatabases(region string) error {
 
 			dbName := aws.StringValue(database.DatabaseName)
 
+			log.Printf("[INFO] Deleting Timestream Database (%s)", dbName)
 			r := resourceAwsTimestreamWriteDatabase()
 			d := r.Data(nil)
 			d.SetId(dbName)
