@@ -15,10 +15,10 @@ Provides a resource to manage an [Amazon Macie Member](https://docs.aws.amazon.c
 ```terraform
 resource "aws_macie2_account" "example" {}
 
-resource "aws_macie2_member" "test" {
+resource "aws_macie2_member" "example" {
   account_id = "AWS ACCOUNT ID"
   email      = "EMAIL"
-  depends_on = [aws_macie2_account.test]
+  depends_on = [aws_macie2_account.example]
 }
 ```
 
@@ -44,8 +44,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_member` can be imported using the id, e.g.
+`aws_macie2_member` can be imported using the account ID of the member account, e.g.
 
 ```
-$ terraform import aws_macie2_member.example abcd1
+$ terraform import aws_macie2_member.example 123456789012
 ```

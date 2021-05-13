@@ -13,17 +13,17 @@ Provides a resource to manage an [Amazon Macie Invitation](https://docs.aws.amaz
 ## Example Usage
 
 ```terraform
-resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "example" {}
 
-resource "aws_macie2_member" "test" {
+resource "aws_macie2_member" "example" {
   account_id = "AWS ACCOUNT ID"
   email      = "EMAIL"
-  depends_on = [aws_macie2_account.test]
+  depends_on = [aws_macie2_account.example]
 }
 
-resource "aws_macie2_invitation" "test" {
-  account_ids = ["ACCOUNT IDS"]
-  depends_on  = [aws_macie2_member.test]
+resource "aws_macie2_invitation" "example" {
+  account_id = "ACCOUNT ID"
+  depends_on = [aws_macie2_member.example]
 }
 ```
 
@@ -44,8 +44,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_invitation` can be imported using the id, e.g.
+`aws_macie2_invitation` can be imported using the account ID of the invited account, e.g.
 
 ```
-$ terraform import aws_macie2_invitation.example abcd1
+$ terraform import aws_macie2_invitation.example 123456789012
 ```

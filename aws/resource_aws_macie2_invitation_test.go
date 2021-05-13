@@ -96,7 +96,7 @@ func testAccCheckAwsMacie2InvitationExists(resourceName string) resource.TestChe
 		exists := false
 		err := conn.ListMembersPages(&macie2.ListMembersInput{OnlyAssociated: aws.String("false")}, func(page *macie2.ListMembersOutput, lastPage bool) bool {
 			for _, member := range page.Members {
-				if aws.StringValue(member.AdministratorAccountId) == rs.Primary.ID {
+				if aws.StringValue(member.AccountId) == rs.Primary.ID {
 					exists = true
 					return false
 				}
@@ -127,7 +127,7 @@ func testAccCheckAwsMacie2InvitationDestroy(s *terraform.State) error {
 		empty := true
 		err := conn.ListMembersPages(&macie2.ListMembersInput{OnlyAssociated: aws.String("false")}, func(page *macie2.ListMembersOutput, lastPage bool) bool {
 			for _, member := range page.Members {
-				if aws.StringValue(member.AdministratorAccountId) == rs.Primary.ID {
+				if aws.StringValue(member.AccountId) == rs.Primary.ID {
 					empty = false
 					return false
 				}
@@ -155,21 +155,21 @@ func testAccCheckAwsMacie2InvitationDestroy(s *terraform.State) error {
 
 func testAccAwsMacieInvitationConfigBasic(email string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_caller_identity" "inviter" {
+data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "primary" {}
 
-resource "aws_macie2_member" "test" {
-  account_id = data.aws_caller_identity.inviter.account_id
+resource "aws_macie2_member" "primary" {
+  account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
-  depends_on = [aws_macie2_account.test]
+  depends_on = [aws_macie2_account.primary]
 }
 
 resource "aws_macie2_invitation" "test" {
-  account_id = data.aws_caller_identity.inviter.account_id
-  depends_on = [aws_macie2_member.test]
+  account_id = data.aws_caller_identity.member.account_id
+  depends_on = [aws_macie2_member.primary]
 }
 `, email)
 }

@@ -76,7 +76,7 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 			return resource.NonRetryableError(err)
 		}
 
-		if len(output.UnprocessedAccounts) > 0 {
+		if len(output.UnprocessedAccounts) != 0 {
 			return resource.NonRetryableError(err)
 		}
 
@@ -92,10 +92,10 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if len(output.UnprocessedAccounts) != 0 {
-		return diag.FromErr(fmt.Errorf("error creating Macie Invitation: %w", fmt.Errorf("%s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))))
+		return diag.FromErr(fmt.Errorf("error creating Macie Invitation: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(accountID)
 
 	if _, err = waiter.MemberInvited(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Macie Invitation (%s) creation: %w", d.Id(), err))
@@ -115,7 +115,7 @@ func resourceMacie2InvitationRead(ctx context.Context, d *schema.ResourceData, m
 	var result *macie2.Member
 	err = conn.ListMembersPages(input, func(page *macie2.ListMembersOutput, lastPage bool) bool {
 		for _, member := range page.Members {
-			if aws.StringValue(member.AdministratorAccountId) == d.Id() {
+			if aws.StringValue(member.AccountId) == d.Id() {
 				result = member
 				return false
 			}
@@ -164,7 +164,7 @@ func resourceMacie2InvitationDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if len(output.UnprocessedAccounts) != 0 {
-		return diag.FromErr(fmt.Errorf("error deleting Macie Invitation: %w", fmt.Errorf("%s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))))
+		return diag.FromErr(fmt.Errorf("error deleting Macie Invitation: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
 	}
 
 	return nil

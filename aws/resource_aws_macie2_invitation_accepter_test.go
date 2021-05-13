@@ -43,42 +43,6 @@ func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
-	var providers []*schema.Provider
-	resourceName := "aws_macie2_invitation_accepter.test"
-	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccAlternateAccountPreCheck(t)
-		},
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
-		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsMacieInvitationAccepterConfigMemberStatus(email, macie2.MacieStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2InvitationAccepterExists(resourceName),
-				),
-			},
-			{
-				Config: testAccAwsMacieInvitationAccepterConfigMemberStatus(email, macie2.MacieStatusPaused),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMacie2InvitationAccepterExists(resourceName),
-				),
-			},
-			{
-				Config:            testAccAwsMacieInvitationAccepterConfigBasic(email),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testAccCheckAwsMacie2InvitationAccepterExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -139,7 +103,7 @@ data "aws_caller_identity" "primary" {
   provider = "awsalternate"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "member" {}
 
 resource "aws_macie2_account" "primary" {
   provider = "awsalternate"
@@ -149,14 +113,14 @@ resource "aws_macie2_account" "member" {}
 
 resource "aws_macie2_member" "primary" {
   provider   = "awsalternate"
-  account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
   depends_on = [aws_macie2_account.primary]
 }
 
 resource "aws_macie2_invitation" "primary" {
   provider   = "awsalternate"
-  account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.member.account_id
   depends_on = [aws_macie2_member.primary]
 }
 
@@ -164,7 +128,6 @@ resource "aws_macie2_invitation_accepter" "test" {
   administrator_account_id = data.aws_caller_identity.primary.account_id
   depends_on               = [aws_macie2_invitation.primary]
 }
-
 `, email)
 }
 
@@ -174,7 +137,7 @@ data "aws_caller_identity" "primary" {
   provider = "awsalternate"
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "member" {}
 
 resource "aws_macie2_account" "primary" {
   provider = "awsalternate"
@@ -184,7 +147,7 @@ resource "aws_macie2_account" "member" {}
 
 resource "aws_macie2_member" "primary" {
   provider   = "awsalternate"
-  account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
   status     = %[2]q
   depends_on = [aws_macie2_account.primary]
@@ -192,7 +155,7 @@ resource "aws_macie2_member" "primary" {
 
 resource "aws_macie2_invitation" "primary" {
   provider   = "awsalternate"
-  account_id = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.member.account_id
   depends_on = [aws_macie2_member.primary]
 }
 
@@ -200,6 +163,5 @@ resource "aws_macie2_invitation_accepter" "test" {
   administrator_account_id = data.aws_caller_identity.primary.account_id
   depends_on               = [aws_macie2_invitation.primary]
 }
-
 `, email, memberStatus)
 }

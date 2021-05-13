@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 )
 
 func testAccAwsMacie2Member_basic(t *testing.T) {
@@ -68,6 +69,42 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Member(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
+	var providers []*schema.Provider
+	resourceName := "aws_macie2_invitation_accepter.test"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieInvitationAccepterConfigMemberStatus(email, macie2.MacieStatusEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2InvitationAccepterExists(resourceName),
+				),
+			},
+			{
+				Config: testAccAwsMacieInvitationAccepterConfigMemberStatus(email, macie2.MacieStatusPaused),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2InvitationAccepterExists(resourceName),
+				),
+			},
+			{
+				Config:            testAccAwsMacieInvitationAccepterConfigBasic(email),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -166,37 +203,37 @@ func testAccCheckAwsMacie2MemberDestroy(s *terraform.State) error {
 
 }
 
-func testAccAwsMacieMemberConfigBasic(accountID string) string {
+func testAccAwsMacieMemberConfigBasic(email string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_caller_identity" "inviter" {
+data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "primary" {}
 
 resource "aws_macie2_member" "test" {
-  account_id = data.aws_caller_identity.inviter.account_id
+  account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
-  depends_on = [aws_macie2_account.test]
+  depends_on = [aws_macie2_account.primary]
 }
-`, accountID)
+`, email)
 }
 
 func testAccAwsMacieMemberConfigWithTags(email string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_caller_identity" "inviter" {
+data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_macie2_account" "test" {}
+resource "aws_macie2_account" "primary" {}
 
 resource "aws_macie2_member" "test" {
-  account_id = data.aws_caller_identity.inviter.account_id
+  account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
   tags = {
     Key = "value"
   }
-  depends_on = [aws_macie2_account.test]
+  depends_on = [aws_macie2_account.primary]
 }
 `, email)
 }

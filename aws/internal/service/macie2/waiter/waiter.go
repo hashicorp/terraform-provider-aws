@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for an Member to return NotFound
-	MemeberNotFoundTimeout = 5 * time.Minute
+	// Maximum amount of time to wait for the MemberRelationshipStatus to be Invited, Enabled, or Paused
+	MemberInvitedTimeout = 5 * time.Minute
 )
 
 // MemberInvited waits for an AdminAccount to return Invited, Enabled and Paused
@@ -19,7 +19,7 @@ func MemberInvited(ctx context.Context, conn *macie2.Macie2, adminAccountID stri
 		Pending: []string{macie2.RelationshipStatusCreated, macie2.RelationshipStatusEmailVerificationInProgress},
 		Target:  []string{macie2.RelationshipStatusInvited, macie2.RelationshipStatusEnabled, macie2.RelationshipStatusPaused},
 		Refresh: MemberRelationshipStatus(conn, adminAccountID),
-		Timeout: MemeberNotFoundTimeout,
+		Timeout: MemberInvitedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
