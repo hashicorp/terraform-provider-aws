@@ -1059,6 +1059,7 @@ func Provider() *schema.Provider {
 			"aws_swf_domain":                                          resourceAwsSwfDomain(),
 			"aws_synthetics_canary":                                   resourceAwsSyntheticsCanary(),
 			"aws_timestreamwrite_database":                            resourceAwsTimestreamWriteDatabase(),
+			"aws_timestreamwrite_table":                               resourceAwsTimestreamWriteTable(),
 			"aws_transfer_server":                                     resourceAwsTransferServer(),
 			"aws_transfer_ssh_key":                                    resourceAwsTransferSshKey(),
 			"aws_transfer_user":                                       resourceAwsTransferUser(),
