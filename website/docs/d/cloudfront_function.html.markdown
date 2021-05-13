@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 * `comment` - Comment.
 * `publish` - Whether to publish creation/change as Live CloudFront Function Version.
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
-* `version` - ETag hash of the function
+* `etag` - ETag hash of the function
 * `last_modified` - Date this resource was last modified.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 * `stage` - Stage of the code. Can be `DEVELOPMENT` or `LIVE`.

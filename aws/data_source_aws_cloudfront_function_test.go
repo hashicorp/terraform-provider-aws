@@ -30,7 +30,7 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "stage", resourceName, "stage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 				),
 			},
 		},

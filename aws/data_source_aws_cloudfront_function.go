@@ -39,7 +39,7 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,37 +62,29 @@ func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	log.Printf("[DEBUG] Get Cloudfront Function: %s", d.Id())
-
-	GetFunctionOutput, err := conn.GetFunction(params)
+	getFunctionOutput, err := conn.GetFunction(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cloudfront.ErrCodeNoSuchFunctionExists && !d.IsNewResource() {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Get("name").(string), err)
 	}
 
-	d.Set("code", string(GetFunctionOutput.FunctionCode))
+	d.Set("code", string(getFunctionOutput.FunctionCode))
 
 	describeParams := &cloudfront.DescribeFunctionInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	log.Printf("[DEBUG] Fetching Cloudfront Function: %s", d.Id())
-
-	DescribeFunctionOutput, err := conn.DescribeFunction(describeParams)
+	describeFunctionOutput, err := conn.DescribeFunction(describeParams)
 	if err != nil {
 		return err
 	}
 
-	d.Set("version", DescribeFunctionOutput.ETag)
-	d.Set("arn", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
-	d.Set("stage", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
-	d.Set("comment", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
-	d.Set("runtime", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", DescribeFunctionOutput.FunctionSummary.Status)
+	d.Set("etag", describeFunctionOutput.ETag)
+	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
+	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
+	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
+	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
+	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	d.SetId(d.Get("name").(string))
 

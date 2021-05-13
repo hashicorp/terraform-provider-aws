@@ -22,14 +22,9 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"code": {
 				Type:     schema.TypeString,
@@ -62,7 +57,7 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +80,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 
 	functionName := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Creating Lambda Function %s", functionName)
+	log.Printf("[DEBUG] Creating CloudFront Function %s", functionName)
 
 	params := &cloudfront.CreateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
@@ -96,38 +91,32 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 		Name: aws.String(functionName),
 	}
 
-	CreateFunctionOutput, err := conn.CreateFunction(params)
+	createFunctionOutput, err := conn.CreateFunction(params)
 
 	if err != nil {
-		return fmt.Errorf("error creating Cloudfront Function: %w", err)
+		return fmt.Errorf("error creating CloudFront Function (%s): %w", functionName, err)
 	}
 
-	d.SetId(d.Get("name").(string))
-	d.Set("version", CreateFunctionOutput.ETag)
-	d.Set("arn", CreateFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", CreateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
-	d.Set("stage", CreateFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
-	d.Set("status", CreateFunctionOutput.FunctionSummary.Status)
+	d.SetId(aws.StringValue(createFunctionOutput.FunctionSummary.Name))
+	etag := createFunctionOutput.ETag
 
 	publish := d.Get("publish").(bool)
 	if publish {
 
 		params := &cloudfront.PublishFunctionInput{
-			Name:    aws.String(d.Get("name").(string)),
-			IfMatch: aws.String(d.Get("version").(string)),
+			Name:    aws.String(d.Id()),
+			IfMatch: aws.String(etag),
 		}
 
-		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
+		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", params)
 
 		PublishFunctionOutput, err := conn.PublishFunction(params)
 		if err != nil {
-			return err
+			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
 		}
-		d.Set("status", PublishFunctionOutput.FunctionSummary.Status)
-		d.Set("last_modified", PublishFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	}
 
-	return nil
+	return resourceAwsCloudFrontFunctionRead(d, meta)
 }
 
 // resourceAwsCloudFrontFunctionRead maps to:
@@ -136,41 +125,42 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	params := &cloudfront.GetFunctionInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Get Cloudfront Function: %s", d.Id())
 
-	GetFunctionOutput, err := conn.GetFunction(params)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cloudfront.ErrCodeNoSuchFunctionExists && !d.IsNewResource() {
-			d.SetId("")
-			return nil
-		}
-		return err
+	getFunctionOutput, err := conn.GetFunction(params)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
+		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	d.Set("code", string(GetFunctionOutput.FunctionCode))
+	if err != nil {
+		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Id(), err)
+	}
+
+	d.Set("code", string(getFunctionOutput.FunctionCode))
 
 	describeParams := &cloudfront.DescribeFunctionInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Fetching Cloudfront Function: %s", d.Id())
 
-	DescribeFunctionOutput, err := conn.DescribeFunction(describeParams)
+	describeFunctionOutput, err := conn.DescribeFunction(describeParams)
 	if err != nil {
 		return err
 	}
 
-	d.Set("version", DescribeFunctionOutput.ETag)
-	d.Set("arn", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
-	d.Set("stage", DescribeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
-	d.Set("comment", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
-	d.Set("runtime", DescribeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", DescribeFunctionOutput.FunctionSummary.Status)
-	d.Set("publish", true)
+	d.Set("etag", describeFunctionOutput.ETag)
+	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
+	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
+	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
+	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
+	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	return nil
 }
@@ -183,8 +173,8 @@ func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[INFO] Deleting Cloudfront Function: %s", d.Id())
 
 	params := &cloudfront.DeleteFunctionInput{
-		Name:    aws.String(d.Get("name").(string)),
-		IfMatch: aws.String(d.Get("version").(string)),
+		Name:    aws.String(d.Id()),
+		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
 	_, err := conn.DeleteFunction(params)
@@ -194,7 +184,7 @@ func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cloudfront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFront Function (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -214,7 +204,7 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 			Runtime: aws.String(d.Get("runtime").(string)),
 		},
 		Name:    aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("version").(string)),
+		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
 	log.Printf("[DEBUG] Send Update Cloudfront Function Configuration request: %#v", configReq)
@@ -222,82 +212,24 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 	UpdateFunctionOutput, err := conn.UpdateFunction(configReq)
 
 	if err != nil {
-		return fmt.Errorf("error modifying Lambda Function (%s) configuration : %w", d.Id(), err)
+		return fmt.Errorf("error updating CloudFront Function (%s) configuration : %w", d.Id(), err)
 	}
-
-	d.Set("version", UpdateFunctionOutput.ETag)
-	d.Set("last_modified", UpdateFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 
 	publish := d.Get("publish").(bool)
 	if publish {
 
 		params := &cloudfront.PublishFunctionInput{
-			Name:    aws.String(d.Get("name").(string)),
-			IfMatch: aws.String(d.Get("version").(string)),
+			Name:    aws.String(d.Id()),
+			IfMatch: aws.String(UpdateFunctionOutput.ETag),
 		}
 
 		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
 
 		_, err := conn.PublishFunction(params)
 		if err != nil {
-			return err
+			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
 		}
 	}
 
 	return resourceAwsCloudFrontFunctionRead(d, meta)
 }
-
-/*
-func refreshCloudfrontFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &lambda.GetFunctionInput{
-			FunctionName: aws.String(functionName),
-		}
-
-		output, err := conn.GetFunction(input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.Configuration == nil {
-			return nil, "", nil
-		}
-
-		lastUpdateStatus := aws.StringValue(output.Configuration.LastUpdateStatus)
-
-		if lastUpdateStatus == lambda.LastUpdateStatusFailed {
-			return output.Configuration, lastUpdateStatus, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.LastUpdateStatusReasonCode), aws.StringValue(output.Configuration.LastUpdateStatusReason))
-		}
-
-		return output.Configuration, lastUpdateStatus, nil
-	}
-}
-
-func refreshCloudfrontFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &lambda.GetFunctionInput{
-			FunctionName: aws.String(functionName),
-		}
-
-		output, err := conn.GetFunction(input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.Configuration == nil {
-			return nil, "", nil
-		}
-
-		state := aws.StringValue(output.Configuration.State)
-
-		if state == lambda.StateFailed {
-			return output.Configuration, state, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.StateReasonCode), aws.StringValue(output.Configuration.StateReason))
-		}
-
-		return output.Configuration, state, nil
-	}
-}
-
-*/
