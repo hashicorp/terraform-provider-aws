@@ -22,10 +22,8 @@ func TestAccDataSourceAwsGlueDataCatalogEncryptionSettings_basic(t *testing.T) {
 				Config: testAccDataSourceAwsGlueDataCatalogEncryptionSettingsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsGlueDataCatalogEncryptionSettingsCheck(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "connection_password_encrypted", resourceName, "connection_password_encrypted"),
-					resource.TestCheckResourceAttrPair(datasourceName, "connection_password_kms_key_arn", resourceName, "connection_password_kms_key_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "encryption_mode", resourceName, "encryption_mode"),
-					resource.TestCheckResourceAttrPair(datasourceName, "connection_password_encrypted", resourceName, "connection_password_encrypted"),
+					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "data_catalog_encryption_settings", resourceName, "data_catalog_encryption_settings"),
 				),
 			},
 		},
@@ -58,7 +56,7 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 }
 
 data "aws_glue_data_catalog_encryption_settings" "test" {
-  id = aws_glue_data_catalog_encryption_settings.test.id
+  catalog_id = aws_glue_data_catalog_encryption_settings.test.id
 }
 `
 }

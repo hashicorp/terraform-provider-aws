@@ -7,33 +7,55 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceAwsGlueDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"connection_password_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"connection_password_kms_key_arn": {
+			"catalog_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
-			"encryption_mode": {
-				Type:     schema.TypeString,
+			"data_catalog_encryption_settings": {
+				Type:     schema.TypeList,
 				Computed: true,
-			},
-			"encryption_kms_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_password_encryption": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"aws_kms_key_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"return_connection_password_encrypted": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"encryption_at_rest": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"catalog_encryption_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"sse_aws_kms_key_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -41,17 +63,19 @@ func dataSourceAwsGlueDataCatalogEncryptionSettings() *schema.Resource {
 
 func dataSourceAwsGlueDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).glueconn
+	id := d.Get("catalog_id").(string)
 	input := &glue.GetDataCatalogEncryptionSettingsInput{
-		CatalogId: aws.String(d.Id()),
+		CatalogId: aws.String(id),
 	}
 	out, err := conn.GetDataCatalogEncryptionSettings(input)
 	if err != nil {
 		return diag.Errorf("Error reading Glue Data Catalog Encryption Settings: %s", err)
 	}
-	d.SetId(d.Id())
-	d.Set("connection_password_encrypted", out.DataCatalogEncryptionSettings.ConnectionPasswordEncryption.ReturnConnectionPasswordEncrypted)
-	d.Set("connection_password_kms_key_arn", out.DataCatalogEncryptionSettings.ConnectionPasswordEncryption.AwsKmsKeyId)
-	d.Set("encryption_mode", out.DataCatalogEncryptionSettings.EncryptionAtRest.CatalogEncryptionMode)
-	d.Set("connection_password_encrypted", out.DataCatalogEncryptionSettings.EncryptionAtRest.SseAwsKmsKeyId)
+	d.SetId(id)
+	d.Set("catalog_id", d.Id())
+
+	if err := d.Set("data_catalog_encryption_settings", flattenGlueDataCatalogEncryptionSettings(out.DataCatalogEncryptionSettings)); err != nil {
+		return diag.Errorf("error setting data_catalog_encryption_settings: %s", err)
+	}
 	return nil
 }
