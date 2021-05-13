@@ -109,7 +109,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 
 		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", params)
 
-		PublishFunctionOutput, err := conn.PublishFunction(params)
+		_, err := conn.PublishFunction(params)
 		if err != nil {
 			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
 		}
