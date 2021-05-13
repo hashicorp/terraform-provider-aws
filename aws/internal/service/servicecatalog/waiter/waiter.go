@@ -3,6 +3,7 @@ package waiter
 import (
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -191,8 +192,8 @@ func OrganizationsAccessStable(conn *servicecatalog.ServiceCatalog) (string, err
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(string); ok {
-		return output, err
+	if output, ok := outputRaw.(*servicecatalog.GetAWSOrganizationsAccessStatusOutput); ok {
+		return aws.StringValue(output.AccessStatus), err
 	}
 
 	return "", err
