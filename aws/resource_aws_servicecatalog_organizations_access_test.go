@@ -14,7 +14,11 @@ func TestAccAWSServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_organizations_access.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsEnabledPreCheck(t)
+			testAccOrganizationManagementAccountPreCheck(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogOrganizationsAccessDestroy,

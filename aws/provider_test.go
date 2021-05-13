@@ -24,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	organizationsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/organizations/finder"
+	stsfinder "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sts/finder"
 )
 
 const (
@@ -789,6 +791,24 @@ func testAccOrganizationsEnabledPreCheck(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+}
+
+func testAccOrganizationManagementAccountPreCheck(t *testing.T) {
+	organization, err := organizationsfinder.Organization(testAccProvider.Meta().(*AWSClient).organizationsconn)
+
+	if err != nil {
+		t.Fatalf("error describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := stsfinder.CallerIdentity(testAccProvider.Meta().(*AWSClient).stsconn)
+
+	if err != nil {
+		t.Fatalf("error getting current identity: %s", err)
+	}
+
+	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
+		t.Skip("this AWS account must be the management account of an AWS Organization")
 	}
 }
 
