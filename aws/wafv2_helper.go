@@ -417,6 +417,125 @@ func wafv2VisibilityConfigSchema() *schema.Schema {
 	}
 }
 
+func wafv2AllowConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_request_handling": wafv2CustomRequestHandlingSchema(),
+			},
+		},
+	}
+}
+
+func wafv2CountConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_request_handling": wafv2CustomRequestHandlingSchema(),
+			},
+		},
+	}
+}
+
+func wafv2BlockConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_response": wafv2CustomResponseSchema(),
+			},
+		},
+	}
+}
+
+func wafv2CustomRequestHandlingSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"insert_headers": {
+					Type:     schema.TypeList,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric hyphen, underscore, dot and $ characters"),
+								),
+							},
+							"value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func wafv2CustomResponseSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"custom_response_body_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(0, 128),
+						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric or hyphen characters"),
+					),
+				},
+				"response_code": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(200, 599),
+				},
+				"response_headers": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric hyphen, underscore, dot and $ characters"),
+								),
+							},
+							"value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func expandWafv2Rules(l []interface{}) []*wafv2.Rule {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -457,18 +576,117 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 	action := &wafv2.RuleAction{}
 
 	if v, ok := m["allow"]; ok && len(v.([]interface{})) > 0 {
-		action.Allow = &wafv2.AllowAction{}
+		action.Allow = expandWafv2AllowAction(v.([]interface{}))
 	}
 
 	if v, ok := m["block"]; ok && len(v.([]interface{})) > 0 {
-		action.Block = &wafv2.BlockAction{}
+		action.Block = expandWafv2BlockAction(v.([]interface{}))
 	}
 
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
-		action.Count = &wafv2.CountAction{}
+		action.Count = expandWafv2CountAction(v.([]interface{}))
 	}
 
 	return action
+}
+
+func expandWafv2AllowAction(l []interface{}) *wafv2.AllowAction {
+	action := &wafv2.AllowAction{}
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["custom_request_handling"]; ok && len(v.([]interface{})) > 0 {
+		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v.([]interface{}))
+	}
+
+	return action
+}
+
+func expandWafv2CountAction(l []interface{}) *wafv2.CountAction {
+	action := &wafv2.CountAction{}
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["custom_request_handling"]; ok && len(v.([]interface{})) > 0 {
+		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v.([]interface{}))
+	}
+
+	return action
+}
+
+func expandWafv2BlockAction(l []interface{}) *wafv2.BlockAction {
+	action := &wafv2.BlockAction{}
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["custom_response"]; ok && len(v.([]interface{})) > 0 {
+		action.CustomResponse = expandWafv2CustomResponse(v.([]interface{}))
+	}
+
+	return action
+}
+
+func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	customResponse := &wafv2.CustomResponse{}
+
+	if v, ok := m["response_code"]; ok && v.(int) > 0 {
+		customResponse.ResponseCode = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := m["response_headers"]; ok && len(v.([]interface{})) > 0 {
+		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.([]interface{}))
+	}
+	if v, ok := m["custom_response_body_key"]; ok && len(v.(string)) > 0 {
+		customResponse.CustomResponseBodyKey = aws.String(v.(string))
+	}
+
+	return customResponse
+}
+
+func expandWafv2CustomRequestHandling(l []interface{}) *wafv2.CustomRequestHandling {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	requestHandling := &wafv2.CustomRequestHandling{}
+
+	if v, ok := m["insert_headers"]; ok && len(v.([]interface{})) > 0 {
+		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.([]interface{}))
+	}
+
+	return requestHandling
+}
+
+func expandWafv2CustomHeaders(l []interface{}) []*wafv2.CustomHTTPHeader {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	headers := make([]*wafv2.CustomHTTPHeader, 0)
+
+	for _, header := range l {
+		if header == nil {
+			continue
+		}
+		m := header.(map[string]interface{})
+		headers = append(headers, &wafv2.CustomHTTPHeader{
+			Name:  aws.String(m["name"].(string)),
+			Value: aws.String(m["value"].(string)),
+		})
+	}
+
+	return headers
 }
 
 func expandWafv2VisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
@@ -862,15 +1080,96 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 	m := map[string]interface{}{}
 
 	if a.Allow != nil {
-		m["allow"] = make([]map[string]interface{}, 1)
+		m["allow"] = flattenWafv2Allow(a.Allow)
 	}
 
 	if a.Block != nil {
-		m["block"] = make([]map[string]interface{}, 1)
+		m["block"] = flattenWafv2Block(a.Block)
 	}
 
 	if a.Count != nil {
-		m["count"] = make([]map[string]interface{}, 1)
+		m["count"] = flattenWafv2Count(a.Count)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2Allow(a *wafv2.AllowAction) interface{} {
+	if a == nil {
+		return map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"custom_request_handling": flattenWafv2CustomRequestHandling(a.CustomRequestHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2Block(a *wafv2.BlockAction) interface{} {
+	if a == nil {
+		return map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"custom_response": flattenWafv2CustomResponse(a.CustomResponse),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2Count(a *wafv2.CountAction) interface{} {
+	if a == nil {
+		return map[string]interface{}{}
+	}
+	m := map[string]interface{}{
+		"custom_request_handling": flattenWafv2CustomRequestHandling(a.CustomRequestHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"insert_headers": flattenWafv2CustomHeaders(c.InsertHeaders),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2CustomResponse(r *wafv2.CustomResponse) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"custom_response_body_key": aws.StringValue(r.CustomResponseBodyKey),
+		"response_code":            int(aws.Int64Value(r.ResponseCode)),
+		"response_headers":         flattenWafv2CustomHeaders(r.ResponseHeaders),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2CustomHeaders(h []*wafv2.CustomHTTPHeader) interface{} {
+	out := make([]interface{}, len(h))
+	for i, header := range h {
+		out[i] = flattenWafv2CustomHeader(header)
+	}
+
+	return out
+}
+
+func flattenWafv2CustomHeader(h *wafv2.CustomHTTPHeader) interface{} {
+	if h == nil {
+		return map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"name":  aws.StringValue(h.Name),
+		"value": aws.StringValue(h.Value),
 	}
 
 	return []interface{}{m}

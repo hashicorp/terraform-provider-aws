@@ -59,8 +59,8 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"allow": wafv2EmptySchema(),
-						"block": wafv2EmptySchema(),
+						"allow": wafv2AllowConfigSchema(),
+						"block": wafv2BlockConfigSchema(),
 					},
 				},
 			},
@@ -102,9 +102,9 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": wafv2EmptySchema(),
-									"block": wafv2EmptySchema(),
-									"count": wafv2EmptySchema(),
+									"allow": wafv2AllowConfigSchema(),
+									"block": wafv2BlockConfigSchema(),
+									"count": wafv2CountConfigSchema(),
 								},
 							},
 						},
@@ -119,7 +119,7 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"count": wafv2EmptySchema(),
+									"count": wafv2CountConfigSchema(),
 									"none":  wafv2EmptySchema(),
 								},
 							},
@@ -519,7 +519,7 @@ func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
 	action := &wafv2.OverrideAction{}
 
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
-		action.Count = &wafv2.CountAction{}
+		action.Count = expandWafv2CountAction(v.([]interface{}))
 	}
 
 	if v, ok := m["none"]; ok && len(v.([]interface{})) > 0 {
@@ -538,11 +538,11 @@ func expandWafv2DefaultAction(l []interface{}) *wafv2.DefaultAction {
 	action := &wafv2.DefaultAction{}
 
 	if v, ok := m["allow"]; ok && len(v.([]interface{})) > 0 {
-		action.Allow = &wafv2.AllowAction{}
+		action.Allow = expandWafv2AllowAction(v.([]interface{}))
 	}
 
 	if v, ok := m["block"]; ok && len(v.([]interface{})) > 0 {
-		action.Block = &wafv2.BlockAction{}
+		action.Block = expandWafv2BlockAction(v.([]interface{}))
 	}
 
 	return action
@@ -790,7 +790,7 @@ func flattenWafv2OverrideAction(a *wafv2.OverrideAction) interface{} {
 	m := map[string]interface{}{}
 
 	if a.Count != nil {
-		m["count"] = make([]map[string]interface{}, 1)
+		m["count"] = flattenWafv2Count(a.Count)
 	}
 
 	if a.None != nil {
@@ -808,11 +808,11 @@ func flattenWafv2DefaultAction(a *wafv2.DefaultAction) interface{} {
 	m := map[string]interface{}{}
 
 	if a.Allow != nil {
-		m["allow"] = make([]map[string]interface{}, 1)
+		m["allow"] = flattenWafv2Allow(a.Allow)
 	}
 
 	if a.Block != nil {
-		m["block"] = make([]map[string]interface{}, 1)
+		m["block"] = flattenWafv2Block(a.Block)
 	}
 
 	return []interface{}{m}
