@@ -44,3 +44,27 @@ func ProductStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, productI
 		return output, aws.StringValue(output.ProductViewDetail.Status), err
 	}
 }
+
+func TagOptionStatus(conn *servicecatalog.ServiceCatalog, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.DescribeTagOptionInput{
+			Id: aws.String(id),
+		}
+
+		output, err := conn.DescribeTagOption(input)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, err
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing tag option: %w", err)
+		}
+
+		if output == nil || output.TagOptionDetail == nil {
+			return nil, StatusUnavailable, fmt.Errorf("error describing tag option: empty tag option detail")
+		}
+
+		return output.TagOptionDetail, servicecatalog.StatusAvailable, err
+	}
+}

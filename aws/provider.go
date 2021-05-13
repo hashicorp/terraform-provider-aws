@@ -1007,6 +1007,7 @@ func Provider() *schema.Provider {
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
 			"aws_servicecatalog_product":                              resourceAwsServiceCatalogProduct(),
+			"aws_servicecatalog_tag_option":                           resourceAwsServiceCatalogTagOption(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":              resourceAwsServiceDiscoveryPublicDnsNamespace(),
