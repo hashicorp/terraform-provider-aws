@@ -60,6 +60,7 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 			"target_database": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -147,13 +148,9 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 		dbInput.Parameters = expandStringMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("target_database"); ok {
-		dbInput.TargetDatabase = expandGlueDatabaseTargetDatabase(v.([]interface{}))
-	}
-
 	dbUpdateInput.DatabaseInput = dbInput
 
-	if d.HasChanges("description", "location_uri", "parameters", "target_database") {
+	if d.HasChanges("description", "location_uri", "parameters") {
 		if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
 			return err
 		}
