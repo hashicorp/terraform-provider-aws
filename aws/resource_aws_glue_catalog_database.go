@@ -57,6 +57,23 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
+			"target_database": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -80,6 +97,10 @@ func resourceAwsGlueCatalogDatabaseCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("parameters"); ok {
 		dbInput.Parameters = expandStringMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("target_database"); ok {
+		dbInput.TargetDatabase = expandGlueDatabaseTargetDatabase(v.([]interface{}))
 	}
 
 	input := &glue.CreateDatabaseInput{
@@ -126,9 +147,13 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 		dbInput.Parameters = expandStringMap(v.(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("target_database"); ok {
+		dbInput.TargetDatabase = expandGlueDatabaseTargetDatabase(v.([]interface{}))
+	}
+
 	dbUpdateInput.DatabaseInput = dbInput
 
-	if d.HasChanges("description", "location_uri", "parameters") {
+	if d.HasChanges("description", "location_uri", "parameters", "target_database") {
 		if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
 			return err
 		}
@@ -177,6 +202,10 @@ func resourceAwsGlueCatalogDatabaseRead(d *schema.ResourceData, meta interface{}
 	d.Set("location_uri", database.LocationUri)
 	d.Set("parameters", aws.StringValueMap(database.Parameters))
 
+	if err := d.Set("target_database", flattenGlueDatabaseTargetDatabase(database.TargetDatabase)); err != nil {
+		return fmt.Errorf("error setting target_database: %w", err)
+	}
+
 	return nil
 }
 
@@ -209,4 +238,34 @@ func createAwsGlueCatalogID(d *schema.ResourceData, accountid string) (catalogID
 		catalogID = accountid
 	}
 	return
+}
+
+func expandGlueDatabaseTargetDatabase(l []interface{}) *glue.DatabaseIdentifier {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]interface{})
+	targetDb := &glue.DatabaseIdentifier{
+		CatalogId:    aws.String(s["catalog_id"].(string)),
+		DatabaseName: aws.String(s["database_name"].(string)),
+	}
+
+	return targetDb
+}
+
+func flattenGlueDatabaseTargetDatabase(s *glue.DatabaseIdentifier) []map[string]interface{} {
+	if s == nil {
+		return []map[string]interface{}{}
+	}
+
+	dbIdentifiers := make([]map[string]interface{}, 1)
+
+	dbIdentifier := make(map[string]interface{})
+
+	dbIdentifier["catalog_id"] = aws.StringValue(s.CatalogId)
+	dbIdentifier["database_name"] = aws.StringValue(s.DatabaseName)
+	dbIdentifiers[0] = dbIdentifier
+
+	return dbIdentifiers
 }

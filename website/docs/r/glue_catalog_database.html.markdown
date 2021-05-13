@@ -27,6 +27,12 @@ The following arguments are supported:
 * `description` - (Optional) Description of the database.
 * `location_uri` - (Optional) The location of the database (for example, an HDFS path).
 * `parameters` - (Optional) A list of key-value pairs that define parameters and properties of the database.
+* `target_database` - (Optional) describes a target database for resource linking. see [Target Database](#target-database) below.
+
+### Target Database
+
+* `catalog_id` - (Required) The ID of the Data Catalog in which the database resides.
+* `database_name` - (Required) The name of the catalog database.
 
 ## Attributes Reference
 
