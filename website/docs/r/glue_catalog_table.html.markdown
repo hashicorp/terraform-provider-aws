@@ -97,6 +97,7 @@ The following arguments are supported:
 * `table_type` - (Optional) The type of this table (EXTERNAL_TABLE, VIRTUAL_VIEW, etc.). While optional, some Athena DDL queries such as `ALTER TABLE` and `SHOW CREATE TABLE` will fail if this argument is empty.
 * `parameters` - (Optional) Properties associated with this table, as a list of key-value pairs.
 * `partition_index` - (Optional) A list of partition indexes. see [Partition Index](#partition-index) below.
+* `target_database` - (Optional) describes a target table for resource linking. see [Target Table](#target-table) below.
 
 ### Partition Index
 
@@ -160,6 +161,12 @@ The following arguments are supported:
 * `schema_arn` - (Optional) The Amazon Resource Name (ARN) of the schema. One of `schema_arn` or `schema_name` has to be provided.
 * `schema_name` - (Optional) The name of the schema. One of `schema_arn` or `schema_name` has to be provided.
 * `registry_name` - (Optional) The name of the schema registry that contains the schema. Must be provided when `schema_name` is specified and conflicts with `schema_arn`.
+
+### Target Table
+
+* `catalog_id` - (Required) The ID of the Data Catalog in which the table resides.
+* `database_name` - (Required) The name of the catalog database that contains the target table.
+* `name` - (Required) The name of the target table.
 
 ## Attributes Reference
 

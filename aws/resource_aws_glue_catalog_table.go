@@ -318,6 +318,28 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 					},
 				},
 			},
+			"target_table": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -405,6 +427,10 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
 		return fmt.Errorf("error setting parameters: %w", err)
+	}
+
+	if err := d.Set("target_table", flattenGlueTableTargetTable(table.TargetTable)); err != nil {
+		return fmt.Errorf("error setting target_table: %w", err)
 	}
 
 	partIndexInput := &glue.GetPartitionIndexesInput{
@@ -508,6 +534,10 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 
 	if v, ok := d.GetOk("parameters"); ok {
 		tableInput.Parameters = expandStringMap(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("target_table"); ok {
+		tableInput.TargetTable = expandGlueTableTargetTable(v.([]interface{}))
 	}
 
 	return tableInput
@@ -944,4 +974,37 @@ func flattenGlueTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]inte
 	schemaIDInfoSlice[0] = schemaIDInfo
 
 	return schemaIDInfoSlice
+}
+
+func expandGlueTableTargetTable(l []interface{}) *glue.TableIdentifier {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	s := l[0].(map[string]interface{})
+	targetTable := &glue.TableIdentifier{
+		CatalogId:    aws.String(s["catalog_id"].(string)),
+		DatabaseName: aws.String(s["database_name"].(string)),
+		Name:         aws.String(s["name"].(string)),
+	}
+
+	return targetTable
+}
+
+func flattenGlueTableTargetTable(s *glue.TableIdentifier) []map[string]interface{} {
+	if s == nil {
+		return []map[string]interface{}{}
+	}
+
+	tableIdentifiers := make([]map[string]interface{}, 1)
+
+	tableIdentifier := make(map[string]interface{})
+
+	tableIdentifier["catalog_id"] = aws.StringValue(s.CatalogId)
+	tableIdentifier["database_name"] = aws.StringValue(s.DatabaseName)
+	tableIdentifier["name"] = aws.StringValue(s.Name)
+
+	tableIdentifiers[0] = tableIdentifier
+
+	return tableIdentifiers
 }
