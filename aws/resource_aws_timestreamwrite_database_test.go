@@ -17,8 +17,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_timestreamwrite_database", &resource.Sweeper{
-		Name: "aws_timestreamwrite_database",
-		F:    testSweepTimestreamWriteDatabases,
+		Name:         "aws_timestreamwrite_database",
+		F:            testSweepTimestreamWriteDatabases,
+		Dependencies: []string{"aws_timestreamwrite_table"},
 	})
 }
 
