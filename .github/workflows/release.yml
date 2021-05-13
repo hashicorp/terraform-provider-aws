@@ -15,3 +15,12 @@ jobs:
           asana_project_gid: ${{ secrets.asana_project_gid }}
           asana_github_url_field_gid: ${{ secrets.asana_github_url_field_gid }}
           github_release_name: ${{ github.event.release.tag_name }}
+  project-archive:
+    name: Archive Released Cards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: breathingdust/github-project-archive@v1
+        with:
+          github_done_column_id: 11513756
+          github_release_name: ${{ github.event.release.tag_name }}
+          github_token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
