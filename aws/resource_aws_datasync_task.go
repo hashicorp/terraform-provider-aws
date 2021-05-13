@@ -14,6 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -44,6 +45,24 @@ func resourceAwsDataSyncTask() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"excludes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.FilterType_Values(), false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -86,6 +105,12 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							Default:      datasync.MtimePreserve,
 							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
+						"overwrite_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.OverwriteModeAlways,
+							ValidateFunc: validation.StringInSlice(datasync.OverwriteMode_Values(), false),
+						},
 						"posix_permissions": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -103,6 +128,18 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							Optional:     true,
 							Default:      datasync.PreserveDevicesNone,
 							ValidateFunc: validation.StringInSlice(datasync.PreserveDevices_Values(), false),
+						},
+						"task_queueing": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.TaskQueueingEnabled,
+							ValidateFunc: validation.StringInSlice(datasync.TaskQueueing_Values(), false),
+						},
+						"transfer_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.TransferModeChanged,
+							ValidateFunc: validation.StringInSlice(datasync.TransferMode_Values(), false),
 						},
 						"uid": {
 							Type:         schema.TypeString,
@@ -163,16 +200,20 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 		Tags:                   tags.IgnoreAws().DatasyncTags(),
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
-		input.Schedule = expandAwsDataSyncTaskSchedule(v.([]interface{}))
-	}
-
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
 		input.CloudWatchLogGroupArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("excludes"); ok {
+		input.Excludes = expandAwsDataSyncFilterRules(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("schedule"); ok {
+		input.Schedule = expandAwsDataSyncTaskSchedule(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Task: %s", input)
@@ -198,7 +239,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 
 	output, err := finder.TaskByARN(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -211,6 +252,9 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
+	if err := d.Set("excludes", flattenAwsDataSyncFilterRules(output.Excludes)); err != nil {
+		return fmt.Errorf("error setting excludes: %w", err)
+	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenDataSyncOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
@@ -252,8 +296,8 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.CloudWatchLogGroupArn = aws.String(d.Get("cloudwatch_log_group_arn").(string))
 		}
 
-		if d.HasChanges("schedule") {
-			input.Schedule = expandAwsDataSyncTaskSchedule(d.Get("schedule").([]interface{}))
+		if d.HasChanges("excludes") {
+			input.Excludes = expandAwsDataSyncFilterRules(d.Get("excludes").([]interface{}))
 		}
 
 		if d.HasChanges("name") {
@@ -262,6 +306,10 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 
 		if d.HasChanges("options") {
 			input.Options = expandDataSyncOptions(d.Get("options").([]interface{}))
+		}
+
+		if d.HasChanges("schedule") {
+			input.Schedule = expandAwsDataSyncTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
@@ -326,4 +374,36 @@ func flattenAwsDataSyncTaskSchedule(schedule *datasync.TaskSchedule) []interface
 	}
 
 	return []interface{}{m}
+}
+
+func expandAwsDataSyncFilterRules(l []interface{}) []*datasync.FilterRule {
+	filterRules := []*datasync.FilterRule{}
+
+	for _, mRaw := range l {
+		if mRaw == nil {
+			continue
+		}
+		m := mRaw.(map[string]interface{})
+		filterRule := &datasync.FilterRule{
+			FilterType: aws.String(m["filter_type"].(string)),
+			Value:      aws.String(m["value"].(string)),
+		}
+		filterRules = append(filterRules, filterRule)
+	}
+
+	return filterRules
+}
+
+func flattenAwsDataSyncFilterRules(filterRules []*datasync.FilterRule) []interface{} {
+	l := []interface{}{}
+
+	for _, filterRule := range filterRules {
+		m := map[string]interface{}{
+			"filter_type": aws.StringValue(filterRule.FilterType),
+			"value":       aws.StringValue(filterRule.Value),
+		}
+		l = append(l, m)
+	}
+
+	return l
 }
