@@ -1356,7 +1356,7 @@ resource "aws_glue_catalog_table" "test" {
 resource "aws_glue_catalog_database" "test2" {
   name = "%[1]s-2"
 }
-  
+
 resource "aws_glue_catalog_table" "test2" {
   name          = "%[1]s-2"
   database_name = aws_glue_catalog_database.test2.name
