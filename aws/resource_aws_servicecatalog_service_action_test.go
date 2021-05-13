@@ -227,7 +227,7 @@ resource "aws_servicecatalog_service_action" "test" {
 
   definition {
     name    = "AWS-RestartEC2Instance"
-	version = "1"
+    version = "1"
   }
 }
 `, rName)
@@ -268,8 +268,8 @@ resource "aws_servicecatalog_service_action" "test" {
 
   definition {
     assume_role = aws_iam_role.test.arn
-	name        = "AWS-RestartEC2Instance"
-	version     = "1"
+    name        = "AWS-RestartEC2Instance"
+    version     = "1"
   }
 }
 `, rName)
