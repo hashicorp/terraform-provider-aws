@@ -9,9 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/datasync/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -38,14 +41,15 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"ip_address", "private_link_endpoint"},
+				ExactlyOneOf:  []string{"activation_key", "ip_address"},
+				ConflictsWith: []string{"private_link_endpoint"},
 			},
 			"ip_address": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"activation_key"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"activation_key", "ip_address"},
 			},
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
@@ -86,79 +90,75 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).datasyncconn
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
-	region := meta.(*AWSClient).region
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
 
 	// Perform one time fetch of activation key from gateway IP address
 	if activationKey == "" {
-		if agentIpAddress == "" {
-			return fmt.Errorf("either activation_key or ip_address must be provided")
-		}
-
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 			Timeout: time.Second * 10,
 		}
+		region := meta.(*AWSClient).region
 
-		requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
+		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
 			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, v.(string))
+		} else {
+			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
 		}
 
-		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
-			return fmt.Errorf("error creating HTTP request: %s", err)
+			return fmt.Errorf("error creating HTTP request: %w", err)
 		}
 
 		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
+
+			if err, ok := err.(net.Error); ok {
+				return resource.RetryableError(fmt.Errorf("error making HTTP request: %w", err))
+			}
+
 			if err != nil {
-				if err, ok := err.(net.Error); ok {
-					errMessage := fmt.Errorf("error making HTTP request: %s", err)
-					log.Printf("[DEBUG] retryable %s", errMessage)
-					return resource.RetryableError(errMessage)
-				}
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
+				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
 			}
 
 			if response == nil {
-				return resource.NonRetryableError(fmt.Errorf("Error retrieving response for activation key request: %s", err))
+				return resource.NonRetryableError(fmt.Errorf("no response for activation key request"))
 			}
 
 			log.Printf("[DEBUG] Received HTTP response: %#v", response)
-			if response.StatusCode != 302 {
-				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode))
+			if expected := http.StatusFound; expected != response.StatusCode {
+				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code %d, received: %d", expected, response.StatusCode))
 			}
 
 			redirectURL, err := response.Location()
 			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %s", err))
+				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %w", err))
 			}
 
-			errorType := redirectURL.Query().Get("errorType")
-			if errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
+			if errorType := redirectURL.Query().Get("errorType"); errorType == "PRIVATE_LINK_ENDPOINT_UNREACHABLE" {
 				errMessage := fmt.Errorf("got error during activation: %s", errorType)
-				log.Printf("[DEBUG] retryable %s", errMessage)
 				return resource.RetryableError(errMessage)
 			}
 
 			activationKey = redirectURL.Query().Get("activationKey")
+
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			return fmt.Errorf("timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
+			return fmt.Errorf("timeout retrieving activation key from IP Address (%s): %w", agentIpAddress, err)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
+			return fmt.Errorf("error retrieving activation key from IP Address (%s): %w", agentIpAddress, err)
 		}
 
 		if activationKey == "" {
@@ -175,10 +175,6 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		input.AgentName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
-		input.VpcEndpointId = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("security_group_arns"); ok {
 		input.SecurityGroupArns = expandStringSet(v.(*schema.Set))
 	}
@@ -187,35 +183,21 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		input.SubnetArns = expandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+		input.VpcEndpointId = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Creating DataSync Agent: %s", input)
 	output, err := conn.CreateAgent(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Agent: %s", err)
+		return fmt.Errorf("error creating DataSync Agent: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.AgentArn))
 
 	// Agent activations can take a few minutes
-	descAgentInput := &datasync.DescribeAgentInput{
-		AgentArn: aws.String(d.Id()),
-	}
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeAgent(descAgentInput)
-
-		if isAWSErr(err, "InvalidRequestException", "does not exist") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeAgent(descAgentInput)
-	}
-	if err != nil {
+	if _, err := waiter.AgentReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
 
@@ -227,38 +209,36 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := &datasync.DescribeAgentInput{
-		AgentArn: aws.String(d.Id()),
-	}
+	output, err := finder.AgentByARN(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DataSync Agent: %s", input)
-	output, err := conn.DescribeAgent(input)
-
-	if isAWSErr(err, "InvalidRequestException", "does not exist") {
-		log.Printf("[WARN] DataSync Agent %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DataSync Agent (%s)not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Agent (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.AgentArn)
 	d.Set("name", output.Name)
-
-	if output.PrivateLinkConfig != nil {
-		plc := output.PrivateLinkConfig
+	if plc := output.PrivateLinkConfig; plc != nil {
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
 		d.Set("security_group_arns", flattenStringList(plc.SecurityGroupArns))
 		d.Set("subnet_arns", flattenStringList(plc.SubnetArns))
 		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
+	} else {
+		d.Set("private_link_endpoint", "")
+		d.Set("security_group_arns", nil)
+		d.Set("subnet_arns", nil)
+		d.Set("vpc_endpoint_id", "")
 	}
 
 	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Agent (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
@@ -286,8 +266,9 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 
 		log.Printf("[DEBUG] Updating DataSync Agent: %s", input)
 		_, err := conn.UpdateAgent(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating DataSync Agent (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -295,7 +276,7 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating DataSync Agent (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -305,19 +286,17 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
 
-	input := &datasync.DeleteAgentInput{
+	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
+	_, err := conn.DeleteAgent(&datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting DataSync Agent: %s", input)
-	_, err := conn.DeleteAgent(input)
-
-	if isAWSErr(err, "InvalidRequestException", "does not exist") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Agent (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting DataSync Agent (%s): %w", d.Id(), err)
 	}
 
 	return nil
