@@ -11,65 +11,6 @@ poll "closed_issue_locker" "locker" {
   EOF
 }
 
-behavior "deprecated_import_commenter" "hashicorp_terraform" {
-  import_regexp = "github.com/hashicorp/terraform/"
-  marker_label  = "terraform-plugin-sdk-migration"
-
-  message = <<-EOF
-    Hello, and thank you for your contribution!
-
-    This project recently migrated to the [standalone Terraform Plugin SDK](https://www.terraform.io/docs/extend/plugin-sdk.html). While the migration helps speed up future feature requests and bug fixes to the Terraform AWS Provider's interface with Terraform, it has the unfortunate consequence of requiring minor changes to pull requests created using the old SDK.
-
-    This pull request appears to include the Go import path `${var.import_path}`, which was from the older SDK. The newer SDK uses import paths beginning with `github.com/hashicorp/terraform-plugin-sdk/`.
-
-    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current default (main) branch (example below); replacing any remaining old import paths with the newer ones.
-
-    ```console
-    $ git fetch --all
-    $ git rebase origin/main
-    ```
-
-    Another option is to create a new branch from the current default (main) with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
-
-    We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
-  EOF
-}
-
-behavior "deprecated_import_commenter" "sdkv1" {
-  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/(helper/(acctest|customdiff|logging|resource|schema|structure|validation)|terraform)"
-  marker_label  = "terraform-plugin-sdk-v1"
-
-  message = <<-EOF
-    Hello, and thank you for your contribution!
-
-    This project recently upgraded to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html)
-
-    This pull request appears to include at least one V1 import path of the SDK (`${var.import_path}`). Please import the V2 path `github.com/hashicorp/terraform-plugin-sdk/v2/helper/PACKAGE`
-
-    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current default (main) branch (example below); replacing any remaining old import paths with the newer ones.
-
-    ```console
-    $ git fetch --all
-    $ git rebase origin/main
-    ```
-
-    Another option is to create a new branch from the current default (main) with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
-
-    We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
-  EOF
-}
-
-behavior "deprecated_import_commenter" "sdkv1_deprecated" {
-  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/helper/(hashcode|mutexkv|encryption)"
-  marker_label  = "terraform-plugin-sdk-v1"
-
-  message = <<-EOF
-    Hello, and thank you for your contribution!
-    This pull request appears to include the Go import path `${var.import_path}`, which was deprecated after upgrading to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html).
-    You may use a now internalized version of the package found in `github.com/terraform-providers/terraform-provider-aws/aws/internal/PACKAGE`.
-  EOF
-}
-
 queued_behavior "release_commenter" "releases" {
   repo_prefix = "terraform-provider-"
 
