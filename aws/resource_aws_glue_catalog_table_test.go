@@ -33,7 +33,6 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "0"),
 				),
