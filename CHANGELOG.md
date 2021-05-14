@@ -1,5 +1,9 @@
 ## 3.41.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_pinpoint_email_channel: `role_arn` argument is optional ([#19361](https://github.com/hashicorp/terraform-provider-aws/issues/19361))
+
 ## 3.40.0 (May 13, 2021)
 
 FEATURES:
