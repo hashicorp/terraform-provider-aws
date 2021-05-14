@@ -14,7 +14,10 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsAccountPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
@@ -39,7 +42,10 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 	resourceName := "aws_macie2_organization_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsAccountPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
