@@ -97,13 +97,16 @@ func resourceAwsAppconfigConfigurationProfileCreate(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).appconfigconn
 
 	input := &appconfig.CreateConfigurationProfileInput{
-		Name:             aws.String(d.Get("name").(string)),
-		Description:      aws.String(d.Get("description").(string)),
-		LocationUri:      aws.String(d.Get("location_uri").(string)),
-		RetrievalRoleArn: aws.String(d.Get("retrieval_role_arn").(string)),
-		ApplicationId:    aws.String(d.Get("application_id").(string)),
-		Validators:       expandAppconfigValidators(d.Get("validators").([]interface{})),
-		Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
+		Name:          aws.String(d.Get("name").(string)),
+		Description:   aws.String(d.Get("description").(string)),
+		LocationUri:   aws.String(d.Get("location_uri").(string)),
+		ApplicationId: aws.String(d.Get("application_id").(string)),
+		Validators:    expandAppconfigValidators(d.Get("validators").([]interface{})),
+		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AppconfigTags(),
+	}
+
+	if retrievalRoleARN := d.Get("retrieval_role_arn").(string); retrievalRoleARN != "" {
+		input.RetrievalRoleArn = aws.String(retrievalRoleARN)
 	}
 
 	profile, err := conn.CreateConfigurationProfile(input)
