@@ -13,6 +13,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
 )
 
+const (
+	EnvVarMacie2PrincipalEmail             = "AWS_MACIE2_ACCOUNT_EMAIL"
+	EnvVarMacie2AlternateEmail             = "AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL"
+	EnvVarMacie2PrincipalEmailMessageError = "Environment variable AWS_MACIE2_ACCOUNT_EMAIL is not set. " +
+		"To properly test inviting Macie member account must be provided."
+	EnvVarMacie2AlternateEmailMessageError = "Environment variable AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL is not set. " +
+		"To properly test inviting Macie member account must be provided."
+)
+
 func testAccAwsMacie2Member_basic(t *testing.T) {
 	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
@@ -78,7 +87,7 @@ func testAccAwsMacie2Member_disappears(t *testing.T) {
 	})
 }
 
-func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
+func testAccAwsMacie2Member_invite(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
@@ -95,10 +104,11 @@ func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
 		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusEnabled),
+				Config: testAccAwsMacieMemberConfigInvite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
@@ -107,10 +117,11 @@ func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused),
+				Config: testAccAwsMacieMemberConfigInvite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
@@ -119,11 +130,117 @@ func testAccAwsMacie2InvitationAccepter_memberStatus(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused),
+				Config:                  testAccAwsMacieMemberConfigInvite(email, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{"invite_message"},
+			},
+		},
+	})
+}
+
+func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
+	var macie2Output macie2.GetMemberOutput
+	var providers []*schema.Provider
+	resourceName := "aws_macie2_member.member"
+	dataSourceAlternate := "data.aws_caller_identity.member"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2AlternateEmail, EnvVarMacie2AlternateEmailMessageError)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieMemberConfigInvite(email, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+				),
+			},
+			{
+				Config: testAccAwsMacieMemberConfigInvite(email, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
+					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+				),
+			},
+			{
+				Config:                  testAccAwsMacieMemberConfigInvite(email, false),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"invite_message"},
+			},
+		},
+	})
+}
+
+func testAccAwsMacie2Member_status(t *testing.T) {
+	var macie2Output macie2.GetMemberOutput
+	var providers []*schema.Provider
+	resourceName := "aws_macie2_member.member"
+	dataSourceAlternate := "data.aws_caller_identity.member"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2AlternateEmail, EnvVarMacie2AlternateEmailMessageError)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		CheckDestroy:      testAccCheckAwsMacie2InvitationAccepterDestroy,
+		ErrorCheck:        testAccErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusEnabled, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+				),
+			},
+			{
+				Config: testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMacie2MemberExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					testAccCheckResourceAttrAccountID(resourceName, "administrator_account_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
+					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+				),
+			},
+			{
+				Config:                  testAccAwsMacieMemberConfigStatus(email, macie2.MacieStatusPaused, true),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"invite_message"},
 			},
 		},
 	})
@@ -261,7 +378,7 @@ resource "aws_macie2_member" "member" {
 `, email)
 }
 
-func testAccAwsMacieMemberConfigStatus(email, memberStatus string) string {
+func testAccAwsMacieMemberConfigInvite(email string, invite bool) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
 data "aws_caller_identity" "member" {
   provider = "awsalternate"
@@ -276,20 +393,42 @@ resource "aws_macie2_account" "member" {
 }
 
 resource "aws_macie2_member" "member" {
-  account_id = data.aws_caller_identity.member.account_id
-  email      = %[1]q
-  status     = %[2]q
-  depends_on = [aws_macie2_account.admin]
+  account_id     = data.aws_caller_identity.member.account_id
+  email          = %[1]q
+  invite         = %[2]t
+  invite_message = "This is a message of the invitation"
+  depends_on     = [aws_macie2_account.admin]
+}
+`, email, invite)
 }
 
-resource "aws_macie2_invitation" "member" {
-  account_id = aws_macie2_member.member.account_id
+func testAccAwsMacieMemberConfigStatus(email, memberStatus string, invite bool) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "member" {
+  provider = "awsalternate"
+}
+
+data "aws_caller_identity" "admin" {}
+
+resource "aws_macie2_account" "admin" {}
+
+resource "aws_macie2_account" "member" {
+  provider = "awsalternate"
+}
+
+resource "aws_macie2_member" "member" {
+  account_id     = data.aws_caller_identity.member.account_id
+  email          = %[1]q
+  status         = %[2]q
+  invite         = %[3]t
+  invite_message = "This is a message of the invitation"
+  depends_on     = [aws_macie2_account.admin]
 }
 
 resource "aws_macie2_invitation_accepter" "member" {
   provider                 = "awsalternate"
   administrator_account_id = data.aws_caller_identity.admin.account_id
-  depends_on               = [aws_macie2_invitation.member]
+  depends_on               = [aws_macie2_member.member]
 }
-`, email, memberStatus)
+`, email, memberStatus, invite)
 }

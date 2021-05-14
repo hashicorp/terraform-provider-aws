@@ -20,21 +20,17 @@ resource "aws_macie2_account" "primary" {
 resource "aws_macie2_account" "member" {}
 
 resource "aws_macie2_member" "primary" {
-  provider   = "awsalternate"
-  account_id = "ACCOUNT ID"
-  email      = "EMAIL"
-  depends_on = [aws_macie2_account.primary]
-}
-
-resource "aws_macie2_invitation" "primary" {
-  provider    = "awsalternate"
-  account_ids = ["ACCOUNT IDS"]
-  depends_on  = [aws_macie2_member.primary]
+  provider       = "awsalternate"
+  account_id     = "ACCOUNT ID"
+  email          = "EMAIL"
+  invite         = true
+  invite_message = "Message of the invite"
+  depends_on     = [aws_macie2_account.primary]
 }
 
 resource "aws_macie2_invitation_accepter" "test" {
   administrator_account_id = "ADMINISTRATOR ACCOUNT ID"
-  depends_on               = [aws_macie2_invitation.primary]
+  depends_on               = [aws_macie2_member.primary]
 }
 ```
 

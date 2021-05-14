@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/macie2/waiter"
 )
 
 func resourceAwsMacie2Member() *schema.Resource {
@@ -65,7 +66,21 @@ func resourceAwsMacie2Member() *schema.Resource {
 			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.MacieStatus_Values(), false),
+			},
+			"invite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"invite_disable_email_notification": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"invite_message": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -118,6 +133,56 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(accountId)
 
+	if !d.Get("invite").(bool) {
+		return resourceMacie2MemberRead(ctx, d, meta)
+	}
+
+	// Invitation workflow
+
+	inputInvite := &macie2.CreateInvitationsInput{
+		AccountIds: []*string{aws.String(d.Id())},
+	}
+
+	if v, ok := d.GetOk("invite_disable_email_notification"); ok {
+		inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("invite_message"); ok {
+		inputInvite.Message = aws.String(v.(string))
+	}
+
+	log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
+
+	var output *macie2.CreateInvitationsOutput
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
+
+		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
+	}
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+	}
+
+	if len(output.UnprocessedAccounts) != 0 {
+		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+	}
+
+	if _, err = waiter.MemberInvited(ctx, conn, d.Id()); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+	}
+
 	return resourceMacie2MemberRead(ctx, d, meta)
 }
 
@@ -161,23 +226,108 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags_all", d.Id(), err))
 	}
 
+	status := aws.StringValue(resp.RelationshipStatus)
+	log.Printf("[DEBUG] print resp.RelationshipStatus: %v", aws.StringValue(resp.RelationshipStatus))
+	if status == macie2.RelationshipStatusEnabled ||
+		status == macie2.RelationshipStatusInvited || status == macie2.RelationshipStatusEmailVerificationInProgress ||
+		status == macie2.RelationshipStatusPaused {
+		d.Set("invite", true)
+	}
+
+	if status == macie2.RelationshipStatusRemoved {
+		d.Set("invite", false)
+	}
+
+	// To fake a result for status in order to avoid an error related to difference for ImportVerifyState
+	// It sets to MacieStatusPaused because it can only be changed to PAUSED, normally when it's accepted its status is ENABLED
+	status = macie2.MacieStatusEnabled
+	if aws.StringValue(resp.RelationshipStatus) == macie2.RelationshipStatusPaused {
+		status = macie2.MacieStatusPaused
+	}
+	d.Set("status", status)
+
 	return nil
 }
 
 func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).macie2conn
 
-	input := &macie2.UpdateMemberSessionInput{
-		Id: aws.String(d.Id()),
+	// Invitation workflow
+
+	if d.HasChange("invite") {
+		if d.Get("invite").(bool) {
+			inputInvite := &macie2.CreateInvitationsInput{
+				AccountIds: []*string{aws.String(d.Id())},
+			}
+
+			if v, ok := d.GetOk("invite_disable_email_notification"); ok {
+				inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
+			}
+			if v, ok := d.GetOk("invite_message"); ok {
+				inputInvite.Message = aws.String(v.(string))
+			}
+
+			log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
+			var output *macie2.CreateInvitationsOutput
+			var err error
+			err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+				output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
+
+				if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
+					return resource.RetryableError(err)
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
+			}
+
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+			}
+
+			if len(output.UnprocessedAccounts) != 0 {
+				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+			}
+
+			if _, err = waiter.MemberInvited(ctx, conn, d.Id()); err != nil {
+				return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+			}
+		} else {
+			input := &macie2.DisassociateMemberInput{
+				Id: aws.String(d.Id()),
+			}
+
+			_, err := conn.DisassociateMemberWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+					tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+					return nil
+				}
+				return diag.FromErr(fmt.Errorf("error disassociating Macie Member invite (%s): %w", d.Id(), err))
+			}
+		}
 	}
+
+	// End Invitation workflow
 
 	if d.HasChange("status") {
-		input.Status = aws.String(d.Get("status").(string))
-	}
+		input := &macie2.UpdateMemberSessionInput{
+			Id:     aws.String(d.Id()),
+			Status: aws.String(d.Get("status").(string)),
+		}
 
-	_, err := conn.UpdateMemberSessionWithContext(ctx, input)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
+		_, err := conn.UpdateMemberSessionWithContext(ctx, input)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
+		}
+
 	}
 
 	return resourceMacie2MemberRead(ctx, d, meta)
