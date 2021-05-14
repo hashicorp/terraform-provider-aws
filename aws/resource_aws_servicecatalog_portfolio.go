@@ -43,7 +43,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 20),
+				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -54,7 +54,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			"provider_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 20),
+				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
