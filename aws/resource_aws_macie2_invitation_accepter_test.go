@@ -15,8 +15,8 @@ import (
 
 func testAccAwsMacie2InvitationAccepter_basic(t *testing.T) {
 	var providers []*schema.Provider
-	resourceName := "aws_macie2_invitation_accepter.test"
-	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
+	resourceName := "aws_macie2_invitation_accepter.member"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2PrincipalEmail, EnvVarMacie2PrincipalEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -99,69 +99,33 @@ func testAccCheckAwsMacie2InvitationAccepterDestroy(s *terraform.State) error {
 
 func testAccAwsMacieInvitationAccepterConfigBasic(email string) string {
 	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_caller_identity" "primary" {
+data "aws_caller_identity" "admin" {
   provider = "awsalternate"
 }
 
 data "aws_caller_identity" "member" {}
 
-resource "aws_macie2_account" "primary" {
+resource "aws_macie2_account" "admin" {
   provider = "awsalternate"
 }
 
 resource "aws_macie2_account" "member" {}
 
-resource "aws_macie2_member" "primary" {
+resource "aws_macie2_member" "member" {
   provider   = "awsalternate"
   account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
-  depends_on = [aws_macie2_account.primary]
+  depends_on = [aws_macie2_account.admin]
 }
 
-resource "aws_macie2_invitation" "primary" {
+resource "aws_macie2_invitation" "member" {
   provider   = "awsalternate"
-  account_id = data.aws_caller_identity.member.account_id
-  depends_on = [aws_macie2_member.primary]
+  account_id = aws_macie2_member.member.account_id
 }
 
-resource "aws_macie2_invitation_accepter" "test" {
-  administrator_account_id = data.aws_caller_identity.primary.account_id
-  depends_on               = [aws_macie2_invitation.primary]
+resource "aws_macie2_invitation_accepter" "member" {
+  administrator_account_id = data.aws_caller_identity.admin.account_id
+  depends_on               = [aws_macie2_invitation.member]
 }
 `, email)
-}
-
-func testAccAwsMacieInvitationAccepterConfigMemberStatus(email, memberStatus string) string {
-	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
-data "aws_caller_identity" "primary" {
-  provider = "awsalternate"
-}
-
-data "aws_caller_identity" "member" {}
-
-resource "aws_macie2_account" "primary" {
-  provider = "awsalternate"
-}
-
-resource "aws_macie2_account" "member" {}
-
-resource "aws_macie2_member" "primary" {
-  provider   = "awsalternate"
-  account_id = data.aws_caller_identity.member.account_id
-  email      = %[1]q
-  status     = %[2]q
-  depends_on = [aws_macie2_account.primary]
-}
-
-resource "aws_macie2_invitation" "primary" {
-  provider   = "awsalternate"
-  account_id = data.aws_caller_identity.member.account_id
-  depends_on = [aws_macie2_member.primary]
-}
-
-resource "aws_macie2_invitation_accepter" "test" {
-  administrator_account_id = data.aws_caller_identity.primary.account_id
-  depends_on               = [aws_macie2_invitation.primary]
-}
-`, email, memberStatus)
 }

@@ -14,15 +14,18 @@ import (
 )
 
 const (
-	EnvVarMacie2MemberEmail             = "AWS_MACIE2_MEMBER_EMAIL"
-	EnvVarMacie2MemberEmailMessageError = "Environment variable AWS_MACIE2_MEMBER_EMAIL is not set. " +
+	EnvVarMacie2PrincipalEmail             = "AWS_MACIE2_ACCOUNT_EMAIL"
+	EnvVarMacie2AlternateEmail             = "AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL"
+	EnvVarMacie2PrincipalEmailMessageError = "Environment variable AWS_MACIE2_ACCOUNT_EMAIL is not set. " +
+		"To properly test inviting Macie member account must be provided."
+	EnvVarMacie2AlternateEmailMessageError = "Environment variable AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL is not set. " +
 		"To properly test inviting Macie member account must be provided."
 )
 
 func testAccAwsMacie2Invitation_basic(t *testing.T) {
 	var providers []*schema.Provider
-	resourceName := "aws_macie2_invitation.test"
-	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
+	resourceName := "aws_macie2_invitation.member"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2AlternateEmail, EnvVarMacie2AlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -52,8 +55,8 @@ func testAccAwsMacie2Invitation_basic(t *testing.T) {
 
 func testAccAwsMacie2Invitation_disappears(t *testing.T) {
 	var providers []*schema.Provider
-	resourceName := "aws_macie2_invitation.test"
-	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2MemberEmail, EnvVarMacie2MemberEmailMessageError)
+	resourceName := "aws_macie2_invitation.member"
+	email := envvar.TestSkipIfEmpty(t, EnvVarMacie2AlternateEmail, EnvVarMacie2AlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -159,17 +162,17 @@ data "aws_caller_identity" "member" {
   provider = "awsalternate"
 }
 
-resource "aws_macie2_account" "primary" {}
+resource "aws_macie2_account" "admin" {}
 
-resource "aws_macie2_member" "primary" {
+resource "aws_macie2_member" "member" {
   account_id = data.aws_caller_identity.member.account_id
   email      = %[1]q
-  depends_on = [aws_macie2_account.primary]
+  depends_on = [aws_macie2_account.admin]
 }
 
-resource "aws_macie2_invitation" "test" {
+resource "aws_macie2_invitation" "member" {
   account_id = data.aws_caller_identity.member.account_id
-  depends_on = [aws_macie2_member.primary]
+  depends_on = [aws_macie2_member.member]
 }
 `, email)
 }

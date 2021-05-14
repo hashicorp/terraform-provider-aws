@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 )
 
-// GetMemberNotAssociated Return a list of members not associated and compare with account ID
-func GetMemberNotAssociated(conn *macie2.Macie2, accountID string) (*macie2.Member, error) {
+// MemberNotAssociated Return a list of members not associated and compare with account ID
+func MemberNotAssociated(conn *macie2.Macie2, accountID string) (*macie2.Member, error) {
 	input := &macie2.ListMembersInput{
 		OnlyAssociated: aws.String("false"),
 	}

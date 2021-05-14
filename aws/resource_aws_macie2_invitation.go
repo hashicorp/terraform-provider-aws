@@ -76,10 +76,6 @@ func resourceMacie2InvitationCreate(ctx context.Context, d *schema.ResourceData,
 			return resource.NonRetryableError(err)
 		}
 
-		if len(output.UnprocessedAccounts) != 0 {
-			return resource.NonRetryableError(err)
-		}
-
 		return nil
 	})
 

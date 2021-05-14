@@ -10,7 +10,7 @@ import (
 // MemberRelationshipStatus fetches the Member and its relationship status
 func MemberRelationshipStatus(conn *macie2.Macie2, adminAccountID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		adminAccount, err := finder.GetMemberNotAssociated(conn, adminAccountID)
+		adminAccount, err := finder.MemberNotAssociated(conn, adminAccountID)
 
 		if err != nil {
 			return nil, "Unknown", err
