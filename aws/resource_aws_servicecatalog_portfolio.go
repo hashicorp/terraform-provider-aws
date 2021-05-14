@@ -53,7 +53,7 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 			},
 			"provider_name": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"tags":     tagsSchema(),
