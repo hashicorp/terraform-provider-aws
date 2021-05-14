@@ -52,7 +52,7 @@ func ProductDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, product
 		Pending: []string{servicecatalog.StatusCreating, servicecatalog.StatusAvailable, ProductStatusCreated, StatusUnavailable},
 		Target:  []string{StatusNotFound},
 		Refresh: ProductStatus(conn, acceptLanguage, productID),
-		Timeout: ProductReadyTimeout,
+		Timeout: ProductDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -167,8 +167,8 @@ func PortfolioShareDeleted(conn *servicecatalog.ServiceCatalog, portfolioID, sha
 
 func PortfolioShareDeletedWithToken(conn *servicecatalog.ServiceCatalog, token string) (*servicecatalog.DescribePortfolioShareStatusOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{servicecatalog.ShareStatusCompleted, servicecatalog.ShareStatusNotStarted, servicecatalog.ShareStatusInProgress, StatusNotFound, StatusUnavailable},
-		Target:  []string{StatusNotFound},
+		Pending: []string{servicecatalog.ShareStatusNotStarted, servicecatalog.ShareStatusInProgress, StatusNotFound, StatusUnavailable},
+		Target:  []string{servicecatalog.ShareStatusCompleted},
 		Refresh: PortfolioShareStatusWithToken(conn, token),
 		Timeout: PortfolioShareCreateTimeout,
 	}

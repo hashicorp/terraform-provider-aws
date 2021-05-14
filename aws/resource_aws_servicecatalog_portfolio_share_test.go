@@ -60,7 +60,12 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccOrganizationsEnabledPreCheck(t)
+			testAccOrganizationManagementAccountPreCheck(t)
+			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
@@ -71,10 +76,10 @@ func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganization),
+					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganizationalUnit),
 				),
 			},
 			{
@@ -186,11 +191,11 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = %[1]q
 }
 
-resource "aws_organizations_organization" "test" {}
+data "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_servicecatalog_portfolio_share" "test" {

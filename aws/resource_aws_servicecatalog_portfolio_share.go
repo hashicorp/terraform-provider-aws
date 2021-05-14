@@ -3,8 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -49,6 +51,17 @@ func resourceAwsServiceCatalogPortfolioShare() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateServiceCatalogSharePrincipal,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					newARN, err := arn.Parse(new)
+
+					if err != nil {
+						return old == new
+					}
+
+					parts := strings.Split(newARN.Resource, "/")
+
+					return old == parts[len(parts)-1]
+				},
 			},
 			"share_tag_options": {
 				Type:     schema.TypeBool,
@@ -130,7 +143,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 		return fmt.Errorf("error creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(tfservicecatalog.PortfolioShareID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
+	d.SetId(tfservicecatalog.PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
 
 	waitForAcceptance := false
 	if v, ok := d.GetOk("wait_for_acceptance"); ok {
@@ -154,7 +167,7 @@ func resourceAwsServiceCatalogPortfolioShareCreate(d *schema.ResourceData, meta 
 func resourceAwsServiceCatalogPortfolioShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	portfolioID, shareType, principalID, err := tfservicecatalog.ParsePortfolioShareID(d.Id())
+	portfolioID, shareType, principalID, err := tfservicecatalog.PortfolioShareParseResourceID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("could not parse ID (%s): %w", d.Id(), err)

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ParsePortfolioShareID(id string) (string, string, string, error) {
+func PortfolioShareParseResourceID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, ":", 3)
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
@@ -15,6 +15,6 @@ func ParsePortfolioShareID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-func PortfolioShareID(portfolioID, shareType, principalID string) string {
+func PortfolioShareCreateResourceID(portfolioID, shareType, principalID string) string {
 	return strings.Join([]string{portfolioID, shareType, principalID}, ":")
 }
