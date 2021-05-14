@@ -20,6 +20,8 @@ const (
 	PortfolioShareCreateTimeout = 3 * time.Minute
 
 	OrganizationsAccessStableTimeout = 3 * time.Minute
+	ConstraintReadyTimeout           = 3 * time.Minute
+	ConstraintDeleteTimeout          = 3 * time.Minute
 
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
@@ -197,4 +199,38 @@ func OrganizationsAccessStable(conn *servicecatalog.ServiceCatalog) (string, err
 	}
 
 	return "", err
+}
+
+func ConstraintReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeConstraintOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound, StatusUnavailable},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: ConstraintStatus(conn, acceptLanguage, id),
+		Timeout: ConstraintReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeConstraintOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ConstraintDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{servicecatalog.StatusAvailable},
+		Target:  []string{StatusNotFound, StatusUnavailable},
+		Refresh: ConstraintStatus(conn, acceptLanguage, id),
+		Timeout: ConstraintDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	return err
 }
