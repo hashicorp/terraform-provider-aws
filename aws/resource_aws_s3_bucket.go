@@ -524,6 +524,21 @@ func resourceAwsS3Bucket() *schema.Resource {
 											},
 										},
 									},
+									"delete_marker_replication": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"status": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Default:  s3.DeleteMarkerReplicationStatusDisabled,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -2109,12 +2124,17 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			} else {
 				rcRule.Filter.Prefix = aws.String(filter["prefix"].(string))
 			}
-			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
-				Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
-			}
+
 		} else {
 			// XML schema V1.
 			rcRule.Prefix = aws.String(rr["prefix"].(string))
+		}
+
+		if d, ok := rr["delete_marker_replication"].([]interface{}); ok && len(d) > 0 && d[0] != nil {
+			dmr := d[0].(map[string]interface{})
+			rcRule.DeleteMarkerReplication = &s3.DeleteMarkerReplication{
+				Status: aws.String(dmr["status"].(string)),
+			}
 		}
 
 		rules = append(rules, rcRule)
@@ -2409,6 +2429,14 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 			t["filter"] = []interface{}{m}
 		}
 
+		if dmr := v.DeleteMarkerReplication; dmr != nil {
+			m := map[string]interface{}{}
+			if dmr.Status != nil {
+				m["status"] = aws.StringValue(v.DeleteMarkerReplication.Status)
+			}
+			t["delete_marker_replication"] = []interface{}{m}
+		}
+
 		rules = append(rules, t)
 	}
 	m["rules"] = schema.NewSet(rulesHash, rules)
@@ -2574,6 +2602,9 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 	}
+	if v, ok := m["delete_marker_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", deleteMarkerReplicationHash(v[0])))
+	}
 	if v, ok := m["filter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		buf.WriteString(fmt.Sprintf("%d-", replicationRuleFilterHash(v[0])))
 	}
@@ -2594,6 +2625,21 @@ func replicationRuleFilterHash(v interface{}) int {
 	if v, ok := m["tags"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", keyvaluetags.New(v).Hash()))
 	}
+	return hashcode.String(buf.String())
+}
+
+func deleteMarkerReplicationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["status"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
 	return hashcode.String(buf.String())
 }
 

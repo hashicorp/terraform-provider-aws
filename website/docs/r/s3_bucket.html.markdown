@@ -436,6 +436,7 @@ The `rules` object supports the following:
 * `prefix` - (Optional) Object keyname prefix identifying one or more objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `status` - (Required) The status of the rule. Either `Enabled` or `Disabled`. The rule is ignored if status is not Enabled.
 * `filter` - (Optional) Filter that identifies subset of objects to which the replication rule applies (documented below).
+* `delete_marker_replication` - (Optional) Specifies whether delete markers are replicated (documented below).
 
 ~> **NOTE on `prefix` and `filter`:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 With the `filter` attribute, you can specify object filters based on the object key prefix, tags, or both to scope the objects that the rule applies to.
@@ -444,6 +445,10 @@ Replication configuration V1 supports filtering based on only the `prefix` attri
 * For a specific rule, `prefix` conflicts with `filter`
 * If any rule has `filter` specified then they all must
 * `priority` is optional (with a default value of `0`) but must be unique between multiple rules
+* If a rule has `filter` then it **must** have a `delete_marker_replication` object
+* If a rule has `prefix` then it **must not** have a `delete_marker_replication` object
+
+~> **NOTE:** Delete markers are always replicated when using `prefix` in a rule and is not configurable. The default behavior when using `filter` can be achieved by providing an empty configuration block `delete_marker_replication {}`.
 
 ~> **NOTE:** Replication to multiple destination buckets requires that `priority` is specified in the `rules` object. If the corresponding rule requires no filter, an empty configuration block `filter {}` must be specified.
 
@@ -470,6 +475,10 @@ The `filter` object supports the following:
 * `prefix` - (Optional) Object keyname prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `tags` - (Optional)  A map of tags that identifies subset of objects to which the rule applies.
 The rule applies only to objects having all the tags in its tagset.
+
+The `delete_marker_replication` object supports the following:
+
+* `status` - (Optional) The delete marker replication status. Either `Enabled` or `Disabled`. Default `Disabled`. If `tags` is set in the `filter` object, then `status` must be set to `Disabled`.
 
 The `server_side_encryption_configuration` object supports the following:
 

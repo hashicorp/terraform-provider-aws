@@ -2100,7 +2100,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(rInt),
+				Config: testAccAWSS3BucketConfigReplicationWithV2ConfigurationDeleteMarkerReplicationDisabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
@@ -2123,6 +2123,36 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 								Priority: aws.Int64(0),
 								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
 									Status: aws.String(s3.DeleteMarkerReplicationStatusDisabled),
+								},
+							},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replication_configuration.0.role", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					testAccCheckAWSS3BucketExistsWithProvider("aws_s3_bucket.destination", testAccAwsRegionProviderFunc(alternateRegion, &providers)),
+					testAccCheckAWSS3BucketReplicationRules(
+						resourceName,
+						[]*s3.ReplicationRule{
+							{
+								ID: aws.String("foobar"),
+								Destination: &s3.Destination{
+									Bucket:       aws.String(fmt.Sprintf("arn:%s:s3:::tf-test-bucket-destination-%d", partition, rInt)),
+									StorageClass: aws.String(s3.ObjectStorageClassStandard),
+								},
+								Status: aws.String(s3.ReplicationRuleStatusEnabled),
+								Filter: &s3.ReplicationRuleFilter{
+									Prefix: aws.String("foo"),
+								},
+								Priority: aws.Int64(0),
+								DeleteMarkerReplication: &s3.DeleteMarkerReplication{
+									Status: aws.String(s3.DeleteMarkerReplicationStatusEnabled),
 								},
 							},
 						},
@@ -4544,6 +4574,10 @@ resource "aws_s3_bucket" "bucket" {
         prefix = "testprefix"
       }
 
+      delete_marker_replication {
+        status = "Enabled"
+      }
+
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
@@ -4560,6 +4594,39 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 `, rName, rNameDestination))
+}
+
+func testAccAWSS3BucketConfigReplicationWithV2ConfigurationDeleteMarkerReplicationDisabled(randInt int) string {
+	return testAccAWSS3BucketConfigReplicationBasic(randInt) + fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "tf-test-bucket-%[1]d"
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      status = "Enabled"
+
+      filter {
+        prefix = "foo"
+      }
+
+      delete_marker_replication {}
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = "STANDARD"
+      }
+    }
+  }
+}
+`, randInt)
 }
 
 func testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(randInt int) string {
@@ -4581,6 +4648,10 @@ resource "aws_s3_bucket" "bucket" {
 
       filter {
         prefix = "foo"
+      }
+
+      delete_marker_replication {
+        status = "Enabled"
       }
 
       destination {
@@ -4616,6 +4687,10 @@ resource "aws_s3_bucket" "bucket" {
         tags = {
           ReplicateMe = "Yes"
         }
+      }
+
+      delete_marker_replication {
+        status = "Disabled"
       }
 
       destination {
@@ -4656,6 +4731,10 @@ resource "aws_s3_bucket" "bucket" {
         }
       }
 
+      delete_marker_replication {
+        status = "Disabled"
+      }
+
       destination {
         bucket        = aws_s3_bucket.destination.arn
         storage_class = "STANDARD"
@@ -4689,6 +4768,10 @@ resource "aws_s3_bucket" "bucket" {
           Foo         = "Bar"
           ReplicateMe = "Yes"
         }
+      }
+
+      delete_marker_replication {
+        status = "Disabled"
       }
 
       destination {
