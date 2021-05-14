@@ -121,9 +121,16 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_macie2_account" "test" {}
 
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["macie.${data.aws_partition.current.dns_suffix}"]
+  feature_set                   = "ALL"
+}
+
 resource "aws_macie2_organization_admin_account" "test" {
   admin_account_id = data.aws_caller_identity.current.account_id
-  depends_on       = [aws_macie2_account.test]
+  depends_on       = [aws_macie2_account.test, aws_organizations_organization.test]
 }
 `
 }
