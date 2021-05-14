@@ -15,6 +15,7 @@ jobs:
           asana_project_gid: ${{ secrets.asana_project_gid }}
           asana_github_url_field_gid: ${{ secrets.asana_github_url_field_gid }}
           github_release_name: ${{ github.event.release.tag_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   project-archive:
     name: Archive Released Cards
     runs-on: ubuntu-latest
