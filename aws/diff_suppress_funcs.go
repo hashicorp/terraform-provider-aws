@@ -91,17 +91,7 @@ func suppressEquivalentJsonEmptyNilDiffs(k, old, new string, d *schema.ResourceD
 		return true
 	}
 
-	ob := bytes.NewBufferString("")
-	if err := json.Compact(ob, []byte(old)); err != nil {
-		return false
-	}
-
-	nb := bytes.NewBufferString("")
-	if err := json.Compact(nb, []byte(new)); err != nil {
-		return false
-	}
-
-	return jsonBytesEqual(ob.Bytes(), nb.Bytes())
+	return suppressEquivalentJsonDiffs(k, old, new, d)
 }
 
 func suppressOpenIdURL(k, old, new string, d *schema.ResourceData) bool {
