@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 )
@@ -22,7 +24,7 @@ func PortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shareType,
 				continue
 			}
 
-			if aws.StringValue(deet.PrincipalId) == principalID {
+			if strings.Contains(principalID, aws.StringValue(deet.PrincipalId)) {
 				result = deet
 				return false
 			}
