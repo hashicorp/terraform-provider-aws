@@ -140,3 +140,31 @@ func OrganizationsAccessStatus(conn *servicecatalog.ServiceCatalog) resource.Sta
 		return output, aws.StringValue(output.AccessStatus), err
 	}
 }
+
+func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.DescribeConstraintInput{
+			Id: aws.String(id),
+		}
+
+		if acceptLanguage != "" {
+			input.AcceptLanguage = aws.String(acceptLanguage)
+		}
+
+		output, err := conn.DescribeConstraint(input)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, err
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing constraint: %w", err)
+		}
+
+		if output == nil || output.ConstraintDetail == nil {
+			return nil, StatusUnavailable, fmt.Errorf("error describing constraint: empty constraint detail")
+		}
+
+		return output, aws.StringValue(output.Status), err
+	}
+}
