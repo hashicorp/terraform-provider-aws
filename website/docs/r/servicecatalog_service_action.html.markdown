@@ -41,13 +41,11 @@ The following arguments are optional:
 
 The `definition` configuration block supports the following attributes:
 
-(At least one of `assume_role`, `name`, `parameters`, or `version` is required.)
-
 * `assume_role` - (Optional) ARN of the role that performs the self-service actions on your behalf. For example, `arn:aws:iam::12345678910:role/ActionRole`. To reuse the provisioned product launch role, set to `LAUNCH_ROLE`.
-* `name` - (Optional) Name of the SSM document. For example, `AWS-RestartEC2Instance`. If you are using a shared SSM document, you must provide the ARN instead of the name.
+* `name` - (Required) Name of the SSM document. For example, `AWS-RestartEC2Instance`. If you are using a shared SSM document, you must provide the ARN instead of the name.
 * `parameters` - (Optional) List of parameters in JSON format. For example: `[{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}]` or `[{\"Name\":\"InstanceId\",\"Type\":\"TEXT_VALUE\"}]`.
 * `type` - (Optional) Service action definition type. Valid value is `SSM_AUTOMATION`. Default is `SSM_AUTOMATION`.
-* `version` - (Optional) SSM document version. For example, `1`.
+* `version` - (Required) SSM document version. For example, `1`.
 
 ## Attributes Reference
 
