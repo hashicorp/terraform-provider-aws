@@ -101,6 +101,10 @@ func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta inte
 			return resource.RetryableError(err)
 		}
 
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -113,7 +117,7 @@ func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Constraint: %w", err)
+		return fmt.Errorf("error creating Service Catalog Constraint %v: %w", input, err) // take input out
 	}
 
 	if output == nil || output.ConstraintDetail == nil {
