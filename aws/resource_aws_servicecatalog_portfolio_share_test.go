@@ -54,28 +54,24 @@ func TestAccAWSServiceCatalogPortfolioShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogPortfolioShare_organization(t *testing.T) {
+func TestAccAWSServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
-			testAccPartitionHasServicePreCheck(servicecatalog.EndpointsID, t)
-		},
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogPortfolioShareConfig_organization(rName),
+				Config: testAccAWSServiceCatalogPortfolioShareConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioShareExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttr(resourceName, "accepted", "true"),
-					resource.TestCheckResourceAttr(resourceName, "principal_id", fmt.Sprintf("arn:%s:organizations::111122223333:organization/o-abcdefghijkl", testAccGetPartition())),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_id", "aws_organizations_organizational_unit.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", compareName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "share_tag_options", "true"),
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.DescribePortfolioShareTypeOrganization),
@@ -176,7 +172,7 @@ resource "aws_servicecatalog_portfolio_share" "test" {
 `, rName))
 }
 
-func testAccAWSServiceCatalogPortfolioShareConfig_organization(rName string) string {
+func testAccAWSServiceCatalogPortfolioShareConfig_organizationalUnit(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -190,12 +186,19 @@ resource "aws_servicecatalog_portfolio" "test" {
   provider_name = %[1]q
 }
 
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = aws_organizations_organization.test.roots[0].id
+}
+
 resource "aws_servicecatalog_portfolio_share" "test" {
   accept_language   = "en"
   portfolio_id      = aws_servicecatalog_portfolio.test.id
   share_tag_options = true
-  type              = "ORGANIZATION"
-  principal_id      = "arn:${data.aws_partition.current.partition}:organizations::111122223333:organization/o-abcdefghijkl"
+  type              = "ORGANIZATIONAL_UNIT"
+  principal_id      = aws_organizations_organizational_unit.test.arn
 }
 `, rName)
 }
