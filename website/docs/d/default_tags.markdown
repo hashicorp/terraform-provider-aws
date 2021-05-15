@@ -3,7 +3,7 @@ subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_default_tags"
 description: |-
-Expose the default tags configured on the provider.
+  Expose the default tags configured on the provider.
 ---
 
 # Data Source: aws_default_Tags
@@ -20,7 +20,7 @@ provider "aws" {
   default_tags {
     tags = {
       Environment = "Test"
-      Name = "Provider Tag"
+      Name        = "Provider Tag"
     }
   }
 }
@@ -31,8 +31,8 @@ resource "aws_autoscaling_group" "group" {
   dynamic "tag" {
     for_each = data.aws_default_tags.tags.tags
     content {
-      key = tag.key
-      value = tag.value
+      key                 = tag.key
+      value               = tag.value
       propagate_at_launch = true
     }
   }

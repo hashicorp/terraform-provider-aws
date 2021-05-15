@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAWSDefaultTagsDataSource_basic(t *testing.T) {
+func TestAccAWSDefaultTagsDataSource_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	dataSourceName := "data.aws_default_tags.test"
