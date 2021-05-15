@@ -3,7 +3,7 @@ subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_function"
 description: |-
-  Provides a CloudFront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. 
+  Provides a CloudFront Function resource. With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations.
 ---
 
 # Resource: aws_cloudfront_function
@@ -46,8 +46,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
 * `etag` - ETag hash of the function
 * `last_modified` - Date this resource was last modified.
-* `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 * `stage` - Stage of the code. Can be `DEVELOPMENT` or `LIVE`.
+* `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
 ## Import
 

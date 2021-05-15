@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -73,11 +72,8 @@ func testSweepCloudfrontFunctions(region string) error {
 
 func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
-	var getconf cloudfront.GetFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
-
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_cloudfront_func_basic_%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -86,25 +82,33 @@ func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(funcName),
+				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, funcName, &conf, &getconf),
-					testAccCheckAwsCloudfrontFunctionName(&conf, funcName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", funcName)),
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "code"),
+					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					resource.TestCheckResourceAttr(resourceName, "runtime", "cloudfront-js-1.0"),
+					resource.TestCheckResourceAttr(resourceName, "stage", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
 			},
 		},
 	})
 }
 
 func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
-	var function cloudfront.DescribeFunctionOutput
-	var getconf cloudfront.GetFunctionOutput
+	var conf cloudfront.DescribeFunctionOutput
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudfront_function.test"
@@ -118,7 +122,7 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 			{
 				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, rName, &function, &getconf),
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -127,15 +131,10 @@ func TestAccAWSCloudfrontFunction_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudfrontFunction_codeUpdate(t *testing.T) {
+func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
-	var getconf cloudfront.GetFunctionOutput
-
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_cloudfront_func_code_upd_%s", rString)
 	resourceName := "aws_cloudfront_function.test"
-
-	var timeBeforeUpdate time.Time
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -144,43 +143,33 @@ func TestAccAWSCloudfrontFunction_codeUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(funcName),
+				Config: testAccAWSCloudfrontConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, funcName, &conf, &getconf),
-					testAccCheckAwsCloudfrontFunctionName(&conf, funcName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", funcName)),
-					testAccCheckAwsCloudfrontFunctionETag(&getconf, "ETVPDKIKX0DER"),
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccAWSCloudfrontConfigCodeUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "etag", "E3UN6WX5RRO2AG"),
+				),
 			},
 			{
-				Config: testAccAWSCloudfrontConfigCodeUpdate(funcName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, funcName, &conf, &getconf),
-					testAccCheckAwsCloudfrontFunctionName(&conf, funcName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", funcName)),
-					testAccCheckAwsCloudfrontFunctionETag(&getconf, "E3UN6WX5RRO2AG"),
-					func(s *terraform.State) error {
-						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
-					},
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
 			},
 		},
 	})
 }
 
-func TestAccAWSCloudfrontFunction_Update_nameOnly(t *testing.T) {
+func TestAccAWSCloudfrontFunction_Update_Comment(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
-	var getconf cloudfront.GetFunctionOutput
-
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_cloudfront_func_local_upd_name_%s", rString)
-	funcNameUpdate := funcName + "_update"
 	resourceName := "aws_cloudfront_function.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
@@ -189,27 +178,24 @@ func TestAccAWSCloudfrontFunction_Update_nameOnly(t *testing.T) {
 		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudfrontConfigBasic(funcName),
+				Config: testAccAWSCloudfrontConfigComment(rName, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, funcName, &conf, &getconf),
-					testAccCheckAwsCloudfrontFunctionName(&conf, funcName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", funcName)),
-					testAccCheckAwsCloudfrontFunctionETag(&getconf, "ETVPDKIKX0DER"),
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test 1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccAWSCloudfrontConfigComment(rName, "test 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "comment", "test 2"),
+				),
 			},
 			{
-				Config: testAccAWSCloudfrontConfigBasic(funcNameUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCloudfrontFunctionExists(resourceName, funcNameUpdate, &conf, &getconf),
-					testAccCheckAwsCloudfrontFunctionName(&conf, funcNameUpdate),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "cloudfront", fmt.Sprintf("function/%s", funcNameUpdate)),
-					testAccCheckAwsCloudfrontFunctionETag(&getconf, "ETVPDKIKX0DER"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
 			},
 		},
 	})
@@ -237,12 +223,11 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 
 }
 
-func testAccCheckAwsCloudfrontFunctionExists(res, funcName string, function *cloudfront.DescribeFunctionOutput, getfunction *cloudfront.GetFunctionOutput) resource.TestCheckFunc {
-	// Wait for IAM role
+func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Cloudfront Function not found: %s", res)
+			return fmt.Errorf("Cloudfront Function not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -251,58 +236,25 @@ func testAccCheckAwsCloudfrontFunctionExists(res, funcName string, function *clo
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
 
-		params := &cloudfront.DescribeFunctionInput{
-			Name: aws.String(funcName),
-		}
+		output, err := conn.DescribeFunction(&cloudfront.DescribeFunctionInput{
+			Name: aws.String(rs.Primary.ID),
+		})
 
-		describeFunction, err := conn.DescribeFunction(params)
 		if err != nil {
 			return err
 		}
 
-		*function = *describeFunction
-
-		getparams := &cloudfront.GetFunctionInput{
-			Name: aws.String(funcName),
-		}
-
-		getFunction, geterr := conn.GetFunction(getparams)
-		if geterr != nil {
-			return geterr
-		}
-
-		*getfunction = *getFunction
-		return nil
-	}
-}
-
-func testAccCheckAwsCloudfrontFunctionName(function *cloudfront.DescribeFunctionOutput, expectedName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		c := function.FunctionSummary
-		if *c.Name != expectedName {
-			return fmt.Errorf("Expected function name %s, got %s", expectedName, *c.Name)
-		}
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckAwsCloudfrontFunctionETag(function *cloudfront.GetFunctionOutput, expectedETag string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *function.ETag != expectedETag {
-			return fmt.Errorf("Expected code ETag %s, got %s", expectedETag, *function.ETag)
-		}
-
-		return nil
-	}
-}
-
-func testAccAWSCloudfrontConfigBasic(funcName string) string {
+func testAccAWSCloudfrontConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name    = "%s"
+  name    = %[1]q
   runtime = "cloudfront-js-1.0"
-  comment = "%s"
   code    = <<-EOT
 function handler(event) {
 	var response = {
@@ -317,15 +269,14 @@ function handler(event) {
 }
 EOT
 }
-`, funcName, funcName)
+`, rName)
 }
 
-func testAccAWSCloudfrontConfigCodeUpdate(funcName string) string {
+func testAccAWSCloudfrontConfigCodeUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name    = "%s"
+  name    = %[1]q
   runtime = "cloudfront-js-1.0"
-  comment = "%s"
   code    = <<-EOT
 function handler(event) {
 	// updated code
@@ -341,5 +292,28 @@ function handler(event) {
 }
 EOT
 }
-`, funcName, funcName)
+`, rName)
+}
+
+func testAccAWSCloudfrontConfigComment(rName, comment string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-1.0"
+  comment = %[2]q
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName, comment)
 }

@@ -25,46 +25,55 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"code": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudfront.FunctionRuntime_Values(), false),
-			},
+
 			"publish": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+
+			"runtime": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudfront.FunctionRuntime_Values(), false),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
 			"stage": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_modified": {
+
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,10 +87,7 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	functionName := d.Get("name").(string)
-
-	log.Printf("[DEBUG] Creating CloudFront Function %s", functionName)
-
-	params := &cloudfront.CreateFunctionInput{
+	input := &cloudfront.CreateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
 		FunctionConfig: &cloudfront.FunctionConfig{
 			Comment: aws.String(d.Get("comment").(string)),
@@ -90,26 +96,24 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 		Name: aws.String(functionName),
 	}
 
-	createFunctionOutput, err := conn.CreateFunction(params)
+	log.Printf("[DEBUG] Creating CloudFront Function %s", functionName)
+	output, err := conn.CreateFunction(input)
 
 	if err != nil {
 		return fmt.Errorf("error creating CloudFront Function (%s): %w", functionName, err)
 	}
 
-	d.SetId(aws.StringValue(createFunctionOutput.FunctionSummary.Name))
-	etag := createFunctionOutput.ETag
+	d.SetId(aws.StringValue(output.FunctionSummary.Name))
 
-	publish := d.Get("publish").(bool)
-	if publish {
-
-		params := &cloudfront.PublishFunctionInput{
+	if d.Get("publish").(bool) {
+		input := &cloudfront.PublishFunctionInput{
 			Name:    aws.String(d.Id()),
-			IfMatch: aws.String(*etag),
+			IfMatch: output.ETag,
 		}
 
-		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", params)
+		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", input)
+		_, err := conn.PublishFunction(input)
 
-		_, err := conn.PublishFunction(params)
 		if err != nil {
 			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
 		}
@@ -123,13 +127,10 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	params := &cloudfront.GetFunctionInput{
+	describeFunctionOutput, err := conn.DescribeFunction(&cloudfront.DescribeFunctionInput{
 		Name: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Get Cloudfront Function: %s", d.Id())
-
-	getFunctionOutput, err := conn.GetFunction(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
 		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -137,29 +138,27 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error describing CloudFront Function (%s): %w", d.Id(), err)
+	}
+
+	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
+	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
+	d.Set("etag", describeFunctionOutput.ETag)
+	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
+	d.Set("name", describeFunctionOutput.FunctionSummary.Name)
+	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
+	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
+	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
+
+	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
+		Name: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return fmt.Errorf("error describing CloudFront Function (%s): %w", d.Id(), err)
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
-
-	describeParams := &cloudfront.DescribeFunctionInput{
-		Name: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Fetching Cloudfront Function: %s", d.Id())
-
-	describeFunctionOutput, err := conn.DescribeFunction(describeParams)
-	if err != nil {
-		return err
-	}
-
-	d.Set("etag", describeFunctionOutput.ETag)
-	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
-	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
-	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
-	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
-	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	return nil
 }
@@ -170,13 +169,10 @@ func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).cloudfrontconn
 
 	log.Printf("[INFO] Deleting Cloudfront Function: %s", d.Id())
-
-	params := &cloudfront.DeleteFunctionInput{
+	_, err := conn.DeleteFunction(&cloudfront.DeleteFunctionInput{
 		Name:    aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	}
-
-	_, err := conn.DeleteFunction(params)
+	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
 		return nil
@@ -194,9 +190,7 @@ func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{
 func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	// arn := d.Get("arn").(string)
-
-	configReq := &cloudfront.UpdateFunctionInput{
+	input := &cloudfront.UpdateFunctionInput{
 		FunctionCode: []byte(d.Get("code").(string)),
 		FunctionConfig: &cloudfront.FunctionConfig{
 			Comment: aws.String(d.Get("comment").(string)),
@@ -206,25 +200,22 @@ func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	log.Printf("[DEBUG] Send Update Cloudfront Function Configuration request: %#v", configReq)
-
-	UpdateFunctionOutput, err := conn.UpdateFunction(configReq)
+	log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
+	output, err := conn.UpdateFunction(input)
 
 	if err != nil {
 		return fmt.Errorf("error updating CloudFront Function (%s) configuration : %w", d.Id(), err)
 	}
 
-	publish := d.Get("publish").(bool)
-	if publish {
-
-		params := &cloudfront.PublishFunctionInput{
+	if d.Get("publish").(bool) {
+		input := &cloudfront.PublishFunctionInput{
 			Name:    aws.String(d.Id()),
-			IfMatch: aws.String(*UpdateFunctionOutput.ETag),
+			IfMatch: output.ETag,
 		}
 
 		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
+		_, err := conn.PublishFunction(input)
 
-		_, err := conn.PublishFunction(params)
 		if err != nil {
 			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
 		}
