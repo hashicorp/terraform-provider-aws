@@ -38,7 +38,7 @@ data "aws_caller_identity" "delegated" {
 }
 
 data "aws_organizations_delegated_services" "test" {
-  account_id        = data.aws_caller_identity.delegated.account_id
+  account_id = data.aws_caller_identity.delegated.account_id
 }
 `
 }
