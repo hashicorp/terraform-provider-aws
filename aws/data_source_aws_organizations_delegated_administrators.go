@@ -83,6 +83,8 @@ func dataSourceAwsOrganizationsDelegatedAdministratorsRead(ctx context.Context, 
 		return diag.FromErr(fmt.Errorf("error setting delegated_Administrators: %w", err))
 	}
 
+	d.SetId(meta.(*AWSClient).accountid)
+
 	return nil
 }
 

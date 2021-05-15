@@ -55,6 +55,8 @@ func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *sch
 		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
 	}
 
+	d.SetId(meta.(*AWSClient).accountid)
+
 	return nil
 }
 

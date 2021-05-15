@@ -3,6 +3,8 @@ package aws
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -68,32 +70,37 @@ func resourceAwsOrganizationsDelegatedAdministrator() *schema.Resource {
 func resourceAwsOrganizationsDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).organizationsconn
 
-	name := d.Get("name").(string)
 	accountID := d.Get("account_id").(string)
+	servicePrincipal := d.Get("service_principal").(string)
 	input := &organizations.RegisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
-		ServicePrincipal: aws.String(d.Get("service_principal").(string)),
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
 	_, err := conn.RegisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Organizations DelegatedAdministrator (%s): %w", name, err))
+		return diag.FromErr(fmt.Errorf("error creating Organizations DelegatedAdministrator (%s): %w", accountID, err))
 	}
 
-	d.SetId(accountID)
+	d.SetId(fmt.Sprintf("%s/%s", accountID, servicePrincipal))
 
 	return resourceAwsOrganizationsDelegatedAdministratorRead(ctx, d, meta)
 }
 
 func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).organizationsconn
+
+	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+	}
 	input := &organizations.ListDelegatedAdministratorsInput{
-		ServicePrincipal: aws.String(d.Get("service_principal").(string)),
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
 	var delegatedAccount *organizations.DelegatedAdministrator
-	err := conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+	err = conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
 		for _, delegated := range page.DelegatedAdministrators {
-			if aws.StringValue(delegated.Id) != d.Id() {
+			if aws.StringValue(delegated.Id) == accountID {
 				delegatedAccount = delegated
 			}
 		}
@@ -104,6 +111,12 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 		return diag.FromErr(fmt.Errorf("error listing AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
 	}
 
+	if delegatedAccount == nil {
+		log.Printf("[WARN] AWS Organization DelegatedAdministrators not found (%s), removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("arn", delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
 	d.Set("email", delegatedAccount.Email)
@@ -111,6 +124,8 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", delegatedAccount.Name)
 	d.Set("status", delegatedAccount.Status)
+	d.Set("account_id", accountID)
+	d.Set("service_principal", servicePrincipal)
 
 	return nil
 }
@@ -118,14 +133,26 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 func resourceAwsOrganizationsDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).organizationsconn
 
+	accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error decoding ID AWS Organization (%s) DelegatedAdministrators: %w", d.Id(), err))
+	}
 	input := &organizations.DeregisterDelegatedAdministratorInput{
-		AccountId:        aws.String(d.Id()),
-		ServicePrincipal: aws.String(d.Get("service_principal").(string)),
+		AccountId:        aws.String(accountID),
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	_, err := conn.DeregisterDelegatedAdministratorWithContext(ctx, input)
+	_, err = conn.DeregisterDelegatedAdministratorWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting Organizations DelegatedAdministrator (%s): %w", d.Id(), err))
 	}
 	return nil
+}
+
+func decodeOrganizationDelegatedAdministratorID(id string) (string, string, error) {
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return "", "", fmt.Errorf("expected ID in the form of account_id/service_principal, given: %q", id)
+	}
+	return idParts[0], idParts[1], nil
 }

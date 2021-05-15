@@ -7,25 +7,34 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
+	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
-	servicePrincipal := ""
+	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
+	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
 		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsDelegatedAdministratorExists(resourceName, &organization),
-					testAccCheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
+					testAccCheckResourceAttrRfc3339(resourceName, "delegation_enabled_date"),
+					testAccCheckResourceAttrRfc3339(resourceName, "joined_timestamp"),
 				),
 			},
 			{
@@ -38,13 +47,17 @@ func testAccAwsOrganizationsDelegatedAdministrator_basic(t *testing.T) {
 }
 
 func testAccAwsOrganizationsDelegatedAdministrator_disappears(t *testing.T) {
+	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
-	servicePrincipal := ""
+	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsOrganizationsDelegatedAdministratorDestroy,
 		ErrorCheck:        testAccErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
@@ -64,18 +77,22 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorDestroy(s *terraform.Stat
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_organization" {
+		if rs.Type != "aws_organizations_delegated_administrator" {
 			continue
 		}
 
+		accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(rs.Primary.Attributes["service_principal"]),
+			ServicePrincipal: aws.String(servicePrincipal),
 		}
 
 		exists := false
-		err := conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+		err = conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
 			for _, delegated := range page.DelegatedAdministrators {
-				if aws.StringValue(delegated.Id) != rs.Primary.ID {
+				if aws.StringValue(delegated.Id) == accountID {
 					exists = true
 				}
 			}
@@ -106,16 +123,20 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 			return fmt.Errorf("Organization ID not set")
 		}
 
+		accountID, servicePrincipal, err := decodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 		conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(rs.Primary.Attributes["service_principal"]),
+			ServicePrincipal: aws.String(servicePrincipal),
 		}
 
 		exists := false
 		var resp *organizations.DelegatedAdministrator
-		err := conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+		err = conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
 			for _, delegated := range page.DelegatedAdministrators {
-				if aws.StringValue(delegated.Id) != rs.Primary.ID {
+				if aws.StringValue(delegated.Id) == accountID {
 					exists = true
 					resp = delegated
 				}
@@ -139,11 +160,13 @@ func testAccCheckAwsOrganizationsDelegatedAdministratorExists(n string, org *org
 }
 
 func testAccAwsOrganizationsDelegatedAdministratorConfig(servicePrincipal string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_caller_identity" "delegated" {
+  provider = "awsalternate"
+}
 
 resource "aws_organizations_delegated_administrator" "test" {
-  account_id        = data.aws_caller_identity.current.account_id
+  account_id        = data.aws_caller_identity.delegated.account_id
   service_principal = %[1]q
 }
 `, servicePrincipal)
