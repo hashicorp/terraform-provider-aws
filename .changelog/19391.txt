@@ -1,0 +1,3 @@
+```release-notes:enhancement
+data-source/aws_default_tags: Add `aws_default_tags` data source to expose the `default_tags` configured on the provider
+```
