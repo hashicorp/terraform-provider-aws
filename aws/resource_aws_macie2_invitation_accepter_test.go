@@ -112,12 +112,12 @@ resource "aws_macie2_account" "admin" {
 resource "aws_macie2_account" "member" {}
 
 resource "aws_macie2_member" "member" {
-  provider       = "awsalternate"
-  account_id     = data.aws_caller_identity.member.account_id
-  email          = %[1]q
-  invite         = true
-  invite_message = "This is a message of the invite"
-  depends_on     = [aws_macie2_account.admin]
+  provider           = "awsalternate"
+  account_id         = data.aws_caller_identity.member.account_id
+  email              = %[1]q
+  invite             = true
+  invitation_message = "This is a message of the invite"
+  depends_on         = [aws_macie2_account.admin]
 }
 
 resource "aws_macie2_invitation_accepter" "member" {

@@ -16,12 +16,12 @@ Provides a resource to manage an [Amazon Macie Member](https://docs.aws.amazon.c
 resource "aws_macie2_account" "example" {}
 
 resource "aws_macie2_member" "example" {
-  account_id                        = "AWS ACCOUNT ID"
-  email                             = "EMAIL"
-  invite                            = true
-  invite_message                    = "Message of the invitation"
-  invite_disable_email_notification = true
-  depends_on                        = [aws_macie2_account.example]
+  account_id                            = "AWS ACCOUNT ID"
+  email                                 = "EMAIL"
+  invite                                = true
+  invitation_message                    = "Message of the invitation"
+  invitation_disable_email_notification = true
+  depends_on                            = [aws_macie2_account.example]
 }
 ```
 
@@ -34,8 +34,8 @@ The following arguments are supported:
 * `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the account in Amazon Macie.
 * `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 * `invite` - (Optional) Send an invitation to a member
-* `invite_message` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
-* `invite_disable_email_notification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
+* `invitation_message` - (Optional) A custom message to include in the invitation. Amazon Macie adds this message to the standard content that it sends for an invitation.
+* `invitation_disable_email_notification` - (Optional) Specifies whether to send an email notification to the root user of each account that the invitation will be sent to. This notification is in addition to an alert that the root user receives in AWS Personal Health Dashboard. To send an email notification to the root user of each account, set this value to `true`.
 
 ## Attributes Reference
 

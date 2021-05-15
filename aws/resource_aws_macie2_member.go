@@ -74,11 +74,11 @@ func resourceAwsMacie2Member() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"invite_disable_email_notification": {
+			"invitation_disable_email_notification": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"invite_message": {
+			"invitation_message": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -143,10 +143,10 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 		AccountIds: []*string{aws.String(d.Id())},
 	}
 
-	if v, ok := d.GetOk("invite_disable_email_notification"); ok {
+	if v, ok := d.GetOk("invitation_disable_email_notification"); ok {
 		inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("invite_message"); ok {
+	if v, ok := d.GetOk("invitation_message"); ok {
 		inputInvite.Message = aws.String(v.(string))
 	}
 
@@ -260,10 +260,10 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 				AccountIds: []*string{aws.String(d.Id())},
 			}
 
-			if v, ok := d.GetOk("invite_disable_email_notification"); ok {
+			if v, ok := d.GetOk("invitation_disable_email_notification"); ok {
 				inputInvite.DisableEmailNotification = aws.Bool(v.(bool))
 			}
-			if v, ok := d.GetOk("invite_message"); ok {
+			if v, ok := d.GetOk("invitation_message"); ok {
 				inputInvite.Message = aws.String(v.(string))
 			}
 

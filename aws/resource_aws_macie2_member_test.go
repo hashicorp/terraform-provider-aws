@@ -48,6 +48,7 @@ func testAccAwsMacie2Member_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -114,6 +115,7 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -127,6 +129,7 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -134,7 +137,7 @@ func testAccAwsMacie2Member_invite(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"invite_message"},
+				ImportStateVerifyIgnore: []string{"invitation_message"},
 			},
 		},
 	})
@@ -167,6 +170,7 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -180,6 +184,7 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -187,7 +192,7 @@ func testAccAwsMacie2Member_inviteRemoved(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"invite_message"},
+				ImportStateVerifyIgnore: []string{"invitation_message"},
 			},
 		},
 	})
@@ -220,6 +225,7 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -233,6 +239,7 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					testAccCheckResourceAttrRfc3339(resourceName, "invited_at"),
 					testAccCheckResourceAttrRfc3339(resourceName, "updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
 				),
 			},
 			{
@@ -240,7 +247,7 @@ func testAccAwsMacie2Member_status(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"invite_message"},
+				ImportStateVerifyIgnore: []string{"invitation_message"},
 			},
 		},
 	})
@@ -393,11 +400,11 @@ resource "aws_macie2_account" "member" {
 }
 
 resource "aws_macie2_member" "member" {
-  account_id     = data.aws_caller_identity.member.account_id
-  email          = %[1]q
-  invite         = %[2]t
-  invite_message = "This is a message of the invitation"
-  depends_on     = [aws_macie2_account.admin]
+  account_id         = data.aws_caller_identity.member.account_id
+  email              = %[1]q
+  invite             = %[2]t
+  invitation_message = "This is a message of the invitation"
+  depends_on         = [aws_macie2_account.admin]
 }
 `, email, invite)
 }
@@ -417,12 +424,12 @@ resource "aws_macie2_account" "member" {
 }
 
 resource "aws_macie2_member" "member" {
-  account_id     = data.aws_caller_identity.member.account_id
-  email          = %[1]q
-  status         = %[2]q
-  invite         = %[3]t
-  invite_message = "This is a message of the invitation"
-  depends_on     = [aws_macie2_account.admin]
+  account_id         = data.aws_caller_identity.member.account_id
+  email              = %[1]q
+  status             = %[2]q
+  invite             = %[3]t
+  invitation_message = "This is a message of the invitation"
+  depends_on         = [aws_macie2_account.admin]
 }
 
 resource "aws_macie2_invitation_accepter" "member" {
