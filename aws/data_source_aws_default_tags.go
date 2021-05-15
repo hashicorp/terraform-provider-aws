@@ -15,7 +15,7 @@ func dataSourceAwsDefaultTags() *schema.Resource {
 func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-	if err := d.Set("tags", conn.Tags.IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", conn.Tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return err
 	}
 	d.SetId(meta.(*AWSClient).partition)
