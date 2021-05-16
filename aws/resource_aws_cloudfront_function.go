@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -45,11 +44,6 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 				Computed: true,
 			},
 
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -66,11 +60,6 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(cloudfront.FunctionRuntime_Values(), false),
-			},
-
-			"stage": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 
 			"status": {
@@ -142,10 +131,8 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", describeFunctionOutput.ETag)
-	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339)) // 2006-01-02T15:04:05Z0700
 	d.Set("name", describeFunctionOutput.FunctionSummary.Name)
 	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{

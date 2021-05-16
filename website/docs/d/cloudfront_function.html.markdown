@@ -32,12 +32,10 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `code` - Source code of the function
-* `runtime` - Identifier of the function's runtime.
-* `comment` - Comment.
-* `publish` - Whether to publish creation/change as Live CloudFront Function Version.
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
+* `code` - Source code of the function
+* `comment` - Comment.
 * `etag` - ETag hash of the function
-* `last_modified` - Date this resource was last modified.
+* `last_modified_time` - When this resource was last modified.
+* `runtime` - Identifier of the function's runtime.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
-* `stage` - Stage of the code. Can be `DEVELOPMENT` or `LIVE`.

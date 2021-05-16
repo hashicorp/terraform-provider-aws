@@ -35,7 +35,7 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 				Computed: true,
 			},
 
-			"last_modified": {
+			"last_modified_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,11 +46,6 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 			},
 
 			"runtime": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"stage": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,10 +72,9 @@ func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", describeFunctionOutput.ETag)
-	d.Set("last_modified", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
+	d.Set("last_modified_time", describeFunctionOutput.FunctionSummary.FunctionMetadata.LastModifiedTime.Format(time.RFC3339))
 	d.Set("name", describeFunctionOutput.FunctionSummary.Name)
 	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
-	d.Set("stage", describeFunctionOutput.FunctionSummary.FunctionMetadata.Stage)
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
