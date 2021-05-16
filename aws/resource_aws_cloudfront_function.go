@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudFrontFunction() *schema.Resource {
@@ -18,12 +20,10 @@ func resourceAwsCloudFrontFunction() *schema.Resource {
 		Read:   resourceAwsCloudFrontFunctionRead,
 		Update: resourceAwsCloudFrontFunctionUpdate,
 		Delete: resourceAwsCloudFrontFunctionDelete,
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -127,11 +127,9 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	describeFunctionOutput, err := conn.DescribeFunction(&cloudfront.DescribeFunctionInput{
-		Name: aws.String(d.Id()),
-	})
+	describeFunctionOutput, err := finder.FunctionByName(conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -155,12 +153,56 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Id(), err)
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
 
 	return nil
+}
+
+// resourceAwsCloudFrontFunctionUpdate maps to:
+// UpdateFunctionCode in the API / SDK
+func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudfrontconn
+	etag := d.Get("etag").(string)
+
+	if d.HasChanges("code", "comment", "runtime") {
+		input := &cloudfront.UpdateFunctionInput{
+			FunctionCode: []byte(d.Get("code").(string)),
+			FunctionConfig: &cloudfront.FunctionConfig{
+				Comment: aws.String(d.Get("comment").(string)),
+				Runtime: aws.String(d.Get("runtime").(string)),
+			},
+			Name:    aws.String(d.Id()),
+			IfMatch: aws.String(etag),
+		}
+
+		log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
+		output, err := conn.UpdateFunction(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating CloudFront Function (%s) configuration : %w", d.Id(), err)
+		}
+
+		etag = aws.StringValue(output.ETag)
+	}
+
+	if d.Get("publish").(bool) {
+		input := &cloudfront.PublishFunctionInput{
+			Name:    aws.String(d.Id()),
+			IfMatch: aws.String(etag),
+		}
+
+		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
+		_, err := conn.PublishFunction(input)
+
+		if err != nil {
+			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
+		}
+	}
+
+	return resourceAwsCloudFrontFunctionRead(d, meta)
 }
 
 // resourceAwsCloudFrontFunction maps to:
@@ -183,43 +225,4 @@ func resourceAwsCloudFrontFunctionDelete(d *schema.ResourceData, meta interface{
 	}
 
 	return nil
-}
-
-// resourceAwsCloudFrontFunctionUpdate maps to:
-// UpdateFunctionCode in the API / SDK
-func resourceAwsCloudFrontFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
-
-	input := &cloudfront.UpdateFunctionInput{
-		FunctionCode: []byte(d.Get("code").(string)),
-		FunctionConfig: &cloudfront.FunctionConfig{
-			Comment: aws.String(d.Get("comment").(string)),
-			Runtime: aws.String(d.Get("runtime").(string)),
-		},
-		Name:    aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
-	}
-
-	log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
-	output, err := conn.UpdateFunction(input)
-
-	if err != nil {
-		return fmt.Errorf("error updating CloudFront Function (%s) configuration : %w", d.Id(), err)
-	}
-
-	if d.Get("publish").(bool) {
-		input := &cloudfront.PublishFunctionInput{
-			Name:    aws.String(d.Id()),
-			IfMatch: output.ETag,
-		}
-
-		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
-		_, err := conn.PublishFunction(input)
-
-		if err != nil {
-			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
-		}
-	}
-
-	return resourceAwsCloudFrontFunctionRead(d, meta)
 }

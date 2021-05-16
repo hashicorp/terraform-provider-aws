@@ -5,11 +5,12 @@ import (
 	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -209,14 +210,17 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetFunction(&cloudfront.GetFunctionInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := finder.FunctionByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			return fmt.Errorf("Cloudfront Function still exists")
+		if tfresource.NotFound(err) {
+			continue
 		}
 
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CloudFront Function %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -236,9 +240,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
 
-		output, err := conn.DescribeFunction(&cloudfront.DescribeFunctionInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		output, err := finder.FunctionByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

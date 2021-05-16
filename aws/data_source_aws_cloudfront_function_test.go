@@ -25,12 +25,12 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "code", resourceName, "code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified", resourceName, "last_modified"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "stage", resourceName, "stage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 				),
 			},
 		},
@@ -40,9 +40,9 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 func testAccDataSourceAWSCloudfrontFunctionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_function" "test" {
-  name    = "%s"
+  name    = %[1]q
   runtime = "cloudfront-js-1.0"
-  comment = "%s"
+  comment = "test"
   code    = <<-EOT
 function handler(event) {
 	var response = {
@@ -61,5 +61,5 @@ EOT
 data "aws_cloudfront_function" "test" {
   name = aws_cloudfront_function.test.name
 }
-`, rName, rName)
+`, rName)
 }
