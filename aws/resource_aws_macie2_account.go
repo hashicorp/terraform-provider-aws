@@ -148,7 +148,28 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 
 	input := &macie2.DisableMacieInput{}
 
-	_, err := conn.DisableMacieWithContext(ctx, input)
+	err := resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		_, err := conn.DisableMacieWithContext(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "Cannot disable Macie while associated with an administrator account") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+				return nil
+			}
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DisableMacieWithContext(ctx, input)
+	}
+
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
@@ -156,5 +177,6 @@ func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 		return diag.FromErr(fmt.Errorf("error disabling Macie Account (%s): %w", d.Id(), err))
 	}
+
 	return nil
 }
