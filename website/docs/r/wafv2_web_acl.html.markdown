@@ -47,6 +47,12 @@ resource "aws_wafv2_web_acl" "example" {
         excluded_rule {
           name = "NoUserAgent_HEADER"
         }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
       }
     }
 

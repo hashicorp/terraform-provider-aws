@@ -359,7 +359,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
+				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
 				"not_statement":                         wafv2StatementSchema(level),
 				"or_statement":                          wafv2StatementSchema(level),
 				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
@@ -373,7 +373,7 @@ func wafv2WebACLRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ManagedRuleGroupStatementSchema() *schema.Schema {
+func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -391,6 +391,7 @@ func wafv2ManagedRuleGroupStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
+				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
 			},
 		},
 	}
@@ -626,11 +627,18 @@ func expandWafv2ManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGro
 	}
 
 	m := l[0].(map[string]interface{})
-	return &wafv2.ManagedRuleGroupStatement{
+	r := &wafv2.ManagedRuleGroupStatement{
 		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
 		Name:          aws.String(m["name"].(string)),
 		VendorName:    aws.String(m["vendor_name"].(string)),
 	}
+
+	s := m["scope_down_statement"].([]interface{})
+	if len(s) > 0 && s[0] != nil {
+		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
+	}
+
+	return r
 }
 
 func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
@@ -824,9 +832,10 @@ func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) i
 	}
 
 	m := map[string]interface{}{
-		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
-		"name":          aws.StringValue(r.Name),
-		"vendor_name":   aws.StringValue(r.VendorName),
+		"excluded_rule":        flattenWafv2ExcludedRules(r.ExcludedRules),
+		"name":                 aws.StringValue(r.Name),
+		"vendor_name":          aws.StringValue(r.VendorName),
+		"scope_down_statement": nil,
 	}
 
 	return []interface{}{m}

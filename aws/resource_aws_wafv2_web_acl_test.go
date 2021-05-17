@@ -566,10 +566,11 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 						"override_action.0.count.#": "0",
 						"override_action.0.none.#":  "1",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                 "1",
-						"statement.0.managed_rule_group_statement.0.name":            "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":     "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#": "0",
+						"statement.0.managed_rule_group_statement.#":                        "1",
+						"statement.0.managed_rule_group_statement.0.name":                   "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":            "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":        "0",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#": "0",
 					}),
 				),
 			},
@@ -587,12 +588,17 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 						"override_action.0.count.#": "1",
 						"override_action.0.none.#":  "0",
 						"statement.#":               "1",
-						"statement.0.managed_rule_group_statement.#":                      "1",
-						"statement.0.managed_rule_group_statement.0.name":                 "AWSManagedRulesCommonRuleSet",
-						"statement.0.managed_rule_group_statement.0.vendor_name":          "AWS",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.#":      "2",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name": "SizeRestrictions_QUERYSTRING",
-						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name": "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.#":                                                              "1",
+						"statement.0.managed_rule_group_statement.0.name":                                                         "AWSManagedRulesCommonRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                  "AWS",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.#":                                              "2",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.0.name":                                         "SizeRestrictions_QUERYSTRING",
+						"statement.0.managed_rule_group_statement.0.excluded_rule.1.name":                                         "NoUserAgent_HEADER",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.managed_rule_group_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
 					}),
 				),
 			},
@@ -2114,6 +2120,12 @@ resource "aws_wafv2_web_acl" "test" {
 
         excluded_rule {
           name = "NoUserAgent_HEADER"
+        }
+
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
         }
       }
     }
