@@ -283,6 +283,28 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"target_table": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"view_original_text": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -314,28 +336,6 @@ func resourceAwsGlueCatalogTable() *schema.Resource {
 						"index_status": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
-			"target_table": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"catalog_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"database_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -429,8 +429,12 @@ func resourceAwsGlueCatalogTableRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting parameters: %w", err)
 	}
 
-	if err := d.Set("target_table", flattenGlueTableTargetTable(table.TargetTable)); err != nil {
-		return fmt.Errorf("error setting target_table: %w", err)
+	if table.TargetTable != nil {
+		if err := d.Set("target_table", []interface{}{flattenGlueTableTargetTable(table.TargetTable)}); err != nil {
+			return fmt.Errorf("error setting target_table: %w", err)
+		}
+	} else {
+		d.Set("target_table", nil)
 	}
 
 	partIndexInput := &glue.GetPartitionIndexesInput{
@@ -536,8 +540,8 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 		tableInput.Parameters = expandStringMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("target_table"); ok {
-		tableInput.TargetTable = expandGlueTableTargetTable(v.([]interface{}))
+	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tableInput.TargetTable = expandGlueTableTargetTable(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return tableInput
@@ -976,35 +980,46 @@ func flattenGlueTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]inte
 	return schemaIDInfoSlice
 }
 
-func expandGlueTableTargetTable(l []interface{}) *glue.TableIdentifier {
-	if len(l) == 0 || l[0] == nil {
+func expandGlueTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier {
+	if tfMap == nil {
 		return nil
 	}
 
-	s := l[0].(map[string]interface{})
-	targetTable := &glue.TableIdentifier{
-		CatalogId:    aws.String(s["catalog_id"].(string)),
-		DatabaseName: aws.String(s["database_name"].(string)),
-		Name:         aws.String(s["name"].(string)),
+	apiObject := &glue.TableIdentifier{}
+
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+		apiObject.CatalogId = aws.String(v)
 	}
 
-	return targetTable
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
+		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenGlueTableTargetTable(s *glue.TableIdentifier) []map[string]interface{} {
-	if s == nil {
-		return []map[string]interface{}{}
+func flattenGlueTableTargetTable(apiObject *glue.TableIdentifier) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	tableIdentifiers := make([]map[string]interface{}, 1)
+	tfMap := map[string]interface{}{}
 
-	tableIdentifier := make(map[string]interface{})
+	if v := apiObject.CatalogId; v != nil {
+		tfMap["catalog_id"] = aws.StringValue(v)
+	}
 
-	tableIdentifier["catalog_id"] = aws.StringValue(s.CatalogId)
-	tableIdentifier["database_name"] = aws.StringValue(s.DatabaseName)
-	tableIdentifier["name"] = aws.StringValue(s.Name)
+	if v := apiObject.DatabaseName; v != nil {
+		tfMap["database_name"] = aws.StringValue(v)
+	}
 
-	tableIdentifiers[0] = tableIdentifier
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
 
-	return tableIdentifiers
+	return tfMap
 }
