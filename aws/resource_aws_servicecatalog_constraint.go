@@ -134,7 +134,7 @@ func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interf
 
 	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -147,6 +147,14 @@ func resourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta interf
 	if output == nil {
 		return fmt.Errorf("error getting Service Catalog Constraint (%s): empty response", d.Id())
 	}
+
+	acceptLanguage := d.Get("accept_language").(string)
+
+	if acceptLanguage == "" {
+		acceptLanguage = "en"
+	}
+
+	d.Set("accept_language", acceptLanguage)
 
 	d.Set("parameters", output.ConstraintParameters)
 	d.Set("status", output.Status)
@@ -227,7 +235,9 @@ func resourceAwsServiceCatalogConstraintDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error deleting Service Catalog Constraint (%s): %w", d.Id(), err)
 	}
 
-	if err := waiter.ConstraintDeleted(conn, d.Get("accept_language").(string), d.Id()); err != nil {
+	err = waiter.ConstraintDeleted(conn, d.Get("accept_language").(string), d.Id())
+
+	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("error waiting for Service Catalog Constraint (%s) to be deleted: %w", d.Id(), err)
 	}
 
