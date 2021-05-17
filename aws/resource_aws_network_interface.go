@@ -132,9 +132,9 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			"interface_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ec2.NetworkInterfaceCreationType_Values(), false),
 				Computed:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.NetworkInterfaceCreationType_Values(), false),
 			},
 		},
 

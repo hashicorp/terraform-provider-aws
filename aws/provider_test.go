@@ -365,6 +365,17 @@ func testAccCheckResourceAttrHostnameWithPort(resourceName, attributeName, servi
 	}
 }
 
+// testAccCheckResourceAttrPrivateDnsName ensures the Terraform state exactly matches a private DNS name
+//
+// For example: ip-172-16-10-100.us-west-2.compute.internal
+func testAccCheckResourceAttrPrivateDnsName(resourceName, attributeName string, privateIpAddress **string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		privateDnsName := fmt.Sprintf("ip-%s.%s", resourceAwsEc2DashIP(**privateIpAddress), resourceAwsEc2RegionalPrivateDnsSuffix(testAccGetRegion()))
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, privateDnsName)(s)
+	}
+}
+
 // testAccMatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func testAccMatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
