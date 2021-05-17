@@ -290,6 +290,9 @@ of several sub-resources - these resources are laid out below.
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda
     function with specific actions (maximum 4).
 
+* `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront
+    function with specific actions (maximum 2).
+
 * `max_ttl` (Optional) - The maximum amount of time (in seconds) that an
     object is in a CloudFront cache before CloudFront forwards another request
     to your origin to determine whether the object has been updated. Only
@@ -376,6 +379,33 @@ resource "aws_cloudfront_distribution" "example" {
   `origin-response`
 * `lambda_arn` (Required) - ARN of the Lambda function.
 * `include_body` (Optional) - When set to true it exposes the request body to the lambda function. Defaults to false. Valid values: `true`, `false`.
+
+##### Function Association
+
+With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [Cloudfront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
+for more information.
+
+Example configuration:
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  # function_association is also supported by default_cache_behavior
+  ordered_cache_behavior {
+    # ... other configuration ...
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.example.arn
+    }
+  }
+}
+```
+
+* `event_type` (Required) - The specific event to trigger this function.
+  Valid values: `viewer-request` or `viewer-response`
+* `function_arn` (Required) - ARN of the Cloudfront function.
 
 ##### Cookies Arguments
 

@@ -223,6 +223,10 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 		dcb.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
 	}
 
+	if v, ok := m["function_association"]; ok {
+		dcb.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
+	}
+
 	if v, ok := m["smooth_streaming"]; ok {
 		dcb.SmoothStreaming = aws.Bool(v.(bool))
 	}
@@ -277,6 +281,10 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		cb.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
 	}
 
+	if v, ok := m["function_association"]; ok {
+		cb.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
+	}
+
 	if v, ok := m["smooth_streaming"]; ok {
 		cb.SmoothStreaming = aws.Bool(v.(bool))
 	}
@@ -320,6 +328,9 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 	if len(dcb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
 	}
+	if len(dcb.FunctionAssociations.Items) > 0 {
+		m["function_association"] = flattenFunctionAssociations(dcb.FunctionAssociations)
+	}
 	if dcb.MaxTTL != nil {
 		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)
 	}
@@ -362,6 +373,9 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	}
 	if len(cb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(cb.LambdaFunctionAssociations)
+	}
+	if len(cb.FunctionAssociations.Items) > 0 {
+		m["function_association"] = flattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
 		m["max_ttl"] = int(*cb.MaxTTL)
@@ -433,6 +447,14 @@ func lambdaFunctionAssociationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
+func functionAssociationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
+	buf.WriteString(m["function_arn"].(string))
+	return hashcode.String(buf.String())
+}
+
 func expandLambdaFunctionAssociations(v interface{}) *cloudfront.LambdaFunctionAssociations {
 	if v == nil {
 		return &cloudfront.LambdaFunctionAssociations{
@@ -464,6 +486,34 @@ func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.Lamb
 	return &lfa
 }
 
+func expandFunctionAssociations(v interface{}) *cloudfront.FunctionAssociations {
+	if v == nil {
+		return &cloudfront.FunctionAssociations{
+			Quantity: aws.Int64(0),
+		}
+	}
+
+	s := v.([]interface{})
+	var fa cloudfront.FunctionAssociations
+	fa.Quantity = aws.Int64(int64(len(s)))
+	fa.Items = make([]*cloudfront.FunctionAssociation, len(s))
+	for i, f := range s {
+		fa.Items[i] = expandFunctionAssociation(f.(map[string]interface{}))
+	}
+	return &fa
+}
+
+func expandFunctionAssociation(f map[string]interface{}) *cloudfront.FunctionAssociation {
+	var fa cloudfront.FunctionAssociation
+	if v, ok := f["event_type"]; ok {
+		fa.EventType = aws.String(v.(string))
+	}
+	if v, ok := f["function_arn"]; ok {
+		fa.FunctionARN = aws.String(v.(string))
+	}
+	return &fa
+}
+
 func flattenLambdaFunctionAssociations(lfa *cloudfront.LambdaFunctionAssociations) *schema.Set {
 	s := schema.NewSet(lambdaFunctionAssociationHash, []interface{}{})
 	for _, v := range lfa.Items {
@@ -478,6 +528,23 @@ func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation)
 		m["event_type"] = aws.StringValue(lfa.EventType)
 		m["lambda_arn"] = aws.StringValue(lfa.LambdaFunctionARN)
 		m["include_body"] = aws.BoolValue(lfa.IncludeBody)
+	}
+	return m
+}
+
+func flattenFunctionAssociations(fa *cloudfront.FunctionAssociations) *schema.Set {
+	s := schema.NewSet(functionAssociationHash, []interface{}{})
+	for _, v := range fa.Items {
+		s.Add(flattenFunctionAssociation(v))
+	}
+	return s
+}
+
+func flattenFunctionAssociation(fa *cloudfront.FunctionAssociation) map[string]interface{} {
+	m := map[string]interface{}{}
+	if fa != nil {
+		m["event_type"] = aws.StringValue(fa.EventType)
+		m["function_arn"] = aws.StringValue(fa.FunctionARN)
 	}
 	return m
 }
