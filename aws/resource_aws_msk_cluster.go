@@ -112,6 +112,11 @@ func resourceAwsMskCluster() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
+									"iam": {
+									    Type:     schema.TypeBool,
+									    Optional: true,
+									    ForceNew: true,
+									},
 								},
 							},
 							ConflictsWith: []string{"client_authentication.0.tls"},
@@ -713,7 +718,7 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 	m := l[0].(map[string]interface{})
 
 	ca := &kafka.ClientAuthentication{
-		Sasl: expandMskClusterScram(m["sasl"].([]interface{})),
+		Sasl: expandMskClusterSasl(m["sasl"].([]interface{})),
 		Tls:  expandMskClusterTls(m["tls"].([]interface{})),
 	}
 
@@ -770,7 +775,7 @@ func expandMskClusterEncryptionInTransit(l []interface{}) *kafka.EncryptionInTra
 	return eit
 }
 
-func expandMskClusterScram(l []interface{}) *kafka.Sasl {
+func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -783,6 +788,9 @@ func expandMskClusterScram(l []interface{}) *kafka.Sasl {
 	sasl := &kafka.Sasl{
 		Scram: &kafka.Scram{
 			Enabled: aws.Bool(tfMap["scram"].(bool)),
+		},
+		Iam: &kafka.Iam{
+			Enabled: aws.Bool(tfMap["iam"].(bool)),
 		},
 	}
 
