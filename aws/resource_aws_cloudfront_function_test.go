@@ -64,7 +64,7 @@ func testSweepCloudfrontFunctions(region string) error {
 			r := resourceAwsCloudFrontFunction()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("etag", aws.StringValue(output.ETag))
+			d.Set("etag", output.ETag)
 
 			err = r.Delete(d, client)
 
