@@ -25,6 +25,7 @@ func TestAccAWSAutoscalingSchedule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -59,6 +60,7 @@ func TestAccAWSAutoscalingSchedule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -97,6 +99,7 @@ func TestAccAWSAutoscalingSchedule_recurrence(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -130,6 +133,7 @@ func TestAccAWSAutoscalingSchedule_zeroValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -162,6 +166,7 @@ func TestAccAWSAutoscalingSchedule_negativeOne(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, autoscaling.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAutoscalingScheduleDestroy,
 		Steps: []resource.TestStep{
@@ -292,7 +297,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -308,7 +313,7 @@ resource "aws_autoscaling_schedule" "foobar" {
   desired_capacity       = 0
   start_time             = "%s"
   end_time               = "%s"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
 }
 `, r, r, start, end)
 }
@@ -339,7 +344,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -354,7 +359,7 @@ resource "aws_autoscaling_schedule" "foobar" {
   max_size               = 1
   desired_capacity       = 0
   recurrence             = "0 8 * * *"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
 }
 `, r, r)
 }
@@ -385,7 +390,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -401,7 +406,7 @@ resource "aws_autoscaling_schedule" "foobar" {
   desired_capacity       = 0
   start_time             = "%s"
   end_time               = "%s"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
 }
 `, r, r, start, end)
 }
@@ -432,7 +437,7 @@ resource "aws_autoscaling_group" "foobar" {
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = "${aws_launch_configuration.foobar.name}"
+  launch_configuration      = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -448,7 +453,7 @@ resource "aws_autoscaling_schedule" "foobar" {
   desired_capacity       = -1
   start_time             = "%s"
   end_time               = "%s"
-  autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  autoscaling_group_name = aws_autoscaling_group.foobar.name
 }
 `, r, r, start, end)
 }

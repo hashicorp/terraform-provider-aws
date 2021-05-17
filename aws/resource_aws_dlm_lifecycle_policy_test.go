@@ -18,6 +18,7 @@ func TestAccAWSDlmLifecyclePolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -54,6 +55,7 @@ func TestAccAWSDlmLifecyclePolicy_Volume_Full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -156,6 +158,7 @@ func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
+		ErrorCheck:   testAccErrorCheck(t, dlm.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +285,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "basic" {
@@ -332,7 +334,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {
@@ -391,7 +392,6 @@ resource "aws_iam_role" "dlm_lifecycle_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_dlm_lifecycle_policy" "full" {

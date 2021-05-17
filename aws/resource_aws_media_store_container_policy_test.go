@@ -17,6 +17,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		ErrorCheck:   testAccErrorCheck(t, mediastore.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -101,6 +102,8 @@ data "aws_region" "current" {}
 
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
 }
@@ -118,10 +121,10 @@ resource "aws_media_store_container_policy" "test" {
         "mediastore:*"
       ],
       "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Effect": "Allow",
-      "Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.test.name}/*",
       "Condition": {
         "Bool": {
           "aws:SecureTransport": "true"
@@ -131,7 +134,6 @@ resource "aws_media_store_container_policy" "test" {
   ]
 }
 EOF
-
 }
 `, rName, sid)
 }

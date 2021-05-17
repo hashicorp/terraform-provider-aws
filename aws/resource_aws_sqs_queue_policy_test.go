@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
@@ -16,6 +17,7 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -51,6 +53,7 @@ func TestAccAWSSQSQueuePolicy_disappears_queue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +77,7 @@ func TestAccAWSSQSQueuePolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
 		Steps: []resource.TestStep{
@@ -97,21 +101,22 @@ resource "aws_sqs_queue" "test" {
 }
 
 resource "aws_sqs_queue_policy" "test" {
-  queue_url = "${aws_sqs_queue.test.id}"
+  queue_url = aws_sqs_queue.test.id
+
   policy = <<POLICY
 {
-  "Version":"2012-10-17",
-  "Id":"sqspolicy",
-  "Statement":[
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement": [
     {
-      "Sid":"First",
-      "Effect":"Allow",
-      "Principal":"*",
-      "Action":"sqs:SendMessage",
-      "Resource":"${aws_sqs_queue.test.arn}",
-      "Condition":{
-        "ArnEquals":{
-          "aws:SourceArn":"${aws_sqs_queue.test.arn}"
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.test.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${aws_sqs_queue.test.arn}"
         }
       }
     }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,8 +16,9 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testin
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, rds.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName),
@@ -51,8 +53,9 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, rds.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName),
@@ -87,8 +90,9 @@ func TestAccAWSDbClusterSnapshotDataSource_MostRecent(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, rds.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName),
@@ -122,7 +126,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -134,17 +138,17 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -153,17 +157,17 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
-`, rName, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName string) string {
@@ -172,7 +176,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -184,17 +188,17 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -203,17 +207,17 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
 }
-`, rName, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
@@ -222,7 +226,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -234,17 +238,17 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = [aws_subnet.test.*.id[0], aws_subnet.test.*.id[1]]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -253,17 +257,17 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "incorrect" {
   db_cluster_identifier          = aws_rds_cluster.test.id
-  db_cluster_snapshot_identifier = "%s-incorrect"
+  db_cluster_snapshot_identifier = "%[1]s-incorrect"
 }
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_db_cluster_snapshot.incorrect.db_cluster_identifier
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
 
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier = aws_db_cluster_snapshot.test.db_cluster_identifier
   most_recent           = true
 }
-`, rName, rName, rName, rName, rName, rName)
+`, rName)
 }

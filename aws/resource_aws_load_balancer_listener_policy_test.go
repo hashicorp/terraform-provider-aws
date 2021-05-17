@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,6 +19,7 @@ func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	mcName := rChar
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -147,10 +147,10 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -183,14 +183,14 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
     aws_load_balancer_policy.magic-cookie-sticky.policy_name,
   ]
 }
-`, lbName, mcName)
+`, lbName, mcName))
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -223,14 +223,14 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
     aws_load_balancer_policy.magic-cookie-sticky.policy_name,
   ]
 }
-`, lbName, mcName)
+`, lbName, mcName))
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
   name               = "%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port     = 80
@@ -243,5 +243,5 @@ resource "aws_elb" "test-lb" {
     Name = "tf-acc-test"
   }
 }
-`, lbName)
+`, lbName))
 }

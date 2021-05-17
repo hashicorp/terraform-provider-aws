@@ -3,12 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -30,9 +30,9 @@ func testSweepRoute53QueryLogs(region string) error {
 	conn := client.(*AWSClient).r53conn
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, isLast bool) bool {
+	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, queryLoggingConfig := range page.QueryLoggingConfigs {
@@ -53,7 +53,7 @@ func testSweepRoute53QueryLogs(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
 	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
@@ -69,12 +69,6 @@ func testSweepRoute53QueryLogs(region string) error {
 }
 
 func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
-	// The underlying resources are sensitive to where they are located
-	// Use us-east-1 for testing
-	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_route53_query_log.test"
 	route53ZoneResourceName := "aws_route53_zone.test"
@@ -82,9 +76,10 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
+		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
@@ -105,7 +100,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -132,7 +127,7 @@ func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.Qu
 }
 
 func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_query_log" {
@@ -142,8 +137,13 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 		out, err := conn.GetQueryLoggingConfig(&route53.GetQueryLoggingConfigInput{
 			Id: aws.String(rs.Primary.ID),
 		})
+
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig) {
+			continue
+		}
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
 		}
 
 		if out.QueryLoggingConfig != nil {
@@ -155,11 +155,15 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccRoute53QueryLogRegionProviderConfig(),
+		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name              = "/aws/route53/${aws_route53_zone.test.name}"
   retention_in_days = 1
 }
+
+data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
@@ -168,10 +172,10 @@ data "aws_iam_policy_document" "test" {
       "logs:PutLogEvents",
     ]
 
-    resources = ["arn:aws:logs:*:*:log-group:/aws/route53/*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:*:log-group:/aws/route53/*"]
 
     principals {
-      identifiers = ["route53.amazonaws.com"]
+      identifiers = ["route53.${data.aws_partition.current.dns_suffix}"]
       type        = "Service"
     }
   }
@@ -179,7 +183,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
   policy_name     = "%[1]s"
-  policy_document = "${data.aws_iam_policy_document.test.json}"
+  policy_document = data.aws_iam_policy_document.test.json
 }
 
 resource "aws_route53_zone" "test" {
@@ -189,8 +193,8 @@ resource "aws_route53_zone" "test" {
 resource "aws_route53_query_log" "test" {
   depends_on = [aws_cloudwatch_log_resource_policy.test]
 
-  cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
-  zone_id                  = "${aws_route53_zone.test.zone_id}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.test.arn
+  zone_id                  = aws_route53_zone.test.zone_id
 }
-`, rName)
+`, rName))
 }

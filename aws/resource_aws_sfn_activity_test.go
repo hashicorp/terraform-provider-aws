@@ -19,6 +19,7 @@ func TestAccAWSSfnActivity_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
@@ -45,6 +46,7 @@ func TestAccAWSSfnActivity_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sfn.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSfnActivityDestroy,
 		Steps: []resource.TestStep{
@@ -150,9 +152,10 @@ func testAccAWSSfnActivityBasicConfigTags1(rName, tag1Key, tag1Value string) str
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
+
   tags = {
-	%q = %q
-}
+    %q = %q
+  }
 }
 `, rName, tag1Key, tag1Value)
 }
@@ -161,10 +164,11 @@ func testAccAWSSfnActivityBasicConfigTags2(rName, tag1Key, tag1Value, tag2Key, t
 	return fmt.Sprintf(`
 resource "aws_sfn_activity" "test" {
   name = "%s"
+
   tags = {
-	%q = %q
-	%q = %q
-}
+    %q = %q
+    %q = %q
+  }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

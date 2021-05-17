@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 10 * time.Minute
-	emrInstanceGroupUpdateTimeout = 10 * time.Minute
+	emrInstanceGroupCreateTimeout = 30 * time.Minute
+	emrInstanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func resourceAwsEMRInstanceGroup() *schema.Resource {
@@ -185,7 +185,7 @@ func resourceAwsEMRInstanceGroupCreate(d *schema.ResourceData, meta interface{})
 	if resp == nil || len(resp.InstanceGroupIds) == 0 {
 		return fmt.Errorf("Error creating instance groups: no instance group returned")
 	}
-	d.SetId(*resp.InstanceGroupIds[0])
+	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
 	if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)

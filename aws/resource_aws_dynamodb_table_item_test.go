@@ -26,6 +26,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -60,6 +61,7 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -103,6 +105,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +153,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -197,6 +201,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, dynamodb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
@@ -339,7 +344,6 @@ resource "aws_dynamodb_table_item" "test" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, hashKey, item)
 }
@@ -372,7 +376,6 @@ resource "aws_dynamodb_table_item" "test" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, item)
 }
@@ -405,7 +408,6 @@ resource "aws_dynamodb_table_item" "test1" {
   item = <<ITEM
 %s
 ITEM
-
 }
 
 resource "aws_dynamodb_table_item" "test2" {
@@ -416,7 +418,6 @@ resource "aws_dynamodb_table_item" "test2" {
   item = <<ITEM
 %s
 ITEM
-
 }
 `, tableName, hashKey, rangeKey, hashKey, rangeKey, firstItem, secondItem)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,6 +15,7 @@ func TestAccAWSRoute53ZoneAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -37,6 +39,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -58,6 +61,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -79,6 +83,7 @@ func TestAccAWSRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +111,8 @@ func TestAccAWSRoute53ZoneAssociation_CrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +143,8 @@ func TestAccAWSRoute53ZoneAssociation_CrossRegion(t *testing.T) {
 			testAccPreCheck(t)
 			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckRoute53ZoneAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -221,36 +228,40 @@ func testAccCheckRoute53ZoneAssociationExists(resourceName string) resource.Test
 
 const testAccRoute53ZoneAssociationConfig = `
 resource "aws_vpc" "foo" {
-	cidr_block = "10.6.0.0/16"
-	enable_dns_hostnames = true
-	enable_dns_support = true
-	tags = {
-		Name = "terraform-testacc-route53-zone-association-foo"
-	}
+  cidr_block           = "10.6.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "terraform-testacc-route53-zone-association-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.7.0.0/16"
-	enable_dns_hostnames = true
-	enable_dns_support = true
-	tags = {
-		Name = "terraform-testacc-route53-zone-association-bar"
-	}
+  cidr_block           = "10.7.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "terraform-testacc-route53-zone-association-bar"
+  }
 }
 
 resource "aws_route53_zone" "foo" {
-	name = "foo.com"
-	vpc {
-		vpc_id = "${aws_vpc.foo.id}"
-	}
-	lifecycle {
-		ignore_changes = ["vpc"]
-	}
+  name = "foo.com"
+
+  vpc {
+    vpc_id = aws_vpc.foo.id
+  }
+
+  lifecycle {
+    ignore_changes = ["vpc"]
+  }
 }
 
 resource "aws_route53_zone_association" "foobar" {
-	zone_id = "${aws_route53_zone.foo.id}"
-	vpc_id  = "${aws_vpc.bar.id}"
+  zone_id = aws_route53_zone.foo.id
+  vpc_id  = aws_vpc.bar.id
 }
 `
 

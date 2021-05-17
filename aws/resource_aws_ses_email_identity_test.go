@@ -23,11 +23,12 @@ func init() {
 func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 	email := fmt.Sprintf(
 		"%s@terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -50,11 +51,12 @@ func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
 	email := fmt.Sprintf(
 		"%s@terraformtesting.com.",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESEmailIdentityDestroy,
 		Steps: []resource.TestStep{

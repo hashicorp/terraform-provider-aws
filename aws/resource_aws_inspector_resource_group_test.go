@@ -17,6 +17,7 @@ func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, inspector.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
@@ -82,13 +83,15 @@ func testAccCheckAWSInspectorResourceGroupRecreated(v1, v2 *inspector.ResourceGr
 var testAccAWSInspectorResourceGroup = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
-    Name  = "foo"
+    Name = "foo"
   }
-}`
+}
+`
 
 var testAccCheckAWSInspectorResourceGroupModified = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
-    Name  = "bar"
+    Name = "bar"
   }
-}`
+}
+`

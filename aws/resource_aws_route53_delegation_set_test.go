@@ -5,12 +5,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
 )
 
 func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
@@ -19,11 +18,10 @@ func TestAccAWSRoute53DelegationSet_basic(t *testing.T) {
 	resourceName := "aws_route53_delegation_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"reference_name"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckRoute53DelegationSetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53DelegationSetConfig(refName),
@@ -51,11 +49,10 @@ func TestAccAWSRoute53DelegationSet_withZones(t *testing.T) {
 	zoneName2 := fmt.Sprintf("%s-secondary.terraformtest.com", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"reference_name"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckRoute53DelegationSetDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, route53.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53DelegationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53DelegationSetWithZonesConfig(refName, zoneName1, zoneName2),
@@ -172,12 +169,12 @@ resource "aws_route53_delegation_set" "test" {
 
 resource "aws_route53_zone" "primary" {
   name              = "%s"
-  delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  delegation_set_id = aws_route53_delegation_set.test.id
 }
 
 resource "aws_route53_zone" "secondary" {
   name              = "%s"
-  delegation_set_id = "${aws_route53_delegation_set.test.id}"
+  delegation_set_id = aws_route53_delegation_set.test.id
 }
 `, refName, zoneName1, zoneName2)
 }

@@ -14,8 +14,10 @@ func dataSourceAwsOutpostsOutpost() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validateArn,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -41,6 +43,7 @@ func dataSourceAwsOutpostsOutpost() *schema.Resource {
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"site_id": {
@@ -73,6 +76,14 @@ func dataSourceAwsOutpostsOutpostRead(d *schema.ResourceData, meta interface{}) 
 			}
 
 			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(outpost.Name) {
+				continue
+			}
+
+			if v, ok := d.GetOk("arn"); ok && v.(string) != aws.StringValue(outpost.OutpostArn) {
+				continue
+			}
+
+			if v, ok := d.GetOk("owner_id"); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
 				continue
 			}
 

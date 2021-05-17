@@ -12,7 +12,7 @@ Authorizes a VPC in a peer account to be associated with a local Route53 Hosted 
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "aws" {
 }
 
@@ -65,7 +65,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The calculated unique identifier for the association.
 

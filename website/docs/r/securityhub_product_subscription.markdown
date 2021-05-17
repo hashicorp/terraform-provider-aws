@@ -12,7 +12,7 @@ Subscribes to a Security Hub product.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_securityhub_account" "example" {}
 
 data "aws_region" "current" {}
@@ -65,7 +65,7 @@ Currently available products (remember to replace `${var.region}` as appropriate
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of a resource that represents your subscription to the product that generates the findings that you want to import into Security Hub.
 
