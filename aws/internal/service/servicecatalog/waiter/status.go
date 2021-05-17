@@ -154,7 +154,9 @@ func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id st
 		output, err := conn.DescribeConstraint(input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %w", acceptLanguage, id, err),
+			}
 		}
 
 		if err != nil {
@@ -162,9 +164,35 @@ func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id st
 		}
 
 		if output == nil || output.ConstraintDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing constraint: empty constraint detail")
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("describing constraint (accept language %s, ID: %s): empty response", acceptLanguage, id),
+			}
 		}
 
 		return output, aws.StringValue(output.Status), err
+	}
+}
+
+func ProductPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ProductPortfolioAssociation(conn, acceptLanguage, portfolioID, productID)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("product portfolio association not found (%s:%s:%s): %w", acceptLanguage, portfolioID, productID, err),
+			}
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing product portfolio association: %w", err)
+		}
+
+		if output == nil {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("finding product portfolio association (%s:%s:%s): empty response", acceptLanguage, portfolioID, productID),
+			}
+		}
+
+		return output, servicecatalog.StatusAvailable, err
 	}
 }
