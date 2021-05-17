@@ -7,9 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FunctionByName(conn *cloudfront.CloudFront, name string) (*cloudfront.DescribeFunctionOutput, error) {
+func FunctionByNameAndStage(conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
 	input := &cloudfront.DescribeFunctionInput{
-		Name: aws.String(name),
+		Name:  aws.String(name),
+		Stage: aws.String(stage),
 	}
 
 	output, err := conn.DescribeFunction(input)

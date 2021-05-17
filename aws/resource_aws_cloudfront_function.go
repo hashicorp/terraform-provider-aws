@@ -116,16 +116,21 @@ func resourceAwsCloudFrontFunctionCreate(d *schema.ResourceData, meta interface{
 func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	describeFunctionOutput, err := finder.FunctionByName(conn, d.Id())
+	stage := cloudfront.FunctionStageDevelopment
+	if d.Get("publish").(bool) {
+		stage = cloudfront.FunctionStageLive
+	}
+
+	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, d.Id(), stage)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] CloudFront Function (%s/%s) not found, removing from state", d.Id(), stage)
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", d.Id(), stage, err)
 	}
 
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
@@ -136,11 +141,12 @@ func resourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{})
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
-		Name: aws.String(d.Id()),
+		Name:  aws.String(d.Id()),
+		Stage: aws.String(stage),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting CloudFront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error getting CloudFront Function (%s/%s): %w", d.Id(), stage, err)
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))

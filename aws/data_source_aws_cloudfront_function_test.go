@@ -58,7 +58,8 @@ EOT
 }
 
 data "aws_cloudfront_function" "test" {
-  name = aws_cloudfront_function.test.name
+  name  = aws_cloudfront_function.test.name
+  stage = "LIVE"
 }
 `, rName)
 }

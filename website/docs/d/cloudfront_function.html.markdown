@@ -27,6 +27,7 @@ data "aws_cloudfront_function" "existing" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the CloudFront function.
+* `stage` - (Required) The function’s stage, either `DEVELOPMENT` or `LIVE`.
 
 ## Attributes Reference
 

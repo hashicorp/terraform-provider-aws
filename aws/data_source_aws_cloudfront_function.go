@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
 )
 
@@ -50,6 +51,12 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 				Computed: true,
 			},
 
+			"stage": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudfront.FunctionStage_Values(), false),
+			},
+
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -61,13 +68,14 @@ func dataSourceAwsCloudFrontFunction() *schema.Resource {
 func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	describeFunctionOutput, err := finder.FunctionByName(conn, d.Get("name").(string))
+	name := d.Get("name").(string)
+	stage := d.Get("stage").(string)
+
+	describeFunctionOutput, err := finder.FunctionByNameAndStage(conn, name, stage)
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFront Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", name, stage, err)
 	}
-
-	d.SetId(aws.StringValue(describeFunctionOutput.FunctionSummary.Name))
 
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", describeFunctionOutput.FunctionSummary.FunctionConfig.Comment)
@@ -78,7 +86,8 @@ func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
 	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
-		Name: aws.String(d.Id()),
+		Name:  aws.String(name),
+		Stage: aws.String(stage),
 	})
 
 	if err != nil {
@@ -86,6 +95,8 @@ func dataSourceAwsCloudFrontFunctionRead(d *schema.ResourceData, meta interface{
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
+
+	d.SetId(aws.StringValue(describeFunctionOutput.FunctionSummary.Name))
 
 	return nil
 }

@@ -245,7 +245,7 @@ func testAccCheckCloudfrontFunctionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := finder.FunctionByName(conn, rs.Primary.ID)
+		_, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -275,7 +275,7 @@ func testAccCheckAwsCloudfrontFunctionExists(n string, v *cloudfront.DescribeFun
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
 
-		output, err := finder.FunctionByName(conn, rs.Primary.ID)
+		output, err := finder.FunctionByNameAndStage(conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 		if err != nil {
 			return err
