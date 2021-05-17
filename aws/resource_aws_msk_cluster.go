@@ -113,9 +113,9 @@ func resourceAwsMskCluster() *schema.Resource {
 										ForceNew: true,
 									},
 									"iam": {
-									    Type:     schema.TypeBool,
-									    Optional: true,
-									    ForceNew: true,
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
