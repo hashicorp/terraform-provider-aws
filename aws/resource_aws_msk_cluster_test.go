@@ -57,7 +57,8 @@ func testSweepMskClusters(region string) error {
 
 const (
 	mskClusterPortPlaintext = 9092
-	mskClusterPortSasl      = 9096
+	mskClusterPortSaslScram = 9096
+	mskClusterPortSaslIam   = 9098
 	mskClusterPortTls       = 9094
 
 	mskClusterPortZookeeper = 2181
@@ -68,9 +69,10 @@ const (
 )
 
 var (
-	mskClusterBoostrapBrokersRegexp     = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortPlaintext))
-	mskClusterBoostrapBrokersSaslRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSasl))
-	mskClusterBoostrapBrokersTlsRegexp  = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortTls))
+	mskClusterBoostrapBrokersRegexp          = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortPlaintext))
+	mskClusterBoostrapBrokersSaslScramRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslScram))
+	mskClusterBoostrapBrokersSaslIamRegexp   = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortSaslIam))
+	mskClusterBoostrapBrokersTlsRegexp       = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortTls))
 
 	mskClusterZookeeperConnectStringRegexp = regexp.MustCompile(fmt.Sprintf(mskClusterBrokerRegexpFormat, mskClusterPortZookeeper))
 )
@@ -234,7 +236,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
 
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslRegexp),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", mskClusterBoostrapBrokersSaslScramRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
 
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_scram"),
@@ -293,7 +295,7 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslRegexp),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslIamRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
 
 					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_iam"),
