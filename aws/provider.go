@@ -1011,6 +1011,7 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_portfolio_share":                      resourceAwsServiceCatalogPortfolioShare(),
 			"aws_servicecatalog_product":                              resourceAwsServiceCatalogProduct(),
 			"aws_servicecatalog_tag_option":                           resourceAwsServiceCatalogTagOption(),
+			"aws_servicecatalog_product_portfolio_association":        resourceAwsServiceCatalogProductPortfolioAssociation(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":              resourceAwsServiceDiscoveryPublicDnsNamespace(),
