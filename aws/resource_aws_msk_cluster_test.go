@@ -293,10 +293,10 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
-					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", mskClusterBoostrapBrokersTlsRegexp),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", mskClusterBoostrapBrokersSaslRegexp),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
 
-					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_scram"),
+					testCheckResourceAttrIsSortedCsv(resourceName, "bootstrap_brokers_sasl_iam"),
 				),
 			},
 			{
