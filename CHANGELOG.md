@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_macie2_organization_admin_account` ([#19303](https://github.com/hashicorp/terraform-provider-aws/issues/19303))
 * **New Resource:** `aws_servicecatalog_organizations_access` ([#19278](https://github.com/hashicorp/terraform-provider-aws/issues/19278))
 * **New Resource:** `aws_servicecatalog_portfolio_share` ([#19278](https://github.com/hashicorp/terraform-provider-aws/issues/19278))
 
