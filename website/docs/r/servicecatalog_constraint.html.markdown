@@ -60,24 +60,27 @@ The `type` you specify determines what must be included in the `parameters` JSON
 ```json
 {"LocalRoleName": "SCBasicLaunchRole"}
 ```
+
 * `NOTIFICATION`: Specify the `NotificationArns` property as follows:
 
 ```json
 {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 ```
+
 * `RESOURCE_UPDATE`: Specify the `TagUpdatesOnProvisionedProduct` property as follows. The `TagUpdatesOnProvisionedProduct` property accepts a string value of `ALLOWED` or `NOT_ALLOWED`.
 
 ```json
 {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
 ```
+
 * `STACKSET`: Specify the Parameters property as follows. You cannot have both a `LAUNCH` and a `STACKSET` constraint. You also cannot have more than one `STACKSET` constraint on on an `aws_servicecatalog_product` and `aws_servicecatalog_portfolio`. Products with a `STACKSET` constraint will launch an AWS CloudFormation stack set.
 
 ```json
-{"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
-[ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
+{"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList": [ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
 ```
+
 * `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
-  
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
