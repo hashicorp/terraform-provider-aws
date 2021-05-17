@@ -93,6 +93,11 @@ func testSweepServiceCatalogProductPortfolioAssociations(region string) error {
 
 				return !lastPage
 			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Portfolios for Products %s: %w", region, err))
+				continue
+			}
 		}
 
 		return !lastPage
