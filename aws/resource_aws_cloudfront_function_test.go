@@ -5,11 +5,14 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudfront/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
@@ -31,44 +34,60 @@ func testAccErrorCheckSkipFunction(t *testing.T) resource.ErrorCheckFunc {
 func testSweepCloudfrontFunctions(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).cloudfrontconn
+	input := &cloudfront.ListFunctionsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = lister.ListFunctionsPages(conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.FunctionList.Items {
+			name := aws.StringValue(item.Name)
+
+			output, err := finder.FunctionByNameAndStage(conn, name, cloudfront.FunctionStageDevelopment)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error reading CloudFront Function (%s): %w", name, err)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			r := resourceAwsCloudFrontFunction()
+			d := r.Data(nil)
+			d.SetId(name)
+			d.Set("etag", aws.StringValue(output.ETag))
+
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	cloudfrontconn := client.(*AWSClient).cloudfrontconn
-
-	resp, err := cloudfrontconn.ListFunctions(&cloudfront.ListFunctionsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Cloudfront Function sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving Cloudfront Functions: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFront Functions: %w", err))
 	}
 
-	if len(resp.FunctionList.Items) == 0 {
-		log.Print("[DEBUG] No aws Cloudfront Functions to sweep")
-		return nil
-	}
-
-	for _, f := range resp.FunctionList.Items {
-		describeParams := &cloudfront.DescribeFunctionInput{
-			Name: f.Name,
-		}
-		DescribeFunctionOutput, err := cloudfrontconn.DescribeFunction(describeParams)
-		if err != nil {
-			return err
-		}
-		_, delerr := cloudfrontconn.DeleteFunction(
-			&cloudfront.DeleteFunctionInput{
-				Name:    f.Name,
-				IfMatch: DescribeFunctionOutput.ETag,
-			})
-		if delerr != nil {
-			return delerr
-		}
-	}
-
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSCloudfrontFunction_basic(t *testing.T) {
