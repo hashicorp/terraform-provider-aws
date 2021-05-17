@@ -103,7 +103,7 @@ func TestAccAWSServiceCatalogConstraint_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_role(rName),
+				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
@@ -136,7 +136,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName),
+				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogConstraintExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogConstraint(), resourceName),
@@ -150,7 +150,7 @@ func TestAccAWSServiceCatalogConstraint_disappears(t *testing.T) {
 func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_constraint.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	//rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -159,12 +159,15 @@ func TestAccAWSServiceCatalogConstraint_update(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogConstraintDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName),
+				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "key", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner"),
-					resource.TestCheckResourceAttr(resourceName, "value", "värde ett"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+				),
+			},
+			{
+				Config: testAccAWSServiceCatalogConstraintConfig_basic(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", rName2),
 				),
 			},
 		},
@@ -285,61 +288,29 @@ resource "aws_servicecatalog_portfolio" "test" {
   name          = %[1]q
   provider_name = %[1]q
 }
+
+resource "aws_servicecatalog_product_portfolio_association" "test" {
+  portfolio_id = aws_servicecatalog_portfolio.test.id
+  product_id   = aws_servicecatalog_product.test.id
+}
 `, rName)
 }
 
-func testAccAWSServiceCatalogConstraintConfig_basic(rName string) string {
+func testAccAWSServiceCatalogConstraintConfig_basic(rName, description string) string {
 	return composeConfig(testAccAWSServiceCatalogConstraintConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
 
 resource "aws_servicecatalog_constraint" "test" {
-  description  = %[1]q
-  portfolio_id = aws_servicecatalog_portfolio.test.id
-  product_id   = aws_servicecatalog_product.test.id
+  description  = %[2]q
+  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
+  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
   type         = "NOTIFICATION"
 
   parameters = jsonencode({"NotificationArns" : ["${aws_sns_topic.test.arn}"]})
 
   depends_on = [aws_sns_topic.test]
 }
-`, rName))
-}
-
-func testAccAWSServiceCatalogConstraintConfig_role(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogConstraintConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "servicecatalog.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_servicecatalog_constraint" "test" {
-  description  = %[1]q
-  portfolio_id = aws_servicecatalog_portfolio.test.id
-  product_id   = aws_servicecatalog_product.test.id
-  type         = "LAUNCH"
-
-  parameters = jsonencode({"RoleArn" : "${aws_iam_role.test.arn}"})
-
-  depends_on = [aws_iam_role.test]
-}
-`, rName))
+`, rName, description))
 }
