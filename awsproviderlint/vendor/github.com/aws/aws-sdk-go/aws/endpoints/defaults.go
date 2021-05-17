@@ -638,7 +638,19 @@ var awsPartition = partition{
 		"api.fleethub.iot": service{
 
 			Endpoints: endpoints{
-				"us-east-1": endpoint{},
+				"ap-northeast-1": endpoint{},
+				"ap-northeast-2": endpoint{},
+				"ap-south-1":     endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"ca-central-1":   endpoint{},
+				"eu-central-1":   endpoint{},
+				"eu-north-1":     endpoint{},
+				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"api.mediatailor": service{
@@ -8092,6 +8104,13 @@ var awscnPartition = partition{
 				"cn-northwest-1": endpoint{
 					Protocols: []string{"https"},
 				},
+			},
+		},
+		"servicecatalog": service{
+
+			Endpoints: endpoints{
+				"cn-north-1":     endpoint{},
+				"cn-northwest-1": endpoint{},
 			},
 		},
 		"servicediscovery": service{
