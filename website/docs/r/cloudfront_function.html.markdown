@@ -12,6 +12,8 @@ Provides a CloudFront Function resource. With CloudFront Functions in Amazon Clo
 
 See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
 
+~> **NOTE:** You cannot delete a function if it’s associated with a cache behavior. First, update your distributions to remove the function association from all cache behaviors, then delete the function.
+
 ## Example Usage
 
 ### Basic Example
