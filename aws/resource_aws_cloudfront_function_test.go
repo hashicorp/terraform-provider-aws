@@ -167,6 +167,51 @@ func TestAccAWSCloudfrontFunction_Publish(t *testing.T) {
 	})
 }
 
+// If you are testing manually and can't wait for deletion, set the
+// TF_TEST_CLOUDFRONT_RETAIN environment variable.
+func TestAccAWSCloudfrontFunction_Associated(t *testing.T) {
+	var conf cloudfront.DescribeFunctionOutput
+	resourceName := "aws_cloudfront_function.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudfrontFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudfrontConfigAssociated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					// After creation the function will be in UNASSOCIATED status.
+					// Apply the same configuration and it will move to DEPLOYED status.
+					resource.TestCheckResourceAttr(resourceName, "status", "UNASSOCIATED"),
+				),
+			},
+			{
+				Config: testAccAWSCloudfrontConfigAssociated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
+			},
+			{
+				Config: testAccAWSCloudfrontConfigUnassociated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCloudfrontFunctionExists(resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudfrontFunction_Update_Code(t *testing.T) {
 	var conf cloudfront.DescribeFunctionOutput
 	resourceName := "aws_cloudfront_function.test"
@@ -331,6 +376,151 @@ EOT
   publish = %[2]t
 }
 `, rName, publish)
+}
+
+func testAccAWSCloudfrontConfigAssociated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.test.arn
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-1.0"
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+
+  publish = true
+}
+`, rName, testAccAWSCloudFrontDistributionRetainConfig())
+}
+
+func testAccAWSCloudfrontConfigUnassociated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[2]s
+}
+
+resource "aws_cloudfront_function" "test" {
+  name    = %[1]q
+  runtime = "cloudfront-js-1.0"
+  code    = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+
+  publish = true
+}
+`, rName, testAccAWSCloudFrontDistributionRetainConfig())
 }
 
 func testAccAWSCloudfrontConfigCodeUpdate(rName string) string {
