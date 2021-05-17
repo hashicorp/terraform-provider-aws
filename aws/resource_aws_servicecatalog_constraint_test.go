@@ -268,9 +268,9 @@ EOF
 }
 
 resource "aws_servicecatalog_product" "test" {
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  name  = %[1]q
+  owner = "ägare"
+  type  = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     disable_template_validation = true
