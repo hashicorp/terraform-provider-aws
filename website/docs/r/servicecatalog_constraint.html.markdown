@@ -10,6 +10,8 @@ description: |-
 
 Manages a Service Catalog Constraint.
 
+~> **NOTE:** This resource does not associate a Service Catalog product and portfolio. However, the product and portfolio must be associated (see the [`aws_servicecatalog_product_portfolio_association`]((/docs/providers/aws/r/servicecatalog_product_portfolio_association.html)) resource) prior to creating a constraint or you will receive an error.
+
 ## Example Usage
 
 ### Basic Usage
