@@ -1027,18 +1027,27 @@ func flattenMskSasl(sasl *kafka.Sasl) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"scram": flattenMskScram(sasl.Scram),
+		"scram": flattenMskSaslScram(sasl.Scram),
+		"iam":   flattenMskSaslIam(sasl.Iam),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenMskScram(scram *kafka.Scram) bool {
+func flattenMskSaslScram(scram *kafka.Scram) bool {
 	if scram == nil {
 		return false
 	}
 
 	return aws.BoolValue(scram.Enabled)
+}
+
+func flattenMskSaslIam(iam *kafka.Iam) bool {
+	if iam == nil {
+		return false
+	}
+
+	return aws.BoolValue(iam.Enabled)
 }
 
 func flattenMskTls(tls *kafka.Tls) []map[string]interface{} {
