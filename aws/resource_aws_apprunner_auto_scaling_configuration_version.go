@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 )
@@ -44,22 +45,25 @@ func resourceAwsAppRunnerAutoScalingConfigurationVersion() *schema.Resource {
 				Computed: true,
 			},
 			"max_concurrency": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  100,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      100,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 200),
 			},
 			"max_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  50,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      25,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 25),
 			},
 			"min_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      1,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 25),
 			},
 			"status": {
 				Type:     schema.TypeString,

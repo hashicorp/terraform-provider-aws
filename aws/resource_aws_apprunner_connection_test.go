@@ -19,8 +19,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_apprunner_connection", &resource.Sweeper{
-		Name: "aws_apprunner_connection",
-		F:    testSweepAppRunnerConnections,
+		Name:         "aws_apprunner_connection",
+		F:            testSweepAppRunnerConnections,
+		Dependencies: []string{"aws_apprunner_service"},
 	})
 }
 

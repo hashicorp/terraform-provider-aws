@@ -19,6 +19,10 @@ const (
 
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
 	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
+
+	ServiceCreateTimeout = 20 * time.Minute
+	ServiceDeleteTimeout = 20 * time.Minute
+	ServiceUpdateTimeout = 20 * time.Minute
 )
 
 func AutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -79,6 +83,45 @@ func CustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunn
 		Target:  []string{},
 		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func ServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.ServiceStatusOperationInProgress},
+		Target:  []string{apprunner.ServiceStatusRunning},
+		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Timeout: ServiceCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func ServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.ServiceStatusOperationInProgress},
+		Target:  []string{apprunner.ServiceStatusRunning},
+		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Timeout: ServiceUpdateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func ServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.ServiceStatusRunning, apprunner.ServiceStatusOperationInProgress},
+		Target:  []string{apprunner.ServiceStatusDeleted},
+		Refresh: ServiceStatus(ctx, conn, serviceArn),
+		Timeout: ServiceDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

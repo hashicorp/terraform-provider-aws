@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/finder"
 )
 
 func AutoScalingConfigurationStatus(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
@@ -57,5 +58,25 @@ func CustomDomainStatus(ctx context.Context, conn *apprunner.AppRunner, domainNa
 		}
 
 		return customDomain, aws.StringValue(customDomain.Status), nil
+	}
+}
+
+func ServiceStatus(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apprunner.DescribeServiceInput{
+			ServiceArn: aws.String(serviceArn),
+		}
+
+		output, err := conn.DescribeServiceWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.Service == nil {
+			return nil, "", nil
+		}
+
+		return output.Service, aws.StringValue(output.Service.Status), nil
 	}
 }
