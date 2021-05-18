@@ -1098,8 +1098,10 @@ func flattenWafv2Allow(a *wafv2.AllowAction) interface{} {
 	if a == nil {
 		return map[string]interface{}{}
 	}
-	m := map[string]interface{}{
-		"custom_request_handling": flattenWafv2CustomRequestHandling(a.CustomRequestHandling),
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenWafv2CustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []interface{}{m}
@@ -1109,8 +1111,11 @@ func flattenWafv2Block(a *wafv2.BlockAction) interface{} {
 	if a == nil {
 		return map[string]interface{}{}
 	}
-	m := map[string]interface{}{
-		"custom_response": flattenWafv2CustomResponse(a.CustomResponse),
+
+	m := map[string]interface{}{}
+
+	if a.CustomResponse != nil {
+		m["custom_response"] = flattenWafv2CustomResponse(a.CustomResponse)
 	}
 
 	return []interface{}{m}
@@ -1120,8 +1125,10 @@ func flattenWafv2Count(a *wafv2.CountAction) interface{} {
 	if a == nil {
 		return map[string]interface{}{}
 	}
-	m := map[string]interface{}{
-		"custom_request_handling": flattenWafv2CustomRequestHandling(a.CustomRequestHandling),
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenWafv2CustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []interface{}{m}
@@ -1172,7 +1179,7 @@ func flattenWafv2CustomHeader(h *wafv2.CustomHTTPHeader) interface{} {
 		"value": aws.StringValue(h.Value),
 	}
 
-	return []interface{}{m}
+	return m
 }
 
 func flattenWafv2RootStatement(s *wafv2.Statement) interface{} {
