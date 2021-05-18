@@ -3,7 +3,7 @@ subcategory: "App Runner"
 layout: "aws"
 page_title: "AWS: aws_apprunner_connection"
 description: |-
-Manage an App Runner Connection
+  Manages an App Runner Connection.
 ---
 
 # Resource: aws_apprunner_connection

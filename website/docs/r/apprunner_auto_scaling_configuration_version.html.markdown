@@ -3,7 +3,7 @@ subcategory: "App Runner"
 layout: "aws"
 page_title: "AWS: aws_apprunner_auto_scaling_configuration_version"
 description: |-
-  Manage an App Runner AutoScaling Configuration Version.
+  Manages an App Runner AutoScaling Configuration Version.
 ---
 
 # Resource: aws_apprunner_auto_scaling_configuration_version

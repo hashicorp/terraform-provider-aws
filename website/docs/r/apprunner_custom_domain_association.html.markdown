@@ -3,7 +3,7 @@ subcategory: "App Runner"
 layout: "aws"
 page_title: "AWS: aws_apprunner_custom_domain_association"
 description: |-
-  Manage an App Runner Custom Domain association
+  Manages an App Runner Custom Domain association.
 ---
 
 # Resource: aws_apprunner_custom_domain_association
