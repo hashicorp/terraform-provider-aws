@@ -8,15 +8,44 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+const (
+	MetricStreamDeleteTimeout = 10 * time.Minute
+	MetricStreamReadyTimeout  = 2 * time.Minute
+
+	StateRunning = "running"
+	StateStopped = "stopped"
+)
+
 func MetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			"running",
-			"stopped",
+			StateRunning,
+			StateStopped,
 		},
 		Target:  []string{},
 		Refresh: MetricStreamState(ctx, conn, name),
-		Timeout: 10 * time.Minute,
+		Timeout: MetricStreamDeleteTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*cloudwatch.GetMetricStreamOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func MetricStreamReady(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			StateStopped,
+		},
+		Target: []string{
+			StateRunning,
+		},
+		Refresh: MetricStreamState(ctx, conn, name),
+		Timeout: MetricStreamReadyTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
