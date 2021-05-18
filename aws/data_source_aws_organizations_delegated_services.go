@@ -16,11 +16,12 @@ func dataSourceAwsOrganizationsDelegatedServices() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAwsOrganizationsDelegatedServicesRead,
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateAwsAccountId,
 			},
 			"delegated_services": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -46,12 +47,21 @@ func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *sch
 		AccountId: aws.String(d.Get("account_id").(string)),
 	}
 
-	org, err := conn.ListDelegatedServicesForAccountWithContext(ctx, input)
+	var delegators []*organizations.DelegatedService
+	err := conn.ListDelegatedServicesForAccountPagesWithContext(ctx, input, func(page *organizations.ListDelegatedServicesForAccountOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		delegators = page.DelegatedServices
+
+		return !lastPage
+	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
 	}
 
-	if err = d.Set("delegated_services", flattenOrganizationsDelegatedServices(org.DelegatedServices)); err != nil {
+	if err = d.Set("delegated_services", flattenOrganizationsDelegatedServices(delegators)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
 	}
 

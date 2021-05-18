@@ -24,7 +24,7 @@ resource "aws_organizations_delegated_administrator" "example" {
 The following arguments are supported:
 
 * `account_id` - (Required) The account ID number of the member account in the organization to register as a delegated administrator.
-* `service_principal` - The service principal of the AWS service for which you want to make the member account a delegated administrator.
+* `service_principal` - (Required) The service principal of the AWS service for which you want to make the member account a delegated administrator.
 
 ## Attributes Reference
 

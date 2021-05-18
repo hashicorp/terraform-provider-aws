@@ -22,7 +22,7 @@ func dataSourceAwsOrganizationsDelegatedAdministrators() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"delegated_administrators": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -74,13 +74,23 @@ func dataSourceAwsOrganizationsDelegatedAdministratorsRead(ctx context.Context, 
 		input.ServicePrincipal = aws.String(v.(string))
 	}
 
-	org, err := conn.ListDelegatedAdministratorsWithContext(ctx, input)
+	var delegators []*organizations.DelegatedAdministrator
+
+	err := conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		delegators = page.DelegatedAdministrators
+
+		return !lastPage
+	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error describing organizations delegated Administrators: %w", err))
 	}
 
-	if err = d.Set("delegated_administrators", flattenOrganizationsDelegatedAdministrators(org.DelegatedAdministrators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_Administrators: %w", err))
+	if err = d.Set("delegated_administrators", flattenOrganizationsDelegatedAdministrators(delegators)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
 	}
 
 	d.SetId(meta.(*AWSClient).accountid)

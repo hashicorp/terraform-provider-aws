@@ -120,7 +120,7 @@ func resourceAwsOrganizationsDelegatedAdministratorRead(ctx context.Context, d *
 	d.Set("arn", delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
 	d.Set("email", delegatedAccount.Email)
-	d.Set("joined_method", delegatedAccount.Status)
+	d.Set("joined_method", delegatedAccount.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", delegatedAccount.Name)
 	d.Set("status", delegatedAccount.Status)
