@@ -515,7 +515,6 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
 						},
 					},
