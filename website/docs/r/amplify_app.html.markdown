@@ -130,7 +130,9 @@ resource "aws_amplify_app" "app" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name for the Amplify App.
+* `name` - (Optional) Name of the Amplify App. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+
 * `access_token` - (Optional) Personal Access token for 3rd party source control system for an Amplify App, used to create webhook and read-only deploy key. Token is not stored.
 * `auto_branch_creation_config` - (Optional) Automated branch creation config for the Amplify App. An `auto_branch_creation_config` block is documented below.
 * `basic_auth_config` - (Optional) Basic Authentication config for the Amplify App. A `basic_auth_config` block is documented below.
@@ -143,7 +145,8 @@ The following arguments are supported:
 * `oauth_token` - (Optional) OAuth token for 3rd party source control system for an Amplify App, used to create webhook and read-only deploy key. OAuth token is not stored.
 * `platform` - (Optional) Platform for the Amplify App.
 * `repository` - (Optional) Repository for the Amplify App.
-* `tags` - (Optional) Key-value mapping of resource tags.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
 
 An `auto_branch_creation_config` block supports the following arguments:
 
@@ -178,6 +181,7 @@ The following attributes are exported:
 
 * `arn` - ARN for the Amplify App.
 * `default_domain` - Default domain for the Amplify App.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

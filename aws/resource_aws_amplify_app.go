@@ -1,18 +1,18 @@
 package aws
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAmplifyApp() *schema.Resource {
@@ -25,76 +25,78 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
+			"access_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
+
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"auto_branch_creation_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auto_branch_creation_patterns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"basic_auth_credentials": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Sensitive:    true,
+							ValidateFunc: validation.StringLenBetween(1, 2000),
 						},
-						"basic_auth_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enable_basic_auth": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"password": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Sensitive:    true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-									"username": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 255),
-									},
-								},
-							},
-						},
+
 						"build_spec": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
-						"enable_auto_branch_creation": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
+
 						"enable_auto_build": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+
+						"enable_basic_auth": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+
+						"enable_performance_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+
 						"enable_pull_request_preview": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+
 						"environment_variables": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+
 						"framework": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+
 						"pull_request_environment_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+
 						"stage": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -103,61 +105,58 @@ func resourceAwsAmplifyApp() *schema.Resource {
 								if old == "NONE" && new == "" {
 									return true
 								}
-								return false
+								return old == new
 							},
-							ValidateFunc: validation.StringInSlice([]string{
-								amplify.StageProduction,
-								amplify.StageBeta,
-								amplify.StageDevelopment,
-								amplify.StageExperimental,
-								amplify.StagePullRequest,
-							}, false),
+							ValidateFunc: validation.StringInSlice(amplify.Stage_Values(), false),
 						},
 					},
 				},
 			},
-			"basic_auth_config": {
-				Type:     schema.TypeList,
+
+			"auto_branch_creation_patterns": {
+				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_basic_auth": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"password": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"username": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
+			"basic_auth_credentials": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 2000),
+			},
+
 			"build_spec": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				//TODO
+				//Computed: true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
-			"custom_rules": {
+
+			"custom_headers": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
+			},
+
+			"custom_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"condition": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
+
 						"source": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
+
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -166,188 +165,271 @@ func resourceAwsAmplifyApp() *schema.Resource {
 								"301",
 								"302",
 								"404",
+								"404-200",
 							}, false),
 						},
+
 						"target": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
 					},
 				},
 			},
+
 			"default_domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"description": {
-				Type:     schema.TypeString,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
+			},
+
+			"enable_auto_branch_creation": {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
+
+			"enable_basic_auth": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"enable_branch_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+
+			"enable_branch_auto_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
+
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 1024),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "should only contains letters, numbers, _ and -"),
-				),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.StringLenBetween(1, 255),
+				ConflictsWith: []string{"name_prefix"},
 			},
+
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+			},
+
+			"oauth_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
+			},
+
 			"platform": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  amplify.PlatformWeb,
-				ValidateFunc: validation.StringInSlice([]string{
-					amplify.PlatformWeb,
-				}, false),
+				//TODO
+				//Default:  amplify.PlatformWeb,
+				ValidateFunc: validation.StringInSlice(amplify.Platform_Values(), false),
 			},
+
+			"production_branch": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"branch_name": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"last_deploy_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"thumbnail_url": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"repository": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				//TODO
+				//ForceNew: true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"oauth_token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"access_token": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"tags": tagsSchema(),
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Print("[DEBUG] Creating Amplify App")
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	params := &amplify.CreateAppInput{
-		Name: aws.String(d.Get("name").(string)),
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+
+	input := &amplify.CreateAppInput{
+		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("auto_branch_creation_config"); ok {
-		config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
-		params.AutoBranchCreationConfig = config
-		params.AutoBranchCreationPatterns = patterns
-		params.EnableAutoBranchCreation = enable
+	/*
+		if v, ok := d.GetOk("auto_branch_creation_config"); ok {
+			config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
+			params.AutoBranchCreationConfig = config
+			params.AutoBranchCreationPatterns = patterns
+			params.EnableAutoBranchCreation = enable
+		}
+
+		if v, ok := d.GetOk("basic_auth_config"); ok {
+			enable, credentials := expandAmplifyBasicAuthConfig(v.([]interface{}))
+			params.EnableBasicAuth = enable
+			params.BasicAuthCredentials = credentials
+		}
+
+		if v, ok := d.GetOk("build_spec"); ok {
+			params.BuildSpec = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_rules"); ok {
+			params.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			params.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("enable_branch_auto_build"); ok {
+			params.EnableBranchAutoBuild = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("environment_variables"); ok {
+			params.EnvironmentVariables = stringMapToPointers(v.(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("iam_service_role_arn"); ok {
+			params.IamServiceRoleArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("platform"); ok {
+			params.Platform = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("repository"); ok {
+			params.Repository = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("access_token"); ok {
+			params.AccessToken = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("oauth_token"); ok {
+			params.OauthToken = aws.String(v.(string))
+		}
+	*/
+
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().AmplifyTags()
 	}
 
-	if v, ok := d.GetOk("basic_auth_config"); ok {
-		enable, credentials := expandAmplifyBasicAuthConfig(v.([]interface{}))
-		params.EnableBasicAuth = enable
-		params.BasicAuthCredentials = credentials
-	}
+	log.Printf("[DEBUG] Creating Amplify App: %s", input)
+	output, err := conn.CreateApp(input)
 
-	if v, ok := d.GetOk("build_spec"); ok {
-		params.BuildSpec = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("custom_rules"); ok {
-		params.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("enable_branch_auto_build"); ok {
-		params.EnableBranchAutoBuild = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("environment_variables"); ok {
-		params.EnvironmentVariables = stringMapToPointers(v.(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("iam_service_role_arn"); ok {
-		params.IamServiceRoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("platform"); ok {
-		params.Platform = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("repository"); ok {
-		params.Repository = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("access_token"); ok {
-		params.AccessToken = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("oauth_token"); ok {
-		params.OauthToken = aws.String(v.(string))
-	}
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		params.Tags = keyvaluetags.New(v).IgnoreAws().AmplifyTags()
-	}
-
-	resp, err := conn.CreateApp(params)
 	if err != nil {
-		return fmt.Errorf("Error creating Amplify App: %s", err)
+		return fmt.Errorf("error creating Amplify App (%s): %w", name, err)
 	}
 
-	d.SetId(*resp.App.AppId)
+	d.SetId(aws.StringValue(output.App.AppId))
 
 	return resourceAwsAmplifyAppRead(d, meta)
 }
 
 func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-	log.Printf("[DEBUG] Reading Amplify App: %s", d.Id())
 
-	resp, err := conn.GetApp(&amplify.GetAppInput{
-		AppId: aws.String(d.Id()),
-	})
+	app, err := finder.AppByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == amplify.ErrCodeNotFoundException {
-			log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading Amplify App (%s): %w", d.Id(), err)
 	}
 
-	d.Set("arn", resp.App.AppArn)
-	if err := d.Set("auto_branch_creation_config", flattenAmplifyAutoBranchCreationConfig(resp.App.AutoBranchCreationConfig, resp.App.AutoBranchCreationPatterns, resp.App.EnableAutoBranchCreation)); err != nil {
-		return fmt.Errorf("error setting auto_branch_creation_config: %s", err)
+	d.Set("arn", app.AppArn)
+
+	d.Set("name", app.Name)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(app.Name)))
+
+	/*
+		if err := d.Set("auto_branch_creation_config", flattenAmplifyAutoBranchCreationConfig(resp.App.AutoBranchCreationConfig, resp.App.AutoBranchCreationPatterns, resp.App.EnableAutoBranchCreation)); err != nil {
+			return fmt.Errorf("error setting auto_branch_creation_config: %s", err)
+		}
+		if err := d.Set("basic_auth_config", flattenAmplifyBasicAuthConfig(resp.App.EnableBasicAuth, resp.App.BasicAuthCredentials)); err != nil {
+			return fmt.Errorf("error setting basic_auth_config: %s", err)
+		}
+		d.Set("build_spec", resp.App.BuildSpec)
+		if err := d.Set("custom_rules", flattenAmplifyCustomRules(resp.App.CustomRules)); err != nil {
+			return fmt.Errorf("error setting custom_rules: %s", err)
+		}
+		d.Set("default_domain", resp.App.DefaultDomain)
+		d.Set("description", resp.App.Description)
+		d.Set("enable_branch_auto_build", resp.App.EnableBranchAutoBuild)
+		if err := d.Set("environment_variables", aws.StringValueMap(resp.App.EnvironmentVariables)); err != nil {
+			return fmt.Errorf("error setting environment_variables: %s", err)
+		}
+		d.Set("iam_service_role_arn", resp.App.IamServiceRoleArn)
+		d.Set("name", resp.App.Name)
+		d.Set("platform", resp.App.Platform)
+		d.Set("repository", resp.App.Repository)
+	*/
+
+	tags := keyvaluetags.AmplifyKeyValueTags(app.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
-	if err := d.Set("basic_auth_config", flattenAmplifyBasicAuthConfig(resp.App.EnableBasicAuth, resp.App.BasicAuthCredentials)); err != nil {
-		return fmt.Errorf("error setting basic_auth_config: %s", err)
-	}
-	d.Set("build_spec", resp.App.BuildSpec)
-	if err := d.Set("custom_rules", flattenAmplifyCustomRules(resp.App.CustomRules)); err != nil {
-		return fmt.Errorf("error setting custom_rules: %s", err)
-	}
-	d.Set("default_domain", resp.App.DefaultDomain)
-	d.Set("description", resp.App.Description)
-	d.Set("enable_branch_auto_build", resp.App.EnableBranchAutoBuild)
-	if err := d.Set("environment_variables", aws.StringValueMap(resp.App.EnvironmentVariables)); err != nil {
-		return fmt.Errorf("error setting environment_variables: %s", err)
-	}
-	d.Set("iam_service_role_arn", resp.App.IamServiceRoleArn)
-	d.Set("name", resp.App.Name)
-	d.Set("platform", resp.App.Platform)
-	d.Set("repository", resp.App.Repository)
-	if err := d.Set("tags", keyvaluetags.AmplifyKeyValueTags(resp.App.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -355,80 +437,82 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Printf("[DEBUG] Updating Amplify App: %s", d.Id())
 
-	params := &amplify.UpdateAppInput{
-		AppId: aws.String(d.Id()),
-	}
+	/*
 
-	if d.HasChange("auto_branch_creation_config") {
-		v := d.Get("auto_branch_creation_config")
-		config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
-		params.AutoBranchCreationConfig = config
-		params.AutoBranchCreationPatterns = patterns
-		params.EnableAutoBranchCreation = enable
-	}
+		params := &amplify.UpdateAppInput{
+			AppId: aws.String(d.Id()),
+		}
 
-	if d.HasChange("basic_auth_config") {
-		enable, credentials := expandAmplifyBasicAuthConfig(d.Get("basic_auth_config").([]interface{}))
-		params.EnableBasicAuth = enable
-		params.BasicAuthCredentials = credentials
-	}
+		if d.HasChange("auto_branch_creation_config") {
+			v := d.Get("auto_branch_creation_config")
+			config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
+			params.AutoBranchCreationConfig = config
+			params.AutoBranchCreationPatterns = patterns
+			params.EnableAutoBranchCreation = enable
+		}
 
-	if d.HasChange("build_spec") {
-		params.BuildSpec = aws.String(d.Get("build_spec").(string))
-	}
+		if d.HasChange("basic_auth_config") {
+			enable, credentials := expandAmplifyBasicAuthConfig(d.Get("basic_auth_config").([]interface{}))
+			params.EnableBasicAuth = enable
+			params.BasicAuthCredentials = credentials
+		}
 
-	if d.HasChange("custom_rules") {
-		params.CustomRules = expandAmplifyCustomRules(d.Get("custom_rules").([]interface{}))
-	}
+		if d.HasChange("build_spec") {
+			params.BuildSpec = aws.String(d.Get("build_spec").(string))
+		}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
-	}
+		if d.HasChange("custom_rules") {
+			params.CustomRules = expandAmplifyCustomRules(d.Get("custom_rules").([]interface{}))
+		}
 
-	if d.HasChange("enable_branch_auto_build") {
-		params.EnableBranchAutoBuild = aws.Bool(d.Get("enable_branch_auto_build").(bool))
-	}
+		if d.HasChange("description") {
+			params.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("environment_variables") {
-		v := d.Get("environment_variables")
-		params.EnvironmentVariables = expandAmplifyEnvironmentVariables(v.(map[string]interface{}))
-	}
+		if d.HasChange("enable_branch_auto_build") {
+			params.EnableBranchAutoBuild = aws.Bool(d.Get("enable_branch_auto_build").(bool))
+		}
 
-	if d.HasChange("iam_service_role_arn") {
-		params.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
-	}
+		if d.HasChange("environment_variables") {
+			v := d.Get("environment_variables")
+			params.EnvironmentVariables = expandAmplifyEnvironmentVariables(v.(map[string]interface{}))
+		}
 
-	if d.HasChange("name") {
-		params.Name = aws.String(d.Get("name").(string))
-	}
+		if d.HasChange("iam_service_role_arn") {
+			params.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+		}
 
-	if d.HasChange("platform") {
-		params.Platform = aws.String(d.Get("platform").(string))
-	}
+		if d.HasChange("name") {
+			params.Name = aws.String(d.Get("name").(string))
+		}
 
-	if d.HasChange("repository") {
-		params.Repository = aws.String(d.Get("repository").(string))
-	}
+		if d.HasChange("platform") {
+			params.Platform = aws.String(d.Get("platform").(string))
+		}
 
-	if v, ok := d.GetOk("access_token"); ok {
-		params.AccessToken = aws.String(v.(string))
-	}
+		if d.HasChange("repository") {
+			params.Repository = aws.String(d.Get("repository").(string))
+		}
 
-	if v, ok := d.GetOk("oauth_token"); ok {
-		params.OauthToken = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("access_token"); ok {
+			params.AccessToken = aws.String(v.(string))
+		}
 
-	_, err := conn.UpdateApp(params)
-	if err != nil {
-		return fmt.Errorf("Error updating Amplify App: %s", err)
-	}
+		if v, ok := d.GetOk("oauth_token"); ok {
+			params.OauthToken = aws.String(v.(string))
+		}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+		_, err := conn.UpdateApp(params)
+		if err != nil {
+			return fmt.Errorf("Error updating Amplify App: %s", err)
+		}
+	*/
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.AmplifyUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -437,25 +521,24 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsAmplifyAppDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Printf("[DEBUG] Deleting Amplify App: %s", d.Id())
 
-	err := deleteAmplifyApp(conn, d.Id())
+	log.Printf("[DEBUG] Deleting Amplify App (%s)", d.Id())
+	_, err := conn.DeleteApp(&amplify.DeleteAppInput{
+		AppId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Amplify App: %s", err)
+		return fmt.Errorf("error deleting Amplify App (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func deleteAmplifyApp(conn *amplify.Amplify, appId string) error {
-	params := &amplify.DeleteAppInput{
-		AppId: aws.String(appId),
-	}
-
-	_, err := conn.DeleteApp(params)
-	return err
-}
-
+/*
 func expandAmplifyEnvironmentVariables(envs map[string]interface{}) map[string]*string {
 	if len(envs) == 0 {
 		empty := ""
@@ -646,3 +729,4 @@ func flattenAmplifyCustomRules(rules []*amplify.CustomRule) []map[string]interfa
 
 	return values
 }
+*/
