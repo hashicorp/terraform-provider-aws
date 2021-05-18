@@ -27,3 +27,19 @@ func AutoScalingConfigurationStatus(ctx context.Context, conn *apprunner.AppRunn
 		return output.AutoScalingConfiguration, aws.StringValue(output.AutoScalingConfiguration.Status), nil
 	}
 }
+
+func ConnectionStatus(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		c, err := finder.ConnectionSummaryByName(ctx, conn, name)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if c == nil {
+			return nil, "", nil
+		}
+
+		return c, aws.StringValue(c.Status), nil
+	}
+}

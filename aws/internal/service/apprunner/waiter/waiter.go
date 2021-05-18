@@ -14,6 +14,8 @@ const (
 
 	AutoScalingConfigurationCreateTimeout = 2 * time.Minute
 	AutoScalingConfigurationDeleteTimeout = 2 * time.Minute
+
+	ConnectionDeleteTimeout = 5 * time.Minute
 )
 
 func AutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -35,6 +37,19 @@ func AutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRu
 		Target:  []string{AutoScalingConfigurationStatusInactive},
 		Refresh: AutoScalingConfigurationStatus(ctx, conn, arn),
 		Timeout: AutoScalingConfigurationDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func ConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.ConnectionStatusPendingHandshake, apprunner.ConnectionStatusAvailable, apprunner.ConnectionStatusDeleted},
+		Target:  []string{},
+		Refresh: ConnectionStatus(ctx, conn, name),
+		Timeout: ConnectionDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
