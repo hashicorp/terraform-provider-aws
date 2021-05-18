@@ -79,8 +79,6 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
-		IDRefreshName:     resourceName,
-		IDRefreshIgnore:   []string{"name_prefix"},
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
 		Steps: []resource.TestStep{
@@ -92,10 +90,9 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
