@@ -41,11 +41,11 @@ func resourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_brokers_sasl_scram": {
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_brokers_sasl_iam": {
+			"bootstrap_brokers_sasl_scram": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -471,8 +471,8 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("bootstrap_brokers", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_sasl_iam", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", sortMskClusterEndpoints(aws.StringValue(brokerOut.BootstrapBrokerStringTls)))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
