@@ -1354,9 +1354,9 @@ resource "aws_msk_cluster" "test" {
 }
 
 func testAccMskClusterConfigLoggingInfo(rName string, cloudwatchLogsEnabled bool, firehoseEnabled bool, s3Enabled bool) string {
-	cloudwatchLogsLogGroup := ""
-	firehoseDeliveryStream := ""
-	s3Bucket := ""
+	cloudwatchLogsLogGroup := "\"\""
+	firehoseDeliveryStream := "\"\""
+	s3Bucket := "\"\""
 
 	if cloudwatchLogsEnabled {
 		cloudwatchLogsLogGroup = "aws_cloudwatch_log_group.test.name"
