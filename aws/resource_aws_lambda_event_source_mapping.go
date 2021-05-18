@@ -34,7 +34,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"event_source_arn": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"function_name": {
@@ -80,12 +80,19 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 						return false
 					}
 
-					eventSourceARN, err := arn.Parse(d.Get("event_source_arn").(string))
-					if err != nil {
-						return false
+					serviceName := ""
+					if v, ok := d.GetOk("event_source_arn"); ok {
+						eventSourceARN, err := arn.Parse(v.(string))
+						if err != nil {
+							return false
+						}
+						serviceName = eventSourceARN.Service
+					} else {
+						// self managed kafka does not have an event_source_arn
+						serviceName = "kafka"
 					}
-					switch eventSourceARN.Service {
-					// kafka.ServiceName is "Kafka".
+					switch serviceName {
+					// kafka.ServiceName is "kafka".
 					case dynamodb.ServiceName, kinesis.ServiceName, "kafka":
 						if old == "100" {
 							return true
@@ -156,6 +163,66 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
+			/*
+				"self_managed_event_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"endpoints": {
+										Type:     schema.TypeMap,
+										Required: true,
+										Elem: &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+			*/
+			"self_managed_event_source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoints": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kafka_bootstrap_servers": {
+										Type:     schema.TypeList,
+										Required: true,
+										ForceNew: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"source_access_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -190,8 +257,11 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	conn := meta.(*AWSClient).lambdaconn
 
 	input := &lambda.CreateEventSourceMappingInput{
-		Enabled:      aws.Bool(d.Get("enabled").(bool)),
-		FunctionName: aws.String(d.Get("function_name").(string)),
+		Enabled: aws.Bool(d.Get("enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("function_name"); ok {
+		input.FunctionName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
@@ -234,6 +304,14 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		t, _ := time.Parse(time.RFC3339, v.(string))
 
 		input.StartingPositionTimestamp = aws.Time(t)
+	}
+
+	if v, ok := d.GetOk("self_managed_event_source"); ok {
+		input.SelfManagedEventSource = expandLambdaEventSourceMappingSelfManagedEventSource(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("source_access_configuration"); ok {
+		input.SourceAccessConfigurations = expandLambdaEventSourceMappingSourceAccessConfigurations(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
@@ -321,6 +399,12 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	}
 	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
 		return fmt.Errorf("error setting topics: %w", err)
+	}
+	if err := d.Set("self_managed_event_source", flattenLambdaEventSourceMappingSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)); err != nil {
+		return fmt.Errorf("error setting self_managed_event_source: %w", err)
+	}
+	if err := d.Set("source_access_configuration", flattenLambdaEventSourceMappingSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations, d)); err != nil {
+		return fmt.Errorf("error setting source_access_configuration: %w", err)
 	}
 
 	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
@@ -437,6 +521,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChange("parallelization_factor") {
 		input.ParallelizationFactor = aws.Int64(int64(d.Get("parallelization_factor").(int)))
+	}
+
+	if d.HasChange("source_access_configuration") {
+		input.SourceAccessConfigurations = expandLambdaEventSourceMappingSourceAccessConfigurations(d.Get("source_access_configuration").([]interface{}))
 	}
 
 	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {

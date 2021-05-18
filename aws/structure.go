@@ -1674,6 +1674,86 @@ func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationCo
 	return []interface{}{mDest}
 }
 
+func expandLambdaEventSourceMappingSelfManagedEventSource(vSource []interface{}) *lambda.SelfManagedEventSource {
+	if len(vSource) == 0 {
+		return nil
+	}
+
+	source := &lambda.SelfManagedEventSource{}
+	source.Endpoints = map[string][]*string{}
+
+	if len(vSource) > 0 {
+		if config, ok := vSource[0].(map[string]interface{}); ok {
+			if vEndpoints, ok := config["endpoints"].([]interface{}); ok {
+				mEndpoints := vEndpoints[0].(map[string]interface{})
+				if kafkaBootstrapServers, ok := mEndpoints["kafka_bootstrap_servers"]; ok {
+					source.Endpoints["KAFKA_BOOTSTRAP_SERVERS"] = expandStringList(kafkaBootstrapServers.([]interface{}))
+				}
+			}
+		}
+	}
+	return source
+}
+
+func flattenLambdaEventSourceMappingSelfManagedEventSource(source *lambda.SelfManagedEventSource) []interface{} {
+	mSource := map[string]interface{}{}
+	mEndpoints := map[string]interface{}{}
+	if source != nil {
+		if source.Endpoints != nil {
+			if kafkaBootstrapBrokers, ok := source.Endpoints["KAFKA_BOOTSTRAP_SERVERS"]; ok {
+				mEndpoints["kafka_bootstrap_servers"] = flattenStringList(kafkaBootstrapBrokers)
+				mSource["endpoints"] = []interface{}{mEndpoints}
+			}
+		}
+	}
+
+	if len(mSource) == 0 {
+		return nil
+	}
+
+	return []interface{}{mSource}
+}
+
+func expandLambdaEventSourceMappingSourceAccessConfigurations(v []interface{}) []*lambda.SourceAccessConfiguration {
+	accesses := make([]*lambda.SourceAccessConfiguration, 0, len(v))
+	for _, m := range v {
+		config := m.(map[string]interface{})
+		accesses = append(accesses, &lambda.SourceAccessConfiguration{
+			Type: aws.String(config["type"].(string)),
+			URI:  aws.String(config["uri"].(string)),
+		})
+	}
+	return accesses
+}
+
+func flattenLambdaEventSourceMappingSourceAccessConfigurations(accesses []*lambda.SourceAccessConfiguration, d *schema.ResourceData) []map[string]interface{} {
+	if accesses == nil {
+		return nil
+	}
+	settings := make([]map[string]interface{}, len(accesses))
+
+	for i, access := range accesses {
+		setting := make(map[string]interface{})
+		setting["type"] = access.Type
+		setting["uri"] = access.URI
+		settings[i] = setting
+	}
+	// The result returned from AWS is sorted so try to order it like the original to prevent spurious diffs
+	if curCount, ok := d.Get("source_access_configuration.#").(int); ok {
+		for i := 0; i < curCount; i++ {
+			if curSetting, ok := d.Get("source_access_configuration." + strconv.Itoa(i)).(map[string]interface{}); ok {
+				for j := 0; j < len(settings); j++ {
+					if curSetting["type"] == *settings[j]["type"].(*string) &&
+						curSetting["uri"] == *settings[j]["uri"].(*string) {
+						settings[i], settings[j] = settings[j], settings[i]
+					}
+				}
+			}
+		}
+	}
+	return settings
+}
+
 func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
 	arns := make([]*string, len(layers))
 	for i, layer := range layers {
