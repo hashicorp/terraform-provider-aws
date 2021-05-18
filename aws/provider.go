@@ -496,6 +496,7 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_service":                             resourceAwsAppmeshVirtualService(),
 			"aws_apprunner_auto_scaling_configuration_version":        resourceAwsAppRunnerAutoScalingConfigurationVersion(),
 			"aws_apprunner_connection":                                resourceAwsAppRunnerConnection(),
+			"aws_apprunner_custom_domain_association":                 resourceAwsAppRunnerCustomDomainAssociation(),
 			"aws_appsync_api_key":                                     resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                                  resourceAwsAppsyncDatasource(),
 			"aws_appsync_function":                                    resourceAwsAppsyncFunction(),

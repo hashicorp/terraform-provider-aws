@@ -43,3 +43,19 @@ func ConnectionStatus(ctx context.Context, conn *apprunner.AppRunner, name strin
 		return c, aws.StringValue(c.Status), nil
 	}
 }
+
+func CustomDomainStatus(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		customDomain, err := finder.CustomDomain(ctx, conn, domainName, serviceArn)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if customDomain == nil {
+			return nil, "", nil
+		}
+
+		return customDomain, aws.StringValue(customDomain.Status), nil
+	}
+}

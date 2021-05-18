@@ -43,3 +43,40 @@ func ConnectionSummaryByName(ctx context.Context, conn *apprunner.AppRunner, nam
 
 	return cs, nil
 }
+
+func CustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) (*apprunner.CustomDomain, error) {
+	input := &apprunner.DescribeCustomDomainsInput{
+		ServiceArn: aws.String(serviceArn),
+	}
+
+	var customDomain *apprunner.CustomDomain
+
+	err := conn.DescribeCustomDomainsPagesWithContext(ctx, input, func(page *apprunner.DescribeCustomDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cd := range page.CustomDomains {
+			if cd == nil {
+				continue
+			}
+
+			if aws.StringValue(cd.DomainName) == domainName {
+				customDomain = cd
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if customDomain == nil {
+		return nil, nil
+	}
+
+	return customDomain, nil
+}

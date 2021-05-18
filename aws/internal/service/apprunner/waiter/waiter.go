@@ -16,6 +16,9 @@ const (
 	AutoScalingConfigurationDeleteTimeout = 2 * time.Minute
 
 	ConnectionDeleteTimeout = 5 * time.Minute
+
+	CustomDomainAssociationCreateTimeout = 5 * time.Minute
+	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
 )
 
 func AutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -50,6 +53,32 @@ func ConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name stri
 		Target:  []string{},
 		Refresh: ConnectionStatus(ctx, conn, name),
 		Timeout: ConnectionDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func CustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.CustomDomainAssociationStatusCreating},
+		Target:  []string{apprunner.CustomDomainAssociationStatusPendingCertificateDnsValidation},
+		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
+		Timeout: CustomDomainAssociationCreateTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func CustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{apprunner.CustomDomainAssociationStatusDeleting},
+		Target:  []string{},
+		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
+		Timeout: CustomDomainAssociationDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
