@@ -10,7 +10,7 @@ description: |-
 
 Provides a CloudWatch Metric Stream resource.
 
-~> **NOTE:** AWS does currently provide a way to support drift detection for Metric Stream tags. You can apply tags but you cannot verify that tags were actually set or detect out-of-band changes.
+~> **NOTE:** AWS does not currently provide a way to support drift detection for Metric Stream tags. You can apply tags but you cannot verify that tags were set or detect out-of-band changes.
 
 ## Example Usage
 
