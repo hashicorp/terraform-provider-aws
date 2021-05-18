@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -109,31 +110,52 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 	}
 
 	if proposal == nil {
-		log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		associatedGatewayId, ok := d.GetOk("associated_gateway_id")
+
+		if !ok || associatedGatewayId == nil {
+			return fmt.Errorf("error reading Direct Connect Associated Gateway Id (%s): %s", d.Id(), err)
+		}
+
+		assocRaw, state, err := getDxGatewayAssociation(conn, associatedGatewayId.(string))()
+
+		if err != nil {
+			return fmt.Errorf("error reading Direct Connect gateway association (%s): %s", d.Id(), err)
+		}
+
+		if state == gatewayAssociationStateDeleted {
+			log.Printf("[WARN] Direct Connect gateway association (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has been accepted", d.Id())
+		assoc := assocRaw.(*directconnect.GatewayAssociation)
+		d.Set("associated_gateway_id", assoc.AssociatedGateway.Id)
+		d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
+		d.Set("dx_gateway_owner_account_id", assoc.DirectConnectGatewayOwnerAccount)
+	} else {
+
+		if aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateDeleted {
+			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) deleted, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		if proposal.AssociatedGateway == nil {
+			return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): missing associated gateway information", d.Id())
+		}
+
+		if err := d.Set("allowed_prefixes", flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(proposal.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
+			return fmt.Errorf("error setting allowed_prefixes: %s", err)
+		}
+
+		d.Set("associated_gateway_id", proposal.AssociatedGateway.Id)
+		d.Set("associated_gateway_owner_account_id", proposal.AssociatedGateway.OwnerAccount)
+		d.Set("associated_gateway_type", proposal.AssociatedGateway.Type)
+		d.Set("dx_gateway_id", proposal.DirectConnectGatewayId)
+		d.Set("dx_gateway_owner_account_id", proposal.DirectConnectGatewayOwnerAccount)
+
 	}
-
-	if aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateDeleted {
-		log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) deleted, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if proposal.AssociatedGateway == nil {
-		return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): missing associated gateway information", d.Id())
-	}
-
-	if err := d.Set("allowed_prefixes", flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(proposal.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
-		return fmt.Errorf("error setting allowed_prefixes: %s", err)
-	}
-
-	d.Set("associated_gateway_id", proposal.AssociatedGateway.Id)
-	d.Set("associated_gateway_owner_account_id", proposal.AssociatedGateway.OwnerAccount)
-	d.Set("associated_gateway_type", proposal.AssociatedGateway.Type)
-	d.Set("dx_gateway_id", proposal.DirectConnectGatewayId)
-	d.Set("dx_gateway_owner_account_id", proposal.DirectConnectGatewayOwnerAccount)
-
 	return nil
 }
 
@@ -227,4 +249,36 @@ func flattenDirectConnectGatewayAssociationProposalAllowedPrefixes(routeFilterPr
 	}
 
 	return allowedPrefixes
+}
+
+func getDxGatewayAssociation(conn *directconnect.DirectConnect, associatedGatewayId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
+			AssociatedGatewayId: aws.String(associatedGatewayId),
+		})
+		if err != nil {
+			return nil, "", err
+		}
+
+		n := len(resp.DirectConnectGatewayAssociations)
+		switch n {
+		case 0:
+			return "", gatewayAssociationStateDeleted, nil
+
+		case 1:
+			assoc := resp.DirectConnectGatewayAssociations[0]
+
+			if stateChangeError := aws.StringValue(assoc.StateChangeError); stateChangeError != "" {
+				id := dxGatewayAssociationId(
+					aws.StringValue(resp.DirectConnectGatewayAssociations[0].DirectConnectGatewayId),
+					aws.StringValue(resp.DirectConnectGatewayAssociations[0].AssociatedGateway.Id))
+				log.Printf("[INFO] Direct Connect gateway association (%s) state change error: %s", id, stateChangeError)
+			}
+
+			return assoc, aws.StringValue(assoc.AssociationState), nil
+
+		default:
+			return nil, "", fmt.Errorf("Found %d Direct Connect gateway associations for %s, expected 1", n, associatedGatewayId)
+		}
+	}
 }
