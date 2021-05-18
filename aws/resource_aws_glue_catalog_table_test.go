@@ -12,6 +12,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 )
 
+func init() {
+	RegisterServiceErrorCheckFunc(glue.EndpointsID, testAccErrorCheckSkipGlue)
+}
+
+func testAccErrorCheckSkipGlue(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"AccessDeniedException: Operation not allowed",
+	)
+}
+
 func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_catalog_table.test"
