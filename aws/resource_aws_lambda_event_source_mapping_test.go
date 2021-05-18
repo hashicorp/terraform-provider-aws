@@ -48,11 +48,13 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 				PlanOnly: true,
 				Config:   testAccAWSLambdaEventSourceMappingConfigKinesisBatchSize(rName, "null"),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			/*
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
+			*/
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisUpdateFunctionName(rName),
 				Check: resource.ComposeTestCheckFunc(
