@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 )
 
@@ -29,10 +29,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Read:   schema.DefaultTimeout(1 * time.Minute),
-			Delete: schema.DefaultTimeout(1 * time.Minute),
-		},
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -91,6 +88,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateCloudWatchMetricStreamName,
@@ -109,29 +107,25 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(), // GetMetricStreamOutput doesn't have Tags which creates a "write but no read" situation
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudwatchconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	var name string
-	if v, ok := d.GetOk("name"); ok {
-		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
-	} else {
-		name = resource.UniqueId()
-	}
+	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	params := cloudwatch.PutMetricStreamInput{
 		Name:         aws.String(name),
 		FirehoseArn:  aws.String(d.Get("firehose_arn").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		OutputFormat: aws.String(d.Get("output_format").(string)),
-		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudwatchTags(),
+		Tags:         tags.IgnoreAws().CloudwatchTags(),
 	}
 
 	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -145,7 +139,7 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] Putting CloudWatch MetricStream: %#v", params)
 	_, err := conn.PutMetricStreamWithContext(ctx, &params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Putting metric_stream failed: %s", err))
+		return diag.FromErr(fmt.Errorf("putting metric_stream failed: %s", err))
 	}
 	d.SetId(name)
 	log.Println("[INFO] CloudWatch MetricStream put finished")
@@ -154,66 +148,50 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	name := d.Get("name").(string)
-	log.Printf("[DEBUG] Reading CloudWatch MetricStream: %s", name)
 	conn := meta.(*AWSClient).cloudwatchconn
 
-	params := cloudwatch.GetMetricStreamInput{
-		Name: aws.String(d.Id()),
-	}
+	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
 
-	var err error
-	var resp *cloudwatch.GetMetricStreamOutput
-
-	if d.IsNewResource() {
-		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-			resp, err = conn.GetMetricStreamWithContext(ctx, &params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if isResourceTimeoutError(err) {
-			resp, err = conn.GetMetricStreamWithContext(ctx, &params)
-		}
-	} else {
-		resp, err = conn.GetMetricStreamWithContext(ctx, &params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
-				log.Printf("[WARN] CloudWatch MetricStream (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Reading metric_stream failed: %s", err))
+		return diag.FromErr(fmt.Errorf("error getting CloudWatch Metric Stream (%s): %w", d.Id(), err))
 	}
 
-	d.Set("arn", resp.Arn)
-	d.Set("creation_date", resp.CreationDate.Format(time.RFC3339))
-	d.Set("firehose_arn", resp.FirehoseArn)
-	d.Set("last_update_date", resp.CreationDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
-	d.Set("output_format", resp.OutputFormat)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("state", resp.State)
+	if output == nil {
+		return diag.FromErr(fmt.Errorf("error getting CloudWatch Metric Stream (%s): empty response", d.Id()))
+	}
 
-	if resp.IncludeFilters != nil {
-		if err := d.Set("include_filter", flattenCloudWatchMetricStreamFilter(resp.IncludeFilters)); err != nil {
+	d.Set("arn", output.Arn)
+	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set("firehose_arn", output.FirehoseArn)
+	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
+	d.Set("name", output.Name)
+	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("output_format", output.OutputFormat)
+	d.Set("role_arn", output.RoleArn)
+	d.Set("state", output.State)
+
+	if output.IncludeFilters != nil {
+		if err := d.Set("include_filter", flattenCloudWatchMetricStreamFilters(output.IncludeFilters)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting include_filter error: %w", err))
 		}
 	}
 
-	if resp.ExcludeFilters != nil {
-		if err := d.Set("exclude_filter", flattenCloudWatchMetricStreamFilter(resp.ExcludeFilters)); err != nil {
+	if output.ExcludeFilters != nil {
+		if err := d.Set("exclude_filter", flattenCloudWatchMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting exclude_filter error: %w", err))
 		}
 	}
+
+	// Tags should be read here but GetMetricStreamOutput does not currently have a Tags field.
+	// When AWS fixes this, add tag reading.
+	d.Set("tags", d.Get("tags"))
+	d.Set("tags_all", d.Get("tags_all"))
 
 	return nil
 }
@@ -226,7 +204,7 @@ func resourceAwsCloudWatchMetricStreamDelete(ctx context.Context, d *schema.Reso
 	}
 
 	if _, err := conn.DeleteMetricStreamWithContext(ctx, &params); err != nil {
-		return diag.FromErr(fmt.Errorf("Error deleting CloudWatch MetricStream: %s", err))
+		return diag.FromErr(fmt.Errorf("error deleting CloudWatch MetricStream: %s", err))
 	}
 
 	if _, err := waiter.MetricStreamDeleted(ctx, conn, d.Id()); err != nil {
@@ -262,7 +240,7 @@ func expandCloudWatchMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStre
 	return filters
 }
 
-func flattenCloudWatchMetricStreamFilter(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
+func flattenCloudWatchMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
 	filters := make([]map[string]interface{}, 0)
 
 	for _, bd := range s {
