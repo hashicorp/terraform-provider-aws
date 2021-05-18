@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	AutoScalingConfigurationStatusActive   = "active"
-	AutoScalingConfigurationStatusInactive = "inactive"
-
 	AutoScalingConfigurationCreateTimeout = 2 * time.Minute
 	AutoScalingConfigurationDeleteTimeout = 2 * time.Minute
 
@@ -66,8 +63,8 @@ func ConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name stri
 
 func CustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{apprunner.CustomDomainAssociationStatusCreating},
-		Target:  []string{apprunner.CustomDomainAssociationStatusPendingCertificateDnsValidation},
+		Pending: []string{CustomDomainAssociationStatusCreating},
+		Target:  []string{CustomDomainAssociationStatusPendingCertificateDnsValidation},
 		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationCreateTimeout,
 	}
@@ -79,7 +76,7 @@ func CustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunn
 
 func CustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{apprunner.CustomDomainAssociationStatusDeleting},
+		Pending: []string{CustomDomainAssociationStatusActive, CustomDomainAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: CustomDomainStatus(ctx, conn, domainName, serviceArn),
 		Timeout: CustomDomainAssociationDeleteTimeout,

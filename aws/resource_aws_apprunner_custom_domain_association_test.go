@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfapprunner "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 )
 
 func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
@@ -29,18 +30,19 @@ func TestAccAwsAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 				Config: testAccAppRunnerCustomDomainAssociation_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppRunnerCustomDomainAssociationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_validation_records.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", apprunner.CustomDomainAssociationStatusPendingCertificateDnsValidation),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.CustomDomainAssociationStatusPendingCertificateDnsValidation),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dns_target"},
 			},
 		},
 	})

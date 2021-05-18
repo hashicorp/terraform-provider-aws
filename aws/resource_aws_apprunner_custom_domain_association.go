@@ -27,7 +27,7 @@ func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certification_validation_records": {
+			"certificate_validation_records": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -72,6 +72,10 @@ func resourceAwsAppRunnerCustomDomainAssociation() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -142,6 +146,7 @@ func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *sch
 	d.Set("domain_name", customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
+	d.Set("status", customDomain.Status)
 
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 )
 
 func init() {
@@ -98,7 +99,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 			{
@@ -131,7 +132,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "50"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 			{
@@ -151,7 +152,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "150"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 			{
@@ -171,7 +172,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 		},
@@ -201,7 +202,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_MultipleVersions(t *test
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 					testAccMatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
@@ -209,7 +210,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_MultipleVersions(t *test
 					resource.TestCheckResourceAttr(otherResourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(otherResourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(otherResourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(otherResourceName, "status", "active"),
+					resource.TestCheckResourceAttr(otherResourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 			{
@@ -266,7 +267,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_UpdateMultipleVersions(t
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "100"),
 					resource.TestCheckResourceAttr(resourceName, "max_size", "25"),
 					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "active"),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 					testAccMatchResourceAttrRegionalARN(otherResourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`autoscalingconfiguration/%s/2/.+`, rName))),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_name", rName),
 					resource.TestCheckResourceAttr(otherResourceName, "auto_scaling_configuration_revision", "2"),
@@ -274,7 +275,7 @@ func TestAccAwsAppRunnerAutoScalingConfigurationVersion_UpdateMultipleVersions(t
 					resource.TestCheckResourceAttr(otherResourceName, "max_concurrency", "125"),
 					resource.TestCheckResourceAttr(otherResourceName, "max_size", "20"),
 					resource.TestCheckResourceAttr(otherResourceName, "min_size", "1"),
-					resource.TestCheckResourceAttr(otherResourceName, "status", "active"),
+					resource.TestCheckResourceAttr(otherResourceName, "status", waiter.AutoScalingConfigurationStatusActive),
 				),
 			},
 			{

@@ -9,6 +9,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/finder"
 )
 
+const (
+	AutoScalingConfigurationStatusActive   = "active"
+	AutoScalingConfigurationStatusInactive = "inactive"
+
+	CustomDomainAssociationStatusActive                          = "active"
+	CustomDomainAssociationStatusCreating                        = "creating"
+	CustomDomainAssociationStatusDeleting                        = "deleting"
+	CustomDomainAssociationStatusPendingCertificateDnsValidation = "pending_certificate_dns_validation"
+)
+
 func AutoScalingConfigurationStatus(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
