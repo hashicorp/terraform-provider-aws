@@ -53,7 +53,7 @@ func dataSourceAwsOrganizationsDelegatedServicesRead(ctx context.Context, d *sch
 			return !lastPage
 		}
 
-		delegators = page.DelegatedServices
+		delegators = append(delegators, page.DelegatedServices...)
 
 		return !lastPage
 	})
