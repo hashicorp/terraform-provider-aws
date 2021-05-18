@@ -48,6 +48,30 @@ func resourceAwsInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			// FUGUE: custom attributes begin
+
+			"ami_owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"ami_creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"ami_platform_details": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"launch_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			// FUGUE: custom attributes end
+
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -802,6 +826,13 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_ip", instance.PrivateIpAddress)
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("iam_instance_profile", iamInstanceProfileArnToName(instance.IamInstanceProfile))
+
+	if err := readImageAttributes(d, conn); err != nil {
+		return err
+	}
+	if instance.LaunchTime != nil {
+		d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
+	}
 
 	// Set configured Network Interface Device Index Slice
 	// We only want to read, and populate state for the configured network_interface attachments. Otherwise, other
@@ -2383,4 +2414,48 @@ func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) 
 	}
 
 	return resp.Reservations[0].Instances, nil
+}
+
+func readImageAttributes(d *schema.ResourceData, conn *ec2.EC2) error {
+
+	imageID := d.Get("ami").(string)
+	var image *ec2.Image
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		res, err := conn.DescribeImages(&ec2.DescribeImagesInput{
+			ImageIds: []*string{aws.String(imageID)},
+		})
+		if isResourceTimeoutError(err) {
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, "InvalidAMIID.Unavailable", "") || isAWSErr(err, "InvalidAMIID.NotFound", "") {
+			return nil
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if len(res.Images) == 0 {
+			return nil
+		}
+		image = res.Images[0]
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Unable to describe AMI after retries: %s", err)
+	}
+	// Don't fail the refresh if the AMI was not found
+	if image == nil {
+		return nil
+	}
+
+	if image.OwnerId != nil {
+		d.Set("ami_owner_id", image.OwnerId)
+	}
+	if image.PlatformDetails != nil {
+		d.Set("ami_platform_details", image.PlatformDetails)
+	}
+	if image.CreationDate != nil {
+		d.Set("ami_creation_date", image.CreationDate)
+	}
+	return nil
 }
