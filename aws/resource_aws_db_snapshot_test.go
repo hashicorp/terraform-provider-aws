@@ -91,6 +91,7 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +119,7 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -162,6 +164,7 @@ func TestAccAWSDBSnapshot_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDbSnapshotDestroy,
 		Steps: []resource.TestStep{
@@ -255,7 +258,7 @@ func testAccAwsDbSnapshotConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
-  engine                  = "MySQL"
+  engine                  = "mysql"
   engine_version          = "5.6.35"
   instance_class          = "db.t2.micro"
   name                    = "baz"
@@ -285,7 +288,7 @@ resource "aws_db_snapshot" "test" {
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -298,8 +301,8 @@ resource "aws_db_snapshot" "test" {
   db_snapshot_identifier = %[1]q
 
   tags = {
-  	%[2]q = %[3]q
-  	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

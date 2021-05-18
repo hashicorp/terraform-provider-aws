@@ -21,6 +21,7 @@ func init() {
 			"aws_appmesh_virtual_service",
 			"aws_appmesh_virtual_router",
 			"aws_appmesh_virtual_node",
+			"aws_appmesh_virtual_gateway",
 		},
 	})
 }
@@ -32,9 +33,9 @@ func testSweepAppmeshMeshes(region string) error {
 	}
 	conn := client.(*AWSClient).appmeshconn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, mesh := range page.Meshes {
@@ -52,7 +53,7 @@ func testSweepAppmeshMeshes(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -71,7 +72,8 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
@@ -82,6 +84,8 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					testAccCheckResourceAttrAccountID(resourceName, "resource_owner"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
 				),
 			},
@@ -100,7 +104,8 @@ func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
@@ -139,7 +144,8 @@ func testAccAwsAppmeshMesh_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appmesh.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, appmesh.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{

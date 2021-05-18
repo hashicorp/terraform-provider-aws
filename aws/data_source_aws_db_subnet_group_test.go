@@ -5,20 +5,20 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func TestAccAWSDbSubnetGroupDataSource_basic(t *testing.T) {
-	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_subnet_group.test"
 	dataSourceName := "data.aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBSubnetGroupDataSourceConfig(rName),
@@ -36,11 +36,10 @@ func TestAccAWSDbSubnetGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSDbSubnetGroupDataSource_nonexistent(t *testing.T) {
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, rds.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSDBSubnetGroupDataSourceConfig_NonExistent,

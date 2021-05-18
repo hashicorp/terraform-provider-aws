@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -30,9 +29,9 @@ func testSweepEcsClusters(region string) error {
 	}
 	conn := client.(*AWSClient).ecsconn
 
-	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, isLast bool) bool {
+	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, clusterARNPtr := range page.ClusterArns {
@@ -49,7 +48,7 @@ func testSweepEcsClusters(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -69,6 +68,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -98,6 +98,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -120,6 +121,7 @@ func TestAccAWSEcsCluster_Tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -166,6 +168,7 @@ func TestAccAWSEcsCluster_SingleCapacityProvider(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -192,6 +195,7 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -222,6 +226,7 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -260,6 +265,7 @@ func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -292,6 +298,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ecs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
@@ -309,7 +316,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						"name":  "containerInsights",
 						"value": "enabled",
 					}),
@@ -320,7 +327,7 @@ func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						"name":  "containerInsights",
 						"value": "disabled",
 					}),
@@ -426,11 +433,11 @@ resource "aws_ecs_cluster" "test" {
 func testAccAWSEcsClusterCapacityProviderConfig(rName string) string {
 	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
-	name = %q
+  name = %q
 
-	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.test.arn
-	}
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
 }
 `, rName)
 }
@@ -438,15 +445,15 @@ resource "aws_ecs_capacity_provider" "test" {
 func testAccAWSEcsClusterSingleCapacityProvider(rName, providerName string) string {
 	return testAccAWSEcsClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	capacity_providers = [aws_ecs_capacity_provider.test.name]
+  capacity_providers = [aws_ecs_capacity_provider.test.name]
 
-	default_capacity_provider_strategy {
-		base = 1
-		capacity_provider = aws_ecs_capacity_provider.test.name
-		weight = 1
-	}
+  default_capacity_provider_strategy {
+    base              = 1
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight            = 1
+  }
 }
 `, rName)
 }

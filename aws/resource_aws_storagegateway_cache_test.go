@@ -19,8 +19,8 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 		ErrCount           int
 	}{
 		{
-			Input:              "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0",
-			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:              "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0", //lintignore:AWSAT003,AWSAT005
+			ExpectedGatewayARN: "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",                               //lintignore:AWSAT003,AWSAT005
 			ExpectedDiskID:     "pci-0000:03:00.0-scsi-0:0:0:0",
 			ErrCount:           0,
 		},
@@ -33,7 +33,7 @@ func TestDecodeStorageGatewayCacheID(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678",
+			Input:    "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
 		},
 		{
@@ -73,8 +73,9 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -102,8 +103,9 @@ func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  testAccProviders,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,

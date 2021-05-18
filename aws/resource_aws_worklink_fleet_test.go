@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,6 +19,7 @@ func TestAccAWSWorkLinkFleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -47,6 +47,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -79,6 +80,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -111,6 +113,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -136,6 +139,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -179,6 +183,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -212,6 +217,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -242,6 +248,7 @@ func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -439,7 +446,7 @@ resource "aws_worklink_fleet" "test" {
 
   network {
     vpc_id             = aws_vpc.test.id
-    subnet_ids         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
+    subnet_ids         = aws_subnet.test[*].id
     security_group_ids = [aws_security_group.test.id]
   }
 }
@@ -449,7 +456,7 @@ resource "aws_worklink_fleet" "test" {
 func testAccAWSWorkLinkFleetConfigAuditStreamArn(r string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "%s_kinesis_test"
+  name        = "AmazonWorkLink-%s_kinesis_test"
   shard_count = 1
 }
 

@@ -28,6 +28,7 @@ func testAccAwsOrganizationsAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -74,6 +75,7 @@ func testAccAwsOrganizationsAccount_ParentId(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -118,6 +120,7 @@ func testAccAwsOrganizationsAccount_Tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, organizations.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsAccountDestroy,
 		Steps: []resource.TestStep{
@@ -228,12 +231,12 @@ resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = aws_organizations_organization.test.roots.0.id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = aws_organizations_organization.test.roots.0.id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_account" "test" {
@@ -250,12 +253,12 @@ resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = aws_organizations_organization.test.roots.0.id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = aws_organizations_organization.test.roots.0.id
+  parent_id = aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_account" "test" {

@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -12,8 +13,9 @@ func TestAccDataSourceAwsAcmpcaCertificateAuthority_basic(t *testing.T) {
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, acmpca.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
@@ -73,6 +75,7 @@ data "aws_acmpca_certificate_authority" "test" {
 }
 `
 
+//lintignore:AWSAT003,AWSAT005
 const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"

@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,9 +20,14 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSDynamodbGlobalTable(t)
+			testAccDynamoDBGlobalTablePreCheck(t)
+		},
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDynamoDbGlobalTableConfig_invalidName(acctest.RandString(2)),
@@ -61,10 +68,11 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSDynamodbGlobalTable(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccDynamoDBGlobalTablePreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, dynamodb.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -150,6 +158,28 @@ func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+// testAccDynamoDBGlobalTablePreCheck checks if aws_dynamodb_global_table (version 2017.11.29) can be used and skips test if not.
+// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
+func testAccDynamoDBGlobalTablePreCheck(t *testing.T) {
+	supportRegionsSort := []string{
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApNortheast2RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuCentral1RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.EuWest2RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsEast2RegionID,
+		endpoints.UsWest1RegionID,
+		endpoints.UsWest2RegionID,
+	}
+
+	if testAccGetRegion() != supportRegionsSort[sort.SearchStrings(supportRegionsSort, testAccGetRegion())] {
+		t.Skipf("skipping test; aws_dynamodb_global_table (DynamoDB v2017.11.29) not supported in region %s", testAccGetRegion())
 	}
 }
 
@@ -255,13 +285,15 @@ resource "aws_dynamodb_global_table" "test" {
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_dynamodb_global_table" "test" {
   name = "%s"
 
   replica {
-    region_name = "us-east-1"
+    region_name = data.aws_region.current.name
   }
 }
-`, tableName)
+`, tableName))
 }

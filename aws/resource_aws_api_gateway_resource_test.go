@@ -18,7 +18,8 @@ func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +50,8 @@ func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +94,8 @@ func TestAccAWSAPIGatewayResource_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
 		Steps: []resource.TestStep{
@@ -202,9 +205,9 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
 }
 `, rName)
 }
@@ -216,9 +219,9 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test_changed"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test_changed"
 }
 `, rName)
 }

@@ -91,10 +91,10 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,10 +128,10 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_disappears(t *testing.T) {
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,10 +156,10 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,10 +210,11 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T)
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSEc2TransitGateway(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -377,7 +378,8 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name  = %[2]q
+    Name = %[2]q
+
     %[3]s = %[4]q
   }
 }
@@ -392,7 +394,8 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
 
   tags = {
-    Name  = %[2]q
+    Name = %[2]q
+
     %[3]s = %[4]q
     %[5]s = %[6]q
   }

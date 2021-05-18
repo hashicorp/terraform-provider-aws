@@ -45,11 +45,11 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 						DetectorId:    detectorID,
 					}
 
-					log.Printf("[INFO] Deleting GuardDuty Publish Destination: %s", *destination_element.DestinationId)
+					log.Printf("[INFO] Deleting GuardDuty Publishing Destination: %s", *destination_element.DestinationId)
 					_, err := conn.DeletePublishingDestination(input)
 
 					if err != nil {
-						sweeperErr := fmt.Errorf("error deleting GuardDuty Pusblish Destination (%s): %w", *destination_element.DestinationId, err)
+						sweeperErr := fmt.Errorf("error deleting GuardDuty Publishing Destination (%s): %w", *destination_element.DestinationId, err)
 						log.Printf("[ERROR] %s", sweeperErr)
 						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 					}
@@ -61,18 +61,18 @@ func testSweepGuarddutyPublishingDestinations(region string) error {
 	})
 
 	if err != nil {
-		sweeperErr := fmt.Errorf("Error receiving Guardduty detectors for publish sweep : %w", err)
+		sweeperErr := fmt.Errorf("Error receiving Guardduty detectors for publishing sweep : %w", err)
 		log.Printf("[ERROR] %s", sweeperErr)
 		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 	}
 
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping GuardDuty Publish Destination sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping GuardDuty Publishing Destination sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving GuardDuty Publish Destinations: %s", err)
+		return fmt.Errorf("error retrieving GuardDuty Publishing Destinations: %s", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -87,6 +87,7 @@ func testAccAwsGuardDutyPublishingDestination_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -114,6 +115,7 @@ func testAccAwsGuardDutyPublishingDestination_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsGuardDutyPublishingDestinationDestroy,
 		Steps: []resource.TestStep{
@@ -136,6 +138,8 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "bucket_pol" {
   statement {
     sid = "Allow PutObject"
@@ -149,14 +153,14 @@ data "aws_iam_policy_document" "bucket_pol" {
 
     principals {
       type        = "Service"
-      identifiers = ["guardduty.amazonaws.com"]
+      identifiers = ["guardduty.${data.aws_partition.current.dns_suffix}"]
     }
   }
 
   statement {
     sid = "Allow GetBucketLocation"
     actions = [
-      "s3:GetBucketLocation"                                                   
+      "s3:GetBucketLocation"
     ]
 
     resources = [
@@ -165,7 +169,7 @@ data "aws_iam_policy_document" "bucket_pol" {
 
     principals {
       type        = "Service"
-      identifiers = ["guardduty.amazonaws.com"]
+      identifiers = ["guardduty.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
@@ -179,12 +183,12 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
       type        = "Service"
-      identifiers = ["guardduty.amazonaws.com"]
+      identifiers = ["guardduty.${data.aws_partition.current.dns_suffix}"]
     }
   }
 
@@ -195,12 +199,12 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
       type        = "AWS"
-      identifiers = [ "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root" ]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 
@@ -211,8 +215,8 @@ resource "aws_guardduty_detector" "test_gd" {
 }
 
 resource "aws_s3_bucket" "gd_bucket" {
-  bucket = %[1]q
-  acl    = "private"
+  bucket        = %[1]q
+  acl           = "private"
   force_destroy = true
 }
 
@@ -222,19 +226,19 @@ resource "aws_s3_bucket_policy" "gd_bucket_policy" {
 }
 
 resource "aws_kms_key" "gd_key" {
-  description = "Temporary key for AccTest of TF"
+  description             = "Temporary key for AccTest of TF"
   deletion_window_in_days = 7
-  policy = data.aws_iam_policy_document.kms_pol.json
+  policy                  = data.aws_iam_policy_document.kms_pol.json
 }
 
 resource "aws_guardduty_publishing_destination" "test" {
-	detector_id = aws_guardduty_detector.test_gd.id
-	destination_arn = aws_s3_bucket.gd_bucket.arn
-	kms_key_arn = aws_kms_key.gd_key.arn
-	
-	depends_on = [
-		aws_s3_bucket_policy.gd_bucket_policy,
-	]
+  detector_id     = aws_guardduty_detector.test_gd.id
+  destination_arn = aws_s3_bucket.gd_bucket.arn
+  kms_key_arn     = aws_kms_key.gd_key.arn
+
+  depends_on = [
+    aws_s3_bucket_policy.gd_bucket_policy,
+  ]
 }`, bucketName)
 }
 

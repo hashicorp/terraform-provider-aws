@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -12,6 +13,7 @@ import (
 func TestAccAWSMainRouteTableAssociation_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMainRouteTableAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -149,9 +151,9 @@ resource "aws_internet_gateway" "foo" {
   vpc_id = aws_vpc.foo.id
 }
 
-// Need to keep the old route table around when we update the
-// main_route_table_association, otherwise Terraform will try to destroy the
-// route table too early, and will fail because it's still the main one
+# Need to keep the old route table around when we update the
+# main_route_table_association, otherwise Terraform will try to destroy the
+# route table too early, and will fail because it's still the main one
 resource "aws_route_table" "foo" {
   vpc_id = aws_vpc.foo.id
 

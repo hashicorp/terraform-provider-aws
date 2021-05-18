@@ -5,13 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
@@ -21,6 +20,7 @@ func TestAccAWSNeptuneSubnetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -49,11 +49,12 @@ func TestAccAWSNeptuneSubnetGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig_namePrefix,
+				Config: testAccNeptuneSubnetGroupConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
 						"aws_neptune_subnet_group.test", &v),
@@ -76,11 +77,12 @@ func TestAccAWSNeptuneSubnetGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig_generatedName,
+				Config: testAccNeptuneSubnetGroupConfig_generatedName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNeptuneSubnetGroupExists(
 						"aws_neptune_subnet_group.test", &v),
@@ -101,6 +103,7 @@ func TestAccAWSNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, neptune.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +195,7 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 }
 
 func testAccNeptuneSubnetGroupConfig(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -203,7 +206,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -213,7 +216,7 @@ resource "aws_subnet" "foo" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -229,11 +232,11 @@ resource "aws_neptune_subnet_group" "foo" {
     Name = "tf-neptunesubnet-group-test"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccNeptuneSubnetGroupConfig_updatedDescription(rName string) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -244,7 +247,7 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -254,7 +257,7 @@ resource "aws_subnet" "foo" {
 
 resource "aws_subnet" "bar" {
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.foo.id
 
   tags = {
@@ -271,10 +274,11 @@ resource "aws_neptune_subnet_group" "foo" {
     Name = "tf-neptunesubnet-group-test"
   }
 }
-`, rName)
+`, rName))
 }
 
-const testAccNeptuneSubnetGroupConfig_namePrefix = `
+func testAccNeptuneSubnetGroupConfig_namePrefix() string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -286,7 +290,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-neptune-subnet-group-name-prefix-a"
@@ -296,7 +300,7 @@ resource "aws_subnet" "a" {
 resource "aws_subnet" "b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-neptune-subnet-group-name-prefix-b"
@@ -307,9 +311,11 @@ resource "aws_neptune_subnet_group" "test" {
   name_prefix = "tf_test-"
   subnet_ids  = [aws_subnet.a.id, aws_subnet.b.id]
 }
-`
+`)
+}
 
-const testAccNeptuneSubnetGroupConfig_generatedName = `
+func testAccNeptuneSubnetGroupConfig_generatedName() string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -321,7 +327,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-neptune-subnet-group-generated-name-a"
@@ -331,7 +337,7 @@ resource "aws_subnet" "a" {
 resource "aws_subnet" "b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = data.aws_availability_zones.available.names[1]
 
   tags = {
     Name = "tf-acc-neptune-subnet-group-generated-name-a"
@@ -341,4 +347,5 @@ resource "aws_subnet" "b" {
 resource "aws_neptune_subnet_group" "test" {
   subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
 }
-`
+`)
+}

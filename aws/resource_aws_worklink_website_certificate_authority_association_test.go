@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,6 +19,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -49,6 +49,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 	displayName2 := fmt.Sprintf("tf-website-certificate-%s", acctest.RandStringFromCharSet(5, acctest.CharSetAlpha))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -81,6 +82,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
+		ErrorCheck:   testAccErrorCheck(t, worklink.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{

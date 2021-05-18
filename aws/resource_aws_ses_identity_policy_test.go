@@ -14,11 +14,12 @@ import (
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -40,11 +41,12 @@ func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
 func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 	email := fmt.Sprintf(
 		"%s@terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -66,11 +68,12 @@ func TestAccAWSSESIdentityPolicy_Identity_Email(t *testing.T) {
 func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
-		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+		acctest.RandString(10))
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityPolicyDestroy,
 		Steps: []resource.TestStep{

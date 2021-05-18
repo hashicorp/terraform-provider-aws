@@ -15,7 +15,7 @@ detach volumes from AWS Instances.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.example.id
@@ -57,6 +57,8 @@ useful when destroying an instance which has volumes created by some other
 means attached.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance
