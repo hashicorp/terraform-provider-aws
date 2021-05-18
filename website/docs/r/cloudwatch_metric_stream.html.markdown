@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Metric Stream resource.
 
+~> **NOTE:** AWS does currently provide a way to support drift detection for Metric Stream tags. You can apply tags but you cannot verify that tags were actually set or detect out-of-band changes.
+
 ## Example Usage
 
 ```terraform
@@ -140,7 +142,7 @@ The following arguments are required:
 * `firehose_arn` - (Required) ARN of the Amazon Kinesis Firehose delivery stream to use for this metric stream.
 * `role_arn` - (Required) ARN of the IAM role that this metric stream will use to access Amazon Kinesis Firehose resources. For more information about role permissions, see [Trust between CloudWatch and Kinesis Data Firehose](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-trustpolicy.html).
 * `output_format` - (Required) Output format for the stream. For more information about output formats, see [Metric streams output formats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-metric-streams-formats.html).
-* `tags` - (Optional) Map of tags to assign to the resource.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The following arguments are optional:
 
@@ -165,6 +167,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was created.
 * `last_update_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was last updated.
 * `state` - State of the metric stream. Possible values are `running` and `stopped`.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
