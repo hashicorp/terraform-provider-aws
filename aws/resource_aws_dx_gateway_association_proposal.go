@@ -32,7 +32,12 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 					return false
 				}
 
-				return proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
+				if proposal == nil {
+					// Don't report as a diff when the proposal is gone.
+					return true
+				}
+
+				return aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
 			}),
 		),
 
