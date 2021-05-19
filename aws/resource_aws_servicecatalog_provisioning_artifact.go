@@ -216,14 +216,11 @@ func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData,
 		input := &servicecatalog.UpdateProvisioningArtifactInput{
 			ProductId:              aws.String(productID),
 			ProvisioningArtifactId: aws.String(artifactID),
+			Active:                 aws.Bool(d.Get("active").(bool)),
 		}
 
 		if v, ok := d.GetOk("accept_language"); ok {
 			input.AcceptLanguage = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("active"); ok {
-			input.Active = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("description"); ok {
