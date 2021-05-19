@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 )
 
@@ -155,7 +156,7 @@ func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id st
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
+				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %w", acceptLanguage, id, err),
 			}
 		}
 
@@ -179,7 +180,7 @@ func ProductPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acce
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("product portfolio association not found (%s:%s:%s): %s", acceptLanguage, portfolioID, productID, err),
+				Message: fmt.Sprintf("product portfolio association not found (%s): %w", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
 
@@ -189,7 +190,7 @@ func ProductPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acce
 
 		if output == nil {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("finding product portfolio association (%s:%s:%s): empty response", acceptLanguage, portfolioID, productID),
+				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
 			}
 		}
 
