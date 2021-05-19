@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 )
 
 // add sweeper to delete known test servicecat provisioning artifacts
@@ -250,7 +251,7 @@ func testAccCheckAwsServiceCatalogProvisioningArtifactDestroy(s *terraform.State
 			continue
 		}
 
-		artifactID, productID, err := parseServiceCatalogProvisioningArtifactID(rs.Primary.ID)
+		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", rs.Primary.ID, err)
@@ -289,7 +290,7 @@ func testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName string
 
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 
-		artifactID, productID, err := parseServiceCatalogProvisioningArtifactID(rs.Primary.ID)
+		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", rs.Primary.ID, err)
