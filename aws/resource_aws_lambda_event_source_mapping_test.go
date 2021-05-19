@@ -48,13 +48,11 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 				PlanOnly: true,
 				Config:   testAccAWSLambdaEventSourceMappingConfigKinesisBatchSize(rName, "null"),
 			},
-			/*
-				{
-					ResourceName:      resourceName,
-					ImportState:       true,
-					ImportStateVerify: true,
-				},
-			*/
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisUpdateFunctionName(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -684,10 +682,7 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
-
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.0.kafka_bootstrap_servers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.0.kafka_bootstrap_servers.0", "test:9092"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test2:9092,test1:9092"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.0.type", "VPC_SUBNET"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.1.type", "VPC_SUBNET"),
@@ -703,11 +698,6 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 			{
 				PlanOnly: true,
 				Config:   testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "null"),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1333,8 +1323,8 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
   self_managed_event_source {
-    endpoints {
-      kafka_bootstrap_servers = [ "test:9092" ]
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "test2:9092,test1:9092"
     }
   }
 

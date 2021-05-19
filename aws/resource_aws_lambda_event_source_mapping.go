@@ -163,23 +163,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-			/*
-				"self_managed_event_source": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 1,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoints": {
-										Type:     schema.TypeMap,
-										Required: true,
-										Elem: &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-			*/
 			"self_managed_event_source": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -188,20 +171,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoints": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Required: true,
-							MaxItems: 1,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kafka_bootstrap_servers": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -400,7 +373,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	if err := d.Set("topics", flattenStringSet(eventSourceMappingConfiguration.Topics)); err != nil {
 		return fmt.Errorf("error setting topics: %w", err)
 	}
-	if err := d.Set("self_managed_event_source", flattenLambdaEventSourceMappingSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)); err != nil {
+	if err := d.Set("self_managed_event_source", flattenLambdaEventSourceMappingSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource, d)); err != nil {
 		return fmt.Errorf("error setting self_managed_event_source: %w", err)
 	}
 	if err := d.Set("source_access_configuration", flattenLambdaEventSourceMappingSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations, d)); err != nil {

@@ -46,6 +46,36 @@ resource "aws_lambda_event_source_mapping" "example" {
 }
 ```
 
+### Self Managed Apache Kafka
+
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  function_name     = aws_lambda_function.example.arn
+  topics            = ["Example"]
+  starting_position = "TRIM_HORIZON"
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "kafka1.example.com:9092,kafka2.example.com:9092"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SUBNET"
+    uri = "subnet:subnet-example1"
+  }
+
+  source_access_configuration {
+    type = "VPC_SUBNET"
+    uri = "subnet:subnet-example2"
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri = "security_group:sg-example"
+  }
+}```
+
 ### SQS
 
 ```terraform
@@ -59,7 +89,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 * `batch_size` - (Optional) The largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis and MSK, `10` for SQS.
 * `maximum_batching_window_in_seconds` - (Optional) The maximum amount of time to gather records before invoking the function, in seconds (between 0 and 300). Records will continue to buffer (or accumulate in the case of an SQS queue event source) until either `maximum_batching_window_in_seconds` expires or `batch_size` has been met. For streaming event sources, defaults to as soon as records are available in the stream. If the batch it reads from the stream/queue only has one record in it, Lambda only sends one record to the function. Only available for stream sources (DynamoDB and Kinesis) and SQS standard queues.
-* `event_source_arn` - (Required) The event source ARN - can be a Kinesis stream, DynamoDB stream, SQS queue or MSK cluster.
+* `event_source_arn` - (Optional) The event source ARN - this is required for Kinesis stream, DynamoDB stream, SQS queue or MSK cluster.  It is incompatible with a Self Managed Kafka source.
 * `enabled` - (Optional) Determines if the mapping will be enabled on creation. Defaults to `true`.
 * `function_name` - (Required) The name or the ARN of the Lambda function that will be subscribing to events.
 * `starting_position` - (Optional) The position in the stream where AWS Lambda should start reading. Must be one of `AT_TIMESTAMP` (Kinesis only), `LATEST` or `TRIM_HORIZON` if getting events from Kinesis, DynamoDB or MSK. Must not be provided if getting events from SQS. More information about these positions can be found in the [AWS DynamoDB Streams API Reference](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html) and [AWS Kinesis API Reference](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType).
@@ -70,6 +100,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
 * `topics` - (Optional) The name of the Kafka topics. Only available for MSK sources. A single topic name must be specified.
 * `destination_config`: - (Optional) An Amazon SQS queue or Amazon SNS topic destination for failed records. Only available for stream sources (DynamoDB and Kinesis). Detailed below.
+* `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster.  Detailed below.
+* `source_access_configuration`: (Optional) For Self Managed Kafka sources, the access configuration for the source.  Detailed below.
 
 ### destination_config Configuration Block
 
@@ -78,6 +110,15 @@ resource "aws_lambda_event_source_mapping" "example" {
 #### destination_config on_failure Configuration Block
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
+
+### self_managed_event_source Configuration Block
+
+* `endpoints` - (Required) A map of endpoints for the self managed source.  For Kafka self-managed sources, the key should be `KAFKA_BOOTSTRAP_SERVERS` and the value should be a string with a comma separated list of broker endpoints.
+
+### source_access_configuration Configuration Block
+
+* `type` - (Required) The type of this configuration.  For Self Managed Kafka you will need to supply blocks for type `VPC_SUBNET` and `VPC_SECURITY_GROUP`.
+* `uri` - (Required) The URI for this configuration.  For type `VPC_SUBNET` the value should be `subnet:subnet_id` where `subnet_id` is the value you would find in an aws_subnet resource's id attribute.  For type `VPC_SECURITY_GROUP` the value should be `security_group:security_group_id` where `security_group_id` is the value you would find in an aws_security_group resource's id attribute.
 
 ## Attributes Reference
 
