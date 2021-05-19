@@ -1146,7 +1146,7 @@ func TestAccAwsWafv2WebACL_CustomRequestHandling(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling(webACLName, "allow", "x-hdr1", "x-hdr2"),
+				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling_Allow(webACLName, "x-hdr1", "x-hdr2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1177,7 +1177,7 @@ func TestAccAwsWafv2WebACL_CustomRequestHandling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling(webACLName, "count", "x-hdr1", "x-hdr2"),
+				Config: testAccAwsWafv2WebACLConfig_CustomRequestHandling_Count(webACLName, "x-hdr1", "x-hdr2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1706,7 +1706,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, countryCodes)
 }
 
-func testAccAwsWafv2WebACLConfig_CustomRequestHandling(name, actionName string, firstHeader string, secondHeader string) string {
+func testAccAwsWafv2WebACLConfig_CustomRequestHandling_Count(name, firstHeader string, secondHeader string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
@@ -1722,15 +1722,15 @@ resource "aws_wafv2_web_acl" "test" {
     priority = 1
 
     action {
-      %[2]s {
-	    custom_request_handling {
+      count {
+        custom_request_handling {
           insert_headers {
-            name = "%[3]s"
+            name  = "%[2]s"
             value = "test-value-1"
           }
 
           insert_headers {
-            name = "%[4]s"
+            name  = "%[3]s"
             value = "test-value-2"
           }
         }
@@ -1756,7 +1756,60 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, actionName, firstHeader, secondHeader)
+`, name, firstHeader, secondHeader)
+}
+
+func testAccAwsWafv2WebACLConfig_CustomRequestHandling_Allow(name, firstHeader string, secondHeader string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {
+        custom_request_handling {
+          insert_headers {
+            name  = "%[2]s"
+            value = "test-value-1"
+          }
+
+          insert_headers {
+            name  = "%[3]s"
+            value = "test-value-2"
+          }
+        }
+      }
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, firstHeader, secondHeader)
 }
 
 func testAccAwsWafv2WebACLConfig_CustomResponse(name string, defaultStatusCode int, countryBlockStatusCode int, countryHeaderName string) string {
@@ -1780,11 +1833,11 @@ resource "aws_wafv2_web_acl" "test" {
 
     action {
       block {
-	    custom_response {
+        custom_response {
           response_code = %[3]d
-          
+
           response_headers {
-            name = "%[4]s"
+            name  = "%[4]s"
             value = "custom-response-header-value"
           }
         }
