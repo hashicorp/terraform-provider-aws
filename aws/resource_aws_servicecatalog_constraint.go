@@ -117,7 +117,7 @@ func resourceAwsServiceCatalogConstraintCreate(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Constraint %v: %w", input, err) // take input out
+		return fmt.Errorf("error creating Service Catalog Constraint: %w", err)
 	}
 
 	if output == nil || output.ConstraintDetail == nil {
