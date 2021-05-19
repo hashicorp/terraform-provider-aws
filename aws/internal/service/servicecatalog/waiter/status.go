@@ -156,7 +156,7 @@ func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id st
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %w", acceptLanguage, id, err),
+				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
 			}
 		}
 
@@ -180,7 +180,7 @@ func ProductPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acce
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("product portfolio association not found (%s): %w", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
+				Message: fmt.Sprintf("product portfolio association not found (%s): %s", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
 
