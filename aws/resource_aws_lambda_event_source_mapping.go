@@ -33,9 +33,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"event_source_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
 			"function_name": {
 				Type:     schema.TypeString,
@@ -164,10 +165,11 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				},
 			},
 			"self_managed_event_source": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				MaxItems:     1,
+				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoints": {
