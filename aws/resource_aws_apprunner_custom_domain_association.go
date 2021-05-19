@@ -132,7 +132,7 @@ func resourceAwsAppRunnerCustomDomainAssociationRead(ctx context.Context, d *sch
 
 	if customDomain == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Custom Domain Associaton (%s): empty output after creation", d.Id()))
+			return diag.FromErr(fmt.Errorf("error reading App Runner Custom Domain Association (%s): empty output after creation", d.Id()))
 		}
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
