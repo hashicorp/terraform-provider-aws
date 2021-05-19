@@ -29,8 +29,12 @@ func resourceAwsAmplifyApp() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			SetTagsDiff,
+			customdiff.ForceNewIfChange("build_spec", func(_ context.Context, old, new, meta interface{}) bool {
+				// Any existing value cannot be cleared.
+				return new.(string) == ""
+			}),
 			customdiff.ForceNewIfChange("description", func(_ context.Context, old, new, meta interface{}) bool {
-				// Any existing description cannot be cleared.
+				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
 		),

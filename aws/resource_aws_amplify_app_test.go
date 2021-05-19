@@ -265,13 +265,10 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_buildSpec(t *testing.T) {
+func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
+	var app1, app2, app3 amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
-
-	// once set, build_spec cannot be removed.
-	buildSpec1 := "version: 0.1"
-	buildSpec2 := "version: 0.2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -280,9 +277,10 @@ func TestAccAWSAmplifyApp_buildSpec(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, buildSpec1),
+				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, "version: 0.1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "build_spec", buildSpec1),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app1),
+					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.1"),
 				),
 			},
 			{
@@ -291,9 +289,19 @@ func TestAccAWSAmplifyApp_buildSpec(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, buildSpec2),
+				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, "version: 0.2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "build_spec", buildSpec2),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app2),
+					testAccCheckAWSAmplifyAppNotRecreated(&app1, &app2),
+					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.2"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app3),
+					testAccCheckAWSAmplifyAppRecreated(&app2, &app3),
+					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
 				),
 			},
 		},
@@ -623,12 +631,12 @@ resource "aws_amplify_app" "test" {
 `, rName, repository, accessToken)
 }
 
-func testAccAWSAmplifyAppConfigBuildSpec(rName string, buildSpec string) string {
+func testAccAWSAmplifyAppConfigBuildSpec(rName, buildSpec string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  build_spec = "%s"
+  build_spec = %[2]q
 }
 `, rName, buildSpec)
 }
