@@ -37,7 +37,7 @@ The following arguments supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Name of the connection.
+* `arn` - ARN of the connection.
 * `status` - The current state of the App Runner connection. When the state is `AVAILABLE`, you can use the connection to create an [`aws_apprunner_service` resource](apprunner_service.html).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
