@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -117,14 +116,14 @@ func TestAccAWSServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, "beskrivning"),
+				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "guidance", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
@@ -157,7 +156,7 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, rName),
+				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProvisioningArtifact(), resourceName),
@@ -167,6 +166,28 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 		},
 	})
 }
+
+/*
+	if v, ok := d.GetOk("accept_language"); ok {
+		input.AcceptLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("active"); ok {
+		input.Active = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("guidance"); ok {
+		input.Guidance = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		input.Name = aws.String(v.(string))
+	}
+*/
 
 func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
@@ -179,23 +200,24 @@ func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogProvisioningArtifactDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, "beskrivning"),
+				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-2", rName)),
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, "ny beskrivning"),
+				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_description", "ny supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", "jp"),
+					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "description", fmt.Sprintf("%s-3", rName)),
+					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDeprecated),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-3", rName)),
 				),
 			},
 		},
@@ -216,28 +238,17 @@ func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 				Config: testAccAWSServiceCatalogProvisioningArtifactConfig_physicalID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisioningArtifactExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
-					testAccMatchResourceAttrRegionalARN(
-						resourceName,
-						"provisioning_artifact_parameters.0.template_physical_id",
-						"cloudformation",
-						regexp.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
-					),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "template_physical_id"),
+					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
+					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"accept_language",
-					"provisioning_artifact_parameters",
-				},
 			},
 		},
 	})
@@ -323,51 +334,44 @@ resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
-  content = <<EOF
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  content = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
-    }
-  }
-}
-EOF
-}
 
-data "aws_partition" "current" {}
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = { 
+          Ref = "MyVPC" 
+        }
+      }
+    }
+  })
+}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = "Produktbeskrivning"
+  description         = %[1]q
   distributor         = "distributör"
   name                = %[1]q
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = "supportbeskrivning"
+  support_description = %[1]q
   support_email       = "support@example.com"
   support_url         = "http://example.com"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
-    name                        = "%[1]s-1"
-    template_url                = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-    #template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+    name                        = %[1]q
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
@@ -378,56 +382,68 @@ resource "aws_servicecatalog_product" "test" {
 `, rName)
 }
 
-func testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName, description string) string {
+func testAccAWSServiceCatalogProvisioningArtifactConfig_basic(rName string) string {
 	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName), fmt.Sprintf(`
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   accept_language             = "en"
-  active                      = "true"
-  description                 = %[2]q
+  active                      = true
+  description                 = %[1]q
   disable_template_validation = true
   guidance                    = "DEFAULT"
   name                        = "%[1]s-2"
   product_id                  = aws_servicecatalog_product.test.id
-  template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
   type                        = "CLOUD_FORMATION_TEMPLATE"
 }
-`, rName, description))
+`, rName))
 }
 
-func testAccAWSServiceCatalogProvisioningArtifactConfig_physicalID(rName string) string {
+func testAccAWSServiceCatalogProvisioningArtifactConfig_update(rName string) string {
+	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigTemplateURLBase(rName), fmt.Sprintf(`
+resource "aws_servicecatalog_provisioning_artifact" "test" {
+  accept_language             = "jp"
+  active                      = false
+  description                 = "%[1]s-3"
+  disable_template_validation = true
+  guidance                    = "DEPRECATED"
+  name                        = "%[1]s-3"
+  product_id                  = aws_servicecatalog_product.test.id
+  template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+  type                        = "CLOUD_FORMATION_TEMPLATE"
+}
+`, rName))
+}
+
+func testAccAWSServiceCatalogProvisioningArtifactConfigPhysicalIDBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
 
-  template_body = <<STACK
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
     }
-  }
-}
-STACK
+  })
 }
 
-resource "aws_servicecatalog_provisioning_artifact" "test" {
-  description         = "beskrivning"
+resource "aws_servicecatalog_product" "test" {
+  description         = %[1]q
   distributor         = "distributör"
   name                = %[1]q
   owner               = "ägare"
@@ -435,10 +451,29 @@ resource "aws_servicecatalog_provisioning_artifact" "test" {
   support_description = "supportbeskrivning"
   support_email       = "support@example.com"
   support_url         = "http://example.com"
-  description          = "artefaktbeskrivning"
-  name                 = %[1]q
-  template_physical_id = aws_cloudformation_stack.test.id
-  type                 = "CLOUD_FORMATION_TEMPLATE"
+
+  provisioning_artifact_parameters {
+    description          = "artefaktbeskrivning"
+    name                 = %[1]q
+    template_physical_id = aws_cloudformation_stack.test.id
+    type                 = "CLOUD_FORMATION_TEMPLATE"
+  }
 }
 `, rName)
+}
+
+func testAccAWSServiceCatalogProvisioningArtifactConfig_physicalID(rName string) string {
+	return composeConfig(testAccAWSServiceCatalogProvisioningArtifactConfigPhysicalIDBase(rName), fmt.Sprintf(`
+resource "aws_servicecatalog_provisioning_artifact" "test" {
+  accept_language             = "en"
+  active                      = true
+  description                 = %[1]q
+  disable_template_validation = false
+  guidance                    = "DEFAULT"
+  name                        = "%[1]s-2"
+  product_id                  = aws_servicecatalog_product.test.id
+  template_physical_id        = aws_cloudformation_stack.test.id
+  type                        = "CLOUD_FORMATION_TEMPLATE"
+}
+`, rName))
 }
