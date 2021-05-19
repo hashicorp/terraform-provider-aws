@@ -21,5 +21,3 @@ require (
 	github.com/pquerna/otp v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-replace github.com/aws/aws-sdk-go => ../../aws/aws-sdk-go
