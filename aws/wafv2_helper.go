@@ -635,8 +635,8 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 	if v, ok := m["response_code"]; ok && v.(int) > 0 {
 		customResponse.ResponseCode = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := m["response_header"]; ok && len(v.([]interface{})) > 0 {
-		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.([]interface{}))
+	if v, ok := m["response_header"]; ok && len(v.(*schema.Set).List()) > 0 {
+		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.(*schema.Set).List())
 	}
 
 	return customResponse
@@ -650,8 +650,8 @@ func expandWafv2CustomRequestHandling(l []interface{}) *wafv2.CustomRequestHandl
 	m := l[0].(map[string]interface{})
 	requestHandling := &wafv2.CustomRequestHandling{}
 
-	if v, ok := m["insert_header"]; ok && len(v.([]interface{})) > 0 {
-		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.([]interface{}))
+	if v, ok := m["insert_header"]; ok && len(v.(*schema.Set).List()) > 0 {
+		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.(*schema.Set).List())
 	}
 
 	return requestHandling
