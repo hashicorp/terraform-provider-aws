@@ -231,12 +231,6 @@ func resourceAwsQLDBStreamRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting Stream Name: %s", err)
 	}
 
-	// TODO: Set the atributes in the right place.  Confirm where the right place is...
-	// qldbStream.Stream.Arn
-	// qldbStream.Stream.CreationTime
-	// qldbStream.Stream.Status
-	// qldbStream.Stream.StreamId
-
 	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
 	if err != nil {
@@ -263,7 +257,6 @@ func resourceAwsQLDBStreamUpdate(d *schema.ResourceData, meta interface{}) error
 	return resourceAwsQLDBStreamRead(d, meta)
 }
 
-// TODO: You cannot actually "delete" a stream, it can only be "cancelled".  Not sure about naming preferences here...
 func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 	deleteQLDBStreamOpts := &qldb.CancelJournalKinesisStreamInput{
@@ -275,7 +268,6 @@ func resourceAwsQLDBStreamDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.CancelJournalKinesisStream(deleteQLDBStreamOpts)
 
-		// TODO:  Confirm which errors to be checking for here
 		if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
 			return resource.RetryableError(err)
 		}

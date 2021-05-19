@@ -136,7 +136,6 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 	kinesisStreamName := fmt.Sprintf("test-kinesis-stream-%s", acctest.RandString(10))
 	roleName := fmt.Sprintf("test-role-%s", acctest.RandString(10))
 
-	// rInt := acctest.RandInt()
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
