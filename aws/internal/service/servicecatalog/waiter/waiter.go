@@ -42,10 +42,9 @@ const (
 	StatusUnavailable = "UNAVAILABLE"
 
 	// AWS documentation is wrong, says that status will be "AVAILABLE" but it is actually "CREATED"
-	ProductStatusCreated = "CREATED"
+	StatusCreated = "CREATED"
 
 	OrganizationAccessStatusError = "ERROR"
-	StatusCreated                 = "CREATED"
 )
 
 func ProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
