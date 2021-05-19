@@ -1,4 +1,4 @@
-## 3.41.0 (May 19, 2021)
+## 3.42.0 (Unreleased)
 
 FEATURES:
 
