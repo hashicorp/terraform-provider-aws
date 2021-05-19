@@ -562,23 +562,21 @@ func resourceAwsInstance() *schema.Resource {
 
 			"capacity_reservation_specification": {
 				Type:     schema.TypeList,
-				Optional: true,
 				MaxItems: 1,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"capacity_reservation_preference": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ec2.CapacityReservationPreferenceOpen,
-								ec2.CapacityReservationPreferenceNone,
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(ec2.CapacityReservationPreference_Values(), false),
+							ExactlyOneOf: []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
 						},
 						"capacity_reservation_target": {
 							Type:     schema.TypeList,
-							Optional: true,
 							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capacity_reservation_id": {
@@ -587,6 +585,7 @@ func resourceAwsInstance() *schema.Resource {
 									},
 								},
 							},
+							ExactlyOneOf: []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
 						},
 					},
 				},
