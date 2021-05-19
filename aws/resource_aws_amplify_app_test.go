@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
@@ -23,28 +24,37 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckNoResourceAttr(resourceName, "access_token"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "repository", ""),
-					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
-					resource.TestMatchResourceAttr(resourceName, "default_domain", regexp.MustCompile(`\.amplifyapp\.com$`)),
-					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
+					resource.TestMatchResourceAttr(resourceName, "default_domain", regexp.MustCompile(`\.amplifyapp\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_build", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_deletion", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "oauth_token"),
+					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
+					resource.TestCheckResourceAttr(resourceName, "production_branch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -62,7 +72,7 @@ func TestAccAWSAmplifyApp_Name_Generated(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -89,7 +99,7 @@ func TestAccAWSAmplifyApp_NamePrefix(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -117,7 +127,7 @@ func TestAccAWSAmplifyApp_Tags(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -164,7 +174,7 @@ func TestAccAWSAmplifyApp_rename(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -199,7 +209,7 @@ func TestAccAWSAmplifyApp_description(t *testing.T) {
 	description2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -230,7 +240,7 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -262,7 +272,7 @@ func TestAccAWSAmplifyApp_buildSpec(t *testing.T) {
 	buildSpec2 := "version: 0.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -293,7 +303,7 @@ func TestAccAWSAmplifyApp_customRules(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -334,7 +344,7 @@ func TestAccAWSAmplifyApp_environmentVariables(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -374,7 +384,7 @@ func TestAccAWSAmplifyApp_autoBranchCreationConfig(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -439,28 +449,26 @@ func TestAccAWSAmplifyApp_autoBranchCreationConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_basicAuthConfig(t *testing.T) {
+func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
+	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
 
-	username1 := "username1"
-	password1 := "password1"
-	username2 := "username2"
-	password2 := "password2"
+	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
+	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyAppConfigBasicAuthConfig(rName, username1, password1),
+				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.enable_basic_auth", "true"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.username", username1),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.password", password1),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
 				),
 			},
 			{
@@ -469,18 +477,19 @@ func TestAccAWSAmplifyApp_basicAuthConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyAppConfigBasicAuthConfig(rName, username2, password2),
+				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.enable_basic_auth", "true"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.username", username2),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.password", password2),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
 				),
 			},
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "0"),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 				),
 			},
 		},
@@ -492,7 +501,7 @@ func TestAccAWSAmplifyApp_enableBranchAutoBuild(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -526,7 +535,7 @@ func TestAccAWSAmplifyApp_iamServiceRoleArn(t *testing.T) {
 	roleName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
 		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
@@ -599,6 +608,12 @@ func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPreCheckAWSAmplify(t *testing.T) {
+	if testAccGetPartition() == "aws-us-gov" {
+		t.Skip("AWS Amplify is not supported in GovCloud partition")
+	}
 }
 
 func testAccAWSAmplifyAppConfigName(rName string) string {
@@ -795,18 +810,15 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigBasicAuthConfig(rName string, username, password string) string {
+func testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, basicAuthCredentials string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  basic_auth_config {
-    enable_basic_auth = true
-    username          = "%s"
-    password          = "%s"
-  }
+  basic_auth_credentials = %[2]q
+  enable_basic_auth      = true
 }
-`, rName, username, password)
+`, rName, basicAuthCredentials)
 }
 
 func testAccAWSAmplifyAppConfigEnableBranchAutoBuild(rName string) string {

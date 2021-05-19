@@ -14,7 +14,7 @@ func AppByID(conn *amplify.Amplify, id string) (*amplify.App, error) {
 
 	output, err := conn.GetApp(input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

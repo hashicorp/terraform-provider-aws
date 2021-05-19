@@ -248,10 +248,9 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			},
 
 			"platform": {
-				Type:     schema.TypeString,
-				Optional: true,
-				//TODO
-				//Default:  amplify.PlatformWeb,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      amplify.PlatformWeb,
 				ValidateFunc: validation.StringInSlice(amplify.Platform_Values(), false),
 			},
 
@@ -330,6 +329,10 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("custom_headers"); ok {
 		input.CustomHeaders = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -472,7 +475,9 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
 	d.Set("custom_headers", app.CustomHeaders)
-
+	if err := d.Set("custom_rule", flattenAmplifyCustomRules(app.CustomRules)); err != nil {
+		return fmt.Errorf("error setting custom_rule: %w", err)
+	}
 	d.Set("default_domain", app.DefaultDomain)
 	d.Set("description", app.Description)
 	d.Set("enable_auto_branch_creation", app.EnableAutoBranchCreation)
@@ -621,7 +626,7 @@ func resourceAwsAmplifyAppDelete(d *schema.ResourceData, meta interface{}) error
 		AppId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
 		return nil
 	}
 
@@ -730,6 +735,102 @@ func flattenAmplifyAutoBranchCreationConfig(apiObject *amplify.AutoBranchCreatio
 	}
 
 	return tfMap
+}
+
+func expandAmplifyCustomRule(tfMap map[string]interface{}) *amplify.CustomRule {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &amplify.CustomRule{}
+
+	if v, ok := tfMap["condition"].(string); ok && v != "" {
+		apiObject.Condition = aws.String(v)
+	}
+
+	if v, ok := tfMap["source"].(string); ok && v != "" {
+		apiObject.Source = aws.String(v)
+	}
+
+	if v, ok := tfMap["status"].(string); ok && v != "" {
+		apiObject.Status = aws.String(v)
+	}
+
+	if v, ok := tfMap["target"].(string); ok && v != "" {
+		apiObject.Target = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandAmplifyCustomRules(tfList []interface{}) []*amplify.CustomRule {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*amplify.CustomRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandAmplifyCustomRule(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenAmplifyCustomRule(apiObject *amplify.CustomRule) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Condition; v != nil {
+		tfMap["condition"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Source; v != nil {
+		tfMap["source"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["status"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Target; v != nil {
+		tfMap["target"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenAmplifyCustomRules(apiObjects []*amplify.CustomRule) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAmplifyCustomRule(apiObject))
+	}
+
+	return tfList
 }
 
 func flattenAmplifyProductionBranch(apiObject *amplify.ProductionBranch) map[string]interface{} {
