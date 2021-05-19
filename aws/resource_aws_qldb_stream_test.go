@@ -295,16 +295,6 @@ resource "aws_iam_role" "test" {
 	}
 }
 
-resource "null_resource" "previous" {
-	depends_on = [aws_iam_role.test]
-}
-
-resource "time_sleep" "wait_30_seconds" {
-  depends_on = [null_resource.prev]
-
-  create_duration = "30s"
-}
-
 resource "aws_qldb_stream" "test" {
 	stream_name          = "%s"
 	ledger_name          = aws_qldb_ledger.test.id
@@ -317,7 +307,9 @@ resource "aws_qldb_stream" "test" {
 		stream_arn          = aws_kinesis_stream.test.arn
 	}
 
-	depends_on = [time_sleep.wait_30_seconds]
+	provisioner "local-exec" {
+		command = "sleep 8"
+	}
 }
 `, rLedgerName, rKinesisStreamName, rRoleName, rStreamName)
 }
