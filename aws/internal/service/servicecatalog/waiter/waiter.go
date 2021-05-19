@@ -20,6 +20,11 @@ const (
 	PortfolioShareCreateTimeout = 3 * time.Minute
 
 	OrganizationsAccessStableTimeout = 3 * time.Minute
+	ConstraintReadyTimeout           = 3 * time.Minute
+	ConstraintDeleteTimeout          = 3 * time.Minute
+
+	ProductPortfolioAssociationReadyTimeout  = 3 * time.Minute
+	ProductPortfolioAssociationDeleteTimeout = 3 * time.Minute
 
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
@@ -197,4 +202,64 @@ func OrganizationsAccessStable(conn *servicecatalog.ServiceCatalog) (string, err
 	}
 
 	return "", err
+}
+
+func ConstraintReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeConstraintOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound, servicecatalog.StatusCreating, StatusUnavailable},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: ConstraintStatus(conn, acceptLanguage, id),
+		Timeout: ConstraintReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeConstraintOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ConstraintDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.StatusCreating},
+		Target:  []string{StatusNotFound},
+		Refresh: ConstraintStatus(conn, acceptLanguage, id),
+		Timeout: ConstraintDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func ProductPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) (*servicecatalog.PortfolioDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound, StatusUnavailable},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: ProductPortfolioAssociationStatus(conn, acceptLanguage, portfolioID, productID),
+		Timeout: ProductPortfolioAssociationReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.PortfolioDetail); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ProductPortfolioAssociationDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{servicecatalog.StatusAvailable},
+		Target:  []string{StatusNotFound, StatusUnavailable},
+		Refresh: ProductPortfolioAssociationStatus(conn, acceptLanguage, portfolioID, productID),
+		Timeout: ProductPortfolioAssociationDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
