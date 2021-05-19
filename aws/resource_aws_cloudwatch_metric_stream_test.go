@@ -28,13 +28,13 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "state", waiter.StateRunning),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.metric_stream_to_firehose", "arn"),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
 					testAccCheckResourceAttrRfc3339(resourceName, "creation_date"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_update_date"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.metric_stream_to_firehose", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", waiter.StateRunning),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck:          func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudwatch.EndpointsID, t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
 		ProviderFactories: testAccProviderFactories,
 		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
@@ -217,6 +217,33 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(rName),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
+	var metricStream cloudwatch.GetMetricStreamOutput
+	resourceName := "aws_cloudwatch_metric_stream.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
+		ProviderFactories: testAccProviderFactories,
+		CheckDestroy:      testAccCheckAWSCloudWatchMetricStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchMetricStreamConfigTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -508,6 +535,26 @@ resource "aws_cloudwatch_metric_stream" "test" {
 
   exclude_filter {
     namespace = "AWS/EBS"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCloudWatchMetricStreamConfigTags(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudwatch_metric_stream" "test" {
+  name          = %[1]q
+  role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/MyRole"
+  firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
+  output_format = "json"
+
+  tags {
+    Name     = %[1]q
+	Mercedes = "Toto"
   }
 }
 `, rName)

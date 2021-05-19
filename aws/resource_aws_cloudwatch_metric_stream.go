@@ -107,7 +107,7 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tagsSchema(), // GetMetricStreamOutput doesn't have Tags which creates a "write but no read" situation
+			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
 	}
@@ -149,6 +149,8 @@ func resourceAwsCloudWatchMetricStreamCreate(ctx context.Context, d *schema.Reso
 
 func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*AWSClient).cloudwatchconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	output, err := waiter.MetricStreamReady(ctx, conn, d.Id())
 
@@ -188,10 +190,22 @@ func resourceAwsCloudWatchMetricStreamRead(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	// Tags should be read here but GetMetricStreamOutput does not currently have a Tags field.
-	// When AWS fixes this, add tag reading.
-	d.Set("tags", d.Get("tags"))
-	d.Set("tags_all", d.Get("tags_all"))
+	tags, err := keyvaluetags.CloudwatchListTags(conn, aws.StringValue(output.Arn))
+
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error listing tags for CloudWatch Metric Stream (%s): %w", d.Id(), err))
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
 
 	return nil
 }
