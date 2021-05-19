@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -193,13 +194,10 @@ func TestAccAWSAmplifyApp_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_description(t *testing.T) {
+func TestAccAWSAmplifyApp_Description(t *testing.T) {
+	var app1, app2, app3 amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
-
-	// once set, description cannot be removed.
-	description1 := acctest.RandomWithPrefix("tf-acc-test")
-	description2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -208,9 +206,10 @@ func TestAccAWSAmplifyApp_description(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyAppConfigDescription(rName, description1),
+				Config: testAccAWSAmplifyAppConfigDescription(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app1),
+					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
 				),
 			},
 			{
@@ -219,9 +218,19 @@ func TestAccAWSAmplifyApp_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyAppConfigDescription(rName, description2),
+				Config: testAccAWSAmplifyAppConfigDescription(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app2),
+					testAccCheckAWSAmplifyAppNotRecreated(&app1, &app2),
+					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app3),
+					testAccCheckAWSAmplifyAppRecreated(&app2, &app3),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 		},
@@ -562,6 +571,26 @@ func testAccPreCheckAWSAmplify(t *testing.T) {
 	}
 }
 
+func testAccCheckAWSAmplifyAppNotRecreated(before, after *amplify.App) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.AppId), aws.StringValue(after.AppId); before != after {
+			return fmt.Errorf("Amplify App (%s/%s) recreated", before, after)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSAmplifyAppRecreated(before, after *amplify.App) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.AppId), aws.StringValue(after.AppId); before == after {
+			return fmt.Errorf("Amplify App (%s) not recreated", before)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSAmplifyAppConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
@@ -570,12 +599,12 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigDescription(rName string, description string) string {
+func testAccAWSAmplifyAppConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  description = "%s"
+  description = %[2]q
 }
 `, rName, description)
 }
