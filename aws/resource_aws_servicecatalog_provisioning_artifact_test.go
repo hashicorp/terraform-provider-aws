@@ -167,28 +167,6 @@ func TestAccAWSServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 	})
 }
 
-/*
-	if v, ok := d.GetOk("accept_language"); ok {
-		input.AcceptLanguage = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("active"); ok {
-		input.Active = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("guidance"); ok {
-		input.Guidance = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		input.Name = aws.String(v.(string))
-	}
-*/
-
 func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioning_artifact.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
