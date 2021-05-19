@@ -641,36 +641,36 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }
 
-func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSlice []interface{}) *autoscaling.PredefinedLoadMetricSpecification {
+func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSlice []interface{}) *autoscaling.PredictiveScalingPredefinedLoadMetric {
 	if predefinedLoadMetricSpecificationSlice == nil || len(predefinedLoadMetricSpecificationSlice) < 1 {
 		return nil
 	}
 	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
-	predefinedLoadMetricSpecification := &autoscaling.PredefinedLoadMetricSpecification{
+	predefinedLoadMetricSpecification := &autoscaling.PredictiveScalingPredefinedLoadMetric{
 		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
 		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
 	}
 	return predefinedLoadMetricSpecification
 }
 
-func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSlice []interface{}) *autoscaling.PredefinedMetricPairSpecification {
+func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSlice []interface{}) *autoscaling.PredictiveScalingPredefinedMetricPair {
 	if predefinedMetricPairSpecificationSlice == nil || len(predefinedMetricPairSpecificationSlice) < 1 {
 		return nil
 	}
 	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
-	predefinedMetricPairSpecification := &autoscaling.PredefinedMetricPairSpecification{
+	predefinedMetricPairSpecification := &autoscaling.PredictiveScalingPredefinedMetricPair{
 		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
 		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
 	}
 	return predefinedMetricPairSpecification
 }
 
-func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecificationSlice []interface{}) *autoscaling.PredefinedScalingMetricSpecification {
+func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecificationSlice []interface{}) *autoscaling.PredictiveScalingPredefinedScalingMetric {
 	if predefinedScalingMetricSpecificationSlice == nil || len(predefinedScalingMetricSpecificationSlice) < 1 {
 		return nil
 	}
 	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
-	predefinedScalingMetricSpecification := &autoscaling.PredefinedScalingMetricSpecification{
+	predefinedScalingMetricSpecification := &autoscaling.PredictiveScalingPredefinedScalingMetric{
 		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
 		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
 	}
@@ -760,7 +760,7 @@ func flattenPredictiveScalingMetricSpecifications(metricSpecification []*autosca
 	return []map[string]interface{}{metricSpecificationFlat}
 }
 
-func flattenPredefinedScalingMetricSpecification(predefinedScalingMetricSpecification *autoscaling.PredefinedScalingMetricSpecification) []map[string]interface{} {
+func flattenPredefinedScalingMetricSpecification(predefinedScalingMetricSpecification *autoscaling.PredictiveScalingPredefinedScalingMetric) []map[string]interface{} {
 	predefinedScalingMetricSpecificationFlat := map[string]interface{}{}
 	if predefinedScalingMetricSpecification == nil {
 		return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
@@ -770,7 +770,7 @@ func flattenPredefinedScalingMetricSpecification(predefinedScalingMetricSpecific
 	return []map[string]interface{}{predefinedScalingMetricSpecificationFlat}
 }
 
-func flattenPredefinedLoadMetricSpecification(predefinedLoadMetricSpecification *autoscaling.PredefinedLoadMetricSpecification) []map[string]interface{} {
+func flattenPredefinedLoadMetricSpecification(predefinedLoadMetricSpecification *autoscaling.PredictiveScalingPredefinedLoadMetric) []map[string]interface{} {
 	predefinedLoadMetricSpecificationFlat := map[string]interface{}{}
 	if predefinedLoadMetricSpecification == nil {
 		return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
@@ -780,7 +780,7 @@ func flattenPredefinedLoadMetricSpecification(predefinedLoadMetricSpecification 
 	return []map[string]interface{}{predefinedLoadMetricSpecificationFlat}
 }
 
-func flattenPredefinedMetricPairSpecification(predefinedMetricPairSpecification *autoscaling.PredefinedMetricPairSpecification) []map[string]interface{} {
+func flattenPredefinedMetricPairSpecification(predefinedMetricPairSpecification *autoscaling.PredictiveScalingPredefinedMetricPair) []map[string]interface{} {
 	predefinedMetricPairSpecificationFlat := map[string]interface{}{}
 	if predefinedMetricPairSpecification == nil {
 		return []map[string]interface{}{predefinedMetricPairSpecificationFlat}
