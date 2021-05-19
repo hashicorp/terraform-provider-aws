@@ -349,8 +349,8 @@ resource "aws_s3_bucket_object" "test" {
     Outputs = {
       VpcID = {
         Description = "VPC ID"
-        Value = { 
-          Ref = "MyVPC" 
+        Value = {
+          Ref = "MyVPC"
         }
       }
     }
