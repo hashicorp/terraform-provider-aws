@@ -237,7 +237,7 @@ func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
 				Config: testAccAWSCloudWatchMetricStreamConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
 			{
@@ -552,9 +552,9 @@ resource "aws_cloudwatch_metric_stream" "test" {
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
-  tags {
+  tags = {
     Name     = %[1]q
-	Mercedes = "Toto"
+    Mercedes = "Toto"
   }
 }
 `, rName)
