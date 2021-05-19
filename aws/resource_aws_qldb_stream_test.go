@@ -23,7 +23,6 @@ func init() {
 	testAccProviders = map[string]*schema.Provider{
 		ProviderNameAws: testAccProvider,
 		// "time":          testAccProvider,
-		// "null":          testAccProvider,
 	}
 }
 
@@ -299,13 +298,8 @@ resource "aws_iam_role" "test" {
 	}
 }
 
-resource "null_resource" "previous" {
-	depends_on = [aws_iam_role.tf_test]
-}
-  
 resource "time_sleep" "wait_seconds" {
 	depends_on = [
-		null_resource.previous,
 		aws_iam_role.tf_test,
 	]
 
