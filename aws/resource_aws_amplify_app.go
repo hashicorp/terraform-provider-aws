@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -232,20 +231,9 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			},
 
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringLenBetween(1, 255),
-				ConflictsWith: []string{"name_prefix"},
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
 			"oauth_token": {
@@ -309,7 +297,7 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	name := naming.Generate(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := d.Get("name").(string)
 
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
@@ -495,7 +483,6 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("environment_variables", aws.StringValueMap(app.EnvironmentVariables))
 	d.Set("iam_service_role_arn", app.IamServiceRoleArn)
 	d.Set("name", app.Name)
-	d.Set("name_prefix", naming.NamePrefixFromName(aws.StringValue(app.Name)))
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
 		if err := d.Set("production_branch", []interface{}{flattenAmplifyProductionBranch(app.ProductionBranch)}); err != nil {
@@ -505,29 +492,6 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("production_branch", nil)
 	}
 	d.Set("repository", app.Repository)
-
-	/*
-		if err := d.Set("auto_branch_creation_config", flattenAmplifyAutoBranchCreationConfig(resp.App.AutoBranchCreationConfig, resp.App.AutoBranchCreationPatterns, resp.App.EnableAutoBranchCreation)); err != nil {
-			return fmt.Errorf("error setting auto_branch_creation_config: %s", err)
-		}
-		if err := d.Set("basic_auth_config", flattenAmplifyBasicAuthConfig(resp.App.EnableBasicAuth, resp.App.BasicAuthCredentials)); err != nil {
-			return fmt.Errorf("error setting basic_auth_config: %s", err)
-		}
-		d.Set("build_spec", resp.App.BuildSpec)
-		if err := d.Set("custom_rules", flattenAmplifyCustomRules(resp.App.CustomRules)); err != nil {
-			return fmt.Errorf("error setting custom_rules: %s", err)
-		}
-		d.Set("default_domain", resp.App.DefaultDomain)
-		d.Set("description", resp.App.Description)
-		d.Set("enable_branch_auto_build", resp.App.EnableBranchAutoBuild)
-		if err := d.Set("environment_variables", aws.StringValueMap(resp.App.EnvironmentVariables)); err != nil {
-			return fmt.Errorf("error setting environment_variables: %s", err)
-		}
-		d.Set("iam_service_role_arn", resp.App.IamServiceRoleArn)
-		d.Set("name", resp.App.Name)
-		d.Set("platform", resp.App.Platform)
-		d.Set("repository", resp.App.Repository)
-	*/
 
 	tags := keyvaluetags.AmplifyKeyValueTags(app.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
 
@@ -604,6 +568,10 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if d.HasChange("iam_service_role_arn") {
 			input.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
 		}
 
 		if d.HasChange("oauth_token") {

@@ -130,8 +130,7 @@ resource "aws_amplify_app" "app" {
 
 The following arguments are supported:
 
-* `name` - (Optional) Name of the Amplify App. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `name` - (Required) Name of the Amplify App.
 
 * `access_token` - (Optional) Personal Access token for 3rd party source control system for an Amplify App, used to create webhook and read-only deploy key. Token is not stored.
 * `auto_branch_creation_config` - (Optional) Automated branch creation config for the Amplify App. An `auto_branch_creation_config` block is documented below.

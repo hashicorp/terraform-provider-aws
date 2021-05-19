@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -50,66 +49,11 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "oauth_token"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
 					resource.TestCheckResourceAttr(resourceName, "production_branch.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_Name_Generated(t *testing.T) {
-	var app amplify.App
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigNameGenerated(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					naming.TestCheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_NamePrefix(t *testing.T) {
-	var app amplify.App
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigNamePrefix("tf-acc-test-prefix-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					naming.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -166,12 +110,59 @@ func TestAccAWSAmplifyApp_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_rename(t *testing.T) {
+func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
+	var app amplify.App
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
 
-	// name is not unique and can be renamed
+	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
+	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					// Clearing basic_auth_credentials not reflected in API.
+					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAmplifyApp_Name(t *testing.T) {
+	var app amplify.App
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -182,6 +173,7 @@ func TestAccAWSAmplifyApp_rename(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName1),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
@@ -193,6 +185,7 @@ func TestAccAWSAmplifyApp_rename(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName2),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -449,54 +442,6 @@ func TestAccAWSAmplifyApp_autoBranchCreationConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
-	var app amplify.App
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
-	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigBasicAuthCredentials(rName, credentials2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					// Clearing basic_auth_credentials not reflected in API.
-					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSAmplifyApp_enableBranchAutoBuild(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -623,20 +568,6 @@ resource "aws_amplify_app" "test" {
   name = %[1]q
 }
 `, rName)
-}
-
-func testAccAWSAmplifyAppConfigNameGenerated() string {
-	return `
-resource "aws_amplify_app" "test" {}
-`
-}
-
-func testAccAWSAmplifyAppConfigNamePrefix(namePrefix string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name_prefix = %[1]q
-}
-`, namePrefix)
 }
 
 func testAccAWSAmplifyAppConfigDescription(rName string, description string) string {
