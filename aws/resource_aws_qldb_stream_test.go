@@ -130,7 +130,13 @@ func waitForQLDBStreamCancellation(conn *qldb.QLDB, ledgerName string, streamID 
 
 func TestAccAWSQLDBStream_basic(t *testing.T) {
 	var qldbCluster qldb.DescribeJournalKinesisStreamOutput
-	rInt := acctest.RandInt()
+
+	ledgerName := fmt.Sprintf("test-ledger-%s", acctest.RandString(10))
+	streamName := fmt.Sprintf("test-stream-%s", acctest.RandString(10))
+	kinesisStreamName := fmt.Sprintf("test-kinesis-stream-%s", acctest.RandString(10))
+	roleName := fmt.Sprintf("test-role-%s", acctest.RandString(10))
+
+	// rInt := acctest.RandInt()
 	resourceName := "aws_qldb_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,13 +146,17 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSQLDBStreamCancel,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBLedgerConfig(rInt),
+				Config: testAccAWSQLDBStreamConfig(ledgerName, streamName, kinesisStreamName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBStreamExists(resourceName, &qldbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`stream/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "stream_name", regexp.MustCompile("test-stream-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					// testAccCheckAWSKinesisStreamExists("aws_kinesis_stream.test", 1, &out),
+					// testAccCheckAWSIAMRoleExists("aws_iam_role.test_role", 1, &out),
+					// testAccCheckAWSQLDBLedgerExists("aws_qldb_ledger.test", 1, &out),
+					// testAccCheckAWSQLDBStreamExists("aws_qldb_stream.test", 1, &out),
 				),
 			},
 			{
@@ -232,121 +242,65 @@ func testAccCheckAWSQLDBStreamExists(n string, v *qldb.DescribeJournalKinesisStr
 	}
 }
 
-func testAccAWSQLDBStreamConfig(n int) string {
+func testAccAWSQLDBStreamConfig(rLedgerName, rStreamName, rKinesisStreamName, rRoleName string) string {
 	return fmt.Sprintf(`
+resource "aws_qldb_ledger" "test" {
+	name                = "%s"
+	deletion_protection = false
+}
+
 resource "aws_qldb_stream" "test" {
-  name                = "test-stream-%d"
-  deletion_protection = false
-}
-`, n)
-}
-
-func TestAccAWSQLDBStream_Tags(t *testing.T) {
-	var cluster1 qldb.DescribeLedgerOutput
-	var cluster2, cluster3, cluster4 qldb.DescribeJournalKinesisStreamOutput
-	rLedgerName := acctest.RandomWithPrefix("tf-acc-test")
-	rStreamName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resourceNameForQLDBLedger := "aws_qldb_ledger.test"
-	resourceNameForQLDBStream := "aws_qldb_stream.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSQLDBStreamCancel,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSQLDBLedgerForStreamsConfig(rLedgerName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBLedgerExists(resourceNameForQLDBLedger, &cluster1),
-				),
-			},
-			{
-				Config: testAccAWSQLDBStreamConfigTags1(rLedgerName, rStreamName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBStreamExists(resourceNameForQLDBStream, &cluster2),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceNameForQLDBStream,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSQLDBStreamConfigTags2(rLedgerName, rStreamName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBStreamExists(resourceNameForQLDBStream, &cluster3),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSQLDBStreamConfigTags1(rLedgerName, rStreamName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQLDBStreamExists(resourceNameForQLDBStream, &cluster4),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceNameForQLDBStream, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func testAccAWSQLDBLedgerForStreamsConfig(rLedgerName string) string {
-	return fmt.Sprintf(`
-	resource "aws_qldb_ledger" "test" {
-		name                = "%s"
-		deletion_protection = false
-	}
-	`, rLedgerName)
-}
-
-func testAccAWSQLDBStreamConfigTags1(rLedgerName, rStreamName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-	resource "aws_qldb_stream" "test" {
-		stream_name          = "%[1]q"
-		ledger_name          = "%[2]q"
-		inclusive_start_time = "2021-01-01T00:00:00Z"
-		deletion_protection  = false
-	
-		role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/test-qldb-role"
-	
-		kinesis_configuration = {
-			aggregation_enabled = false
-			stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/test-kinesis-stream"
-		}
-	
-		tags = {
-			%[3]q = %[4]q
-		}
-	}
-	`, rLedgerName, rStreamName, tagKey1, tagValue1)
-}
-
-func testAccAWSQLDBStreamConfigTags2(rLedgerName, rStreamName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_qldb_stream" "test" {
-	stream_name          = "%[1]q"
-	ledger_name          = "%[2]q"
+	stream_name          = "%s"
+	ledger_name          = aws_qldb_ledger.test.id
 	inclusive_start_time = "2021-01-01T00:00:00Z"
-	deletion_protection  = false
 
-	role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/test-qldb-role"
+	role_arn = aws_iam_role.test_role.arn
 
 	kinesis_configuration = {
 		aggregation_enabled = false
-		stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/test-kinesis-stream"
-	}
-
-	tags = {
-		%[3]q = %[4]q
-		%[5]q = %[6]q
+		stream_arn          = aws_kinesis_stream.test.arn
 	}
 }
 
-`, rLedgerName, rStreamName, tagKey1, tagValue1, tagKey2, tagValue2)
+resource "aws_kinesis_stream" "test" {
+	name             = "%s"
+	shard_count      = 1
+	retention_period = 24
+}
+
+resource "aws_iam_role" "test_role" {
+	name = "%s"
+
+	assume_role_policy = jsonencode({
+		Version = "2012-10-17"
+		Statement = [
+			{
+				Action = "sts:AssumeRole"
+				Effect = "Allow"
+				Sid    = ""
+				Principal = {
+				Service = "qldb.amazonaws.com"
+				}
+			},
+		]
+	})
+
+	inline_policy {
+		name = "test-qldb-policy"
+		policy = jsonencode({
+		Version = "2012-10-17"
+		Statement = [
+			{
+				Action = [
+					"kinesis:PutRecord*",
+					"kinesis:DescribeStream",
+					"kinesis:ListShards",
+				]
+				Effect   = "Allow"
+				Resource = aws_kinesis_stream.test.arn
+			},
+		]
+		})
+	}
+}`, rLedgerName, rStreamName, rKinesisStreamName, rRoleName)
 }

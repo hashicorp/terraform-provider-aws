@@ -324,11 +324,11 @@ func waitForQLDBStreamDeletion(conn *qldb.QLDB, ledgerName string, streamID stri
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			qldb.StreamStatusActive,
-			qldb.StreamStatusCompleted,
-			qldb.StreamStatusFailed,
 			qldb.StreamStatusImpaired,
 		},
 		Target: []string{
+			qldb.StreamStatusCompleted,
+			qldb.StreamStatusFailed,
 			qldb.StreamStatusCanceled,
 		},
 		Timeout:    5 * time.Minute,
