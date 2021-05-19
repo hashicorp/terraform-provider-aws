@@ -488,7 +488,8 @@ func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
+					// Clearing basic_auth_credentials not reflected in API.
+					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 				),
 			},

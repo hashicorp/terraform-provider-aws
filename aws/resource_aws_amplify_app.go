@@ -126,6 +126,14 @@ func resourceAwsAmplifyApp() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 2000),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// These credentials are ignored if basic auth is not enabled.
+					if d.Get("enable_basic_auth").(bool) {
+						return old == new
+					}
+
+					return true
+				},
 			},
 
 			"build_spec": {
@@ -372,7 +380,7 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("repository"); ok {
-		input.Platform = aws.String(v.(string))
+		input.Repository = aws.String(v.(string))
 	}
 
 	/*
@@ -537,76 +545,85 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
 
-	/*
-
-		params := &amplify.UpdateAppInput{
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &amplify.UpdateAppInput{
 			AppId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_branch_creation_config") {
-			v := d.Get("auto_branch_creation_config")
-			config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
-			params.AutoBranchCreationConfig = config
-			params.AutoBranchCreationPatterns = patterns
-			params.EnableAutoBranchCreation = enable
+		if d.HasChange("access_token") {
+			input.AccessToken = aws.String(d.Get("access_token").(string))
 		}
 
-		if d.HasChange("basic_auth_config") {
-			enable, credentials := expandAmplifyBasicAuthConfig(d.Get("basic_auth_config").([]interface{}))
-			params.EnableBasicAuth = enable
-			params.BasicAuthCredentials = credentials
+		if d.HasChange("auto_branch_creation_config") {
+			input.AutoBranchCreationConfig = expandAmplifyAutoBranchCreationConfig(d.Get("auto_branch_creation_config").([]interface{})[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("auto_branch_creation_patterns") {
+			input.AutoBranchCreationPatterns = expandStringSet(d.Get("auto_branch_creation_patterns").(*schema.Set))
+		}
+
+		if d.HasChange("basic_auth_credentials") {
+			input.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
 		}
 
 		if d.HasChange("build_spec") {
-			params.BuildSpec = aws.String(d.Get("build_spec").(string))
+			input.BuildSpec = aws.String(d.Get("build_spec").(string))
 		}
 
-		if d.HasChange("custom_rules") {
-			params.CustomRules = expandAmplifyCustomRules(d.Get("custom_rules").([]interface{}))
+		if d.HasChange("custom_headers") {
+			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
+		}
+
+		if d.HasChange("custom_rule") {
+			input.CustomRules = expandAmplifyCustomRules(d.Get("custom_rule").([]interface{}))
 		}
 
 		if d.HasChange("description") {
-			params.Description = aws.String(d.Get("description").(string))
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("enable_auto_branch_creation") {
+			input.EnableAutoBranchCreation = aws.Bool(d.Get("enable_auto_branch_creation").(bool))
+		}
+
+		if d.HasChange("enable_basic_auth") {
+			input.EnableBasicAuth = aws.Bool(d.Get("enable_basic_auth").(bool))
 		}
 
 		if d.HasChange("enable_branch_auto_build") {
-			params.EnableBranchAutoBuild = aws.Bool(d.Get("enable_branch_auto_build").(bool))
+			input.EnableBranchAutoBuild = aws.Bool(d.Get("enable_branch_auto_build").(bool))
+		}
+
+		if d.HasChange("enable_branch_auto_deletion") {
+			input.EnableBranchAutoDeletion = aws.Bool(d.Get("enable_branch_auto_deletion").(bool))
 		}
 
 		if d.HasChange("environment_variables") {
-			v := d.Get("environment_variables")
-			params.EnvironmentVariables = expandAmplifyEnvironmentVariables(v.(map[string]interface{}))
+			input.EnvironmentVariables = expandStringMap(d.Get("environment_variables").(map[string]interface{}))
 		}
 
 		if d.HasChange("iam_service_role_arn") {
-			params.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+			input.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
 		}
 
-		if d.HasChange("name") {
-			params.Name = aws.String(d.Get("name").(string))
+		if d.HasChange("oauth_token") {
+			input.OauthToken = aws.String(d.Get("oauth_token").(string))
 		}
 
 		if d.HasChange("platform") {
-			params.Platform = aws.String(d.Get("platform").(string))
+			input.Platform = aws.String(d.Get("platform").(string))
 		}
 
 		if d.HasChange("repository") {
-			params.Repository = aws.String(d.Get("repository").(string))
+			input.Repository = aws.String(d.Get("repository").(string))
 		}
 
-		if v, ok := d.GetOk("access_token"); ok {
-			params.AccessToken = aws.String(v.(string))
-		}
+		_, err := conn.UpdateApp(input)
 
-		if v, ok := d.GetOk("oauth_token"); ok {
-			params.OauthToken = aws.String(v.(string))
-		}
-
-		_, err := conn.UpdateApp(params)
 		if err != nil {
-			return fmt.Errorf("Error updating Amplify App: %s", err)
+			return fmt.Errorf("error updating Amplify App (%s): %w", d.Id(), err)
 		}
-	*/
+	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
