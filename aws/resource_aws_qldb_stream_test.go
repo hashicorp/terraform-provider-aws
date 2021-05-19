@@ -146,17 +146,15 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSQLDBStreamCancel,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQLDBStreamConfig(ledgerName, streamName, kinesisStreamName, roleName),
+				Config: testAccAWSQLDBStreamDependenciesConfig(ledgerName, kinesisStreamName, roleName, streamName),
+			},
+			{
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBStreamExists(resourceName, &qldbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`stream/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "stream_name", regexp.MustCompile("test-stream-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					// testAccCheckAWSKinesisStreamExists("aws_kinesis_stream.test", 1, &out),
-					// testAccCheckAWSIAMRoleExists("aws_iam_role.test_role", 1, &out),
-					// testAccCheckAWSQLDBLedgerExists("aws_qldb_ledger.test", 1, &out),
-					// testAccCheckAWSQLDBStreamExists("aws_qldb_stream.test", 1, &out),
 				),
 			},
 			{
@@ -208,18 +206,22 @@ func testAccCheckAWSQLDBStreamCancelWithProvider(s *terraform.State, provider *s
 }
 
 func testAccCheckAWSQLDBStreamExists(n string, v *qldb.DescribeJournalKinesisStreamOutput) resource.TestCheckFunc {
+	log.Printf("Checking for QLDB stream's existence... %s", n)
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
+			log.Printf("Not found: %s", n)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
+			log.Printf("No QLDB Stream ID is set")
 			return fmt.Errorf("No QLDB Stream ID is set")
 		}
 
 		ledgerName, ok := rs.Primary.Attributes["ledger_name"]
 		if !ok {
+			log.Printf("No ledger name value has been set")
 			return fmt.Errorf("No ledger name value has been set")
 		}
 
@@ -230,6 +232,7 @@ func testAccCheckAWSQLDBStreamExists(n string, v *qldb.DescribeJournalKinesisStr
 		})
 
 		if err != nil {
+			log.Printf("Error: %s", err.Error())
 			return err
 		}
 
@@ -238,28 +241,16 @@ func testAccCheckAWSQLDBStreamExists(n string, v *qldb.DescribeJournalKinesisStr
 			return nil
 		}
 
+		log.Printf("QLDB Stream (%s) not found", rs.Primary.ID)
 		return fmt.Errorf("QLDB Stream (%s) not found", rs.Primary.ID)
 	}
 }
 
-func testAccAWSQLDBStreamConfig(rLedgerName, rStreamName, rKinesisStreamName, rRoleName string) string {
+func testAccAWSQLDBStreamDependenciesConfig(rLedgerName, rKinesisStreamName, rRoleName, rStreamName string) string {
 	return fmt.Sprintf(`
 resource "aws_qldb_ledger" "test" {
 	name                = "%s"
 	deletion_protection = false
-}
-
-resource "aws_qldb_stream" "test" {
-	stream_name          = "%s"
-	ledger_name          = aws_qldb_ledger.test.id
-	inclusive_start_time = "2021-01-01T00:00:00Z"
-
-	role_arn = aws_iam_role.test_role.arn
-
-	kinesis_configuration = {
-		aggregation_enabled = false
-		stream_arn          = aws_kinesis_stream.test.arn
-	}
 }
 
 resource "aws_kinesis_stream" "test" {
@@ -268,7 +259,7 @@ resource "aws_kinesis_stream" "test" {
 	retention_period = 24
 }
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "test" {
 	name = "%s"
 
 	assume_role_policy = jsonencode({
@@ -302,5 +293,31 @@ resource "aws_iam_role" "test_role" {
 		]
 		})
 	}
-}`, rLedgerName, rStreamName, rKinesisStreamName, rRoleName)
+}
+
+resource "null_resource" "previous" {
+	depends_on = [aws_iam_role.test]
+}
+
+resource "time_sleep" "wait_30_seconds" {
+  depends_on = [null_resource.prev]
+
+  create_duration = "30s"
+}
+
+resource "aws_qldb_stream" "test" {
+	stream_name          = "%s"
+	ledger_name          = aws_qldb_ledger.test.id
+	inclusive_start_time = "2021-01-01T00:00:00Z"
+
+	role_arn = aws_iam_role.test.arn
+
+	kinesis_configuration = {
+		aggregation_enabled = false
+		stream_arn          = aws_kinesis_stream.test.arn
+	}
+
+	depends_on = [time_sleep.wait_30_seconds]
+}
+`, rLedgerName, rKinesisStreamName, rRoleName, rStreamName)
 }
