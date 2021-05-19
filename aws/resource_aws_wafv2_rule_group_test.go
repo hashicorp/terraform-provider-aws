@@ -1241,12 +1241,12 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"action.#":         "1",
 						"action.0.allow.#": "1",
-						"action.0.allow.0.custom_request_handling.#":                        "1",
-						"action.0.allow.0.custom_request_handling.0.insert_headers.#":       "2",
-						"action.0.allow.0.custom_request_handling.0.insert_headers.0.name":  "x-hdr1",
-						"action.0.allow.0.custom_request_handling.0.insert_headers.0.value": "test-val1",
-						"action.0.allow.0.custom_request_handling.0.insert_headers.1.name":  "x-hdr2",
-						"action.0.allow.0.custom_request_handling.0.insert_headers.1.value": "test-val2",
+						"action.0.allow.0.custom_request_handling.#":                       "1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.0.allow.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.0.value": "test-val1",
+						"action.0.allow.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
+						"action.0.allow.0.custom_request_handling.0.insert_header.1.value": "test-val2",
 						"action.0.block.#": "0",
 						"action.0.count.#": "0",
 					}),
@@ -1268,12 +1268,12 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomRequestHandling(t *testing.T) {
 						"action.0.allow.#": "0",
 						"action.0.block.#": "0",
 						"action.0.count.#": "1",
-						"action.0.count.0.custom_request_handling.#":                        "1",
-						"action.0.count.0.custom_request_handling.0.insert_headers.#":       "2",
-						"action.0.count.0.custom_request_handling.0.insert_headers.0.name":  "x-hdr1",
-						"action.0.count.0.custom_request_handling.0.insert_headers.0.value": "test-val1",
-						"action.0.count.0.custom_request_handling.0.insert_headers.1.name":  "x-hdr2",
-						"action.0.count.0.custom_request_handling.0.insert_headers.1.value": "test-val2",
+						"action.0.count.0.custom_request_handling.#":                       "1",
+						"action.0.count.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.0.count.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
+						"action.0.count.0.custom_request_handling.0.insert_header.0.value": "test-val1",
+						"action.0.count.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
+						"action.0.count.0.custom_request_handling.0.insert_header.1.value": "test-val2",
 					}),
 				),
 			},
@@ -1314,12 +1314,12 @@ func TestAccAwsWafv2RuleGroup_RuleAction_CustomResponse(t *testing.T) {
 						"action.0.allow.#":                   "0",
 						"action.0.block.#":                   "1",
 						"action.0.block.0.custom_response.#": "1",
-						"action.0.block.0.custom_response.0.response_code":            "429",
-						"action.0.block.0.custom_response.0.response_headers.#":       "2",
-						"action.0.block.0.custom_response.0.response_headers.0.name":  "x-hdr1",
-						"action.0.block.0.custom_response.0.response_headers.0.value": "test-val1",
-						"action.0.block.0.custom_response.0.response_headers.1.name":  "x-hdr2",
-						"action.0.block.0.custom_response.0.response_headers.1.value": "test-val2",
+						"action.0.block.0.custom_response.0.response_code":           "429",
+						"action.0.block.0.custom_response.0.response_header.#":       "2",
+						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr1",
+						"action.0.block.0.custom_response.0.response_header.0.value": "test-val1",
+						"action.0.block.0.custom_response.0.response_header.1.name":  "x-hdr2",
+						"action.0.block.0.custom_response.0.response_header.1.value": "test-val2",
 						"action.0.count.#": "0",
 					}),
 				),
@@ -1888,12 +1888,12 @@ resource "aws_wafv2_rule_group" "test" {
     action {
       allow {
         custom_request_handling {
-          insert_headers {
+          insert_header {
             name  = "x-hdr1"
             value = "test-val1"
           }
 
-          insert_headers {
+          insert_header {
             name  = "x-hdr2"
             value = "test-val2"
           }
@@ -1975,12 +1975,12 @@ resource "aws_wafv2_rule_group" "test" {
       block {
         custom_response {
           response_code = 429
-          response_headers {
+          response_header {
             name  = "x-hdr1"
             value = "test-val1"
           }
 
-          response_headers {
+          response_header {
             name  = "x-hdr2"
             value = "test-val2"
           }
@@ -2061,12 +2061,12 @@ resource "aws_wafv2_rule_group" "test" {
     action {
       count {
         custom_request_handling {
-          insert_headers {
+          insert_header {
             name  = "x-hdr1"
             value = "test-val1"
           }
 
-          insert_headers {
+          insert_header {
             name  = "x-hdr2"
             value = "test-val2"
           }

@@ -463,8 +463,8 @@ func wafv2CustomRequestHandlingSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"insert_headers": {
-					Type:     schema.TypeList,
+				"insert_header": {
+					Type:     schema.TypeSet,
 					Required: true,
 					MinItems: 1,
 					Elem: &schema.Resource{
@@ -510,8 +510,8 @@ func wafv2CustomResponseSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(200, 599),
 				},
-				"response_headers": {
-					Type:     schema.TypeList,
+				"response_header": {
+					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -643,7 +643,7 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 	if v, ok := m["response_code"]; ok && v.(int) > 0 {
 		customResponse.ResponseCode = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := m["response_headers"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := m["response_header"]; ok && len(v.([]interface{})) > 0 {
 		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.([]interface{}))
 	}
 	if v, ok := m["custom_response_body_key"]; ok && len(v.(string)) > 0 {
@@ -661,7 +661,7 @@ func expandWafv2CustomRequestHandling(l []interface{}) *wafv2.CustomRequestHandl
 	m := l[0].(map[string]interface{})
 	requestHandling := &wafv2.CustomRequestHandling{}
 
-	if v, ok := m["insert_headers"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := m["insert_header"]; ok && len(v.([]interface{})) > 0 {
 		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.([]interface{}))
 	}
 
@@ -1140,7 +1140,7 @@ func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) interface
 	}
 
 	m := map[string]interface{}{
-		"insert_headers": flattenWafv2CustomHeaders(c.InsertHeaders),
+		"insert_header": flattenWafv2CustomHeaders(c.InsertHeaders),
 	}
 
 	return []interface{}{m}
@@ -1154,7 +1154,7 @@ func flattenWafv2CustomResponse(r *wafv2.CustomResponse) interface{} {
 	m := map[string]interface{}{
 		"custom_response_body_key": aws.StringValue(r.CustomResponseBodyKey),
 		"response_code":            int(aws.Int64Value(r.ResponseCode)),
-		"response_headers":         flattenWafv2CustomHeaders(r.ResponseHeaders),
+		"response_header":          flattenWafv2CustomHeaders(r.ResponseHeaders),
 	}
 
 	return []interface{}{m}
