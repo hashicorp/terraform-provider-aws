@@ -14,7 +14,6 @@ import (
 )
 
 func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -27,7 +26,7 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "state", waiter.StateRunning),
@@ -47,7 +46,6 @@ func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +57,7 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigNoName(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 				),
 			},
 			{
@@ -72,7 +70,6 @@ func TestAccAWSCloudWatchMetricStream_noName(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -85,7 +82,7 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resourceName, "tf-acc-test"),
 				),
 			},
@@ -99,7 +96,6 @@ func TestAccAWSCloudWatchMetricStream_namePrefix(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -112,7 +108,7 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigIncludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
@@ -128,7 +124,6 @@ func TestAccAWSCloudWatchMetricStream_includeFilters(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -141,7 +136,7 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigExcludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
@@ -157,7 +152,6 @@ func TestAccAWSCloudWatchMetricStream_excludeFilters(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -170,7 +164,7 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigUpdateArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
@@ -183,7 +177,7 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
 				),
@@ -193,10 +187,10 @@ func TestAccAWSCloudWatchMetricStream_update(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ErrorCheck:        testAccErrorCheck(t, cloudwatch.EndpointsID),
@@ -206,14 +200,14 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					testAccCheckAWSCloudWatchMetricStreamDestroyPrevious(rName),
 				),
@@ -223,7 +217,6 @@ func TestAccAWSCloudWatchMetricStream_updateName(t *testing.T) {
 }
 
 func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
-	var metricStream cloudwatch.GetMetricStreamOutput
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -236,7 +229,7 @@ func TestAccAWSCloudWatchMetricStream_tags(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchMetricStreamConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchMetricStreamExists(resourceName, &metricStream),
+					testAccCheckCloudWatchMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
@@ -266,7 +259,7 @@ func testAccCheckCloudWatchMetricStreamGeneratedNamePrefix(resource, prefix stri
 	}
 }
 
-func testAccCheckCloudWatchMetricStreamExists(n string, metricStream *cloudwatch.GetMetricStreamOutput) resource.TestCheckFunc {
+func testAccCheckCloudWatchMetricStreamExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -278,12 +271,11 @@ func testAccCheckCloudWatchMetricStreamExists(n string, metricStream *cloudwatch
 			Name: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetMetricStream(&params)
+		_, err := conn.GetMetricStream(&params)
+
 		if err != nil {
 			return err
 		}
-
-		*metricStream = *resp
 
 		return nil
 	}
