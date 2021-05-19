@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -148,7 +147,7 @@ func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData,
 		return fmt.Errorf("error creating Service Catalog Provisioning Artifact: empty response")
 	}
 
-	d.SetId(serviceCatalogProvisioningArtifactID(aws.StringValue(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
+	d.SetId(tfservicecatalog.ProvisioningArtifactID(aws.StringValue(output.ProvisioningArtifactDetail.Id), d.Get("product_id").(string)))
 
 	// Active and Guidance are not fields of CreateProvisioningArtifact but are fields of UpdateProvisioningArtifact.
 	// In order to set these to non-default values, you must create and then update.
@@ -159,7 +158,7 @@ func resourceAwsServiceCatalogProvisioningArtifactCreate(d *schema.ResourceData,
 func resourceAwsServiceCatalogProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	artifactID, productID, err := parseServiceCatalogProvisioningArtifactID(d.Id())
+	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
@@ -208,7 +207,7 @@ func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData,
 	conn := meta.(*AWSClient).scconn
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
-		artifactID, productID, err := parseServiceCatalogProvisioningArtifactID(d.Id())
+		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
 
 		if err != nil {
 			return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
@@ -268,7 +267,7 @@ func resourceAwsServiceCatalogProvisioningArtifactUpdate(d *schema.ResourceData,
 func resourceAwsServiceCatalogProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	artifactID, productID, err := parseServiceCatalogProvisioningArtifactID(d.Id())
+	artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
@@ -298,16 +297,4 @@ func resourceAwsServiceCatalogProvisioningArtifactDelete(d *schema.ResourceData,
 	}
 
 	return nil
-}
-
-func serviceCatalogProvisioningArtifactID(artifactID, productID string) string {
-	return strings.Join([]string{artifactID, productID}, ":")
-}
-
-func parseServiceCatalogProvisioningArtifactID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Please make sure the ID is in the form artifact_id:product_id (i.e. pa-r2d2slrtcob:prod-c3pohcrhmisy")
-	}
-	return parts[0], parts[1], nil
 }
