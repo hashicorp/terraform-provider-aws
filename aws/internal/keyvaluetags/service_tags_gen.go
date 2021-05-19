@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloud9"
@@ -570,6 +571,33 @@ func (tags KeyValueTags) AppmeshTags() []*appmesh.TagRef {
 
 // AppmeshKeyValueTags creates KeyValueTags from appmesh service tags.
 func AppmeshKeyValueTags(tags []*appmesh.TagRef) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// ApprunnerTags returns apprunner service tags.
+func (tags KeyValueTags) ApprunnerTags() []*apprunner.Tag {
+	result := make([]*apprunner.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &apprunner.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// ApprunnerKeyValueTags creates KeyValueTags from apprunner service tags.
+func ApprunnerKeyValueTags(tags []*apprunner.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
