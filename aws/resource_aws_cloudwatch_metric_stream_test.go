@@ -13,6 +13,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatch/waiter"
 )
 
+func init() {
+	RegisterServiceErrorCheckFunc(cloudwatch.EndpointsID, testAccErrorCheckSkipCloudwatch)
+}
+
+func testAccErrorCheckSkipCloudwatch(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"context deadline exceeded", // tests never fail in GovCloud, they just timeout
+	)
+}
+
 func TestAccAWSCloudWatchMetricStream_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")

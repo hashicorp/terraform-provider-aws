@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	MetricStreamDeleteTimeout = 10 * time.Minute
-	MetricStreamReadyTimeout  = 2 * time.Minute
+	MetricStreamDeleteTimeout = 2 * time.Minute
+	MetricStreamReadyTimeout  = 1 * time.Minute
 
 	StateRunning = "running"
 	StateStopped = "stopped"

@@ -29,6 +29,11 @@ func resourceAwsCloudWatchMetricStream() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(waiter.MetricStreamReadyTimeout),
+			Delete: schema.DefaultTimeout(waiter.MetricStreamDeleteTimeout),
+		},
+
 		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
