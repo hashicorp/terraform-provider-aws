@@ -511,11 +511,15 @@ func resourceAwsNetworkFirewallRuleGroupUpdate(ctx context.Context, d *schema.Re
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
-		if v, ok := d.GetOk("rule_group"); ok {
-			input.RuleGroup = expandNetworkFirewallRuleGroup(v.([]interface{}))
-		}
-		if v, ok := d.GetOk("rules"); ok {
-			input.Rules = aws.String(v.(string))
+
+		// Network Firewall UpdateRuleGroup API method only allows one of Rules or RuleGroup
+		// else, request returns "InvalidRequestException: Exactly one of Rules or RuleGroup must be set";
+		// Here, "rules" takes precedence as "rule_group" is Computed from "rules" when configured
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19414
+		if d.HasChange("rules") {
+			input.Rules = aws.String(d.Get("rules").(string))
+		} else if d.HasChange("rule_group") {
+			input.RuleGroup = expandNetworkFirewallRuleGroup(d.Get("rule_group").([]interface{}))
 		}
 
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
