@@ -198,6 +198,16 @@ func TestAccAWSServiceCatalogProvisioningArtifact_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-3", rName)),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+					"disable_template_validation",
+					"template_url",
+				},
+			},
 		},
 	})
 }
@@ -227,6 +237,16 @@ func TestAccAWSServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"accept_language",
+					"disable_template_validation",
+					"template_physical_id",
+				},
 			},
 		},
 	})
