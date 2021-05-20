@@ -1,3 +1,0 @@
-```release-note:enhancement
-aws_chime: Add new AWS Chime service
-```
