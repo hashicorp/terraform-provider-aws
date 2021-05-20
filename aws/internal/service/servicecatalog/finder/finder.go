@@ -98,3 +98,32 @@ func BudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budgetName, 
 
 	return result, err
 }
+
+func TagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tagOptionID, resourceID string) (*servicecatalog.ResourceDetail, error) {
+	input := &servicecatalog.ListResourcesForTagOptionInput{
+		TagOptionId: aws.String(tagOptionID),
+	}
+
+	var result *servicecatalog.ResourceDetail
+
+	err := conn.ListResourcesForTagOptionPages(input, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, deet := range page.ResourceDetails {
+			if deet == nil {
+				continue
+			}
+
+			if aws.StringValue(deet.Id) == resourceID {
+				result = deet
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return result, err
+}
