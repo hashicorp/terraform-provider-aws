@@ -176,12 +176,6 @@ func resourceAwsAmplifyApp() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
 
-			"custom_headers": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 25000),
-			},
-
 			"custom_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -356,10 +350,6 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 		input.BuildSpec = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("custom_headers"); ok {
-		input.CustomHeaders = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
 		input.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
 	}
@@ -448,7 +438,6 @@ func resourceAwsAmplifyAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("auto_branch_creation_patterns", aws.StringValueSlice(app.AutoBranchCreationPatterns))
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
-	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenAmplifyCustomRules(app.CustomRules)); err != nil {
 		return fmt.Errorf("error setting custom_rule: %w", err)
 	}
@@ -516,10 +505,6 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if d.HasChange("build_spec") {
 			input.BuildSpec = aws.String(d.Get("build_spec").(string))
-		}
-
-		if d.HasChange("custom_headers") {
-			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
 		}
 
 		if d.HasChange("custom_rule") {

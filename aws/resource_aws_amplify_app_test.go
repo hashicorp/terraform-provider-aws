@@ -89,7 +89,6 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
-					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "default_domain", regexp.MustCompile(`\.amplifyapp\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -369,52 +368,6 @@ func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 		},
 	})
 }
-
-/*
-func TestAccAWSAmplifyApp_CustomHeaders(t *testing.T) {
-	var app amplify.App
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	customHeaders1 := `{"customHeaders":[{"pattern":"*.json","headers":[{"key":"custom-header-name-1","value":"custom-header-value-1"}]}]}`
-	customHeaders2 := `{"customHeaders":[{"pattern":"*.json","headers":[{"key":"custom-header-name-2","value":"custom-header-value-2"}]},{"pattern":"/path/*","headers":[{"key":"custom-header-name-1","value":"custom-header-value-1"}]}]}`
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigCustomHeaders(rName, customHeaders1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "custom_headers", customHeaders1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigCustomHeaders(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "custom_headers", customHeaders2),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
-				),
-			},
-		},
-	})
-}
-*/
 
 func TestAccAWSAmplifyApp_CustomRules(t *testing.T) {
 	var app amplify.App
@@ -775,16 +728,6 @@ resource "aws_amplify_app" "test" {
   build_spec = %[2]q
 }
 `, rName, buildSpec)
-}
-
-func testAccAWSAmplifyAppConfigCustomHeaders(rName, customHeaders string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  custom_headers = %[2]q
-}
-`, rName, customHeaders)
 }
 
 func testAccAWSAmplifyAppConfigCustomRules(rName string) string {
