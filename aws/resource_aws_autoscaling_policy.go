@@ -174,7 +174,6 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 						"max_capacity_buffer": {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
-							Default:      0,
 							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
 						},
 						"mode": {
