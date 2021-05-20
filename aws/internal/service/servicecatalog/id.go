@@ -46,3 +46,17 @@ func BudgetResourceAssociationParseID(id string) (string, string, error) {
 func BudgetResourceAssociationID(budgetName, resourceID string) string {
 	return strings.Join([]string{budgetName, resourceID}, ":")
 }
+
+func TagOptionResourceAssociationParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), tagOptionID:resourceID", id)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func TagOptionResourceAssociationID(tagOptionID, resourceID string) string {
+	return strings.Join([]string{tagOptionID, resourceID}, ":")
+}
