@@ -10,7 +10,7 @@ description: |-
 
 Manages a Service Catalog Tag Option Resource Association.
 
--> A "resource" is either a Service Catalog portfolio or product.
+-> **Tip:** A "resource" is either a Service Catalog portfolio or product.
 
 ## Example Usage
 
