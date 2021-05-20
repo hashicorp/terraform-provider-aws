@@ -274,3 +274,28 @@ func TagOptionResourceAssociationStatus(conn *servicecatalog.ServiceCatalog, tag
 		return output, servicecatalog.StatusAvailable, err
 	}
 }
+
+func ProvisioningArtifactStatus(conn *servicecatalog.ServiceCatalog, id, productID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.DescribeProvisioningArtifactInput{
+			ProvisioningArtifactId: aws.String(id),
+			ProductId:              aws.String(productID),
+		}
+
+		output, err := conn.DescribeProvisioningArtifact(input)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, err
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, err
+		}
+
+		if output == nil || output.ProvisioningArtifactDetail == nil {
+			return nil, StatusUnavailable, err
+		}
+
+		return output, aws.StringValue(output.Status), err
+	}
+}

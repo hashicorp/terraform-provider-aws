@@ -227,31 +227,27 @@ func testAccAWSServiceCatalogProductPortfolioAssociationConfig_base(rName string
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
 
-  template_body = <<STACK
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
     }
-  }
-}
-STACK
+  })
 }
 
 resource "aws_servicecatalog_product" "test" {

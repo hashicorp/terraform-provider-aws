@@ -240,31 +240,27 @@ resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
-  content = <<EOF
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  content = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
     }
-  }
-}
-EOF
+  })
 }
 
 resource "aws_servicecatalog_product" "test" {
@@ -275,7 +271,7 @@ resource "aws_servicecatalog_product" "test" {
   provisioning_artifact_parameters {
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "s3://${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 

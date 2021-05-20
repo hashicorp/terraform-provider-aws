@@ -60,3 +60,16 @@ func TagOptionResourceAssociationParseID(id string) (string, string, error) {
 func TagOptionResourceAssociationID(tagOptionID, resourceID string) string {
 	return strings.Join([]string{tagOptionID, resourceID}, ":")
 }
+
+func ProvisioningArtifactID(artifactID, productID string) string {
+	return strings.Join([]string{artifactID, productID}, ":")
+}
+
+func ProvisioningArtifactParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected artifactID:productID", id)
+	}
+	return parts[0], parts[1], nil
+}

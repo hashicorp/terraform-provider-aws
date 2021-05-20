@@ -19,9 +19,11 @@ import (
 // add sweeper to delete known test servicecat products
 func init() {
 	resource.AddTestSweepers("aws_servicecatalog_product", &resource.Sweeper{
-		Name:         "aws_servicecatalog_product",
-		Dependencies: []string{},
-		F:            testSweepServiceCatalogProducts,
+		Name: "aws_servicecatalog_product",
+		Dependencies: []string{
+			"aws_servicecatalog_provisioning_artifact",
+		},
+		F: testSweepServiceCatalogProducts,
 	})
 }
 
@@ -104,7 +106,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-					resource.TestCheckResourceAttr(resourceName, "status", waiter.ProductStatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "status", waiter.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", "support@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "support_url", "http://example.com"),
@@ -320,31 +322,27 @@ resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
-  content = <<EOF
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  content = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
     }
-  }
-}
-EOF
+  })
 }
 `, rName)
 }
@@ -367,7 +365,7 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
@@ -396,7 +394,7 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
@@ -413,31 +411,27 @@ func testAccAWSServiceCatalogProductConfig_physicalID(rName string) string {
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
 
-  template_body = <<STACK
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
+
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
     }
-  }
-}
-STACK
+  })
 }
 
 resource "aws_servicecatalog_product" "test" {
