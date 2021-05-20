@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
@@ -170,10 +172,10 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 							}, false),
 						},
 						"max_capacity_buffer": {
-							Type:         schema.TypeInt,
+							Type:         nullable.TypeNullableInt,
 							Optional:     true,
 							Default:      0,
-							ValidateFunc: validation.IntBetween(-1, 100),
+							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 100),
 						},
 						"mode": {
 							Type:     schema.TypeString,
@@ -185,9 +187,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 							}, false),
 						},
 						"scheduling_buffer_time": {
-							Type:         schema.TypeInt,
+							Type:         nullable.TypeNullableInt,
 							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(0),
+							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 						},
 					},
 				},
@@ -619,10 +621,12 @@ func expandPredictiveScalingConfig(predictiveScalingConfigSlice []interface{}) *
 		MetricSpecifications:      expandPredictiveScalingMetricSpecifications(predictiveScalingConfigFlat["metric_specification"].([]interface{})),
 		MaxCapacityBreachBehavior: aws.String(predictiveScalingConfigFlat["max_capacity_breach_behavior"].(string)),
 		Mode:                      aws.String(predictiveScalingConfigFlat["mode"].(string)),
-		SchedulingBufferTime:      aws.Int64(int64(predictiveScalingConfigFlat["scheduling_buffer_time"].(int))),
 	}
-	if predictiveScalingConfigFlat["max_capacity_buffer"].(int) != 0 {
-		predictiveScalingConfig.MaxCapacityBuffer = aws.Int64(int64(predictiveScalingConfigFlat["max_capacity_buffer"].(int)))
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["max_capacity_buffer"].(string)).Value(); !null {
+		predictiveScalingConfig.MaxCapacityBuffer = aws.Int64(v)
+	}
+	if v, null, _ := nullable.Int(predictiveScalingConfigFlat["scheduling_buffer_time"].(string)).Value(); !null {
+		predictiveScalingConfig.SchedulingBufferTime = aws.Int64(v)
 	}
 	return predictiveScalingConfig
 }
@@ -729,13 +733,13 @@ func flattenPredictiveScalingConfig(predictiveScalingConfig *autoscaling.Predict
 		predictiveScalingConfigFlat["mode"] = aws.StringValue(predictiveScalingConfig.Mode)
 	}
 	if predictiveScalingConfig.SchedulingBufferTime != nil {
-		predictiveScalingConfigFlat["scheduling_buffer_time"] = aws.Int64Value(predictiveScalingConfig.SchedulingBufferTime)
+		predictiveScalingConfigFlat["scheduling_buffer_time"] = strconv.FormatInt(aws.Int64Value(predictiveScalingConfig.SchedulingBufferTime), 10)
 	}
 	if predictiveScalingConfig.MaxCapacityBreachBehavior != nil {
 		predictiveScalingConfigFlat["max_capacity_breach_behavior"] = aws.StringValue(predictiveScalingConfig.MaxCapacityBreachBehavior)
 	}
 	if predictiveScalingConfig.MaxCapacityBuffer != nil {
-		predictiveScalingConfigFlat["max_capacity_buffer"] = aws.Int64Value(predictiveScalingConfig.MaxCapacityBuffer)
+		predictiveScalingConfigFlat["max_capacity_buffer"] = strconv.FormatInt(aws.Int64Value(predictiveScalingConfig.MaxCapacityBuffer), 10)
 	}
 	return []map[string]interface{}{predictiveScalingConfigFlat}
 }
