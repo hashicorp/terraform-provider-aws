@@ -116,6 +116,29 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAmplifyApp_disappears(t *testing.T) {
+	var app amplify.App
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmplifyApp(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAmplifyApp_Tags(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
