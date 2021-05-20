@@ -226,3 +226,27 @@ func ServiceActionStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id
 		return output.ServiceActionDetail, servicecatalog.StatusAvailable, nil
 	}
 }
+
+func BudgetResourceAssociationStatus(conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.BudgetResourceAssociation(conn, budgetName, resourceID)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("tag option resource association not found (%s): %s", tfservicecatalog.BudgetResourceAssociationID(budgetName, resourceID), err),
+			}
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing tag option resource association: %w", err)
+		}
+
+		if output == nil {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", tfservicecatalog.BudgetResourceAssociationID(budgetName, resourceID)),
+			}
+		}
+
+		return output, servicecatalog.StatusAvailable, err
+	}
+}
