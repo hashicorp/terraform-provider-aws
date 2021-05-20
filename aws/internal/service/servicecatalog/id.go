@@ -32,3 +32,17 @@ func ProductPortfolioAssociationParseID(id string) (string, string, string, erro
 func ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID string) string {
 	return strings.Join([]string{acceptLanguage, portfolioID, productID}, ":")
 }
+
+func BudgetResourceAssociationParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), budgetName:resourceID", id)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func BudgetResourceAssociationID(budgetName, resourceID string) string {
+	return strings.Join([]string{budgetName, resourceID}, ":")
+}
