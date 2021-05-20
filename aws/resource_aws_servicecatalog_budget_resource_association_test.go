@@ -141,8 +141,8 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -168,8 +168,8 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
+		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
