@@ -579,7 +579,11 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("environment_variables") {
-			input.EnvironmentVariables = expandStringMap(d.Get("environment_variables").(map[string]interface{}))
+			if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
+				input.EnvironmentVariables = expandStringMap(v)
+			} else {
+				input.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
+			}
 		}
 
 		if d.HasChange("iam_service_role_arn") {

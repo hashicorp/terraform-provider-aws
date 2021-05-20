@@ -325,6 +325,50 @@ func TestAccAWSAmplifyApp_CustomRules(t *testing.T) {
 	})
 }
 
+func TestAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
+	var app amplify.App
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigEnvironmentVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigEnvironmentVariablesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAmplifyApp_Name(t *testing.T) {
 	var app amplify.App
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -383,46 +427,6 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 				// access_token is ignored because AWS does not store access_token and oauth_token
 				// See https://docs.aws.amazon.com/sdk-for-go/api/service/amplify/#CreateAppInput
 				ImportStateVerifyIgnore: []string{"access_token"},
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_environmentVariables(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigEnvironmentVariables1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigEnvironmentVariables2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
-				),
 			},
 		},
 	})
@@ -715,10 +719,10 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigEnvironmentVariables1(rName string) string {
+func testAccAWSAmplifyAppConfigEnvironmentVariables(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
   environment_variables = {
     ENVVAR1 = "1"
@@ -727,10 +731,10 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigEnvironmentVariables2(rName string) string {
+func testAccAWSAmplifyAppConfigEnvironmentVariablesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
   environment_variables = {
     ENVVAR1 = "2",
