@@ -551,7 +551,11 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.HasChange("custom_rule") {
-			input.CustomRules = expandAmplifyCustomRules(d.Get("custom_rule").([]interface{}))
+			if v := d.Get("custom_rule").([]interface{}); len(v) > 0 {
+				input.CustomRules = expandAmplifyCustomRules(v)
+			} else {
+				input.CustomRules = []*amplify.CustomRule{}
+			}
 		}
 
 		if d.HasChange("description") {

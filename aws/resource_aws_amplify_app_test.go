@@ -232,112 +232,6 @@ func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_Name(t *testing.T) {
-	var app amplify.App
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_Description(t *testing.T) {
-	var app1, app2, app3 amplify.App
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigDescription(rName, "description 1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app1),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigDescription(rName, "description 2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app2),
-					testAccCheckAWSAmplifyAppNotRecreated(&app1, &app2),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app3),
-					testAccCheckAWSAmplifyAppRecreated(&app2, &app3),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_repository(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigRepository(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "repository", regexp.MustCompile("^https://github.com")),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// access_token is ignored because AWS does not store access_token and oauth_token
-				// See https://docs.aws.amazon.com/sdk-for-go/api/service/amplify/#CreateAppInput
-				ImportStateVerifyIgnore: []string{"access_token"},
-			},
-		},
-	})
-}
-
 func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 	var app1, app2, app3 amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -381,7 +275,8 @@ func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_customRules(t *testing.T) {
+func TestAccAWSAmplifyApp_CustomRules(t *testing.T) {
+	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
 
@@ -392,12 +287,13 @@ func TestAccAWSAmplifyApp_customRules(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyAppConfigCustomRules1(rName),
+				Config: testAccAWSAmplifyAppConfigCustomRules(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.source", "/<*>"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.status", "404"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.target", "/index.html"),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.source", "/<*>"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.status", "404"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.target", "/index.html"),
 				),
 			},
 			{
@@ -406,17 +302,87 @@ func TestAccAWSAmplifyApp_customRules(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyAppConfigCustomRules2(rName),
+				Config: testAccAWSAmplifyAppConfigCustomRulesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.source", "/documents"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.status", "302"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.target", "/documents/us"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.0.condition", "<US>"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.1.source", "/<*>"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.1.status", "200"),
-					resource.TestCheckResourceAttr(resourceName, "custom_rules.1.target", "/index.html"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.condition", "<US>"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.source", "/documents"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.status", "302"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.0.target", "/documents/us"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.1.source", "/<*>"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.1.status", "200"),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.1.target", "/index.html"),
 				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAmplifyApp_Name(t *testing.T) {
+	var app amplify.App
+	rName1 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAmplifyApp_repository(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigRepository(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(resourceName, "repository", regexp.MustCompile("^https://github.com")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// access_token is ignored because AWS does not store access_token and oauth_token
+				// See https://docs.aws.amazon.com/sdk-for-go/api/service/amplify/#CreateAppInput
+				ImportStateVerifyIgnore: []string{"access_token"},
 			},
 		},
 	})
@@ -714,12 +680,12 @@ resource "aws_amplify_app" "test" {
 `, rName, buildSpec)
 }
 
-func testAccAWSAmplifyAppConfigCustomRules1(rName string) string {
+func testAccAWSAmplifyAppConfigCustomRules(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  custom_rules {
+  custom_rule {
     source = "/<*>"
     status = "404"
     target = "/index.html"
@@ -728,19 +694,19 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigCustomRules2(rName string) string {
+func testAccAWSAmplifyAppConfigCustomRulesUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  custom_rules {
+  custom_rule {
+    condition = "<US>"
     source    = "/documents"
     status    = "302"
     target    = "/documents/us"
-    condition = "<US>"
   }
 
-  custom_rules {
+  custom_rule {
     source = "/<*>"
     status = "200"
     target = "/index.html"
