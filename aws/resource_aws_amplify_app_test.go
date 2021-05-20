@@ -553,6 +553,50 @@ func TestAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
 	})
 }
 
+func TestAccAWSAmplifyApp_IamServiceRole(t *testing.T) {
+	var app1, app2, app3 amplify.App
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_app.test"
+	iamRole1ResourceName := "aws_iam_role.test1"
+	iamRole2ResourceName := "aws_iam_role.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app1),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole1ResourceName, "arn")),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArnUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app2),
+					testAccCheckAWSAmplifyAppNotRecreated(&app1, &app2),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole2ResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyAppConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyAppExists(resourceName, &app3),
+					testAccCheckAWSAmplifyAppRecreated(&app2, &app3),
+					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAmplifyApp_Name(t *testing.T) {
 	var app amplify.App
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -611,40 +655,6 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 				// access_token is ignored because AWS does not store access_token and oauth_token
 				// See https://docs.aws.amazon.com/sdk-for-go/api/service/amplify/#CreateAppInput
 				ImportStateVerifyIgnore: []string{"access_token"},
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyApp_iamServiceRoleArn(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_app.test"
-
-	roleName1 := acctest.RandomWithPrefix("tf-acc-test")
-	roleName2 := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName, roleName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrGlobalARN(resourceName, "iam_service_role_arn", "iam", regexp.MustCompile("role/"+roleName1)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName, roleName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrGlobalARN(resourceName, "iam_service_role_arn", "iam", regexp.MustCompile("role/"+roleName2)),
-				),
 			},
 		},
 	})
@@ -922,34 +932,62 @@ resource "aws_amplify_app" "test" {
 `, rName, basicAuthCredentials)
 }
 
-func testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName string, roleName string) string {
+func testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-
-  iam_service_role_arn = aws_iam_role.role.arn
-}
-
-resource "aws_iam_role" "role" {
-  name = "%s"
+resource "aws_iam_role" "test1" {
+  name = "%[1]s-1"
 
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "amplify.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
 }
 POLICY
 }
-`, rName, roleName)
+
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+`, rName)
+}
+
+func testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName string) string {
+	return composeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  iam_service_role_arn = aws_iam_role.test1.arn
+}
+`, rName))
+}
+
+func testAccAWSAmplifyAppConfigIAMServiceRoleArnUpdated(rName string) string {
+	return composeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  iam_service_role_arn = aws_iam_role.test2.arn
+}
+`, rName))
 }
 
 func testAccAWSAmplifyAppConfigTags1(rName, tagKey1, tagValue1 string) string {

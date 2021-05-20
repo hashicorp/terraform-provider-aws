@@ -38,6 +38,10 @@ func resourceAwsAmplifyApp() *schema.Resource {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
+			customdiff.ForceNewIfChange("iam_service_role_arn", func(_ context.Context, old, new, meta interface{}) bool {
+				// Any existing value cannot be cleared.
+				return new.(string) == ""
+			}),
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -78,7 +82,6 @@ func resourceAwsAmplifyApp() *schema.Resource {
 						"build_spec": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
 
@@ -169,6 +172,7 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			"build_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
 
