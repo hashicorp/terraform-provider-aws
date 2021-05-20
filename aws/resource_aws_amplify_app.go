@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfamplify "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -55,6 +56,7 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			"auto_branch_creation_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -63,11 +65,20 @@ func resourceAwsAmplifyApp() *schema.Resource {
 							Optional:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 2000),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// These credentials are ignored if basic auth is not enabled.
+								if d.Get("auto_branch_creation_config.0.enable_basic_auth").(bool) {
+									return old == new
+								}
+
+								return true
+							},
 						},
 
 						"build_spec": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
 
@@ -110,17 +121,17 @@ func resourceAwsAmplifyApp() *schema.Resource {
 						},
 
 						"stage": {
-							Type:     schema.TypeString,
-							Optional: true,
-							//TODO
-							// DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-							// 	// stage is "NONE" by default
-							// 	if old == "NONE" && new == "" {
-							// 		return true
-							// 	}
-							// 	return old == new
-							// },
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(amplify.Stage_Values(), false),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// API returns "NONE" by default.
+								if old == tfamplify.StageNone && new == "" {
+									return true
+								}
+
+								return old == new
+							},
 						},
 					},
 				},
@@ -130,6 +141,14 @@ func resourceAwsAmplifyApp() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// These patterns are ignored if branch auto-creation is not enabled.
+					if d.Get("enable_auto_branch_creation").(bool) {
+						return old == new
+					}
+
+					return true
+				},
 			},
 
 			"basic_auth_credentials": {
@@ -148,10 +167,8 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			},
 
 			"build_spec": {
-				Type:     schema.TypeString,
-				Optional: true,
-				//TODO
-				//Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
 
@@ -383,61 +400,6 @@ func resourceAwsAmplifyAppCreate(d *schema.ResourceData, meta interface{}) error
 		input.Repository = aws.String(v.(string))
 	}
 
-	/*
-		if v, ok := d.GetOk("auto_branch_creation_config"); ok {
-			config, patterns, enable := expandAmplifyAutoBranchCreationConfig(v.([]interface{}))
-			params.AutoBranchCreationConfig = config
-			params.AutoBranchCreationPatterns = patterns
-			params.EnableAutoBranchCreation = enable
-		}
-
-		if v, ok := d.GetOk("basic_auth_config"); ok {
-			enable, credentials := expandAmplifyBasicAuthConfig(v.([]interface{}))
-			params.EnableBasicAuth = enable
-			params.BasicAuthCredentials = credentials
-		}
-
-		if v, ok := d.GetOk("build_spec"); ok {
-			params.BuildSpec = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("custom_rules"); ok {
-			params.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
-		}
-
-		if v, ok := d.GetOk("description"); ok {
-			params.Description = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("enable_branch_auto_build"); ok {
-			params.EnableBranchAutoBuild = aws.Bool(v.(bool))
-		}
-
-		if v, ok := d.GetOk("environment_variables"); ok {
-			params.EnvironmentVariables = stringMapToPointers(v.(map[string]interface{}))
-		}
-
-		if v, ok := d.GetOk("iam_service_role_arn"); ok {
-			params.IamServiceRoleArn = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("platform"); ok {
-			params.Platform = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("repository"); ok {
-			params.Repository = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("access_token"); ok {
-			params.AccessToken = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("oauth_token"); ok {
-			params.OauthToken = aws.String(v.(string))
-		}
-	*/
-
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().AmplifyTags()
 	}
@@ -532,6 +494,12 @@ func resourceAwsAmplifyAppUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if d.HasChange("auto_branch_creation_config") {
 			input.AutoBranchCreationConfig = expandAmplifyAutoBranchCreationConfig(d.Get("auto_branch_creation_config").([]interface{})[0].(map[string]interface{}))
+
+			if d.HasChange("auto_branch_creation_config.0.environment_variables") {
+				if v := d.Get("auto_branch_creation_config.0.environment_variables").(map[string]interface{}); len(v) == 0 {
+					input.AutoBranchCreationConfig.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
+				}
+			}
 		}
 
 		if d.HasChange("auto_branch_creation_patterns") {
@@ -657,19 +625,19 @@ func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplif
 		apiObject.BuildSpec = aws.String(v)
 	}
 
-	if v, ok := tfMap["enable_auto_build"].(bool); ok && v {
+	if v, ok := tfMap["enable_auto_build"].(bool); ok {
 		apiObject.EnableAutoBuild = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable_basic_auth"].(bool); ok && v {
+	if v, ok := tfMap["enable_basic_auth"].(bool); ok {
 		apiObject.EnableBasicAuth = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable_performance_mode"].(bool); ok && v {
+	if v, ok := tfMap["enable_performance_mode"].(bool); ok {
 		apiObject.EnablePerformanceMode = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable_pull_request_preview"].(bool); ok && v {
+	if v, ok := tfMap["enable_pull_request_preview"].(bool); ok {
 		apiObject.EnablePullRequestPreview = aws.Bool(v)
 	}
 
@@ -685,7 +653,7 @@ func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplif
 		apiObject.PullRequestEnvironmentName = aws.String(v)
 	}
 
-	if v, ok := tfMap["stage"].(string); ok && v != "" {
+	if v, ok := tfMap["stage"].(string); ok && v != "" && v != tfamplify.StageNone {
 		apiObject.Stage = aws.String(v)
 	}
 
