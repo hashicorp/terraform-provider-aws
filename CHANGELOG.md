@@ -1,7 +1,12 @@
 ## 3.43.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_servicecatalog_budget_resource_association` ([#19452](https://github.com/hashicorp/terraform-provider-aws/issues/19452))
+
 BUG FIXES:
 
+* resource/aws_eks_addon: Use `service_account_role_arn`, if set, on updates ([#19454](https://github.com/hashicorp/terraform-provider-aws/issues/19454))
 * resource/aws_glue_connection: `connection_properties` are optional ([#19375](https://github.com/hashicorp/terraform-provider-aws/issues/19375))
 
 ## 3.42.0 (May 20, 2021)
