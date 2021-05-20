@@ -588,31 +588,6 @@ resource "aws_autoscaling_policy" "test" {
 `, name))
 }
 
-func testAccAWSAutoscalingPolicyConfig_predictiveScalingUnsetNullables(name string) string {
-	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
-resource "aws_autoscaling_policy" "test" {
-  name                   = "%[1]s-policy_predictive"
-  policy_type            = "PredictiveScaling"
-  autoscaling_group_name = aws_autoscaling_group.test.name
-  predictive_scaling_configuration {
-    metric_specification {
-      target_value = 32
-      predefined_scaling_metric_specification {
-        predefined_metric_type = "ASGAverageCPUUtilization"
-        resource_label         = "testLabel"
-      }
-      predefined_load_metric_specification {
-        predefined_metric_type = "ASGTotalCPUUtilization"
-        resource_label         = "testLabel"
-      }
-    }
-    mode                         = "ForecastAndScale"
-    max_capacity_breach_behavior = "IncreaseMaxCapacity"
-  }
-}
-`, name))
-}
-
 func testAccAWSAutoscalingPolicyConfig_predictiveScalingRemoved(name string) string {
 	return composeConfig(testAccAWSAutoscalingPolicyConfig_base(name), fmt.Sprintf(`
 resource "aws_autoscaling_policy" "test" {
