@@ -100,8 +100,8 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `bisect_batch_on_function_error`: - (Optional) If the function returns an error, split the batch in two and retry. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.
 * `topics` - (Optional) The name of the Kafka topics. Only available for MSK sources. A single topic name must be specified.
 * `destination_config`: - (Optional) An Amazon SQS queue or Amazon SNS topic destination for failed records. Only available for stream sources (DynamoDB and Kinesis). Detailed below.
-* `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster.  Detailed below.
-* `source_access_configuration`: (Optional) For Self Managed Kafka sources, the access configuration for the source.  Detailed below.
+* `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster.  Detailed below.  If set, configuration must also include `source_access_configuration`.
+* `source_access_configuration`: (Optional) For Self Managed Kafka sources, the access configuration for the source.  Detailed below. If set, configuration must also include `self_managed_event_source`.
 
 ### destination_config Configuration Block
 
