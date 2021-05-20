@@ -123,6 +123,10 @@ service/budgets:
   - 'aws/internal/service/budgets/**/*'
   - '**/*_budgets_*'
   - '**/budgets_*'
+service/chime:
+  - 'aws/internal/service/chime/**/*'
+  - '**/*_chime_*'
+  - '**/chime_*'
 service/cloud9:
   - 'aws/internal/service/cloud9/**/*'
   - '**/*_cloud9_*'
