@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -170,6 +172,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				MinItems:     1,
 				MaxItems:     1,
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
+				RequiredWith: []string{"self_managed_event_source", "source_access_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoints": {
@@ -182,9 +185,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				},
 			},
 			"source_access_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				RequiredWith: []string{"self_managed_event_source", "source_access_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -533,4 +537,113 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	return resourceAwsLambdaEventSourceMappingRead(d, meta)
+}
+
+func expandLambdaEventSourceMappingSelfManagedEventSource(configured []interface{}) *lambda.SelfManagedEventSource {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	source := &lambda.SelfManagedEventSource{}
+	source.Endpoints = map[string][]*string{}
+
+	if config, ok := configured[0].(map[string]interface{}); ok {
+		if endpoints, ok := config["endpoints"].(map[string]interface{}); ok {
+			for key, value := range endpoints {
+				values := strings.Split(value.(string), ",")
+				source.Endpoints[key] = make([]*string, len(values))
+				for i, value := range values {
+					valueCopy := value
+					source.Endpoints[key][i] = &valueCopy
+				}
+			}
+		}
+	}
+	return source
+}
+
+func flattenLambdaEventSourceMappingSelfManagedEventSource(source *lambda.SelfManagedEventSource, d *schema.ResourceData) []interface{} {
+	if source == nil {
+		return nil
+	}
+
+	if source.Endpoints == nil {
+		return nil
+	}
+
+	endpoints := map[string]string{}
+	for key, values := range source.Endpoints {
+		sValues := make([]string, len(values))
+		for i, value := range values {
+			sValues[i] = *value
+		}
+		// The AWS API sorts the list of brokers so try to order the string by what
+		// is in the TF file to prevent spurious diffs.
+		curValue, ok := d.Get("self_managed_event_source.0.endpoints." + key).(string)
+		if !ok {
+			curValue = ""
+		}
+		curValues := strings.Split(curValue, ",")
+		if len(sValues) == len(curValues) {
+			for i := 0; i < len(curValues); i++ {
+				for j := 0; j < len(sValues); j++ {
+					if curValues[i] == sValues[j] {
+						sValues[i], sValues[j] = sValues[j], sValues[i]
+						break
+					}
+				}
+			}
+		}
+		endpoints[key] = strings.Join(sValues, ",")
+	}
+
+	if len(endpoints) == 0 {
+		return nil
+	}
+
+	config := map[string]interface{}{}
+	config["endpoints"] = endpoints
+
+	return []interface{}{config}
+}
+
+func expandLambdaEventSourceMappingSourceAccessConfigurations(configured []interface{}) []*lambda.SourceAccessConfiguration {
+	accesses := make([]*lambda.SourceAccessConfiguration, 0, len(configured))
+	for _, m := range configured {
+		config := m.(map[string]interface{})
+		accesses = append(accesses, &lambda.SourceAccessConfiguration{
+			Type: aws.String(config["type"].(string)),
+			URI:  aws.String(config["uri"].(string)),
+		})
+	}
+	return accesses
+}
+
+func flattenLambdaEventSourceMappingSourceAccessConfigurations(accesses []*lambda.SourceAccessConfiguration, d *schema.ResourceData) []map[string]interface{} {
+	if accesses == nil {
+		return nil
+	}
+	settings := make([]map[string]interface{}, len(accesses))
+
+	for i, access := range accesses {
+		setting := make(map[string]interface{})
+		setting["type"] = access.Type
+		setting["uri"] = access.URI
+		settings[i] = setting
+	}
+	// The result returned from AWS is sorted so try to order it like the original to prevent spurious diffs
+	if curCount, ok := d.Get("source_access_configuration.#").(int); ok {
+		if curCount == len(settings) {
+			for i := 0; i < curCount; i++ {
+				if curSetting, ok := d.Get("source_access_configuration." + strconv.Itoa(i)).(map[string]interface{}); ok {
+					for j := 0; j < len(settings); j++ {
+						if curSetting["type"] == *settings[j]["type"].(*string) && curSetting["uri"] == *settings[j]["uri"].(*string) {
+							settings[i], settings[j] = settings[j], settings[i]
+						}
+					}
+				}
+			}
+		}
+	}
+	return settings
 }
