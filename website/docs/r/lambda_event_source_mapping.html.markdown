@@ -74,7 +74,8 @@ resource "aws_lambda_event_source_mapping" "example" {
     type = "VPC_SECURITY_GROUP"
     uri = "security_group:sg-example"
   }
-}```
+}
+```
 
 ### SQS
 
