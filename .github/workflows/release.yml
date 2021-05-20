@@ -30,7 +30,8 @@ jobs:
       steps:
         - uses: actions/checkout@v2
           with:
-            fetch-depth: 0      
+            fetch-depth: 0
+            ref: main
         - run: |
             CHANGELOG_FILE_NAME="CHANGELOG.md"
             PREVIOUS_RELEASE_TAG=$(git describe --abbrev=0 --match='v*.*.*' --tags)
