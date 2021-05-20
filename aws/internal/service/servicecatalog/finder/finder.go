@@ -69,3 +69,32 @@ func ProductPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLang
 
 	return result, err
 }
+
+func BudgetResourceAssociation(conn *servicecatalog.ServiceCatalog, budgetName, resourceID string) (*servicecatalog.BudgetDetail, error) {
+	input := &servicecatalog.ListBudgetsForResourceInput{
+		ResourceId: aws.String(resourceID),
+	}
+
+	var result *servicecatalog.BudgetDetail
+
+	err := conn.ListBudgetsForResourcePages(input, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, budget := range page.Budgets {
+			if budget == nil {
+				continue
+			}
+
+			if aws.StringValue(budget.BudgetName) == budgetName {
+				result = budget
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return result, err
+}
