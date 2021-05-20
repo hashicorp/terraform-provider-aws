@@ -66,9 +66,10 @@ func ProvisioningArtifactID(artifactID, productID string) string {
 }
 
 func ProvisioningArtifactParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("Please make sure the ID is in the form artifact_id:product_id (i.e. pa-r2d2slrtcob:prod-c3pohcrhmisy")
+	parts := strings.SplitN(id, ":", 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected artifactID:productID", id)
 	}
 	return parts[0], parts[1], nil
 }
