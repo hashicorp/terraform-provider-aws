@@ -52,13 +52,13 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `created_time` - Time when the provisioning artifact was created.
-* `id` - Provisioning Artifact identifier.
+* `id` - Provisioning Artifact identifier and product identifier separated by a colon.
 * `status` - Status of the provisioning artifact.
 
 ## Import
 
-`aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID, e.g.
+`aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID and product ID separated by a colon, e.g.
 
 ```
-$ terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec
+$ terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3
 ```
