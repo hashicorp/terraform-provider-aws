@@ -10,10 +10,10 @@ jobs:
       - uses: breathingdust/github-asana-tidy@v1
         with:
           asana_pat: ${{ secrets.asana_pat }}
-          asana_target_section_gid: 1141945723817371
-          asana_workspace_gid: 90955849329269
-          asana_project_gid: 632425409545160
-          asana_github_url_field_gid: 1134594824474912
+          asana_target_section_gid: '1141945723817371'
+          asana_workspace_gid: '90955849329269'
+          asana_project_gid: '632425409545160'
+          asana_github_url_field_gid: '1134594824474912'
           github_release_name: ${{ github.event.release.tag_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   project-archive:
