@@ -600,7 +600,7 @@ resource "aws_glue_connection" "test" {
 }
 
 func testAccAWSGlueConnectionConfig_Network(rName string) string {
-    return fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
