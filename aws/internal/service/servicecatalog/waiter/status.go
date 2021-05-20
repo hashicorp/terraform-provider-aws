@@ -289,11 +289,11 @@ func ProvisioningArtifactStatus(conn *servicecatalog.ServiceCatalog, id, product
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing Service Catalog Provisioning Artifact (%s): %w", id, err)
+			return nil, servicecatalog.StatusFailed, err
 		}
 
 		if output == nil || output.ProvisioningArtifactDetail == nil {
-			return nil, StatusUnavailable, fmt.Errorf("error describing Service Catalog Provisioning Artifact (%s): empty response", id)
+			return nil, StatusUnavailable, err
 		}
 
 		return output, aws.StringValue(output.Status), err
