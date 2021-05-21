@@ -306,10 +306,9 @@ func resourceAwsAmplifyApp() *schema.Resource {
 			},
 
 			"repository": {
-				Type:     schema.TypeString,
-				Optional: true,
-				//TODO
-				//ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
 

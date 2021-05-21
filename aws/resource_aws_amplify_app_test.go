@@ -585,7 +585,20 @@ func TestAccAWSAmplifyApp_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_repository(t *testing.T) {
+func TestAccAWSAmplifyApp_Repository(t *testing.T) {
+	key := "AMPLIFY_GITHUB_ACCESS_TOKEN"
+	accessToken := os.Getenv(key)
+	if accessToken == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	key = "AMPLIFY_GITHUB_REPOSITORY"
+	repository := os.Getenv(key)
+	if repository == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
 
@@ -596,9 +609,11 @@ func TestAccAWSAmplifyApp_repository(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyAppConfigRepository(rName),
+				Config: testAccAWSAmplifyAppConfigRepository(rName, repository, accessToken),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "repository", regexp.MustCompile("^https://github.com")),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "access_token", accessToken),
+					resource.TestCheckResourceAttr(resourceName, "repository", repository),
 				),
 			},
 			{
@@ -706,16 +721,13 @@ resource "aws_amplify_app" "test" {
 `, rName, description)
 }
 
-func testAccAWSAmplifyAppConfigRepository(rName string) string {
-	repository := os.Getenv("AMPLIFY_GITHUB_REPOSITORY")
-	accessToken := os.Getenv("AMPLIFY_GITHUB_ACCESS_TOKEN")
-
+func testAccAWSAmplifyAppConfigRepository(rName, repository, accessToken string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 
-  repository   = "%s"
-  access_token = "%s"
+  repository   = %[2]q
+  access_token = %[3]q
 }
 `, rName, repository, accessToken)
 }
