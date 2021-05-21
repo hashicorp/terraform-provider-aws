@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/finder"
 )
 
@@ -130,6 +131,7 @@ func OrganizationsAccessStatus(conn *servicecatalog.ServiceCatalog) resource.Sta
 		}
 
 		if err != nil {
+
 			return nil, OrganizationAccessStatusError, fmt.Errorf("error getting Organizations Access: %w", err)
 		}
 
@@ -138,5 +140,89 @@ func OrganizationsAccessStatus(conn *servicecatalog.ServiceCatalog) resource.Sta
 		}
 
 		return output, aws.StringValue(output.AccessStatus), err
+	}
+}
+
+func ConstraintStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.DescribeConstraintInput{
+			Id: aws.String(id),
+		}
+
+		if acceptLanguage != "" {
+			input.AcceptLanguage = aws.String(acceptLanguage)
+		}
+
+		output, err := conn.DescribeConstraint(input)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
+			}
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing constraint: %w", err)
+		}
+
+		if output == nil || output.ConstraintDetail == nil {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("describing constraint (accept language %s, ID: %s): empty response", acceptLanguage, id),
+			}
+		}
+
+		return output, aws.StringValue(output.Status), err
+	}
+}
+
+func ProductPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.ProductPortfolioAssociation(conn, acceptLanguage, portfolioID, productID)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("product portfolio association not found (%s): %s", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
+			}
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing product portfolio association: %w", err)
+		}
+
+		if output == nil {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", tfservicecatalog.ProductPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
+			}
+		}
+
+		return output, servicecatalog.StatusAvailable, err
+	}
+}
+
+func ServiceActionStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.DescribeServiceActionInput{
+			Id: aws.String(id),
+		}
+
+		if acceptLanguage != "" {
+			input.AcceptLanguage = aws.String(acceptLanguage)
+		}
+
+		output, err := conn.DescribeServiceAction(input)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, err
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing Service Action: %w", err)
+		}
+
+		if output == nil || output.ServiceActionDetail == nil {
+			return nil, StatusUnavailable, fmt.Errorf("error describing Service Action: empty Service Action Detail")
+		}
+
+		return output.ServiceActionDetail, servicecatalog.StatusAvailable, nil
 	}
 }
