@@ -169,7 +169,6 @@ func TestAccAWSQLDBStream_basic(t *testing.T) {
 	})
 }
 
-// reference: testAccCheckAWSLedgerDestroyWithProvider
 func testAccCheckAWSQLDBStreamCancel(s *terraform.State) error {
 	return testAccCheckAWSQLDBStreamCancelWithProvider(s, testAccProvider)
 }
