@@ -299,3 +299,27 @@ func ProvisioningArtifactStatus(conn *servicecatalog.ServiceCatalog, id, product
 		return output, aws.StringValue(output.Status), err
 	}
 }
+
+func PrincipalPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := finder.PrincipalPortfolioAssociation(conn, acceptLanguage, principalARN, portfolioID)
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("principal portfolio association not found (%s): %s", tfservicecatalog.PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID), err),
+			}
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, fmt.Errorf("error describing principal portfolio association: %w", err)
+		}
+
+		if output == nil {
+			return nil, StatusNotFound, &resource.NotFoundError{
+				Message: fmt.Sprintf("finding principal portfolio association (%s): empty response", tfservicecatalog.PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID)),
+			}
+		}
+
+		return output, servicecatalog.StatusAvailable, err
+	}
+}
