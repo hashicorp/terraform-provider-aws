@@ -15,11 +15,11 @@ import (
 )
 
 func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
-	var env1, env2 amplify.BackendEnvironment
+	var env amplify.BackendEnvironment
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_backend_environment.test"
 
-	envName := "backend"
+	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -28,13 +28,13 @@ func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBackendEnvironmentConfig_Required(rName, envName),
+				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env1),
+					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "environment_name", envName),
-					resource.TestMatchResourceAttr(resourceName, "deployment_artifacts", regexp.MustCompile(fmt.Sprintf("^tf-acc-test-.*-%s-.*-deployment$", envName))),
-					resource.TestMatchResourceAttr(resourceName, "stack_name", regexp.MustCompile(fmt.Sprintf("^amplify-tf-acc-test-.*-%s-.*$", envName))),
+					resource.TestCheckResourceAttrSet(resourceName, "deployment_artifacts"),
+					resource.TestCheckResourceAttr(resourceName, "environment_name", environmentName),
+					resource.TestCheckResourceAttrSet(resourceName, "stack_name"),
 				),
 			},
 			{
@@ -42,18 +42,68 @@ func testAccAWSAmplifyBackendEnvironment_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func testAccAWSAmplifyBackendEnvironment_disappears(t *testing.T) {
+	var env amplify.BackendEnvironment
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_backend_environment.test"
+
+	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBackendEnvironmentConfigAll(rName, envName),
+				Config: testAccAWSAmplifyBackendEnvironmentConfigBasic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env2),
-					resource.TestCheckResourceAttr(resourceName, "environment_name", envName),
-					resource.TestCheckResourceAttr(resourceName, "deployment_artifacts", rName),
-					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
+					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmplifyBackendEnvironment(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
+
+func testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
+	var env amplify.BackendEnvironment
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_backend_environment.test"
+
+	environmentName := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyBackendEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyBackendEnvironmentConfigDeploymentArtifactsAndStackName(rName, environmentName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName, &env),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "deployment_artifacts", rName),
+					resource.TestCheckResourceAttr(resourceName, "environment_name", environmentName),
+					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// testAccAWSAmplifyBackendEnvironmentConfigDeploymentArtifactsAndStackName(rname, environmentName)
 
 func testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName string, v *amplify.BackendEnvironment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -116,31 +166,31 @@ func testAccCheckAWSAmplifyBackendEnvironmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAmplifyBackendEnvironmentConfig_Required(rName string, envName string) string {
+func testAccAWSAmplifyBackendEnvironmentConfigBasic(rName string, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_amplify_backend_environment" "test" {
   app_id           = aws_amplify_app.test.id
-  environment_name = "%s"
+  environment_name = %[2]q
 }
-`, rName, envName)
+`, rName, environmentName)
 }
 
-func testAccAWSAmplifyBackendEnvironmentConfigAll(rName string, envName string) string {
+func testAccAWSAmplifyBackendEnvironmentConfigDeploymentArtifactsAndStackName(rName string, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_amplify_backend_environment" "test" {
   app_id           = aws_amplify_app.test.id
-  environment_name = "%s"
+  environment_name = %[2]q
 
-  deployment_artifacts = "%s"
-  stack_name           = "%s"
+  deployment_artifacts = %[1]q
+  stack_name           = %[1]q
 }
-`, rName, envName, rName, rName)
+`, rName, environmentName)
 }

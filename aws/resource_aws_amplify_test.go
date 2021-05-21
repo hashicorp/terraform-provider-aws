@@ -23,7 +23,9 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"Repository":               testAccAWSAmplifyApp_Repository,
 		},
 		"BackendEnvironment": {
-			"basic": testAccAWSAmplifyBackendEnvironment_basic,
+			"basic":                         testAccAWSAmplifyBackendEnvironment_basic,
+			"disappears":                    testAccAWSAmplifyBackendEnvironment_disappears,
+			"DeploymentArtifacts_StackName": testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName,
 		},
 	}
 
