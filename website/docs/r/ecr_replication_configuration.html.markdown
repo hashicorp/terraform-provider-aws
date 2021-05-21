@@ -33,7 +33,7 @@ resource "aws_ecr_replication_configuration" "example" {
 
 The following arguments are supported:
 
-* `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#encryption-configuration).
+* `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
 ### Replication Configuration
 
