@@ -680,6 +680,10 @@ func expandAppRunnerServiceAuthenticationConfiguration(l []interface{}) *apprunn
 		result.AccessRoleArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["connection_arn"].(string); ok && v != "" {
+		result.ConnectionArn = aws.String(v)
+	}
+
 	return result
 }
 
@@ -698,6 +702,14 @@ func expandAppRunnerServiceImageConfiguration(l []interface{}) *apprunner.ImageC
 
 	if v, ok := tfMap["port"].(string); ok && v != "" {
 		result.Port = aws.String(v)
+	}
+
+	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentVariables = expandStringMap(v)
+	}
+
+	if v, ok := tfMap["start_command"].(string); ok && v != "" {
+		result.StartCommand = aws.String(v)
 	}
 
 	return result
@@ -806,6 +818,10 @@ func expandAppRunnerServiceCodeConfigurationValues(l []interface{}) *apprunner.C
 
 	if v, ok := tfMap["runtime"].(string); ok && v != "" {
 		result.Runtime = aws.String(v)
+	}
+
+	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentVariables = expandStringMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
