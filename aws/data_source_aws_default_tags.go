@@ -18,12 +18,12 @@ func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(meta.(*AWSClient).partition)
 
-	if defaultTagsConfig == nil || defaultTagsConfig.Tags == nil {
-		return nil
-	}
-
-	if err := d.Set("tags", defaultTagsConfig.Tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return err
+	if defaultTagsConfig != nil && defaultTagsConfig.Tags != nil {
+		if err := d.Set("tags", defaultTagsConfig.Tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return err
+		}
+	} else {
+		d.Set("tags", nil)
 	}
 
 	return nil
