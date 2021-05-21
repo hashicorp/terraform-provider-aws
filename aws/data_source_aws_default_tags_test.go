@@ -83,6 +83,40 @@ func TestAccAWSDefaultTagsDataSource_multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSDefaultTagsDataSource_ignore(t *testing.T) {
+	var providers []*schema.Provider
+
+	dataSourceName := "data.aws_default_tags.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccAWSProviderConfigDefaultTags_Tags1("Tabac", "Louis Chiron"),
+					testAccAWSDefaultTagsDataSource(),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Tabac", "Louis Chiron"),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigDefaultAndIgnoreTagsKeys1("Tabac", "Louis Chiron"),
+					testAccAWSDefaultTagsDataSource(),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSDefaultTagsDataSource() string {
 	return `data "aws_default_tags" "test" {}`
 }

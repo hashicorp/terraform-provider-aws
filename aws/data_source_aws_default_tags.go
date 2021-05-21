@@ -1,6 +1,10 @@
 package aws
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
 func dataSourceAwsDefaultTags() *schema.Resource {
 	return &schema.Resource{
@@ -18,12 +22,14 @@ func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(meta.(*AWSClient).partition)
 
-	if defaultTagsConfig != nil && defaultTagsConfig.Tags != nil {
-		if err := d.Set("tags", defaultTagsConfig.Tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return err
-		}
-	} else {
-		d.Set("tags", nil)
+	tags := defaultTagsConfig.GetTags()
+
+	if len(tags) > 0 {
+		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+	}
+
+	if err := d.Set("tags", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
