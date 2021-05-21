@@ -8,11 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -47,10 +46,6 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 						"destination_arn": {
 							Type:     schema.TypeString,
 							Required: true,
-							StateFunc: func(arn interface{}) string {
-								// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
-								return strings.TrimSuffix(arn.(string), ":*")
-							},
 						},
 						"format": {
 							Type:     schema.TypeString,
@@ -114,8 +109,10 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"xray_tracing_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -125,13 +122,15 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
-
-	d.Partial(true)
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := apigateway.CreateStageInput{
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
@@ -164,8 +163,8 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		input.Variables = aws.StringMap(variables)
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ApigatewayTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().ApigatewayTags()
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -175,14 +174,7 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)))
 
-	d.SetPartial("rest_api_id")
-	d.SetPartial("stage_name")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("variables")
-	d.SetPartial("xray_tracing_enabled")
-
-	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
+	if waitForCache && out != nil && aws.StringValue(out.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
 				apigateway.CacheClusterStatusCreateInProgress,
@@ -202,10 +194,6 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
-
 	if _, ok := d.GetOk("client_certificate_id"); ok {
 		return resourceAwsApiGatewayStageUpdate(d, meta)
 	}
@@ -217,6 +205,8 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -226,14 +216,17 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 		StageName: aws.String(stageName),
 	}
 	stage, err := conn.GetStage(&input)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
-			log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error getting API Gateway REST API (%s) Stage (%s): %w", restApiId, stageName, err)
+	}
+
 	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
 
 	if err := d.Set("access_log_settings", flattenApiGatewayStageAccessLogSettings(stage.AccessLogSettings)); err != nil {
@@ -242,7 +235,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("client_certificate_id", stage.ClientCertificateId)
 
-	if stage.CacheClusterStatus != nil && *stage.CacheClusterStatus == apigateway.CacheClusterStatusDeleteInProgress {
+	if aws.StringValue(stage.CacheClusterStatus) == apigateway.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", nil)
 	} else {
@@ -255,8 +248,15 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags := keyvaluetags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	stageArn := arn.ARN{
@@ -288,16 +288,14 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
 
-	d.Partial(true)
-
 	stageArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
 		Service:   "apigateway",
 		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
 	}.String()
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.ApigatewayUpdateTags(conn, stageArn, o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
@@ -307,7 +305,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	waitForCache := false
 	if d.HasChange("cache_cluster_enabled") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/cacheClusterEnabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
 		})
@@ -315,7 +313,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("cache_cluster_size") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/cacheClusterSize"),
 			Value: aws.String(d.Get("cache_cluster_size").(string)),
 		})
@@ -323,35 +321,35 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("client_certificate_id") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/clientCertificateId"),
 			Value: aws.String(d.Get("client_certificate_id").(string)),
 		})
 	}
 	if d.HasChange("deployment_id") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/deploymentId"),
 			Value: aws.String(d.Get("deployment_id").(string)),
 		})
 	}
 	if d.HasChange("description") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
 	}
 	if d.HasChange("xray_tracing_enabled") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/tracingEnabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
 		})
 	}
 	if d.HasChange("documentation_version") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/documentationVersion"),
 			Value: aws.String(d.Get("documentation_version").(string)),
 		})
@@ -367,18 +365,17 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		if len(accessLogSettings) == 1 {
 			operations = append(operations,
 				&apigateway.PatchOperation{
-					Op:   aws.String("replace"),
-					Path: aws.String("/accessLogSettings/destinationArn"),
-					// arns coming from a TF reference to a log group contain a trailing `:*` which is not valid
-					Value: aws.String(strings.TrimSuffix(d.Get("access_log_settings.0.destination_arn").(string), ":*")),
+					Op:    aws.String(apigateway.OpReplace),
+					Path:  aws.String("/accessLogSettings/destinationArn"),
+					Value: aws.String(d.Get("access_log_settings.0.destination_arn").(string)),
 				}, &apigateway.PatchOperation{
-					Op:    aws.String("replace"),
+					Op:    aws.String(apigateway.OpReplace),
 					Path:  aws.String("/accessLogSettings/format"),
 					Value: aws.String(d.Get("access_log_settings.0.format").(string)),
 				})
 		} else if len(accessLogSettings) == 0 {
 			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String("remove"),
+				Op:   aws.String(apigateway.OpRemove),
 				Path: aws.String("/accessLogSettings"),
 			})
 		}
@@ -395,13 +392,7 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
 	}
 
-	d.SetPartial("client_certificate_id")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("xray_tracing_enabled")
-	d.SetPartial("variables")
-
-	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
+	if waitForCache && out != nil && aws.StringValue(out.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
 				apigateway.CacheClusterStatusCreateInProgress,
@@ -425,10 +416,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
-
 	return resourceAwsApiGatewayStageRead(d, meta)
 }
 
@@ -439,7 +426,7 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}) []*apigateway.Pat
 	for k := range oldVars {
 		if _, ok := newVars[k]; !ok {
 			ops = append(ops, &apigateway.PatchOperation{
-				Op:   aws.String("remove"),
+				Op:   aws.String(apigateway.OpRemove),
 				Path: aws.String(prefix + k),
 			})
 		}
@@ -455,7 +442,7 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}) []*apigateway.Pat
 			}
 		}
 		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String(prefix + k),
 			Value: aws.String(newValue),
 		})
@@ -487,8 +474,13 @@ func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) 
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 	_, err := conn.DeleteStage(&input)
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Deleting API Gateway Stage failed: %s", err)
+		return fmt.Errorf("error deleting API Gateway REST API (%s) Stage (%s): %w", d.Get("rest_api_id").(string), d.Get("stage_name").(string), err)
 	}
 
 	return nil

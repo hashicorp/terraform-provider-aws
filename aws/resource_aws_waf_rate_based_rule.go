@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -52,7 +52,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateWafPredicatesType(),
+							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
 						},
 					},
 				},
@@ -66,18 +66,22 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(100),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
-	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -90,7 +94,7 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 		}
 
 		if len(tags) > 0 {
-			params.Tags = tags
+			params.Tags = tags.IgnoreAws().WafTags()
 		}
 
 		return conn.CreateRateBasedRule(params)
@@ -99,7 +103,7 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	resp := out.(*waf.CreateRateBasedRuleOutput)
-	d.SetId(*resp.Rule.RuleId)
+	d.SetId(aws.StringValue(resp.Rule.RuleId))
 
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
@@ -115,6 +119,8 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -154,8 +160,16 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Failed to get WAF Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
 	}
-	if err := d.Set("tags", tagList.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+
+	tags := tagList.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("predicates", predicates)
@@ -170,7 +184,7 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	if d.HasChange("predicates") {
+	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")
@@ -181,8 +195,8 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)

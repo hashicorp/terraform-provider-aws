@@ -7,11 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 /**
@@ -95,10 +94,10 @@ func TestAccAWSPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	configuration := testAccAwsPinpointAPNSChannelCertConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointAPNSChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointAPNSChannelConfig_basicCertificate(configuration),
@@ -129,10 +128,10 @@ func TestAccAWSPinpointAPNSChannel_basicToken(t *testing.T) {
 	configuration := testAccAwsPinpointAPNSChannelTokenConfigurationFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSPinpointAPNSChannelDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSPinpointApp(t) },
+		ErrorCheck:   testAccErrorCheck(t, pinpoint.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPinpointAPNSChannelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSPinpointAPNSChannelConfig_basicToken(configuration),
@@ -190,7 +189,7 @@ func testAccAWSPinpointAPNSChannelConfig_basicCertificate(conf *testAccAwsPinpoi
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_channel" "test_apns_channel" {
-  application_id                = "${aws_pinpoint_app.test_app.application_id}"
+  application_id                = aws_pinpoint_app.test_app.application_id
   enabled                       = false
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
@@ -204,7 +203,7 @@ func testAccAWSPinpointAPNSChannelConfig_basicToken(conf *testAccAwsPinpointAPNS
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_apns_channel" "test_apns_channel" {
-  application_id = "${aws_pinpoint_app.test_app.application_id}"
+  application_id = aws_pinpoint_app.test_app.application_id
   enabled        = false
 
   default_authentication_method = "TOKEN"

@@ -208,6 +208,83 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
+		{
+			Name: "empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes",
+			ApiJson: `
+{
+	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+	"vcpus": 1,
+	"memory": 4096,
+	"command": [],
+	"jobRoleArn": "arn:aws:iam::123:role/role-test",
+	"volumes": [],
+	"environment": [{"name":"ENVIRONMENT","value":"test"}],
+	"logConfiguration": {
+		"logDriver": "awslogs",
+		"secretOptions": []
+	},
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": [],
+	"secrets": []
+}
+`,
+			ConfigurationJson: `
+{
+    "image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+    "memory": 4096,
+    "vcpus": 1,
+    "jobRoleArn": "arn:aws:iam::123:role/role-test",
+    "environment": [
+      {
+        "name": "ENVIRONMENT",
+        "value": "test"
+      }
+   ],
+   "logConfiguration": {
+		"logDriver": "awslogs"
+	}
+}
+`,
+			ExpectEquivalent: true,
+		},
+		{
+			Name: "no fargatePlatformConfiguration",
+			ApiJson: `
+{
+	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+	"resourceRequirements": [
+	  {
+		"type": "MEMORY",
+		"value": "512"
+	  },
+	  {
+		"type": "VCPU",
+		"value": "0.25"
+	  }
+	],
+	"fargatePlatformConfiguration": {
+		"platformVersion": "LATEST"
+	}
+}
+`,
+			ConfigurationJson: `
+{
+	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+	"resourceRequirements": [
+	  {
+		  "type": "MEMORY",
+		  "value": "512"
+	  },
+	  {
+		"type": "VCPU",
+		"value": "0.25"
+	  }
+	]
+}
+`,
+			ExpectEquivalent: true,
+		},
 	}
 
 	for _, testCase := range testCases {

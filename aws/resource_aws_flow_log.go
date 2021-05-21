@@ -6,9 +6,10 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -37,10 +38,6 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"log_group_name"},
 				ValidateFunc:  validateArn,
-				StateFunc: func(arn interface{}) string {
-					// aws_cloudwatch_log_group arn attribute references contain a trailing `:*`, which breaks functionality
-					return strings.TrimSuffix(arn.(string), ":*")
-				},
 			},
 
 			"log_destination_type": {
@@ -101,13 +98,31 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+
+			"max_aggregation_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      600,
+				ValidateFunc: validation.IntInSlice([]int{60, 600}),
+			},
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	types := []struct {
 		ID   string
@@ -150,12 +165,17 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
 		opts.LogGroupName = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("log_format"); ok && v != "" {
 		opts.LogFormat = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		opts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpcFlowLog)
+	if v, ok := d.GetOk("max_aggregation_interval"); ok {
+		opts.MaxAggregationInterval = aws.Int64(int64(v.(int)))
+	}
+
+	if len(tags) > 0 {
+		opts.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcFlowLog)
 	}
 
 	log.Printf(
@@ -173,27 +193,36 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error: multiple Flow Logs created for (%s)", resourceId)
 	}
 
-	d.SetId(*resp.FlowLogIds[0])
+	d.SetId(aws.StringValue(resp.FlowLogIds[0]))
 
 	return resourceAwsLogFlowRead(d, meta)
 }
 
 func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	opts := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: []*string{aws.String(d.Id())},
 	}
 
 	resp, err := conn.DescribeFlowLogs(opts)
+
 	if err != nil {
-		log.Printf("[WARN] Error describing Flow Logs for id (%s)", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading EC2 Flow Log (%s): %w", d.Id(), err)
+	}
+
+	if resp == nil {
+		return fmt.Errorf("error reading EC2 Flow Log (%s): empty response", d.Id())
 	}
 
 	if len(resp.FlowLogs) == 0 {
-		log.Printf("[WARN] No Flow Logs found for id (%s)", d.Id())
+		if d.IsNewResource() {
+			return fmt.Errorf("error reading EC2 Flow Log (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] Flow Log (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -205,6 +234,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_format", fl.LogFormat)
+	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	var resourceKey string
 	if strings.HasPrefix(*fl.ResourceId, "vpc-") {
 		resourceKey = "vpc_id"
@@ -217,9 +247,26 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(resourceKey, fl.ResourceId)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().Map()); err != nil {
+	tags := keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %s", err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   ec2.ServiceName,
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -227,8 +274,8 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}

@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
@@ -23,6 +23,7 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -144,6 +145,11 @@ func testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(rName, privateKey, p
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
@@ -154,14 +160,14 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 
 resource "aws_elb" "test-lb" {
   name               = "%[1]s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
   }
 
   tags = {
@@ -170,33 +176,33 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-pubkey-policy0" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-pubkey-policy0"
   policy_type_name   = "PublicKeyPolicyType"
 
   policy_attribute {
     name  = "PublicKey"
-    value = "${replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
+    value = replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
   }
 }
 
 resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-backend-auth-policy0"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = "${aws_load_balancer_policy.test-pubkey-policy0.policy_name}"
+    value = aws_load_balancer_policy.test-pubkey-policy0.policy_name
   }
 }
 
 resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   instance_port      = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}",
+    aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
   ]
 }
 `, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(privateKey), tlsPemEscapeNewlines(publicKey))
@@ -206,6 +212,11 @@ func testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(rName, privateKey1, 
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
@@ -216,14 +227,14 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 
 resource "aws_elb" "test-lb" {
   name               = "%[1]s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
   }
 
   tags = {
@@ -232,44 +243,44 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-pubkey-policy0" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-pubkey-policy0"
   policy_type_name   = "PublicKeyPolicyType"
 
   policy_attribute {
     name  = "PublicKey"
-    value = "${replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
+    value = replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
   }
 }
 
 resource "aws_load_balancer_policy" "test-pubkey-policy1" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-pubkey-policy1"
   policy_type_name   = "PublicKeyPolicyType"
 
   policy_attribute {
     name  = "PublicKey"
-    value = "${replace(replace(replace("%[5]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
+    value = replace(replace(replace("%[5]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
   }
 }
 
 resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   policy_name        = "test-backend-auth-policy0"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = "${aws_load_balancer_policy.test-pubkey-policy1.policy_name}"
+    value = aws_load_balancer_policy.test-pubkey-policy1.policy_name
   }
 }
 
 resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
-  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_name = aws_elb.test-lb.name
   instance_port      = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}",
+    aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
   ]
 }
 `, rName, tlsPemEscapeNewlines(certificate1), tlsPemEscapeNewlines(privateKey1), tlsPemEscapeNewlines(publicKey1), tlsPemEscapeNewlines(publicKey2))
@@ -279,6 +290,11 @@ func testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(rName, privateKey, c
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
@@ -289,14 +305,14 @@ resource "aws_iam_server_certificate" "test-iam-cert0" {
 
 resource "aws_elb" "test-lb" {
   name               = "%[1]s"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
     instance_port      = 443
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
+    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
   }
 
   tags = {

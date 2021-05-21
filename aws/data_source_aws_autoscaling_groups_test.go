@@ -7,15 +7,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:   func() { testAccPreCheck(t) },
+		ErrorCheck: testAccErrorCheck(t, autoscaling.EndpointsID),
+		Providers:  testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsAutoscalingGroupsConfig(acctest.RandInt(), acctest.RandInt(), acctest.RandInt()),
@@ -81,7 +83,7 @@ func testAccCheckAwsAutoscalingGroupsAvailable(attrs map[string]string) ([]strin
 }
 
 func testAccCheckAwsAutoscalingGroupsConfig(rInt1, rInt2, rInt3 int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -92,15 +94,13 @@ data "aws_ami" "test_ami" {
   }
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "aws_launch_configuration" "foobar" {
-  image_id      = "${data.aws_ami.test_ami.id}"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -108,7 +108,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -118,7 +118,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[1]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -126,7 +126,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -136,7 +136,7 @@ resource "aws_autoscaling_group" "foo" {
 }
 
 resource "aws_autoscaling_group" "barbaz" {
-  availability_zones = ["${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[2]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -144,7 +144,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -156,7 +156,7 @@ resource "aws_autoscaling_group" "barbaz" {
 }
 
 func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {
-	return fmt.Sprintf(`
+	return testAccAvailableAZsNoOptInConfig() + fmt.Sprintf(`
 data "aws_ami" "test_ami" {
   most_recent = true
   owners      = ["amazon"]
@@ -167,15 +167,13 @@ data "aws_ami" "test_ami" {
   }
 }
 
-data "aws_availability_zones" "available" {}
-
 resource "aws_launch_configuration" "foobar" {
-  image_id      = "${data.aws_ami.test_ami.id}"
+  image_id      = data.aws_ami.test_ami.id
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  availability_zones = [data.aws_availability_zones.available.names[0]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -183,7 +181,7 @@ resource "aws_autoscaling_group" "bar" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -193,7 +191,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["${data.aws_availability_zones.available.names[1]}"]
+  availability_zones = [data.aws_availability_zones.available.names[1]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -201,7 +199,7 @@ resource "aws_autoscaling_group" "foo" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"
@@ -211,7 +209,7 @@ resource "aws_autoscaling_group" "foo" {
 }
 
 resource "aws_autoscaling_group" "barbaz" {
-  availability_zones = ["${data.aws_availability_zones.available.names[2]}"]
+  availability_zones = [data.aws_availability_zones.available.names[2]]
   name               = "test-asg-%d"
   max_size           = 1
   min_size           = 0
@@ -219,7 +217,7 @@ resource "aws_autoscaling_group" "barbaz" {
   desired_capacity   = 0
   force_delete       = true
 
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_configuration = aws_launch_configuration.foobar.name
 
   tag {
     key                 = "Foo"

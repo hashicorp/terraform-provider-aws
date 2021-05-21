@@ -12,11 +12,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 )
 
 func resourceAwsKmsExternalKey() *schema.Resource {
@@ -29,6 +31,8 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
+		CustomizeDiff: SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -76,10 +80,11 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 32768),
-					validation.ValidateJsonString,
+					validation.StringIsJSON,
 				),
 			},
-			"tags": tagsSchema(),
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 			"valid_to": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -91,6 +96,8 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 
 func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &kms.CreateKeyInput{
 		KeyUsage: aws.String(kms.KeyUsageTypeEncryptDecrypt),
@@ -105,12 +112,12 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 		input.Policy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().KmsTags()
 	}
 
 	var output *kms.CreateKeyOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateKey(input)
@@ -158,6 +165,8 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
@@ -241,8 +250,15 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	d.Set("valid_to", "")
@@ -306,8 +322,8 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating KMS External Key (%s) tags: %s", d.Id(), err)
@@ -332,11 +348,17 @@ func resourceAwsKmsExternalKeyDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error scheduling KMS External Key (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error scheduling deletion for KMS Key (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForKmsKeyScheduleDeletion(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for KMS External Key (%s) deletion scheduling: %s", d.Id(), err)
+	_, err = waiter.KeyStatePendingDeletion(conn, d.Id())
+
+	if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error waiting for KMS Key (%s) to schedule deletion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -439,40 +461,4 @@ func importKmsExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, valid
 	}
 
 	return nil
-}
-
-func waitForKmsKeyScheduleDeletion(conn *kms.KMS, keyID string) error {
-	// Wait for propagation since KMS is eventually consistent
-	input := &kms.DescribeKeyInput{
-		KeyId: aws.String(keyID),
-	}
-
-	wait := resource.StateChangeConf{
-		Pending:                   []string{kms.KeyStateDisabled, kms.KeyStateEnabled},
-		Target:                    []string{kms.KeyStatePendingDeletion},
-		Timeout:                   20 * time.Minute,
-		MinTimeout:                2 * time.Second,
-		ContinuousTargetOccurence: 10,
-		Refresh: func() (interface{}, string, error) {
-			output, err := conn.DescribeKey(input)
-
-			if isAWSErr(err, kms.ErrCodeNotFoundException, "") {
-				return 42, kms.KeyStatePendingDeletion, nil
-			}
-
-			if err != nil {
-				return nil, kms.KeyStateUnavailable, err
-			}
-
-			if output == nil || output.KeyMetadata == nil {
-				return 42, kms.KeyStatePendingDeletion, nil
-			}
-
-			return output, aws.StringValue(output.KeyMetadata.KeyState), nil
-		},
-	}
-
-	_, err := wait.WaitForState()
-
-	return err
 }
