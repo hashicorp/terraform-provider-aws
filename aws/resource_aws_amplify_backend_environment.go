@@ -3,14 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tfamplify "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
@@ -23,43 +24,38 @@ func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"app_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"deployment_artifacts": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "should not contain special characters"),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
+
 			"environment_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 10),
-					validation.StringMatch(regexp.MustCompile(`^[a-z]+$`), "should only contain lowercase alphabets"),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
+
 			"stack_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "should not contain special characters"),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 		},
 	}
@@ -67,78 +63,87 @@ func resourceAwsAmplifyBackendEnvironment() *schema.Resource {
 
 func resourceAwsAmplifyBackendEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Print("[DEBUG] Creating Amplify BackendEnvironment")
 
-	params := &amplify.CreateBackendEnvironmentInput{
-		AppId:           aws.String(d.Get("app_id").(string)),
-		EnvironmentName: aws.String(d.Get("environment_name").(string)),
+	appID := d.Get("app_id").(string)
+	environmentName := d.Get("environment_name").(string)
+	id := tfamplify.BackendEnvironmentCreateResourceID(appID, environmentName)
+
+	input := &amplify.CreateBackendEnvironmentInput{
+		AppId:           aws.String(appID),
+		EnvironmentName: aws.String(environmentName),
 	}
 
 	if v, ok := d.GetOk("deployment_artifacts"); ok {
-		params.DeploymentArtifacts = aws.String(v.(string))
+		input.DeploymentArtifacts = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("stack_name"); ok {
-		params.StackName = aws.String(v.(string))
+		input.StackName = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateBackendEnvironment(params)
+	log.Printf("[DEBUG] Creating Amplify Backend Environment: %s", input)
+	_, err := conn.CreateBackendEnvironment(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating Amplify BackendEnvironment: %s", err)
+		return fmt.Errorf("error creating Amplify Backend Environment (%s): %w", id, err)
 	}
 
-	arn := *resp.BackendEnvironment.BackendEnvironmentArn
-	d.SetId(arn[strings.Index(arn, ":apps/")+len(":apps/"):])
+	d.SetId(id)
 
 	return resourceAwsAmplifyBackendEnvironmentRead(d, meta)
 }
 
 func resourceAwsAmplifyBackendEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Printf("[DEBUG] Reading Amplify BackendEnvironment: %s", d.Id())
 
-	s := strings.Split(d.Id(), "/")
-	app_id := s[0]
-	environment_name := s[2]
+	appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(d.Id())
 
-	resp, err := conn.GetBackendEnvironment(&amplify.GetBackendEnvironmentInput{
-		AppId:           aws.String(app_id),
-		EnvironmentName: aws.String(environment_name),
-	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == amplify.ErrCodeNotFoundException {
-			log.Printf("[WARN] Amplify BackendEnvironment (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error parsing Amplify Backend Environment ID: %w", err)
 	}
 
-	d.Set("app_id", app_id)
-	d.Set("arn", resp.BackendEnvironment.BackendEnvironmentArn)
-	d.Set("deployment_artifacts", resp.BackendEnvironment.DeploymentArtifacts)
-	d.Set("environment_name", resp.BackendEnvironment.EnvironmentName)
-	d.Set("stack_name", resp.BackendEnvironment.StackName)
+	backendEnvironment, err := finder.BackendEnvironmentByAppIDAndEnvironmentName(conn, appID, environmentName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Amplify Backend Environment (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading Amplify Backend Environment (%s): %w", d.Id(), err)
+	}
+
+	d.Set("app_id", appID)
+	d.Set("arn", backendEnvironment.BackendEnvironmentArn)
+	d.Set("deployment_artifacts", backendEnvironment.DeploymentArtifacts)
+	d.Set("environment_name", backendEnvironment.EnvironmentName)
+	d.Set("stack_name", backendEnvironment.StackName)
 
 	return nil
 }
 
 func resourceAwsAmplifyBackendEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Printf("[DEBUG] Deleting Amplify BackendEnvironment: %s", d.Id())
 
-	s := strings.Split(d.Id(), "/")
-	app_id := s[0]
-	environment_name := s[2]
+	appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(d.Id())
 
-	params := &amplify.DeleteBackendEnvironmentInput{
-		AppId:           aws.String(app_id),
-		EnvironmentName: aws.String(environment_name),
+	if err != nil {
+		return fmt.Errorf("error parsing Amplify Backend Environment ID: %w", err)
 	}
 
-	_, err := conn.DeleteBackendEnvironment(params)
+	log.Printf("[DEBUG] Deleting Amplify Backend Environment: %s", d.Id())
+	_, err = conn.DeleteBackendEnvironment(&amplify.DeleteBackendEnvironmentInput{
+		AppId:           aws.String(appID),
+		EnvironmentName: aws.String(environmentName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Amplify BackendEnvironment: %s", err)
+		return fmt.Errorf("error deleting Amplify Backend Environment (%s): %w", d.Id(), err)
 	}
 
 	return nil
