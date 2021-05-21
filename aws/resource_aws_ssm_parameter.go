@@ -126,7 +126,7 @@ func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) err
 		Type:           aws.String(d.Get("type").(string)),
 		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
-		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+		Overwrite:      aws.Bool(!d.IsNewResource()),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 	}
 
@@ -284,7 +284,7 @@ func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) err
 			Type:           aws.String(d.Get("type").(string)),
 			Tier:           aws.String(d.Get("tier").(string)),
 			Value:          aws.String(d.Get("value").(string)),
-			Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
+			Overwrite:      aws.Bool(!d.IsNewResource()),
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 		}
 
