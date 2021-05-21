@@ -14,7 +14,7 @@ Provides an Amplify App resource, a fullstack serverless app hosted on the [AWS 
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_amplify_app" "example" {
   name       = "example"
   repository = "https://github.com/example/app"
@@ -56,7 +56,7 @@ resource "aws_amplify_app" "example" {
 
 If you create a new Amplify App with the `repository` argument, you also need to set `oauth_token` or `access_token` for authentication. For GitHub, get a [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line) and set `access_token` as follows:
 
-```hcl
+```terraform
 resource "aws_amplify_app" "example" {
   name       = "example"
   repository = "https://github.com/example/app"
@@ -70,7 +70,7 @@ You can omit `access_token` if you import an existing Amplify App created by the
 
 ### Auto Branch Creation
 
-```hcl
+```terraform
 resource "aws_amplify_app" "example" {
   name = "example"
 
@@ -89,9 +89,9 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
-### Basic Authentication
+### Basic Authorization
 
-```hcl
+```terraform
 resource "aws_amplify_app" "example" {
   name = "example"
 
@@ -100,9 +100,9 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
-### Rewrites and redirects
+### Rewrites and Redirects
 
-```hcl
+```terraform
 resource "aws_amplify_app" "example" {
   name = "example"
 
