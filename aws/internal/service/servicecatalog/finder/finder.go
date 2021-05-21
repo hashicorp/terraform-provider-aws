@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -124,6 +125,47 @@ func TagOptionResourceAssociation(conn *servicecatalog.ServiceCatalog, tagOption
 
 		return !lastPage
 	})
+
+	return result, err
+}
+
+func PrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
+	input := &servicecatalog.ListPrincipalsForPortfolioInput{
+		PortfolioId: aws.String(portfolioID),
+	}
+
+	if acceptLanguage != "" {
+		input.AcceptLanguage = aws.String(acceptLanguage)
+	}
+
+	arns := make([]string, 3)
+
+	var result *servicecatalog.Principal
+
+	err := conn.ListPrincipalsForPortfolioPages(input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, deet := range page.Principals {
+			if deet == nil {
+				continue
+			}
+
+			arns = append(arns, aws.StringValue(deet.PrincipalARN))
+
+			if aws.StringValue(deet.PrincipalARN) == principalARN {
+				result = deet
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if true {
+		return nil, fmt.Errorf("wut?? %v\narn: %s\narns: %v", input, principalARN, arns)
+	}
 
 	return result, err
 }
