@@ -207,6 +207,12 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 		dcb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
 	}
 
+	if v, ok := m["trusted_key_groups"]; ok {
+		dcb.TrustedKeyGroups = expandTrustedKeyGroups(v.([]interface{}))
+	} else {
+		dcb.TrustedKeyGroups = expandTrustedKeyGroups([]interface{}{})
+	}
+
 	if v, ok := m["trusted_signers"]; ok {
 		dcb.TrustedSigners = expandTrustedSigners(v.([]interface{}))
 	} else {
@@ -215,6 +221,10 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 
 	if v, ok := m["lambda_function_association"]; ok {
 		dcb.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
+	}
+
+	if v, ok := m["function_association"]; ok {
+		dcb.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := m["smooth_streaming"]; ok {
@@ -255,6 +265,12 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		cb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
 	}
 
+	if v, ok := m["trusted_key_groups"]; ok {
+		cb.TrustedKeyGroups = expandTrustedKeyGroups(v.([]interface{}))
+	} else {
+		cb.TrustedKeyGroups = expandTrustedKeyGroups([]interface{}{})
+	}
+
 	if v, ok := m["trusted_signers"]; ok {
 		cb.TrustedSigners = expandTrustedSigners(v.([]interface{}))
 	} else {
@@ -263,6 +279,10 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 
 	if v, ok := m["lambda_function_association"]; ok {
 		cb.LambdaFunctionAssociations = expandLambdaFunctionAssociations(v.(*schema.Set).List())
+	}
+
+	if v, ok := m["function_association"]; ok {
+		cb.FunctionAssociations = expandFunctionAssociations(v.(*schema.Set).List())
 	}
 
 	if v, ok := m["smooth_streaming"]; ok {
@@ -299,11 +319,17 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 	if dcb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(dcb.ForwardedValues)}
 	}
+	if len(dcb.TrustedKeyGroups.Items) > 0 {
+		m["trusted_key_groups"] = flattenTrustedKeyGroups(dcb.TrustedKeyGroups)
+	}
 	if len(dcb.TrustedSigners.Items) > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(dcb.TrustedSigners)
 	}
 	if len(dcb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(dcb.LambdaFunctionAssociations)
+	}
+	if len(dcb.FunctionAssociations.Items) > 0 {
+		m["function_association"] = flattenFunctionAssociations(dcb.FunctionAssociations)
 	}
 	if dcb.MaxTTL != nil {
 		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)
@@ -339,11 +365,17 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
 	}
+	if len(cb.TrustedKeyGroups.Items) > 0 {
+		m["trusted_key_groups"] = flattenTrustedKeyGroups(cb.TrustedKeyGroups)
+	}
 	if len(cb.TrustedSigners.Items) > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(cb.TrustedSigners)
 	}
 	if len(cb.LambdaFunctionAssociations.Items) > 0 {
 		m["lambda_function_association"] = flattenLambdaFunctionAssociations(cb.LambdaFunctionAssociations)
+	}
+	if len(cb.FunctionAssociations.Items) > 0 {
+		m["function_association"] = flattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
 		m["max_ttl"] = int(*cb.MaxTTL)
@@ -364,6 +396,26 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["path_pattern"] = *cb.PathPattern
 	}
 	return m
+}
+
+func expandTrustedKeyGroups(s []interface{}) *cloudfront.TrustedKeyGroups {
+	var tkg cloudfront.TrustedKeyGroups
+	if len(s) > 0 {
+		tkg.Quantity = aws.Int64(int64(len(s)))
+		tkg.Items = expandStringList(s)
+		tkg.Enabled = aws.Bool(true)
+	} else {
+		tkg.Quantity = aws.Int64(0)
+		tkg.Enabled = aws.Bool(false)
+	}
+	return &tkg
+}
+
+func flattenTrustedKeyGroups(tkg *cloudfront.TrustedKeyGroups) []interface{} {
+	if tkg.Items != nil {
+		return flattenStringList(tkg.Items)
+	}
+	return []interface{}{}
 }
 
 func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
@@ -392,6 +444,14 @@ func lambdaFunctionAssociationHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
 	buf.WriteString(m["lambda_arn"].(string))
 	buf.WriteString(fmt.Sprintf("%t", m["include_body"].(bool)))
+	return hashcode.String(buf.String())
+}
+
+func functionAssociationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["event_type"].(string)))
+	buf.WriteString(m["function_arn"].(string))
 	return hashcode.String(buf.String())
 }
 
@@ -426,6 +486,34 @@ func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.Lamb
 	return &lfa
 }
 
+func expandFunctionAssociations(v interface{}) *cloudfront.FunctionAssociations {
+	if v == nil {
+		return &cloudfront.FunctionAssociations{
+			Quantity: aws.Int64(0),
+		}
+	}
+
+	s := v.([]interface{})
+	var fa cloudfront.FunctionAssociations
+	fa.Quantity = aws.Int64(int64(len(s)))
+	fa.Items = make([]*cloudfront.FunctionAssociation, len(s))
+	for i, f := range s {
+		fa.Items[i] = expandFunctionAssociation(f.(map[string]interface{}))
+	}
+	return &fa
+}
+
+func expandFunctionAssociation(f map[string]interface{}) *cloudfront.FunctionAssociation {
+	var fa cloudfront.FunctionAssociation
+	if v, ok := f["event_type"]; ok {
+		fa.EventType = aws.String(v.(string))
+	}
+	if v, ok := f["function_arn"]; ok {
+		fa.FunctionARN = aws.String(v.(string))
+	}
+	return &fa
+}
+
 func flattenLambdaFunctionAssociations(lfa *cloudfront.LambdaFunctionAssociations) *schema.Set {
 	s := schema.NewSet(lambdaFunctionAssociationHash, []interface{}{})
 	for _, v := range lfa.Items {
@@ -440,6 +528,23 @@ func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation)
 		m["event_type"] = aws.StringValue(lfa.EventType)
 		m["lambda_arn"] = aws.StringValue(lfa.LambdaFunctionARN)
 		m["include_body"] = aws.BoolValue(lfa.IncludeBody)
+	}
+	return m
+}
+
+func flattenFunctionAssociations(fa *cloudfront.FunctionAssociations) *schema.Set {
+	s := schema.NewSet(functionAssociationHash, []interface{}{})
+	for _, v := range fa.Items {
+		s.Add(flattenFunctionAssociation(v))
+	}
+	return s
+}
+
+func flattenFunctionAssociation(fa *cloudfront.FunctionAssociation) map[string]interface{} {
+	m := map[string]interface{}{}
+	if fa != nil {
+		m["event_type"] = aws.StringValue(fa.EventType)
+		m["function_arn"] = aws.StringValue(fa.FunctionARN)
 	}
 	return m
 }
@@ -1131,6 +1236,34 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 		m["minimum_protocol_version"] = *vc.MinimumProtocolVersion
 	}
 	return []interface{}{m}
+}
+
+func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+	if atkg == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(atkg.Enabled),
+		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+	result := make([]interface{}, 0, len(keyPairIds))
+
+	for _, keyPairId := range keyPairIds {
+		m := map[string]interface{}{
+			"key_group_id": aws.StringValue(keyPairId.KeyGroupId),
+			"key_pair_ids": aws.StringValueSlice(keyPairId.KeyPairIds.Items),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
 }
 
 func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {

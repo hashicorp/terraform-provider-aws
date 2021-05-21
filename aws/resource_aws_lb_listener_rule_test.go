@@ -65,6 +65,7 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -94,6 +95,49 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 						"source_ip.#":             "0",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/static/*"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListenerRule_tags(t *testing.T) {
+	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_lb_listener_rule.static"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerRuleTagsConfig1(lbName, targetGroupName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleTagsConfig2(lbName, targetGroupName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleTagsConfig1(lbName, targetGroupName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -112,6 +156,7 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -190,6 +235,7 @@ func TestAccAWSLBListenerRule_BackwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -234,6 +280,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -274,6 +321,7 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -311,6 +359,7 @@ func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -341,6 +390,7 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -371,6 +421,7 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -398,6 +449,7 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -479,6 +531,7 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -519,6 +572,7 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -559,6 +613,7 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -585,6 +640,7 @@ func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -608,6 +664,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -644,6 +701,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -682,6 +740,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -726,6 +785,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -746,6 +806,7 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -784,6 +845,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -822,6 +884,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -884,6 +947,7 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -922,6 +986,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -995,6 +1060,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -1077,6 +1143,7 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
@@ -1326,7 +1393,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1476,7 +1543,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1631,7 +1698,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1770,7 +1837,7 @@ resource "aws_lb_target_group" "test2" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -1891,7 +1958,7 @@ resource "aws_alb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2004,7 +2071,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2117,7 +2184,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2238,7 +2305,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2370,7 +2437,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2475,7 +2542,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2534,7 +2601,7 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "first" {
   listener_arn = aws_lb_listener.front_end.arn
 
@@ -2567,11 +2634,11 @@ resource "aws_lb_listener_rule" "third" {
 
   depends_on = [aws_lb_listener_rule.first]
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityLast(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "last" {
   listener_arn = aws_lb_listener.front_end.arn
 
@@ -2586,11 +2653,11 @@ resource "aws_lb_listener_rule" "last" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "last" {
   listener_arn = aws_lb_listener.front_end.arn
   priority     = 7
@@ -2606,11 +2673,11 @@ resource "aws_lb_listener_rule" "last" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityParallelism(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityStatic(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "parallelism" {
   count = 10
 
@@ -2627,11 +2694,11 @@ resource "aws_lb_listener_rule" "parallelism" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50000" {
   listener_arn = aws_lb_listener.front_end.arn
   priority     = 50000
@@ -2647,12 +2714,12 @@ resource "aws_lb_listener_rule" "priority50000" {
     }
   }
 }
-`
+`)
 }
 
 // priority out of range (1, 50000)
 func testAccAWSLBListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50001" {
   listener_arn = aws_lb_listener.front_end.arn
 
@@ -2667,11 +2734,11 @@ resource "aws_lb_listener_rule" "priority50001" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
-	return testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName) + `
+	return composeConfig(testAccAWSLBListenerRuleConfig_priority50000(lbName, targetGroupName), `
 resource "aws_lb_listener_rule" "priority50000_in_use" {
   listener_arn = aws_lb_listener.front_end.arn
   priority     = 50000
@@ -2687,7 +2754,7 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
     }
   }
 }
-`
+`)
 }
 
 func testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate string) string {
@@ -2775,7 +2842,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -2942,7 +3009,7 @@ resource "aws_lb_target_group" "test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -3287,7 +3354,7 @@ resource "aws_lb" "alb_test" {
 
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
+  type    = list(string)
 }
 
 data "aws_availability_zones" "available" {
@@ -3588,4 +3655,255 @@ condition {
   }
 }
 `, "Multiple", lbName)
+}
+
+func testAccAWSLBListenerRuleTagsConfig1(lbName, targetGroupName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[2]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.alb_test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName, tagKey1, tagValue1)
+}
+
+func testAccAWSLBListenerRuleTagsConfig2(lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[2]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.alb_test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

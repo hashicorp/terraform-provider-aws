@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
@@ -34,7 +35,9 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 
 	var sweeperErrs *multierror.Error
 
-	input := &elasticache.DescribeGlobalReplicationGroupsInput{}
+	input := &elasticache.DescribeGlobalReplicationGroupsInput{
+		ShowMemberInfo: aws.Bool(true),
+	}
 	err = conn.DescribeGlobalReplicationGroupsPages(input, func(page *elasticache.DescribeGlobalReplicationGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -42,6 +45,21 @@ func testSweepElasticacheGlobalReplicationGroups(region string) error {
 
 		for _, globalReplicationGroup := range page.GlobalReplicationGroups {
 			id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+
+			for _, member := range globalReplicationGroup.Members {
+				if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
+					continue
+				}
+
+				if err := disassociateElasticacheReplicationGroup(conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion)); err != nil {
+					sweeperErr := fmt.Errorf(
+						"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
+						aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
+					)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				}
+			}
 
 			log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
 			err := deleteElasticacheGlobalReplicationGroup(conn, id)
@@ -80,6 +98,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -94,6 +113,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_enabled", primaryReplicationGroupResourceName, "cluster_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryReplicationGroupResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "actual_engine_version", primaryReplicationGroupResourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(elasticacheGlobalReplicationGroupRegionPrefixFormat+rName)),
@@ -121,6 +141,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_Description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -155,6 +176,7 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticacheGlobalReplicationGroup(t) },
+		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheGlobalReplicationGroupDestroy,
 		Steps: []resource.TestStep{
@@ -165,6 +187,62 @@ func TestAccAWSElasticacheGlobalReplicationGroup_disappears(t *testing.T) {
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsElasticacheGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheGlobalReplicationGroup_MultipleSecondaries(t *testing.T) {
+	var providers []*schema.Provider
+	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticacheGlobalReplicationGroup_ReplaceSecondary_DifferentRegion(t *testing.T) {
+	var providers []*schema.Provider
+	var globalReplcationGroup elasticache.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ErrorCheck:        testAccErrorCheck(t, elasticache.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		CheckDestroy:      testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
+			},
+			{
+				Config: testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName, &globalReplcationGroup),
+				),
 			},
 		},
 	})
@@ -187,7 +265,7 @@ func testAccCheckAWSElasticacheGlobalReplicationGroupExists(resourceName string,
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
 
-		if aws.StringValue(grg.Status) != waiter.GlobalReplicationGroupStatusAvailable && aws.StringValue(grg.Status) != waiter.GlobalReplicationGroupStatusPrimaryOnly {
+		if aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleting || aws.StringValue(grg.Status) == waiter.GlobalReplicationGroupStatusDeleted {
 			return fmt.Errorf("ElastiCache Global Replication Group (%s) exists, but is in a non-available state: %s", rs.Primary.ID, aws.StringValue(grg.Status))
 		}
 
@@ -272,4 +350,196 @@ resource "aws_elasticache_replication_group" "test" {
   number_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId, description)
+}
+
+func testAccAWSElasticacheGlobalReplicationGroupConfig_MultipleSecondaries(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "alternate", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "alternate" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-a"
+  replication_group_description = "alternate"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.alternate.name
+
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "third" {
+  provider = awsthird
+
+  replication_group_id          = "%[1]s-t"
+  replication_group_description = "third"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.third.name
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Setup(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "secondary" {
+  provider = awsalternate
+
+  replication_group_id          = "%[1]s-a"
+  replication_group_description = "alternate"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.secondary.name
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccAWSElasticacheReplicationGroupConfig_ReplaceSecondary_DifferentRegion_Move(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		testAccElasticacheVpcBaseWithProvider(rName, "primary", ProviderNameAws),
+		testAccElasticacheVpcBaseWithProvider(rName, "secondary", ProviderNameAwsAlternate),
+		testAccElasticacheVpcBaseWithProvider(rName, "third", ProviderNameAwsThird),
+		fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  provider = aws
+
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.primary.id
+}
+
+resource "aws_elasticache_replication_group" "primary" {
+  provider = aws
+
+  replication_group_id          = "%[1]s-p"
+  replication_group_description = "primary"
+
+  subnet_group_name = aws_elasticache_subnet_group.primary.name
+
+  node_type = "cache.m5.large"
+
+  engine                = "redis"
+  engine_version        = "5.0.6"
+  number_cache_clusters = 1
+}
+
+resource "aws_elasticache_replication_group" "third" {
+  provider = awsthird
+
+  replication_group_id          = "%[1]s-t"
+  replication_group_description = "third"
+  global_replication_group_id   = aws_elasticache_global_replication_group.test.global_replication_group_id
+
+  subnet_group_name = aws_elasticache_subnet_group.third.name
+
+  number_cache_clusters = 1
+}
+`, rName))
+}
+
+func testAccElasticacheVpcBaseWithProvider(rName, name, provider string) string {
+	return composeConfig(
+		testAccAvailableAZsNoOptInConfigWithProvider(name, provider),
+		fmt.Sprintf(`
+resource "aws_vpc" "%[1]s" {
+  provider = %[2]s
+
+  cidr_block = "192.168.0.0/16"
+}
+
+resource "aws_subnet" "%[1]s" {
+  provider = %[2]s
+	
+  vpc_id            = aws_vpc.%[1]s.id
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = data.aws_availability_zones.%[1]s.names[0]
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "%[1]s" {
+  provider = %[2]s
+	
+  name        = %[3]q
+  description = "tf-test-cache-subnet-group-descr"
+
+  subnet_ids = [
+    aws_subnet.%[1]s.id,
+  ]
+}
+`, name, provider, rName),
+	)
+}
+
+func testAccAvailableAZsNoOptInConfigWithProvider(name, provider string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "%[1]s" {
+  provider = %[2]s
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, name, provider)
 }

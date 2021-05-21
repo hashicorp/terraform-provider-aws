@@ -4,10 +4,13 @@ ACM
 API Gateway (REST APIs)
 API Gateway v2 (WebSocket and HTTP APIs)
 Access Analyzer
+AppConfig
 AppMesh
+App Runner
 AppSync
 Application Autoscaling
 Athena
+Audit Manager
 Autoscaling
 Autoscaling Plans
 Amazon Managed Service for Prometheus (AMP)
@@ -35,6 +38,7 @@ Data Lifecycle Manager (DLM)
 DataPipeline
 DataSync
 Database Migration Service (DMS)
+Detective
 Device Farm
 Direct Connect
 Directory Service

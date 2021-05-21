@@ -26,6 +26,7 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -60,6 +61,7 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -94,6 +96,7 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -126,6 +129,7 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -189,6 +193,7 @@ func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken
 			testAccPreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
+		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{

@@ -117,6 +117,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_api_gateway_v2_",
       "aws_apigatewayv2_",
     ],
+    "service/appconfig" = [
+      "aws_appconfig_",
+    ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
     ],
@@ -129,6 +132,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/appmesh" = [
       "aws_appmesh_",
     ],
+    "service/apprunner" = [
+      "aws_apprunner_",
+    ],
     "service/appstream" = [
       "aws_appstream_",
     ],
@@ -137,6 +143,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/athena" = [
       "aws_athena_",
+    ],
+    "service/auditmanager" = [
+      "aws_auditmanager_",
     ],
     "service/autoscaling" = [
       "aws_autoscaling_",
@@ -183,6 +192,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/cloudwatchlogs" = [
       "aws_cloudwatch_log_",
+      "aws_cloudwatch_query_definition",
     ],
     "service/codeartifact" = [
       "aws_codeartifact_",
@@ -231,6 +241,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/dax" = [
       "aws_dax_",
+    ],
+    "service/detective" = [
+      "aws_detective_"
     ],
     "service/devicefarm" = [
       "aws_devicefarm_",
@@ -515,6 +528,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/s3" = [
       "aws_canonical_user_id",
       "aws_s3_bucket",
+      "aws_s3_object",
     ],
     "service/s3control" = [
       "aws_s3_account_",
@@ -710,6 +724,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/api_gateway_v2_*",
       "**/apigatewayv2_*"
     ]
+    "service/appconfig" = [
+      "aws/internal/service/appconfig/**/*",
+      "**/*_appconfig_*",
+      "**/appconfig_*"
+    ]
     "service/applicationautoscaling" = [
       "aws/internal/service/applicationautoscaling/**/*",
       "**/*_appautoscaling_*",
@@ -725,6 +744,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_appmesh_*",
       "**/appmesh_*"
     ]
+    "service/apprunner" = [
+      "aws/internal/service/apprunner/**/*",
+      "**/*_apprunner_*",
+      "**/apprunner_*"
+    ]
     "service/appstream" = [
       "aws/internal/service/appstream/**/*",
       "**/*_appstream_*",
@@ -739,6 +763,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/athena/**/*",
       "**/*_athena_*",
       "**/athena_*"
+    ]
+    "service/auditmanager" = [
+      "aws/internal/service/auditmanager/**/*",
+      "**/*_auditmanager_*",
+      "**/auditmanager_*"
     ]
     "service/autoscaling" = [
       "aws/internal/service/autoscaling/**/*",
@@ -817,7 +846,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudwatchlogs" = [
       "aws/internal/service/cloudwatchlogs/**/*",
       "**/*_cloudwatch_log_*",
-      "**/cloudwatch_log_*"
+      "**/cloudwatch_log_*",
+      "**/*_cloudwatch_query_definition*",
+      "**/cloudwatch_query_definition*"
     ]
     "service/codeartifact" = [
       "aws/internal/service/codeartifact/**/*",
@@ -909,6 +940,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/dax/**/*",
       "**/*_dax_*",
       "**/dax_*"
+    ]
+    "service/detective" = [
+      "aws/internal/service/detective/**/*",
+      "**/*_detective_*",
+      "**/detective_*"
     ]
     "service/devicefarm" = [
       "aws/internal/service/devicefarm/**/*",
@@ -1411,6 +1447,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/service/s3/**/*",
       "**/*_s3_bucket*",
       "**/s3_bucket*",
+      "**/*_s3_object*",
+      "**/s3_object*",
       "aws/*_aws_canonical_user_id*",
       "website/**/canonical_user_id*"
     ]
@@ -1579,11 +1617,6 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/xray_*"
     ]
   }
-}
-
-behavior "regexp_issue_labeler" "panic_label" {
-    regexp = "panic:"
-    labels = ["crash", "bug"]
 }
 
 behavior "remove_labels_on_reply" "remove_stale" {
