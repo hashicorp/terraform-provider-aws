@@ -225,6 +225,10 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"secret_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -282,6 +286,7 @@ func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Found CloudWatchEvent connection: %#v", *output)
 
 	d.Set("arn", output.ConnectionArn)
+	d.Set("secret_arn", output.SecretArn)
 	d.Set("name", output.Name)
 	d.Set("description", output.Description)
 	d.Set("authorization_type", output.AuthorizationType)
