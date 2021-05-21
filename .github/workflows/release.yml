@@ -26,19 +26,3 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-            NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
-                $1 = substr($1,2)
-                $2 += 1
-                printf("%s.%02d.%s\n\n", $1, $2, $3);
-            }')
-
-            echo New minor version is: v$NEW_RELEASE_LINE
-
-            echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
-        - run: |
-              git config --local user.email changelogbot@hashicorp.com
-              git config --local user.name changelogbot
-              git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ github.event.release.tag_name }}" 
-              git push
