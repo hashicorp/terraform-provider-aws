@@ -168,7 +168,7 @@ A `custom_rule` block supports the following arguments:
 * `status` - (Optional) The status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) The target pattern for a URL rewrite or redirect rule.
 
-## Attribute Reference
+## Attributes Reference
 
 The following attributes are exported:
 
