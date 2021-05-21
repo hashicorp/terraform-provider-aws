@@ -34,3 +34,32 @@ func AppByID(conn *amplify.Amplify, id string) (*amplify.App, error) {
 
 	return output.App, nil
 }
+
+func BackendEnvironmentByAppIDAndEnvironmentName(conn *amplify.Amplify, appID, environmentName string) (*amplify.BackendEnvironment, error) {
+	input := &amplify.GetBackendEnvironmentInput{
+		AppId:           aws.String(appID),
+		EnvironmentName: aws.String(environmentName),
+	}
+
+	output, err := conn.GetBackendEnvironment(input)
+
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BackendEnvironment == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.BackendEnvironment, nil
+}

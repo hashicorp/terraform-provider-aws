@@ -22,6 +22,11 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"Name":                     testAccAWSAmplifyApp_Name,
 			"Repository":               testAccAWSAmplifyApp_Repository,
 		},
+		"BackendEnvironment": {
+			"basic":                         testAccAWSAmplifyBackendEnvironment_basic,
+			"disappears":                    testAccAWSAmplifyBackendEnvironment_disappears,
+			"DeploymentArtifacts_StackName": testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName,
+		},
 	}
 
 	for group, m := range testCases {
