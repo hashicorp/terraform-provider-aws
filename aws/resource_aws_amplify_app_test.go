@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -68,7 +69,41 @@ func testSweepAmplifyApps(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func TestAccAWSAmplifyApp_basic(t *testing.T) {
+// Serialize to limit API rate-limit exceeded errors.
+func TestAccAWSAmplify_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"App": {
+			"basic":                    testAccAWSAmplifyApp_basic,
+			"disappears":               testAccAWSAmplifyApp_disappears,
+			"Tags":                     testAccAWSAmplifyApp_Tags,
+			"AutoBranchCreationConfig": testAccAWSAmplifyApp_AutoBranchCreationConfig,
+			"BasicAuthCredentials":     testAccAWSAmplifyApp_BasicAuthCredentials,
+			"BuildSpec":                testAccAWSAmplifyApp_BuildSpec,
+			"CustomRules":              testAccAWSAmplifyApp_CustomRules,
+			"Description":              testAccAWSAmplifyApp_Description,
+			"EnvironmentVariables":     testAccAWSAmplifyApp_EnvironmentVariables,
+			"IamServiceRole":           testAccAWSAmplifyApp_IamServiceRole,
+			"Name":                     testAccAWSAmplifyApp_Name,
+			"Repository":               testAccAWSAmplifyApp_Repository,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+					// Explicitly sleep between tests.
+					time.Sleep(5 * time.Second)
+				})
+			}
+		})
+	}
+}
+
+func testAccAWSAmplifyApp_basic(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -115,7 +150,7 @@ func TestAccAWSAmplifyApp_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_disappears(t *testing.T) {
+func testAccAWSAmplifyApp_disappears(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -138,7 +173,7 @@ func TestAccAWSAmplifyApp_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_Tags(t *testing.T) {
+func testAccAWSAmplifyApp_Tags(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -183,7 +218,7 @@ func TestAccAWSAmplifyApp_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_AutoBranchCreationConfig(t *testing.T) {
+func testAccAWSAmplifyApp_AutoBranchCreationConfig(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -278,7 +313,7 @@ func TestAccAWSAmplifyApp_AutoBranchCreationConfig(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
+func testAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -326,7 +361,7 @@ func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
+func testAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -368,7 +403,7 @@ func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_CustomRules(t *testing.T) {
+func testAccAWSAmplifyApp_CustomRules(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -418,7 +453,7 @@ func TestAccAWSAmplifyApp_CustomRules(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_Description(t *testing.T) {
+func testAccAWSAmplifyApp_Description(t *testing.T) {
 	var app1, app2, app3 amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -461,7 +496,7 @@ func TestAccAWSAmplifyApp_Description(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
+func testAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
 	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -505,7 +540,7 @@ func TestAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_IamServiceRole(t *testing.T) {
+func testAccAWSAmplifyApp_IamServiceRole(t *testing.T) {
 	var app1, app2, app3 amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
@@ -549,7 +584,7 @@ func TestAccAWSAmplifyApp_IamServiceRole(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_Name(t *testing.T) {
+func testAccAWSAmplifyApp_Name(t *testing.T) {
 	var app amplify.App
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
@@ -584,7 +619,7 @@ func TestAccAWSAmplifyApp_Name(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmplifyApp_Repository(t *testing.T) {
+func testAccAWSAmplifyApp_Repository(t *testing.T) {
 	key := "AMPLIFY_GITHUB_ACCESS_TOKEN"
 	accessToken := os.Getenv(key)
 	if accessToken == "" {
