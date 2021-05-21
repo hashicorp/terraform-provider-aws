@@ -1,4 +1,3 @@
-terraform-provider-aws
 *.dll
 *.exe
 .DS_Store
