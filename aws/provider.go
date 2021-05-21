@@ -226,6 +226,7 @@ func Provider() *schema.Provider {
 			"aws_codecommit_repository":                      dataSourceAwsCodeCommitRepository(),
 			"aws_codestarconnections_connection":             dataSourceAwsCodeStarConnectionsConnection(),
 			"aws_cur_report_definition":                      dataSourceAwsCurReportDefinition(),
+			"aws_default_tags":                               dataSourceAwsDefaultTags(),
 			"aws_db_cluster_snapshot":                        dataSourceAwsDbClusterSnapshot(),
 			"aws_db_event_categories":                        dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                                dataSourceAwsDbInstance(),
