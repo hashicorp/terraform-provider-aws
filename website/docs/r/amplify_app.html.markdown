@@ -170,7 +170,7 @@ A `custom_rule` block supports the following arguments:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the Amplify app.
 * `default_domain` - The default domain for the Amplify app.
