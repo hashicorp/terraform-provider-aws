@@ -24,12 +24,12 @@ func dataSourceAwsDefaultTagsRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags := defaultTagsConfig.GetTags()
 
-	if len(tags) > 0 {
-		tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
-	}
-
-	if err := d.Set("tags", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if tags != nil {
+		if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
+	} else {
+		d.Set("tags", nil)
 	}
 
 	return nil
