@@ -743,8 +743,8 @@ resource "aws_amplify_app" "test" {
   enable_auto_branch_creation = true
 
   auto_branch_creation_patterns = [
-	"*",
-	"*/**",
+    "*",
+    "*/**",
   ]
 }
 `, rName)
@@ -756,7 +756,7 @@ resource "aws_amplify_app" "test" {
   name = %[1]q
 
   enable_auto_branch_creation = true
-  
+
   auto_branch_creation_patterns = [
     "feature/*",
   ]
@@ -766,8 +766,8 @@ resource "aws_amplify_app" "test" {
     framework  = "React"
     stage      = "DEVELOPMENT"
 
-	enable_basic_auth      = true
-	basic_auth_credentials = %[2]q
+    enable_basic_auth      = true
+    basic_auth_credentials = %[2]q
 
     enable_auto_build             = true
     enable_pull_request_preview   = true
@@ -788,7 +788,7 @@ resource "aws_amplify_app" "test" {
   name = %[1]q
 
   enable_auto_branch_creation = true
-  
+
   auto_branch_creation_patterns = [
     "feature/*",
   ]
@@ -798,7 +798,7 @@ resource "aws_amplify_app" "test" {
     framework  = "React"
     stage      = "EXPERIMENTAL"
 
-	enable_basic_auth = false
+    enable_basic_auth = false
 
     enable_auto_build           = false
     enable_pull_request_preview = false
