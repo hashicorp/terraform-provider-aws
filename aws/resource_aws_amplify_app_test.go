@@ -7,7 +7,6 @@ import (
 	"os"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -67,40 +66,6 @@ func testSweepAmplifyApps(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
-}
-
-// Serialize to limit API rate-limit exceeded errors.
-func TestAccAWSAmplify_serial(t *testing.T) {
-	testCases := map[string]map[string]func(t *testing.T){
-		"App": {
-			"basic":                    testAccAWSAmplifyApp_basic,
-			"disappears":               testAccAWSAmplifyApp_disappears,
-			"Tags":                     testAccAWSAmplifyApp_Tags,
-			"AutoBranchCreationConfig": testAccAWSAmplifyApp_AutoBranchCreationConfig,
-			"BasicAuthCredentials":     testAccAWSAmplifyApp_BasicAuthCredentials,
-			"BuildSpec":                testAccAWSAmplifyApp_BuildSpec,
-			"CustomRules":              testAccAWSAmplifyApp_CustomRules,
-			"Description":              testAccAWSAmplifyApp_Description,
-			"EnvironmentVariables":     testAccAWSAmplifyApp_EnvironmentVariables,
-			"IamServiceRole":           testAccAWSAmplifyApp_IamServiceRole,
-			"Name":                     testAccAWSAmplifyApp_Name,
-			"Repository":               testAccAWSAmplifyApp_Repository,
-		},
-	}
-
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-					// Explicitly sleep between tests.
-					time.Sleep(5 * time.Second)
-				})
-			}
-		})
-	}
 }
 
 func testAccAWSAmplifyApp_basic(t *testing.T) {
