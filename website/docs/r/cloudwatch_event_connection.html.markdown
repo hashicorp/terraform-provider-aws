@@ -137,8 +137,8 @@ resource "aws_cloudwatch_event_connection" "test" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
-* `description` - (Optional)  Enter a description for the connection. Maximum of 512 characters.
-* `authorization_type` - (Required)  Choose the type of authorization to use to access the API destination. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`. A secret for the connection is created and stored in AWS Secrets Manager.
+* `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
+* `authorization_type` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
 * `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
