@@ -215,6 +215,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"custom_error_response": {
 				Type:     schema.TypeSet,
