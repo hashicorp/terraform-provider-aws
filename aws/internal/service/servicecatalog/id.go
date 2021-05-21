@@ -73,3 +73,17 @@ func ProvisioningArtifactParseID(id string) (string, string, error) {
 	}
 	return parts[0], parts[1], nil
 }
+
+func PrincipalPortfolioAssociationParseID(id string) (string, string, string, error) {
+	parts := strings.SplitN(id, ",", 3)
+
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected acceptLanguage,principalARN,portfolioID", id)
+	}
+
+	return parts[0], parts[1], parts[2], nil
+}
+
+func PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID string) string {
+	return strings.Join([]string{acceptLanguage, principalARN, portfolioID}, ",")
+}
