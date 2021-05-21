@@ -327,7 +327,7 @@ func TestAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 }
 
 func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
-	var app1, app2, app3 amplify.App
+	var app amplify.App
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_app.test"
 
@@ -340,7 +340,7 @@ func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, "version: 0.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app1),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.1"),
 				),
 			},
@@ -352,17 +352,16 @@ func TestAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 			{
 				Config: testAccAWSAmplifyAppConfigBuildSpec(rName, "version: 0.2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app2),
-					testAccCheckAWSAmplifyAppNotRecreated(&app1, &app2),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.2"),
 				),
 			},
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyAppExists(resourceName, &app3),
-					testAccCheckAWSAmplifyAppRecreated(&app2, &app3),
-					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
+					testAccCheckAWSAmplifyAppExists(resourceName, &app),
+					// build_spec is Computed.
+					resource.TestCheckResourceAttr(resourceName, "build_spec", "version: 0.2"),
 				),
 			},
 		},
@@ -711,95 +710,29 @@ resource "aws_amplify_app" "test" {
 `, rName)
 }
 
-func testAccAWSAmplifyAppConfigDescription(rName, description string) string {
+func testAccAWSAmplifyAppConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 
-  description = %[2]q
-}
-`, rName, description)
-}
-
-func testAccAWSAmplifyAppConfigRepository(rName, repository, accessToken string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  repository   = %[2]q
-  access_token = %[3]q
-}
-`, rName, repository, accessToken)
-}
-
-func testAccAWSAmplifyAppConfigBuildSpec(rName, buildSpec string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  build_spec = %[2]q
-}
-`, rName, buildSpec)
-}
-
-func testAccAWSAmplifyAppConfigCustomRules(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  custom_rule {
-    source = "/<*>"
-    status = "404"
-    target = "/index.html"
+  tags = {
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccAWSAmplifyAppConfigCustomRulesUpdated(rName string) string {
+func testAccAWSAmplifyAppConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 
-  custom_rule {
-    condition = "<US>"
-    source    = "/documents"
-    status    = "302"
-    target    = "/documents/us"
-  }
-
-  custom_rule {
-    source = "/<*>"
-    status = "200"
-    target = "/index.html"
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
-}
-
-func testAccAWSAmplifyAppConfigEnvironmentVariables(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  environment_variables = {
-    ENVVAR1 = "1"
-  }
-}
-`, rName)
-}
-
-func testAccAWSAmplifyAppConfigEnvironmentVariablesUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  environment_variables = {
-    ENVVAR1 = "2",
-    ENVVAR2 = "2"
-  }
-}
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSAmplifyAppConfigAutoBranchCreationConfigNoAutoBranchCreationConfig(rName string) string {
@@ -887,6 +820,86 @@ resource "aws_amplify_app" "test" {
 `, rName, basicAuthCredentials)
 }
 
+func testAccAWSAmplifyAppConfigBuildSpec(rName, buildSpec string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  build_spec = %[2]q
+}
+`, rName, buildSpec)
+}
+
+func testAccAWSAmplifyAppConfigCustomRules(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  custom_rule {
+    source = "/<*>"
+    status = "404"
+    target = "/index.html"
+  }
+}
+`, rName)
+}
+
+func testAccAWSAmplifyAppConfigCustomRulesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  custom_rule {
+    condition = "<US>"
+    source    = "/documents"
+    status    = "302"
+    target    = "/documents/us"
+  }
+
+  custom_rule {
+    source = "/<*>"
+    status = "200"
+    target = "/index.html"
+  }
+}
+`, rName)
+}
+
+func testAccAWSAmplifyAppConfigDescription(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  description = %[2]q
+}
+`, rName, description)
+}
+
+func testAccAWSAmplifyAppConfigEnvironmentVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  environment_variables = {
+    ENVVAR1 = "1"
+  }
+}
+`, rName)
+}
+
+func testAccAWSAmplifyAppConfigEnvironmentVariablesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+
+  environment_variables = {
+    ENVVAR1 = "2",
+    ENVVAR2 = "2"
+  }
+}
+`, rName)
+}
+
 func testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test1" {
@@ -945,27 +958,13 @@ resource "aws_amplify_app" "test" {
 `, rName))
 }
 
-func testAccAWSAmplifyAppConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAWSAmplifyAppConfigRepository(rName, repository, accessToken string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 
-  tags = {
-    %[2]q = %[3]q
-  }
+  repository   = %[2]q
+  access_token = %[3]q
 }
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAWSAmplifyAppConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, repository, accessToken)
 }
