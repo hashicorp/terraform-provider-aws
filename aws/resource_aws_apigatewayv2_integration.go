@@ -86,7 +86,7 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 			"passthrough_behavior": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  apigatewayv2.PassthroughBehaviorWhenNoMatch,
+				// Default:  apigatewayv2.PassthroughBehaviorWhenNoMatch,
 				ValidateFunc: validation.StringInSlice([]string{
 					apigatewayv2.PassthroughBehaviorWhenNoMatch,
 					apigatewayv2.PassthroughBehaviorNever,
