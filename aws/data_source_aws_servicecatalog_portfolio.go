@@ -32,6 +32,10 @@ func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -40,15 +44,11 @@ func dataSourceAwsServiceCatalogPortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"provider_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
