@@ -39,7 +39,7 @@ func TestAccAWSServiceCatalogConstraintDataSource_basic(t *testing.T) {
 func testAccAWSServiceCatalogConstraintDataSourceConfig_basic(rName, description string) string {
 	return composeConfig(testAccAWSServiceCatalogConstraintConfig_basic(rName, description), `
 data "aws_servicecatalog_constraint" "test" {
-  id  = aws_servicecatalog_constraint.test.id
+  id = aws_servicecatalog_constraint.test.id
 }
 `)
 }
