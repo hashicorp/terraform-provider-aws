@@ -583,16 +583,16 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 }
 
 func expandWafv2AllowAction(l []interface{}) *wafv2.AllowAction {
+	action := &wafv2.AllowAction{}
+
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return action
 	}
 
 	m, ok := l[0].(map[string]interface{})
 	if !ok {
-		return nil
+		return action
 	}
-
-	action := &wafv2.AllowAction{}
 
 	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v)
@@ -602,16 +602,16 @@ func expandWafv2AllowAction(l []interface{}) *wafv2.AllowAction {
 }
 
 func expandWafv2CountAction(l []interface{}) *wafv2.CountAction {
+	action := &wafv2.CountAction{}
+
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return action
 	}
 
 	m, ok := l[0].(map[string]interface{})
 	if !ok {
-		return nil
+		return action
 	}
-
-	action := &wafv2.CountAction{}
 
 	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
 		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v)
@@ -621,16 +621,16 @@ func expandWafv2CountAction(l []interface{}) *wafv2.CountAction {
 }
 
 func expandWafv2BlockAction(l []interface{}) *wafv2.BlockAction {
+	action := &wafv2.BlockAction{}
+
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return action
 	}
 
 	m, ok := l[0].(map[string]interface{})
 	if !ok {
-		return nil
+		return action
 	}
-
-	action := &wafv2.BlockAction{}
 
 	if v, ok := m["custom_response"].([]interface{}); ok && len(v) > 0 {
 		action.CustomResponse = expandWafv2CustomResponse(v)
