@@ -128,12 +128,14 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		associatedGatewayId, ok := d.GetOk("associated_gateway_id")
 
 		if !ok || associatedGatewayId == nil {
+			d.SetId("")
 			return fmt.Errorf("error reading Direct Connect Associated Gateway Id (%s): %s", d.Id(), err)
 		}
 
 		assocRaw, state, err := getDxGatewayAssociation(conn, associatedGatewayId.(string))()
 
 		if err != nil {
+			d.SetId("")
 			return fmt.Errorf("error reading Direct Connect gateway association (%s): %s", d.Id(), err)
 		}
 
