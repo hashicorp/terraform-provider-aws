@@ -34,7 +34,22 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				}
 
 				if proposal == nil {
-					// Don't report as a diff when the proposal is gone.
+					// Don't report as a diff when the proposal is gone unless the association is gone too.
+					associatedGatewayId, ok := d.GetOk("associated_gateway_id")
+
+					if !ok || associatedGatewayId == nil {
+						return false
+					}
+
+					_, state, err := getDxGatewayAssociation(conn, associatedGatewayId.(string))()
+
+					if err != nil {
+						return false
+					}
+
+					if state == gatewayAssociationStateDeleted {
+						return false
+					}
 					return true
 				}
 
