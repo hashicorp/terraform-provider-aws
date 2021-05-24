@@ -3,12 +3,14 @@ subcategory: "Chime"
 layout: "aws"
 page_title: "AWS: aws_chime_voice_connector"
 description: |-
-Enables you to connect your phone system to the telephone network at a substantial cost savings by using SIP trunking.
+  Enables you to connect your phone system to the telephone network at a substantial cost savings by using SIP trunking.
 ---
 
 # Resource: aws_chime_voice_connector
 
 Enables you to connect your phone system to the telephone network at a substantial cost savings by using SIP trunking.
+
+## Example Usage
 
 ```terraform
 resource "aws_chime_voice_connector" "test" {
