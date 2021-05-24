@@ -20,6 +20,8 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(events.EndpointsID, testAccErrorCheckSkipEvents)
+
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
 		F:    testSweepCloudWatchEventRules,
@@ -76,6 +78,12 @@ func testSweepCloudWatchEventRules(region string) error {
 	log.Printf("[INFO] Deleted %d CloudWatch Events rules", count)
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func testAccErrorCheckSkipEvents(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"Operation is disabled in this region",
+	)
 }
 
 func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
