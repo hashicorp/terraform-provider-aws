@@ -11,6 +11,9 @@ FEATURES:
 BUG FIXES:
 
 * data-source/aws_launch_template: Add `interface_type` to `network_interfaces` attribute ([#19492](https://github.com/hashicorp/terraform-provider-aws/issues/19492))
+* resource/aws_apprunner_service: Correctly configure `authentication_configuration`, `code_configuration`, and `image_configuration` nested arguments in API requests ([#19471](https://github.com/hashicorp/terraform-provider-aws/issues/19471))
+* resource/aws_apprunner_service: Handle asynchronous IAM eventual consistency error on creation ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
+* resource/aws_apprunner_service: Suppress `instance_configuration` `cpu` and `memory` differences ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
 * resource/aws_eks_addon: Use `service_account_role_arn`, if set, on updates ([#19454](https://github.com/hashicorp/terraform-provider-aws/issues/19454))
 * resource/aws_glue_connection: `connection_properties` are optional ([#19375](https://github.com/hashicorp/terraform-provider-aws/issues/19375))
 
