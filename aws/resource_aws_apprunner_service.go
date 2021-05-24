@@ -10,10 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
+	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsAppRunnerService() *schema.Resource {
@@ -123,6 +126,10 @@ func resourceAwsAppRunnerService() *schema.Resource {
 							Optional:     true,
 							Default:      "1024",
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`1024|2048|(1|2) vCPU`), ""),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// App Runner API always returns the amount in multiples of 1024 units
+								return (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU")
+							},
 						},
 						"instance_role_arn": {
 							Type:         schema.TypeString,
@@ -134,6 +141,10 @@ func resourceAwsAppRunnerService() *schema.Resource {
 							Optional:     true,
 							Default:      "2048",
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`2048|3072|4096|(2|3|4) GB`), ""),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// App Runner API always returns the amount in MB
+								return (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB")
+							},
 						},
 					},
 				},
@@ -366,7 +377,26 @@ func resourceAwsAppRunnerServiceCreate(ctx context.Context, d *schema.ResourceDa
 		input.InstanceConfiguration = expandAppRunnerServiceInstanceConfiguration(v.([]interface{}))
 	}
 
-	output, err := conn.CreateServiceWithContext(ctx, input)
+	var output *apprunner.CreateServiceOutput
+
+	err := resource.RetryContext(ctx, iamwaiter.PropagationTimeout, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateServiceWithContext(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, apprunner.ErrCodeInvalidRequestException, "Error in assuming instance role") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		output, err = conn.CreateServiceWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error creating App Runner Service (%s): %w", serviceName, err))
