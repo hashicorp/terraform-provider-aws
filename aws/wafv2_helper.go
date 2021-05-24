@@ -474,7 +474,7 @@ func wafv2CustomRequestHandlingSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
 							"value": {
@@ -500,7 +500,7 @@ func wafv2CustomResponseSchema() *schema.Schema {
 				"response_code": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(200, 599),
+					ValidateFunc: validation.IntBetween(200, 600),
 				},
 				"response_header": {
 					Type:     schema.TypeSet,
@@ -512,7 +512,7 @@ func wafv2CustomResponseSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
 							"value": {
@@ -583,42 +583,57 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 }
 
 func expandWafv2AllowAction(l []interface{}) *wafv2.AllowAction {
-	action := &wafv2.AllowAction{}
 	if len(l) == 0 || l[0] == nil {
-		return action
+		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-	if v, ok := m["custom_request_handling"]; ok && len(v.([]interface{})) > 0 {
-		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v.([]interface{}))
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	action := &wafv2.AllowAction{}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v)
 	}
 
 	return action
 }
 
 func expandWafv2CountAction(l []interface{}) *wafv2.CountAction {
-	action := &wafv2.CountAction{}
 	if len(l) == 0 || l[0] == nil {
-		return action
+		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-	if v, ok := m["custom_request_handling"]; ok && len(v.([]interface{})) > 0 {
-		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v.([]interface{}))
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	action := &wafv2.CountAction{}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandWafv2CustomRequestHandling(v)
 	}
 
 	return action
 }
 
 func expandWafv2BlockAction(l []interface{}) *wafv2.BlockAction {
-	action := &wafv2.BlockAction{}
 	if len(l) == 0 || l[0] == nil {
-		return action
+		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-	if v, ok := m["custom_response"]; ok && len(v.([]interface{})) > 0 {
-		action.CustomResponse = expandWafv2CustomResponse(v.([]interface{}))
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	action := &wafv2.BlockAction{}
+
+	if v, ok := m["custom_response"].([]interface{}); ok && len(v) > 0 {
+		action.CustomResponse = expandWafv2CustomResponse(v)
 	}
 
 	return action
@@ -629,14 +644,18 @@ func expandWafv2CustomResponse(l []interface{}) *wafv2.CustomResponse {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
 	customResponse := &wafv2.CustomResponse{}
 
-	if v, ok := m["response_code"]; ok && v.(int) > 0 {
-		customResponse.ResponseCode = aws.Int64(int64(v.(int)))
+	if v, ok := m["response_code"].(int); ok && v > 0 {
+		customResponse.ResponseCode = aws.Int64(int64(v))
 	}
-	if v, ok := m["response_header"]; ok && len(v.(*schema.Set).List()) > 0 {
-		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.(*schema.Set).List())
+	if v, ok := m["response_header"].(*schema.Set); ok && len(v.List()) > 0 {
+		customResponse.ResponseHeaders = expandWafv2CustomHeaders(v.List())
 	}
 
 	return customResponse
@@ -650,8 +669,8 @@ func expandWafv2CustomRequestHandling(l []interface{}) *wafv2.CustomRequestHandl
 	m := l[0].(map[string]interface{})
 	requestHandling := &wafv2.CustomRequestHandling{}
 
-	if v, ok := m["insert_header"]; ok && len(v.(*schema.Set).List()) > 0 {
-		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.(*schema.Set).List())
+	if v, ok := m["insert_header"].(*schema.Set); ok && len(v.List()) > 0 {
+		requestHandling.InsertHeaders = expandWafv2CustomHeaders(v.List())
 	}
 
 	return requestHandling
@@ -1083,9 +1102,9 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2Allow(a *wafv2.AllowAction) interface{} {
+func flattenWafv2Allow(a *wafv2.AllowAction) []interface{} {
 	if a == nil {
-		return map[string]interface{}{}
+		return []interface{}{}
 	}
 	m := map[string]interface{}{}
 
@@ -1096,9 +1115,9 @@ func flattenWafv2Allow(a *wafv2.AllowAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2Block(a *wafv2.BlockAction) interface{} {
+func flattenWafv2Block(a *wafv2.BlockAction) []interface{} {
 	if a == nil {
-		return map[string]interface{}{}
+		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
@@ -1110,9 +1129,9 @@ func flattenWafv2Block(a *wafv2.BlockAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2Count(a *wafv2.CountAction) interface{} {
+func flattenWafv2Count(a *wafv2.CountAction) []interface{} {
 	if a == nil {
-		return map[string]interface{}{}
+		return []interface{}{}
 	}
 	m := map[string]interface{}{}
 
@@ -1123,7 +1142,7 @@ func flattenWafv2Count(a *wafv2.CountAction) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) interface{} {
+func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) []interface{} {
 	if c == nil {
 		return []interface{}{}
 	}
@@ -1135,7 +1154,7 @@ func flattenWafv2CustomRequestHandling(c *wafv2.CustomRequestHandling) interface
 	return []interface{}{m}
 }
 
-func flattenWafv2CustomResponse(r *wafv2.CustomResponse) interface{} {
+func flattenWafv2CustomResponse(r *wafv2.CustomResponse) []interface{} {
 	if r == nil {
 		return []interface{}{}
 	}
@@ -1148,7 +1167,7 @@ func flattenWafv2CustomResponse(r *wafv2.CustomResponse) interface{} {
 	return []interface{}{m}
 }
 
-func flattenWafv2CustomHeaders(h []*wafv2.CustomHTTPHeader) interface{} {
+func flattenWafv2CustomHeaders(h []*wafv2.CustomHTTPHeader) []interface{} {
 	out := make([]interface{}, len(h))
 	for i, header := range h {
 		out[i] = flattenWafv2CustomHeader(header)
@@ -1157,7 +1176,7 @@ func flattenWafv2CustomHeaders(h []*wafv2.CustomHTTPHeader) interface{} {
 	return out
 }
 
-func flattenWafv2CustomHeader(h *wafv2.CustomHTTPHeader) interface{} {
+func flattenWafv2CustomHeader(h *wafv2.CustomHTTPHeader) map[string]interface{} {
 	if h == nil {
 		return map[string]interface{}{}
 	}
