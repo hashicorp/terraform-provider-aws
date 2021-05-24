@@ -300,6 +300,37 @@ func TestAccAwsAppRunnerService_ImageRepository_InstanceConfiguration(t *testing
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19469
+func TestAccAwsAppRunnerService_ImageRepository_RuntimeEnvironmentVars(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_apprunner_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAppRunner(t) },
+		ErrorCheck:   testAccErrorCheck(t, apprunner.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppRunnerServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppRunnerService_imageRepository_runtimeEnvVars(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppRunnerServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_variables.APP_NAME", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsAppRunnerService_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_apprunner_service.test"
@@ -453,6 +484,27 @@ resource "aws_apprunner_service" "test" {
     image_repository {
       image_configuration {
         port = "8000"
+      }
+      image_identifier      = "public.ecr.aws/jg/hello:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAppRunnerService_imageRepository_runtimeEnvVars(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "8000"
+        runtime_environment_variables = {
+          APP_NAME = %[1]q
+        }
       }
       image_identifier      = "public.ecr.aws/jg/hello:latest"
       image_repository_type = "ECR_PUBLIC"
