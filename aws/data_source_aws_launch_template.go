@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -314,6 +315,11 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 						"subnet_id": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"interface_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
 						},
 					},
 				},
