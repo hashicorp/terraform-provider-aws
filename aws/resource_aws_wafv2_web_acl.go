@@ -119,7 +119,7 @@ func resourceAwsWafv2WebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"count": wafv2CountConfigSchema(),
+									"count": wafv2EmptySchema(),
 									"none":  wafv2EmptySchema(),
 								},
 							},
@@ -519,7 +519,7 @@ func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
 	action := &wafv2.OverrideAction{}
 
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
-		action.Count = expandWafv2CountAction(v.([]interface{}))
+		action.Count = &wafv2.CountAction{}
 	}
 
 	if v, ok := m["none"]; ok && len(v.([]interface{})) > 0 {
@@ -790,7 +790,7 @@ func flattenWafv2OverrideAction(a *wafv2.OverrideAction) interface{} {
 	m := map[string]interface{}{}
 
 	if a.Count != nil {
-		m["count"] = flattenWafv2Count(a.Count)
+		m["count"] = make([]map[string]interface{}, 1)
 	}
 
 	if a.None != nil {
