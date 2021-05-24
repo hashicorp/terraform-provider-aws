@@ -12,7 +12,7 @@ import (
 func main() {
 	var debugMode bool
 
-	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
+	flag.BoolVar(&debugMode, "debug", true, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 
 	opts := &plugin.ServeOpts{ProviderFunc: aws.Provider}
