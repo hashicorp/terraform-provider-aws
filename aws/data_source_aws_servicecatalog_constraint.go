@@ -2,14 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
@@ -65,18 +63,12 @@ func dataSourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta inte
 
 	output, err := waiter.ConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Service Catalog Constraint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Constraint (%s): %w", d.Id(), err)
+		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Service Catalog Constraint (%s): empty response", d.Id())
+		return fmt.Errorf("error getting Service Catalog Constraint: empty response")
 	}
 
 	acceptLanguage := d.Get("accept_language").(string)
