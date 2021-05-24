@@ -3,23 +3,38 @@ package waiter
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
-	// ConnectionDeletedTimeout is the maximum amount of time to wait for a CloudwatchEvent Connection to delete
+	ConnectionCreatedTimeout = 2 * time.Minute
 	ConnectionDeletedTimeout = 2 * time.Minute
+	ConnectionUpdatedTimeout = 2 * time.Minute
 )
 
-// CloudWatchEventConnectionDeleted waits for a CloudwatchEvent Connection to return Deleted
-func CloudWatchEventConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+func ConnectionCreated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{events.ConnectionStateCreating, events.ConnectionStateAuthorizing},
+		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},
+		Refresh: ConnectionState(conn, id),
+		Timeout: ConnectionCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*events.DescribeConnectionOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func ConnectionDeleted(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{events.ConnectionStateDeleting},
 		Target:  []string{},
-		Refresh: CloudWatchEventConnectionStatus(conn, id),
+		Refresh: ConnectionState(conn, id),
 		Timeout: ConnectionDeletedTimeout,
 	}
 
@@ -32,22 +47,19 @@ func CloudWatchEventConnectionDeleted(conn *events.CloudWatchEvents, id string) 
 	return nil, err
 }
 
-// CloudWatchEventConnectionStatus fetches the Connection and its Status
-func CloudWatchEventConnectionStatus(conn *events.CloudWatchEvents, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		params := events.DescribeConnectionInput{
-			Name: aws.String(id),
-		}
-
-		output, err := conn.DescribeConnection(&params)
-		if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.ConnectionState), nil
+func ConnectionUpdated(conn *events.CloudWatchEvents, id string) (*events.DescribeConnectionOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{events.ConnectionStateUpdating, events.ConnectionStateAuthorizing, events.ConnectionStateDeauthorizing},
+		Target:  []string{events.ConnectionStateAuthorized, events.ConnectionStateDeauthorized},
+		Refresh: ConnectionState(conn, id),
+		Timeout: ConnectionUpdatedTimeout,
 	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*events.DescribeConnectionOutput); ok {
+		return v, err
+	}
+
+	return nil, err
 }

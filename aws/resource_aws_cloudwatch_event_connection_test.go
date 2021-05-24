@@ -8,12 +8,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func init() {
@@ -81,7 +82,7 @@ func TestAccAWSCloudWatchEventConnection_apiKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -163,7 +164,7 @@ func TestAccAWSCloudWatchEventConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +283,7 @@ func TestAccAWSCloudWatchEventConnection_oAuth(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -447,7 +448,7 @@ func TestAccAWSCloudWatchEventConnection_invocationHttpParameters(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -593,7 +594,7 @@ func TestAccAWSCloudWatchEventConnection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, cloudwatchevents.EndpointsID),
+		ErrorCheck:   testAccErrorCheck(t, events.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchEventConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -623,15 +624,17 @@ func testAccCheckAWSCloudWatchEventConnectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		params := events.DescribeConnectionInput{
-			Name: aws.String(rs.Primary.ID),
+		_, err := finder.ConnectionByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeConnection(&params)
-
-		if err == nil {
-			return fmt.Errorf("CloudWatch Events Connection (%s) still exists: %s", rs.Primary.ID, resp)
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("CloudWatch Events connection %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -645,18 +648,14 @@ func testAccCheckCloudWatchEventConnectionExists(n string, v *events.DescribeCon
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
-		params := events.DescribeConnectionInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeConnection(&params)
+
+		output, err := finder.ConnectionByName(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if resp == nil {
-			return fmt.Errorf("CloudWatch Events Connection (%s) not found", n)
-		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}

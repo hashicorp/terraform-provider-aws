@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudwatchevents/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsCloudWatchEventConnection() *schema.Resource {
@@ -236,31 +239,32 @@ func resourceAwsCloudWatchEventConnection() *schema.Resource {
 func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input := &events.CreateConnectionInput{}
-
-	if name, ok := d.GetOk("name"); ok {
-		input.Name = aws.String(name.(string))
-	}
-	if description, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(description.(string))
-	}
-	if authorizationType, ok := d.GetOk("authorization_type"); ok {
-		input.AuthorizationType = aws.String(authorizationType.(string))
-	}
-	if authParameters, ok := d.GetOk("auth_parameters"); ok {
-		input.AuthParameters = expandAwsCloudWatchEventCreateConnectionAuthRequestParameters(authParameters.([]interface{}))
+	name := d.Get("name").(string)
+	input := &events.CreateConnectionInput{
+		AuthorizationType: aws.String(d.Get("authorization_type").(string)),
+		AuthParameters:    expandAwsCloudWatchEventCreateConnectionAuthRequestParameters(d.Get("auth_parameters").([]interface{})),
+		Name:              aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatchEvent connection: %v", input)
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Creating CloudWatch Events connection: %s", input)
 
 	_, err := conn.CreateConnection(input)
+
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatchEvent connection (%s) failed: %w", *input.Name, err)
+		return fmt.Errorf("error creating CloudWatch Events connection (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(input.Name))
+	d.SetId(name)
 
-	log.Printf("[INFO] CloudWatchEvent connection (%s) created", d.Id())
+	_, err = waiter.ConnectionCreated(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to create: %w", d.Id(), err)
+	}
 
 	return resourceAwsCloudWatchEventConnectionRead(d, meta)
 }
@@ -268,33 +272,28 @@ func resourceAwsCloudWatchEventConnectionCreate(d *schema.ResourceData, meta int
 func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input := &events.DescribeConnectionInput{
-		Name: aws.String(d.Id()),
-	}
+	output, err := finder.ConnectionByName(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading CloudWatchEvent connection (%s)", d.Id())
-	output, err := conn.DescribeConnection(input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatchEvent connection (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Events connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading CloudWatchEvent connection: %w", err)
+		return fmt.Errorf("error reading CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Found CloudWatchEvent connection: %#v", *output)
-
 	d.Set("arn", output.ConnectionArn)
-	d.Set("secret_arn", output.SecretArn)
-	d.Set("name", output.Name)
-	d.Set("description", output.Description)
 	d.Set("authorization_type", output.AuthorizationType)
+	d.Set("description", output.Description)
+	d.Set("name", output.Name)
+	d.Set("secret_arn", output.SecretArn)
 
 	if output.AuthParameters != nil {
 		authParameters := flattenAwsCloudWatchEventConnectionAuthParameters(output.AuthParameters, d)
 		if err := d.Set("auth_parameters", authParameters); err != nil {
-			return fmt.Errorf("Error setting authParameters error: %w", err)
+			return fmt.Errorf("error setting auth_parameters error: %w", err)
 		}
 	}
 
@@ -304,55 +303,59 @@ func resourceAwsCloudWatchEventConnectionRead(d *schema.ResourceData, meta inter
 func resourceAwsCloudWatchEventConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input := &events.UpdateConnectionInput{}
-
-	if name, ok := d.GetOk("name"); ok {
-		input.Name = aws.String(name.(string))
-	}
-	if description, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(description.(string))
-	}
-	if authorizationType, ok := d.GetOk("authorization_type"); ok {
-		input.AuthorizationType = aws.String(authorizationType.(string))
-	}
-	if authParameters, ok := d.GetOk("auth_parameters"); ok {
-		input.AuthParameters = expandAwsCloudWatchEventUpdateConnectionAuthRequestParameters(authParameters.([]interface{}))
+	input := &events.UpdateConnectionInput{
+		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Updating CloudWatchEvent connection: %s", input)
+	if v, ok := d.GetOk("authorization_type"); ok {
+		input.AuthorizationType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("auth_parameters"); ok {
+		input.AuthParameters = expandAwsCloudWatchEventUpdateConnectionAuthRequestParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Updating CloudWatch Events connection: %s", input)
 	_, err := conn.UpdateConnection(input)
+
 	if err != nil {
-		return fmt.Errorf("error updating CloudWatchEvent connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
+
+	_, err = waiter.ConnectionUpdated(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to update: %w", d.Id(), err)
+	}
+
 	return resourceAwsCloudWatchEventConnectionRead(d, meta)
 }
 
 func resourceAwsCloudWatchEventConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	log.Printf("[INFO] Deleting CloudWatchEvent connection (%s)", d.Id())
-	input := &events.DeleteConnectionInput{
+	log.Printf("[INFO] Deleting CloudWatch Events connection (%s)", d.Id())
+	_, err := conn.DeleteConnection(&events.DeleteConnectionInput{
 		Name: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteConnection(input)
+	})
 
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatchEvent connection (%s) not found", d.Id())
+	if tfawserr.ErrCodeEquals(err, events.ErrCodeResourceNotFoundException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatchEvent connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CloudWatch Events connection (%s): %w", d.Id(), err)
 	}
 
-	_, err = waiter.CloudWatchEventConnectionDeleted(conn, d.Id())
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] CloudWatchEvent connection (%s) not found", d.Id())
-		return nil
-	}
+	_, err = waiter.ConnectionDeleted(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudWatchEvent connection (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for CloudWatch Events connection (%s) to delete: %w", d.Id(), err)
 	}
-	log.Printf("[INFO] CloudWatchEvent connection (%s) deleted", d.Id())
 
 	return nil
 }
