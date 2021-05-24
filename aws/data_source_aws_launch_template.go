@@ -317,9 +317,8 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						"interface_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
