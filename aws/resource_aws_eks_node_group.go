@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -219,6 +220,30 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
+			"taint": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 63),
+						},
+						"value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 63),
+						},
+						"effect": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(eks.TaintEffect_Values(), false),
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -281,6 +306,10 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 
 	if len(tags) > 0 {
 		input.Tags = tags.IgnoreAws().EksTags()
+	}
+
+	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
+		input.Taints = expandEksTaints(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -396,6 +425,10 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
+	if err := d.Set("taint", flattenEksTaints(nodeGroup.Taints)); err != nil {
+		return fmt.Errorf("error setting taint: %w", err)
+	}
+
 	d.Set("version", nodeGroup.Version)
 
 	return nil
@@ -410,7 +443,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if d.HasChanges("labels", "scaling_config") {
+	if d.HasChanges("labels", "scaling_config", "taint") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 
 		input := &eks.UpdateNodegroupConfigInput{
@@ -423,6 +456,9 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		if v := d.Get("scaling_config").([]interface{}); len(v) > 0 {
 			input.ScalingConfig = expandEksNodegroupScalingConfig(v)
 		}
+
+		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
+		input.Taints = expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List())
 
 		output, err := conn.UpdateNodegroupConfig(input)
 
@@ -585,6 +621,108 @@ func expandEksNodegroupScalingConfig(l []interface{}) *eks.NodegroupScalingConfi
 	return config
 }
 
+func expandEksTaints(l []interface{}) []*eks.Taint {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var taints []*eks.Taint
+
+	for _, raw := range l {
+		t, ok := raw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		taint := &eks.Taint{}
+
+		if k, ok := t["key"].(string); ok {
+			taint.Key = aws.String(k)
+		}
+
+		if v, ok := t["value"].(string); ok {
+			taint.Value = aws.String(v)
+		}
+
+		if e, ok := t["effect"].(string); ok {
+			taint.Effect = aws.String(e)
+		}
+
+		taints = append(taints, taint)
+	}
+
+	return taints
+}
+
+func expandEksUpdateTaintsPayload(oldTaintsRaw, newTaintsRaw []interface{}) *eks.UpdateTaintsPayload {
+	oldTaints := expandEksTaints(oldTaintsRaw)
+	newTaints := expandEksTaints(newTaintsRaw)
+
+	var removedTaints []*eks.Taint
+	for _, ot := range oldTaints {
+		if ot == nil {
+			continue
+		}
+
+		removed := true
+		for _, nt := range newTaints {
+			if nt == nil {
+				continue
+			}
+
+			// if both taint.key and taint.effect are the same, we don't need to remove it.
+			if aws.StringValue(nt.Key) == aws.StringValue(ot.Key) &&
+				aws.StringValue(nt.Effect) == aws.StringValue(ot.Effect) {
+				removed = false
+				break
+			}
+		}
+
+		if removed {
+			removedTaints = append(removedTaints, ot)
+		}
+	}
+
+	var updatedTaints []*eks.Taint
+	for _, nt := range newTaints {
+		if nt == nil {
+			continue
+		}
+
+		updated := true
+		for _, ot := range oldTaints {
+			if nt == nil {
+				continue
+			}
+
+			if reflect.DeepEqual(nt, ot) {
+				updated = false
+				break
+			}
+		}
+		if updated {
+			updatedTaints = append(updatedTaints, nt)
+		}
+	}
+
+	if len(removedTaints) == 0 && len(updatedTaints) == 0 {
+		return nil
+	}
+
+	updateTaintsPayload := &eks.UpdateTaintsPayload{}
+
+	if len(removedTaints) > 0 {
+		updateTaintsPayload.RemoveTaints = removedTaints
+	}
+
+	if len(updatedTaints) > 0 {
+		updateTaintsPayload.AddOrUpdateTaints = updatedTaints
+	}
+
+	return updateTaintsPayload
+}
+
 func expandEksRemoteAccessConfig(l []interface{}) *eks.RemoteAccessConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -708,6 +846,28 @@ func flattenEksRemoteAccessConfig(config *eks.RemoteAccessConfig) []map[string]i
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenEksTaints(taints []*eks.Taint) []interface{} {
+	if len(taints) == 0 {
+		return nil
+	}
+
+	var results []interface{}
+
+	for _, taint := range taints {
+		if taint == nil {
+			continue
+		}
+
+		t := make(map[string]interface{})
+		t["key"] = aws.StringValue(taint.Key)
+		t["value"] = aws.StringValue(taint.Value)
+		t["effect"] = aws.StringValue(taint.Effect)
+
+		results = append(results, t)
+	}
+	return results
 }
 
 func refreshEksNodeGroupStatus(conn *eks.EKS, clusterName string, nodeGroupName string) resource.StateRefreshFunc {
