@@ -126,7 +126,7 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", eks.NodegroupStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "taints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", eksClusterResourceName, "version"),
 				),
 			},
@@ -834,8 +834,8 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key1", "value1", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "taints.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taints.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key1",
 						"value":  "value1",
 						"effect": "NO_SCHEDULE",
@@ -853,13 +853,13 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 					"key2", "value2", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "taints.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taints.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key1",
 						"value":  "value1updated",
 						"effect": "NO_EXECUTE",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taints.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key2",
 						"value":  "value2",
 						"effect": "NO_SCHEDULE",
@@ -870,8 +870,8 @@ func TestAccAWSEksNodeGroup_Taints(t *testing.T) {
 				Config: testAccAWSEksNodeGroupConfigTaints1(rName, "key2", "value2", "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "taints.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taints.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "taint.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						"key":    "key2",
 						"value":  "value2",
 						"effect": "NO_SCHEDULE",
@@ -1972,7 +1972,7 @@ resource "aws_eks_node_group" "test" {
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.test[*].id
 
-  taints {
+  taint {
     key    = %[2]q
     value  = %[3]q
     effect = %[4]q
@@ -2001,13 +2001,13 @@ resource "aws_eks_node_group" "test" {
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.test[*].id
 
-  taints {
+  taint {
     key    = %[2]q
     value  = %[3]q
     effect = %[4]q
   }
 
-  taints {
+  taint {
     key    = %[5]q
     value  = %[6]q
     effect = %[7]q

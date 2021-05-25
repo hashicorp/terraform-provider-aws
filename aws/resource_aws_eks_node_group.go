@@ -220,7 +220,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
-			"taints": {
+			"taint": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 50,
@@ -308,7 +308,7 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 		input.Tags = tags.IgnoreAws().EksTags()
 	}
 
-	if v, ok := d.GetOk("taints"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
 		input.Taints = expandEksTaints(v.(*schema.Set).List())
 	}
 
@@ -425,8 +425,8 @@ func resourceAwsEksNodeGroupRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("taints", flattenEksTaints(nodeGroup.Taints)); err != nil {
-		return fmt.Errorf("error setting taints: %w", err)
+	if err := d.Set("taint", flattenEksTaints(nodeGroup.Taints)); err != nil {
+		return fmt.Errorf("error setting taint: %w", err)
 	}
 
 	d.Set("version", nodeGroup.Version)
@@ -443,7 +443,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taints") {
+	if d.HasChanges("labels", "scaling_config", "taint") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 
 		input := &eks.UpdateNodegroupConfigInput{
@@ -457,7 +457,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 			input.ScalingConfig = expandEksNodegroupScalingConfig(v)
 		}
 
-		oldTaintsRaw, newTaintsRaw := d.GetChange("taints")
+		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 		input.Taints = expandEksUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List())
 
 		output, err := conn.UpdateNodegroupConfig(input)
