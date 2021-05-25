@@ -2,14 +2,14 @@
 layout: "aws"
 page_title: "Provider: AWS"
 description: |-
-  The Amazon Web Services (AWS) provider is used to interact with the many resources supported by AWS. The provider needs to be configured with the proper credentials before it can be used.
+  Use the Amazon Web Services (AWS) provider to interact with the many resources supported by AWS. You must configure the provider with the proper credentials before you can use it.
 ---
 
 # AWS Provider
 
-The Amazon Web Services (AWS) provider is used to interact with the
-many resources supported by AWS. The provider needs to be configured
-with the proper credentials before it can be used.
+Use the Amazon Web Services (AWS) provider to interact with the
+many resources supported by AWS. You must configure the provider
+with the proper credentials before you can use it.
 
 Use the navigation to the left to read about the available resources.
 
