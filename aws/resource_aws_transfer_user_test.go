@@ -18,10 +18,10 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_basic(rName),
@@ -50,10 +50,10 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_options(rName),
@@ -110,6 +110,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -129,16 +130,17 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSTransferUserName_validation("!@#$%^"),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation(acctest.RandString(2)),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
 				Config:             testAccAWSTransferUserName_validation(acctest.RandString(33)),
@@ -147,11 +149,11 @@ func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation(acctest.RandString(101)),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
 				Config:      testAccAWSTransferUserName_validation("-abcdef"),
-				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 100 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": `),
 			},
 			{
 				Config:             testAccAWSTransferUserName_validation("valid_username"),
@@ -168,10 +170,10 @@ func TestAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
 	resourceName := "aws_transfer_user.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_homeDirectoryMappings(rName),
