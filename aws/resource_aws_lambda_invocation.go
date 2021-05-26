@@ -35,10 +35,11 @@ func resourceAwsLambdaInvocation() *schema.Resource {
 				ValidateFunc: validation.StringIsJSON,
 			},
 
-			"invoke_on_update": {
-				Type:     schema.TypeBool,
+			"triggers": {
+				Type:     schema.TypeMap,
 				Optional: true,
-				Default:  true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"result": {
@@ -85,11 +86,7 @@ func resourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsLambdaInvocationUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.Get("invoke_on_update").(bool) {
-		return resourceAwsLambdaInvocationCreate(d, meta)
-	} else {
-		return nil
-	}
+	return resourceAwsLambdaInvocationCreate(d, meta)
 }
 
 func resourceAwsLambdaInvocationDelete(d *schema.ResourceData, meta interface{}) error {
