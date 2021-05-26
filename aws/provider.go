@@ -1390,6 +1390,7 @@ func init() {
 		"s3control",
 		"s3outposts",
 		"sagemaker",
+		"schemas",
 		"sdb",
 		"secretsmanager",
 		"securityhub",

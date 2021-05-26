@@ -184,6 +184,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>s3control</code></li>
   <li><code>s3outposts</code></li>
   <li><code>sagemaker</code></li>
+  <li><code>schemas</code></li>
   <li><code>sdb</code></li>
   <li><code>secretsmanager</code></li>
   <li><code>securityhub</code></li>
