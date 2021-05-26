@@ -172,6 +172,7 @@ variable "service_labels" {
     "s3outposts",
     "sagemaker",
     "savingsplans",
+    "schemas",
     "secretsmanager",
     "securityhub",
     "serverlessapplicationrepository",

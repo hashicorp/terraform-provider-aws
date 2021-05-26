@@ -686,6 +686,10 @@ service/sagemaker:
   - 'aws/internal/service/sagemaker/**/*'
   - '**/*_sagemaker_*'
   - '**/sagemaker_*'
+service/schemas:
+  - 'aws/internal/service/schemas/**/*'
+  - '**/*_schemas_*'
+  - '**/schemas_*'
 service/secretsmanager:
   - 'aws/internal/service/secretsmanager/**/*'
   - '**/*_secretsmanager_*'
