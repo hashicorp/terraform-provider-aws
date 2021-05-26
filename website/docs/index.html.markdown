@@ -2,16 +2,21 @@
 layout: "aws"
 page_title: "Provider: AWS"
 description: |-
-  The Amazon Web Services (AWS) provider is used to interact with the many resources supported by AWS. The provider needs to be configured with the proper credentials before it can be used.
+  Use the Amazon Web Services (AWS) provider to interact with the many resources supported by AWS. You must configure the provider with the proper credentials before you can use it.
 ---
 
 # AWS Provider
 
-The Amazon Web Services (AWS) provider is used to interact with the
-many resources supported by AWS. The provider needs to be configured
-with the proper credentials before it can be used.
+Use the Amazon Web Services (AWS) provider to interact with the
+many resources supported by AWS. You must configure the provider
+with the proper credentials before you can use it.
 
 Use the navigation to the left to read about the available resources.
+
+To learn the basics of Terraform using this provider, follow the
+hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) on HashiCorp's Learn platform. Interact with AWS services,
+including Lambda, RDS, and IAM by following the [AWS services
+tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
 ## Example Usage
 
