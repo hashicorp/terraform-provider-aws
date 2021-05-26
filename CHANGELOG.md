@@ -13,7 +13,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` attribute ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
 * resource/aws_eks_node_group: Add `taint` argument ([#19482](https://github.com/hashicorp/terraform-provider-aws/issues/19482))
+* resource/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` argument ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
 * resource/aws_msk_configuration: `kafka_versions` argument is optional ([#17571](https://github.com/hashicorp/terraform-provider-aws/issues/17571))
 * resource/aws_sns_topic: Add `firehose_success_feedback_role_arn`, `firehose_success_feedback_sample_rate` and `firehose_failure_feedback_role_arn` arguments. ([#19528](https://github.com/hashicorp/terraform-provider-aws/issues/19528))
 * resource/aws_sns_topic: Add `owner` attribute. ([#19528](https://github.com/hashicorp/terraform-provider-aws/issues/19528))
@@ -26,6 +28,8 @@ BUG FIXES:
 * resource/aws_apprunner_service: Correctly configure `authentication_configuration`, `code_configuration`, and `image_configuration` nested arguments in API requests ([#19471](https://github.com/hashicorp/terraform-provider-aws/issues/19471))
 * resource/aws_apprunner_service: Handle asynchronous IAM eventual consistency error on creation ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
 * resource/aws_apprunner_service: Suppress `instance_configuration` `cpu` and `memory` differences ([#19483](https://github.com/hashicorp/terraform-provider-aws/issues/19483))
+* resource/aws_batch_job_definition: Don't crash when setting `timeout.attempt_duration_seconds` to `null` ([#19505](https://github.com/hashicorp/terraform-provider-aws/issues/19505))
+* resource/aws_ec2_managed_prefix_list: Fix crash with multiple description-only updates ([#19517](https://github.com/hashicorp/terraform-provider-aws/issues/19517))
 * resource/aws_eks_addon: Use `service_account_role_arn`, if set, on updates ([#19454](https://github.com/hashicorp/terraform-provider-aws/issues/19454))
 * resource/aws_glue_connection: `connection_properties` are optional ([#19375](https://github.com/hashicorp/terraform-provider-aws/issues/19375))
 * resource/aws_lb_listener_rule: Allow blank string for `action.redirect.query` nested argument ([#19496](https://github.com/hashicorp/terraform-provider-aws/issues/19496))
