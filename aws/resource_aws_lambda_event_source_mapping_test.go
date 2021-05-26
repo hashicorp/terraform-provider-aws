@@ -677,16 +677,14 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "100"),
+				Config: testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "100", "test1:9092,test2:9092"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test2:9092,test1:9092"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.0.type", "VPC_SUBNET"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.1.type", "VPC_SUBNET"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.2.type", "VPC_SECURITY_GROUP"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
@@ -695,9 +693,10 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
+			// Verify also that bootstrap broker order does not matter.
 			{
 				PlanOnly: true,
-				Config:   testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "null"),
+				Config:   testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "null", "test2:9092,test1:9092"),
 			},
 		},
 	})
@@ -863,6 +862,214 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 `, rName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigSQSBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs12.x"
+}
+`, rName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  stream_enabled   = true
+  stream_view_type = "KEYS_ONLY"
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs12.x"
+}
+`, rName)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName string) string {
+	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kafka:DescribeCluster",
+        "kafka:GetBootstrapBrokers",
+        "ec2:CreateNetworkInterface",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  roles      = [aws_iam_role.test.name]
+  policy_arn = aws_iam_policy.test.arn
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "192.168.0.0/22"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs12.x"
+}
+`, rName))
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
@@ -1035,58 +1242,6 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, rName))
 }
 
-func testAccAWSLambdaEventSourceMappingConfigSQSBase(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Action": "sts:AssumeRole",
-    "Principal": {
-      "Service": "lambda.amazonaws.com"
-    },
-    "Effect": "Allow"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_sqs_queue" "test" {
-  name = %[1]q
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
-}
-`, rName)
-}
-
 func testAccAWSLambdaEventSourceMappingConfigSqsBatchWindow(rName string, batchWindow int64) string {
 	return composeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
@@ -1104,110 +1259,18 @@ func testAccAWSLambdaEventSourceMappingConfigMsk(rName, batchSize string) string
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "test" {
-  name = %[1]q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "kafka:DescribeCluster",
-        "kafka:GetBootstrapBrokers",
-        "ec2:CreateNetworkInterface",
-        "ec2:DeleteNetworkInterface",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs",
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "test" {
-  name       = %[1]q
-  roles      = [aws_iam_role.test.name]
-  policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/22"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.2.1"
+  kafka_version          = "2.7.1"
   number_of_broker_nodes = 2
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
     ebs_volume_size = 10
-    instance_type   = "kafka.t3.small"
+    instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
   }
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.test.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_event_source_mapping" "test" {
@@ -1223,108 +1286,22 @@ resource "aws_lambda_event_source_mapping" "test" {
 `, rName, batchSize))
 }
 
-func testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, batchSize string) string {
+func testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, batchSize, kafkaBootstrapServers string) string {
 	if batchSize == "" {
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "test" {
-  name = %[1]q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateNetworkInterface",
-        "ec2:DeleteNetworkInterface",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "test" {
-  name       = %[1]q
-  roles      = [aws_iam_role.test.name]
-  policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/22"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.test.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-}
-
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[2]s
-  enabled           = true
+  enabled           = false
   function_name     = aws_lambda_function.test.arn
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
   self_managed_event_source {
     endpoints = {
-      KAFKA_BOOTSTRAP_SERVERS = "test2:9092,test1:9092"
+      KAFKA_BOOTSTRAP_SERVERS = %[3]q
     }
   }
 
@@ -1341,70 +1318,7 @@ resource "aws_lambda_event_source_mapping" "test" {
     uri = aws_security_group.test.id
   }
 }
-`, rName, batchSize))
-}
-
-func testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Action": "sts:AssumeRole",
-    "Principal": {
-      "Service": "lambda.amazonaws.com"
-    },
-    "Effect": "Allow"
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  read_capacity  = 1
-  write_capacity = 2
-  hash_key       = "TestTableHashKey"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  stream_enabled   = true
-  stream_view_type = "KEYS_ONLY"
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
-}
-`, rName)
+`, rName, batchSize, kafkaBootstrapServers))
 }
 
 func testAccAWSLambdaEventSourceMappingConfigDynamoDbBatchSize(rName, batchSize string) string {

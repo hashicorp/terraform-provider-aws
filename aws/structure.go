@@ -1635,45 +1635,6 @@ func flattenDSVpcSettings(
 	return []map[string]interface{}{settings}
 }
 
-func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
-	if len(vDest) == 0 {
-		return nil
-	}
-
-	dest := &lambda.DestinationConfig{}
-	onFailure := &lambda.OnFailure{}
-
-	if len(vDest) > 0 {
-		if config, ok := vDest[0].(map[string]interface{}); ok {
-			if vOnFailure, ok := config["on_failure"].([]interface{}); ok && len(vOnFailure) > 0 && vOnFailure[0] != nil {
-				mOnFailure := vOnFailure[0].(map[string]interface{})
-				onFailure.SetDestination(mOnFailure["destination_arn"].(string))
-			}
-		}
-	}
-	dest.SetOnFailure(onFailure)
-	return dest
-}
-
-func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationConfig) []interface{} {
-	mDest := map[string]interface{}{}
-	mOnFailure := map[string]interface{}{}
-	if dest != nil {
-		if dest.OnFailure != nil {
-			if dest.OnFailure.Destination != nil {
-				mOnFailure["destination_arn"] = *dest.OnFailure.Destination
-				mDest["on_failure"] = []interface{}{mOnFailure}
-			}
-		}
-	}
-
-	if len(mDest) == 0 {
-		return nil
-	}
-
-	return []interface{}{mDest}
-}
-
 func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
 	arns := make([]*string, len(layers))
 	for i, layer := range layers {
