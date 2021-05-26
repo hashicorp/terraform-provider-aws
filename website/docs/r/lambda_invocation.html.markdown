@@ -16,7 +16,14 @@ invocation type.
 
 ```hcl
 resource "aws_lambda_invocation" "example" {
-  function_name = "${aws_lambda_function.lambda_function_test.function_name}"
+  function_name = aws_lambda_function.lambda_function_test.function_name
+
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_lambda_function.example
+    ]))
+  }
+  
   input = <<JSON
 {
   "key1": "value1",
@@ -35,7 +42,7 @@ output "result_entry" {
 * `input` - (Required) A string in JSON format that is passed as payload to the lambda function.
 * `qualifier` - (Optional) The qualifier (a.k.a version) of the lambda function. Defaults
   to `$LATEST`.
-* `invoke_on_update` - (Optional) Whether to run the lambda function on argument changes. Default is `true`.
+* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 
