@@ -13,19 +13,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 )
 
-// add sweeper to delete known test servicecat products
+// add sweeper to delete known test servicecat provisioned products
 func init() {
-	resource.AddTestSweepers("aws_servicecatalog_product", &resource.Sweeper{
-		Name:         "aws_servicecatalog_product",
+	resource.AddTestSweepers("aws_servicecatalog_provisioned_product", &resource.Sweeper{
+		Name:         "aws_servicecatalog_provisioned_product",
 		Dependencies: []string{},
-		F:            testSweepServiceCatalogProducts,
+		F:            testSweepServiceCatalogProvisionedProducts,
 	})
 }
 
-func testSweepServiceCatalogProducts(region string) error {
+func testSweepServiceCatalogProvisionedProducts(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
@@ -36,23 +37,26 @@ func testSweepServiceCatalogProducts(region string) error {
 	sweepResources := make([]*testSweepResource, 0)
 	var errs *multierror.Error
 
-	input := &servicecatalog.SearchProductsAsAdminInput{}
+	input := &servicecatalog.SearchProvisionedProductsInput{
+		AccessLevelFilter: &servicecatalog.AccessLevelFilter{
+			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
+			Value: aws.String(client.(*AWSClient).accountid),
+		},
+	}
 
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProvisionedProductsPages(input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, pvd := range page.ProductViewDetails {
-			if pvd == nil || pvd.ProductViewSummary == nil {
+		for _, detail := range page.ProvisionedProducts {
+			if detail == nil {
 				continue
 			}
 
-			id := aws.StringValue(pvd.ProductViewSummary.ProductId)
-
-			r := resourceAwsServiceCatalogProduct()
+			r := resourceAwsServiceCatalogProvisionedProduct()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.StringValue(detail.Id))
 
 			sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 		}
@@ -61,86 +65,74 @@ func testSweepServiceCatalogProducts(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
 	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
 	if testSweepSkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Service Catalog Products sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping Service Catalog Provisioned Products sweep for %s: %s", region, errs)
 		return nil
 	}
 
 	return errs.ErrorOrNil()
 }
 
-func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
+func TestAccAWSServiceCatalogProvisionedProduct_basic(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
+		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
+					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "launch_role_arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
-					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "owner", "ägare"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-					resource.TestCheckResourceAttr(resourceName, "status", waiter.ProductStatusCreated),
-					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_email", "support@example.com"),
-					resource.TestCheckResourceAttr(resourceName, "support_url", "http://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product", "provisioning_artifact_parameters.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_successful_provisioning_record_id"),
+					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACKSET"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"accept_language",
-					"provisioning_artifact_parameters",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
+func TestAccAWSServiceCatalogProvisionedProduct_disappears(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
+		CheckDestroy: testAccCheckAwsServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, rName, rName),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProduct(), resourceName),
+					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,143 +140,29 @@ func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_update(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "support_description", "ny supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSServiceCatalogProductConfig_basic(rName, "beskrivning", "supportbeskrivning"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				Config: testAccAWSServiceCatalogProductConfig_updateTags(rName, "beskrivning", "supportbeskrivning"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Yak", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "natural"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSServiceCatalogProduct_physicalID(t *testing.T) {
-	resourceName := "aws_servicecatalog_product.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceCatalogProductDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSServiceCatalogProductConfig_physicalID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceCatalogProductExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
-					testAccMatchResourceAttrRegionalARN(
-						resourceName,
-						"provisioning_artifact_parameters.0.template_physical_id",
-						"cloudformation",
-						regexp.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
-					),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"accept_language",
-					"provisioning_artifact_parameters",
-				},
-			},
-		},
-	})
-}
-
-func testAccCheckAwsServiceCatalogProductDestroy(s *terraform.State) error {
+func testAccCheckAwsServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).scconn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_product" {
+		if rs.Type != "aws_servicecatalog_provisioned_product" {
 			continue
 		}
 
-		input := &servicecatalog.DescribeProductAsAdminInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeProductAsAdmin(input)
+		err := waiter.ProvisionedProductTerminated(conn, tfservicecatalog.ServiceCatalogAcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Product (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Service Catalog Product (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("error getting Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogProductExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -294,21 +172,17 @@ func testAccCheckAwsServiceCatalogProductExists(resourceName string) resource.Te
 
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 
-		input := &servicecatalog.DescribeProductAsAdminInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeProductAsAdmin(input)
+		_, err := waiter.ProvisionedProductReady(conn, tfservicecatalog.ServiceCatalogAcceptLanguageEnglish, rs.Primary.ID, "")
 
 		if err != nil {
-			return fmt.Errorf("error describing Service Catalog Product (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
 		}
 
 		return nil
 	}
 }
 
-func testAccAWSServiceCatalogProductConfigTemplateURLBase(rName string) string {
+func testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -320,46 +194,36 @@ resource "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "%[1]s.json"
 
-  content = <<EOF
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  content = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+
+    Resources = {
+      MyVPC = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = "10.1.0.0/16"
+        }
       }
     }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
-    }
-  }
-}
-EOF
-}
-`, rName)
-}
 
-func testAccAWSServiceCatalogProductConfig_basic(rName, description, supportDescription string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
+    Outputs = {
+      VpcID = {
+        Description = "VPC ID"
+        Value = {
+          Ref = "MyVPC"
+        }
+      }
+    }
+  })
+}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[2]q
+  description         = %[1]q
   distributor         = "distributör"
   name                = %[1]q
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = %[3]q
+  support_description = %[1]q
   support_email       = "support@example.com"
   support_url         = "http://example.com"
 
@@ -367,94 +231,8 @@ resource "aws_servicecatalog_product" "test" {
     description                 = "artefaktbeskrivning"
     disable_template_validation = true
     name                        = %[1]q
-    template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
+    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
     type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, description, supportDescription))
-}
-
-func testAccAWSServiceCatalogProductConfig_updateTags(rName, description, supportDescription string) string {
-	return composeConfig(testAccAWSServiceCatalogProductConfigTemplateURLBase(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description         = %[2]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = %[3]q
-  support_email       = "support@example.com"
-  support_url         = "http://example.com"
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://s3.${data.aws_partition.current.dns_suffix}/${aws_s3_bucket.test.id}/${aws_s3_bucket_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    Yak         = %[1]q
-    Environment = "natural"
-  }
-}
-`, rName, description, supportDescription))
-}
-
-func testAccAWSServiceCatalogProductConfig_physicalID(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudformation_stack" "test" {
-  name = %[1]q
-
-  template_body = <<STACK
-{
-  "Resources" : {
-    "MyVPC": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : "10.0.0.0/16",
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
-      }
-    }
-  },
-  "Outputs" : {
-    "DefaultSgId" : {
-      "Description": "The ID of default security group",
-      "Value" : { "Fn::GetAtt" : [ "MyVPC", "DefaultSecurityGroup" ]}
-    },
-    "VpcID" : {
-      "Description": "The VPC ID",
-      "Value" : { "Ref" : "MyVPC" }
-    }
-  }
-}
-STACK
-}
-
-resource "aws_servicecatalog_product" "test" {
-  description         = "beskrivning"
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = "supportbeskrivning"
-  support_email       = "support@example.com"
-  support_url         = "http://example.com"
-
-  provisioning_artifact_parameters {
-    description          = "artefaktbeskrivning"
-    name                 = %[1]q
-    template_physical_id = aws_cloudformation_stack.test.id
-    type                 = "CLOUD_FORMATION_TEMPLATE"
   }
 
   tags = {
@@ -462,4 +240,15 @@ resource "aws_servicecatalog_product" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSServiceCatalogProvisionedProductConfig_basic(rName string) string {
+	return composeConfig(testAccAWSServiceCatalogProvisionedProductConfigTemplateURLBase(rName), fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_product.test.id
+  provisioning_artifact_name = %[1]q
+  path_name                  = %[1]q
+}
+`, rName))
 }
