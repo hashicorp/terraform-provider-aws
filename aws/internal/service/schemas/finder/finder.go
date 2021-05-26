@@ -34,3 +34,31 @@ func DiscovererByID(conn *schemas.Schemas, id string) (*schemas.DescribeDiscover
 
 	return output, nil
 }
+
+func RegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
+	input := &schemas.DescribeRegistryInput{
+		RegistryName: aws.String(name),
+	}
+
+	output, err := conn.DescribeRegistry(input)
+
+	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
