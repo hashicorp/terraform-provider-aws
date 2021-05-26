@@ -342,7 +342,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 
 	acceptLanguage := tfservicecatalog.ServiceCatalogAcceptLanguageEnglish
 
-	if v, ok := d.GetOk("accept_language"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
 	}
 
