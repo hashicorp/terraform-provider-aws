@@ -7,5 +7,9 @@ resource/aws_wafv2_web_acl: Add `custom_response` to `block` default action and 
 ```
 
 ```release-notes:enhancement
-resource/aws_wafv2_rule_group: Included the above changes to `rule` `allow`, `count`, and `block` actions.
+resource/aws_wafv2_rule_group: Add `custom_request_handling` to `allow` and `count` rule actions.
+```
+
+```release-notes:enhancement
+resource/aws_wafv2_rule_group: Add `custom_response` to `block` rule actions.
 ```
