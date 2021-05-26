@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfschemas "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
@@ -18,49 +20,88 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_schemas_registry", &resource.Sweeper{
 		Name: "aws_schemas_registry",
-		F:    testSweepSchemasRegistry,
+		F:    testSweepSchemasRegistries,
 	})
 }
 
-func testSweepSchemasRegistry(region string) error {
+func testSweepSchemasRegistries(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).schemasconn
-
+	input := &schemas.ListRegistriesInput{}
 	var sweeperErrs *multierror.Error
 
-	input := &schemas.ListRegistriesInput{
-		Limit: aws.Int64(100),
+	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, registry := range page.Registries {
+			registryName := aws.StringValue(registry.RegistryName)
+
+			input := &schemas.ListSchemasInput{
+				RegistryName: aws.String(registryName),
+			}
+
+			err = conn.ListSchemasPages(input, func(page *schemas.ListSchemasOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, schema := range page.Schemas {
+					schemaName := aws.StringValue(schema.SchemaName)
+					if strings.HasPrefix(schemaName, "aws.") {
+						continue
+					}
+
+					r := resourceAwsSchemasSchema()
+					d := r.Data(nil)
+					d.SetId(tfschemas.SchemaCreateResourceID(schemaName, registryName))
+					err = r.Delete(d, client)
+
+					if err != nil {
+						log.Printf("[ERROR] %s", err)
+						sweeperErrs = multierror.Append(sweeperErrs, err)
+						continue
+					}
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Schemas: %w", err))
+			}
+
+			if strings.HasPrefix(registryName, "aws.") {
+				continue
+			}
+
+			r := resourceAwsSchemasRegistry()
+			d := r.Data(nil)
+			d.SetId(registryName)
+			err = r.Delete(d, client)
+
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Schemas Registry sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-	var registries []*schemas.RegistrySummary
-	for {
-		output, err := conn.ListRegistries(input)
-		if err != nil {
-			return err
-		}
-		registries = append(registries, output.Registries...)
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Registries: %w", err))
 	}
-
-	for _, registry := range registries {
-
-		input := &schemas.DeleteRegistryInput{
-			RegistryName: registry.RegistryName,
-		}
-		_, err := conn.DeleteRegistry(input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting Schemas Registry (%s): %w", *registry.RegistryName, err))
-			continue
-		}
-	}
-
-	log.Printf("[INFO] Deleted %d Schemas Registries", len(registries))
 
 	return sweeperErrs.ErrorOrNil()
 }

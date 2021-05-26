@@ -2,12 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -67,82 +64,6 @@ const (
 }
 `
 )
-
-func init() {
-	resource.AddTestSweepers("aws_schemas_schema", &resource.Sweeper{
-		Name: "aws_schemas_schema",
-		F:    testSweepSchemasSchema,
-		Dependencies: []string{
-			"aws_schemas_registry",
-		},
-	})
-}
-
-func testSweepSchemasSchema(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.(*AWSClient).schemasconn
-
-	var sweeperErrs *multierror.Error
-	var deletedSchemas int
-
-	input := &schemas.ListRegistriesInput{
-		Limit: aws.Int64(100),
-	}
-	var registries []*schemas.RegistrySummary
-	for {
-		output, err := conn.ListRegistries(input)
-		if err != nil {
-			return err
-		}
-		registries = append(registries, output.Registries...)
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	for _, registry := range registries {
-		input := &schemas.ListSchemasInput{
-			Limit:        aws.Int64(100),
-			RegistryName: registry.RegistryName,
-		}
-		var existingSchemas []*schemas.SchemaSummary
-		for {
-			output, err := conn.ListSchemas(input)
-			if err != nil {
-				return err
-			}
-			existingSchemas = append(existingSchemas, output.Schemas...)
-
-			if aws.StringValue(output.NextToken) == "" {
-				break
-			}
-			input.NextToken = output.NextToken
-		}
-
-		for _, existingSchema := range existingSchemas {
-
-			input := &schemas.DeleteSchemaInput{
-				SchemaName:   existingSchema.SchemaName,
-				RegistryName: registry.RegistryName,
-			}
-			_, err := conn.DeleteSchema(input)
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting Schemas Schema (%s): %w", *existingSchema.SchemaName, err))
-				continue
-			}
-			deletedSchemas += 1
-		}
-	}
-
-	log.Printf("[INFO] Deleted %d Schemas Schemas", deletedSchemas)
-
-	return sweeperErrs.ErrorOrNil()
-}
 
 func TestAccAWSSchemasSchema_basic(t *testing.T) {
 	var v schemas.DescribeSchemaOutput

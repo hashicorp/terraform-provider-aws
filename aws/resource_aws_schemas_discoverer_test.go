@@ -18,52 +18,48 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_schemas_discoverer", &resource.Sweeper{
 		Name: "aws_schemas_discoverer",
-		F:    testSweepSchemasDiscoverer,
-		Dependencies: []string{
-			"aws_cloudwatch_event_bus",
-		},
+		F:    testSweepSchemasDiscoverers,
 	})
 }
 
-func testSweepSchemasDiscoverer(region string) error {
+func testSweepSchemasDiscoverers(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).schemasconn
-
+	input := &schemas.ListDiscoverersInput{}
 	var sweeperErrs *multierror.Error
 
-	input := &schemas.ListDiscoverersInput{
-		Limit: aws.Int64(100),
-	}
-	var discoverers []*schemas.DiscovererSummary
-	for {
-		output, err := conn.ListDiscoverers(input)
-		if err != nil {
-			return err
+	err = conn.ListDiscoverersPages(input, func(page *schemas.ListDiscoverersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		discoverers = append(discoverers, output.Discoverers...)
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
+		for _, discoverer := range page.Discoverers {
+			r := resourceAwsSchemasDiscoverer()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(discoverer.DiscovererId))
+			err = r.Delete(d, client)
 
-	for _, discoverer := range discoverers {
+			if err != nil {
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
+			}
+		}
 
-		input := &schemas.DeleteDiscovererInput{
-			DiscovererId: discoverer.DiscovererId,
-		}
-		_, err := conn.DeleteDiscoverer(input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting Schemas Discoverer (%s): %w", *discoverer.DiscovererId, err))
-			continue
-		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Schemas Discoverer sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	log.Printf("[INFO] Deleted %d Schemas Discoverers", len(discoverers))
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Schemas Discoverers: %w", err))
+	}
 
 	return sweeperErrs.ErrorOrNil()
 }
