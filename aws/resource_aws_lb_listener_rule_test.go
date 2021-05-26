@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -285,7 +286,7 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_redirect(lbName),
+				Config: testAccAWSLBListenerRuleConfig_redirect(lbName, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
@@ -301,6 +302,54 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.query", "#{query}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.status_code", "HTTP_301"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_redirect(lbName, "param1=value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.host", "#{host}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.path", "/#{path}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.query", "param1=value1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.status_code", "HTTP_301"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerRuleConfig_redirect(lbName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.host", "#{host}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.path", "/#{path}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.query", ""),
 					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.status_code", "HTTP_301"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
@@ -2016,7 +2065,11 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
+func testAccAWSLBListenerRuleConfig_redirect(lbName, query string) string {
+	if query != "null" {
+		query = strconv.Quote(query)
+	}
+
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.front_end.arn
@@ -2028,6 +2081,7 @@ resource "aws_lb_listener_rule" "static" {
     redirect {
       port        = "443"
       protocol    = "HTTPS"
+      query       = %[2]s
       status_code = "HTTP_301"
     }
   }
@@ -2056,7 +2110,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
   subnets         = aws_subnet.alb_test[*].id
@@ -2126,7 +2180,7 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_redirect"
   }
 }
-`, lbName)
+`, lbName, query)
 }
 
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName, response string) string {
