@@ -282,7 +282,7 @@ func testAccAWSSchemasDiscovererConfigTags1(rName, tagKey1, tagValue1 string) st
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
 }
-	
+
 resource "aws_schemas_discoverer" "test" {
   source_arn = aws_cloudwatch_event_bus.test.arn
 
@@ -298,7 +298,7 @@ func testAccAWSSchemasDiscovererConfigTags2(rName, tagKey1, tagValue1, tagKey2, 
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
 }
-	
+
 resource "aws_schemas_discoverer" "test" {
   source_arn = aws_cloudwatch_event_bus.test.arn
 
