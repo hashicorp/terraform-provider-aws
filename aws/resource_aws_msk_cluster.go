@@ -740,9 +740,14 @@ func expandMskClusterClientAuthentication(l []interface{}) *kafka.ClientAuthenti
 
 	m := l[0].(map[string]interface{})
 
-	ca := &kafka.ClientAuthentication{
-		Sasl: expandMskClusterSasl(m["sasl"].([]interface{})),
-		Tls:  expandMskClusterTls(m["tls"].([]interface{})),
+	ca := &kafka.ClientAuthentication{}
+
+	if v, ok := m["sasl"].([]interface{}); ok {
+		ca.Sasl = expandMskClusterSasl(v)
+	}
+
+	if v, ok := m["tls"].([]interface{}); ok {
+		ca.Tls = expandMskClusterTls(v)
 	}
 
 	return ca
