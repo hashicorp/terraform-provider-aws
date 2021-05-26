@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -100,14 +99,9 @@ func resourceAwsEc2CapacityReservation() *schema.Resource {
 				ForceNew: true,
 			},
 			"outpost_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(
-						regexp.MustCompile(`^arn:aws([a-z-]+)?:outposts:[a-z\d-]+:\d{12}:outpost/op-[a-f0-9]{17}$`),
-						"must match ^arn:aws([a-z-]+)?:outposts:[a-z\\d-]+:\\d{12}:outpost/op-[a-f0-9]{17}$",
-					),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
