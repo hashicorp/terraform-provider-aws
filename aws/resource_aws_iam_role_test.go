@@ -346,7 +346,7 @@ func TestAccAWSIAMRole_disappears(t *testing.T) {
 				Config: testAccAWSIAMRoleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRoleExists(resourceName, &role),
-					testAccCheckAWSRoleDisappears(&role),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -975,23 +975,6 @@ func testAccCheckAWSRoleExists(n string, res *iam.GetRoleOutput) resource.TestCh
 		}
 
 		*res = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckAWSRoleDisappears(getRoleOutput *iam.GetRoleOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-
-		roleName := aws.StringValue(getRoleOutput.Role.RoleName)
-
-		_, err := iamconn.DeleteRole(&iam.DeleteRoleInput{
-			RoleName: aws.String(roleName),
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting role %q: %s", roleName, err)
-		}
 
 		return nil
 	}
