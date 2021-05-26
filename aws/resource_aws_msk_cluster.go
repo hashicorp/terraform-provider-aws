@@ -6,7 +6,6 @@ import (
 	"log"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -28,7 +28,9 @@ func resourceAwsMskCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
+			Create: schema.DefaultTimeout(waiter.ClusterCreateTimeout),
+			Update: schema.DefaultTimeout(waiter.ClusterUpdateTimeout),
+			Delete: schema.DefaultTimeout(waiter.ClusterDeleteTimeout),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -413,7 +415,7 @@ func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.ClusterCreateTimeout, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1214,7 +1216,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	input := &kafka.DescribeClusterInput{
 		ClusterArn: aws.String(arn),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(waiter.ClusterDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DescribeCluster(input)
 
 		if err != nil {
@@ -1271,7 +1273,7 @@ func waitForMskClusterOperation(conn *kafka.Kafka, clusterOperationARN string) e
 		Pending: []string{"PENDING", "UPDATE_IN_PROGRESS"},
 		Target:  []string{"UPDATE_COMPLETE"},
 		Refresh: mskClusterOperationRefreshFunc(conn, clusterOperationARN),
-		Timeout: 2 * time.Hour,
+		Timeout: waiter.ClusterUpdateTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK Cluster Operation (%s) completion", clusterOperationARN)
