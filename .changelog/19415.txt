@@ -1,9 +1,9 @@
 ```release-notes:enhancement
-resource/aws_wafv2_web_acl: Add `custom_request_handling` to `allow` and `count` actions.
+resource/aws_wafv2_web_acl: Add `custom_request_handling` to `allow` and `count` default action and rule actions.
 ```
 
 ```release-notes:enhancement
-resource/aws_wafv2_web_acl: Add `custom_response` to `block` actions.
+resource/aws_wafv2_web_acl: Add `custom_response` to `block` default action and rule actions.
 ```
 
 ```release-notes:enhancement
