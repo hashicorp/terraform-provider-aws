@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events) Schemas"
+subcategory: "EventBridge Schemas"
 layout: "aws"
 page_title: "AWS: aws_schemas_registry"
 description: |-
