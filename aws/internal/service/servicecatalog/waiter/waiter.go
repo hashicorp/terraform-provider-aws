@@ -43,6 +43,11 @@ const (
 
 	LaunchPathsReadyTimeout = 3 * time.Minute
 
+	ProvisionedProductReadyTimeout  = 3 * time.Minute
+	ProvisionedProductDeleteTimeout = 3 * time.Minute
+
+	RecordReadyTimeout = 3 * time.Minute
+
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
 
@@ -457,6 +462,53 @@ func LaunchPathsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, produ
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.([]*servicecatalog.LaunchPathSummary); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string) (*servicecatalog.DescribeProvisionedProductOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: ProvisionedProductStatus(conn, acceptLanguage, id, name),
+		Timeout: ProvisionedProductReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ProvisionedProductTerminated(conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
+		Target:  []string{StatusNotFound, StatusUnavailable},
+		Refresh: ProvisionedProductStatus(conn, acceptLanguage, id, name),
+		Timeout: ProvisionedProductDeleteTimeout,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func RecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) (*servicecatalog.DescribeRecordOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
+		Target:  []string{servicecatalog.StatusAvailable},
+		Refresh: RecordStatus(conn, acceptLanguage, id),
+		Timeout: RecordReadyTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeRecordOutput); ok {
 		return output, err
 	}
 
