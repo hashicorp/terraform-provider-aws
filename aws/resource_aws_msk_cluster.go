@@ -690,7 +690,25 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
+}
 
+func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).kafkaconn
+
+	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
+	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
+		ClusterArn: aws.String(d.Id()),
+	})
+	if err != nil {
+		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
+
+	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
 }
 
 func expandMskClusterBrokerNodeGroupInfo(l []interface{}) *kafka.BrokerNodeGroupInfo {
@@ -790,13 +808,18 @@ func expandMskClusterSasl(l []interface{}) *kafka.Sasl {
 		return nil
 	}
 
-	sasl := &kafka.Sasl{
-		Scram: &kafka.Scram{
-			Enabled: aws.Bool(tfMap["scram"].(bool)),
-		},
-		Iam: &kafka.Iam{
-			Enabled: aws.Bool(tfMap["iam"].(bool)),
-		},
+	sasl := &kafka.Sasl{}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		sasl.Scram = &kafka.Scram{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		sasl.Iam = &kafka.Iam{
+			Enabled: aws.Bool(v),
+		}
 	}
 
 	return sasl
@@ -1175,25 +1198,6 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 	}
 
 	return []map[string]interface{}{m}
-}
-
-func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).kafkaconn
-
-	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
-	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
 }
 
 func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
