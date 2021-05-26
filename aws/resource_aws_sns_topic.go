@@ -75,8 +75,9 @@ func resourceAwsSnsTopic() *schema.Resource {
 				},
 			},
 			"application_success_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"application_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -84,12 +85,14 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"application_failure_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"http_success_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"http_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -97,8 +100,9 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"http_failure_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"kms_master_key_id": {
 				Type:     schema.TypeString,
@@ -115,9 +119,25 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"firehose_success_feedback_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
+			"firehose_success_feedback_sample_rate": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 100),
+			},
+			"firehose_failure_feedback_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
+			},
 			"lambda_success_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"lambda_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -125,12 +145,14 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"lambda_failure_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"sqs_success_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"sqs_success_feedback_sample_rate": {
 				Type:         schema.TypeInt,
@@ -138,10 +160,15 @@ func resourceAwsSnsTopic() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
 			"sqs_failure_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -298,6 +325,24 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if d.HasChange("firehose_failure_feedback_role_arn") {
+		_, v := d.GetChange("firehose_failure_feedback_role_arn")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, snsconn); err != nil {
+			return err
+		}
+	}
+	if d.HasChange("firehose_success_feedback_role_arn") {
+		_, v := d.GetChange("firehose_success_feedback_role_arn")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, snsconn); err != nil {
+			return err
+		}
+	}
+	if d.HasChange("firehose_success_feedback_sample_rate") {
+		_, v := d.GetChange("firehose_success_feedback_sample_rate")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, snsconn); err != nil {
+			return err
+		}
+	}
 
 	return resourceAwsSnsTopicRead(d, meta)
 }
@@ -414,6 +459,24 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
+	if d.HasChange("firehose_failure_feedback_role_arn") {
+		_, v := d.GetChange("firehose_failure_feedback_role_arn")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseFailureFeedbackRoleArn", v, snsconn); err != nil {
+			return err
+		}
+	}
+	if d.HasChange("firehose_success_feedback_role_arn") {
+		_, v := d.GetChange("firehose_success_feedback_role_arn")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackRoleArn", v, snsconn); err != nil {
+			return err
+		}
+	}
+	if d.HasChange("firehose_success_feedback_sample_rate") {
+		_, v := d.GetChange("firehose_success_feedback_sample_rate")
+		if err := updateAwsSnsTopicAttribute(d.Id(), "FirehoseSuccessFeedbackSampleRate", v, snsconn); err != nil {
+			return err
+		}
+	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -463,6 +526,9 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("policy", attributeOutput.Attributes["Policy"])
 		d.Set("sqs_failure_feedback_role_arn", attributeOutput.Attributes["SQSFailureFeedbackRoleArn"])
 		d.Set("sqs_success_feedback_role_arn", attributeOutput.Attributes["SQSSuccessFeedbackRoleArn"])
+		d.Set("firehose_success_feedback_role_arn", attributeOutput.Attributes["FirehoseSuccessFeedbackRoleArn"])
+		d.Set("firehose_failure_feedback_role_arn", attributeOutput.Attributes["FirehoseFailureFeedbackRoleArn"])
+		d.Set("owner", attributeOutput.Attributes["Owner"])
 
 		// set the boolean values
 		if v, ok := attributeOutput.Attributes["FifoTopic"]; ok && aws.StringValue(v) == "true" {
@@ -513,6 +579,15 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			d.Set("sqs_success_feedback_sample_rate", v)
 		}
+
+		vStr = aws.StringValue(attributeOutput.Attributes["FirehoseSuccessFeedbackSampleRate"])
+		if vStr != "" {
+			v, err = strconv.ParseInt(vStr, 10, 64)
+			if err != nil {
+				return fmt.Errorf("error parsing integer attribute 'FirehoseSuccessFeedbackSampleRate': %w", err)
+			}
+			d.Set("firehose_success_feedback_sample_rate", v)
+		}
 	}
 
 	d.Set("fifo_topic", fifoTopic)
@@ -560,6 +635,9 @@ func resourceAwsSnsTopicDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
+		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("error deleting SNS Topic (%s): %w", d.Id(), err)
 	}
 
