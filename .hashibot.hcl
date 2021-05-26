@@ -471,6 +471,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/sagemaker" = [
       "aws_sagemaker_",
     ],
+    "service/schemas" = [
+      "aws_schemas_",
+    ],
     "service/secretsmanager" = [
       "aws_secretsmanager_",
     ],

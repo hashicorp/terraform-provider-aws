@@ -103,6 +103,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -333,6 +334,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(securityhub.New)
 	case "servicediscovery":
 		funcType = reflect.TypeOf(servicediscovery.New)
+	case "schemas":
+		funcType = reflect.TypeOf(schemas.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
 	case "shield":
