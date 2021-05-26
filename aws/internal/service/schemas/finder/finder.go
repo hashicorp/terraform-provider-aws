@@ -62,3 +62,32 @@ func RegistryByName(conn *schemas.Schemas, name string) (*schemas.DescribeRegist
 
 	return output, nil
 }
+
+func SchemaByNameAndRegistryName(conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
+	input := &schemas.DescribeSchemaInput{
+		RegistryName: aws.String(registryName),
+		SchemaName:   aws.String(name),
+	}
+
+	output, err := conn.DescribeSchema(input)
+
+	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

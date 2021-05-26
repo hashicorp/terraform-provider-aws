@@ -6,60 +6,67 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	schemas "github.com/aws/aws-sdk-go/service/schemas"
+	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfschemas "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-var schemaType = schemas.TypeOpenApi3
-var content = `{
-	"openapi": "3.0.0",
-	"info": {
-	  "version": "1.0.0",
-	  "title": "Event"
-	},
-	"paths": {},
-	"components": {
-	  "schemas": {
-		"Event": {
-		  "type": "object",
-		  "properties": {
-			"name": {
-			  "type": "string"
-			}
-		  }
-		}
+const (
+	testAccAWSSchemasSchemaContent = `
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Event"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Event": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+`
+
+	testAccAWSSchemasSchemaContentUpdated = `
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "2.0.0",
+    "title": "Event"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Event": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
 	  }
 	}
   }
+}
 `
-var contentModified = `{
-	"openapi": "3.0.0",
-	"info": {
-	  "version": "2.0.0",
-	  "title": "Event"
-	},
-	"paths": {},
-	"components": {
-	  "schemas": {
-		"Event": {
-		  "type": "object",
-		  "properties": {
-			"name": {
-			  "type": "string"
-			},
-			"created_at": {
-			  "type": "string",
-			  "format": "date-time"
-			}
-		  }
-		}
-	  }
-	}
-  }
-`
+)
 
 func init() {
 	resource.AddTestSweepers("aws_schemas_schema", &resource.Sweeper{
@@ -138,169 +145,36 @@ func testSweepSchemasSchema(region string) error {
 }
 
 func TestAccAWSSchemasSchema_basic(t *testing.T) {
-	var v1, v2, v3 schemas.DescribeSchemaOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
-	nameModified := acctest.RandomWithPrefix("tf-acc-test")
-
-	registry := acctest.RandomWithPrefix("tf-acc-test")
-
-	description := acctest.RandomWithPrefix("tf-acc-test")
-	descriptionModified := acctest.RandomWithPrefix("tf-acc-test")
-
+	var v schemas.DescribeSchemaOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfig(
-					name,
-					registry,
-					schemaType,
-					content,
-					description,
-				),
+				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "registry", registry),
-					resource.TestCheckResourceAttr(resourceName, "type", schemaType),
-					resource.TestCheckResourceAttr(resourceName, "content", content),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", registry, name)),
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
+					resource.TestCheckResourceAttrSet(resourceName, "content"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", "OpenApi3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_created_date"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSSchemasSchemaConfig(
-					nameModified,
-					registry,
-					schemaType,
-					contentModified,
-					descriptionModified,
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
-					resource.TestCheckResourceAttr(resourceName, "registry", registry),
-					resource.TestCheckResourceAttr(resourceName, "type", schemaType),
-					resource.TestCheckResourceAttr(resourceName, "content", contentModified),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", registry, nameModified)),
-					testAccCheckSchemasSchemaRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				Config: testAccAWSSchemasSchemaConfig_Tags1(
-					nameModified,
-					registry,
-					schemaType,
-					contentModified,
-					"key",
-					"value",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v3),
-					testAccCheckSchemasSchemaNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSchemasSchema_tags(t *testing.T) {
-	var v1, v2, v3, v4 schemas.DescribeSchemaOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
-	registry := acctest.RandomWithPrefix("tf-acc-test")
-	description := acctest.RandomWithPrefix("tf-acc-test")
-
-	resourceName := "aws_schemas_schema.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSchemasSchemaConfig_Tags1(
-					name,
-					registry,
-					schemaType,
-					content,
-					"key1",
-					"value",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSSchemasSchemaConfig_Tags2(
-					name,
-					registry,
-					schemaType,
-					content,
-					"key1",
-					"updated",
-					"key2",
-					"added",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v2),
-					testAccCheckSchemasSchemaNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
-				),
-			},
-			{
-				Config: testAccAWSSchemasSchemaConfig_Tags1(
-					name,
-					registry,
-					schemaType,
-					content,
-					"key2",
-					"added",
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v3),
-					testAccCheckSchemasSchemaNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "added"),
-				),
-			},
-			{
-				Config: testAccAWSSchemasSchemaConfig(
-					name,
-					registry,
-					schemaType,
-					content,
-					description,
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemasSchemaExists(resourceName, &v4),
-					testAccCheckSchemasSchemaNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
 			},
 		},
 	})
@@ -308,31 +182,113 @@ func TestAccAWSSchemasSchema_tags(t *testing.T) {
 
 func TestAccAWSSchemasSchema_disappears(t *testing.T) {
 	var v schemas.DescribeSchemaOutput
-	name := acctest.RandomWithPrefix("tf-acc-test")
-	registry := acctest.RandomWithPrefix("tf-acc-test")
-	description := acctest.RandomWithPrefix("tf-acc-test")
-
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
 		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSchemasSchemaConfig(
-					name,
-					registry,
-					schemaType,
-					content,
-					description,
-				),
+				Config: testAccAWSSchemasSchemaConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemasSchemaExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSchemasSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSchemasSchema_ContentDescription(t *testing.T) {
+	var v schemas.DescribeSchemaOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_schemas_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccAWSSchemasSchemaContent, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "content", testAccAWSSchemasSchemaContent),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSchemasSchemaConfigContentDescription(rName, testAccAWSSchemasSchemaContentUpdated, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "content", testAccAWSSchemasSchemaContentUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSchemasSchemaConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSchemasSchema_Tags(t *testing.T) {
+	var v schemas.DescribeSchemaOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_schemas_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(schemas.EndpointsID, t) },
+		ErrorCheck:   testAccErrorCheck(t, schemas.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSchemasSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSchemasSchemaConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSchemasSchemaConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSchemasSchemaConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemasSchemaExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -346,21 +302,23 @@ func testAccCheckAWSSchemasSchemaDestroy(s *terraform.State) error {
 			continue
 		}
 
-		schemaName, registryName, err := parseSchemaID(rs.Primary.ID)
+		name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		params := schemas.DescribeSchemaInput{
-			SchemaName:   aws.String(schemaName),
-			RegistryName: aws.String(registryName),
+		_, err = finder.SchemaByNameAndRegistryName(conn, name, registryName)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		resp, err := conn.DescribeSchema(&params)
-
-		if err == nil {
-			return fmt.Errorf("Schemas Schema (%s) still exists: %s", rs.Primary.ID, resp)
+		if err != nil {
+			return err
 		}
+
+		return fmt.Errorf("EventBridge Schemas Schema %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -373,100 +331,96 @@ func testAccCheckSchemasSchemaExists(n string, v *schemas.DescribeSchemaOutput) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		schemaName, registryName, err := parseSchemaID(rs.Primary.ID)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EventBridge Schemas Schema ID is set")
+		}
+
+		name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		params := schemas.DescribeSchemaInput{
-			SchemaName:   aws.String(schemaName),
-			RegistryName: aws.String(registryName),
-		}
 		conn := testAccProvider.Meta().(*AWSClient).schemasconn
 
-		resp, err := conn.DescribeSchema(&params)
+		output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
+
 		if err != nil {
 			return err
 		}
-		if resp == nil {
-			return fmt.Errorf("Schemas Schema (%s) not found", n)
-		}
 
-		*v = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckSchemasSchemaRecreated(i, j *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.SchemaArn) == aws.StringValue(j.SchemaArn) {
-			return fmt.Errorf("Schemas Schema not recreated")
-		}
-		return nil
-	}
-}
-
-func testAccCheckSchemasSchemaNotRecreated(i, j *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if aws.StringValue(i.SchemaArn) != aws.StringValue(j.SchemaArn) {
-			return fmt.Errorf("Schemas Schema was recreated")
-		}
-		return nil
-	}
-}
-
-func testAccAWSSchemasSchemaConfig(name, registry, schemaType, content, description string) string {
+func testAccAWSSchemasSchemaConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_schemas_registry" "test" {
-	name = %[2]q
-}
-
-resource "aws_schemas_schema" "test" {
   name = %[1]q
-  registry = aws_schemas_registry.test.name
-  type = %[3]q
-  content = %[4]q
-  description = %[5]q
-}
-`, name, registry, schemaType, content, description)
-}
-
-func testAccAWSSchemasSchemaConfig_Tags1(name, registry, schemaType, content, key, value string) string {
-	return fmt.Sprintf(`
-resource "aws_schemas_registry" "test" {
-	name = %[2]q
 }
 
 resource "aws_schemas_schema" "test" {
-	name = %[1]q
-	registry = aws_schemas_registry.test.name
-	type = %[3]q
-	content = %[4]q
+  name          = %[1]q
+  registry_name = aws_schemas_registry.test.name
+  type          = "OpenApi3"
+  content       = %[2]q
+}
+`, rName, testAccAWSSchemasSchemaContent)
+}
+
+func testAccAWSSchemasSchemaConfigContentDescription(rName, content, description string) string {
+	return fmt.Sprintf(`
+resource "aws_schemas_registry" "test" {
+  name = %[1]q
+}
+
+resource "aws_schemas_schema" "test" {
+  name          = %[1]q
+  registry_name = aws_schemas_registry.test.name
+  type          = "OpenApi3"
+  content       = %[2]q
+  description   = %[3]q
+}
+`, rName, content, description)
+}
+
+func testAccAWSSchemasSchemaConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_schemas_registry" "test" {
+  name = %[1]q
+}
+
+resource "aws_schemas_schema" "test" {
+  name          = %[1]q
+  registry_name = aws_schemas_registry.test.name
+  type          = "OpenApi3"
+  content       = %[2]q
 
   tags = {
-    %[5]q = %[6]q
+    %[3]q = %[4]q
   }
 }
-`, name, registry, schemaType, content, key, value)
+`, rName, testAccAWSSchemasSchemaContent, tagKey1, tagValue1)
 }
 
-func testAccAWSSchemasSchemaConfig_Tags2(name, registry, schemaType, content, key1, value1, key2, value2 string) string {
+func testAccAWSSchemasSchemaConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_schemas_registry" "test" {
-	name = %[2]q
+  name = %[1]q
 }
 
 resource "aws_schemas_schema" "test" {
-	name = %[1]q
-	registry = aws_schemas_registry.test.name
-	type = %[3]q
-	content = %[4]q
+  name          = %[1]q
+  registry_name = aws_schemas_registry.test.name
+  type          = "OpenApi3"
+  content       = %[2]q
 
   tags = {
+    %[3]q = %[4]q
     %[5]q = %[6]q
-    %[7]q = %[8]q
   }
 }
-`, name, registry, schemaType, content, key1, value1, key2, value2)
+`, rName, testAccAWSSchemasSchemaContent, tagKey1, tagValue1, tagKey2, tagValue2)
 }

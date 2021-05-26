@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	schemas "github.com/aws/aws-sdk-go/service/schemas"
+	"github.com/aws/aws-sdk-go/service/schemas"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfschemas "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func resourceAwsSchemasSchema() *schema.Resource {
@@ -24,6 +28,28 @@ func resourceAwsSchemasSchema() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"content": {
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+			},
+
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -33,128 +59,128 @@ func resourceAwsSchemasSchema() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
 				),
 			},
-			"content": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
+
+			"registry_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"registry": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-			},
+
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(schemas.Type_Values(), true),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"version_created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tagsSchema(),
+
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
+
+		CustomizeDiff: SetTagsDiff,
 	}
 }
 
 func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &schemas.CreateSchemaInput{}
-	if name, ok := d.GetOk("name"); ok {
-		input.SchemaName = aws.String(name.(string))
-	}
-	if registry, ok := d.GetOk("registry"); ok {
-		input.RegistryName = aws.String(registry.(string))
-	}
-	if schemaType, ok := d.GetOk("type"); ok {
-		input.Type = aws.String(schemaType.(string))
-	}
-	if content, ok := d.GetOk("content"); ok {
-		input.Content = aws.String(content.(string))
-	}
-	if description, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(description.(string))
-	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SchemasTags()
+	name := d.Get("name").(string)
+	registryName := d.Get("registry_name").(string)
+	input := &schemas.CreateSchemaInput{
+		Content:      aws.String(d.Get("content").(string)),
+		RegistryName: aws.String(registryName),
+		SchemaName:   aws.String(name),
+		Type:         aws.String(d.Get("type").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Schemas Schema: %v", input)
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
 
+	if len(tags) > 0 {
+		input.Tags = tags.IgnoreAws().SchemasTags()
+	}
+
+	id := tfschemas.SchemaCreateResourceID(name, registryName)
+
+	log.Printf("[DEBUG] Creating EventBridge Schemas Schema: %s", input)
 	_, err := conn.CreateSchema(input)
+
 	if err != nil {
-		return fmt.Errorf("Creating Schemas Schema (%s) failed: %w", *input.SchemaName, err)
+		return fmt.Errorf("error creating EventBridge Schemas Schema (%s): %w", id, err)
 	}
 
-	id := fmt.Sprintf("%s/%s", aws.StringValue(input.SchemaName), aws.StringValue(input.RegistryName))
 	d.SetId(id)
-
-	log.Printf("[INFO] Schemas Schema (%s) created", d.Id())
 
 	return resourceAwsSchemasSchemaRead(d, meta)
 }
 
 func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	schemaName, registryName, err := parseSchemaID(d.Id())
+	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
 	}
 
-	input := &schemas.DescribeSchemaInput{
-		SchemaName:   aws.String(schemaName),
-		RegistryName: aws.String(registryName),
-	}
+	output, err := finder.SchemaByNameAndRegistryName(conn, name, registryName)
 
-	log.Printf("[DEBUG] Reading Schemas Schema (%s)", d.Id())
-	output, err := conn.DescribeSchema(input)
-	if isAWSErr(err, schemas.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Schemas Schema (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-	if err != nil {
-		return fmt.Errorf("error reading Schemas Schema: %w", err)
-	}
 
-	log.Printf("[DEBUG] Found CloudWatch Event bus: %#v", *output)
+	if err != nil {
+		return fmt.Errorf("error reading EventBridge Schemas Schema (%s): %w", d.Id(), err)
+	}
 
 	d.Set("arn", output.SchemaArn)
-	d.Set("name", output.SchemaName)
-	d.Set("registry", aws.StringValue(input.RegistryName))
 	d.Set("content", output.Content)
 	d.Set("description", output.Description)
+	if output.LastModified != nil {
+		d.Set("last_modified", aws.TimeValue(output.LastModified).Format(time.RFC3339))
+	} else {
+		d.Set("last_modified", nil)
+	}
+	d.Set("name", output.SchemaName)
+	d.Set("registry_name", registryName)
 	d.Set("type", output.Type)
 	d.Set("version", output.SchemaVersion)
-	d.Set("version_created_date", output.VersionCreatedDate.String())
-	d.Set("last_modified", output.LastModified.String())
-
-	tags, err := keyvaluetags.SchemasListTags(conn, *output.SchemaArn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for Schemas Schema (%s): %w", d.Id(), err)
+	if output.VersionCreatedDate != nil {
+		d.Set("version_created_date", aws.TimeValue(output.VersionCreatedDate).Format(time.RFC3339))
+	} else {
+		d.Set("version_created_date", nil)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+
+	tags, err := keyvaluetags.SchemasListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for EventBridge Schemas Schema (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
 	return nil
@@ -163,36 +189,39 @@ func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
 
-	if d.HasChanges("name", "registry", "type", "content", "description") {
-		input := &schemas.UpdateSchemaInput{
-			Description: aws.String(""),
-		}
-		if name, ok := d.GetOk("name"); ok {
-			input.SchemaName = aws.String(name.(string))
-		}
-		if registry, ok := d.GetOk("registry"); ok {
-			input.RegistryName = aws.String(registry.(string))
-		}
-		if schemaType, ok := d.GetOk("type"); ok {
-			input.Type = aws.String(schemaType.(string))
-		}
-		if content, ok := d.GetOk("content"); ok {
-			input.Content = aws.String(content.(string))
-		}
-		if description, ok := d.GetOk("description"); ok {
-			input.Description = aws.String(description.(string))
-		}
-		log.Printf("[DEBUG] Updating Schemas Schema: %s", input)
-		_, err := conn.UpdateSchema(input)
+	if d.HasChanges("content", "description", "type") {
+		name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+
 		if err != nil {
-			return fmt.Errorf("error updating Schemas Schema (%s): %w", d.Id(), err)
+			return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+		}
+
+		input := &schemas.UpdateSchemaInput{
+			RegistryName: aws.String(registryName),
+			SchemaName:   aws.String(name),
+		}
+
+		if d.HasChanges("content", "type") {
+			input.Content = aws.String(d.Get("content").(string))
+			input.Type = aws.String(d.Get("type").(string))
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		log.Printf("[DEBUG] Updating EventBridge Schemas Schema: %s", input)
+		_, err = conn.UpdateSchema(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EventBridge Schemas Schema (%s): %w", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 		if err := keyvaluetags.SchemasUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -202,34 +231,25 @@ func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSchemasSchemaDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).schemasconn
 
-	schemaName, registryName, err := parseSchemaID(d.Id())
+	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
 	}
 
-	input := &schemas.DeleteSchemaInput{
-		SchemaName:   aws.String(schemaName),
+	log.Printf("[INFO] Deleting EventBridge Schemas Schema (%s)", d.Id())
+	_, err = conn.DeleteSchema(&schemas.DeleteSchemaInput{
 		RegistryName: aws.String(registryName),
-	}
+		SchemaName:   aws.String(name),
+	})
 
-	log.Printf("[INFO] Deleting Schemas Schema (%s)", d.Id())
-	_, err = conn.DeleteSchema(input)
-	if isAWSErr(err, schemas.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Schemas Schema (%s) not found", d.Id())
+	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting Schemas Schema (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting EventBridge Schemas Schema (%s): %w", d.Id(), err)
 	}
-	log.Printf("[INFO] Schemas Schema (%s) deleted", d.Id())
 
 	return nil
-}
-
-func parseSchemaID(id string) (string, string, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%q), expected SCHEMA_NAME:REGISTRY_NAME", id)
-	}
-	return parts[0], parts[1], nil
 }
