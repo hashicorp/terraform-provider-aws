@@ -158,6 +158,9 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				// BadRequestException: The minimum increase in storage size of the cluster should be atleast 100GB
@@ -199,6 +202,7 @@ func TestAccAWSMskCluster_BrokerNodeGroupInfo_InstanceType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
 					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+					"current_version",
 				},
 			},
 			{
@@ -264,6 +268,9 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Scram(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
@@ -319,6 +326,9 @@ func TestAccAWSMskCluster_ClientAuthentication_Sasl_Iam(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
@@ -350,6 +360,9 @@ func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *t
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
@@ -382,6 +395,9 @@ func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigConfigurationInfoRevision2(rName),
@@ -455,6 +471,9 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *tes
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
@@ -484,6 +503,9 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
@@ -511,6 +533,9 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigEnhancedMonitoring(rName, "PER_TOPIC_PER_BROKER"),
@@ -657,6 +682,9 @@ func TestAccAWSMskCluster_LoggingInfo(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigLoggingInfo(rName, true, true, true),
@@ -699,6 +727,9 @@ func TestAccAWSMskCluster_KafkaVersionUpgrade(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigKafkaVersion(rName, "2.8.0"),
@@ -739,6 +770,9 @@ func TestAccAWSMskCluster_KafkaVersionDowngrade(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigKafkaVersion(rName, "2.7.1"),
@@ -784,6 +818,9 @@ func TestAccAWSMskCluster_KafkaVersionUpgradeWithConfigurationInfo(t *testing.T)
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 			{
 				Config: testAccMskClusterConfigKafkaVersionWithConfigurationInfo(rName, "2.8.0", "config2"),
@@ -833,6 +870,9 @@ func TestAccAWSMskCluster_Tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
 			},
 		},
 	})
