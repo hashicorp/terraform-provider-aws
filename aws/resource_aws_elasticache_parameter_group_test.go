@@ -597,7 +597,7 @@ resource "aws_elasticache_parameter_group" "test" {
   name   = %[2]q
 
   tags = {
-	%[3]s  = %[4]q
+    %[3]s = %[4]q
   }
 }
 `, family, rName, tagName1, tagValue1)
@@ -610,8 +610,8 @@ resource "aws_elasticache_parameter_group" "test" {
   name   = %[2]q
 
   tags = {
-    %[3]s  = %[4]q
-    %[5]s  = %[6]q
+    %[3]s = %[4]q
+    %[5]s = %[6]q
   }
 }
 `, family, rName, tagName1, tagValue1, tagName2, tagValue2)
