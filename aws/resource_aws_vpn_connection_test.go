@@ -397,6 +397,74 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSVpnConnection_tunnelOptionsLesser(t *testing.T) {
+	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+	var vpn ec2.VpnConnection
+
+	tunnel1 := TunnelOptions{
+		psk:                        "12345678",
+		tunnelCidr:                 "169.254.8.0/30",
+		dpdTimeoutAction:           "clear",
+		dpdTimeoutSeconds:          30,
+		ikeVersions:                "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
+		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:      28800,
+		phase2DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
+		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:      3600,
+		rekeyFuzzPercentage:        100,
+		rekeyMarginTimeSeconds:     540,
+		replayWindowSize:           1024,
+		startupAction:              "add",
+	}
+
+	tunnel2 := TunnelOptions{
+		psk:                        "abcdefgh",
+		tunnelCidr:                 "169.254.9.0/30",
+		dpdTimeoutAction:           "clear",
+		dpdTimeoutSeconds:          30,
+		ikeVersions:                "\"ikev1\", \"ikev2\"",
+		phase1DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
+		phase1EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase1IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase1LifetimeSeconds:      28800,
+		phase2DhGroupNumbers:       "14, 15, 16, 17, 18, 19, 20, 21",
+		phase2EncryptionAlgorithms: "\"AES128\", \"AES256\", \"AES128-GCM-16\", \"AES256-GCM-16\"",
+		phase2IntegrityAlgorithms:  "\"SHA2-256\", \"SHA2-384\", \"SHA2-512\"",
+		phase2LifetimeSeconds:      3600,
+		rekeyFuzzPercentage:        100,
+		rekeyMarginTimeSeconds:     540,
+		replayWindowSize:           1024,
+		startupAction:              "add",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAwsVpnConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
+
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
+
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
@@ -529,10 +597,10 @@ func TestAccAWSVpnConnection_specifyIpv4(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsVpnConnectionConfigLocalRemoteIpv4Cidrs("10.111.0.0/16", "10.222.33.0/24"),
@@ -551,10 +619,10 @@ func TestAccAWSVpnConnection_specifyIpv6(t *testing.T) {
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccAwsVpnConnectionDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsVpnConnectionConfigIpv6(65000, "1111:2222:3333:4444::/64", "5555:6666:7777::/48", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
