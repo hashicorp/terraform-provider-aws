@@ -29,13 +29,13 @@ func testSweepBudgetsBudgetActionss(region string) error {
 	}
 	conn := client.(*AWSClient).budgetconn
 	accountID := client.(*AWSClient).accountid
-	input := &budgets.DescribeBudgetsInput{
+	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
 	}
 	var sweeperErrs *multierror.Error
 
 	for {
-		output, err := conn.DescribeBudgets(input)
+		output, err := conn.DescribeBudgetActionsForAccount(input)
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Budgets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
@@ -45,19 +45,18 @@ func testSweepBudgetsBudgetActionss(region string) error {
 			return sweeperErrs
 		}
 
-		for _, budget := range output.Budgets {
-			name := aws.StringValue(budget.BudgetName)
+		for _, action := range output.Actions {
+			name := aws.StringValue(action.BudgetName)
+			log.Printf("[INFO] Deleting Budget Action: %s", name)
+			id := fmt.Sprintf("%s:%s:%s", accountID, aws.StringValue(action.ActionId), name)
 
-			log.Printf("[INFO] Deleting Budget: %s", name)
-			_, err := conn.DeleteBudget(&budgets.DeleteBudgetInput{
-				AccountId:  aws.String(accountID),
-				BudgetName: aws.String(name),
-			})
-			if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
-				continue
-			}
+			r := resourceAwsBudgetsBudgetAction()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			err := r.Delete(d, client)
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Budget (%s): %w", name, err)
+				sweeperErr := fmt.Errorf("error deleting Budget Action (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
