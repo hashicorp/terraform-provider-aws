@@ -1303,8 +1303,8 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
   static_routes_only  = false
 
-  local_ipv4_network_cidr  = %[3]s
-  remote_ipv4_network_cidr = %[4]s
+  local_ipv4_network_cidr  = %[3]q
+  remote_ipv4_network_cidr = %[4]q
 }
 `, rName, rBgpAsn, localIpv4Cidr, remoteIpv4Cidr)
 }
