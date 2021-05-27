@@ -40,6 +40,7 @@ BUG FIXES:
 * resource/aws_glue_connection: `connection_properties` are optional ([#19375](https://github.com/hashicorp/terraform-provider-aws/issues/19375))
 * resource/aws_lb_listener_rule: Allow blank string for `action.redirect.query` nested argument ([#19496](https://github.com/hashicorp/terraform-provider-aws/issues/19496))
 * resource/aws_synthetics_canary: Change minimum `timeout_in_seconds` in `run_config` from `60` to `3` ([#19515](https://github.com/hashicorp/terraform-provider-aws/issues/19515))
+* resource/aws_emr_instance_group: Fix read when EMR cluster no longer exists([#19552](https://github.com/hashicorp/terraform-provider-aws/issues/19552))
 
 ## 3.42.0 (May 20, 2021)
 
