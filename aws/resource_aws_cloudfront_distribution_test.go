@@ -448,6 +448,7 @@ func TestAccAWSCloudFrontDistribution_Origin_ConnectionAttempts(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
@@ -478,6 +479,7 @@ func TestAccAWSCloudFrontDistribution_Origin_ConnectionTimeout(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
@@ -508,11 +510,12 @@ func TestAccAWSCloudFrontDistribution_Origin_OriginShield(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("cloudfront", t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudfront.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`null`, `"us-east-1"`)),
+				Config:      testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`null`, `data.aws_region.current.name`)),
 				ExpectError: regexp.MustCompile(`Missing required argument`),
 			},
 			{
@@ -525,19 +528,19 @@ func TestAccAWSCloudFrontDistribution_Origin_OriginShield(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`false`, `""`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code \(eg\. us\-east\-1\).*`),
+				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
 				Config:      testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`true`, `"US East (Ohio)"`)),
-				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code \(eg\. us\-east\-1\).*`),
+				ExpectError: regexp.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
-				Config: testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`true`, `"us-east-1"`)),
+				Config: testAccAWSCloudFrontDistributionOriginItem(rName, rInt, originShieldItem(`true`, `"us-east-1"`)), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", `true`),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"), //lintignore:AWSAT003
 				),
 			},
 		},
@@ -3642,6 +3645,8 @@ func testAccAWSCloudFrontDistributionOriginItem(rName string, rInt int, item str
 variable rand_id {
   default = %[1]d
 }
+
+data "aws_region" "current" {}
 
 resource "aws_cloudfront_distribution" "test" {
   origin {

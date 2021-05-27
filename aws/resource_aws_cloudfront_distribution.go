@@ -587,7 +587,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"origin_shield_region": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(awsRegionRegexp, "must be a valid AWS Region Code (eg. us-east-1)"),
+										ValidateFunc: validation.StringMatch(awsRegionRegexp, "must be a valid AWS Region Code"),
 									},
 								},
 							},

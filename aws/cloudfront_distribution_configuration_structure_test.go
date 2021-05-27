@@ -139,7 +139,7 @@ func customOriginSslProtocolsConf() *schema.Set {
 func originShield() map[string]interface{} {
 	return map[string]interface{}{
 		"enabled":              true,
-		"origin_shield_region": "us-east-1",
+		"origin_shield_region": "testRegion",
 	}
 }
 
@@ -830,8 +830,8 @@ func TestCloudFrontStructure_expandOriginShield(t *testing.T) {
 	if *o.Enabled != true {
 		t.Fatalf("Expected Enabled to be true, got %v", *o.Enabled)
 	}
-	if *o.OriginShieldRegion != "us-east-1" {
-		t.Fatalf("Expected OriginShieldRegion to be us-east-1, got %v", *o.OriginShieldRegion)
+	if *o.OriginShieldRegion != "testRegion" {
+		t.Fatalf("Expected OriginShieldRegion to be testRegion, got %v", *o.OriginShieldRegion)
 	}
 }
 
