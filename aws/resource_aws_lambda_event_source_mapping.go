@@ -128,6 +128,15 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				},
 			},
 
+			"function_response_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.FunctionResponseType_Values(), false),
+				},
+			},
+
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -294,6 +303,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		target = v
 	}
 
+	if v, ok := d.GetOk("function_response_types"); ok && v.(*schema.Set).Len() > 0 {
+		input.FunctionResponseTypes = expandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		input.MaximumBatchingWindowInSeconds = aws.Int64(int64(v.(int)))
 	}
@@ -407,6 +420,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("function_name", eventSourceMappingConfiguration.FunctionArn)
+	d.Set("function_response_types", aws.StringValueSlice(eventSourceMappingConfiguration.FunctionResponseTypes))
 	if eventSourceMappingConfiguration.LastModified != nil {
 		d.Set("last_modified", aws.TimeValue(eventSourceMappingConfiguration.LastModified).Format(time.RFC3339))
 	} else {
@@ -481,6 +495,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChange("function_name") {
 		input.FunctionName = aws.String(d.Get("function_name").(string))
+	}
+
+	if d.HasChange("function_response_types") {
+		input.FunctionResponseTypes = expandStringSet(d.Get("function_response_types").(*schema.Set))
 	}
 
 	if d.HasChange("maximum_batching_window_in_seconds") {

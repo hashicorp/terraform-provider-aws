@@ -38,6 +38,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
@@ -145,6 +146,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "stream_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
@@ -160,6 +162,41 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigDynamoDbFunctionResponseTypes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "function_response_types.*", "ReportBatchItemFailures"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigDynamoDbNoFunctionResponseTypes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
+				),
 			},
 		},
 	})
@@ -1386,4 +1423,30 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "LATEST"
 }
 `, batchSize))
+}
+
+func testAccAWSLambdaEventSourceMappingConfigDynamoDbFunctionResponseTypes(rName string) string {
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 150
+  enabled           = true
+  event_source_arn  = aws_dynamodb_table.test.stream_arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "LATEST"
+
+  function_response_types = ["ReportBatchItemFailures"]
+}
+`)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigDynamoDbNoFunctionResponseTypes(rName string) string {
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 150
+  enabled           = true
+  event_source_arn  = aws_dynamodb_table.test.stream_arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "LATEST"
+}
+`)
 }
