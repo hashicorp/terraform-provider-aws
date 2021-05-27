@@ -93,7 +93,7 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(resp.CacheParameterGroup.CacheParameterGroupName))
-	d.Set("arn", aws.StringValue(resp.CacheParameterGroup.ARN))
+	d.Set("arn", resp.CacheParameterGroup.ARN)
 	log.Printf("[INFO] ElastiCache Parameter Group ID: %s", d.Id())
 
 	return resourceAwsElasticacheParameterGroupUpdate(d, meta)
