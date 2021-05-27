@@ -22,19 +22,19 @@ resource "aws_budgets_budget_action" "example" {
 
   action_threshold {
     action_threshold_type  = "ABSOLUTE_VALUE"
-	  action_threshold_value = 100
+    action_threshold_value = 100
   }
 
   definition {
     iam_action_definition {
-	  policy_arn = aws_iam_policy.example.arn
-	  roles      = [aws_iam_role.example.name]
-	}
+      policy_arn = aws_iam_policy.example.arn
+      roles      = [aws_iam_role.example.name]
+    }
   }
 
   subscriber {
     address           = "example@example.example"
-	  subscription_type = "EMAIL"
+    subscription_type = "EMAIL"
   }
 }
 
