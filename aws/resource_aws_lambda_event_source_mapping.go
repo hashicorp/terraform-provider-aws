@@ -250,6 +250,12 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"tumbling_window_in_seconds": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 900),
+			},
+
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -326,6 +332,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("topics"); ok && v.(*schema.Set).Len() > 0 {
 		input.Topics = expandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("tumbling_window_in_seconds"); ok {
+		input.TumblingWindowInSeconds = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating Lambda Event Source Mapping: %s", input)
@@ -426,6 +436,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("state", eventSourceMappingConfiguration.State)
 	d.Set("state_transition_reason", eventSourceMappingConfiguration.StateTransitionReason)
 	d.Set("topics", aws.StringValueSlice(eventSourceMappingConfiguration.Topics))
+	d.Set("tumbling_window_in_seconds", eventSourceMappingConfiguration.TumblingWindowInSeconds)
 	d.Set("uuid", eventSourceMappingConfiguration.UUID)
 
 	switch state := d.Get("state").(string); state {
@@ -492,6 +503,10 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
 			input.SourceAccessConfigurations = expandLambdaSourceAccessConfigurations(v.(*schema.Set).List())
 		}
+	}
+
+	if d.HasChange("tumbling_window_in_seconds") {
+		input.TumblingWindowInSeconds = aws.Int64(int64(d.Get("tumbling_window_in_seconds").(int)))
 	}
 
 	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {

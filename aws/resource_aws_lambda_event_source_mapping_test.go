@@ -39,6 +39,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -145,6 +146,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -340,6 +342,42 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "parallelization_factor", strconv.Itoa(int(parallelizationFactorUpdate))),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_event_source_mapping.test"
+	tumblingWindowInSeconds := int64(30)
+	tumblingWindowInSecondsUpdate := int64(300)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisTumblingWindowInSeconds(rName, tumblingWindowInSeconds),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", strconv.Itoa(int(tumblingWindowInSeconds))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisTumblingWindowInSeconds(rName, tumblingWindowInSecondsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", strconv.Itoa(int(tumblingWindowInSecondsUpdate))),
 				),
 			},
 		},
@@ -1109,6 +1147,19 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position      = "TRIM_HORIZON"
 }
 `, parallelizationFactor))
+}
+
+func testAccAWSLambdaEventSourceMappingConfigKinesisTumblingWindowInSeconds(rName string, tumblingWindowInSeconds int64) string {
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size                 = 100
+  tumbling_window_in_seconds = %[1]d
+  enabled                    = true
+  event_source_arn           = aws_kinesis_stream.test.arn
+  function_name              = aws_lambda_function.test.arn
+  starting_position          = "TRIM_HORIZON"
+}
+`, tumblingWindowInSeconds))
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName string, maximumRetryAttempts int64) string {

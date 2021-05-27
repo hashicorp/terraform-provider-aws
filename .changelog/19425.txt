@@ -1,3 +1,7 @@
 ```release-notes:enhancement
-resource/aws_lambda_event_source_mapping: Add `self_managed_event_source`, `source_access_configuration` to allow for self managed kafka cluster.
+resource/aws_lambda_event_source_mapping: Add `self_managed_event_source` and `source_access_configuration` arguments to support self-managed Apache Kafka event sources
+```
+
+```release-notes:enhancement
+resource/aws_lambda_event_source_mapping: Add `tumbling_window_in_seconds` argument to support AWS Lambda streaming analytics calculations
 ```
