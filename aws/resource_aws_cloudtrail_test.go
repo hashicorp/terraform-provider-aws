@@ -103,6 +103,7 @@ func TestAccAWSCloudTrail_serial(t *testing.T) {
 			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
 			"tags":                       testAccAWSCloudTrail_tags,
 			"eventSelector":              testAccAWSCloudTrail_event_selector,
+			"eventSelectorDynamoDB":      testAccAWSCloudTrail_eventSelectorDynamoDB,
 			"insightSelector":            testAccAWSCloudTrail_insight_selector,
 		},
 	}
@@ -549,6 +550,32 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig_eventSelectorNone(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSCloudTrail_eventSelectorDynamoDB(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudtrail.foobar"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudtrail.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudTrailConfig_eventSelectorDynamoDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::DynamoDB::Table"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexp.MustCompile(`table/tf-acc-test-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
 				),
 			},
 		},
@@ -1606,6 +1633,74 @@ resource "aws_s3_bucket" "foo" {
 POLICY
 }
 `, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_eventSelectorDynamoDB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "foobar" {
+  name           = %[1]q
+  s3_bucket_name = aws_s3_bucket.foo.id
+
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = true
+
+    data_resource {
+      type = "AWS::DynamoDB::Table"
+
+      values = [
+        aws_dynamodb_table.test.arn,
+      ]
+    }
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "foo" {
+  bucket        = %[1]q
+  force_destroy = true
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName)
 }
 
 func testAccAWSCloudTrailConfig_insightSelector(rName string) string {
