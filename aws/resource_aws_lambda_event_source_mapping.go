@@ -342,7 +342,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	err = resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(input)
 
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "cannot be assumed by Lambda") {
 			return resource.RetryableError(err)
 		}
 
@@ -496,10 +496,6 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 
 	err := resource.Retry(waiter.EventSourceMappingPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(input)
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeInvalidParameterValueException) {
-			return resource.RetryableError(err)
-		}
 
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceInUseException) {
 			return resource.RetryableError(err)
