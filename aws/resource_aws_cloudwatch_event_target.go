@@ -146,7 +146,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      events.LaunchTypeEc2,
-							ValidateFunc: validation.StringInSlice(events.LaunchType_Values(), false),
+							ValidateFunc: validation.StringInSlice(append(events.LaunchType_Values(), []string{""}...), false),
 						},
 						"network_configuration": {
 							Type:     schema.TypeList,
