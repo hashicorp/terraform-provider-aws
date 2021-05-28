@@ -497,7 +497,7 @@ func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFormationStackExists(resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
-					resource.TestCheckResourceAttr(resourceName, "on_failure", "DO_NOTHING"),
+					resource.TestCheckResourceAttr(resourceName, "on_failure", cloudformation.OnFailureDoNothing),
 				),
 			},
 		},
