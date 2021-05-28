@@ -813,7 +813,7 @@ STACK
 %[2]s
 POLICY
   capabilities       = ["CAPABILITY_IAM"]
-  notification_arns  = ["${aws_sns_topic.test.arn}"]
+  notification_arns  = [aws_sns_topic.test.arn]
   on_failure         = "DELETE"
   timeout_in_minutes = 10
   tags = {
