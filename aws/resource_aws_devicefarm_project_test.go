@@ -16,6 +16,7 @@ import (
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 	var proj devicefarm.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_devicefarm_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,6 +43,56 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeviceFarmProjectConfig(rNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
+	var proj devicefarm.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_devicefarm_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t)
+			// Currently, DeviceFarm is only supported in us-west-2
+			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
+			testAccRegionPreCheck(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:   testAccErrorCheck(t, devicefarm.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeviceFarmProjectConfigDefaultJobTimeout(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeviceFarmProjectConfigDefaultJobTimeout(rName, 20),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "20"),
+				),
 			},
 		},
 	})
@@ -136,4 +187,13 @@ resource "aws_devicefarm_project" "test" {
   name = %[1]q
 }
 `, rName)
+}
+
+func testAccDeviceFarmProjectConfigDefaultJobTimeout(rName string, timeout int) string {
+	return fmt.Sprintf(`
+resource "aws_devicefarm_project" "test" {
+  name                        = %[1]q
+  default_job_timeout_minutes = %[2]d
+}
+`, rName, timeout)
 }
