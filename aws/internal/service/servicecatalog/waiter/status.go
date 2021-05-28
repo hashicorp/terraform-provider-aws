@@ -319,3 +319,40 @@ func PrincipalPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, ac
 		return output, servicecatalog.StatusAvailable, err
 	}
 }
+
+func LaunchPathsStatus(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &servicecatalog.ListLaunchPathsInput{
+			AcceptLanguage: aws.String(acceptLanguage),
+			ProductId:      aws.String(productID),
+		}
+
+		var summaries []*servicecatalog.LaunchPathSummary
+
+		err := conn.ListLaunchPathsPages(input, func(page *servicecatalog.ListLaunchPathsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, summary := range page.LaunchPathSummaries {
+				if summary == nil {
+					continue
+				}
+
+				summaries = append(summaries, summary)
+			}
+
+			return !lastPage
+		})
+
+		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			return nil, StatusNotFound, err
+		}
+
+		if err != nil {
+			return nil, servicecatalog.StatusFailed, err
+		}
+
+		return summaries, servicecatalog.StatusAvailable, err
+	}
+}
