@@ -257,7 +257,7 @@ resource "aws_devicefarm_project" "test" {
 
   tags = {
     %[2]q = %[3]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1)
 }
@@ -270,7 +270,7 @@ resource "aws_devicefarm_project" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-  }  
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
