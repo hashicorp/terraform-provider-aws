@@ -482,7 +482,8 @@ func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 // TestAccAWSCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
 func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 	var stack cloudformation.Stack
-	rName := fmt.Sprintf("tf-acc-test-cloudformation-on-failure-%s", acctest.RandString(10))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -493,9 +494,9 @@ func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_onFailure(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.bucket-onfailure", &stack),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.bucket-onfailure", "disable_rollback", "false"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.bucket-onfailure", "on_failure", "DO_NOTHING"),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
+					resource.TestCheckResourceAttr(resourceName, "on_failure", "DO_NOTHING"),
 				),
 			},
 		},
@@ -1057,27 +1058,25 @@ STACK
 `, rName)
 }
 
-func testAccAWSCloudFormationStackConfig_onFailure(stackName string) string {
+func testAccAWSCloudFormationStackConfig_onFailure(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "foo" {
-  bucket        = "%[1]s"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_cloudformation_stack" "bucket-onfailure" {
-  name       = "%[1]s"
+resource "aws_cloudformation_stack" "test" {
+  name       = %[1]q
   on_failure = "DO_NOTHING"
 
-  template_body = <<-EOF
-    {
-      "AWSTemplateFormatVersion": "2010-09-09",
-      "Resources": {
-        "S3Bucket": {
-            "Type" : "AWS::S3::Bucket"
-        }
+  template_body = jsonencode({
+    AWSTemplateFormatVersion = "2010-09-09"
+    Resources = {
+      S3Bucket = {
+        Type = "AWS::S3::Bucket"
       }
     }
-    EOF
+  })
 }
-`, stackName)
+`, rName)
 }
