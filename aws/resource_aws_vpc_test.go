@@ -437,6 +437,114 @@ func TestAccAWSVpc_defaultTags_providerAndResource_duplicateTag(t *testing.T) {
 	})
 }
 
+// TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges ensures computed "tags_all"
+// attributes are correctly determined when the provider-level default_tags block
+// is left unused and resource tags (merged with local.tags) are only known at apply time,
+// with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
+func TestAccAWSVpc_DynamicResourceTagsMergedWithLocals_IgnoreChanges(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
+				),
+				// Dynamic tag "updated_at" will cause a perpetual diff but that's OK for this test
+				// as we want to ensure subsequent applies will not result in "inconsistent final plan errors"
+				// for the attribute "tags_all"
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals("localkey", "localvalue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
+				),
+				// Dynamic tag "updated_at" will cause a perpetual diff but that's OK for this test
+				// as we wanted to ensure this configuration applies successfully
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// TestAccAWSVpc_DynamicResourceTags_IgnoreChanges ensures computed "tags_all"
+// attributes are correctly determined when the provider-level default_tags block
+// is left unused and resource tags are only known at apply time,
+// with additional lifecycle ignore_changes attributes, thereby eliminating "Inconsistent final plan" errors
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/18366
+func TestAccAWSVpc_DynamicResourceTags_IgnoreChanges(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ErrorCheck:        testAccErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: testAccProviderFactoriesInternal(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
+				),
+				// Dynamic tag "updated_at" will cause a perpetual diff but that's OK for this test
+				// as we want to ensure subsequent applies will not result in "inconsistent final plan errors"
+				// for the attribute "tags_all"
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSVPCConfigWithIgnoreChanges_DynamicTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
+				),
+				// Dynamic tag "updated_at" will cause a perpetual diff but that's OK for this test
+				// as we wanted to ensure this configuration applies successfully
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSVpc_defaultAndIgnoreTags(t *testing.T) {
 	var providers []*schema.Provider
 	var vpc ec2.Vpc
@@ -949,6 +1057,48 @@ resource "aws_vpc" "test" {
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+func testAccAWSVPCConfigWithIgnoreChanges_DynamicTagsMergedWithLocals(localTagKey1, localTagValue1 string) string {
+	return fmt.Sprintf(`
+locals {
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = merge(local.tags, {
+    "created_at" = timestamp()
+    "updated_at" = timestamp()
+  })
+
+  lifecycle {
+    ignore_changes = [
+      tags["created_at"],
+    ]
+  }
+}
+`, localTagKey1, localTagValue1)
+}
+
+const testAccAWSVPCConfigWithIgnoreChanges_DynamicTags = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    "created_at" = timestamp()
+    "updated_at" = timestamp()
+  }
+
+  lifecycle {
+    ignore_changes = [
+      tags["created_at"],
+    ]
+  }
+}
+`
 
 const testAccVpcDedicatedConfig = `
 resource "aws_vpc" "test" {

@@ -433,6 +433,10 @@ func resourceAwsMwaaEnvironmentUpdate(d *schema.ResourceData, meta interface{}) 
 			input.NetworkConfiguration = expandMwaaEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
 		}
 
+		if d.HasChange("plugins_s3_object_version") {
+			input.PluginsS3ObjectVersion = aws.String(d.Get("plugins_s3_object_version").(string))
+		}
+
 		if d.HasChange("plugins_s3_path") {
 			input.PluginsS3Path = aws.String(d.Get("plugins_s3_path").(string))
 		}

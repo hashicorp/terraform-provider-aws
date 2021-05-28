@@ -4,6 +4,45 @@ import (
 	"testing"
 )
 
+func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
+	testCases := []struct {
+		name          string
+		defaultConfig *DefaultConfig
+		want          KeyValueTags
+	}{
+		{
+			name:          "empty config",
+			defaultConfig: &DefaultConfig{},
+			want:          KeyValueTags{},
+		},
+		{
+			name:          "nil config",
+			defaultConfig: nil,
+			want:          nil,
+		},
+		{
+			name: "with Tags config",
+			defaultConfig: &DefaultConfig{
+				Tags: New(map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				}),
+			},
+			want: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+			}),
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.defaultConfig.GetTags()
+			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want.Map())
+		})
+	}
+}
+
 func TestKeyValueTagsDefaultConfigMergeTags(t *testing.T) {
 	testCases := []struct {
 		name          string

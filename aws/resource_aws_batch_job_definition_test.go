@@ -170,6 +170,44 @@ func TestAccAWSBatchJobDefinition_PlatformCapabilities_EC2(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate_ContainerPropertiesDefaults(t *testing.T) {
+	var jd batch.JobDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		ErrorCheck:   testAccErrorCheck(t, batch.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBatchJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBatchJobDefinitionExists(resourceName, &jd),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexp.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "container_properties"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "propagate_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "container"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchJobDefinition_PlatformCapabilities_Fargate(t *testing.T) {
 	var jd batch.JobDefinition
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -609,6 +647,53 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
+func testAccBatchJobDefinitionConfigCapabilitiesFargateContainerPropertiesDefaults(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+
+  platform_capabilities = [
+    "FARGATE",
+  ]
+
+  container_properties = <<CONTAINER_PROPERTIES
+{
+  "image": "busybox",
+  "resourceRequirements": [
+    {"type": "MEMORY", "value": "512"},
+    {"type": "VCPU", "value": "0.25"}
+  ],
+  "executionRoleArn": "${aws_iam_role.ecs_task_execution_role.arn}"
+}
+CONTAINER_PROPERTIES
+}
+`, rName)
+}
+
 func testAccBatchJobDefinitionConfigCapabilitiesFargate(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -648,6 +733,9 @@ resource "aws_batch_job_definition" "test" {
   "image": "busybox",
   "fargatePlatformConfiguration": {
     "platformVersion": "LATEST"
+  },
+  "networkConfiguration": {
+    "assignPublicIp": "DISABLED"
   },
   "resourceRequirements": [
     {"type": "VCPU", "value": "0.25"},

@@ -165,7 +165,8 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 			},
 			"service_role": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validateArn,
 			},
 			"state": {
@@ -326,31 +327,28 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 
 		// TODO See above on how to remove check on type.
 		if computeEnvironmentType := strings.ToUpper(d.Get("type").(string)); computeEnvironmentType == batch.CETypeManaged {
-			if d.HasChange("compute_resources") {
-				computeResourceUpdate := &batch.ComputeResourceUpdate{}
-
-				if d.HasChange("compute_resources.0.desired_vcpus") {
-					computeResourceUpdate.DesiredvCpus = aws.Int64(int64(d.Get("compute_resources.0.desired_vcpus").(int)))
-				}
-
-				if d.HasChange("compute_resources.0.max_vcpus") {
-					computeResourceUpdate.MaxvCpus = aws.Int64(int64(d.Get("compute_resources.0.max_vcpus").(int)))
-				}
-
-				if d.HasChange("compute_resources.0.min_vcpus") {
-					computeResourceUpdate.MinvCpus = aws.Int64(int64(d.Get("compute_resources.0.min_vcpus").(int)))
-				}
-
-				if d.HasChange("compute_resources.0.security_group_ids") {
-					computeResourceUpdate.SecurityGroupIds = expandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
-				}
-
-				if d.HasChange("compute_resources.0.subnets") {
-					computeResourceUpdate.Subnets = expandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
-				}
-
-				input.ComputeResources = computeResourceUpdate
+			// "At least one compute-resources attribute must be specified"
+			computeResourceUpdate := &batch.ComputeResourceUpdate{
+				MaxvCpus: aws.Int64(int64(d.Get("compute_resources.0.max_vcpus").(int))),
 			}
+
+			if d.HasChange("compute_resources.0.desired_vcpus") {
+				computeResourceUpdate.DesiredvCpus = aws.Int64(int64(d.Get("compute_resources.0.desired_vcpus").(int)))
+			}
+
+			if d.HasChange("compute_resources.0.min_vcpus") {
+				computeResourceUpdate.MinvCpus = aws.Int64(int64(d.Get("compute_resources.0.min_vcpus").(int)))
+			}
+
+			if d.HasChange("compute_resources.0.security_group_ids") {
+				computeResourceUpdate.SecurityGroupIds = expandStringSet(d.Get("compute_resources.0.security_group_ids").(*schema.Set))
+			}
+
+			if d.HasChange("compute_resources.0.subnets") {
+				computeResourceUpdate.Subnets = expandStringSet(d.Get("compute_resources.0.subnets").(*schema.Set))
+			}
+
+			input.ComputeResources = computeResourceUpdate
 		}
 
 		log.Printf("[DEBUG] Updating Batch Compute Environment: %s", input)

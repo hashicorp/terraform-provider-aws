@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ram/waiter"
 )
 
 func resourceAwsRamResourceShare() *schema.Resource {
@@ -75,14 +75,7 @@ func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(createResp.ResourceShare.ResourceShareArn))
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ram.ResourceShareStatusPending},
-		Target:  []string{ram.ResourceShareStatusActive},
-		Refresh: resourceAwsRamResourceShareStateRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
-
-	_, err = stateConf.WaitForState()
+	_, err = waiter.ResourceShareOwnedBySelfActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
 	}
@@ -191,40 +184,11 @@ func resourceAwsRamResourceShareDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ram.ResourceShareStatusDeleting},
-		Target:  []string{ram.ResourceShareStatusDeleted},
-		Refresh: resourceAwsRamResourceShareStateRefreshFunc(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
+	_, err = waiter.ResourceShareOwnedBySelfDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
-	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) to become ready: %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourceAwsRamResourceShareStateRefreshFunc(conn *ram.RAM, resourceShareArn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		request := &ram.GetResourceSharesInput{
-			ResourceShareArns: []*string{aws.String(resourceShareArn)},
-			ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		}
-
-		output, err := conn.GetResourceShares(request)
-
-		if err != nil {
-			return nil, ram.ResourceShareStatusFailed, err
-		}
-
-		if len(output.ResourceShares) == 0 {
-			return nil, ram.ResourceShareStatusDeleted, nil
-		}
-
-		resourceShare := output.ResourceShares[0]
-
-		return resourceShare, aws.StringValue(resourceShare.Status), nil
-	}
 }

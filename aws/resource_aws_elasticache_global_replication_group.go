@@ -278,7 +278,7 @@ func deleteElasticacheGlobalReplicationGroup(conn *elasticache.ElastiCache, id s
 				LastRequest: input,
 			})
 		}
-		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault, "is not empty") {
+		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidGlobalReplicationGroupStateFault) {
 			return resource.RetryableError(err)
 		}
 		if err != nil {

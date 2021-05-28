@@ -13,9 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elbv2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
@@ -34,6 +36,9 @@ func resourceAwsLbListener() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(10 * time.Minute),
 		},
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {
@@ -355,6 +360,8 @@ func resourceAwsLbListener() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"tags":     tagsSchema(),
+			"tags_all": tagsSchemaComputed(),
 		},
 	}
 }
@@ -376,6 +383,8 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	lbArn := d.Get("load_balancer_arn").(string)
 
@@ -385,6 +394,10 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("port"); ok {
 		params.Port = aws.Int64(int64(v.(int)))
+	}
+
+	if len(tags) > 0 {
+		params.Tags = tags.IgnoreAws().Elbv2Tags()
 	}
 
 	if v, ok := d.GetOk("protocol"); ok {
@@ -455,6 +468,8 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	var listener *elbv2.Listener
 
@@ -518,67 +533,114 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
 	}
 
+	tags, err := keyvaluetags.Elbv2ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elbv2conn
 
-	params := &elbv2.ModifyListenerInput{
-		ListenerArn: aws.String(d.Id()),
-	}
-
-	if v, ok := d.GetOk("port"); ok {
-		params.Port = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("protocol"); ok {
-		params.Protocol = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("ssl_policy"); ok {
-		params.SslPolicy = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("certificate_arn"); ok {
-		params.Certificates = make([]*elbv2.Certificate, 1)
-		params.Certificates[0] = &elbv2.Certificate{
-			CertificateArn: aws.String(v.(string)),
+	if d.HasChangesExcept("tags", "tags_all") {
+		params := &elbv2.ModifyListenerInput{
+			ListenerArn: aws.String(d.Id()),
 		}
-	}
 
-	if v, ok := d.GetOk("alpn_policy"); ok {
-		params.AlpnPolicy = aws.StringSlice([]string{v.(string)})
-	}
+		if v, ok := d.GetOk("port"); ok {
+			params.Port = aws.Int64(int64(v.(int)))
+		}
 
-	if d.HasChange("default_action") {
-		var err error
-		params.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+		if v, ok := d.GetOk("protocol"); ok {
+			params.Protocol = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("ssl_policy"); ok {
+			params.SslPolicy = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("certificate_arn"); ok {
+			params.Certificates = make([]*elbv2.Certificate, 1)
+			params.Certificates[0] = &elbv2.Certificate{
+				CertificateArn: aws.String(v.(string)),
+			}
+		}
+
+		if v, ok := d.GetOk("alpn_policy"); ok {
+			params.AlpnPolicy = aws.StringSlice([]string{v.(string)})
+		}
+
+		if d.HasChange("default_action") {
+			var err error
+			params.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
+			if err != nil {
+				return fmt.Errorf("error updating ELBv2 Listener (%s): %w", d.Id(), err)
+			}
+		}
+
+		err := resource.Retry(waiter.LoadBalancerListenerUpdateTimeout, func() *resource.RetryError {
+			_, err := conn.ModifyListener(params)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.ModifyListener(params)
+		}
+
 		if err != nil {
-			return fmt.Errorf("error updating ELBv2 Listener (%s): %w", d.Id(), err)
+			return fmt.Errorf("error modifying ELBv2 Listener (%s): %w", d.Id(), err)
 		}
 	}
 
-	err := resource.Retry(waiter.LoadBalancerListenerUpdateTimeout, func() *resource.RetryError {
-		_, err := conn.ModifyListener(params)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(err)
+		err := resource.Retry(waiter.LoadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) ||
+				tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB Listener (%s) after error: %s", d.Id(), err)
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = keyvaluetags.Elbv2UpdateTags(conn, d.Id(), o, n)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
 		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.ModifyListener(params)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error modifying ELBv2 Listener (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsLbListenerRead(d, meta)

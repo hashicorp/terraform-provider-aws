@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -55,8 +56,20 @@ func resourceAwsElasticacheSubnetGroup() *schema.Resource {
 			"tags_all": tagsSchemaComputed(),
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: resourceAwsElasticacheSubnetGroupDiff,
 	}
+}
+
+func resourceAwsElasticacheSubnetGroupDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging;
+	// thus we must suppress the diff originating from the provider-level default_tags configuration
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213
+	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get("name").(string) == "default" {
+		return nil
+	}
+
+	return SetTagsDiff(context.Background(), diff, meta)
 }
 
 func resourceAwsElasticacheSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {

@@ -248,6 +248,43 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
+		{
+			Name: "no fargatePlatformConfiguration",
+			ApiJson: `
+{
+	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+	"resourceRequirements": [
+	  {
+		"type": "MEMORY",
+		"value": "512"
+	  },
+	  {
+		"type": "VCPU",
+		"value": "0.25"
+	  }
+	],
+	"fargatePlatformConfiguration": {
+		"platformVersion": "LATEST"
+	}
+}
+`,
+			ConfigurationJson: `
+{
+	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
+	"resourceRequirements": [
+	  {
+		  "type": "MEMORY",
+		  "value": "512"
+	  },
+	  {
+		"type": "VCPU",
+		"value": "0.25"
+	  }
+	]
+}
+`,
+			ExpectEquivalent: true,
+		},
 	}
 
 	for _, testCase := range testCases {

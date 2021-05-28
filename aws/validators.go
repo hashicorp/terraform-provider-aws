@@ -673,13 +673,51 @@ func validatePrincipal(v interface{}, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
+	// https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html
+	// Principal is an AWS account
+	// --principal DataLakePrincipalIdentifier=111122223333
+	wsAccount, errorsAccount := validateAwsAccountId(v, k)
+	if len(errorsAccount) == 0 {
+		return wsAccount, errorsAccount
+	}
+
 	wsARN, errorsARN := validateArn(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
-	pattern := `\d{12}:(role|user)/`
+	pattern := `:(role|user|group|ou|organization)/`
 	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q doesn't look like a user or role: %q", k, value))
+		errors = append(errors, fmt.Errorf("%q does not look like a user, role, group, OU, or organization: %q", k, value))
+	}
+
+	if len(errors) > 0 {
+		errors = append(errors, errorsAccount...)
+	}
+
+	return ws, errors
+}
+
+func validateServiceCatalogSharePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// either account ID, or organization or organization unit
+
+	wsAccount, errorsAccount := validateAwsAccountId(v, k)
+
+	if len(errorsAccount) == 0 {
+		return wsAccount, errorsAccount
+	}
+
+	wsARN, errorsARN := validateArn(v, k)
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+
+	pattern := `^arn:[\w-]+:organizations:.*:(ou|organization)/`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
+	}
+
+	if len(errors) > 0 {
+		errors = append(errors, errorsAccount...)
 	}
 
 	return ws, errors
@@ -2371,8 +2409,13 @@ func validateEKSClusterName(v interface{}, k string) (ws []string, errors []erro
 
 var validateCloudWatchEventCustomEventBusName = validation.All(
 	validation.StringLenBetween(1, 256),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), ""),
+	validation.StringMatch(regexp.MustCompile(`^[/\.\-_A-Za-z0-9]+$`), ""),
 	validation.StringDoesNotMatch(regexp.MustCompile(`^default$`), "cannot be 'default'"),
+)
+
+var validateCloudWatchEventCustomEventBusEventSourceName = validation.All(
+	validation.StringLenBetween(1, 256),
+	validation.StringMatch(regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`), ""),
 )
 
 var validateCloudWatchEventBusNameOrARN = validation.Any(
@@ -2440,6 +2483,29 @@ func MapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFu
 			if ok := r.MatchString(key); ok {
 				errors = append(errors, fmt.Errorf("%s: %s: %s", k, message, key))
 			}
+		}
+
+		return warnings, errors
+	}
+}
+
+func MapKeyInSlice(valid []string, ignoreCase bool) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
+		v, ok := i.(map[string]interface{})
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %[1]q to be Map, got %[1]T", k))
+			return warnings, errors
+		}
+
+		for key := range v {
+			for _, str := range valid {
+				if key == str || (ignoreCase && strings.EqualFold(key, str)) {
+					return warnings, errors
+				}
+			}
+
+			errors = append(errors, fmt.Errorf("expected %s to be one of %v, got %s", k, valid, key))
+			return warnings, errors
 		}
 
 		return warnings, errors

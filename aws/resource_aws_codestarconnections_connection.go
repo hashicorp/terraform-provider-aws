@@ -40,11 +40,21 @@ func resourceAwsCodeStarConnectionsConnection() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"host_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"provider_type"},
+				ValidateFunc:  validateArn,
+			},
+
 			"provider_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"host_arn"},
+				ValidateFunc:  validation.StringInSlice(codestarconnections.ProviderType_Values(), false),
 			},
 
 			"tags":     tagsSchema(),
@@ -62,7 +72,14 @@ func resourceAwsCodeStarConnectionsConnectionCreate(d *schema.ResourceData, meta
 
 	params := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(d.Get("name").(string)),
-		ProviderType:   aws.String(d.Get("provider_type").(string)),
+	}
+
+	if v, ok := d.GetOk("provider_type"); ok {
+		params.ProviderType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("host_arn"); ok {
+		params.HostArn = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -103,6 +120,7 @@ func resourceAwsCodeStarConnectionsConnectionRead(d *schema.ResourceData, meta i
 	d.Set("arn", connection.ConnectionArn)
 	d.Set("connection_status", connection.ConnectionStatus)
 	d.Set("name", connection.ConnectionName)
+	d.Set("host_arn", connection.HostArn)
 	d.Set("provider_type", connection.ProviderType)
 
 	tags, err := keyvaluetags.CodestarconnectionsListTags(conn, arn)

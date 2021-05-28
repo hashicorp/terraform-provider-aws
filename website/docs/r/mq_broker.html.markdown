@@ -68,7 +68,6 @@ resource "aws_mq_broker" "example" {
     password = "MindTheGap"
   }
 }
-
 ```
 
 ## Argument Reference

@@ -142,6 +142,8 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
@@ -158,6 +160,9 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
 			},
 			{
@@ -166,6 +171,8 @@ func TestAccAWSElasticacheSubnetGroup_tags(t *testing.T) {
 					testAccCheckAWSElasticacheSubnetGroupExists(resourceName, &csg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
 			},
 		},

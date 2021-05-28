@@ -93,6 +93,7 @@ The following arguments are supported:
 * `ami` - (Required) AMI to use for the instance.
 * `associate_public_ip_address` - (Optional) Whether to associate a public IP address with an instance in a VPC.
 * `availability_zone` - (Optional) AZ to start the instance in.
+* `capacity_reservation_specification` - (Optional) Describes an instance's Capacity Reservation targeting option. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
 
 -> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
 
@@ -143,6 +144,29 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 * `create` - (Defaults to 10 mins) Used when launching the instance (until it reaches the initial `running` state)
 * `update` - (Defaults to 10 mins) Used when stopping and starting the instance when necessary during update - e.g. when changing instance type
 * `delete` - (Defaults to 20 mins) Used when terminating the instance
+
+### Capacity Reservation Specification
+
+~> **NOTE:** You can specify only one argument at a time. If you specify both `capacity_reservation_preference` and `capacity_reservation_target`, the request fails. Modifying `capacity_reservation_preference` or `capacity_reservation_target` in this block requires the instance to be in `stopped` state.
+
+Capacity reservation specification can be applied/modified to the EC2 Instance at creation time or when the instance is `stopped`.
+
+The `capacity_reservation_specification` block supports the following:
+
+* `capacity_reservation_preference` - (Optional) Indicates the instance's Capacity Reservation preferences. Can be `"open"` or `"none"`. (Default: `"open"`).
+* `capacity_reservation_target` - (Optional) Information about the target Capacity Reservation. See [Capacity Reservation Target](#capacity-reservation-target) below for more details.
+
+For more information, see the documentation on [Capacity Reservations](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-reservations-using.html).
+
+### Capacity Reservation Target
+
+~> **NOTE:** Modifying `capacity_reservation_id` in this block requires the instance to be in `stopped` state.
+
+Describes a target Capacity Reservation.
+
+This `capacity_reservation_target` block supports the following:
+
+* `capacity_reservation_id` - (Optional) The ID of the Capacity Reservation in which to run the instance.
 
 ### Credit Specification
 
@@ -231,6 +255,7 @@ Each `network_interface` block supports the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the instance.
+* `capacity_reservation_specification` - Capacity reservation specification of the instance.
 * `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpost_arn` - The ARN of the Outpost the instance is assigned to.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
