@@ -479,13 +479,14 @@ func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
 	})
 }
 
-// Test for https://github.com/hashicorp/terraform/issues/5204
+// TestAccAWSCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
 func TestAccAWSCloudFormationStack_onFailure(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-cloudformation-on-failure-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudformation.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
