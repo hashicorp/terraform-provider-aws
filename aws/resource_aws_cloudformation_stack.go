@@ -261,6 +261,12 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
+
+		// takes into account that disable_rollback conflicts with on_failure and
+		// prevents forced new creation if disable_rollback is reset during refresh
+		if d.Get("on_failure") != nil {
+			d.Set("disable_rollback", false)
+		}
 	}
 	if len(stack.NotificationARNs) > 0 {
 		err = d.Set("notification_arns", flattenStringSet(stack.NotificationARNs))
