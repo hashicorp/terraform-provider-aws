@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_devicefarm_project: Add `default_job_timeout_minutes` argument
+resource/aws_devicefarm_project: Add `default_job_timeout_minutes` and `tags` argument
 ```
 
 ```release-note:enhancement
