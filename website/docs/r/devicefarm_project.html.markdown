@@ -27,6 +27,7 @@ resource "aws_devicefarm_project" "awesome_devices" {
 ## Argument Reference
 
 * `name` - (Required) The name of the project
+* `default_job_timeout_minutes` - (Optional) Sets the execution timeout value (in minutes) for a project. All test runs in this project use the specified execution timeout value unless overridden when scheduling a run.
 
 ## Attributes Reference
 
