@@ -1283,7 +1283,7 @@ func flattenWafv2CustomHeader(h *wafv2.CustomHTTPHeader) map[string]interface{} 
 }
 
 func flattenWafv2RuleLabels(l []*wafv2.Label) []interface{} {
-	if l == nil || len(l) == 0 {
+	if len(l) == 0 {
 		return nil
 	}
 
