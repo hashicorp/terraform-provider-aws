@@ -422,8 +422,8 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					testAccCheckCloudTrailLoadTags(&trail, &trailTags),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Yak", "milk"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Fox", "tail"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -439,9 +439,9 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					testAccCheckCloudTrailLoadTags(&trail, &trailTagsModified),
-					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Moo", "boom"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Yak", "milk"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Emu", "toes"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Fox", "tail"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -504,8 +504,8 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "2"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/foobar", rName)),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/baz", rName)),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 				),
@@ -530,8 +530,8 @@ func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "2"),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/foobar", rName)),
-					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/baz", rName)),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.#", "2"),
@@ -741,25 +741,27 @@ resource "aws_s3_bucket" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid       = "AWSCloudTrailAclCheck"
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = "s3:GetBucketAcl"
-      Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
-    },
-    {
-      Sid       = "AWSCloudTrailWrite"
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = "s3:PutObject"
-      Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
-      Condition = {
-        StringEquals = {
-          "s3:x-amz-acl" = "bucket-owner-full-control"
+    Statement = [
+      {
+        Sid       = "AWSCloudTrailAclCheck"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetBucketAcl"
+        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
+      },
+      {
+        Sid       = "AWSCloudTrailWrite"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:PutObject"
+        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
         }
       }
-    }]
+    ]
   })
 }
 `, rName)
@@ -804,11 +806,13 @@ resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
+
     Statement = [{
       Sid    = ""
       Effect = "Allow"
       Action = "sts:AssumeRole"
+
       Principal = {
         Service = "cloudtrail.${data.aws_partition.current.dns_suffix}"
       }
@@ -821,11 +825,13 @@ resource "aws_iam_role_policy" "test" {
   role = aws_iam_role.test.id
 
   policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
+
     Statement = [{
       Sid      = "AWSCloudTrailCreateLogStream"
       Effect   = "Allow"
       Resource = "${aws_cloudwatch_log_group.test.arn}:*"
+
       Action = [
         "logs:CreateLogStream",
         "logs:PutLogEvents",
@@ -859,10 +865,12 @@ resource "aws_iam_role" "test" {
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
+
     Statement = [{
       Sid    = ""
       Effect = "Allow"
       Action = "sts:AssumeRole"
+
       Principal = {
         Service = "cloudtrail.${data.aws_partition.current.dns_suffix}"
       }
@@ -876,10 +884,12 @@ resource "aws_iam_role_policy" "test" {
 
   policy = jsonencode({
     Version = "2012-10-17"
+
     Statement = [{
       Sid      = "AWSCloudTrailCreateLogStream"
       Effect   = "Allow"
       Resource = "${aws_cloudwatch_log_group.test2.arn}:*"
+
       Action = [
         "logs:CreateLogStream",
         "logs:PutLogEvents",
@@ -942,13 +952,15 @@ resource "aws_kms_key" "test" {
   description = %[1]q
 
   policy = jsonencode({
-    Version   = "2012-10-17"
-    Id        = %[1]q
+    Version = "2012-10-17"
+    Id      = %[1]q
+
     Statement = [{
-      Sid       = "Enable IAM User Permissions"
-      Effect    = "Allow"
-      Action    = "kms:*"
-      Resource  = "*"
+      Sid      = "Enable IAM User Permissions"
+      Effect   = "Allow"
+      Action   = "kms:*"
+      Resource = "*"
+
       Principal = {
         AWS = "*"
       }
@@ -982,8 +994,8 @@ resource "aws_cloudtrail" "test" {
   s3_bucket_name = aws_s3_bucket.test.id
 
   tags = {
-    Foo  = "moo"
-    Pooh = "hi"
+    Yak = "milk"
+    Fox = "tail"
   }
 }
 `, rName))
@@ -996,9 +1008,9 @@ resource "aws_cloudtrail" "test" {
   s3_bucket_name = aws_s3_bucket.test.id
 
   tags = {
-    Foo  = "moo"
-    Pooh = "hi"
-    Moo  = "boom"
+    Yak = "milk"
+    Fox = "tail"
+    Emu = "toes"
   }
 }
 `, rName))
@@ -1027,8 +1039,8 @@ resource "aws_cloudtrail" "test" {
       type = "AWS::S3::Object"
 
       values = [
-        "${aws_s3_bucket.test2.arn}/foobar",
-        "${aws_s3_bucket.test2.arn}/baz",
+        "${aws_s3_bucket.test2.arn}/isen",
+        "${aws_s3_bucket.test2.arn}/ko",
       ]
     }
   }
@@ -1069,8 +1081,8 @@ resource "aws_cloudtrail" "test" {
       type = "AWS::S3::Object"
 
       values = [
-        "${aws_s3_bucket.test2.arn}/foobar",
-        "${aws_s3_bucket.test2.arn}/baz",
+        "${aws_s3_bucket.test2.arn}/isen",
+        "${aws_s3_bucket.test2.arn}/ko",
       ]
     }
   }
@@ -1107,11 +1119,13 @@ resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
+
     Statement = [{
-      Sid       = ""
-      Effect    = "Allow"
-      Action    = "sts:AssumeRole"
+      Sid    = ""
+      Effect = "Allow"
+      Action = "sts:AssumeRole"
+
       Principal = {
         Service = "lambda.${data.aws_partition.current.dns_suffix}"
       }
