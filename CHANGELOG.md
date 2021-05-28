@@ -17,6 +17,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` attribute ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
+* resource/aws_cloudfront_distribution: Add `connection_attempts`, `connection_timeout`, and `origin_shield`. ([#16049](https://github.com/hashicorp/terraform-provider-aws/issues/16049))
+* resource/aws_cloudtrail: Add `AWS::DynamoDB::Table` as an option for `event_selector`.`data_resource`.`type` ([#19559](https://github.com/hashicorp/terraform-provider-aws/issues/19559))
 * resource/aws_ec2_capacity_reservation: Add `outpost_arn` argument ([#19535](https://github.com/hashicorp/terraform-provider-aws/issues/19535))
 * resource/aws_ecs_service: Add support for ECS Anywhere with the `launch_type` `EXTERNAL` ([#19557](https://github.com/hashicorp/terraform-provider-aws/issues/19557))
 * resource/aws_eks_node_group: Add `taint` argument ([#19482](https://github.com/hashicorp/terraform-provider-aws/issues/19482))
