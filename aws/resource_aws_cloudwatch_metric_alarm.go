@@ -553,7 +553,7 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 		if v, ok := metricQueryResource["return_data"]; ok {
 			metricQuery.ReturnData = aws.Bool(v.(bool))
 		}
-		if v := metricQueryResource["metric"]; v != nil {
+		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
 			metricQuery.MetricStat = expandCloudWatchMetricAlarmMetricsMetric(v.([]interface{}))
 		}
 		metrics = append(metrics, &metricQuery)
