@@ -391,6 +391,7 @@ func Provider() *schema.Provider {
 			"aws_secretsmanager_secret_rotation":             dataSourceAwsSecretsManagerSecretRotation(),
 			"aws_secretsmanager_secret_version":              dataSourceAwsSecretsManagerSecretVersion(),
 			"aws_servicecatalog_constraint":                  dataSourceAwsServiceCatalogConstraint(),
+			"aws_servicecatalog_launch_paths":                dataSourceAwsServiceCatalogLaunchPaths(),
 			"aws_servicecatalog_portfolio":                   dataSourceAwsServiceCatalogPortfolio(),
 			"aws_servicecatalog_product":                     dataSourceAwsServiceCatalogProduct(),
 			"aws_servicequotas_service":                      dataSourceAwsServiceQuotasService(),
