@@ -67,17 +67,11 @@ func dataSourceAwsServiceCatalogConstraintRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)
 	}
 
-	if output == nil {
+	if output == nil || output.ConstraintDetail == nil {
 		return fmt.Errorf("error getting Service Catalog Constraint: empty response")
 	}
 
-	acceptLanguage := d.Get("accept_language").(string)
-
-	if acceptLanguage == "" {
-		acceptLanguage = "en"
-	}
-
-	d.Set("accept_language", acceptLanguage)
+	d.Set("accept_language", d.Get("accept_language").(string))
 
 	d.Set("parameters", output.ConstraintParameters)
 	d.Set("status", output.Status)
