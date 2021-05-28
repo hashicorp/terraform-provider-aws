@@ -176,12 +176,13 @@ to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"st1"`, `"sc1"`
   or `"io1"`. (Default: `"standard"`).
 * `volume_size` - (Optional) The size of the volume in gigabytes.
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1"`.
+* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Whether the volume should be encrypted or not. (Default: `false`).
@@ -193,12 +194,13 @@ Each `ebs_block_device` supports the following:
 
 * `device_name` - (Required) The name of the device to mount.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"st1"`, `"sc1"`
   or `"io1"`. (Default: `"standard"`).
 * `volume_size` - (Optional) The size of the volume in gigabytes.
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1"`.
+* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Whether the volume should be encrypted or not. Do not use this option if you are using `snapshot_id` as the encrypted flag will be determined by the snapshot. (Default: `false`).
