@@ -145,7 +145,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"extended_statistic", "metric_query"},
-				ExactlyOneOf:  []string{"extended_statistic", "statistic"},
 				ValidateFunc:  validation.StringInSlice(cloudwatch.Statistic_Values(), false),
 			},
 			"threshold": {
@@ -225,7 +224,6 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"statistic", "metric_query"},
-				ExactlyOneOf:  []string{"extended_statistic", "statistic"},
 				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`p(\d{1,2}(\.\d{0,2})?|100)`), "must specify a value between p0.0 and p100"),
 			},
 			"treat_missing_data": {
@@ -250,6 +248,14 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 }
 
 func validateResourceAwsCloudWatchMetricAlarm(d *schema.ResourceData) error {
+	_, metricNameOk := d.GetOk("metric_name")
+	_, statisticOk := d.GetOk("statistic")
+	_, extendedStatisticOk := d.GetOk("extended_statistic")
+
+	if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
+		return fmt.Errorf("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
+	}
+
 	if v := d.Get("metric_query"); v != nil {
 		for _, v := range v.(*schema.Set).List() {
 			metricQueryResource := v.(map[string]interface{})
@@ -573,15 +579,10 @@ func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.Metri
 	if v, ok := metricResource["unit"]; ok && v.(string) != "" {
 		metricStat.Unit = aws.String(v.(string))
 	}
-	a := metricResource["dimensions"].(map[string]interface{})
-	dimensions := make([]*cloudwatch.Dimension, 0, len(a))
-	for k, v := range a {
-		dimensions = append(dimensions, &cloudwatch.Dimension{
-			Name:  aws.String(k),
-			Value: aws.String(v.(string)),
-		})
+	if v, ok := metricResource["dimensions"]; ok {
+		metric.Dimensions = expandAwsCloudWatchMetricAlarmDimensions(v.(map[string]interface{}))
 	}
-	metric.Dimensions = dimensions
+
 	return &metricStat
 }
 
