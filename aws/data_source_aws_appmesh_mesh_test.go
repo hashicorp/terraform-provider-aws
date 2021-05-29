@@ -46,7 +46,7 @@ func TestAccAWSAppmeshMeshDataSource_meshOwner(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAppmeshMeshDataSourceConfig(rName),
+				Config: testAccCheckAwsAppmeshMeshDataSourceConfig_meshOwner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
@@ -73,7 +73,7 @@ func TestAccAWSAppmeshMeshDataSource_specAndTagsSet(t *testing.T) {
 		CheckDestroy: testAccCheckAppmeshMeshDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAppmeshMeshDataSourceConfig(rName),
+				Config: testAccCheckAwsAppmeshMeshDataSourceConfig_specAndTagsSet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
