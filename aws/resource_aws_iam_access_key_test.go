@@ -33,13 +33,17 @@ func TestAccAWSAccessKey_basic(t *testing.T) {
 					testAccCheckAWSAccessKeyAttributes(&conf, "Active"),
 					testAccCheckResourceAttrRfc3339("aws_iam_access_key.a_key", "create_date"),
 					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "secret"),
+					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "encrypted_secret"),
+					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "key_fingerprint"),
+					resource.TestCheckResourceAttrSet("aws_iam_access_key.a_key", "ses_smtp_password_v4"),
+					resource.TestCheckNoResourceAttr("aws_iam_access_key.a_key", "encrypted_ses_smtp_password_v4"),
 				),
 			},
 			{
 				ResourceName:            "aws_iam_access_key.a_key",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 		},
 	})
@@ -67,13 +71,17 @@ func TestAccAWSAccessKey_encrypted(t *testing.T) {
 						"aws_iam_access_key.a_key", "encrypted_secret"),
 					resource.TestCheckResourceAttrSet(
 						"aws_iam_access_key.a_key", "key_fingerprint"),
+					resource.TestCheckNoResourceAttr(
+						"aws_iam_access_key.a_key", "ses_smtp_password_v4"),
+					resource.TestCheckResourceAttrSet(
+						"aws_iam_access_key.a_key", "encrypted_ses_smtp_password_v4"),
 				),
 			},
 			{
 				ResourceName:            "aws_iam_access_key.a_key",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 		},
 	})
@@ -100,7 +108,7 @@ func TestAccAWSAccessKey_Status(t *testing.T) {
 				ResourceName:            "aws_iam_access_key.a_key",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4"},
+				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
 				Config: testAccAWSAccessKeyConfig_Status(rName, iam.StatusTypeActive),
@@ -205,14 +213,23 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 			return fmt.Errorf("Not found: %s", nAccessKey)
 		}
 
-		password, ok := keyResource.Primary.Attributes["encrypted_secret"]
+		secret, ok := keyResource.Primary.Attributes["encrypted_secret"]
+		if !ok {
+			return errors.New("No secret in state")
+		}
+
+		password, ok := keyResource.Primary.Attributes["encrypted_ses_smtp_password_v4"]
 		if !ok {
 			return errors.New("No password in state")
 		}
 
-		// We can't verify that the decrypted password is correct, because we don't
+		// We can't verify that the decrypted secret or password is correct, because we don't
 		// have it. We can verify that decrypting it does not error
-		_, err := pgpkeys.DecryptBytes(password, key)
+		_, err := pgpkeys.DecryptBytes(secret, key)
+		if err != nil {
+			return fmt.Errorf("Error decrypting secret: %s", err)
+		}
+		_, err = pgpkeys.DecryptBytes(password, key)
 		if err != nil {
 			return fmt.Errorf("Error decrypting password: %s", err)
 		}
