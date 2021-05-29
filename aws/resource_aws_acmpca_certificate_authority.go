@@ -240,7 +240,6 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										Default:      acmpca.S3ObjectAclPublicRead,
 										ValidateFunc: validation.StringInSlice(acmpca.S3ObjectAcl_Values(), false),
 									},
 								},
