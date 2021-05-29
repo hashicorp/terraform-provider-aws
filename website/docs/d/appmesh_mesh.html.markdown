@@ -51,4 +51,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Egress Filter
 
-* `type` - The egress filter type. By default, the type is `DROP_ALL`, but if the resource was created by Terraform without this value set, this will return `None`.
+* `type` - The egress filter type.
