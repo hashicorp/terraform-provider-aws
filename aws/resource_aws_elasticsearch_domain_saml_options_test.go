@@ -218,16 +218,11 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
   domain_name = aws_elasticsearch_domain.example.domain_name
 
   saml_options {
-	# enabled  = true
+    enabled = true
     idp {
-        entity_id = "https://terraform-dev-ed.my.salesforce.com"
-        metadata_content = file("./test-fixtures/saml-metadata.xml")
+      entity_id        = "https://terraform-dev-ed.my.salesforce.com"
+      metadata_content = file("./test-fixtures/saml-metadata.xml")
     }
-	# master_backend_role = "my-idp-group-or-role"
-	# master_user_name = "my-idp-user"
-	# roles_key = "optional-roles-key"
-	# session_timeout_minutes = 60
-	# subject_key = "optional-subject-key"
   }
 }
 `, userName, domainName)
@@ -280,16 +275,12 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
   domain_name = aws_elasticsearch_domain.example.domain_name
 
   saml_options {
-	# enabled  = true
+    enabled = true
     idp {
-        entity_id = "https://terraform-dev-ed.my.salesforce.com"
-        metadata_content = file("./test-fixtures/saml-metadata.xml")
+      entity_id        = "https://terraform-dev-ed.my.salesforce.com"
+      metadata_content = file("./test-fixtures/saml-metadata.xml")
     }
-	# master_backend_role = "my-idp-group-or-role"
-	# master_user_name = "my-idp-user"
-	# roles_key = "optional-roles-key"
-	session_timeout_minutes = 180
-	# subject_key = "optional-subject-key"
+    session_timeout_minutes = 180
   }
 }
 `, userName, domainName)
