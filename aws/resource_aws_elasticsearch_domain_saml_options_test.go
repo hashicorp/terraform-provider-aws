@@ -146,21 +146,6 @@ func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckESDomainSAMLOptionsDisappears(domainName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).esconn
-
-		input := elasticsearch.AdvancedSecurityOptionsInput{}
-		input.SetSAMLOptions(nil)
-		_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
-			DomainName:              aws.String(domainName),
-			AdvancedSecurityOptions: &input,
-		})
-
-		return err
-	}
-}
-
 func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[esResource]

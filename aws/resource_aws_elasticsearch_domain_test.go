@@ -1457,18 +1457,6 @@ func testAccPreCheckIamServiceLinkedRoleEs(t *testing.T) {
 	}
 }
 
-func testAccCheckESDomainDisappears(domainName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).esconn
-
-		_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
-			DomainName: aws.String(domainName),
-		})
-
-		return err
-	}
-}
-
 func testAccESDomainConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
