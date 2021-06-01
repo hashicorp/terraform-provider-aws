@@ -637,7 +637,7 @@ func expandLambdaOnFailure(tfMap map[string]interface{}) *lambda.OnFailure {
 
 	apiObject := &lambda.OnFailure{}
 
-	if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["destination_arn"].(string); ok {
 		apiObject.Destination = aws.String(v)
 	}
 
