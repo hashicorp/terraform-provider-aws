@@ -162,6 +162,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for the branch.
 * `display_name` - (Optional) The display name for a branch. This is used as the default domain prefix.
 * `enable_auto_build` - (Optional) Enables auto building for the branch.
+* `enable_basic_auth` - (Optional) Enables basic authorization for the branch.
 * `enable_notifications` - (Optional) Enables notifications for the branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for this branch.
@@ -178,7 +179,7 @@ The following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) for the branch.
 * `associated_resources` - A list of custom resources that are linked to this branch.
-* `custom_domains` - The custom domains for a branch of an Amplify app.
+* `custom_domains` - The custom domains for the branch.
 * `destination_branch` - The destination branch if the branch is a pull request branch.
 * `source_branch` - The source branch if the branch is a pull request branch.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

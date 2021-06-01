@@ -63,3 +63,32 @@ func BackendEnvironmentByAppIDAndEnvironmentName(conn *amplify.Amplify, appID, e
 
 	return output.BackendEnvironment, nil
 }
+
+func BranchByAppIDAndBranchName(conn *amplify.Amplify, appID, branchName string) (*amplify.Branch, error) {
+	input := &amplify.GetBranchInput{
+		AppId:      aws.String(appID),
+		BranchName: aws.String(branchName),
+	}
+
+	output, err := conn.GetBranch(input)
+
+	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Branch == nil {
+		return nil, &resource.NotFoundError{
+			Message:     "Empty result",
+			LastRequest: input,
+		}
+	}
+
+	return output.Branch, nil
+}
