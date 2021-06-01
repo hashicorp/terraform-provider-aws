@@ -42,7 +42,7 @@ resource "aws_amplify_branch" "master" {
   branch_name = "master"
 
   basic_auth_config {
-    // Enable basic authentication.
+    # Enable basic authentication.
     enable_basic_auth = true
 
     username = "username"
@@ -64,11 +64,11 @@ resource "aws_amplify_branch" "master" {
   app_id      = aws_amplify_app.example.id
   branch_name = "master"
 
-  // Enable SNS notifications.
+  # Enable SNS notifications.
   enable_notification = true
 }
 
-// CloudWatch Events Rule for Amplify notifications
+# CloudWatch Events Rule for Amplify notifications
 
 resource "aws_cloudwatch_event_rule" "amplify_app_master" {
   name        = "amplify-${aws_amplify_app.app.id}-${aws_amplify_branch.master.branch_name}-branch-notification"
@@ -115,7 +115,7 @@ resource "aws_cloudwatch_event_target" "amplify_app_master" {
   }
 }
 
-// SNS Topic for Amplify notifications
+# SNS Topic for Amplify notifications
 
 resource "aws_sns_topic" "amplify_app_master" {
   name = "amplify-${aws_amplify_app.app.id}_${aws_amplify_branch.master.branch_name}"
