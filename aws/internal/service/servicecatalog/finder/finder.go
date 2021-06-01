@@ -1,7 +1,6 @@
 package finder
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -138,8 +137,6 @@ func PrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLa
 		input.AcceptLanguage = aws.String(acceptLanguage)
 	}
 
-	arns := make([]string, 3)
-
 	var result *servicecatalog.Principal
 
 	err := conn.ListPrincipalsForPortfolioPages(input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
@@ -152,8 +149,6 @@ func PrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLa
 				continue
 			}
 
-			arns = append(arns, aws.StringValue(deet.PrincipalARN))
-
 			if aws.StringValue(deet.PrincipalARN) == principalARN {
 				result = deet
 				return false
@@ -162,10 +157,6 @@ func PrincipalPortfolioAssociation(conn *servicecatalog.ServiceCatalog, acceptLa
 
 		return !lastPage
 	})
-
-	if true {
-		return nil, fmt.Errorf("wut?? %v\narn: %s\narns: %v", input, principalARN, arns)
-	}
 
 	return result, err
 }
