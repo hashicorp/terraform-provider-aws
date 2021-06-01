@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -112,7 +113,7 @@ func TestAccAWSServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_servicecatalog_principal.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "aws_iam_role.test", "arn"),
 				),
 			},
 			{
@@ -162,7 +163,7 @@ func testAccCheckAwsServiceCatalogPrincipalPortfolioAssociationDestroy(s *terraf
 
 		err = waiter.PrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
 
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -231,7 +232,7 @@ func testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_basic(rName str
 	return composeConfig(testAccAWSServiceCatalogPrincipalPortfolioAssociationConfig_base(rName), `
 resource "aws_servicecatalog_principal_portfolio_association" "test" {
   portfolio_id  = aws_servicecatalog_portfolio.test.id
-  principal_arn = aws_iam_role.test.unique_id
+  principal_arn = aws_iam_role.test.arn
 }
 `)
 }
