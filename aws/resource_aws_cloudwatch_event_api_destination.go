@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"math"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,7 +43,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 			"invocation_rate_limit_per_second": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, math.MaxInt64),
+				ValidateFunc: validation.IntBetween(1, 300),
 				Default:      300,
 			},
 			"http_method": {
