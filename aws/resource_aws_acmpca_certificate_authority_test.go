@@ -403,6 +403,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.expiration_in_days", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.s3_object_acl", "PUBLIC_READ"),
 				),
 			},
 			// Test importing revocation configuration
@@ -440,7 +441,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	})
 }
 
-func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_s3ObjectAcl(t *testing.T) {
+func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfiguration_S3ObjectAcl(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
