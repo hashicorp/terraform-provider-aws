@@ -8,11 +8,6 @@ queued_behavior "release_commenter" "releases" {
   EOF
 }
 
-behavior "remove_labels_on_reply" "remove_stale" {
-    labels = ["waiting-response", "stale"]
-    only_non_maintainers = true
-}
-
 behavior "pull_request_size_labeler" "size" {
     label_prefix = "size/"
     label_map = {
