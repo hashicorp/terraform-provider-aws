@@ -21,8 +21,8 @@ resource "aws_amplify_branch" "master" {
   app_id      = aws_amplify_app.example.id
   branch_name = "master"
 
-  framework   = "React"
-  stage       = "PRODUCTION"
+  framework = "React"
+  stage     = "PRODUCTION"
 
   environment_variables = {
     REACT_APP_API_SERVER = "https://api.example.com"
@@ -132,7 +132,7 @@ data "aws_iam_policy_document" "amplify_app_master" {
     ]
 
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "events.amazonaws.com",
       ]
