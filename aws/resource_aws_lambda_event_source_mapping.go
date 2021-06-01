@@ -58,7 +58,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 					}
 
 					switch serviceName {
-					case "dynamodb", "kinesis", "kafka":
+					case "dynamodb", "kinesis", "kafka", "mq":
 						return old == "100"
 					case "sqs":
 						return old == "10"
@@ -176,6 +176,17 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Computed:     true,
 			},
 
+			"queues": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 1000),
+				},
+			},
+
 			"self_managed_event_source": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -205,7 +216,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 					},
 				},
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
-				RequiredWith: []string{"source_access_configuration"},
 			},
 
 			"source_access_configuration": {
@@ -225,7 +235,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 						},
 					},
 				},
-				RequiredWith: []string{"self_managed_event_source"},
 			},
 
 			"starting_position": {
@@ -256,7 +265,11 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 249),
+				},
 			},
 
 			"tumbling_window_in_seconds": {
@@ -321,6 +334,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("parallelization_factor"); ok {
 		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("queues"); ok && v.(*schema.Set).Len() > 0 {
+		input.Queues = expandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_event_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -431,6 +448,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("maximum_record_age_in_seconds", eventSourceMappingConfiguration.MaximumRecordAgeInSeconds)
 	d.Set("maximum_retry_attempts", eventSourceMappingConfiguration.MaximumRetryAttempts)
 	d.Set("parallelization_factor", eventSourceMappingConfiguration.ParallelizationFactor)
+	d.Set("queues", aws.StringValueSlice(eventSourceMappingConfiguration.Queues))
 	if eventSourceMappingConfiguration.SelfManagedEventSource != nil {
 		if err := d.Set("self_managed_event_source", []interface{}{flattenLambdaSelfManagedEventSource(eventSourceMappingConfiguration.SelfManagedEventSource)}); err != nil {
 			return fmt.Errorf("error setting self_managed_event_source: %w", err)

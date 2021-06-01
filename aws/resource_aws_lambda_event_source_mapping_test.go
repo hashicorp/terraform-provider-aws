@@ -698,7 +698,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"), //using kafka.EndpointsID will import kafka and make linters sad
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
@@ -747,7 +747,7 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"), //using kafka.EndpointsID will import kafka and make linters sad
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
@@ -772,6 +772,39 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 			{
 				PlanOnly: true,
 				Config:   testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, "null", "test2:9092,test1:9092"),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
+	var v lambda.EventSourceMappingConfiguration
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigActiveMQ(rName, "100"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "queues.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "queues.*", "test"),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
+				),
+			},
+			// batch_size became optional.  Ensure that if the user supplies the default
+			// value, but then moves to not providing the value, that we don't consider this
+			// a diff.
+			{
+				PlanOnly: true,
+				Config:   testAccAWSLambdaEventSourceMappingConfigActiveMQ(rName, "null"),
 			},
 		},
 	})
@@ -1147,6 +1180,109 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccAWSLambdaEventSourceMappingConfigMQBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "mq:DescribeBroker",
+        "secretsmanager:GetSecretValue",
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeVpcs",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  ingress {
+    from_port   = 61617
+    to_port     = 61617
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name             = %[1]q
+  engine_type             = "ActiveMQ"
+  engine_version          = "5.15.0"
+  host_instance_type      = "mq.t2.micro"
+  security_groups         = [aws_security_group.test.id]
+  authentication_strategy = "simple"
+  storage_type            = "efs"
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+
+  publicly_accessible = true
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({ username = "Test", password = "TestTest1234" })
+}
+`, rName)
+}
+
 func testAccAWSLambdaEventSourceMappingConfigKinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
 	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
@@ -1449,4 +1585,25 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "LATEST"
 }
 `)
+}
+
+func testAccAWSLambdaEventSourceMappingConfigActiveMQ(rName, batchSize string) string {
+	if batchSize == "" {
+		batchSize = "null"
+	}
+
+	return composeConfig(testAccAWSLambdaEventSourceMappingConfigMQBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size       = %[1]s
+  event_source_arn = aws_mq_broker.test.arn
+  enabled          = true
+  function_name    = aws_lambda_function.test.arn
+  queues           = ["test"]
+
+  source_access_configuration {
+    type = "BASIC_AUTH"
+    uri  = aws_secretsmanager_secret_version.test.arn
+  }
+}
+`, batchSize))
 }

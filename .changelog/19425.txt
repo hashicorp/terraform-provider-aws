@@ -9,3 +9,7 @@ resource/aws_lambda_event_source_mapping: Add `tumbling_window_in_seconds` argum
 ```release-notes:enhancement
 resource/aws_lambda_event_source_mapping: Add `function_response_types` argument to support AWS Lambda checkpointing
 ```
+
+```release-notes:enhancement
+resource/aws_lambda_event_source_mapping: Add `queues` argument to support Amazon MQ for Apache ActiveMQ event sources
+```
