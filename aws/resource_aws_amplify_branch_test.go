@@ -177,6 +177,7 @@ func testAccAWSAmplifyBranch_BackendEnvironmentArn(t *testing.T) {
 	})
 }
 
+/*
 func TestAccAWSAmplifyBranch_simple(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
@@ -370,6 +371,7 @@ func TestAccAWSAmplifyBranch_environmentVariables(t *testing.T) {
 		},
 	})
 }
+*/
 
 func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -520,6 +522,7 @@ resource "aws_amplify_branch" "test" {
 `, rName, environmentName)
 }
 
+/*
 func testAccAWSAmplifyBranchConfig_Required(rName string) string {
 	return testAccAWSAmplifyBranchConfigBranch(rName, "master")
 }
@@ -661,3 +664,4 @@ resource "aws_amplify_branch" "test" {
 }
 `, rName)
 }
+*/
