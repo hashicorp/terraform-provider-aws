@@ -43,13 +43,6 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			/*
-				"principal_unique_id": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-				},
-			*/
 			"principal_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
