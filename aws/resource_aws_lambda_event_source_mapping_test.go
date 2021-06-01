@@ -697,7 +697,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
@@ -783,7 +783,12 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSecretsManager(t)
+			testAccPartitionHasServicePreCheck("mq", t)
+			testAccPreCheckAWSMq(t)
+		},
 		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
