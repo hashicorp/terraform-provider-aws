@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -44,30 +44,14 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateArn,
 			},
-			"basic_auth_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enable_basic_auth": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"password": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Sensitive:    true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"username": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-					},
-				},
+
+			"basic_auth_credentials": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 2000),
 			},
+
 			"branch_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -174,10 +158,8 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 		params.BackendEnvironmentArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("basic_auth_config"); ok {
-		enable, credentials := expandAmplifyBasicAuthConfig(v.([]interface{}))
-		params.EnableBasicAuth = enable
-		params.BasicAuthCredentials = credentials
+	if v, ok := d.GetOk("basic_auth_credentials"); ok {
+		params.BasicAuthCredentials = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("build_spec"); ok {
@@ -205,8 +187,8 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 		params.EnablePullRequestPreview = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("environment_variables"); ok {
-		params.EnvironmentVariables = stringMapToPointers(v.(map[string]interface{}))
+	if v, ok := d.GetOk("environment_variables"); ok && len(v.(map[string]interface{})) > 0 {
+		params.EnvironmentVariables = expandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("framework"); ok {
@@ -265,9 +247,7 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("associated_resources", resp.Branch.AssociatedResources)
 	d.Set("backend_environment_arn", resp.Branch.BackendEnvironmentArn)
 	d.Set("arn", resp.Branch.BranchArn)
-	if err := d.Set("basic_auth_config", flattenAmplifyBasicAuthConfig(resp.Branch.EnableBasicAuth, resp.Branch.BasicAuthCredentials)); err != nil {
-		return fmt.Errorf("error setting basic_auth_config: %s", err)
-	}
+	d.Set("basic_auth_credentials", resp.Branch.EnableBasicAuth)
 	d.Set("branch_name", resp.Branch.BranchName)
 	d.Set("build_spec", resp.Branch.BuildSpec)
 	d.Set("custom_domains", resp.Branch.CustomDomains)
@@ -277,9 +257,7 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("enable_auto_build", resp.Branch.EnableAutoBuild)
 	d.Set("enable_notification", resp.Branch.EnableNotification)
 	d.Set("enable_pull_request_preview", resp.Branch.EnablePullRequestPreview)
-	if err := d.Set("environment_variables", aws.StringValueMap(resp.Branch.EnvironmentVariables)); err != nil {
-		return fmt.Errorf("error setting environment_variables: %s", err)
-	}
+	d.Set("environment_variables", aws.StringValueMap(resp.Branch.EnvironmentVariables))
 	d.Set("framework", resp.Branch.Framework)
 	d.Set("pull_request_environment_name", resp.Branch.PullRequestEnvironmentName)
 	d.Set("source_branch", resp.Branch.SourceBranch)
@@ -311,9 +289,7 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("basic_auth_config") {
-		enable, credentials := expandAmplifyBasicAuthConfig(d.Get("basic_auth_config").([]interface{}))
-		params.EnableBasicAuth = enable
-		params.BasicAuthCredentials = credentials
+		params.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
 	}
 
 	if d.HasChange("build_spec") {
@@ -341,8 +317,11 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("environment_variables") {
-		v := d.Get("environment_variables").(map[string]interface{})
-		params.EnvironmentVariables = expandAmplifyEnvironmentVariables(v)
+		if v := d.Get("environment_variables").(map[string]interface{}); len(v) > 0 {
+			params.EnvironmentVariables = expandStringMap(v)
+		} else {
+			params.EnvironmentVariables = aws.StringMap(map[string]string{"": ""})
+		}
 	}
 
 	if d.HasChange("framework") {
