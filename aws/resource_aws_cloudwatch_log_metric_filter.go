@@ -78,6 +78,11 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validateTypeStringNullableFloat,
 						},
+						"dimensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
