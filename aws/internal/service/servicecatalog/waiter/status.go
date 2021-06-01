@@ -305,9 +305,7 @@ func PrincipalPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, ac
 		output, err := finder.PrincipalPortfolioAssociation(conn, acceptLanguage, principalARN, portfolioID)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("principal portfolio association not found (%s): %s", tfservicecatalog.PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID), err),
-			}
+			return nil, StatusNotFound, err
 		}
 
 		if err != nil {
@@ -315,9 +313,7 @@ func PrincipalPortfolioAssociationStatus(conn *servicecatalog.ServiceCatalog, ac
 		}
 
 		if output == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("finding principal portfolio association (%s): empty response", tfservicecatalog.PrincipalPortfolioAssociationID(acceptLanguage, principalARN, portfolioID)),
-			}
+			return nil, StatusNotFound, err
 		}
 
 		return output, servicecatalog.StatusAvailable, err
