@@ -1,4 +1,5 @@
 ## 3.44.0 (Unreleased)
+
 ## 3.43.0 (June 01, 2021)
 
 FEATURES:
@@ -24,6 +25,10 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Add support for ECS Anywhere with the `launch_type` `EXTERNAL` ([#19557](https://github.com/hashicorp/terraform-provider-aws/issues/19557))
 * resource/aws_eks_node_group: Add `taint` argument ([#19482](https://github.com/hashicorp/terraform-provider-aws/issues/19482))
 * resource/aws_elasticache_parameter_group: Add `tags` argument and `arn` and `tags_all` attributes ([#19551](https://github.com/hashicorp/terraform-provider-aws/issues/19551))
+* resource/aws_lambda_event_source_mapping: Add `function_response_types` argument to support AWS Lambda checkpointing ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `queues` argument to support Amazon MQ for Apache ActiveMQ event sources ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `self_managed_event_source` and `source_access_configuration` arguments to support self-managed Apache Kafka event sources ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
+* resource/aws_lambda_event_source_mapping: Add `tumbling_window_in_seconds` argument to support AWS Lambda streaming analytics calculations ([#19425](https://github.com/hashicorp/terraform-provider-aws/issues/19425))
 * resource/aws_msk_cluster: Add `bootstrap_brokers_sasl_iam` attribute ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
 * resource/aws_msk_cluster: Add `iam` argument to `client_authentication.sasl` configuration block ([#19404](https://github.com/hashicorp/terraform-provider-aws/issues/19404))
 * resource/aws_msk_configuration: `kafka_versions` argument is optional ([#17571](https://github.com/hashicorp/terraform-provider-aws/issues/17571))
