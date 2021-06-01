@@ -1,5 +1,9 @@
 ## 3.44.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_elasticache_cluster: Fix provider-level `default_tags` support for resource ([#19615](https://github.com/hashicorp/terraform-provider-aws/issues/19615))
+
 ## 3.43.0 (June 01, 2021)
 
 FEATURES:
