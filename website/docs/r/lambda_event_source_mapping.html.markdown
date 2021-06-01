@@ -62,17 +62,17 @@ resource "aws_lambda_event_source_mapping" "example" {
 
   source_access_configuration {
     type = "VPC_SUBNET"
-    uri = "subnet:subnet-example1"
+    uri  = "subnet:subnet-example1"
   }
 
   source_access_configuration {
     type = "VPC_SUBNET"
-    uri = "subnet:subnet-example2"
+    uri  = "subnet:subnet-example2"
   }
 
   source_access_configuration {
     type = "VPC_SECURITY_GROUP"
-    uri = "security_group:sg-example"
+    uri  = "security_group:sg-example"
   }
 }
 ```

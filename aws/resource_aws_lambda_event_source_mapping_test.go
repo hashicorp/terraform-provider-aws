@@ -1533,13 +1533,13 @@ resource "aws_lambda_event_source_mapping" "test" {
     for_each = aws_subnet.test.*.id
     content {
       type = "VPC_SUBNET"
-      uri = "subnet:${source_access_configuration.value}"
+      uri  = "subnet:${source_access_configuration.value}"
     }
   }
 
   source_access_configuration {
     type = "VPC_SECURITY_GROUP"
-    uri = aws_security_group.test.id
+    uri  = aws_security_group.test.id
   }
 }
 `, rName, batchSize, kafkaBootstrapServers))
