@@ -1,5 +1,9 @@
 ## 3.44.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_acmpca_certificate_authority: Add `s3_object_acl` argument to `revocation_configuration.crl_configuration` configuration block ([#19578](https://github.com/hashicorp/terraform-provider-aws/issues/19578))
+
 BUG FIXES:
 
 * resource/aws_elasticache_cluster: Fix provider-level `default_tags` support for resource ([#19615](https://github.com/hashicorp/terraform-provider-aws/issues/19615))
