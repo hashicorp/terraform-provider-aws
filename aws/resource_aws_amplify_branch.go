@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -26,7 +28,13 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+			customdiff.ForceNewIfChange("backend_environment_arn", func(_ context.Context, old, new, meta interface{}) bool {
+				// Any existing value cannot be cleared.
+				return new.(string) == ""
+			}),
+		),
 
 		Schema: map[string]*schema.Schema{
 			"app_id": {
