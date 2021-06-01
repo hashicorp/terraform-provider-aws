@@ -43,11 +43,13 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"principal_unique_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+			/*
+				"principal_unique_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			*/
 			"principal_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -124,7 +126,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationRead(d *schema.Resour
 
 	output, err := waiter.PrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException)) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -177,7 +179,11 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationDelete(d *schema.Reso
 
 	err = waiter.PrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
 
-	if err != nil && !tfresource.NotFound(err) {
+	if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Principal Portfolio Disassociation (%s): %w", d.Id(), err)
 	}
 
