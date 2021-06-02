@@ -103,8 +103,6 @@ func testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName(t *testin
 	})
 }
 
-// testAccAWSAmplifyBackendEnvironmentConfigDeploymentArtifactsAndStackName(rname, environmentName)
-
 func testAccCheckAWSAmplifyBackendEnvironmentExists(resourceName string, v *amplify.BackendEnvironment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]

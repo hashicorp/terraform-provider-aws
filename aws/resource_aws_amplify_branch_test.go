@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -132,12 +131,12 @@ func testAccAWSAmplifyBranch_Tags(t *testing.T) {
 }
 
 func testAccAWSAmplifyBranch_BackendEnvironmentArn(t *testing.T) {
-	var branch1, branch2, branch3 amplify.Branch
+	var branch amplify.Branch
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	environmentName1 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
-	environmentName2 := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
+	environmentName := acctest.RandStringFromCharSet(9, acctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
-	backendEnvironmentResourceName := "aws_amplify_backend_environment.test"
+	backendEnvironment1ResourceName := "aws_amplify_backend_environment.test1"
+	backendEnvironment2ResourceName := "aws_amplify_backend_environment.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -146,10 +145,10 @@ func testAccAWSAmplifyBranch_BackendEnvironmentArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName1),
+				Config: testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch1),
-					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironmentResourceName, "arn"),
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment1ResourceName, "arn"),
 				),
 			},
 			{
@@ -158,19 +157,10 @@ func testAccAWSAmplifyBranch_BackendEnvironmentArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName2),
+				Config: testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch2),
-					testAccCheckAWSAmplifyBranchNotRecreated(&branch1, &branch2),
-					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironmentResourceName, "arn"),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyBranchConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAmplifyBranchExists(resourceName, &branch3),
-					testAccCheckAWSAmplifyBranchRecreated(&branch2, &branch3),
-					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, "arn"),
 				),
 			},
 		},
@@ -434,26 +424,6 @@ func testAccCheckAWSAmplifyBranchDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAmplifyBranchNotRecreated(before, after *amplify.Branch) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.TimeValue(before.CreateTime), aws.TimeValue(after.CreateTime); before != after {
-			return fmt.Errorf("Amplify Branch (%s/%s) recreated", before, after)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSAmplifyBranchRecreated(before, after *amplify.Branch) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.TimeValue(before.CreateTime), aws.TimeValue(after.CreateTime); before == after {
-			return fmt.Errorf("Amplify Branch (%s) not recreated", before)
-		}
-
-		return nil
-	}
-}
-
 func testAccAWSAmplifyBranchConfigName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
@@ -502,24 +472,29 @@ resource "aws_amplify_branch" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName string) string {
+func testAccAWSAmplifyBranchConfigBackendEnvironmentARN(rName, environmentName string, index int) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 }
 
-resource "aws_amplify_backend_environment" "test" {
+resource "aws_amplify_backend_environment" "test1" {
   app_id           = aws_amplify_app.test.id
-  environment_name = %[2]q
+  environment_name = "%[2]sa"
+}
+
+resource "aws_amplify_backend_environment" "test2" {
+  app_id           = aws_amplify_app.test.id
+  environment_name = "%[2]sb"
 }
 
 resource "aws_amplify_branch" "test" {
   app_id      = aws_amplify_app.test.id
   branch_name = %[1]q
 
-  backend_environment_arn = aws_amplify_backend_environment.test.arn
+  backend_environment_arn = aws_amplify_backend_environment.test%[3]d.arn
 }
-`, rName, environmentName)
+`, rName, environmentName, index)
 }
 
 /*
