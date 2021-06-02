@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_launch_configuration: Add `throughput` argument to `ebs_block_device` and `root_block_device` configuration blocks to support GP3 volumes
+```
