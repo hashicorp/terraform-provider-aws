@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -89,7 +91,6 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1200),
 			},
 			"subnet_ids": {
@@ -183,8 +184,25 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			SetTagsDiff,
+			resourceFsxLustreFileSystemSchemaCustomizeDiff,
+		),
 	}
+}
+
+func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// we want to force a new resource if the new storage capacity is less than the old one
+	if d.HasChange("storage_capacity") {
+		o, n := d.GetChange("storage_capacity")
+		if n.(int) < o.(int) || d.Get("deployment_type").(string) == fsx.LustreDeploymentTypeScratch1 {
+			if err := d.ForceNew("storage_capacity"); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsFsxLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
@@ -307,6 +325,11 @@ func resourceAwsFsxLustreFileSystemUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("auto_import_policy") {
 		input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("storage_capacity") {
+		input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		requestUpdate = true
 	}
 
