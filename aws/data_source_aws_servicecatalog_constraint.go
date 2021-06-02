@@ -18,7 +18,7 @@ func dataSourceAwsServiceCatalogConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "en",
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"description": {
