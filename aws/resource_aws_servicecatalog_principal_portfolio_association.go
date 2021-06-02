@@ -30,7 +30,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      tfservicecatalog.ServiceCatalogAcceptLanguageEnglish,
+				Default:      tfservicecatalog.AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(tfservicecatalog.AcceptLanguage_Values(), false),
 			},
 			"portfolio_id": {
@@ -114,7 +114,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationRead(d *schema.Resour
 	}
 
 	if acceptLanguage == "" {
-		acceptLanguage = tfservicecatalog.ServiceCatalogAcceptLanguageEnglish
+		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
 	}
 
 	output, err := waiter.PrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
@@ -151,7 +151,7 @@ func resourceAwsServiceCatalogPrincipalPortfolioAssociationDelete(d *schema.Reso
 	}
 
 	if acceptLanguage == "" {
-		acceptLanguage = tfservicecatalog.ServiceCatalogAcceptLanguageEnglish
+		acceptLanguage = tfservicecatalog.AcceptLanguageEnglish
 	}
 
 	input := &servicecatalog.DisassociatePrincipalFromPortfolioInput{
