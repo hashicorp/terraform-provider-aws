@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Add `deduplication_scope` and `fifo_throughput_limit` arguments
+```

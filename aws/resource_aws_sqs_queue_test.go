@@ -95,6 +95,9 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", strconv.Itoa(tfsqs.DefaultQueueMessageRetentionPeriod)),
 					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", strconv.Itoa(tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", strconv.Itoa(tfsqs.DefaultQueueVisibilityTimeout)),
+					// These two should only be set for FIFO queues.
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", ""),
 				),
 			},
 			{
@@ -487,6 +490,8 @@ func TestAccAWSSQSQueue_FIFO(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
 				),
 			},
 			{
@@ -529,6 +534,51 @@ func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_FIFOWithHighThroughputMode(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
+	queueName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, sqs.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithFIFOHighThroughputMode1(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "queue"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perQueue"),
+					testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(&queueAttributes, "queue", "perQueue"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSQSConfigWithFIFOHighThroughputMode2(queueName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", "messageGroup"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_limit", "perMessageGroupId"),
+					testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(&queueAttributes, "messageGroup", "perMessageGroupId"),
 				),
 			},
 			{
@@ -663,6 +713,25 @@ func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[str
 		}
 
 		*queueAttributes = output.Attributes
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSQSFIFOQueueHighThroughputAttributes(queueAttributes *map[string]*string, deduplicationScope, fifoThroughputLimit string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// checking if attributes are defaults
+		for key, valuePointer := range *queueAttributes {
+			value := aws.StringValue(valuePointer)
+
+			if key == "DeduplicationScope" && value != deduplicationScope {
+				return fmt.Errorf("DeduplicationScope (%s) was not set to %s", value, deduplicationScope)
+			}
+
+			if key == "FifoThroughputLimit" && value != fifoThroughputLimit {
+				return fmt.Errorf("FifoThroughputLimit (%s) was not set to %s", value, fifoThroughputLimit)
+			}
+		}
 
 		return nil
 	}
@@ -811,6 +880,26 @@ resource "aws_sqs_queue" "queue" {
   name                        = "%s.fifo"
   fifo_queue                  = true
   content_based_deduplication = true
+}
+`, queue)
+}
+
+func testAccAWSSQSConfigWithFIFOHighThroughputMode1(queue string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name       = "%s.fifo"
+  fifo_queue = true
+}
+`, queue)
+}
+
+func testAccAWSSQSConfigWithFIFOHighThroughputMode2(queue string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "queue" {
+  name                  = "%s.fifo"
+  fifo_queue            = true
+  deduplication_scope   = "messageGroup"
+  fifo_throughput_limit = "perMessageGroupId"
 }
 `, queue)
 }

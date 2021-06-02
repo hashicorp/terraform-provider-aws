@@ -37,6 +37,8 @@ var sqsQueueAttributeMap = map[string]string{
 	"content_based_deduplication":       sqs.QueueAttributeNameContentBasedDeduplication,
 	"kms_master_key_id":                 sqs.QueueAttributeNameKmsMasterKeyId,
 	"kms_data_key_reuse_period_seconds": sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds,
+	"deduplication_scope":               sqs.QueueAttributeNameDeduplicationScope,
+	"fifo_throughput_limit":             sqs.QueueAttributeNameFifoThroughputLimit,
 }
 
 // A number of these are marked as computed because if you don't
@@ -135,6 +137,22 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
+			},
+			"deduplication_scope": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"messageGroup", "queue"},
+					false),
+			},
+			"fifo_throughput_limit": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"perQueue", "perMessageGroupId"},
+					false),
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -306,6 +324,8 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("receive_wait_time_seconds", tfsqs.DefaultQueueReceiveMessageWaitTimeSeconds)
 	d.Set("redrive_policy", "")
 	d.Set("visibility_timeout_seconds", tfsqs.DefaultQueueVisibilityTimeout)
+	d.Set("deduplication_scope", "")
+	d.Set("fifo_throughput_limit", "")
 
 	if attributeOutput != nil {
 		queueAttributes := aws.StringValueMap(attributeOutput.Attributes)
@@ -404,6 +424,14 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			d.Set("visibility_timeout_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameDeduplicationScope]; ok && v != "" {
+			d.Set("deduplication_scope", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameFifoThroughputLimit]; ok && v != "" {
+			d.Set("fifo_throughput_limit", v)
 		}
 	}
 
