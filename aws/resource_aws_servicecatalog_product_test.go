@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 )
 
@@ -93,7 +94,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProductExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "accept_language", "en"),
+					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					testAccCheckResourceAttrRfc3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
