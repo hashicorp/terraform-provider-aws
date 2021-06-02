@@ -1,5 +1,9 @@
 ## 3.44.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_servicecatalog_principal_portfolio_association` ([#19470](https://github.com/hashicorp/terraform-provider-aws/issues/19470))
+
 ENHANCEMENTS:
 
 * resource/aws_acmpca_certificate_authority: Add `s3_object_acl` argument to `revocation_configuration.crl_configuration` configuration block ([#19578](https://github.com/hashicorp/terraform-provider-aws/issues/19578))
