@@ -178,9 +178,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"no_device": {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -191,8 +192,21 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"no_device": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"throughput": {
+							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -207,20 +221,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"throughput": {
-							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
@@ -319,6 +319,13 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"throughput": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -328,13 +335,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 
 						"volume_type": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
-						"throughput": {
-							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
