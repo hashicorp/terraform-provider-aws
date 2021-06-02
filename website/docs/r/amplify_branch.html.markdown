@@ -175,7 +175,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) for the branch.
 * `associated_resources` - A list of custom resources that are linked to this branch.
