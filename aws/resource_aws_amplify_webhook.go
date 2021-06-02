@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsAmplifyWebhook() *schema.Resource {
@@ -28,23 +28,24 @@ func resourceAwsAmplifyWebhook() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"app_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+
 			"branch_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9/_.-]+$`), "should only contain letters, numbers, and the symbols /_.-"),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
+
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,7 +56,6 @@ func resourceAwsAmplifyWebhook() *schema.Resource {
 
 func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Print("[DEBUG] Creating Amplify Webhook")
 
 	params := &amplify.CreateWebhookInput{
 		AppId:      aws.String(d.Get("app_id").(string)),
@@ -78,7 +78,6 @@ func resourceAwsAmplifyWebhookCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsAmplifyWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).amplifyconn
-	log.Printf("[DEBUG] Reading Amplify Webhook: %s", d.Id())
 
 	resp, err := conn.GetWebhook(&amplify.GetWebhookInput{
 		WebhookId: aws.String(d.Id()),

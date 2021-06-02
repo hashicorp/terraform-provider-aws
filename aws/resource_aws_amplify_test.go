@@ -35,6 +35,9 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"EnvironmentVariables": testAccAWSAmplifyBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccAWSAmplifyBranch_OptionalArguments,
 		},
+		"Webhook": {
+			"basic": testAccAWSAmplifyWebhook_basic,
+		},
 	}
 
 	for group, m := range testCases {
