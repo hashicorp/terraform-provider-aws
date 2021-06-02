@@ -28,14 +28,13 @@ func testAccAWSAmplifyBranch_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAmplifyBranchConfigName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
@@ -260,8 +259,8 @@ func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
 	})
 }
 
-/*
-func TestAccAWSAmplifyBranch_simple(t *testing.T) {
+func testAccAWSAmplifyBranch_OptionalArguments(t *testing.T) {
+	var branch amplify.Branch
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_branch.test"
 
@@ -272,13 +271,18 @@ func TestAccAWSAmplifyBranch_simple(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigSimple(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "displayname"),
+				Config: testAccAWSAmplifyBranchConfigOptionalArguments(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "false"),
-					resource.TestCheckResourceAttr(resourceName, "framework", "WEB"),
-					resource.TestCheckResourceAttr(resourceName, "stage", "PRODUCTION"),
+					resource.TestCheckResourceAttr(resourceName, "enable_notification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "false"),
+					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
+					resource.TestCheckResourceAttr(resourceName, "stage", "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "10"),
 				),
 			},
@@ -287,174 +291,25 @@ func TestAccAWSAmplifyBranch_simple(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyBranch_backendEnvironment(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_branch.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyBranchConfigBackendEnvironment(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "backend_environment_arn", regexp.MustCompile("^arn:[^:]+:amplify:[^:]+:[^:]+:apps/[^/]+/backendenvironments/prod")),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyBranch_pullRequestPreview(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_branch.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyBranchConfigPullRequestPreview(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccAWSAmplifyBranchConfigOptionalArgumentsUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname2"),
+					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "true"),
-					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "prod"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_branch.test"
-
-	username1 := "username1"
-	password1 := "password1"
-	username2 := "username2"
-	password2 := "password2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyBranchConfigBasicAuthConfig(rName, username1, password1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.enable_basic_auth", "true"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.username", username1),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.password", password1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyBranchConfigBasicAuthConfig(rName, username2, password2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.enable_basic_auth", "true"),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.username", username2),
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.0.password", password2),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyBranchConfig_Required(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "basic_auth_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
+					resource.TestCheckResourceAttr(resourceName, "stage", "EXPERIMENTAL"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "15"),
 				),
 			},
 		},
 	})
 }
-
-func TestAccAWSAmplifyBranch_notification(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_branch.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyBranchConfigNotification(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_notification", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAmplifyBranch_environmentVariables(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_amplify_branch.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAmplifyBranchConfigEnvironmentVariables1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSAmplifyBranchConfigEnvironmentVariables2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
-				),
-			},
-			{
-				Config: testAccAWSAmplifyBranchConfig_Required(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
-				),
-			},
-		},
-	})
-}
-*/
 
 func testAccCheckAWSAmplifyBranchExists(resourceName string, v *amplify.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -641,146 +496,50 @@ resource "aws_amplify_branch" "test" {
 `, rName)
 }
 
-/*
-func testAccAWSAmplifyBranchConfig_Required(rName string) string {
-	return testAccAWSAmplifyBranchConfigBranch(rName, "master")
-}
-
-func testAccAWSAmplifyBranchConfigBranch(rName string, branchName string) string {
+func testAccAWSAmplifyBranchConfigOptionalArguments(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_amplify_branch" "test" {
   app_id      = aws_amplify_app.test.id
-  branch_name = "%s"
-}
-`, rName, branchName)
-}
+  branch_name = %[1]q
 
-func testAccAWSAmplifyBranchConfigSimple(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  description       = "description"
-  display_name      = "displayname"
-  enable_auto_build = false
-  framework         = "WEB"
-  stage             = "PRODUCTION"
-  ttl               = "10"
+  description                   = "testdescription1"
+  display_name                  = "testdisplayname1"
+  enable_auto_build             = false
+  enable_notification           = true
+  enable_performance_mode       = true
+  enable_pull_request_preview   = false
+  framework                     = "React"
+  pull_request_environment_name = "testpr1"
+  stage                         = "DEVELOPMENT"
+  ttl                           = "10"
 }
 `, rName)
 }
 
-func testAccAWSAmplifyBranchConfigBackendEnvironment(rName string) string {
+func testAccAWSAmplifyBranchConfigOptionalArgumentsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_backend_environment" "test" {
-  app_id           = aws_amplify_app.test.id
-  environment_name = "prod"
+  name = %[1]q
 }
 
 resource "aws_amplify_branch" "test" {
   app_id      = aws_amplify_app.test.id
-  branch_name = "master"
+  branch_name = %[1]q
 
-  backend_environment_arn = aws_amplify_backend_environment.test.arn
+  description                   = "testdescription2"
+  display_name                  = "testdisplayname2"
+  enable_auto_build             = true
+  enable_notification           = false
+  enable_performance_mode       = true
+  enable_pull_request_preview   = true
+  framework                     = "Angular"
+  pull_request_environment_name = "testpr2"
+  stage                         = "EXPERIMENTAL"
+  ttl                           = "15"
 }
 `, rName)
 }
-
-func testAccAWSAmplifyBranchConfigPullRequestPreview(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  enable_pull_request_preview = true
-  pull_request_environment_name = "prod"
-}
-`, rName)
-}
-
-func testAccAWSAmplifyBranchConfigBasicAuthConfig(rName string, username, password string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  basic_auth_config {
-    enable_basic_auth = true
-    username          = "%s"
-    password          = "%s"
-  }
-}
-`, rName, username, password)
-}
-
-func testAccAWSAmplifyBranchConfigNotification(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  enable_notification = true
-}
-`, rName)
-}
-
-func testAccAWSAmplifyBranchConfigEnvironmentVariables1(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  environment_variables = {
-    ENVVAR1 = "1"
-  }
-}
-`, rName)
-}
-
-func testAccAWSAmplifyBranchConfigEnvironmentVariables2(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_amplify_app" "test" {
-  name = "%s"
-}
-
-resource "aws_amplify_branch" "test" {
-  app_id      = aws_amplify_app.test.id
-  branch_name = "master"
-
-  environment_variables = {
-    ENVVAR1 = "2",
-    ENVVAR2 = "2"
-  }
-}
-`, rName)
-}
-*/

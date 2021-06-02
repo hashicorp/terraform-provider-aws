@@ -158,7 +158,6 @@ The following arguments are supported:
 * `branch_name` - (Required) The name for the branch.
 * `backend_environment_arn` - (Optional) The Amazon Resource Name (ARN) for a backend environment that is part of an Amplify app.
 * `basic_auth_credentials` - (Optional) The basic authorization credentials for the branch.
-* `build_spec` - (Optional) The build specification (build spec) for the branch.
 * `description` - (Optional) The description for the branch.
 * `display_name` - (Optional) The display name for a branch. This is used as the default domain prefix.
 * `enable_auto_build` - (Optional) Enables auto building for the branch.

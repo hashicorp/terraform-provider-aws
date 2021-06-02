@@ -74,12 +74,6 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
 
-			"build_spec": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 25000),
-			},
-
 			"custom_domains": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -123,6 +117,7 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 			"enable_performance_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 
 			"enable_pull_request_preview": {
@@ -207,10 +202,6 @@ func resourceAwsAmplifyBranchCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("basic_auth_credentials"); ok {
 		input.BasicAuthCredentials = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("build_spec"); ok {
-		input.BuildSpec = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -302,7 +293,6 @@ func resourceAwsAmplifyBranchRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
 	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
 	d.Set("branch_name", branch.BranchName)
-	d.Set("build_spec", branch.BuildSpec)
 	d.Set("custom_domains", aws.StringValueSlice(branch.CustomDomains))
 	d.Set("description", branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
@@ -353,10 +343,6 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 
 		if d.HasChange("basic_auth_credentials") {
 			input.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
-		}
-
-		if d.HasChange("build_spec") {
-			input.BuildSpec = aws.String(d.Get("build_spec").(string))
 		}
 
 		if d.HasChange("description") {
