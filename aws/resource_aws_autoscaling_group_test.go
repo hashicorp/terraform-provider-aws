@@ -21,10 +21,18 @@ import (
 )
 
 func init() {
+	RegisterServiceErrorCheckFunc(autoscaling.EndpointsID, testAccErrorCheckSkipAutoScaling)
+
 	resource.AddTestSweepers("aws_autoscaling_group", &resource.Sweeper{
 		Name: "aws_autoscaling_group",
 		F:    testSweepAutoscalingGroups,
 	})
+}
+
+func testAccErrorCheckSkipAutoScaling(t *testing.T) resource.ErrorCheckFunc {
+	return testAccErrorCheckSkipMessagesContaining(t,
+		"gp3 is invalid",
+	)
 }
 
 func testSweepAutoscalingGroups(region string) error {
