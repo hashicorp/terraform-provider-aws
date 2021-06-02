@@ -33,6 +33,7 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"Tags":                  testAccAWSAmplifyBranch_Tags,
 			"BackendEnvironmentArn": testAccAWSAmplifyBranch_BackendEnvironmentArn,
 			"BasicAuthCredentials":  testAccAWSAmplifyBranch_BasicAuthCredentials,
+			"EnvironmentVariables":  testAccAWSAmplifyBranch_EnvironmentVariables,
 		},
 	}
 

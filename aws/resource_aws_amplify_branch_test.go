@@ -216,6 +216,50 @@ func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
 	})
 }
 
+func testAccAWSAmplifyBranch_EnvironmentVariables(t *testing.T) {
+	var branch amplify.Branch
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_branch.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyBranchConfigEnvironmentVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyBranchConfigEnvironmentVariablesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 /*
 func TestAccAWSAmplifyBranch_simple(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -560,6 +604,41 @@ resource "aws_amplify_branch" "test" {
   enable_basic_auth      = true
 }
 `, rName, basicAuthCredentials)
+}
+
+func testAccAWSAmplifyBranchConfigEnvironmentVariables(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+
+  environment_variables = {
+    ENVVAR1 = "1"
+  }
+}
+`, rName)
+}
+
+func testAccAWSAmplifyBranchConfigEnvironmentVariablesUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+
+  environment_variables = {
+    ENVVAR1 = "2",
+    ENVVAR2 = "2"
+  }
+}
+`, rName)
 }
 
 /*
