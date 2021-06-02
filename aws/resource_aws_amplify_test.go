@@ -36,7 +36,9 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"OptionalArguments":    testAccAWSAmplifyBranch_OptionalArguments,
 		},
 		"Webhook": {
-			"basic": testAccAWSAmplifyWebhook_basic,
+			"basic":      testAccAWSAmplifyWebhook_basic,
+			"disappears": testAccAWSAmplifyWebhook_disappears,
+			"update":     testAccAWSAmplifyWebhook_update,
 		},
 	}
 
