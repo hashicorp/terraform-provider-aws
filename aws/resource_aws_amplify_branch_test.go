@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"testing"
@@ -161,6 +162,54 @@ func testAccAWSAmplifyBranch_BackendEnvironmentArn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
 					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSAmplifyBranch_BasicAuthCredentials(t *testing.T) {
+	var branch amplify.Branch
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_amplify_branch.test"
+
+	credentials1 := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
+	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAmplifyBranchDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, credentials1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials1),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, credentials2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", credentials2),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "true"),
+				),
+			},
+			{
+				Config: testAccAWSAmplifyBranchConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAmplifyBranchExists(resourceName, &branch),
+					// Clearing basic_auth_credentials not reflected in API.
+					// resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 				),
 			},
 		},
@@ -495,6 +544,22 @@ resource "aws_amplify_branch" "test" {
   backend_environment_arn = aws_amplify_backend_environment.test%[3]d.arn
 }
 `, rName, environmentName, index)
+}
+
+func testAccAWSAmplifyBranchConfigBasicAuthCredentials(rName, basicAuthCredentials string) string {
+	return fmt.Sprintf(`
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+
+  basic_auth_credentials = %[2]q
+  enable_basic_auth      = true
+}
+`, rName, basicAuthCredentials)
 }
 
 /*

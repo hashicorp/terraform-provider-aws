@@ -57,6 +57,14 @@ func resourceAwsAmplifyBranch() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 2000),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// These credentials are ignored if basic auth is not enabled.
+					if d.Get("enable_basic_auth").(bool) {
+						return old == new
+					}
+
+					return true
+				},
 			},
 
 			"branch_name": {
@@ -361,6 +369,10 @@ func resourceAwsAmplifyBranchUpdate(d *schema.ResourceData, meta interface{}) er
 
 		if d.HasChange("enable_auto_build") {
 			input.EnableAutoBuild = aws.Bool(d.Get("enable_auto_build").(bool))
+		}
+
+		if d.HasChange("enable_basic_auth") {
+			input.EnableBasicAuth = aws.Bool(d.Get("enable_basic_auth").(bool))
 		}
 
 		if d.HasChange("enable_notification") {
