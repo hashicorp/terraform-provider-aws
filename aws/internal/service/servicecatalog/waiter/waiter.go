@@ -38,6 +38,9 @@ const (
 	ProvisioningArtifactReadyTimeout   = 3 * time.Minute
 	ProvisioningArtifactDeletedTimeout = 3 * time.Minute
 
+	PrincipalPortfolioAssociationReadyTimeout  = 3 * time.Minute
+	PrincipalPortfolioAssociationDeleteTimeout = 3 * time.Minute
+
 	StatusNotFound    = "NOT_FOUND"
 	StatusUnavailable = "UNAVAILABLE"
 
@@ -406,4 +409,37 @@ func ProvisioningArtifactDeleted(conn *servicecatalog.ServiceCatalog, id, produc
 	}
 
 	return nil
+}
+
+func PrincipalPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{StatusNotFound, StatusUnavailable},
+		Target:         []string{servicecatalog.StatusAvailable},
+		Refresh:        PrincipalPortfolioAssociationStatus(conn, acceptLanguage, principalARN, portfolioID),
+		Timeout:        PrincipalPortfolioAssociationReadyTimeout,
+		NotFoundChecks: 5,
+		MinTimeout:     10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*servicecatalog.Principal); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func PrincipalPortfolioAssociationDeleted(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{servicecatalog.StatusAvailable},
+		Target:         []string{StatusNotFound, StatusUnavailable},
+		Refresh:        PrincipalPortfolioAssociationStatus(conn, acceptLanguage, principalARN, portfolioID),
+		Timeout:        PrincipalPortfolioAssociationDeleteTimeout,
+		NotFoundChecks: 1,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

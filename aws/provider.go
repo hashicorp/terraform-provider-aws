@@ -1040,6 +1040,7 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_service_action":                       resourceAwsServiceCatalogServiceAction(),
 			"aws_servicecatalog_tag_option":                           resourceAwsServiceCatalogTagOption(),
 			"aws_servicecatalog_tag_option_resource_association":      resourceAwsServiceCatalogTagOptionResourceAssociation(),
+			"aws_servicecatalog_principal_portfolio_association":      resourceAwsServiceCatalogPrincipalPortfolioAssociation(),
 			"aws_servicecatalog_product_portfolio_association":        resourceAwsServiceCatalogProductPortfolioAssociation(),
 			"aws_servicecatalog_provisioning_artifact":                resourceAwsServiceCatalogProvisioningArtifact(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
