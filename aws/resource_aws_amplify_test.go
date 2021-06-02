@@ -28,13 +28,12 @@ func TestAccAWSAmplify_serial(t *testing.T) {
 			"DeploymentArtifacts_StackName": testAccAWSAmplifyBackendEnvironment_DeploymentArtifacts_StackName,
 		},
 		"Branch": {
-			"basic":                 testAccAWSAmplifyBranch_basic,
-			"disappears":            testAccAWSAmplifyBranch_disappears,
-			"Tags":                  testAccAWSAmplifyBranch_Tags,
-			"BackendEnvironmentArn": testAccAWSAmplifyBranch_BackendEnvironmentArn,
-			"BasicAuthCredentials":  testAccAWSAmplifyBranch_BasicAuthCredentials,
-			"EnvironmentVariables":  testAccAWSAmplifyBranch_EnvironmentVariables,
-			"OptionalArguments":     testAccAWSAmplifyBranch_OptionalArguments,
+			"basic":                testAccAWSAmplifyBranch_basic,
+			"disappears":           testAccAWSAmplifyBranch_disappears,
+			"Tags":                 testAccAWSAmplifyBranch_Tags,
+			"BasicAuthCredentials": testAccAWSAmplifyBranch_BasicAuthCredentials,
+			"EnvironmentVariables": testAccAWSAmplifyBranch_EnvironmentVariables,
+			"OptionalArguments":    testAccAWSAmplifyBranch_OptionalArguments,
 		},
 	}
 
