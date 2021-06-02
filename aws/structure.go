@@ -1880,6 +1880,10 @@ func expandCloudWatchLogMetricTransformations(m map[string]interface{}) []*cloud
 		transformation.DefaultValue = aws.Float64(value)
 	}
 
+	if dims := m["dimensions"].(map[string]interface{}); len(dims) > 0 {
+		transformation.Dimensions = expandStringMap(dims)
+	}
+
 	return []*cloudwatchlogs.MetricTransformation{&transformation}
 }
 
@@ -1895,6 +1899,12 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 		m["default_value"] = ""
 	} else {
 		m["default_value"] = strconv.FormatFloat(aws.Float64Value(ts[0].DefaultValue), 'f', -1, 64)
+	}
+
+	if dims := ts[0].Dimensions; len(dims) > 0 {
+		m["dimensions"] = pointersMapToStringList(dims)
+	} else {
+		m["dimensions"] = nil
 	}
 
 	mts = append(mts, m)
