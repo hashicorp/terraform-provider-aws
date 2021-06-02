@@ -65,7 +65,7 @@ func testSweepServiceCatalogPrincipalPortfolioAssociations(region string) error 
 
 					r := resourceAwsServiceCatalogPrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID("en", aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
+					d.SetId(tfservicecatalog.PrincipalPortfolioAssociationID(tfservicecatalog.AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id)))
 
 					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
 				}
