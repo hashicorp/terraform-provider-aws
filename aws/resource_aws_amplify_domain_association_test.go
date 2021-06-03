@@ -3,14 +3,15 @@ package aws
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	tfamplify "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
 func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
@@ -21,7 +22,8 @@ func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 	domainName := "example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -53,54 +55,55 @@ func testAccCheckAWSAmplifyDomainAssociationExists(resourceName string, v *ampli
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Amplify Domain Association ID is set")
+		}
 
-		id := strings.Split(rs.Primary.ID, "/")
-		app_id := id[0]
-		domain_name := id[2]
+		appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
 
-		output, err := conn.GetDomainAssociation(&amplify.GetDomainAssociationInput{
-			AppId:      aws.String(app_id),
-			DomainName: aws.String(domain_name),
-		})
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.DomainAssociation == nil {
-			return fmt.Errorf("Amplify DomainAssociation (%s) not found", rs.Primary.ID)
+		conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+
+		domainAssociation, err := finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+
+		if err != nil {
+			return err
 		}
 
-		*v = *output.DomainAssociation
+		*v = *domainAssociation
 
 		return nil
 	}
 }
 
 func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_domain_association" {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+		appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
 
-		s := strings.Split(rs.Primary.ID, "/")
-		app_id := s[0]
-		domain_name := s[2]
+		if err != nil {
+			return err
+		}
 
-		_, err := conn.GetDomainAssociation(&amplify.GetDomainAssociationInput{
-			AppId:      aws.String(app_id),
-			DomainName: aws.String(domain_name),
-		})
+		_, err = finder.DomainAssociationByAppIDAndDomainName(conn, appID, domainName)
 
-		if isAWSErr(err, amplify.ErrCodeNotFoundException, "") {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("Amplify Domain Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -121,7 +124,7 @@ resource "aws_amplify_domain_association" "test" {
   app_id      = aws_amplify_app.test.id
   domain_name = "%s"
 
-  sub_domain_setting {
+  sub_domain {
     branch_name = aws_amplify_branch.test.branch_name
     prefix      = ""
   }
