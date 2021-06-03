@@ -290,6 +290,7 @@ func Provider() *schema.Provider {
 			"aws_elasticache_replication_group":              dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":                         dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":                        dataSourceAwsElbServiceAccount(),
+			"aws_globalaccelerator_accelerator":              dataSourceAwsGlobalAcceleratorAccelerator(),
 			"aws_glue_connection":                            dataSourceAwsGlueConnection(),
 			"aws_glue_data_catalog_encryption_settings":      dataSourceAwsGlueDataCatalogEncryptionSettings(),
 			"aws_glue_script":                                dataSourceAwsGlueScript(),
