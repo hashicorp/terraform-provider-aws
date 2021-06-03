@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceAwsAmplifyDomainAssociation() *schema.Resource {
@@ -24,27 +24,27 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"app_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"enable_auto_sub_domain": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"sub_domain_settings": {
-				Type:     schema.TypeList,
+
+			"sub_domain_setting": {
+				Type:     schema.TypeSet,
 				Required: true,
+				MaxItems: 255,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"branch_name": {
@@ -58,6 +58,7 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 					},
 				},
 			},
+
 			// non-API
 			"wait_for_verification": {
 				Type:     schema.TypeBool,
@@ -80,12 +81,8 @@ func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta inte
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	if v, ok := d.GetOk("sub_domain_settings"); ok {
+	if v, ok := d.GetOk("sub_domain_setting"); ok {
 		params.SubDomainSettings = expandAmplifySubDomainSettings(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("enable_auto_sub_domain"); ok {
-		params.EnableAutoSubDomain = aws.Bool(v.(bool))
 	}
 
 	resp, err := conn.CreateDomainAssociation(params)
@@ -130,10 +127,9 @@ func resourceAwsAmplifyDomainAssociationRead(d *schema.ResourceData, meta interf
 	d.Set("app_id", app_id)
 	d.Set("arn", resp.DomainAssociation.DomainAssociationArn)
 	d.Set("domain_name", resp.DomainAssociation.DomainName)
-	if err := d.Set("sub_domain_settings", flattenAmplifySubDomainSettings(resp.DomainAssociation.SubDomains)); err != nil {
-		return fmt.Errorf("error setting sub_domain_settings: %s", err)
+	if err := d.Set("sub_domain_setting", flattenAmplifySubDomainSettings(resp.DomainAssociation.SubDomains)); err != nil {
+		return fmt.Errorf("error setting sub_domain_setting: %s", err)
 	}
-	d.Set("enable_auto_sub_domain", resp.DomainAssociation.EnableAutoSubDomain)
 
 	return nil
 }
@@ -151,12 +147,8 @@ func resourceAwsAmplifyDomainAssociationUpdate(d *schema.ResourceData, meta inte
 		DomainName: aws.String(domain_name),
 	}
 
-	if d.HasChange("sub_domain_settings") {
-		params.SubDomainSettings = expandAmplifySubDomainSettings(d.Get("sub_domain_settings").([]interface{}))
-	}
-
-	if d.HasChange("enable_auto_sub_domain") {
-		params.EnableAutoSubDomain = aws.Bool(d.Get("enable_auto_sub_domain").(bool))
+	if d.HasChange("sub_domain_setting") {
+		params.SubDomainSettings = expandAmplifySubDomainSettings(d.Get("sub_domain_setting").([]interface{}))
 	}
 
 	_, err := conn.UpdateDomainAssociation(params)

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
@@ -31,9 +31,9 @@ func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile("^arn:[^:]+:amplify:[^:]+:[^:]+:apps/[^/]+/domains/[^/]+$")),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_settings.0.branch_name", "master"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_settings.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.0.branch_name", "master"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.0.prefix", ""),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ resource "aws_amplify_domain_association" "test" {
   app_id      = aws_amplify_app.test.id
   domain_name = "%s"
 
-  sub_domain_settings {
+  sub_domain_setting {
     branch_name = aws_amplify_branch.test.branch_name
     prefix      = ""
   }
