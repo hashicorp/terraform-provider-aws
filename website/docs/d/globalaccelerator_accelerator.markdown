@@ -24,8 +24,8 @@ variable "accelerator_name" {
 }
 
 data "aws_globalaccelerator_accelerator" "example" {
-    arn = var.accelerator_arn
-	name = var.accelerator_name
+  arn = var.accelerator_arn
+  name = var.accelerator_name
 }
 ```
 
