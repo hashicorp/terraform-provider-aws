@@ -1359,6 +1359,7 @@ func init() {
 		"lexmodels",
 		"licensemanager",
 		"lightsail",
+		"location",
 		"macie",
 		"macie2",
 		"managedblockchain",

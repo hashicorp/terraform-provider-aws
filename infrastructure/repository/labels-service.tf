@@ -125,6 +125,7 @@ variable "service_labels" {
     "lexmodelbuildingservice",
     "licensemanager",
     "lightsail",
+    "location",
     "machinelearning",
     "macie",
     "macie2",
