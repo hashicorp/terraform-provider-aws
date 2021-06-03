@@ -90,6 +90,7 @@ var serviceNames = []string{
 	"lambda",
 	"licensemanager",
 	"lightsail",
+	"locationservice",
 	"mediaconnect",
 	"mediaconvert",
 	"medialive",
