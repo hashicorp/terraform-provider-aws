@@ -79,7 +79,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_default_vpc_dhcp_options" "test" {
   owner_id = data.aws_caller_identity.current.account_id
-  
+
   tags = {
     Name = "Default DHCP Option Set"
   }
