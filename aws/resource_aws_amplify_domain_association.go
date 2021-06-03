@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfamplify "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/waiter"
@@ -47,28 +48,30 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 			},
 
 			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
 			"sub_domain": {
 				Type:     schema.TypeSet,
 				Required: true,
-				MaxItems: 255,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"branch_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"dns_record": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"prefix": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 						"verified": {
 							Type:     schema.TypeBool,
@@ -220,7 +223,8 @@ func expandAmplifySubDomainSetting(tfMap map[string]interface{}) *amplify.SubDom
 		apiObject.BranchName = aws.String(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	// Empty prefix is allowed.
+	if v, ok := tfMap["prefix"].(string); ok {
 		apiObject.Prefix = aws.String(v)
 	}
 

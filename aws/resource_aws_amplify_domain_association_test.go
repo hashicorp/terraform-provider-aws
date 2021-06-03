@@ -14,12 +14,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
 )
 
-func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
+func testAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 	var domain amplify.DomainAssociation
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_amplify_domain_association.test"
-
-	domainName := "example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
@@ -28,21 +26,23 @@ func TestAccAWSAmplifyDomainAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAmplifyDomainAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAmplifyDomainAssociationConfig_Required(rName, domainName),
+				Config: testAccAWSAmplifyDomainAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAmplifyDomainAssociationExists(resourceName, &domain),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile("^arn:[^:]+:amplify:[^:]+:[^:]+:apps/[^/]+/domains/[^/]+$")),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.0.branch_name", "master"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain_setting.0.prefix", ""),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
+						"branch_name": rName,
+						"prefix":      "www",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "false"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -109,27 +109,27 @@ func testAccCheckAWSAmplifyDomainAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAWSAmplifyDomainAssociationConfig_Required(rName string, domainName string) string {
+func testAccAWSAmplifyDomainAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_amplify_branch" "test" {
   app_id      = aws_amplify_app.test.id
-  branch_name = "master"
+  branch_name = %[1]q
 }
 
 resource "aws_amplify_domain_association" "test" {
   app_id      = aws_amplify_app.test.id
-  domain_name = "%s"
+  domain_name = "example.com"
 
   sub_domain {
     branch_name = aws_amplify_branch.test.branch_name
-    prefix      = ""
+    prefix      = "www"
   }
 
   wait_for_verification = false
 }
-`, rName, domainName)
+`, rName)
 }
