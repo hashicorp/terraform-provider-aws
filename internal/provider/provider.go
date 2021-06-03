@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -801,6 +802,8 @@ func Provider() *schema.Provider {
 			"aws_appconfig_deployment_strategy":          appconfig.ResourceDeploymentStrategy(),
 			"aws_appconfig_environment":                  appconfig.ResourceEnvironment(),
 			"aws_appconfig_hosted_configuration_version": appconfig.ResourceHostedConfigurationVersion(),
+
+			"aws_appflow_flow": appflow.ResourceFlow(),
 
 			"aws_appautoscaling_policy":           appautoscaling.ResourcePolicy(),
 			"aws_appautoscaling_scheduled_action": appautoscaling.ResourceScheduledAction(),
