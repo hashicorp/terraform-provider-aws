@@ -86,6 +86,7 @@ Lambda
 Lex
 License Manager
 Lightsail
+Lookout for Vision
 MQ
 Macie
 Macie Classic
