@@ -337,6 +337,16 @@ func LambdaKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// LocationTags returns location service tags.
+func (tags KeyValueTags) LocationTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// LocationKeyValueTags creates KeyValueTags from location service tags.
+func LocationKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // Macie2Tags returns macie2 service tags.
 func (tags KeyValueTags) Macie2Tags() map[string]*string {
 	return aws.StringMap(tags.Map())
