@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -23,11 +22,7 @@ func resourceAwsAmplifyDomainAssociation() *schema.Resource {
 		Update: resourceAwsAmplifyDomainAssociationUpdate,
 		Delete: resourceAwsAmplifyDomainAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("wait_for_verification", true)
-
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -111,6 +106,10 @@ func resourceAwsAmplifyDomainAssociationCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(id)
+
+	if _, err := waiter.DomainAssociationCreated(conn, appID, domainName); err != nil {
+		return fmt.Errorf("error waiting for Amplify Domain Association (%s) to create: %w", d.Id(), err)
+	}
 
 	if d.Get("wait_for_verification").(bool) {
 		if _, err := waiter.DomainAssociationVerified(conn, appID, domainName); err != nil {
