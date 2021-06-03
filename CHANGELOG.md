@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Resource:** `aws_amplify_branch` ([#11937](https://github.com/hashicorp/terraform-provider-aws/issues/11937))
+* **New Resource:** `aws_amplify_domain_association` ([#11938](https://github.com/hashicorp/terraform-provider-aws/issues/11938))
+* **New Resource:** `aws_amplify_webhook` ([#11939](https://github.com/hashicorp/terraform-provider-aws/issues/11939))
 * **New Resource:** `aws_servicecatalog_principal_portfolio_association` ([#19470](https://github.com/hashicorp/terraform-provider-aws/issues/19470))
 
 ENHANCEMENTS:
@@ -18,7 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* resource/aws_amplify_app: Mark the `enable_performance_mode` argumnet in the `auto_branch_creation_config` configuration block as `ForceNew` ([#11937](https://github.com/hashicorp/terraform-provider-aws/issues/11937))
+* resource/aws_amplify_app: Mark the `enable_performance_mode` argument in the `auto_branch_creation_config` configuration block as `ForceNew` ([#11937](https://github.com/hashicorp/terraform-provider-aws/issues/11937))
 * resource/aws_elasticache_cluster: Fix provider-level `default_tags` support for resource ([#19615](https://github.com/hashicorp/terraform-provider-aws/issues/19615))
 * resource/aws_iam_access_key: Fix status not defaulting to Active ([#19606](https://github.com/hashicorp/terraform-provider-aws/issues/19606))
 
