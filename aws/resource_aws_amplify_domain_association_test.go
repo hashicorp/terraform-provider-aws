@@ -242,9 +242,9 @@ resource "aws_amplify_branch" "test" {
 }
 
 resource "aws_amplify_branch" "test2" {
-	app_id      = aws_amplify_app.test.id
-	branch_name = "%[1]s-2"
-  }
+  app_id      = aws_amplify_app.test.id
+  branch_name = "%[1]s-2"
+}
 
 resource "aws_amplify_domain_association" "test" {
   app_id      = aws_amplify_app.test.id
