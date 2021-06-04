@@ -6,9 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -72,9 +75,9 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -102,9 +105,9 @@ func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -131,9 +134,9 @@ func TestAccAWSAPIGatewayBasePathMapping_updates(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
@@ -182,16 +185,16 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayBasePathMapping(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,7 +213,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		domainName, basePath, err := decodeApiGatewayBasePathMappingId(rs.Primary.ID)
 		if err != nil {
@@ -234,7 +237,7 @@ func testAccCheckAWSAPIGatewayBasePathExists(n string, res *apigateway.BasePathM
 
 func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_base_path_mapping" {
@@ -253,7 +256,7 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 			_, err = conn.GetBasePathMapping(req)
 
 			if err != nil {
-				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+				if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 					return nil
 				}
 				return err
