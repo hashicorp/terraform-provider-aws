@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
@@ -18,16 +20,16 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -36,7 +38,7 @@ func TestAccAWSCodeBuildSourceCredential_basic(t *testing.T) {
 				Config: testAccAWSCodeBuildSourceCredential_Basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/github_enterprise`)),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "GITHUB_ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
@@ -57,16 +59,16 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 	resourceName := "aws_codebuild_source_credential.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		ErrorCheck:   testAccErrorCheck(t, codebuild.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		ErrorCheck:   atest.ErrorCheck(t, codebuild.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodeBuildSourceCredentialDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildSourceCredential_BasicAuth(token, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`token/bitbucket`)),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
 					resource.TestCheckResourceAttr(resourceName, "server_type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "BASIC_AUTH"),
@@ -90,7 +92,7 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 }
 
 func testAccCheckAWSCodeBuildSourceCredentialDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeBuildConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_source_credential" {
@@ -122,7 +124,7 @@ func testAccCheckAWSCodeBuildSourceCredentialExists(name string, sourceCredentia
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodeBuildConn
 
 		resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
 		if err != nil {
