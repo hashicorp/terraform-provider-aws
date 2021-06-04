@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAWSCloudfrontFunction_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(cloudfront.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, cloudfront.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); atest.PreCheckPartitionService(cloudfront.EndpointsID, t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudfront.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCloudfrontFunctionConfigBasic(rName),
