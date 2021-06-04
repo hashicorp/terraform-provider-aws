@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsCloudformationType_basic(t *testing.T) {
@@ -27,16 +29,16 @@ func TestAccAwsCloudformationType_basic(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudformationTypeConfigTypeName(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsCloudformationTypeExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
 					resource.TestCheckResourceAttr(resourceName, "description", "An example resource schema demonstrating some basic constructs and validation rules."),
@@ -48,7 +50,7 @@ func TestAccAwsCloudformationType_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
 					resource.TestCheckResourceAttr(resourceName, "source_url", "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git"),
 					resource.TestCheckResourceAttr(resourceName, "type", cloudformation.RegistryTypeResource),
-					testAccCheckResourceAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
+					atest.CheckAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
 					resource.TestCheckResourceAttr(resourceName, "type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "visibility", cloudformation.VisibilityPrivate),
 					resource.TestMatchResourceAttr(resourceName, "version_id", regexp.MustCompile(`.+`)),
@@ -65,18 +67,18 @@ func TestAccAwsCloudformationType_disappears(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudformationTypeConfigTypeName(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsCloudformationTypeExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationType(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudFormationType(), resourceName),
 					// Verify Delete error handling
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFormationType(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsCloudFormationType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,9 +94,9 @@ func TestAccAwsCloudformationType_ExecutionRoleArn(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -117,9 +119,9 @@ func TestAccAwsCloudformationType_LoggingConfig(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, cloudformation.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsCloudformationTypeDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -143,7 +145,7 @@ func testAccCheckAwsCloudformationTypeExists(resourceName string) resource.TestC
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cfconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFormationConn
 
 		input := &cloudformation.DescribeTypeInput{
 			Arn: aws.String(rs.Primary.ID),
@@ -168,7 +170,7 @@ func testAccCheckAwsCloudformationTypeExists(resourceName string) resource.TestC
 }
 
 func testAccCheckAwsCloudformationTypeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cfconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CloudFormationConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {
@@ -402,7 +404,7 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 func testAccCloudformationTypeConfigExecutionRoleArn(rName string, zipPath string, typeName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCloudformationTypeConfigBase(rName, zipPath),
 		fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -430,7 +432,7 @@ resource "aws_cloudformation_type" "test" {
 }
 
 func testAccCloudformationTypeConfigLoggingConfig(rName string, zipPath string, typeName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCloudformationTypeConfigBase(rName, zipPath),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -466,7 +468,7 @@ resource "aws_cloudformation_type" "test" {
 }
 
 func testAccCloudformationTypeConfigTypeName(rName string, zipPath string, typeName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccCloudformationTypeConfigBase(rName, zipPath),
 		fmt.Sprintf(`
 resource "aws_cloudformation_type" "test" {
