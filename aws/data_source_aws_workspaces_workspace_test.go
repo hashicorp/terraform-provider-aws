@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byWorkspaceID(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName),
@@ -48,9 +49,9 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 	resourceName := "aws_workspaces_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName),
@@ -77,9 +78,9 @@ func TestAccDataSourceAwsWorkspacesWorkspace_byDirectoryID_userName(t *testing.T
 
 func TestAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+		ErrorCheck: atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWorkspacesWorkspaceConfig_workspaceIDAndDirectoryIDConflict(),
@@ -90,7 +91,7 @@ func TestAccDataSourceAwsWorkspacesWorkspace_workspaceIDAndDirectoryIDConflict(t
 }
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byWorkspaceID(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		`
 resource "aws_workspaces_workspace" "test" {
@@ -118,7 +119,7 @@ data "aws_workspaces_workspace" "test" {
 }
 
 func testAccDataSourceWorkspacesWorkspaceConfig_byDirectoryID_userName(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName),
 		`
 resource "aws_workspaces_workspace" "test" {
