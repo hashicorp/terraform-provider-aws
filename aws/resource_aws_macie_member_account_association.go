@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
@@ -27,7 +29,7 @@ func resourceAwsMacieMemberAccountAssociation() *schema.Resource {
 }
 
 func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*awsprovider.AWSClient).MacieConn
 
 	memberAccountId := d.Get("member_account_id").(string)
 	req := &macie.AssociateMemberAccountInput{
@@ -45,7 +47,7 @@ func resourceAwsMacieMemberAccountAssociationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*awsprovider.AWSClient).MacieConn
 
 	req := &macie.ListMemberAccountsInput{}
 
@@ -74,7 +76,7 @@ func resourceAwsMacieMemberAccountAssociationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsMacieMemberAccountAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).macieconn
+	conn := meta.(*awsprovider.AWSClient).MacieConn
 
 	log.Printf("[DEBUG] Deleting Macie member account association: %s", d.Id())
 
@@ -82,10 +84,10 @@ func resourceAwsMacieMemberAccountAssociationDelete(d *schema.ResourceData, meta
 		MemberAccountId: aws.String(d.Get("member_account_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, macie.ErrCodeInvalidInputException, "is a master Macie account and cannot be disassociated") {
+		if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "is a master Macie account and cannot be disassociated") {
 			log.Printf("[INFO] Macie master account (%s) cannot be disassociated, removing from state", d.Id())
 			return nil
-		} else if isAWSErr(err, macie.ErrCodeInvalidInputException, "is not yet associated with Macie") {
+		} else if tfawserr.ErrMessageContains(err, macie.ErrCodeInvalidInputException, "is not yet associated with Macie") {
 			return nil
 		} else {
 			return fmt.Errorf("Error deleting Macie member account association: %s", err)
