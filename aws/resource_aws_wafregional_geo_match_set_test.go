@@ -7,9 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSWafRegionalGeoMatchSet_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSWafRegionalGeoMatchSet_basic(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,9 +60,9 @@ func TestAccAWSWafRegionalGeoMatchSet_changeNameForceNew(t *testing.T) {
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -98,9 +101,9 @@ func TestAccAWSWafRegionalGeoMatchSet_disappears(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -121,9 +124,9 @@ func TestAccAWSWafRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,9 +180,9 @@ func TestAccAWSWafRegionalGeoMatchSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -212,8 +215,8 @@ func testAccCheckAWSWafGeoMatchSetIdDiffers(before, after *waf.GeoMatchSet) reso
 
 func testAccCheckAWSWafRegionalGeoMatchSetDisappears(v *waf.GeoMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
+		region := atest.Provider.Meta().(*awsprovider.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -263,7 +266,7 @@ func testAccCheckAWSWafRegionalGeoMatchSetExists(n string, v *waf.GeoMatchSet) r
 			return fmt.Errorf("No WAF Regional Geo Match Set ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetGeoMatchSet(&waf.GetGeoMatchSetInput{
 			GeoMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -287,7 +290,7 @@ func testAccCheckAWSWafRegionalGeoMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetGeoMatchSet(
 			&waf.GetGeoMatchSetInput{
 				GeoMatchSetId: aws.String(rs.Primary.ID),
@@ -300,7 +303,7 @@ func testAccCheckAWSWafRegionalGeoMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the WAF Regional Geo Match Set is already destroyed
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if tfawserr.ErrMessageContains(err, "WAFNonexistentItemException", "") {
 			return nil
 		}
 
