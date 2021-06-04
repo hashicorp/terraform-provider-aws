@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCognitoUserGroup() *schema.Resource {
@@ -43,7 +45,7 @@ func resourceAwsCognitoUserGroup() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"user_pool_id": {
 				Type:         schema.TypeString,
@@ -56,7 +58,7 @@ func resourceAwsCognitoUserGroup() *schema.Resource {
 }
 
 func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -88,7 +90,7 @@ func resourceAwsCognitoUserGroupCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -99,7 +101,7 @@ func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetGroup(params)
 	if err != nil {
-		if isAWSErr(err, "ResourceNotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "") {
 			log.Printf("[WARN] Cognito User Group %s is already gone", d.Id())
 			d.SetId("")
 			return nil
@@ -115,7 +117,7 @@ func resourceAwsCognitoUserGroupRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -145,7 +147,7 @@ func resourceAwsCognitoUserGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsCognitoUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cognitoidpconn
+	conn := meta.(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	params := &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
