@@ -6,18 +6,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,9 +42,9 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, athena.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, athena.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +63,7 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 }
 
 func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).athenaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_named_query" {
 			continue
@@ -72,7 +75,7 @@ func testAccCheckAWSAthenaNamedQueryDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetNamedQuery(input)
 		if err != nil {
-			if isAWSErr(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
+			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, rs.Primary.ID) {
 				return nil
 			}
 			return err
@@ -91,7 +94,7 @@ func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).athenaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AthenaConn
 
 		input := &athena.GetNamedQueryInput{
 			NamedQueryId: aws.String(rs.Primary.ID),
