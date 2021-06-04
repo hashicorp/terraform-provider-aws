@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLambdaFunction() *schema.Resource {
@@ -187,8 +188,8 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 }
 
 func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).LambdaConn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	functionName := d.Get("function_name").(string)
 
@@ -307,7 +308,7 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*AWSClient).partition != endpoints.AwsPartitionID {
+	if meta.(*awsprovider.AWSClient).Partition != endpoints.AwsPartitionID {
 		d.SetId(aws.StringValue(function.FunctionName))
 
 		return nil
