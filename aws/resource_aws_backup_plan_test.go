@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsBackupPlan_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsBackupPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupPlanExists(resourceName, &plan),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -56,9 +58,9 @@ func TestAccAwsBackupPlan_withTags(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -112,9 +114,9 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 	rule3Name := fmt.Sprintf("%s_3", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,9 +197,9 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -267,9 +269,9 @@ func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -340,9 +342,9 @@ func TestAccAwsBackupPlan_Rule_CopyAction_SameRegion(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -403,9 +405,9 @@ func TestAccAwsBackupPlan_Rule_CopyAction_NoLifecycle(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -464,9 +466,9 @@ func TestAccAwsBackupPlan_Rule_CopyAction_Multiple(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -501,12 +503,12 @@ func TestAccAwsBackupPlan_Rule_CopyAction_CrossRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSBackup(t)
-			testAccMultipleRegionPreCheck(t, 2)
+			atest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        testAccErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesAlternate(&providers),
+		ErrorCheck:        atest.ErrorCheck(t, backup.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesAlternate(&providers),
 		CheckDestroy:      testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -540,9 +542,9 @@ func TestAccAwsBackupPlan_AdvancedBackupSetting(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -586,16 +588,16 @@ func TestAccAwsBackupPlan_EnableContinuousBackup(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsBackupPlanConfigEnableContinuousBackup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupPlanExists(resourceName, &plan),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "backup", regexp.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -625,16 +627,16 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(14))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
-		ErrorCheck:   testAccErrorCheck(t, backup.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSBackup(t) },
+		ErrorCheck:   atest.ErrorCheck(t, backup.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsBackupPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupPlanExists(resourceName, &plan),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupPlan(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsBackupPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -643,7 +645,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).backupconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_plan" {
 			continue
@@ -667,7 +669,7 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 
 func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).BackupConn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1008,7 +1010,7 @@ resource "aws_backup_plan" "test" {
 }
 
 func testAccAwsBackupPlanConfigRuleCopyActionCrossRegion(rName string) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+	return atest.ConfigProviderAlternateRegion() + fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "%[1]s-1"
 }
