@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElbAttachment() *schema.Resource {
@@ -34,7 +36,7 @@ func resourceAwsElbAttachment() *schema.Resource {
 }
 
 func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)
@@ -47,9 +49,9 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] registering instance %s with ELB %s", instance, elbName)
 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
+		_, err := ELBConn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 
-		if isAWSErr(err, "InvalidTarget", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
 		}
 
@@ -60,7 +62,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		_, err = elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
+		_, err = ELBConn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
 	}
 	if err != nil {
 		return fmt.Errorf("Failure registering instances with ELB: %s", err)
@@ -73,7 +75,7 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsElbAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 
 	// only add the instance that was previously defined for this resource
@@ -84,7 +86,7 @@ func resourceAwsElbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 		LoadBalancerNames: []*string{aws.String(elbName)},
 	}
 
-	resp, err := elbconn.DescribeLoadBalancers(describeElbOpts)
+	resp, err := ELBConn.DescribeLoadBalancers(describeElbOpts)
 	if err != nil {
 		if isLoadBalancerNotFound(err) {
 			log.Printf("[ERROR] ELB %s not found", elbName)
@@ -117,7 +119,7 @@ func resourceAwsElbAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsElbAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	elbconn := meta.(*AWSClient).elbconn
+	ELBConn := meta.(*awsprovider.AWSClient).ELBConn
 	elbName := d.Get("elb").(string)
 
 	instance := d.Get("instance").(string)
@@ -129,7 +131,7 @@ func resourceAwsElbAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 		Instances:        []*elb.Instance{{InstanceId: aws.String(instance)}},
 	}
 
-	_, err := elbconn.DeregisterInstancesFromLoadBalancer(&deRegisterInstancesOpts)
+	_, err := ELBConn.DeregisterInstancesFromLoadBalancer(&deRegisterInstancesOpts)
 	if err != nil {
 		return fmt.Errorf("Failure deregistering instances from ELB: %s", err)
 	}
