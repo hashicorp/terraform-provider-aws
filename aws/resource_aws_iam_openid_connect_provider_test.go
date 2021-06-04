@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,11 +24,11 @@ func init() {
 }
 
 func testSweepIamOpenIDConnectProvider(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).iamconn
+	conn := client.(*awsprovider.AWSClient).IAMConn
 
 	var sweeperErrs *multierror.Error
 
@@ -47,7 +50,7 @@ func testSweepIamOpenIDConnectProvider(region string) error {
 		}
 	}
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping IAM OIDC Provider sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -65,16 +68,16 @@ func TestAccAWSIAMOpenIDConnectProvider_basic(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, "url", url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
@@ -111,9 +114,9 @@ func TestAccAWSIAMOpenIDConnectProvider_tags(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,16 +159,16 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iam.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iam.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckIAMOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIAMOpenIDConnectProviderConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMOpenIDConnectProvider(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamOpenIDConnectProvider(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsIamOpenIDConnectProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,7 +177,7 @@ func TestAccAWSIAMOpenIDConnectProvider_disappears(t *testing.T) {
 }
 
 func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_openid_connect_provider" {
@@ -186,7 +189,7 @@ func testAccCheckIAMOpenIDConnectProviderDestroy(s *terraform.State) error {
 		}
 		out, err := conn.GetOpenIDConnectProvider(input)
 		if err != nil {
-			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 				// none found, that's good
 				return nil
 			}
@@ -212,7 +215,7 @@ func testAccCheckIAMOpenIDConnectProvider(id string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IAMConn
 		_, err := conn.GetOpenIDConnectProvider(&iam.GetOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(rs.Primary.ID),
 		})
