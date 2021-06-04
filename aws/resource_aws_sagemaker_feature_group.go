@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sagemaker/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSagemakerFeatureGroup() *schema.Resource {
@@ -72,7 +73,7 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"feature_definition": {
 				Type:     schema.TypeList,
@@ -142,7 +143,7 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"s3_uri": {
 										Type:     schema.TypeString,
@@ -175,7 +176,7 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -197,8 +198,8 @@ func resourceAwsSagemakerFeatureGroup() *schema.Resource {
 }
 
 func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("feature_group_name").(string)
@@ -231,10 +232,10 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFeatureGroup(input)
 		if err != nil {
-			if isAWSErr(err, "ValidationException", "The execution role ARN is invalid.") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Invalid S3Uri provided") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -260,9 +261,9 @@ func resourceAwsSagemakerFeatureGroupCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.FeatureGroupByName(conn, d.Id())
 	if err != nil {
@@ -315,7 +316,7 @@ func resourceAwsSagemakerFeatureGroupRead(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSagemakerFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -329,7 +330,7 @@ func resourceAwsSagemakerFeatureGroupUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsSagemakerFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sagemakerconn
+	conn := meta.(*awsprovider.AWSClient).SageMakerConn
 
 	input := &sagemaker.DeleteFeatureGroupInput{
 		FeatureGroupName: aws.String(d.Id()),
