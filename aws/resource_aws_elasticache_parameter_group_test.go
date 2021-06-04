@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -28,11 +30,11 @@ func init() {
 }
 
 func testSweepElasticacheParameterGroups(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).elasticacheconn
+	conn := client.(*awsprovider.AWSClient).ElastiCacheConn
 
 	err = conn.DescribeCacheParameterGroupsPages(&elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -59,7 +61,7 @@ func testSweepElasticacheParameterGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elasticache Parameter Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -74,9 +76,9 @@ func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,9 +107,9 @@ func TestAccAWSElasticacheParameterGroup_addParameter(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -152,9 +154,9 @@ func TestAccAWSElasticacheParameterGroup_removeAllParameters(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,9 +193,9 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_AllParame
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -231,9 +233,9 @@ func TestAccAWSElasticacheParameterGroup_removeReservedMemoryParameter_Remaining
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -279,9 +281,9 @@ func TestAccAWSElasticacheParameterGroup_switchReservedMemoryParameter(t *testin
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -323,9 +325,9 @@ func TestAccAWSElasticacheParameterGroup_updateReservedMemoryParameter(t *testin
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -366,9 +368,9 @@ func TestAccAWSElasticacheParameterGroup_UppercaseName(t *testing.T) {
 	rName := fmt.Sprintf("TF-ELASTIPG-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -393,9 +395,9 @@ func TestAccAWSElasticacheParameterGroup_Description(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -420,9 +422,9 @@ func TestAccAWSElasticacheParameterGroup_Tags(t *testing.T) {
 	rName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticache.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticache.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSElasticacheParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,7 +461,7 @@ func TestAccAWSElasticacheParameterGroup_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSElasticacheParameterGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElastiCacheConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_parameter_group" {
@@ -515,7 +517,7 @@ func testAccCheckAWSElasticacheParameterGroupExists(n string, v *elasticache.Cac
 			return fmt.Errorf("No Cache Parameter Group ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticacheconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElastiCacheConn
 
 		opts := elasticache.DescribeCacheParameterGroupsInput{
 			CacheParameterGroupName: aws.String(rs.Primary.ID),
