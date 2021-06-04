@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayModel() *schema.Resource {
@@ -27,7 +29,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 				d.Set("name", name)
 				d.Set("rest_api_id", restApiID)
 
-				conn := meta.(*AWSClient).apigatewayconn
+				conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 				output, err := conn.GetModel(&apigateway.GetModelInput{
 					ModelName: aws.String(name),
@@ -77,7 +79,7 @@ func resourceAwsApiGatewayModel() *schema.Resource {
 }
 
 func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
 	var description *string
@@ -109,7 +111,7 @@ func resourceAwsApiGatewayModelCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	out, err := conn.GetModel(&apigateway.GetModelInput{
@@ -117,7 +119,7 @@ func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) er
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Model (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -134,7 +136,7 @@ func resourceAwsApiGatewayModelRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -167,7 +169,7 @@ func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	input := &apigateway.DeleteModelInput{
 		ModelName: aws.String(d.Get("name").(string)),
@@ -177,7 +179,7 @@ func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] schema is %#v", d)
 	_, err := conn.DeleteModel(input)
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
