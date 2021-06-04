@@ -9,12 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
@@ -43,7 +45,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"replace_unhealthy_instances": {
 				Type:     schema.TypeBool,
@@ -234,7 +236,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"ami": {
 							Type:     schema.TypeString,
@@ -541,7 +543,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateArn,
+					ValidateFunc: ValidateArn,
 				},
 				Set: schema.HashString,
 			},
@@ -554,7 +556,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 }
 
 func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),
@@ -925,8 +927,8 @@ func expandSpotCapacityRebalance(l []interface{}) *ec2.SpotCapacityRebalance {
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
@@ -1049,11 +1051,11 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "Parameter: SpotFleetRequestConfig.IamFleetRole is invalid") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestConfig", "The provided SpotFleetRequestConfig.IamFleetRole does not have permission to call") {
 			return resource.RetryableError(err)
 		}
 
@@ -1095,7 +1097,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotStateConf := &resource.StateChangeConf{
 			Pending:    []string{ec2.ActivityStatusPendingFulfillment},
 			Target:     []string{ec2.ActivityStatusFulfilled},
-			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*AWSClient).ec2conn),
+			Refresh:    resourceAwsSpotFleetRequestFulfillmentRefreshFunc(d.Id(), meta.(*awsprovider.AWSClient).EC2Conn),
 			Timeout:    d.Timeout(schema.TimeoutCreate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -1113,7 +1115,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsSpotFleetRequestStateRefreshFunc(d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*AWSClient).ec2conn
+		conn := meta.(*awsprovider.AWSClient).EC2Conn
 		req := &ec2.DescribeSpotFleetRequestsInput{
 			SpotFleetRequestIds: []*string{aws.String(d.Id())},
 		}
@@ -1201,9 +1203,9 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 
 func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSpotFleetRequestsInput{
 		SpotFleetRequestIds: []*string{aws.String(d.Id())},
@@ -1213,7 +1215,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if isAWSErr(err, "InvalidSpotFleetRequestId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidSpotFleetRequestId.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -1584,7 +1586,7 @@ func rootBlockDeviceToSet(
 
 func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.ModifySpotFleetRequestInput{
 		SpotFleetRequestId: aws.String(d.Id()),
@@ -1641,7 +1643,7 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CancelSpotFleetRequests.html
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 
 	log.Printf("[INFO] Cancelling spot fleet request: %s", d.Id())
