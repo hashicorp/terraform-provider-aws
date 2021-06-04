@@ -11,7 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsImageBuilderImagePipeline() *schema.Resource {
@@ -136,8 +137,8 @@ func resourceAwsImageBuilderImagePipeline() *schema.Resource {
 }
 
 func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateImagePipelineInput{
@@ -197,9 +198,9 @@ func resourceAwsImageBuilderImagePipelineCreate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -266,7 +267,7 @@ func resourceAwsImageBuilderImagePipelineRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsImageBuilderImagePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	if d.HasChanges(
 		"description",
@@ -331,7 +332,7 @@ func resourceAwsImageBuilderImagePipelineUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceAwsImageBuilderImagePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).imagebuilderconn
+	conn := meta.(*awsprovider.AWSClient).ImageBuilderConn
 
 	input := &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
