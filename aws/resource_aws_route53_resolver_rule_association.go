@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -56,7 +58,7 @@ func resourceAwsRoute53ResolverRuleAssociation() *schema.Resource {
 }
 
 func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	req := &route53resolver.AssociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
@@ -85,7 +87,7 @@ func resourceAwsRoute53ResolverRuleAssociationCreate(d *schema.ResourceData, met
 }
 
 func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	assocRaw, state, err := route53ResolverRuleAssociationRefresh(conn, d.Id())()
 	if err != nil {
@@ -107,14 +109,14 @@ func resourceAwsRoute53ResolverRuleAssociationRead(d *schema.ResourceData, meta 
 }
 
 func resourceAwsRoute53ResolverRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).route53resolverconn
+	conn := meta.(*awsprovider.AWSClient).Route53ResolverConn
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver rule association: %s", d.Id())
 	_, err := conn.DisassociateResolverRule(&route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),
 	})
-	if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -136,7 +138,7 @@ func route53ResolverRuleAssociationRefresh(conn *route53resolver.Route53Resolver
 		resp, err := conn.GetResolverRuleAssociation(&route53resolver.GetResolverRuleAssociationInput{
 			ResolverRuleAssociationId: aws.String(assocId),
 		})
-		if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
 			return "", route53ResolverRuleAssociationStatusDeleted, nil
 		}
 		if err != nil {
