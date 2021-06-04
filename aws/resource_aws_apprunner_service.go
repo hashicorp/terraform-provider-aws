@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apprunner/waiter"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppRunnerService() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsAppRunnerService() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"encryption_configuration": {
@@ -54,7 +55,7 @@ func resourceAwsAppRunnerService() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -134,7 +135,7 @@ func resourceAwsAppRunnerService() *schema.Resource {
 						"instance_role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"memory": {
 							Type:         schema.TypeString,
@@ -181,12 +182,12 @@ func resourceAwsAppRunnerService() *schema.Resource {
 									"access_role_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"connection_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 								},
 							},
@@ -349,8 +350,8 @@ func resourceAwsAppRunnerService() *schema.Resource {
 }
 
 func resourceAwsAppRunnerServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("service_name").(string)
@@ -416,9 +417,9 @@ func resourceAwsAppRunnerServiceCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAwsAppRunnerServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppRunnerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &apprunner.DescribeServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -500,7 +501,7 @@ func resourceAwsAppRunnerServiceRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAwsAppRunnerServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*awsprovider.AWSClient).AppRunnerConn
 
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
@@ -546,7 +547,7 @@ func resourceAwsAppRunnerServiceUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAwsAppRunnerServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).apprunnerconn
+	conn := meta.(*awsprovider.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
