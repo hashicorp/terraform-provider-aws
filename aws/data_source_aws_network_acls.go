@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsNetworkAcls() *schema.Resource {
@@ -35,12 +36,12 @@ func dataSourceAwsNetworkAcls() *schema.Resource {
 }
 
 func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeNetworkAclsInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		req.Filters = buildEC2AttributeFilterList(
+		req.Filters = BuildEC2AttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
@@ -83,7 +84,7 @@ func dataSourceAwsNetworkAclsRead(d *schema.ResourceData, meta interface{}) erro
 		networkAcls = append(networkAcls, aws.StringValue(networkAcl.NetworkAclId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err := d.Set("ids", networkAcls); err != nil {
 		return fmt.Errorf("Error setting network ACL ids: %w", err)
