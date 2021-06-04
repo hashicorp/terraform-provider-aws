@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSVolumeAttachment_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +53,9 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +87,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	stopInstance := func() {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		_, err := conn.StopInstances(&ec2.StopInstancesInput{
 			InstanceIds: []*string{i.InstanceId},
@@ -109,9 +112,9 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -145,9 +148,9 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -195,9 +198,9 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +209,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckInstanceExists("aws_instance.test", &i),
 					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsVolumeAttachment(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -241,7 +244,7 @@ func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume
 }
 
 func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_volume_attachment" {
@@ -264,7 +267,7 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeVolumes(request)
 		if err != nil {
-			if isAWSErr(err, "InvalidVolume.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 				return nil
 			}
 			return fmt.Errorf("error describing volumes (%s): %s", rs.Primary.ID, err)
@@ -274,7 +277,7 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
