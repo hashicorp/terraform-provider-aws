@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
@@ -15,9 +16,9 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 	resourceName := "data.aws_cloudformation_stack.network"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudformation.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName),
@@ -101,9 +102,9 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, cloudformation.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, cloudformation.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName),
