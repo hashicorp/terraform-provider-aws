@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsWafRule() *schema.Resource {
@@ -22,7 +23,7 @@ func dataSourceAwsWafRule() *schema.Resource {
 }
 
 func dataSourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafconn
+	conn := meta.(*awsprovider.AWSClient).WAFConn
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)
