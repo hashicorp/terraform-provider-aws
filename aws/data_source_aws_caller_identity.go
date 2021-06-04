@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsCallerIdentity() *schema.Resource {
@@ -33,7 +34,7 @@ func dataSourceAwsCallerIdentity() *schema.Resource {
 }
 
 func dataSourceAwsCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).stsconn
+	client := meta.(*awsprovider.AWSClient).STSConn
 
 	log.Printf("[DEBUG] Reading Caller Identity")
 	res, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
