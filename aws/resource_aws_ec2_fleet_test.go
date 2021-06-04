@@ -10,9 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEc2Fleet_basic(t *testing.T) {
@@ -21,9 +24,9 @@ func TestAccAWSEc2Fleet_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,9 +71,9 @@ func TestAccAWSEc2Fleet_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,9 +94,9 @@ func TestAccAWSEc2Fleet_ExcessCapacityTerminationPolicy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,9 +132,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchT
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -173,9 +176,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_LaunchT
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -217,9 +220,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_LaunchTemplateSpecification_Version
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -266,9 +269,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_AvailabilityZone(t *testin
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -306,9 +309,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -341,16 +344,16 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_InstanceType(t *testing.T)
 }
 
 func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_MaxPrice(t *testing.T) {
-	TestAccSkip(t, "EC2 API is not correctly returning MaxPrice override")
+	atest.Skip(t, "EC2 API is not correctly returning MaxPrice override")
 
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -388,9 +391,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -428,9 +431,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_Priority_Multiple(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -472,9 +475,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_SubnetId(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -512,9 +515,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity(t *testin
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -552,9 +555,9 @@ func TestAccAWSEc2Fleet_LaunchTemplateConfig_Override_WeightedCapacity_Multiple(
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -594,9 +597,9 @@ func TestAccAWSEc2Fleet_OnDemandOptions_AllocationStrategy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -632,9 +635,9 @@ func TestAccAWSEc2Fleet_ReplaceUnhealthyInstances(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -668,9 +671,9 @@ func TestAccAWSEc2Fleet_SpotOptions_AllocationStrategy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -706,9 +709,9 @@ func TestAccAWSEc2Fleet_SpotOptions_CapacityRebalance(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -736,9 +739,9 @@ func TestAccAWSEc2Fleet_SpotOptions_InstanceInterruptionBehavior(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -774,9 +777,9 @@ func TestAccAWSEc2Fleet_SpotOptions_InstancePoolsToUseCount(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -812,9 +815,9 @@ func TestAccAWSEc2Fleet_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -849,9 +852,9 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType(t 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -881,9 +884,9 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_On
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -910,9 +913,9 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_DefaultTargetCapacityType_Sp
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -939,9 +942,9 @@ func TestAccAWSEc2Fleet_TargetCapacitySpecification_TotalTargetCapacity(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -977,9 +980,9 @@ func TestAccAWSEc2Fleet_TerminateInstancesWithExpiration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1013,9 +1016,9 @@ func TestAccAWSEc2Fleet_Type(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1051,9 +1054,9 @@ func TestAccAWSEc2Fleet_TemplateMultipleNetworkInterfaces(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2Fleet(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2FleetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1081,7 +1084,7 @@ func testAccCheckAWSEc2FleetHistory(resourceName string, errorMsg string) resour
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
@@ -1126,7 +1129,7 @@ func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) re
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DescribeFleetsInput{
 			FleetIds: []*string{aws.String(rs.Primary.ID)},
@@ -1162,7 +1165,7 @@ func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) re
 }
 
 func testAccCheckAWSEc2FleetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_fleet" {
@@ -1175,7 +1178,7 @@ func testAccCheckAWSEc2FleetDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeFleets(input)
 
-		if isAWSErr(err, "InvalidFleetId.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidFleetId.NotFound", "") {
 			continue
 		}
 
@@ -1217,7 +1220,7 @@ func testAccCheckAWSEc2FleetDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEc2FleetDisappears(fleet *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		input := &ec2.DeleteFleetsInput{
 			FleetIds:           []*string{fleet.FleetId},
@@ -1251,7 +1254,7 @@ func testAccCheckAWSEc2FleetRecreated(i, j *ec2.FleetData) resource.TestCheckFun
 }
 
 func testAccPreCheckAWSEc2Fleet(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DescribeFleetsInput{
 		MaxResults: aws.Int64(1),
@@ -1259,7 +1262,7 @@ func testAccPreCheckAWSEc2Fleet(t *testing.T) {
 
 	_, err := conn.DescribeFleets(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -1269,7 +1272,7 @@ func testAccPreCheckAWSEc2Fleet(t *testing.T) {
 }
 
 func testAccAWSEc2FleetConfig_multipleNetworkInterfaces(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
