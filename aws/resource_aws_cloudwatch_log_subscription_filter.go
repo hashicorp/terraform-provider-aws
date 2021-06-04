@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
@@ -61,17 +63,17 @@ func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutSubscriptionFilter(&params)
 
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -94,7 +96,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 
@@ -103,10 +105,10 @@ func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, me
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutSubscriptionFilter(&params)
 
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -152,7 +154,7 @@ func getAwsCloudWatchLogsSubscriptionFilterInput(d *schema.ResourceData) cloudwa
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string) // "name" is a required field in the schema
@@ -190,7 +192,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group Subscription: %s", d.Id())
 	log_group_name := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)
@@ -201,7 +203,7 @@ func resourceAwsCloudwatchLogSubscriptionFilterDelete(d *schema.ResourceData, me
 	}
 	_, err := conn.DeleteSubscriptionFilter(params)
 	if err != nil {
-		if isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "The specified log group does not exist") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "The specified log group does not exist") {
 			return nil
 		}
 		return fmt.Errorf(
