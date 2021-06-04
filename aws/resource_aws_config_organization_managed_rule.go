@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsConfigOrganizationManagedRule() *schema.Resource {
@@ -107,7 +109,7 @@ func resourceAwsConfigOrganizationManagedRule() *schema.Resource {
 }
 
 func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 	name := d.Get("name").(string)
 
 	input := &configservice.PutOrganizationConfigRuleInput{
@@ -165,11 +167,11 @@ func resourceAwsConfigOrganizationManagedRuleCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsConfigOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	rule, err := configDescribeOrganizationConfigRule(conn, d.Id())
 
-	if isAWSErr(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
+	if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException, "") {
 		log.Printf("[WARN] Config Organization Managed Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -217,7 +219,7 @@ func resourceAwsConfigOrganizationManagedRuleRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -272,7 +274,7 @@ func resourceAwsConfigOrganizationManagedRuleUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsConfigOrganizationManagedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).configconn
+	conn := meta.(*awsprovider.AWSClient).ConfigConn
 
 	input := &configservice.DeleteOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
