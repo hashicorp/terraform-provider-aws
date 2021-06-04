@@ -10,10 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -24,11 +27,11 @@ func init() {
 }
 
 func testSweepEksFargateProfiles(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).eksconn
+	conn := client.(*awsprovider.AWSClient).EKSConn
 
 	var errors error
 	input := &eks.ListClustersInput{}
@@ -48,7 +51,7 @@ func testSweepEksFargateProfiles(region string) error {
 					}
 					_, err := conn.DeleteFargateProfile(input)
 
-					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+					if err != nil && !tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Fargate Profile %q: %w", profileName, err))
 						continue
 					}
@@ -67,7 +70,7 @@ func testSweepEksFargateProfiles(region string) error {
 
 		return true
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
 		return errors // In case we have completed some pages, but had errors
 	}
@@ -86,16 +89,20 @@ func TestAccAWSEksFargateProfile_basic(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSEks(t)
+			testAccPreCheckAWSEksFargateProfile(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEksFargateProfileConfigFargateProfileName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksFargateProfileExists(resourceName, &fargateProfile),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "fargate_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "pod_execution_role_arn", iamRoleResourceName, "arn"),
@@ -120,9 +127,13 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSEks(t)
+			testAccPreCheckAWSEksFargateProfile(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +155,13 @@ func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
 	resourceName2 := "aws_eks_fargate_profile.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSEks(t)
+			testAccPreCheckAWSEksFargateProfile(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,9 +181,13 @@ func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSEks(t)
+			testAccPreCheckAWSEksFargateProfile(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -192,9 +211,13 @@ func TestAccAWSEksFargateProfile_Tags(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
-		ErrorCheck:   testAccErrorCheck(t, eks.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSEks(t)
+			testAccPreCheckAWSEksFargateProfile(t)
+		},
+		ErrorCheck:   atest.ErrorCheck(t, eks.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +270,7 @@ func testAccCheckAWSEksFargateProfileExists(resourceName string, fargateProfile 
 			return err
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EKSConn
 
 		input := &eks.DescribeFargateProfileInput{
 			ClusterName:        aws.String(clusterName),
@@ -279,7 +302,7 @@ func testAccCheckAWSEksFargateProfileExists(resourceName string, fargateProfile 
 }
 
 func testAccCheckAWSEksFargateProfileDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).eksconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_fargate_profile" {
@@ -298,7 +321,7 @@ func testAccCheckAWSEksFargateProfileDestroy(s *terraform.State) error {
 
 		output, err := conn.DescribeFargateProfile(input)
 
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -312,7 +335,7 @@ func testAccCheckAWSEksFargateProfileDestroy(s *terraform.State) error {
 
 func testAccCheckAWSEksFargateProfileDisappears(fargateProfile *eks.FargateProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).eksconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EKSConn
 
 		input := &eks.DeleteFargateProfileInput{
 			ClusterName:        fargateProfile.ClusterName,
@@ -321,7 +344,7 @@ func testAccCheckAWSEksFargateProfileDisappears(fargateProfile *eks.FargateProfi
 
 		_, err := conn.DeleteFargateProfile(input)
 
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 
@@ -363,7 +386,7 @@ func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
 		endpoints.UsWest1RegionID,
 		endpoints.UsWest2RegionID,
 	}
-	region := testAccProvider.Meta().(*AWSClient).region
+	region := atest.Provider.Meta().(*awsprovider.AWSClient).Region
 
 	for _, allowedRegion := range allowedRegions {
 		if region == allowedRegion {
@@ -563,7 +586,7 @@ resource "aws_eks_fargate_profile" "test" {
 }
 
 func testAccAWSEksFargateProfileConfigFargateProfileMultiple(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSEksFargateProfileConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
