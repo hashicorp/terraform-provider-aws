@@ -7,9 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
-func resourceAWSInspectorResourceGroup() *schema.Resource {
+func ResourceAWSInspectorResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsInspectorResourceGroupCreate,
 		Read:   resourceAwsInspectorResourceGroupRead,
@@ -31,7 +32,7 @@ func resourceAWSInspectorResourceGroup() *schema.Resource {
 }
 
 func resourceAwsInspectorResourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	req := &inspector.CreateResourceGroupInput{
 		ResourceGroupTags: expandInspectorResourceGroupTags(d.Get("tags").(map[string]interface{})),
@@ -49,7 +50,7 @@ func resourceAwsInspectorResourceGroupCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsInspectorResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).inspectorconn
+	conn := meta.(*awsprovider.AWSClient).InspectorConn
 
 	resp, err := conn.DescribeResourceGroups(&inspector.DescribeResourceGroupsInput{
 		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),
