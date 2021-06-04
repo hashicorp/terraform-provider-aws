@@ -14,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/amplify/lister"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,11 +29,11 @@ func init() {
 }
 
 func testSweepAmplifyApps(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).amplifyconn
+	conn := client.(*awsprovider.AWSClient).AmplifyConn
 	input := &amplify.ListAppsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -56,7 +58,7 @@ func testSweepAmplifyApps(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Amplify Apps sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -74,9 +76,9 @@ func testAccAWSAmplifyApp_basic(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -84,7 +86,7 @@ func testAccAWSAmplifyApp_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
 					resource.TestCheckNoResourceAttr(resourceName, "access_token"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
@@ -121,16 +123,16 @@ func testAccAWSAmplifyApp_disappears(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAmplifyAppConfigName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSAmplifyAppExists(resourceName, &app),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmplifyApp(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAmplifyApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,9 +146,9 @@ func testAccAWSAmplifyApp_Tags(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -191,9 +193,9 @@ func testAccAWSAmplifyApp_AutoBranchCreationConfig(t *testing.T) {
 	credentials := base64.StdEncoding.EncodeToString([]byte("username1:password1"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -287,9 +289,9 @@ func testAccAWSAmplifyApp_BasicAuthCredentials(t *testing.T) {
 	credentials2 := base64.StdEncoding.EncodeToString([]byte("username2:password2"))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -332,9 +334,9 @@ func testAccAWSAmplifyApp_BuildSpec(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -374,9 +376,9 @@ func testAccAWSAmplifyApp_CustomRules(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -424,9 +426,9 @@ func testAccAWSAmplifyApp_Description(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -467,9 +469,9 @@ func testAccAWSAmplifyApp_EnvironmentVariables(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -513,9 +515,9 @@ func testAccAWSAmplifyApp_IamServiceRole(t *testing.T) {
 	iamRole2ResourceName := "aws_iam_role.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -556,9 +558,9 @@ func testAccAWSAmplifyApp_Name(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -602,9 +604,9 @@ func testAccAWSAmplifyApp_Repository(t *testing.T) {
 	resourceName := "aws_amplify_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAmplify(t) },
-		ErrorCheck:   testAccErrorCheck(t, amplify.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSAmplify(t) },
+		ErrorCheck:   atest.ErrorCheck(t, amplify.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAmplifyAppDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -638,7 +640,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 			return fmt.Errorf("No Amplify App ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AmplifyConn
 
 		output, err := finder.AppByID(conn, rs.Primary.ID)
 
@@ -653,7 +655,7 @@ func testAccCheckAWSAmplifyAppExists(n string, v *amplify.App) resource.TestChec
 }
 
 func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).amplifyconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AmplifyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_amplify_app" {
@@ -677,7 +679,7 @@ func testAccCheckAWSAmplifyAppDestroy(s *terraform.State) error {
 }
 
 func testAccPreCheckAWSAmplify(t *testing.T) {
-	if testAccGetPartition() == "aws-us-gov" {
+	if atest.Partition() == "aws-us-gov" {
 		t.Skip("AWS Amplify is not supported in GovCloud partition")
 	}
 }
@@ -939,7 +941,7 @@ POLICY
 }
 
 func testAccAWSAmplifyAppConfigIAMServiceRoleArn(rName string) string {
-	return composeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 
@@ -949,7 +951,7 @@ resource "aws_amplify_app" "test" {
 }
 
 func testAccAWSAmplifyAppConfigIAMServiceRoleArnUpdated(rName string) string {
-	return composeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSAmplifyAppConfigIAMServiceRoleBase(rName), fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
 
