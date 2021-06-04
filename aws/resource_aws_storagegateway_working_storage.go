@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
@@ -30,14 +31,14 @@ func resourceAwsStorageGatewayWorkingStorage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -59,7 +60,7 @@ func resourceAwsStorageGatewayWorkingStorageCreate(d *schema.ResourceData, meta 
 }
 
 func resourceAwsStorageGatewayWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayWorkingStorageID(d.Id())
 	if err != nil {
@@ -73,7 +74,7 @@ func resourceAwsStorageGatewayWorkingStorageRead(d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Reading Storage Gateway working storage: %s", input)
 	output, err := conn.DescribeWorkingStorage(input)
 	if err != nil {
-		if isAWSErrStorageGatewayGatewayNotFound(err) {
+		if storageGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway working storage %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
