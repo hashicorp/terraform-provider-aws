@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
@@ -17,9 +20,9 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -28,7 +31,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					atest.CheckAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 			{
@@ -43,7 +46,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("ecr:DescribeImages")),
-					testAccCheckResourceAttrAccountID(resourceName, "registry_id"),
+					atest.CheckAttrAccountID(resourceName, "registry_id"),
 				),
 			},
 		},
@@ -55,9 +58,9 @@ func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -82,16 +85,16 @@ func TestAccAWSEcrRepositoryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRepositoryPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEcrRepositoryPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,16 +107,16 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 	resourceName := "aws_ecr_repository_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ecr.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ecr.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEcrRepositoryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEcrRepositoryPolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcrRepository(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEcrRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +125,7 @@ func TestAccAWSEcrRepositoryPolicy_disappears_repository(t *testing.T) {
 }
 
 func testAccCheckAWSEcrRepositoryPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ecrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ECRConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_repository_policy" {
@@ -134,8 +137,8 @@ func testAccCheckAWSEcrRepositoryPolicyDestroy(s *terraform.State) error {
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
-				isAWSErr(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryNotFoundException, "") ||
+				tfawserr.ErrMessageContains(err, ecr.ErrCodeRepositoryPolicyNotFoundException, "") {
 				return nil
 			}
 			return err
