@@ -11,9 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfservicecatalog "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicecatalog/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // add sweeper to delete known test servicecat budget resource associations
@@ -26,14 +28,14 @@ func init() {
 }
 
 func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).scconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).ServiceCatalogConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
@@ -66,7 +68,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(port.Id)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -110,7 +112,7 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 					d := r.Data(nil)
 					d.SetId(tfservicecatalog.BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(pvd.ProductViewSummary.ProductId)))
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -124,11 +126,11 @@ func testSweepServiceCatalogBudgetResourceAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 	}
 
-	if err = testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err = atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Budget Resource Associations for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Service Catalog Budget Resource Associations sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -141,9 +143,9 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService("budgets", t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,16 +170,16 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck("budgets", t) },
-		ErrorCheck:   testAccErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService("budgets", t) },
+		ErrorCheck:   atest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsServiceCatalogBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,7 +188,7 @@ func TestAccAWSServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) 
 }
 
 func testAccCheckAwsServiceCatalogBudgetResourceAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_budget_resource_association" {
@@ -227,7 +229,7 @@ func testAccCheckAwsServiceCatalogBudgetResourceAssociationExists(resourceName s
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ServiceCatalogConn
 
 		_, err = waiter.BudgetResourceAssociationReady(conn, budgetName, resourceID)
 
@@ -259,7 +261,7 @@ resource "aws_budgets_budget" "test" {
 }
 
 func testAccAWSServiceCatalogBudgetResourceAssociationConfig_basic(rName string) string {
-	return composeConfig(testAccAWSServiceCatalogBudgetResourceAssociationConfig_base(rName, "COST", "100.0", "USD", "2017-01-01_12:00", "MONTHLY"), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSServiceCatalogBudgetResourceAssociationConfig_base(rName, "COST", "100.0", "USD", "2017-01-01_12:00", "MONTHLY"), fmt.Sprintf(`
 resource "aws_servicecatalog_budget_resource_association" "test" {
   resource_id = aws_servicecatalog_portfolio.test.id
   budget_name = %[1]q
