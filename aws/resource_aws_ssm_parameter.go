@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -113,8 +114,8 @@ func resourceAwsSsmParameter() *schema.Resource {
 }
 
 func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -175,9 +176,9 @@ func resourceAwsSsmParameterCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SSMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
@@ -274,7 +275,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		paramInput := &ssm.PutParameterInput{
@@ -322,7 +323,7 @@ func resourceAwsSsmParameterUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssmconn
+	conn := meta.(*awsprovider.AWSClient).SSMConn
 
 	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),
