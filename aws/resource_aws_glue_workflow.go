@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueWorkflow() *schema.Resource {
@@ -55,8 +57,8 @@ func resourceAwsGlueWorkflow() *schema.Resource {
 }
 
 func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -88,9 +90,9 @@ func resourceAwsGlueWorkflowCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetWorkflowInput{
 		Name: aws.String(d.Id()),
@@ -99,7 +101,7 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Reading Glue Workflow: %#v", input)
 	output, err := conn.GetWorkflow(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -115,10 +117,10 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	workFlowArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("workflow/%s", d.Id()),
 	}.String()
 	d.Set("arn", workFlowArn)
@@ -151,7 +153,7 @@ func resourceAwsGlueWorkflowRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -188,7 +190,7 @@ func resourceAwsGlueWorkflowUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsGlueWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
 	err := deleteWorkflow(conn, d.Id())
@@ -206,7 +208,7 @@ func deleteWorkflow(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteWorkflow(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err
