@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/appmesh/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
@@ -594,7 +595,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 																		"certificate_arn": {
 																			Type:         schema.TypeString,
 																			Required:     true,
-																			ValidateFunc: validateArn,
+																			ValidateFunc: ValidateArn,
 																		},
 																	},
 																},
@@ -1058,8 +1059,8 @@ func appmeshVirtualNodeClientPolicySchema() *schema.Schema {
 }
 
 func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &appmesh.CreateVirtualNodeInput{
@@ -1085,9 +1086,9 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
@@ -1177,7 +1178,7 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -1211,7 +1212,7 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())
 	_, err := conn.DeleteVirtualNode(&appmesh.DeleteVirtualNodeInput{
@@ -1219,7 +1220,7 @@ func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
 
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
@@ -1240,7 +1241,7 @@ func resourceAwsAppmeshVirtualNodeImport(d *schema.ResourceData, meta interface{
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual node %s from mesh %s", name, mesh)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*awsprovider.AWSClient).AppMeshConn
 
 	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(mesh),
