@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSubnet() *schema.Resource {
@@ -95,7 +96,7 @@ func resourceAwsSubnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"assign_ipv6_address_on_creation": {
@@ -127,8 +128,8 @@ func resourceAwsSubnet() *schema.Resource {
 }
 
 func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &ec2.CreateSubnetInput{
@@ -231,9 +232,9 @@ func resourceAwsSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var subnet *ec2.Subnet
 
@@ -324,7 +325,7 @@ func resourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -482,7 +483,7 @@ func resourceAwsSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
 
@@ -502,12 +503,12 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 		Refresh: func() (interface{}, string, error) {
 			_, err := conn.DeleteSubnet(req)
 			if err != nil {
-				if isAWSErr(err, "DependencyViolation", "") {
+				if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 					// There is some pending operation, so just retry
 					// in a bit.
 					return 42, "pending", nil
 				}
-				if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 					return 42, "destroyed", nil
 				}
 
@@ -532,7 +533,7 @@ func SubnetStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc 
 			SubnetIds: []*string{aws.String(id)},
 		})
 		if err != nil {
-			if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on SubnetStateRefresh: %s", err)
@@ -558,7 +559,7 @@ func SubnetIpv6CidrStateRefreshFunc(conn *ec2.EC2, id string, associationId stri
 		}
 		resp, err := conn.DescribeSubnets(opts)
 		if err != nil {
-			if isAWSErr(err, "InvalidSubnetID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidSubnetID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on SubnetIpv6CidrStateRefreshFunc: %s", err)
