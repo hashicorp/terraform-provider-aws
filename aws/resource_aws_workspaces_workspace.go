@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/workspaces/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWorkspacesWorkspace() *schema.Resource {
@@ -145,8 +146,8 @@ func resourceAwsWorkspacesWorkspace() *schema.Resource {
 }
 
 func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &workspaces.WorkspaceRequest{
@@ -192,9 +193,9 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	rawOutput, state, err := waiter.WorkspaceState(conn, d.Id())()
 	if err != nil {
@@ -240,7 +241,7 @@ func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsWorkspacesWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
 
 	// IMPORTANT: Only one workspace property could be changed in a time.
 	// I've create AWS Support feature request to allow multiple properties modification in a time.
@@ -287,7 +288,7 @@ func resourceAwsWorkspacesWorkspaceUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsWorkspacesWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).workspacesconn
+	conn := meta.(*awsprovider.AWSClient).WorkSpacesConn
 
 	err := workspaceDelete(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
