@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2Tag() *schema.Resource {
@@ -49,7 +50,7 @@ func extractResourceIDAndKeyFromEc2TagID(id string) (string, string, error) {
 }
 
 func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	resourceID := d.Get("resource_id").(string)
 	key := d.Get("key").(string)
@@ -65,7 +66,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	resourceID, key, err := extractResourceIDAndKeyFromEc2TagID(d.Id())
 
 	if err != nil {
@@ -92,7 +93,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2TagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	resourceID, key, err := extractResourceIDAndKeyFromEc2TagID(d.Id())
 
 	if err != nil {
@@ -107,7 +108,7 @@ func resourceAwsEc2TagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 	resourceID, key, err := extractResourceIDAndKeyFromEc2TagID(d.Id())
 
 	if err != nil {
