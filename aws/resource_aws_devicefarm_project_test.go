@@ -8,9 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
@@ -21,14 +24,14 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(devicefarm.EndpointsID, t)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			testAccRegionPreCheck(t, endpoints.UsWest2RegionID)
+			atest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   testAccErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, devicefarm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +40,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
 				),
 			},
 			{
@@ -50,7 +53,7 @@ func TestAccAWSDeviceFarmProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`project:.+`)),
 				),
 			},
 		},
@@ -64,14 +67,14 @@ func TestAccAWSDeviceFarmProject_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(devicefarm.EndpointsID, t)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			testAccRegionPreCheck(t, endpoints.UsWest2RegionID)
+			atest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   testAccErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, devicefarm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -106,14 +109,14 @@ func TestAccAWSDeviceFarmProject_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(devicefarm.EndpointsID, t)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			testAccRegionPreCheck(t, endpoints.UsWest2RegionID)
+			atest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   testAccErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, devicefarm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -157,21 +160,21 @@ func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(devicefarm.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(devicefarm.EndpointsID, t)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			testAccRegionPreCheck(t, endpoints.UsWest2RegionID)
+			atest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   testAccErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, devicefarm.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckDeviceFarmProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeviceFarmProjectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDevicefarmProject(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDevicefarmProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -190,7 +193,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).devicefarmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DeviceFarmConn
 		resp, err := conn.GetProject(
 			&devicefarm.GetProjectInput{Arn: aws.String(rs.Primary.ID)})
 		if err != nil {
@@ -207,7 +210,7 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 }
 
 func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).devicefarmconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DeviceFarmConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_devicefarm_project" {
@@ -225,7 +228,7 @@ func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if isAWSErr(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
 			return nil
 		}
 	}
