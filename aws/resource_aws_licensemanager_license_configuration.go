@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
@@ -77,8 +79,8 @@ func resourceAwsLicenseManagerLicenseConfiguration() *schema.Resource {
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	opts := &licensemanager.CreateLicenseConfigurationInput{
@@ -117,16 +119,16 @@ func resourceAwsLicenseManagerLicenseConfigurationCreate(d *schema.ResourceData,
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetLicenseConfiguration(&licensemanager.GetLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
 			log.Printf("[WARN] License Manager license configuration (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -160,7 +162,7 @@ func resourceAwsLicenseManagerLicenseConfigurationRead(d *schema.ResourceData, m
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -191,7 +193,7 @@ func resourceAwsLicenseManagerLicenseConfigurationUpdate(d *schema.ResourceData,
 }
 
 func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).licensemanagerconn
+	conn := meta.(*awsprovider.AWSClient).LicenseManagerConn
 
 	opts := &licensemanager.DeleteLicenseConfigurationInput{
 		LicenseConfigurationArn: aws.String(d.Id()),
@@ -199,7 +201,7 @@ func resourceAwsLicenseManagerLicenseConfigurationDelete(d *schema.ResourceData,
 
 	_, err := conn.DeleteLicenseConfiguration(opts)
 	if err != nil {
-		if isAWSErr(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
+		if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting License Manager license configuration: %s", err)
