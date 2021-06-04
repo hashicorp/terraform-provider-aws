@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
+func testresourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
 		"id":          "testgroup",
 		"baseline_id": "pb-0c4e592064EXAMPLE",
@@ -15,8 +15,8 @@ func testResourceAwsSsmPatchGroupStateDataV0() map[string]interface{} {
 	}
 }
 
-func testResourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
-	v0 := testResourceAwsSsmPatchGroupStateDataV0()
+func testresourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
+	v0 := testresourceAwsSsmPatchGroupStateDataV0()
 	return map[string]interface{}{
 		"id":          fmt.Sprintf("%s,%s", v0["patch_group"], v0["baseline_id"]),
 		"baseline_id": v0["baseline_id"],
@@ -25,8 +25,8 @@ func testResourceAwsSsmPatchGroupStateDataV1() map[string]interface{} {
 }
 
 func TestResourceAWSSSMPatchGroupStateUpgradeV0(t *testing.T) {
-	expected := testResourceAwsSsmPatchGroupStateDataV1()
-	actual, err := resourceAwsSsmPatchGroupStateUpgradeV0(context.Background(), testResourceAwsSsmPatchGroupStateDataV0(), nil)
+	expected := testresourceAwsSsmPatchGroupStateDataV1()
+	actual, err := resourceAwsSsmPatchGroupStateUpgradeV0(context.Background(), testresourceAwsSsmPatchGroupStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}
