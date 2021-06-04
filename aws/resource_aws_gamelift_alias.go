@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGameliftAlias() *schema.Resource {
@@ -72,8 +74,8 @@ func resourceAwsGameliftAlias() *schema.Resource {
 }
 
 func resourceAwsGameliftAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	rs := expandGameliftRoutingStrategy(d.Get("routing_strategy").([]interface{}))
@@ -97,16 +99,16 @@ func resourceAwsGameliftAliasCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Describing Gamelift Alias: %s", d.Id())
 	out, err := conn.DescribeAlias(&gamelift.DescribeAliasInput{
 		AliasId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, gamelift.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, gamelift.ErrCodeNotFoundException, "") {
 			d.SetId("")
 			log.Printf("[WARN] Gamelift Alias (%s) not found, removing from state", d.Id())
 			return nil
@@ -141,7 +143,7 @@ func resourceAwsGameliftAliasRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGameliftAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Alias: %s", d.Id())
 	_, err := conn.UpdateAlias(&gamelift.UpdateAliasInput{
@@ -167,7 +169,7 @@ func resourceAwsGameliftAliasUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Alias: %s", d.Id())
 	_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
