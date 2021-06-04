@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lex/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -72,7 +73,7 @@ func resourceAwsLexBotAlias() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(20, 2048),
-								validateArn,
+								ValidateArn,
 							),
 						},
 						// Currently the API docs do not list a min and max for this list.
@@ -115,7 +116,7 @@ var validateLexBotAliasName = validation.All(
 )
 
 func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -168,13 +169,13 @@ func resourceAwsLexBotAliasCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Get("name").(string)),
 	})
-	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -184,10 +185,10 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
@@ -208,7 +209,7 @@ func resourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	input := &lexmodelbuildingservice.PutBotAliasInput{
 		BotName:    aws.String(d.Get("bot_name").(string)),
@@ -258,7 +259,7 @@ func resourceAwsLexBotAliasUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lexmodelconn
+	conn := meta.(*awsprovider.AWSClient).LexModelBuildingConn
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
@@ -271,7 +272,7 @@ func resourceAwsLexBotAliasDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBotAlias(input)
 
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
 		}
 		if err != nil {
@@ -318,7 +319,7 @@ var lexLogSettings = &schema.Resource{
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(20, 2048),
-				validateArn,
+				ValidateArn,
 			),
 		},
 		"log_type": {
@@ -331,7 +332,7 @@ var lexLogSettings = &schema.Resource{
 			Required: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(1, 2048),
-				validateArn,
+				ValidateArn,
 			),
 		},
 		"resource_prefix": {
