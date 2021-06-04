@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestDecodeStorageGatewayCacheID(t *testing.T) {
@@ -73,9 +75,9 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  atest.Providers,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -103,9 +105,9 @@ func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  atest.Providers,
 		// Storage Gateway API does not support removing caches,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -134,7 +136,7 @@ func testAccCheckAWSStorageGatewayCacheExists(resourceName string) resource.Test
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).StorageGatewayConn
 
 		gatewayARN, diskID, err := decodeStorageGatewayCacheID(rs.Primary.ID)
 		if err != nil {
