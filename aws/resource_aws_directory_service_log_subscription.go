@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
@@ -34,7 +35,7 @@ func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
 }
 
 func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId := d.Get("directory_id")
 	logGroupName := d.Get("log_group_name")
@@ -44,7 +45,7 @@ func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, me
 		LogGroupName: aws.String(logGroupName.(string)),
 	}
 
-	_, err := dsconn.CreateLogSubscription(&input)
+	_, err := DirectoryConn.CreateLogSubscription(&input)
 	if err != nil {
 		return fmt.Errorf("error creating Directory Service Log Subscription: %s", err)
 	}
@@ -55,7 +56,7 @@ func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId := d.Id()
 
@@ -63,7 +64,7 @@ func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta
 		DirectoryId: aws.String(directoryId),
 	}
 
-	out, err := dsconn.ListLogSubscriptions(&input)
+	out, err := DirectoryConn.ListLogSubscriptions(&input)
 	if err != nil {
 		return fmt.Errorf("error listing Directory Service Log Subscription: %s", err)
 	}
@@ -82,7 +83,7 @@ func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsDirectoryServiceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	dsconn := meta.(*AWSClient).dsconn
+	DirectoryConn := meta.(*awsprovider.AWSClient).DirectoryConn
 
 	directoryId := d.Id()
 
@@ -90,7 +91,7 @@ func resourceAwsDirectoryServiceLogSubscriptionDelete(d *schema.ResourceData, me
 		DirectoryId: aws.String(directoryId),
 	}
 
-	_, err := dsconn.DeleteLogSubscription(&input)
+	_, err := DirectoryConn.DeleteLogSubscription(&input)
 	if err != nil {
 		return fmt.Errorf("error deleting Directory Service Log Subscription: %s", err)
 	}
