@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,18 +25,18 @@ func init() {
 }
 
 func testSweepQLDBLedgers(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).qldbconn
+	conn := client.(*awsprovider.AWSClient).QLDBConn
 	input := &qldb.ListLedgersInput{}
 	page, err := conn.ListLedgers(input)
 
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
 			return nil
 		}
@@ -68,16 +71,16 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(qldb.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQLDBLedgerConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -93,11 +96,11 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 }
 
 func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	return testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
+	return testAccCheckAWSLedgerDestroyWithProvider(s, atest.Provider)
 }
 
 func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*AWSClient).qldbconn
+	conn := provider.Meta().(*awsprovider.AWSClient).QLDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_qldb_ledger" {
@@ -118,7 +121,7 @@ func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *sche
 		}
 
 		// Return nil if the cluster is already destroyed
-		if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, qldb.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -141,7 +144,7 @@ func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) res
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).qldbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).QLDBConn
 		resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -174,9 +177,9 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(qldb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, qldb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(qldb.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, qldb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
