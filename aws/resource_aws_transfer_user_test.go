@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSTransferUser_basic(t *testing.T) {
@@ -18,16 +21,16 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSTransferUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSTransferUserExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`user/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "transfer", regexp.MustCompile(`user/.+`)),
 					resource.TestCheckResourceAttrPair(
 						resourceName, "server_id", "aws_transfer_server.foo", "id"),
 					resource.TestCheckResourceAttrPair(
@@ -50,9 +53,9 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -109,9 +112,9 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -129,9 +132,9 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 
 func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -170,9 +173,9 @@ func TestAccAWSTransferUser_homeDirectoryMappings(t *testing.T) {
 	resourceName := "aws_transfer_user.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck:   testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck:   atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -209,7 +212,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 			return fmt.Errorf("No Transfer User ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).TransferConn
 		userName := rs.Primary.Attributes["user_name"]
 		serverID := rs.Primary.Attributes["server_id"]
 
@@ -230,7 +233,7 @@ func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) re
 
 func testAccCheckAWSTransferUserDisappears(serverConf *transfer.DescribedServer, userConf *transfer.DescribedUser) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).transferconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).TransferConn
 
 		params := &transfer.DeleteUserInput{
 			ServerId: serverConf.ServerId,
@@ -247,7 +250,7 @@ func testAccCheckAWSTransferUserDisappears(serverConf *transfer.DescribedServer,
 }
 
 func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).TransferConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_transfer_user" {
@@ -262,7 +265,7 @@ func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
 			ServerId: aws.String(serverID),
 		})
 
-		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
 			continue
 		}
 
@@ -287,7 +290,7 @@ data "aws_partition" "current" {}
 `
 
 func testAccAWSTransferUserConfig_basic(rName string) string {
-	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%[1]s"
 
@@ -337,7 +340,7 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserName_validation(rName string) string {
-	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_transfer_user" "foo" {
   server_id = aws_transfer_server.foo.id
   user_name = "%s"
@@ -366,7 +369,7 @@ EOF
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {
-	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%[1]s"
 
@@ -467,7 +470,7 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
-	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%[1]s"
 
@@ -565,7 +568,7 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
-	return composeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSTransferUserConfig_base, fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
   name = "tf-test-transfer-user-iam-role-%[1]s"
 
@@ -665,7 +668,7 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappings(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTransferUserConfig_base,
 		fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
@@ -723,7 +726,7 @@ resource "aws_transfer_user" "foo" {
 }
 
 func testAccAWSTransferUserConfig_homeDirectoryMappingsUpdate(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSTransferUserConfig_base,
 		fmt.Sprintf(`
 resource "aws_iam_role" "foo" {
