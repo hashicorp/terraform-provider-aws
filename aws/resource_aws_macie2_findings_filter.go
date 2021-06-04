@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacie2FindingsFilter() *schema.Resource {
@@ -124,9 +125,9 @@ func resourceAwsMacie2FindingsFilter() *schema.Resource {
 }
 
 func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &macie2.CreateFindingsFilterInput{
@@ -180,10 +181,10 @@ func resourceMacie2FindingsFilterCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
 	}
@@ -223,7 +224,7 @@ func resourceMacie2FindingsFilterRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -261,7 +262,7 @@ func resourceMacie2FindingsFilterUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceMacie2FindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),
