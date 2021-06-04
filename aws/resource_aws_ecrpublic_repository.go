@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEcrPublicRepository() *schema.Resource {
@@ -106,7 +108,7 @@ func resourceAwsEcrPublicRepository() *schema.Resource {
 }
 
 func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*awsprovider.AWSClient).ECRPublicConn
 
 	input := ecrpublic.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -137,7 +139,7 @@ func resourceAwsEcrPublicRepositoryCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*awsprovider.AWSClient).ECRPublicConn
 
 	log.Printf("[DEBUG] Reading ECR Public repository %s", d.Id())
 	var out *ecrpublic.DescribeRepositoriesOutput
@@ -148,7 +150,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 	var err error
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		out, err = conn.DescribeRepositories(input)
-		if d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -161,7 +163,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 		out, err = conn.DescribeRepositories(input)
 	}
 
-	if !d.IsNewResource() && isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 		log.Printf("[WARN] ECR Public Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -217,7 +219,7 @@ func resourceAwsEcrPublicRepositoryRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*awsprovider.AWSClient).ECRPublicConn
 
 	deleteInput := &ecrpublic.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -231,7 +233,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteRepository(deleteInput)
 
 	if err != nil {
-		if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ECR Public repository: %s", err)
@@ -244,7 +246,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err = conn.DescribeRepositories(input)
 		if err != nil {
-			if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -256,7 +258,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 		_, err = conn.DescribeRepositories(input)
 	}
 
-	if isAWSErr(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeRepositoryNotFoundException, "") {
 		return nil
 	}
 
@@ -270,7 +272,7 @@ func resourceAwsEcrPublicRepositoryDelete(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcrPublicRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ecrpublicconn
+	conn := meta.(*awsprovider.AWSClient).ECRPublicConn
 
 	if d.HasChange("catalog_data") {
 		if err := resourceAwsEcrPublicRepositoryUpdateCatalogData(conn, d); err != nil {
