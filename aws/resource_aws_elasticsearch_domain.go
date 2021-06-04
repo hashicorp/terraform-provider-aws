@@ -11,13 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -39,7 +41,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*AWSClient).esconn
+				conn := meta.(*awsprovider.AWSClient).ElasticSearchConn
 				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -100,7 +102,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 									"master_user_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"master_user_name": {
 										Type:     schema.TypeString,
@@ -167,7 +169,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"custom_endpoint_certificate_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateFunc:     validateArn,
+							ValidateFunc:     ValidateArn,
 							DiffSuppressFunc: isCustomEndpointDisabled,
 						},
 					},
@@ -390,7 +392,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"cloudwatch_log_group_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"enabled": {
 							Type:     schema.TypeBool,
@@ -429,7 +431,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -448,8 +450,8 @@ func resourceAwsElasticSearchDomainImport(
 }
 
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElasticSearchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// The API doesn't check for duplicate names
@@ -577,29 +579,29 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		var err error
 		out, err = conn.CreateElasticsearchDomain(&input)
 		if err != nil {
-			if isAWSErr(err, "InvalidTypeException", "Error setting policy") {
+			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
 				log.Printf("[DEBUG] Retrying creation of ElasticSearch domain %s", aws.StringValue(input.DomainName))
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Domain is still being deleted") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon Elasticsearch must be allowed to use the passed role") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Authentication error") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
+			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
 				return resource.RetryableError(err)
 			}
 
@@ -672,9 +674,9 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 }
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElasticSearchConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -814,7 +816,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*awsprovider.AWSClient).ElasticSearchConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -980,7 +982,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).esconn
+	conn := meta.(*awsprovider.AWSClient).ElasticSearchConn
 	domainName := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting ElasticSearch domain: %q", domainName)
@@ -988,7 +990,7 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 		DomainName: aws.String(domainName),
 	})
 	if err != nil {
-		if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return err
@@ -1010,7 +1012,7 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 		out, err = conn.DescribeElasticsearchDomain(input)
 
 		if err != nil {
-			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -1025,7 +1027,7 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 	if isResourceTimeoutError(err) {
 		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
-			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
