@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
@@ -44,9 +46,9 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticsearch.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -55,8 +57,8 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
-						awsClient := testAccProvider.Meta().(*AWSClient)
-						expectedArn, err := buildESDomainArn(name, awsClient.partition, awsClient.accountid, awsClient.region)
+						awsClient := atest.Provider.Meta().(*awsprovider.AWSClient)
+						expectedArn, err := buildESDomainArn(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
 						if err != nil {
 							return err
 						}
