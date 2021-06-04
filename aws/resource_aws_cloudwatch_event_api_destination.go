@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
@@ -54,7 +56,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 			"connection_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -65,7 +67,7 @@ func resourceAwsCloudWatchEventApiDestination() *schema.Resource {
 }
 
 func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.CreateApiDestinationInput{}
 
@@ -103,7 +105,7 @@ func resourceAwsCloudWatchEventApiDestinationCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.DescribeApiDestinationInput{
 		Name: aws.String(d.Id()),
@@ -111,7 +113,7 @@ func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Reading CloudWatchEvent API Destination (%s)", d.Id())
 	output, err := conn.DescribeApiDestination(input)
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -134,7 +136,7 @@ func resourceAwsCloudWatchEventApiDestinationRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	input := &events.UpdateApiDestinationInput{}
 
@@ -166,7 +168,7 @@ func resourceAwsCloudWatchEventApiDestinationUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudWatchEventApiDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatcheventsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchEventsConn
 
 	log.Printf("[INFO] Deleting CloudWatchEvent API Destination (%s)", d.Id())
 	input := &events.DeleteApiDestinationInput{
@@ -175,7 +177,7 @@ func resourceAwsCloudWatchEventApiDestinationDelete(d *schema.ResourceData, meta
 
 	_, err := conn.DeleteApiDestination(input)
 
-	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, events.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] CloudWatchEvent API Destination (%s) not found", d.Id())
 		return nil
 	}
