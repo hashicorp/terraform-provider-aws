@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
@@ -12,9 +13,9 @@ func testAccAWSLakeFormationDataLakeSettingsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lakeformation.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, lakeformation.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(lakeformation.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, lakeformation.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLakeFormationDataLakeSettingsDestroy,
 		Steps: []resource.TestStep{
 			{
