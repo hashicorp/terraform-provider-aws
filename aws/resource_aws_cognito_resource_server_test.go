@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
@@ -21,9 +24,9 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -63,9 +66,9 @@ func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		ErrorCheck:   testAccErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		ErrorCheck:   atest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +116,7 @@ func testAccCheckAWSCognitoResourceServerExists(n string, resourceServer *cognit
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 		userPoolID, identifier, err := decodeCognitoResourceServerID(rs.Primary.ID)
 		if err != nil {
@@ -140,7 +143,7 @@ func testAccCheckAWSCognitoResourceServerExists(n string, resourceServer *cognit
 }
 
 func testAccCheckAWSCognitoResourceServerDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).CognitoIdentityProviderConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_resource_server" {
@@ -158,7 +161,7 @@ func testAccCheckAWSCognitoResourceServerDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if isAWSErr(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
 			return err
