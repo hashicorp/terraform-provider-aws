@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
@@ -23,9 +25,9 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +39,7 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile("ipset/.+$")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile("ipset/.+$")),
 				),
 			},
 			{
@@ -54,9 +56,9 @@ func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -78,9 +80,9 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,9 +122,9 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -183,9 +185,9 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,9 +212,9 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(wafregional.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, wafregional.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(wafregional.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, wafregional.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -339,8 +341,8 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 
 func testAccCheckAWSWafRegionalIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
-		region := testAccProvider.Meta().(*AWSClient).region
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
+		region := atest.Provider.Meta().(*awsprovider.AWSClient).Region
 
 		wr := newWafRegionalRetryer(conn, region)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -386,7 +388,7 @@ func testAccCheckAWSWafRegionalIPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetIPSet(
 			&waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
@@ -422,7 +424,7 @@ func testAccCheckAWSWafRegionalIPSetExists(n string, v *waf.IPSet) resource.Test
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFRegionalConn
 		resp, err := conn.GetIPSet(&waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})
