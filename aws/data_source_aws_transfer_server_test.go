@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
@@ -14,9 +15,9 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_basic,
@@ -37,9 +38,9 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSTransfer(t) },
+		ErrorCheck: atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_service_managed(rName),
@@ -66,9 +67,13 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, transfer.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			testAccPreCheckAWSTransfer(t)
+			testAccAPIGatewayTypeEDGEPreCheck(t)
+		},
+		ErrorCheck: atest.ErrorCheck(t, transfer.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsTransferServerConfig_apigateway(rName),
