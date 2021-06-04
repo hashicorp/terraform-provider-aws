@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccAWSEc2TransitGatewayRouteTableDataSource_Filter(t *testing.T) {
@@ -12,9 +13,9 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_Filter(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,9 +37,9 @@ func TestAccAWSEc2TransitGatewayRouteTableDataSource_ID(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
