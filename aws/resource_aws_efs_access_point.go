@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/efs/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEfsAccessPoint() *schema.Resource {
@@ -120,8 +122,8 @@ func resourceAwsEfsAccessPoint() *schema.Resource {
 }
 
 func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	fsId := d.Get("file_system_id").(string)
@@ -156,7 +158,7 @@ func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEfsAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -170,15 +172,15 @@ func resourceAwsEfsAccessPointUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EFSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			log.Printf("[WARN] EFS access point %q could not be found.", d.Id())
 			d.SetId("")
 			return nil
@@ -195,9 +197,9 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
 
 	fsARN := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(ap.FileSystemId)),
 		Service:   "elasticfilesystem",
 	}.String()
@@ -230,21 +232,21 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsEfsAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).efsconn
+	conn := meta.(*awsprovider.AWSClient).EFSConn
 
 	log.Printf("[DEBUG] Deleting EFS access point %q", d.Id())
 	_, err := conn.DeleteAccessPoint(&efs.DeleteAccessPointInput{
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waiter.AccessPointDeleted(conn, d.Id()); err != nil {
-		if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
+		if tfawserr.ErrMessageContains(err, efs.ErrCodeAccessPointNotFound, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for EFS access point (%s) deletion: %w", d.Id(), err)
