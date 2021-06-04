@@ -10,11 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDaxCluster() *schema.Resource {
@@ -57,7 +59,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -176,8 +178,8 @@ func resourceAwsDaxCluster() *schema.Resource {
 }
 
 func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DAXConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
@@ -233,7 +235,7 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		resp, err = conn.CreateCluster(req)
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
 				return resource.RetryableError(err)
 			}
@@ -274,9 +276,9 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DAXConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	req := &dax.DescribeClustersInput{
 		ClusterNames: []*string{aws.String(d.Id())},
@@ -284,7 +286,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	res, err := conn.DescribeClusters(req)
 	if err != nil {
-		if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 			log.Printf("[WARN] DAX cluster (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -357,7 +359,7 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -495,7 +497,7 @@ func (b byNodeId) Less(i, j int) bool {
 }
 
 func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).daxconn
+	conn := meta.(*awsprovider.AWSClient).DAXConn
 
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -503,7 +505,7 @@ func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(req)
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeInvalidClusterStateFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidClusterStateFault, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -541,7 +543,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 			ClusterNames: []*string{aws.String(clusterID)},
 		})
 		if err != nil {
-			if isAWSErr(err, dax.ErrCodeClusterNotFoundFault, "") {
+			if tfawserr.ErrMessageContains(err, dax.ErrCodeClusterNotFoundFault, "") {
 				log.Printf("[DEBUG] Detect deletion")
 				return nil, "", nil
 			}
