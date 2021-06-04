@@ -6,9 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsResourceGroupsGroup() *schema.Resource {
@@ -80,8 +82,8 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 }
 
 func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ResourceGroupsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := resourcegroups.CreateGroupInput{
@@ -102,16 +104,16 @@ func resourceAwsResourceGroupsGroupCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ResourceGroupsConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
 		GroupName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if isAWSErr(err, resourcegroups.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, resourcegroups.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] Resource Groups Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -159,7 +161,7 @@ func resourceAwsResourceGroupsGroupRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
+	conn := meta.(*awsprovider.AWSClient).ResourceGroupsConn
 
 	if d.HasChange("description") {
 		input := resourcegroups.UpdateGroupInput{
@@ -196,7 +198,7 @@ func resourceAwsResourceGroupsGroupUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsResourceGroupsGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).resourcegroupsconn
+	conn := meta.(*awsprovider.AWSClient).ResourceGroupsConn
 
 	input := resourcegroups.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
