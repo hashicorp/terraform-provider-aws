@@ -10,14 +10,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 var routeTableValidDestinations = []string{
@@ -157,8 +159,8 @@ func resourceAwsRouteTable() *schema.Resource {
 }
 
 func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the routing table
@@ -188,9 +190,9 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	routeTable, err := finder.RouteTableByID(conn, d.Id())
 
@@ -292,9 +294,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	ownerID := aws.StringValue(routeTable.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()
@@ -305,7 +307,7 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -351,7 +353,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				// If we get a Gateway.NotAttached, it is usually some
 				// eventually consistency stuff. So we have to just wait a
 				// bit...
-				if isAWSErr(err, "Gateway.NotAttached", "") {
+				if tfawserr.ErrMessageContains(err, "Gateway.NotAttached", "") {
 					time.Sleep(20 * time.Second)
 					continue
 				}
@@ -478,11 +480,11 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 			err := resource.Retry(waiter.RouteTableUpdateTimeout, func() *resource.RetryError {
 				_, err := conn.CreateRoute(&opts)
 
-				if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 					return resource.RetryableError(err)
 				}
 
-				if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+				if tfawserr.ErrMessageContains(err, "InvalidTransitGatewayID.NotFound", "") {
 					return resource.RetryableError(err)
 				}
 
@@ -515,7 +517,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	// First request the routing table since we'll have to disassociate
 	// all the subnets first.
@@ -535,7 +537,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 			// First check if the association ID is not found. If this
 			// is the case, then it was already disassociated somehow,
 			// and that is okay.
-			if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
 				err = nil
 			}
 		}
@@ -550,7 +552,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 		RouteTableId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidRouteTableID.NotFound", "") {
 			return nil
 		}
 
