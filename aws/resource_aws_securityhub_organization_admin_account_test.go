@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
@@ -17,18 +19,18 @@ func testAccAwsSecurityHubOrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					atest.CheckAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -45,18 +47,18 @@ func testAccAwsSecurityHubOrganizationAdminAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityHubOrganizationAdminAccountConfigSelf(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSecurityHubOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,12 +75,12 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
-			testAccMultipleRegionPreCheck(t, 3)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
+			atest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:        testAccErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: testAccProviderFactoriesMultipleRegion(&providers, 3),
+		ErrorCheck:        atest.ErrorCheck(t, securityhub.EndpointsID),
+		ProviderFactories: atest.ProviderFactoriesMultipleRegion(&providers, 3),
 		CheckDestroy:      testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +96,7 @@ func testAccAwsSecurityHubOrganizationAdminAccount_MultiRegion(t *testing.T) {
 }
 
 func testAccCheckAwsSecurityHubOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -130,7 +132,7 @@ func testAccCheckAwsSecurityHubOrganizationAdminAccountExists(resourceName strin
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		adminAccount, err := finder.AdminAccount(conn, rs.Primary.ID)
 
@@ -168,8 +170,8 @@ resource "aws_securityhub_organization_admin_account" "test" {
 }
 
 func testAccSecurityHubOrganizationAdminAccountConfigMultiRegion() string {
-	return composeConfig(
-		testAccMultipleRegionProviderConfig(3),
+	return atest.ComposeConfig(
+		atest.ConfigProviderMultipleRegion(3),
 		`
 data "aws_caller_identity" "current" {}
 
