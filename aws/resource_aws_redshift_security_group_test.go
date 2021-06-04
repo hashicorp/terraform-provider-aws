@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -44,9 +46,9 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -79,9 +81,9 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -123,9 +125,9 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,9 +157,9 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		ErrorCheck:        testAccErrorCheck(t, redshift.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccEC2ClassicPreCheck(t) },
+		ErrorCheck:        atest.ErrorCheck(t, redshift.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAWSRedshiftSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,7 +206,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 			return fmt.Errorf("No Redshift Security Group ID is set")
 		}
 
-		conn := testAccProviderEc2Classic.Meta().(*AWSClient).redshiftconn
+		conn := testAccProviderEc2Classic.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 		opts := redshift.DescribeClusterSecurityGroupsInput{
 			ClusterSecurityGroupName: aws.String(rs.Primary.ID),
@@ -228,7 +230,7 @@ func testAccCheckAWSRedshiftSecurityGroupExists(n string, v *redshift.ClusterSec
 }
 
 func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
-	conn := testAccProviderEc2Classic.Meta().(*AWSClient).redshiftconn
+	conn := testAccProviderEc2Classic.Meta().(*awsprovider.AWSClient).RedshiftConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshift_security_group" {
@@ -262,7 +264,7 @@ func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_redshift_security_group" "test" {
@@ -276,7 +278,7 @@ resource "aws_redshift_security_group" "test" {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_redshift_security_group" "test" {
@@ -299,7 +301,7 @@ resource "aws_redshift_security_group" "test" {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_redshift_security_group" "test" {
@@ -318,7 +320,7 @@ resource "aws_redshift_security_group" "test" {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_security_group" "redshift" {
@@ -346,7 +348,7 @@ resource "aws_redshift_security_group" "test" {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_security_group" "redshift" {
@@ -408,7 +410,7 @@ resource "aws_redshift_security_group" "test" {
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccEc2ClassicRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_security_group" "redshift" {
