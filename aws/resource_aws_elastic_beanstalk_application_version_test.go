@@ -11,15 +11,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSBeanstalkAppVersion_basic(t *testing.T) {
 	var appVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,9 +39,9 @@ func TestAccAWSBeanstalkAppVersion_duplicateLabels(t *testing.T) {
 	var secondAppVersion elasticbeanstalk.ApplicationVersionDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,9 +60,9 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elasticbeanstalk.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -105,7 +107,7 @@ func TestAccAWSBeanstalkAppVersion_tags(t *testing.T) {
 }
 
 func testAccCheckApplicationVersionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_application_version" {
@@ -147,7 +149,7 @@ func testAccCheckApplicationVersionExists(n string, app *elasticbeanstalk.Applic
 			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elasticbeanstalkconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ElasticBeanstalkConn
 		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
 			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
