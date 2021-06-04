@@ -14,14 +14,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
 	tfsqs "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sqs"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 var sqsQueueAttributeMap = map[string]string{
@@ -143,8 +145,8 @@ func resourceAwsSqsQueue() *schema.Resource {
 }
 
 func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	sqsconn := meta.(*AWSClient).sqsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	SQSConn := meta.(*awsprovider.AWSClient).SQSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	var name string
@@ -163,7 +165,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Tag-on-create is currently only supported in AWS Commercial
-	if len(tags) > 0 && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 && meta.(*awsprovider.AWSClient).Partition == endpoints.AwsPartitionID {
 		req.Tags = tags.IgnoreAws().SqsTags()
 	}
 
@@ -194,9 +196,9 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	var output *sqs.CreateQueueOutput
 	err := resource.Retry(70*time.Second, func() *resource.RetryError {
 		var err error
-		output, err = sqsconn.CreateQueue(req)
+		output, err = SQSConn.CreateQueue(req)
 		if err != nil {
-			if isAWSErr(err, sqs.ErrCodeQueueDeletedRecently, "You must wait 60 seconds after deleting a queue before you can create another with the same name.") {
+			if tfawserr.ErrMessageContains(err, sqs.ErrCodeQueueDeletedRecently, "You must wait 60 seconds after deleting a queue before you can create another with the same name.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -204,7 +206,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if isResourceTimeoutError(err) {
-		output, err = sqsconn.CreateQueue(req)
+		output, err = SQSConn.CreateQueue(req)
 	}
 	if err != nil {
 		return fmt.Errorf("Error creating SQS queue: %s", err)
@@ -213,7 +215,7 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(output.QueueUrl))
 
 	// Tag-on-create is currently only supported in AWS Commercial
-	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+	if meta.(*awsprovider.AWSClient).Partition == endpoints.AwsPartitionID {
 		return resourceAwsSqsQueueRead(d, meta)
 	} else {
 		return resourceAwsSqsQueueUpdate(d, meta)
@@ -221,12 +223,12 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	sqsconn := meta.(*AWSClient).sqsconn
+	SQSConn := meta.(*awsprovider.AWSClient).SQSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := keyvaluetags.SqsUpdateTags(sqsconn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.SqsUpdateTags(SQSConn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating SQS Queue (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -257,7 +259,7 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			QueueUrl:   aws.String(d.Id()),
 			Attributes: attributes,
 		}
-		if _, err := sqsconn.SetQueueAttributes(req); err != nil {
+		if _, err := SQSConn.SetQueueAttributes(req); err != nil {
 			return fmt.Errorf("Error updating SQS attributes: %s", err)
 		}
 	}
@@ -266,11 +268,11 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
-	sqsconn := meta.(*AWSClient).sqsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	SQSConn := meta.(*awsprovider.AWSClient).SQSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
-	attributeOutput, err := sqsconn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
+	attributeOutput, err := SQSConn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(d.Id()),
 		AttributeNames: []*string{aws.String("All")},
 	})
@@ -415,13 +417,13 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name_prefix", naming.NamePrefixFromName(name))
 	}
 
-	tags, err := keyvaluetags.SqsListTags(sqsconn, d.Id())
+	tags, err := keyvaluetags.SqsListTags(SQSConn, d.Id())
 
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
 		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
-		if !isAWSErr(err, "InvalidAction", "") && !isAWSErr(err, sqs.ErrCodeUnsupportedOperation, "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidAction", "") && !tfawserr.ErrMessageContains(err, sqs.ErrCodeUnsupportedOperation, "") {
 			return fmt.Errorf("error listing tags for SQS Queue (%s): %s", d.Id(), err)
 		}
 	}
@@ -441,10 +443,10 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsSqsQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	sqsconn := meta.(*AWSClient).sqsconn
+	SQSConn := meta.(*awsprovider.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] SQS Delete Queue: %s", d.Id())
-	_, err := sqsconn.DeleteQueue(&sqs.DeleteQueueInput{
+	_, err := SQSConn.DeleteQueue(&sqs.DeleteQueueInput{
 		QueueUrl: aws.String(d.Id()),
 	})
 	return err
