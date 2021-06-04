@@ -12,10 +12,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,12 +29,12 @@ func init() {
 }
 
 func testSweepBudgetsBudgets(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).budgetconn
-	accountID := client.(*AWSClient).accountid
+	conn := client.(*awsprovider.AWSClient).BudgetsConn
+	accountID := client.(*awsprovider.AWSClient).AccountID
 	input := &budgets.DescribeBudgetsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -39,7 +42,7 @@ func testSweepBudgetsBudgets(region string) error {
 
 	for {
 		output, err := conn.DescribeBudgets(input)
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping Budgets sweep for %s: %s", region, err)
 			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
@@ -56,7 +59,7 @@ func testSweepBudgetsBudgets(region string) error {
 				AccountId:  aws.String(accountID),
 				BudgetName: aws.String(name),
 			})
-			if isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
 				continue
 			}
 			if err != nil {
@@ -85,16 +88,16 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(budgets.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, budgets.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
-					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgetservice", fmt.Sprintf(`budget/%s`, rName)),
+					atest.CheckAttrGlobalARN(resourceName, "arn", "budgetservice", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -140,9 +143,9 @@ func TestAccAWSBudgetsBudget_prefix(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(budgets.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, budgets.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -204,9 +207,9 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 	oneTopic := []string{"${aws_sns_topic.budget_notifications.arn}"}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(budgets.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, budgets.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			// Can't create without at least one subscriber
@@ -287,16 +290,16 @@ func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(budgets.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, budgets.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(budgets.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, budgets.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsBudgetsBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -316,7 +319,7 @@ func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) r
 			return fmt.Errorf("failed decoding ID: %v", err)
 		}
 
-		client := testAccProvider.Meta().(*AWSClient).budgetconn
+		client := atest.Provider.Meta().(*awsprovider.AWSClient).BudgetsConn
 		b, err := client.DescribeBudget(&budgets.DescribeBudgetInput{
 			BudgetName: &budgetName,
 			AccountId:  &accountID,
@@ -404,8 +407,8 @@ func testAccAWSBudgetsBudgetCheckCostTypes(config budgets.Budget, costTypes budg
 }
 
 func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
-	meta := testAccProvider.Meta()
-	client := meta.(*AWSClient).budgetconn
+	meta := atest.Provider.Meta()
+	client := meta.(*awsprovider.AWSClient).BudgetsConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_budgets_budget" {
 			continue
@@ -420,7 +423,7 @@ func testAccAWSBudgetsBudgetDestroy(s *terraform.State) error {
 			BudgetName: aws.String(budgetName),
 			AccountId:  aws.String(accountID),
 		})
-		if !isAWSErr(err, budgets.ErrCodeNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
 			return fmt.Errorf("Budget '%s' was not deleted properly", rs.Primary.ID)
 		}
 	}
@@ -441,7 +444,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 		},
 		CostFilters: map[string][]*string{
 			"AZ": {
-				aws.String(testAccGetAlternateRegion()),
+				aws.String(atest.AlternateRegion()),
 			},
 		},
 		CostTypes: &budgets.CostTypes{
@@ -476,7 +479,7 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 		},
 		CostFilters: map[string][]*string{
 			"AZ": {
-				aws.String(testAccGetRegion()),
+				aws.String(atest.Region()),
 			},
 		},
 		CostTypes: &budgets.CostTypes{
