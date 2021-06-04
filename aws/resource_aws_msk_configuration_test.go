@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -26,11 +28,11 @@ func init() {
 }
 
 func testSweepMskConfigurations(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).kafkaconn
+	conn := client.(*awsprovider.AWSClient).KafkaConn
 	var sweeperErrs *multierror.Error
 
 	input := &kafka.ListConfigurationsInput{}
@@ -63,7 +65,7 @@ func testSweepMskConfigurations(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping MSK Configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -81,16 +83,16 @@ func TestAccAWSMskConfiguration_basic(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMskConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskConfigurationExists(resourceName, &configuration1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`configuration/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "1"),
@@ -113,16 +115,16 @@ func TestAccAWSMskConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMskConfigurationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskConfigurationExists(resourceName, &configuration1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMskConfiguration(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsMskConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,9 +138,9 @@ func TestAccAWSMskConfiguration_Description(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -171,9 +173,9 @@ func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -202,9 +204,9 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 	serverProperty2 := "auto.create.topics.enable = true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, kafka.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, kafka.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -232,7 +234,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 }
 
 func testAccCheckMskConfigurationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_configuration" {
@@ -272,7 +274,7 @@ func testAccCheckMskConfigurationExists(resourceName string, configuration *kafk
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).kafkaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).KafkaConn
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),
