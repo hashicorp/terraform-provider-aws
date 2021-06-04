@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
@@ -18,11 +20,11 @@ func TestAccDataSourceAwsWorkspacesImage_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccWorkspacesImagePreCheck(t)
 		},
-		ErrorCheck: testAccErrorCheck(t, workspaces.EndpointsID),
-		Providers:  testAccProviders,
+		ErrorCheck: atest.ErrorCheck(t, workspaces.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsWorkspacesImageConfig(imageID),
@@ -58,7 +60,7 @@ func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImag
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WorkSpacesConn
 		resp, err := conn.DescribeWorkspaceImages(&workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
 		})
