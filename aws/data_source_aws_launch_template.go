@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsLaunchTemplate() *schema.Resource {
@@ -406,14 +408,14 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 			"tags":   tagsSchemaComputed(),
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 		},
 	}
 }
 
 func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	id, idOk := d.GetOk("id")
@@ -422,7 +424,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 
 	params := &ec2.DescribeLaunchTemplatesInput{}
 	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
+		params.Filters = awsprovider.BuildDataSourceFilters(filters.(*schema.Set))
 	}
 	if idOk {
 		params.LaunchTemplateIds = []*string{aws.String(id.(string))}
@@ -437,8 +439,8 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	dlt, err := conn.DescribeLaunchTemplates(params)
 
 	if err != nil {
-		if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") ||
-			isAWSErr(err, "InvalidLaunchTemplateName.NotFoundException", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateId.NotFound", "") ||
+			tfawserr.ErrMessageContains(err, "InvalidLaunchTemplateName.NotFoundException", "") {
 			return fmt.Errorf("Launch Template not found")
 		}
 		return fmt.Errorf("Error getting launch template: %w", err)
@@ -464,10 +466,10 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
