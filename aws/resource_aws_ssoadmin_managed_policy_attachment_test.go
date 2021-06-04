@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
@@ -19,9 +21,9 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +52,9 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -86,16 +88,16 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsoAdminManagedPolicyAttachment(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSsoAdminManagedPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,16 +111,16 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_disappears_permissionSet(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsoAdminPermissionSet(), permissionSetResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSsoAdminPermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,9 +135,9 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testin
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck:   testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -166,7 +168,7 @@ func TestAccAWSSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testin
 }
 
 func testAccCheckAWSSSOAdminManagedPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSOAdminConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssoadmin_managed_policy_attachment" {
@@ -216,7 +218,7 @@ func testAccCheckAWSSSOAdminManagedPolicyAttachmentExists(resourceName string) r
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).ssoadminconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SSOAdminConn
 
 		policy, err := finder.ManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
 
@@ -246,7 +248,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 }
 
 func testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
@@ -258,7 +260,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 }
 
 func testAccSSOAdminManagedPolicyAttachmentConfig_forceNew(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccSSOAdminManagedPolicyAttachmentBaseConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
@@ -270,7 +272,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 }
 
 func testAccSSOAdminManagedPolicyAttachmentConfig_multiple(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccSSOAdminManagedPolicyAttachmentBasicConfig(rName),
 		`
 resource "aws_ssoadmin_managed_policy_attachment" "other" {
