@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDocDBSubnetGroup() *schema.Resource {
@@ -68,8 +70,8 @@ func resourceAwsDocDBSubnetGroup() *schema.Resource {
 }
 
 func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	subnetIds := expandStringSet(d.Get("subnet_ids").(*schema.Set))
@@ -102,9 +104,9 @@ func resourceAwsDocDBSubnetGroupCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -115,7 +117,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 		subnetGroups = append(subnetGroups, resp.DBSubnetGroups...)
 		return !lastPage
 	}); err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			log.Printf("[WARN] DocDB Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -162,7 +164,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 
 	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
@@ -194,7 +196,7 @@ func resourceAwsDocDBSubnetGroupUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsDocDBSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).docdbconn
+	conn := meta.(*awsprovider.AWSClient).DocDBConn
 
 	delOpts := docdb.DeleteDBSubnetGroupInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -204,7 +206,7 @@ func resourceAwsDocDBSubnetGroupDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.DeleteDBSubnetGroup(&delOpts)
 	if err != nil {
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting DocDB Subnet Group (%s): %s", d.Id(), err)
@@ -221,7 +223,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 
@@ -233,7 +235,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeDBSubnetGroups(params)
-		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
 			return nil
 		}
 	}
