@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
@@ -50,7 +52,7 @@ func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 					"network_interface_id",
 					"network_load_balancer_arn",
 				},
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -63,8 +65,8 @@ func resourceAwsEc2TrafficMirrorTarget() *schema.Resource {
 }
 
 func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateTrafficMirrorTargetInput{}
@@ -96,7 +98,7 @@ func resourceAwsEc2TrafficMirrorTargetCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2TrafficMirrorTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -110,9 +112,9 @@ func resourceAwsEc2TrafficMirrorTargetUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	targetId := d.Id()
 	input := &ec2.DescribeTrafficMirrorTargetsInput{
@@ -120,7 +122,7 @@ func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interfac
 	}
 
 	out, err := conn.DescribeTrafficMirrorTargets(input)
-	if isAWSErr(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidTrafficMirrorTargetId.NotFound", "") {
 		log.Printf("[WARN] EC2 Traffic Mirror Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -155,9 +157,9 @@ func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interfac
 	d.Set("owner_id", target.OwnerId)
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(target.OwnerId),
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
 	}.String()
@@ -168,7 +170,7 @@ func resourceAwsEc2TrafficMirrorTargetRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2TrafficMirrorTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	targetId := d.Id()
 	input := &ec2.DeleteTrafficMirrorTargetInput{
