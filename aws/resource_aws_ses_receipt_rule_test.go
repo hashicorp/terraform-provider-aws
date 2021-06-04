@@ -7,9 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSESReceiptRule_basic(t *testing.T) {
@@ -20,12 +23,12 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +37,7 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "add_header_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bounce_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "0"),
@@ -66,12 +69,12 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -103,12 +106,12 @@ func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,12 +143,12 @@ func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -177,12 +180,12 @@ func TestAccAWSSESReceiptRule_lambdaAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -214,12 +217,12 @@ func TestAccAWSSESReceiptRule_stopAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -250,12 +253,12 @@ func TestAccAWSSESReceiptRule_order(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,12 +286,12 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -326,19 +329,19 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSES(t)
 			testAccPreCheckSESReceiptRule(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSESReceiptRuleBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -346,7 +349,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName, &rule),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRule(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -355,7 +358,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 }
 
 func testAccCheckSESReceiptRuleDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_receipt_rule" {
@@ -395,7 +398,7 @@ func testAccCheckAwsSESReceiptRuleExists(n string, rule *ses.ReceiptRule) resour
 			return fmt.Errorf("SES Receipt Rule name not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 		params := &ses.DescribeReceiptRuleInput{
 			RuleName:    aws.String(rs.Primary.Attributes["name"]),
@@ -425,7 +428,7 @@ func testAccAwsSesReceiptRuleImportStateIdFunc(resourceName string) resource.Imp
 }
 
 func testAccPreCheckSESReceiptRule(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String("MyRule"),
@@ -434,11 +437,11 @@ func testAccPreCheckSESReceiptRule(t *testing.T) {
 
 	_, err := conn.DescribeReceiptRule(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if isAWSErr(err, "RuleSetDoesNotExist", "") {
+	if tfawserr.ErrMessageContains(err, "RuleSetDoesNotExist", "") {
 		return
 	}
 
