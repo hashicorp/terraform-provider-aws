@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsOpsworksApplication() *schema.Resource {
@@ -120,7 +122,7 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 			"data_source_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -250,7 +252,7 @@ func resourceAwsOpsworksApplicationValidate(d *schema.ResourceData) error {
 }
 
 func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeAppsInput{
 		AppIds: []*string{
@@ -262,7 +264,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := client.DescribeApps(req)
 	if err != nil {
-		if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[INFO] App not found: %s", d.Id())
 			d.SetId("")
 			return nil
@@ -295,7 +297,7 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
 	if err != nil {
@@ -329,7 +331,7 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	err := resourceAwsOpsworksApplicationValidate(d)
 	if err != nil {
@@ -361,7 +363,7 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsOpsworksApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient).opsworksconn
+	client := meta.(*awsprovider.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),
