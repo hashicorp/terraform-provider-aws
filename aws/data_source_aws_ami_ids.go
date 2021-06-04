@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsAmiIds() *schema.Resource {
@@ -19,7 +20,7 @@ func dataSourceAwsAmiIds() *schema.Resource {
 		Read: dataSourceAwsAmiIdsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": awsprovider.DataSourceFiltersSchema(),
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -54,7 +55,7 @@ func dataSourceAwsAmiIds() *schema.Resource {
 }
 
 func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	params := &ec2.DescribeImagesInput{
 		Owners: expandStringList(d.Get("owners").([]interface{})),
@@ -64,7 +65,7 @@ func dataSourceAwsAmiIdsRead(d *schema.ResourceData, meta interface{}) error {
 		params.ExecutableUsers = expandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
+		params.Filters = awsprovider.BuildDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI IDs: %s", params)
