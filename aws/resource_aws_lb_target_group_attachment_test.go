@@ -8,18 +8,21 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -35,9 +38,9 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -56,9 +59,9 @@ func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -75,9 +78,9 @@ func TestAccAWSLBTargetGroupAttachment_Port(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -94,9 +97,9 @@ func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,9 +116,9 @@ func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elbv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elbv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLBTargetGroupAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +138,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestChe
 			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBV2Conn
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
@@ -154,7 +157,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestChe
 		}
 
 		_, err := conn.DeregisterTargets(params)
-		if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			return fmt.Errorf("Error deregistering Targets: %s", err)
 		}
 
@@ -173,7 +176,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 			return errors.New("No Target Group Attachment ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBV2Conn
 
 		_, hasPort := rs.Primary.Attributes["port"]
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
@@ -204,7 +207,7 @@ func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {
@@ -233,7 +236,7 @@ func testAccCheckAWSLBTargetGroupAttachmentDestroy(s *terraform.State) error {
 		}
 
 		// Verify the error
-		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || isAWSErr(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") || tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
 			return nil
 		} else {
 			return fmt.Errorf("Unexpected error checking LB destroyed: %s", err)
