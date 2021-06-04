@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
@@ -124,7 +125,7 @@ func resourceAwsCloudFrontOriginRequestPolicy() *schema.Resource {
 }
 
 func resourceAwsCloudFrontOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	request := &cloudfront.CreateOriginRequestPolicyInput{
 		OriginRequestPolicyConfig: expandCloudFrontOriginRequestPolicyConfig(d),
@@ -142,7 +143,7 @@ func resourceAwsCloudFrontOriginRequestPolicyCreate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 	request := &cloudfront.GetOriginRequestPolicyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -175,7 +176,7 @@ func resourceAwsCloudFrontOriginRequestPolicyRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCloudFrontOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	request := &cloudfront.UpdateOriginRequestPolicyInput{
 		OriginRequestPolicyConfig: expandCloudFrontOriginRequestPolicyConfig(d),
@@ -192,7 +193,7 @@ func resourceAwsCloudFrontOriginRequestPolicyUpdate(d *schema.ResourceData, meta
 }
 
 func resourceAwsCloudFrontOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudfrontconn
+	conn := meta.(*awsprovider.AWSClient).CloudFrontConn
 
 	request := &cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
@@ -201,7 +202,7 @@ func resourceAwsCloudFrontOriginRequestPolicyDelete(d *schema.ResourceData, meta
 
 	_, err := conn.DeleteOriginRequestPolicy(request)
 	if err != nil {
-		if isAWSErr(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy, "") {
+		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy, "") {
 			return nil
 		}
 		return err
