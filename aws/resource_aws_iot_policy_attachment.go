@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotPolicyAttachment() *schema.Resource {
@@ -30,7 +32,7 @@ func resourceAwsIotPolicyAttachment() *schema.Resource {
 }
 
 func resourceAwsIotPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -89,7 +91,7 @@ func getIotPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Poli
 }
 
 func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -112,7 +114,7 @@ func resourceAwsIotPolicyAttachmentRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
@@ -124,7 +126,7 @@ func resourceAwsIotPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 
 	// DetachPolicy doesn't return an error if the policy doesn't exist,
 	// but it returns an error if the Target is not found.
-	if isAWSErr(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
+	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
 		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
 		return nil
 	}
