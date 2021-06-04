@@ -10,9 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +26,11 @@ func init() {
 }
 
 func testSweepAPIGatewayRestApis(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).apigatewayconn
+	conn := client.(*awsprovider.AWSClient).APIGatewayConn
 
 	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
@@ -39,7 +42,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteRestApi(input)
 				if err != nil {
-					if isAWSErr(err, apigateway.ErrCodeTooManyRequestsException, "") {
+					if tfawserr.ErrMessageContains(err, apigateway.ErrCodeTooManyRequestsException, "") {
 						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
@@ -54,7 +57,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
 			return nil
 		}
@@ -70,9 +73,9 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -80,14 +83,14 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
-					testAccCheckResourceAttrRfc3339(resourceName, "created_date"),
+					atest.CheckAttrRfc3339(resourceName, "created_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`[a-z0-9]+`)),
+					atest.MatchAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`[a-z0-9]+`)),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
@@ -110,16 +113,16 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -134,7 +137,7 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestAPIConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -145,7 +148,7 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 				Config: testAccAWSAPIGatewayRestAPIConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
+					atest.MatchAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -160,16 +163,16 @@ func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfigName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRestApi(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayRestApi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -183,9 +186,9 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -219,7 +222,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+					conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
 						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -227,7 +230,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 						},
 					})
 					if err != nil {
-						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
+						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
 						}
 						t.Fatal(err)
@@ -259,16 +262,16 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+					conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
 						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -276,7 +279,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 						},
 					})
 					if err != nil {
-						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
 						}
 						t.Fatal(err)
@@ -312,9 +315,9 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -350,9 +353,9 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_OverrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -394,9 +397,9 @@ func TestAccAWSAPIGatewayRestApi_ApiKeySource_SetByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -422,9 +425,9 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -459,9 +462,9 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_OverrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -506,9 +509,9 @@ func TestAccAWSAPIGatewayRestApi_BinaryMediaTypes_SetByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -535,9 +538,9 @@ func TestAccAWSAPIGatewayRestApi_Body(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			// The body is expected to only set a title (name) and one route
@@ -579,9 +582,9 @@ func TestAccAWSAPIGatewayRestApi_Description(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -614,9 +617,9 @@ func TestAccAWSAPIGatewayRestApi_Description_OverrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -658,9 +661,9 @@ func TestAccAWSAPIGatewayRestApi_Description_SetByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -685,9 +688,9 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -723,9 +726,9 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_OverrideBody(t *testi
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -767,9 +770,9 @@ func TestAccAWSAPIGatewayRestApi_DisableExecuteApiEndpoint_SetByBody(t *testing.
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -797,9 +800,9 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds(t *testing
 	vpcEndpointResourceName2 := "aws_vpc_endpoint.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -855,9 +858,9 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_OverrideBo
 	vpcEndpointResourceName3 := "aws_vpc_endpoint.test.2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -906,9 +909,9 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_VpcEndpointIds_SetByBody(
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -936,9 +939,9 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -978,9 +981,9 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_OverrideBody(t *testing.
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1022,9 +1025,9 @@ func TestAccAWSAPIGatewayRestApi_MinimumCompressionSize_SetByBody(t *testing.T) 
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1053,9 +1056,9 @@ func TestAccAWSAPIGatewayRestApi_Name_OverrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1097,9 +1100,9 @@ func TestAccAWSAPIGatewayRestApi_Parameters(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1133,9 +1136,9 @@ func TestAccAWSAPIGatewayRestApi_Policy(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1165,9 +1168,9 @@ func TestAccAWSAPIGatewayRestApi_Policy_OverrideBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1212,9 +1215,9 @@ func TestAccAWSAPIGatewayRestApi_Policy_SetByBody(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigateway.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccAPIGatewayTypeEDGEPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigateway.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1236,7 +1239,7 @@ func TestAccAWSAPIGatewayRestApi_Policy_SetByBody(t *testing.T) {
 
 func testAccCheckAWSAPIGatewayRestAPIRoutes(conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		resp, err := conn.GetResources(&apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
@@ -1276,7 +1279,7 @@ func testAccCheckAWSAPIGatewayRestAPIExists(n string, res *apigateway.RestApi) r
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -1297,7 +1300,7 @@ func testAccCheckAWSAPIGatewayRestAPIExists(n string, res *apigateway.RestApi) r
 }
 
 func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_rest_api" {
@@ -1322,8 +1325,8 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 
 // testAccAPIGatewayTypeEDGEPreCheck checks if endpoint config type EDGE can be used in a test and skips test if not (i.e., not in standard partition).
 func testAccAPIGatewayTypeEDGEPreCheck(t *testing.T) {
-	if testAccGetPartition() != endpoints.AwsPartitionID {
-		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", testAccGetPartition())
+	if atest.Partition() != endpoints.AwsPartitionID {
+		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", atest.Partition())
 	}
 }
 
@@ -1440,7 +1443,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -1490,7 +1493,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIds2(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -1549,7 +1552,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsOverrideBody(rName string, configVpcEndpointResourceName string, bodyVpcEndpointResourceName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -1634,7 +1637,7 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 
 func testAccAWSAPIGatewayRestAPIConfigEndpointConfigurationVpcEndpointIdsSetByBody(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAvailableAZsNoOptInConfig(),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
