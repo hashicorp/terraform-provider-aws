@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/envvar"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/envvar"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const envVarGithubTokenUsageCodePipelineWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
@@ -23,11 +25,11 @@ func TestAccAWSCodePipelineWebhook_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -58,11 +60,11 @@ func TestAccAWSCodePipelineWebhook_ipAuth(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,11 +95,11 @@ func TestAccAWSCodePipelineWebhook_unauthenticated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -126,11 +128,11 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,11 +192,11 @@ func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSCodePipelineSupported(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, codepipeline.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -238,7 +240,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.Li
 			return fmt.Errorf("No webhook ARN is set as ID")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).CodePipelineConn
 
 		resp, err := getCodePipelineWebhook(conn, rs.Primary.ID)
 
