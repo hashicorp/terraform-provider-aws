@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -328,12 +329,12 @@ func dataSourceAwsSageMakerPrebuiltECRImage() *schema.Resource {
 }
 
 func dataSourceAwsSageMakerPrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*AWSClient).region
+	region := meta.(*awsprovider.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
 
-	suffix := meta.(*AWSClient).dnsSuffix
+	suffix := meta.(*awsprovider.AWSClient).DNSSuffix
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}
