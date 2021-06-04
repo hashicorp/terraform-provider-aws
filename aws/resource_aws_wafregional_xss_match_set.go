@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
@@ -63,8 +65,8 @@ func resourceAwsWafRegionalXssMatchSet() *schema.Resource {
 }
 
 func resourceAwsWafRegionalXssMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	log.Printf("[INFO] Creating regional WAF XSS Match Set: %s", d.Get("name").(string))
 
@@ -95,7 +97,7 @@ func resourceAwsWafRegionalXssMatchSetCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
 	log.Printf("[INFO] Reading regional WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
@@ -103,7 +105,7 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.GetXssMatchSet(params)
 	if err != nil {
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] Regional WAF XSS Match Set (%s) not found, error code (404)", d.Id())
 			d.SetId("")
 			return nil
@@ -123,8 +125,8 @@ func resourceAwsWafRegionalXssMatchSetRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsWafRegionalXssMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if d.HasChange("xss_match_tuple") {
 		o, n := d.GetChange("xss_match_tuple")
@@ -140,8 +142,8 @@ func resourceAwsWafRegionalXssMatchSetUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsWafRegionalXssMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).wafregionalconn
-	region := meta.(*AWSClient).region
+	conn := meta.(*awsprovider.AWSClient).WAFRegionalConn
+	region := meta.(*awsprovider.AWSClient).Region
 
 	if v, ok := d.GetOk("xss_match_tuple"); ok {
 		oldTuples := v.(*schema.Set).List()
