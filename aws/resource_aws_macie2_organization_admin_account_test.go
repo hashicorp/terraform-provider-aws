@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
@@ -15,10 +17,10 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
@@ -26,7 +28,7 @@ func testAccAwsMacie2OrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					atest.CheckAttrAccountID(resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -43,10 +45,10 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccOrganizationsAccountPreCheck(t)
+			atest.PreCheck(t)
+			atest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: testAccProviderFactories,
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckAwsMacie2OrganizationAdminAccountDestroy,
 		ErrorCheck:        testAccErrorCheckSkipMacie2OrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
@@ -54,7 +56,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccAwsMacieOrganizationAdminAccountConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMacie2Account(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsMacie2Account(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -63,7 +65,7 @@ func testAccAwsMacie2OrganizationAdminAccount_disappears(t *testing.T) {
 }
 
 func testAccErrorCheckSkipMacie2OrganizationAdminAccount(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return atest.ErrorCheckSkipMessagesContaining(t,
 		"AccessDeniedException: The request failed because you must be a user of the management account for your AWS organization to perform this operation",
 	)
 }
@@ -75,7 +77,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).macie2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).Macie2Conn
 
 		adminAccount, err := getMacie2OrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -92,7 +94,7 @@ func testAccCheckAwsMacie2OrganizationAdminAccountExists(resourceName string) re
 }
 
 func testAccCheckAwsMacie2OrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).macie2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).Macie2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_organization_admin_account" {
