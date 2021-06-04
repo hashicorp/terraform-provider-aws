@@ -14,6 +14,7 @@ import (
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsS3BucketInventory() *schema.Resource {
@@ -82,7 +83,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 									"bucket_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
+										ValidateFunc: ValidateArn,
 									},
 									"account_id": {
 										Type:         schema.TypeString,
@@ -109,7 +110,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 															"key_id": {
 																Type:         schema.TypeString,
 																Required:     true,
-																ValidateFunc: validateArn,
+																ValidateFunc: ValidateArn,
 															},
 														},
 													},
@@ -186,7 +187,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 }
 
 func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -263,7 +264,7 @@ func resourceAwsS3BucketInventoryPut(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
 	if err != nil {
@@ -294,7 +295,7 @@ func resourceAwsS3BucketInventoryDelete(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsS3BucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).s3conn
+	conn := meta.(*awsprovider.AWSClient).S3Conn
 
 	bucket, name, err := resourceAwsS3BucketInventoryParseID(d.Id())
 	if err != nil {
