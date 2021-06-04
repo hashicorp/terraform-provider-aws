@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSesTemplate_basic(t *testing.T) {
@@ -18,9 +21,9 @@ func TestAccAWSSesTemplate_basic(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -43,22 +46,22 @@ func TestAccAWSSesTemplate_basic(t *testing.T) {
 }
 
 func TestAccAWSSesTemplate_Update(t *testing.T) {
-	TestAccSkip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
+	atest.Skip(t, "Skip due to SES.UpdateTemplate eventual consistency issues")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_template.test"
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("template/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("template/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "html", "html"),
 					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
@@ -100,16 +103,16 @@ func TestAccAWSSesTemplate_disappears(t *testing.T) {
 	var template ses.Template
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		ErrorCheck:   testAccErrorCheck(t, ses.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSSES(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ses.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSesTemplateExists(resourceName, &template),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesTemplate(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSesTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +122,7 @@ func TestAccAWSSesTemplate_disappears(t *testing.T) {
 
 func testAccCheckSesTemplateExists(pr string, template *ses.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).sesconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -149,7 +152,7 @@ func testAccCheckSesTemplateExists(pr string, template *ses.Template) resource.T
 }
 
 func testAccCheckSesTemplateDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_template" {
@@ -162,7 +165,7 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 
 			gto, err := conn.GetTemplate(&input)
 			if err != nil {
-				if isAWSErr(err, ses.ErrCodeTemplateDoesNotExistException, "") {
+				if tfawserr.ErrMessageContains(err, ses.ErrCodeTemplateDoesNotExistException, "") {
 					return nil
 				}
 				return resource.NonRetryableError(err)
