@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // AccessAnalyzer is limited to one per region, so run serially
@@ -32,13 +34,13 @@ func TestAccAWSAccessAnalyzer_serial(t *testing.T) {
 }
 
 func testAccPreCheckAWSAccessAnalyzer(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).accessanalyzerconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AccessAnalyzerConn
 
 	input := &accessanalyzer.ListAnalyzersInput{}
 
 	_, err := conn.ListAnalyzers(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
