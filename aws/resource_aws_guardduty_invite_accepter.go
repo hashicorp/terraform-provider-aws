@@ -7,8 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsGuardDutyInviteAccepter() *schema.Resource {
 }
 
 func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	detectorID := d.Get("detector_id").(string)
 	invitationID := ""
@@ -107,7 +109,7 @@ func resourceAwsGuardDutyInviteAccepterCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	input := &guardduty.GetMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
@@ -116,7 +118,7 @@ func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Reading GuardDuty Master Account: %s", input)
 	output, err := conn.GetMasterAccount(input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		log.Printf("[WARN] GuardDuty Detector %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -137,7 +139,7 @@ func resourceAwsGuardDutyInviteAccepterRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsGuardDutyInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	input := &guardduty.DisassociateFromMasterAccountInput{
 		DetectorId: aws.String(d.Id()),
@@ -146,7 +148,7 @@ func resourceAwsGuardDutyInviteAccepterDelete(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Disassociating GuardDuty Detector (%s) from GuardDuty Master Account: %s", d.Id(), input)
 	_, err := conn.DisassociateFromMasterAccount(input)
 
-	if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+	if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 		return nil
 	}
 
