@@ -8,11 +8,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/lambda/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
@@ -24,9 +27,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +42,7 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
@@ -79,9 +82,9 @@ func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +96,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -117,7 +120,7 @@ func TestAccAWSLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceNameUpdated, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceNameUpdated, "arn"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 				),
 			},
 		},
@@ -132,9 +135,9 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -147,7 +150,7 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
@@ -173,9 +176,9 @@ func TestAccAWSLambdaEventSourceMapping_DynamoDB_FunctionResponseTypes(t *testin
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -210,9 +213,9 @@ func TestAccAWSLambdaEventSourceMapping_SQS_BatchWindow(t *testing.T) {
 	batchWindowUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -244,16 +247,16 @@ func TestAccAWSLambdaEventSourceMapping_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaEventSourceMappingConfigSqsBatchSize(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsLambdaEventSourceMapping(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsLambdaEventSourceMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -267,9 +270,9 @@ func TestAccAWSLambdaEventSourceMapping_SQS_changesInEnabledAreDetected(t *testi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -291,9 +294,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_StartingPositionTimestamp(t *tes
 	startingPositionTimestamp := time.Now().UTC().Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -321,9 +324,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BatchWindow(t *testing.T) {
 	batchWindowUpdate := int64(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -357,9 +360,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_ParallelizationFactor(t *testing
 	parallelizationFactorUpdate := int64(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -393,9 +396,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_TumblingWindowInSeconds(t *testi
 	tumblingWindowInSecondsUpdate := int64(300)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -429,9 +432,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttempts(t *testing.
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -465,9 +468,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsZero(t *test
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -508,9 +511,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRetryAttemptsNegativeOne(
 	maximumRetryAttemptsUpdate := int64(100)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -551,9 +554,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSeconds(t *tes
 	maximumRecordAgeInSecondsUpdate := int64(3600)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -587,9 +590,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_MaximumRecordAgeInSecondsNegativ
 	maximumRecordAgeInSecondsUpdate := int64(3600)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -623,9 +626,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_BisectBatch(t *testing.T) {
 	bisectBatchUpdate := true
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -658,9 +661,9 @@ func TestAccAWSLambdaEventSourceMapping_Kinesis_DestinationConfig(t *testing.T) 
 	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -697,9 +700,9 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "kafka"),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSMsk(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID, "kafka"),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -708,7 +711,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -731,7 +734,7 @@ func TestAccAWSLambdaEventSourceMapping_MSK(t *testing.T) {
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -746,9 +749,9 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -760,7 +763,7 @@ func TestAccAWSLambdaEventSourceMapping_SelfManagedKafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
-					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
+					atest.CheckAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -784,13 +787,13 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
+			atest.PreCheck(t)
 			testAccPreCheckAWSSecretsManager(t)
-			testAccPartitionHasServicePreCheck("mq", t)
+			atest.PreCheckPartitionService("mq", t)
 			testAccPreCheckAWSMq(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, lambda.EndpointsID, "mq", "secretsmanager"),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckLambdaEventSourceMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -817,7 +820,7 @@ func TestAccAWSLambdaEventSourceMapping_ActiveMQ(t *testing.T) {
 
 func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -828,7 +831,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 			_, err := conn.UpdateEventSourceMapping(params)
 
 			if err != nil {
-				if isAWSErr(err, lambda.ErrCodeResourceInUseException, "") {
+				if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceInUseException, "") {
 					return resource.RetryableError(fmt.Errorf(
 						"Waiting for Lambda Event Source Mapping to be ready to be updated: %v", conf.UUID))
 				}
@@ -868,7 +871,7 @@ func testAccCheckAWSLambdaEventSourceMappingIsBeingDisabled(conf *lambda.EventSo
 }
 
 func testAccCheckLambdaEventSourceMappingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -903,7 +906,7 @@ func testAccCheckAwsLambdaEventSourceMappingExists(n string, v *lambda.EventSour
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LambdaConn
 
 		eventSourceMappingConfiguration, err := finder.EventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -1093,7 +1096,7 @@ resource "aws_lambda_function" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1289,7 +1292,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                  = 100
   enabled                     = true
@@ -1302,7 +1305,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName string, batchWindow int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 100
   maximum_batching_window_in_seconds = %[1]d
@@ -1315,7 +1318,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisParallelizationFactor(rName string, parallelizationFactor int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
   parallelization_factor = %[1]d
@@ -1328,7 +1331,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisTumblingWindowInSeconds(rName string, tumblingWindowInSeconds int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                 = 100
   tumbling_window_in_seconds = %[1]d
@@ -1341,7 +1344,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRetryAttempts(rName string, maximumRetryAttempts int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size             = 100
   maximum_retry_attempts = %[1]d
@@ -1354,7 +1357,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisBisectBatch(rName string, bisectBatch bool) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                     = 100
   bisect_batch_on_function_error = %[1]t
@@ -1367,7 +1370,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisMaximumRecordAgeInSeconds(rName string, maximumRecordAgeInSeconds int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                    = 100
   maximum_record_age_in_seconds = %[1]d
@@ -1380,7 +1383,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfig(rName string, topicName string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -1406,7 +1409,7 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisBatchSize(rName, batchSize s
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[1]s
   enabled           = true
@@ -1418,7 +1421,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigKinesisUpdateFunctionName(rName string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
@@ -1442,7 +1445,7 @@ func testAccAWSLambdaEventSourceMappingConfigSqsBatchSize(rName, batchSize strin
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size       = %[1]s
   enabled          = true
@@ -1453,7 +1456,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigSqsUpdateFunctionName(rName string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-update"
@@ -1472,7 +1475,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigSqsBatchWindow(rName string, batchWindow int64) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigSQSBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                         = 10
   maximum_batching_window_in_seconds = %[1]d
@@ -1488,7 +1491,7 @@ func testAccAWSLambdaEventSourceMappingConfigMsk(rName, batchSize string) string
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.7.1"
@@ -1520,7 +1523,7 @@ func testAccAWSLambdaEventSourceMappingConfigSelfManagedKafka(rName, batchSize, 
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigKafkaBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[2]s
   enabled           = false
@@ -1555,7 +1558,7 @@ func testAccAWSLambdaEventSourceMappingConfigDynamoDbBatchSize(rName, batchSize 
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = %[1]s
   enabled           = true
@@ -1567,7 +1570,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigDynamoDbFunctionResponseTypes(rName string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -1581,7 +1584,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccAWSLambdaEventSourceMappingConfigDynamoDbNoFunctionResponseTypes(rName string) string {
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigDynamoDBBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -1597,7 +1600,7 @@ func testAccAWSLambdaEventSourceMappingConfigActiveMQ(rName, batchSize string) s
 		batchSize = "null"
 	}
 
-	return composeConfig(testAccAWSLambdaEventSourceMappingConfigMQBase(rName), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAWSLambdaEventSourceMappingConfigMQBase(rName), fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size       = %[1]s
   event_source_arn = aws_mq_broker.test.arn
