@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -89,8 +91,8 @@ func resourceAwsDbEventSubscription() *schema.Resource {
 }
 
 func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -154,13 +156,13 @@ func resourceAwsDbEventSubscriptionCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RDSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -249,7 +251,7 @@ func resourceAwsDbEventSubscriptionRetrieve(name string, conn *rds.RDS) (*rds.Ev
 }
 
 func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 
 	requestUpdate := false
 
@@ -362,14 +364,14 @@ func resourceAwsDbEventSubscriptionUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsDbEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).rdsconn
+	conn := meta.(*awsprovider.AWSClient).RDSConn
 	deleteOpts := rds.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}
 
 	_, err := conn.DeleteEventSubscription(&deleteOpts)
 
-	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 		return nil
 	}
 
@@ -391,7 +393,7 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 	return func() (interface{}, string, error) {
 		sub, err := resourceAwsDbEventSubscriptionRetrieve(name, conn)
 
-		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			return nil, "", nil
 		}
 
