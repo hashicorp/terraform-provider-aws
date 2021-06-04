@@ -7,10 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
@@ -55,8 +57,8 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 }
 
 func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := guardduty.CreateDetectorInput{
@@ -82,9 +84,9 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := guardduty.GetDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -93,7 +95,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
 	gdo, err := conn.GetDetector(&input)
 	if err != nil {
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -102,15 +104,15 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*AWSClient).accountid,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
 
-	d.Set("account_id", meta.(*AWSClient).accountid)
+	d.Set("account_id", meta.(*awsprovider.AWSClient).AccountID)
 	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
@@ -129,7 +131,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	if d.HasChanges("enable", "finding_publishing_frequency") {
 		input := guardduty.UpdateDetectorInput{
@@ -157,7 +159,7 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).guarddutyconn
+	conn := meta.(*awsprovider.AWSClient).GuardDutyConn
 
 	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),
@@ -166,7 +168,7 @@ func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}
 	err := resource.Retry(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteDetector(input)
 
-		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
+		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
 			return resource.RetryableError(err)
 		}
 
