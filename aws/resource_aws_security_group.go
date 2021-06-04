@@ -18,8 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/naming"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -240,8 +241,8 @@ func resourceAwsSecurityGroup() *schema.Resource {
 }
 
 func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	securityGroupOpts := &ec2.CreateSecurityGroupInput{}
@@ -330,7 +331,7 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			//If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6
 			//enabled SG
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() != "InvalidPermission.NotFound" && !isAWSErr(err, "InvalidParameterValue", "remote-ipv6-range") {
+			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() != "InvalidPermission.NotFound" && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "remote-ipv6-range") {
 				return fmt.Errorf(
 					"Error revoking default IPv6 egress rule for Security Group (%s): %s",
 					d.Id(), err)
@@ -343,9 +344,9 @@ func resourceAwsSecurityGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var sgRaw interface{}
 	var err error
@@ -380,8 +381,8 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 	sgArn := arn.ARN{
 		AccountID: aws.StringValue(sg.OwnerId),
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
 		Service:   ec2.ServiceName,
 	}
@@ -416,7 +417,7 @@ func resourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	var sgRaw interface{}
 	var err error
@@ -461,7 +462,7 @@ func resourceAwsSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
@@ -504,7 +505,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteSecurityGroup(input)
-		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidGroup.NotFound", "") {
 			return nil
 		}
 	}
@@ -749,7 +750,7 @@ func resourceAwsSecurityGroupUpdateRules(
 		// not have service issues.
 
 		if len(remove) > 0 || len(add) > 0 {
-			conn := meta.(*AWSClient).ec2conn
+			conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 			var err error
 			if len(remove) > 0 {
@@ -1436,7 +1437,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 	}
 
 	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
+		Filters: BuildEC2AttributeFilterList(map[string]string{
 			filterName:    resourceId,
 			"description": "AWS Lambda VPC ENI*",
 		}),
