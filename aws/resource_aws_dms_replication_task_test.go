@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDmsReplicationTask_basic(t *testing.T) {
@@ -26,9 +28,9 @@ func TestAccAWSDmsReplicationTask_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, dms.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, dms.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: dmsReplicationTaskDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -69,7 +71,7 @@ func checkDmsReplicationTaskExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DMSConn
 		resp, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{
 				{
@@ -96,7 +98,7 @@ func dmsReplicationTaskDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).dmsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DMSConn
 		resp, err := conn.DescribeReplicationTasks(&dms.DescribeReplicationTasksInput{
 			Filters: []*dms.Filter{
 				{
@@ -123,7 +125,7 @@ func dmsReplicationTaskDestroy(s *terraform.State) error {
 }
 
 func dmsReplicationTaskConfig(rName, tags string) string {
-	return composeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
+	return atest.ComposeConfig(testAccAvailableAZsNoOptInConfig(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
