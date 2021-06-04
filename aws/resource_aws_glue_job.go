@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueJob() *schema.Resource {
@@ -123,7 +125,7 @@ func resourceAwsGlueJob() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
@@ -158,8 +160,8 @@ func resourceAwsGlueJob() *schema.Resource {
 }
 
 func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -233,9 +235,9 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetJobInput{
 		JobName: aws.String(d.Id()),
@@ -244,7 +246,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Glue Job: %s", input)
 	output, err := conn.GetJob(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -260,10 +262,10 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	jobARN := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "glue",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()
 	d.Set("arn", jobARN)
@@ -322,7 +324,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	if d.HasChanges("command", "connections", "default_arguments", "description",
 		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
@@ -406,7 +408,7 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueJobDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	err := deleteGlueJob(conn, d.Id())
@@ -424,7 +426,7 @@ func deleteGlueJob(conn *glue.Glue, jobName string) error {
 
 	_, err := conn.DeleteJob(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return err
