@@ -8,8 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsAppsyncApiKey() *schema.Resource {
@@ -55,7 +57,7 @@ func resourceAwsAppsyncApiKey() *schema.Resource {
 }
 
 func resourceAwsAppsyncApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID := d.Get("api_id").(string)
 
@@ -77,7 +79,7 @@ func resourceAwsAppsyncApiKeyCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAppsyncApiKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
 	if err != nil {
@@ -102,7 +104,7 @@ func resourceAwsAppsyncApiKeyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
 	if err != nil {
@@ -131,7 +133,7 @@ func resourceAwsAppsyncApiKeyUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appsyncconn
+	conn := meta.(*awsprovider.AWSClient).AppSyncConn
 
 	apiID, keyID, err := decodeAppSyncApiKeyId(d.Id())
 	if err != nil {
@@ -144,7 +146,7 @@ func resourceAwsAppsyncApiKeyDelete(d *schema.ResourceData, meta interface{}) er
 	}
 	_, err = conn.DeleteApiKey(input)
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 			return nil
 		}
 		return err
