@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacie2Account() *schema.Resource {
@@ -55,7 +56,7 @@ func resourceAwsMacie2Account() *schema.Resource {
 }
 
 func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.EnableMacieInput{
 		ClientToken: aws.String(resource.UniqueId()),
@@ -90,13 +91,13 @@ func resourceMacie2AccountCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(fmt.Errorf("error enabling Macie Account: %w", err))
 	}
 
-	d.SetId(meta.(*AWSClient).accountid)
+	d.SetId(meta.(*awsprovider.AWSClient).AccountID)
 
 	return resourceMacie2AccountRead(ctx, d, meta)
 }
 
 func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.GetMacieSessionInput{}
 
@@ -123,7 +124,7 @@ func resourceMacie2AccountRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -144,7 +145,7 @@ func resourceMacie2AccountUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceMacie2AccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.DisableMacieInput{}
 
