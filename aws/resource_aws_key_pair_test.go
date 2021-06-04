@@ -9,9 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -27,17 +30,17 @@ func init() {
 }
 
 func testSweepKeyPairs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	ec2conn := client.(*AWSClient).ec2conn
+	EC2Conn := client.(*awsprovider.AWSClient).EC2Conn
 
-	log.Printf("Destroying the tmp keys in (%s)", client.(*AWSClient).region)
+	log.Printf("Destroying the tmp keys in (%s)", client.(*awsprovider.AWSClient).Region)
 
-	resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
+	resp, err := EC2Conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{})
 	if err != nil {
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
 			return nil
 		}
@@ -46,7 +49,7 @@ func testSweepKeyPairs(region string) error {
 
 	keyPairs := resp.KeyPairs
 	for _, d := range keyPairs {
-		_, err := ec2conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
+		_, err := EC2Conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
 			KeyName: d.KeyName,
 		})
 
@@ -64,16 +67,16 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKeyPairConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
+					atest.CheckAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
 					testAccCheckAWSKeyPairFingerprint(&keyPair, fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
@@ -95,9 +98,9 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +143,9 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	resourceName := "aws_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -168,9 +171,9 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	resourceName := "aws_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,16 +200,16 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKeyPairConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsKeyPair(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -215,7 +218,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
-	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+	EC2Conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_key_pair" {
@@ -223,7 +226,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 		}
 
 		// Try to find key pair
-		resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		resp, err := EC2Conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 			KeyNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err == nil {
@@ -233,7 +236,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		if !isAWSErr(err, "InvalidKeyPair.NotFound", "") {
+		if !tfawserr.ErrMessageContains(err, "InvalidKeyPair.NotFound", "") {
 			return err
 		}
 	}
@@ -270,9 +273,9 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 			return fmt.Errorf("No KeyPair name is set")
 		}
 
-		ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		EC2Conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
-		resp, err := ec2conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
+		resp, err := EC2Conn.DescribeKeyPairs(&ec2.DescribeKeyPairsInput{
 			KeyNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
