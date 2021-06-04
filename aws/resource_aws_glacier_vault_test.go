@@ -8,10 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,11 +25,11 @@ func init() {
 }
 
 func testSweepGlacierVaults(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).glacierconn
+	conn := client.(*awsprovider.AWSClient).GlacierConn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, lastPage bool) bool {
@@ -63,7 +66,7 @@ func testSweepGlacierVaults(region string) error {
 
 		return !lastPage
 	})
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping Glacier Vaults sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -80,9 +83,9 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +94,7 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 					testAccCheckGlacierVaultExists(resourceName, &vault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "glacier", regexp.MustCompile(`vaults/.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "glacier", regexp.MustCompile(`vaults/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
 				),
@@ -112,9 +115,9 @@ func TestAccAWSGlacierVault_notification(t *testing.T) {
 	snsResourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,9 +161,9 @@ func TestAccAWSGlacierVault_policy(t *testing.T) {
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -203,9 +206,9 @@ func TestAccAWSGlacierVault_tags(t *testing.T) {
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -248,16 +251,16 @@ func TestAccAWSGlacierVault_disappears(t *testing.T) {
 	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, glacier.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, glacier.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlacierVaultBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists(resourceName, &vault),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlacierVault(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsGlacierVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -276,7 +279,7 @@ func testAccCheckGlacierVaultExists(name string, vault *glacier.DescribeVaultOut
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlacierConn
 		out, err := conn.DescribeVault(&glacier.DescribeVaultInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
@@ -311,12 +314,12 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).glacierconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlacierConn
 		out, err := conn.GetVaultNotifications(&glacier.GetVaultNotificationsInput{
 			VaultName: aws.String(rs.Primary.ID),
 		})
 
-		if !isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 			return fmt.Errorf("Expected ResourceNotFoundException for Vault %s Notification Block but got %s", rs.Primary.ID, err)
 		}
 
@@ -330,7 +333,7 @@ func testAccCheckVaultNotificationsMissing(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckGlacierVaultDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glacierconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GlacierConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glacier_vault" {
@@ -342,7 +345,7 @@ func testAccCheckGlacierVaultDestroy(s *terraform.State) error {
 		}
 		if _, err := conn.DescribeVault(input); err != nil {
 			// Verify the error is what we want
-			if isAWSErr(err, glacier.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
 
