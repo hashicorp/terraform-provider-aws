@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIamGroupPolicy() *schema.Resource {
@@ -58,7 +59,7 @@ func resourceAwsIamGroupPolicy() *schema.Resource {
 }
 
 func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(d.Get("group").(string)),
@@ -75,7 +76,7 @@ func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	}
 	request.PolicyName = aws.String(policyName)
 
-	if _, err := iamconn.PutGroupPolicy(request); err != nil {
+	if _, err := IAMConn.PutGroupPolicy(request); err != nil {
 		return fmt.Errorf("Error putting IAM group policy %s: %s", *request.PolicyName, err)
 	}
 
@@ -84,7 +85,7 @@ func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())
 	if err != nil {
@@ -101,7 +102,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 	err = resource.Retry(waiter.PropagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = iamconn.GetGroupPolicy(request)
+		getResp, err = IAMConn.GetGroupPolicy(request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -115,7 +116,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = iamconn.GetGroupPolicy(request)
+		getResp, err = IAMConn.GetGroupPolicy(request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
@@ -153,7 +154,7 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	iamconn := meta.(*AWSClient).iamconn
+	IAMConn := meta.(*awsprovider.AWSClient).IAMConn
 
 	group, name, err := resourceAwsIamGroupPolicyParseId(d.Id())
 	if err != nil {
@@ -165,8 +166,8 @@ func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) e
 		GroupName:  aws.String(group),
 	}
 
-	if _, err := iamconn.DeleteGroupPolicy(request); err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+	if _, err := IAMConn.DeleteGroupPolicy(request); err != nil {
+		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)
