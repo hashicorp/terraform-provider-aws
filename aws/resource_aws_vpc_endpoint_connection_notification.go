@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
@@ -35,7 +37,7 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 			"connection_notification_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"connection_events": {
 				Type:     schema.TypeSet,
@@ -57,7 +59,7 @@ func resourceAwsVpcEndpointConnectionNotification() *schema.Resource {
 }
 
 func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
@@ -84,13 +86,13 @@ func resourceAwsVpcEndpointConnectionNotificationCreate(d *schema.ResourceData, 
 }
 
 func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	resp, err := conn.DescribeVpcEndpointConnectionNotifications(&ec2.DescribeVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
 			log.Printf("[WARN] VPC Endpoint connection notification (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -103,7 +105,7 @@ func resourceAwsVpcEndpointConnectionNotificationRead(d *schema.ResourceData, me
 }
 
 func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.ModifyVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationId: aws.String(d.Id()),
@@ -126,14 +128,14 @@ func resourceAwsVpcEndpointConnectionNotificationUpdate(d *schema.ResourceData, 
 }
 
 func resourceAwsVpcEndpointConnectionNotificationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint connection notification: %s", d.Id())
 	_, err := conn.DeleteVpcEndpointConnectionNotifications(&ec2.DeleteVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationIds: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidConnectionNotification", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidConnectionNotification", "") {
 			log.Printf("[DEBUG] VPC Endpoint connection notification %s is already gone", d.Id())
 		} else {
 			return fmt.Errorf("Error deleting VPC Endpoint connection notification: %s", err.Error())
