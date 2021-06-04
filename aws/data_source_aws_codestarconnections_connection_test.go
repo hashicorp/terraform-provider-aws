@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
@@ -15,9 +16,12 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_basic(t *testing.T) {
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck: atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigBasic(rName),
@@ -40,9 +44,12 @@ func TestAccDataSourceAwsCodeStarConnectionsConnection_tags(t *testing.T) {
 	resourceName := "aws_codestarconnections_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(codestarconnections.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, codestarconnections.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck: atest.ErrorCheck(t, codestarconnections.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSCodeStarConnectionsConnectionConfigTags(rName),
