@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfelasticache "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/elasticache/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 const (
@@ -226,7 +227,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
-						validateArn,
+						ValidateArn,
 						validation.StringDoesNotContainAny(","),
 					),
 				},
@@ -274,8 +275,8 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 }
 
 func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &elasticache.CreateCacheClusterInput{}
@@ -375,9 +376,9 @@ func resourceAwsElasticacheClusterCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsElasticacheClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	c, err := finder.CacheClusterWithNodeInfoByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -491,7 +492,7 @@ func elasticacheSetResourceDataEngineVersionFromCacheCluster(d *schema.ResourceD
 }
 
 func resourceAwsElasticacheClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -648,12 +649,12 @@ func (b byCacheNodeId) Less(i, j int) bool {
 }
 
 func resourceAwsElasticacheClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).elasticacheconn
+	conn := meta.(*awsprovider.AWSClient).ElastiCacheConn
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := deleteElasticacheCacheCluster(conn, d.Id(), finalSnapshotID)
 	if err != nil {
-		if isAWSErr(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
+		if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheClusterNotFoundFault, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", d.Id(), err)
