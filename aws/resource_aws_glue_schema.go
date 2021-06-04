@@ -7,12 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfglue "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/glue/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueSchema() *schema.Resource {
@@ -41,7 +43,7 @@ func resourceAwsGlueSchema() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"registry_name": {
 				Type:     schema.TypeString,
@@ -93,8 +95,8 @@ func resourceAwsGlueSchema() *schema.Resource {
 }
 
 func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &glue.CreateSchemaInput{
@@ -132,13 +134,13 @@ func resourceAwsGlueSchemaCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GlueConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := finder.SchemaByID(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			log.Printf("[WARN] Glue Schema (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -192,7 +194,7 @@ func resourceAwsGlueSchemaRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: tfglue.CreateAwsGlueSchemaID(d.Id()),
@@ -253,7 +255,7 @@ func resourceAwsGlueSchemaUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsGlueSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{
@@ -262,7 +264,7 @@ func resourceAwsGlueSchemaDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err := conn.DeleteSchema(input)
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error deleting Glue Schema (%s): %w", d.Id(), err)
@@ -270,7 +272,7 @@ func resourceAwsGlueSchemaDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err = waiter.SchemaDeleted(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("error waiting for Glue Schema (%s) to be deleted: %w", d.Id(), err)
