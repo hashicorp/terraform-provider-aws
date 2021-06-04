@@ -101,7 +101,7 @@ if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException
 
 The Amazon Resource Name in the error message will be different for every environment and does not add value to the check. The AWS Backup suffix is also extraneous and could change should the service ever rename.
 
-_The codebase also contains an older style `isAWSErr(err, "CodeEquals", "MessageContains")` helper, which has not yet been refactored out. The helpers above are preferred for clarity._
+_The codebase also contains an older style `AWSErr(err, "CodeEquals", "MessageContains")` helper, which has not yet been refactored out. The helpers above are preferred for clarity._
 
 #### Use AWS Go SDK Error Code Constants
 
