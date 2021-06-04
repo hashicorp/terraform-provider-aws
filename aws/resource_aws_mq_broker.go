@@ -20,8 +20,9 @@ import (
 	"github.com/mitchellh/copystructure"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/nullable"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/mq/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMqBroker() *schema.Resource {
@@ -101,7 +102,7 @@ func resourceAwsMqBroker() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"use_aws_owned_key": {
 							Type:     schema.TypeBool,
@@ -344,8 +345,8 @@ func resourceAwsMqBroker() *schema.Resource {
 }
 
 func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MQConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("broker_name").(string)
@@ -413,9 +414,9 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MQConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
 		BrokerId: aws.String(d.Id()),
@@ -499,7 +500,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*awsprovider.AWSClient).MQConn
 
 	requiresReboot := false
 
@@ -569,7 +570,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsMqBrokerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*awsprovider.AWSClient).MQConn
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
 	_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
