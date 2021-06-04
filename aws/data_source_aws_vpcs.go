@@ -7,7 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsVpcs() *schema.Resource {
@@ -29,7 +30,7 @@ func dataSourceAwsVpcs() *schema.Resource {
 }
 
 func dataSourceAwsVpcsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.DescribeVpcsInput{}
 
@@ -65,7 +66,7 @@ func dataSourceAwsVpcsRead(d *schema.ResourceData, meta interface{}) error {
 		vpcs = append(vpcs, aws.StringValue(vpc.VpcId))
 	}
 
-	d.SetId(meta.(*AWSClient).region)
+	d.SetId(meta.(*awsprovider.AWSClient).Region)
 
 	if err := d.Set("ids", vpcs); err != nil {
 		return fmt.Errorf("error setting vpc ids: %w", err)
