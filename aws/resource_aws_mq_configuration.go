@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMqConfiguration() *schema.Resource {
@@ -88,8 +90,8 @@ func resourceAwsMqConfiguration() *schema.Resource {
 }
 
 func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MQConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := mq.CreateConfigurationRequest{
@@ -118,16 +120,16 @@ func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).MQConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MQ Configuration %s", d.Id())
 	out, err := conn.DescribeConfiguration(&mq.DescribeConfigurationInput{
 		ConfigurationId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, mq.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, mq.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -173,7 +175,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsMqConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mqconn
+	conn := meta.(*awsprovider.AWSClient).MQConn
 
 	if d.HasChanges("data", "description") {
 		rawData := d.Get("data").(string)
