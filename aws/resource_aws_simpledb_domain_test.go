@@ -9,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 	resourceName := "aws_simpledb_domain.test_domain"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(simpledb.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, simpledb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(simpledb.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, simpledb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -36,7 +38,7 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 }
 
 func testAccCheckAWSSimpleDBDomainDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).simpledbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SimpleDBConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_simpledb_domain" {
@@ -72,7 +74,7 @@ func testAccCheckAWSSimpleDBDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SimpleDB domain with that name exists")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).simpledbconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SimpleDBConn
 		input := &simpledb.DomainMetadataInput{
 			DomainName: aws.String(rs.Primary.ID),
 		}
