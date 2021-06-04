@@ -7,10 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -21,14 +24,14 @@ func init() {
 }
 
 func testSweepIotThingPrincipalAttachments(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*AWSClient).iotconn
-	sweepResources := make([]*testSweepResource, 0)
+	conn := client.(*awsprovider.AWSClient).IoTConn
+	sweepResources := make([]*atest.TestSweepResource, 0)
 	var errs *multierror.Error
 
 	input := &iot.ListThingsInput{}
@@ -56,7 +59,7 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 					d.Set("principal", principal)
 					d.Set("thing", thing.ThingName)
 
-					sweepResources = append(sweepResources, NewTestSweepResource(r, d, client))
+					sweepResources = append(sweepResources, atest.NewTestSweepResource(r, d, client))
 				}
 
 				return !lastPage
@@ -74,11 +77,11 @@ func testSweepIotThingPrincipalAttachments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Principal Attachment for %s: %w", region, err))
 	}
 
-	if err := testSweepResourceOrchestrator(sweepResources); err != nil {
+	if err := atest.TestSweepResourceOrchestrator(sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Principal Attachment for %s: %w", region, err))
 	}
 
-	if testSweepSkipSweepError(errs.ErrorOrNil()) {
+	if atest.SweepSkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -91,9 +94,9 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 	thingName2 := acctest.RandomWithPrefix("tf-acc2")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, iot.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, iot.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSIotThingPrincipalAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -141,7 +144,7 @@ func TestAccAWSIotThingPrincipalAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckAWSIotThingPrincipalAttachmentDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).IoTConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_principal_attachment" {
@@ -178,7 +181,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 			return fmt.Errorf("No attachment")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IoTConn
 		thing := rs.Primary.Attributes["thing"]
 		principal := rs.Primary.Attributes["principal"]
 
@@ -198,7 +201,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentExists(n string) resource.TestChe
 
 func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).IoTConn
 
 		principalARNs := make(map[string]string)
 
@@ -214,7 +217,7 @@ func testAccCheckAWSIotThingPrincipalAttachmentStatus(thingName string, exists b
 			ThingName: aws.String(thingName),
 		})
 
-		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
 			if exists {
 				return fmt.Errorf("Error: Thing (%s) exists, but expected to be removed", thingName)
 			} else {
