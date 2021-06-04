@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsIotCertificate() *schema.Resource {
@@ -49,7 +50,7 @@ func resourceAwsIotCertificate() *schema.Resource {
 }
 
 func resourceAwsIotCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	if _, ok := d.GetOk("csr"); ok {
 		log.Printf("[DEBUG] Creating certificate from CSR")
@@ -82,7 +83,7 @@ func resourceAwsIotCertificateCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsIotCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	out, err := conn.DescribeCertificate(&iot.DescribeCertificateInput{
 		CertificateId: aws.String(d.Id()),
@@ -99,7 +100,7 @@ func resourceAwsIotCertificateRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsIotCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	if d.HasChange("active") {
 		status := iot.CertificateStatusInactive
@@ -120,7 +121,7 @@ func resourceAwsIotCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsIotCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).iotconn
+	conn := meta.(*awsprovider.AWSClient).IoTConn
 
 	_, err := conn.UpdateCertificate(&iot.UpdateCertificateInput{
 		CertificateId: aws.String(d.Id()),
