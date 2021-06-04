@@ -10,15 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsEmrManagedScalingPolicy_basic(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -41,9 +43,9 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumCoreCapacityUnits(t 
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -66,9 +68,9 @@ func TestAccAwsEmrManagedScalingPolicy_ComputeLimits_MaximumOndemandCapacityUnit
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 
 		Steps: []resource.TestStep{
@@ -91,16 +93,16 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 	resourceName := "aws_emr_managed_scaling_policy.testpolicy"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { atest.PreCheck(t) },
 		ErrorCheck:   testAccErrorCheckSkipEmrManagedScalingPolicy(t),
-		Providers:    testAccProviders,
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSEmrManagedScalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEmrManagedScalingPolicy_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEmrManagedScalingPolicyExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsEMRManagedScalingPolicy(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsEMRManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,7 +112,7 @@ func TestAccAwsEmrManagedScalingPolicy_disappears(t *testing.T) {
 
 // testAccErrorCheckSkipEmrManagedScalingPolicy skips tests that have error messages indicating unsupported features
 func testAccErrorCheckSkipEmrManagedScalingPolicy(t *testing.T) resource.ErrorCheckFunc {
-	return testAccErrorCheckSkipMessagesContaining(t,
+	return atest.ErrorCheckSkipMessagesContaining(t,
 		"Managed scaling is not available",
 	)
 }
@@ -167,7 +169,7 @@ func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
@@ -183,7 +185,7 @@ func testAccCheckAWSEmrManagedScalingPolicyExists(n string) resource.TestCheckFu
 }
 
 func testAccCheckAWSEmrManagedScalingPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).emrconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).EMRConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_managed_scaling_policy" {
 			continue
