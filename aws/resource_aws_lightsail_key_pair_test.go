@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
@@ -18,9 +20,9 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -42,9 +44,9 @@ func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -68,9 +70,9 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -93,9 +95,9 @@ func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
 	var conf1, conf2 lightsail.KeyPair
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
-		ErrorCheck:   testAccErrorCheck(t, lightsail.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSLightsail(t) },
+		ErrorCheck:   atest.ErrorCheck(t, lightsail.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,7 +124,7 @@ func testAccCheckAWSLightsailKeyPairExists(n string, res *lightsail.KeyPair) res
 			return errors.New("No LightsailKeyPair set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
@@ -146,7 +148,7 @@ func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).LightsailConn
 
 		respKeyPair, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
