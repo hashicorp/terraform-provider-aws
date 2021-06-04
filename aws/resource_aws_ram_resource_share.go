@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ram/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRamResourceShare() *schema.Resource {
@@ -54,8 +56,8 @@ func resourceAwsRamResourceShare() *schema.Resource {
 }
 
 func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ram.CreateResourceShareInput{
@@ -84,9 +86,9 @@ func resourceAwsRamResourceShareCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RAMConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	request := &ram.GetResourceSharesInput{
 		ResourceShareArns: []*string{aws.String(d.Id())},
@@ -95,7 +97,7 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 
 	output, err := conn.GetResourceShares(request)
 	if err != nil {
-		if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 			log.Printf("[WARN] No RAM resource share by ARN (%s) found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -136,7 +138,7 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*awsprovider.AWSClient).RAMConn
 
 	if d.HasChanges("name", "allow_external_principals") {
 		request := &ram.UpdateResourceShareInput{
@@ -148,7 +150,7 @@ func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{})
 		log.Println("[DEBUG] Update RAM resource share request:", request)
 		_, err := conn.UpdateResourceShare(request)
 		if err != nil {
-			if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 				log.Printf("[WARN] No RAM resource share by ARN (%s) found", d.Id())
 				d.SetId("")
 				return nil
@@ -169,7 +171,7 @@ func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsRamResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ramconn
+	conn := meta.(*awsprovider.AWSClient).RAMConn
 
 	deleteResourceShareInput := &ram.DeleteResourceShareInput{
 		ResourceShareArn: aws.String(d.Id()),
@@ -178,7 +180,7 @@ func resourceAwsRamResourceShareDelete(d *schema.ResourceData, meta interface{})
 	log.Println("[DEBUG] Delete RAM resource share request:", deleteResourceShareInput)
 	_, err := conn.DeleteResourceShare(deleteResourceShareInput)
 	if err != nil {
-		if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+		if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting RAM resource share %s: %s", d.Id(), err)
