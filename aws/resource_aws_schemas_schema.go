@@ -11,10 +11,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfschemas "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/schemas/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSchemasSchema() *schema.Resource {
@@ -91,8 +92,8 @@ func resourceAwsSchemasSchema() *schema.Resource {
 }
 
 func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
@@ -127,9 +128,9 @@ func resourceAwsSchemasSchemaCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
 
@@ -187,7 +188,7 @@ func resourceAwsSchemasSchemaRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
@@ -229,7 +230,7 @@ func resourceAwsSchemasSchemaUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsSchemasSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).schemasconn
+	conn := meta.(*awsprovider.AWSClient).SchemasConn
 
 	name, registryName, err := tfschemas.SchemaParseResourceID(d.Id())
 
