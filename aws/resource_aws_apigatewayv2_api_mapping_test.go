@@ -8,10 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 // These tests need to be serialized, else resources get orphaned after "TooManyRequests" errors.
@@ -42,9 +45,9 @@ func TestAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T) {
 
 func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -67,9 +70,9 @@ func testAccAWSAPIGatewayV2ApiMapping_basic(t *testing.T, rName string, certific
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -95,9 +98,9 @@ func testAccAWSAPIGatewayV2ApiMapping_disappears(t *testing.T, rName string, cer
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -120,9 +123,9 @@ func testAccAWSAPIGatewayV2ApiMapping_ApiMappingKey(t *testing.T, rName string, 
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiMappingDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,7 +159,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 		privateKey := tlsRsaPrivateKeyPem(2048)
 		certificate := tlsRsaX509SelfSignedCertificatePem(privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := testAccProvider.Meta().(*AWSClient).acmconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ACMConn
 
 		output, err := conn.ImportCertificate(&acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
@@ -176,7 +179,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingCreateCertificate(rName string, certif
 }
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_api_mapping" {
@@ -187,7 +190,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 			ApiMappingId: aws.String(rs.Primary.ID),
 			DomainName:   aws.String(rs.Primary.Attributes["domain_name"]),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -202,7 +205,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingDestroy(s *terraform.State) error {
 
 func testAccCheckAWSAPIGatewayV2ApiMappingDisappears(domainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{
 			ApiMappingId: v.ApiMappingId,
@@ -224,7 +227,7 @@ func testAccCheckAWSAPIGatewayV2ApiMappingExists(n string, vDomainName *string, 
 			return fmt.Errorf("No API Gateway v2 API mapping ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		domainName := aws.String(rs.Primary.Attributes["domain_name"])
 		resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
