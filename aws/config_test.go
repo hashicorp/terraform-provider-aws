@@ -6,27 +6,28 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) {
 	testCases := []struct {
 		Name      string
-		AWSClient *AWSClient
+		AWSClient *awsprovider.AWSClient
 		Prefix    string
 		Expected  string
 	}{
 		{
 			Name: "AWS Commercial",
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
+			AWSClient: &awsprovider.AWSClient{
+				DNSSuffix: "amazonaws.com",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
 		},
 		{
 			Name: "AWS China",
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
+			AWSClient: &awsprovider.AWSClient{
+				DNSSuffix: "amazonaws.com.cn",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -47,24 +48,24 @@ func TestAWSClientPartitionHostname(t *testing.T) {
 func TestAWSClientRegionalHostname(t *testing.T) {
 	testCases := []struct {
 		Name      string
-		AWSClient *AWSClient
+		AWSClient *awsprovider.AWSClient
 		Prefix    string
 		Expected  string
 	}{
 		{
 			Name: "AWS Commercial",
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com",
-				region:    "us-west-2", //lintignore:AWSAT003
+			AWSClient: &awsprovider.AWSClient{
+				DNSSuffix: "amazonaws.com",
+				Region:    "us-west-2", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.us-west-2.amazonaws.com", //lintignore:AWSAT003
 		},
 		{
 			Name: "AWS China",
-			AWSClient: &AWSClient{
-				dnsSuffix: "amazonaws.com.cn",
-				region:    "cn-northwest-1", //lintignore:AWSAT003
+			AWSClient: &awsprovider.AWSClient{
+				DNSSuffix: "amazonaws.com.cn",
+				Region:    "cn-northwest-1", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
 			Expected: "test.cn-northwest-1.amazonaws.com.cn", //lintignore:AWSAT003
@@ -104,7 +105,7 @@ func TestGetSupportedEC2Platforms(t *testing.T) {
 	defer closeFunc()
 	conn := ec2.New(sess)
 
-	platforms, err := GetSupportedEC2Platforms(conn)
+	platforms, err := awsprovider.SupportedEC2Platforms(conn)
 	if err != nil {
 		t.Fatalf("Expected no error, received: %s", err)
 	}
