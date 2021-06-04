@@ -10,8 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -22,17 +25,17 @@ func init() {
 }
 
 func testSweepDataSyncLocationFsxWindows(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.ListLocationsInput{}
 	for {
 		output, err := conn.ListLocations(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping DataSync Location FSX Windows sweep for %s: %s", region, err)
 			return nil
 		}
@@ -59,7 +62,7 @@ func testSweepDataSyncLocationFsxWindows(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 				continue
 			}
 
@@ -85,19 +88,19 @@ func TestAccAWSDataSyncLocationFsxWindows_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -122,19 +125,19 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,12 +151,12 @@ func TestAccAWSDataSyncLocationFsxWindows_subdirectory(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -180,12 +183,12 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPartitionHasServicePreCheck(fsx.EndpointsID, t)
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(fsx.EndpointsID, t)
 			testAccPreCheckAWSDataSync(t)
 		},
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationFsxWindowsDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,7 +228,7 @@ func TestAccAWSDataSyncLocationFsxWindows_tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_fsx_windows_file_system" {
@@ -238,7 +241,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsDestroy(s *terraform.State) error 
 
 		_, err := conn.DescribeLocationFsxWindows(input)
 
-		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 			return nil
 		}
 
@@ -257,7 +260,7 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 		input := &datasync.DescribeLocationFsxWindowsInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -290,7 +293,7 @@ func testAccWSDataSyncLocationFsxWindowsImportStateIdFunc(resourceName string) r
 }
 
 func testAccAWSDataSyncLocationFsxWindowsConfig() string {
-	return composeConfig(testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1(), `
+	return atest.ComposeConfig(testAccAwsFsxWindowsFileSystemConfigSecurityGroupIds1(), `
 resource "aws_datasync_location_fsx_windows_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
   user                = "SomeUser"
