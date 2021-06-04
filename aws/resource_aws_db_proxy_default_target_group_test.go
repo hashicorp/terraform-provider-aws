@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
@@ -18,16 +21,16 @@ func TestAccAWSDBProxyDefaultTargetGroup_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBProxyDefaultTargetGroupConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
 						"connection_borrow_timeout":    "120",
@@ -53,16 +56,16 @@ func TestAccAWSDBProxyDefaultTargetGroup_EmptyConnectionPoolConfig(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBProxyDefaultTargetGroupConfig_EmptyConnectionPoolConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBProxyTargetGroupExists(resourceName, &dbProxyTargetGroup),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
 						"connection_borrow_timeout":    "120",
@@ -88,9 +91,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_ConnectionBorrowTimeout(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -122,9 +125,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_InitQuery(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -156,9 +159,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxConnectionsPercent(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -190,9 +193,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_MaxIdleConnectionsPercent(t *testing.T)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -225,9 +228,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_SessionPinningFilters(t *testing.T) {
 	sessionPinningFilters := "EXCLUDE_VARIABLE_SETS"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -260,9 +263,9 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 	resourceName := "aws_db_proxy_default_target_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccDBProxyPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, rds.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccDBProxyPreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, rds.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDBProxyTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -271,7 +274,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 					testAccCheckAWSDBProxyExists(resourceName, &v),
 					// DB Proxy default Target Group implicitly exists so it cannot be removed.
 					// Verify disappearance handling for DB Proxy removal instead.
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsDbProxy(), dbProxyResourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsDbProxy(), dbProxyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -280,7 +283,7 @@ func TestAccAWSDBProxyDefaultTargetGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_default_target_group" {
@@ -301,7 +304,7 @@ func testAccCheckAWSDBProxyTargetGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !isAWSErr(err, rds.ErrCodeDBProxyNotFoundFault, "") {
+		if !tfawserr.ErrMessageContains(err, rds.ErrCodeDBProxyNotFoundFault, "") {
 			return err
 		}
 	}
@@ -320,7 +323,7 @@ func testAccCheckAWSDBProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).RDSConn
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
 			DBProxyName:     aws.String(rs.Primary.ID),
