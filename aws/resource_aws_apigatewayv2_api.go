@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayV2Api() *schema.Resource {
@@ -86,7 +88,7 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -151,8 +153,8 @@ func resourceAwsApiGatewayV2Api() *schema.Resource {
 }
 
 func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 
 	if body, ok := d.GetOk("body"); ok {
 		revertReq := &apigatewayv2.UpdateApiInput{
@@ -215,8 +217,8 @@ func resourceAwsAPIGatewayV2ImportOpenAPI(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	protocolType := d.Get("protocol_type").(string)
@@ -270,14 +272,14 @@ func resourceAwsApiGatewayV2ApiCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -289,9 +291,9 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("api_endpoint", resp.ApiEndpoint)
 	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
 	apiArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
@@ -301,10 +303,10 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("description", resp.Description)
 	d.Set("disable_execute_api_endpoint", resp.DisableExecuteApiEndpoint)
 	executionArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  d.Id(),
 	}.String()
 	d.Set("execution_arn", executionArn)
@@ -328,7 +330,7 @@ func resourceAwsApiGatewayV2ApiRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	deleteCorsConfiguration := false
 	if d.HasChange("cors_configuration") {
@@ -399,13 +401,13 @@ func resourceAwsApiGatewayV2ApiUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayV2ApiDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayv2conn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
 	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
