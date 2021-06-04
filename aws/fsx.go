@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -32,7 +33,7 @@ func refreshFsxFileSystemLifecycle(conn *fsx.FSx, id string) resource.StateRefre
 	return func() (interface{}, string, error) {
 		filesystem, err := describeFsxFileSystem(conn, id)
 
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrMessageContains(err, fsx.ErrCodeFileSystemNotFound, "") {
 			return nil, "", nil
 		}
 
@@ -52,7 +53,7 @@ func refreshFsxFileSystemAdministrativeActionsStatusFileSystemUpdate(conn *fsx.F
 	return func() (interface{}, string, error) {
 		filesystem, err := describeFsxFileSystem(conn, id)
 
-		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+		if tfawserr.ErrMessageContains(err, fsx.ErrCodeFileSystemNotFound, "") {
 			return nil, "", nil
 		}
 
