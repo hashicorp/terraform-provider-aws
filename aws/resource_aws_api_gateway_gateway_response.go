@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
@@ -65,7 +67,7 @@ func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
 }
 
 func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	templates := make(map[string]string)
 	if kv, ok := d.GetOk("response_templates"); ok {
@@ -106,7 +108,7 @@ func resourceAwsApiGatewayGatewayResponsePut(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Reading API Gateway Gateway Response %s", d.Id())
 	gatewayResponse, err := conn.GetGatewayResponse(&apigateway.GetGatewayResponseInput{
@@ -114,7 +116,7 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -133,7 +135,7 @@ func resourceAwsApiGatewayGatewayResponseRead(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 
 	_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
@@ -141,7 +143,7 @@ func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta int
 		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
