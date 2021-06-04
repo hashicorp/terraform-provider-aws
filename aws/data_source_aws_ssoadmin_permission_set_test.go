@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
@@ -16,9 +17,9 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_arn(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck: testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck: atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByArnConfig(rName),
@@ -41,9 +42,9 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck: testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck: atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAWSSSOPermissionSetByNameConfig(rName),
@@ -63,9 +64,9 @@ func TestAccDataSourceAWSSSOAdminPermissionSet_name(t *testing.T) {
 func TestAccDataSourceAWSSSOAdminPermissionSet_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
-		ErrorCheck: testAccErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t); testAccPreCheckAWSSSOAdminInstances(t) },
+		ErrorCheck: atest.ErrorCheck(t, ssoadmin.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAWSSSOPermissionSetByNameConfig_nonExistent,
@@ -95,7 +96,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 }
 
 func testAccDataSourceAWSSSOPermissionSetByArnConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
@@ -106,7 +107,7 @@ data "aws_ssoadmin_permission_set" "test" {
 }
 
 func testAccDataSourceAWSSSOPermissionSetByNameConfig(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccDataSourceAWSSSOPermissionSetBaseConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
