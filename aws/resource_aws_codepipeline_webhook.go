@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCodePipelineWebhook() *schema.Resource {
@@ -133,8 +134,8 @@ func extractCodePipelineWebhookAuthConfig(authType string, authConfig map[string
 }
 
 func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	authType := d.Get("authentication").(string)
 
@@ -232,9 +233,9 @@ func flattenCodePipelineWebhookAuthenticationConfiguration(authConfig *codepipel
 }
 
 func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	arn := d.Id()
 	webhook, err := getCodePipelineWebhook(conn, arn)
@@ -292,7 +293,7 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCodePipelineWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -306,7 +307,7 @@ func resourceAwsCodePipelineWebhookUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsCodePipelineWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).codepipelineconn
+	conn := meta.(*awsprovider.AWSClient).CodePipelineConn
 	name := d.Get("name").(string)
 
 	input := codepipeline.DeleteWebhookInput{
