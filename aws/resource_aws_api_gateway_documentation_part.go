@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
@@ -71,7 +73,7 @@ func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
 }
 
 func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	apiId := d.Get("rest_api_id").(string)
 	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
@@ -88,7 +90,7 @@ func resourceAwsApiGatewayDocumentationPartCreate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
 
@@ -102,7 +104,7 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 		RestApiId:           aws.String(apiId),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway Documentation Part (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -120,7 +122,7 @@ func resourceAwsApiGatewayDocumentationPartRead(d *schema.ResourceData, meta int
 }
 
 func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
 	if err != nil {
@@ -157,7 +159,7 @@ func resourceAwsApiGatewayDocumentationPartUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	apiId, id, err := decodeApiGatewayDocumentationPartId(d.Id())
 	if err != nil {
