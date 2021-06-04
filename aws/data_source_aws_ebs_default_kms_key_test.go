@@ -8,13 +8,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccDataSourceAwsEBSDefaultKmsKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, ec2.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, ec2.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsEBSDefaultKmsKeyConfig,
@@ -28,7 +30,7 @@ func TestAccDataSourceAwsEBSDefaultKmsKey_basic(t *testing.T) {
 
 func testAccCheckDataSourceAwsEBSDefaultKmsKey(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).EC2Conn
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
