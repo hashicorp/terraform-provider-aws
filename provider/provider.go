@@ -1,8 +1,6 @@
 package provider
 
 import (
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/mutexkv"
 )
@@ -191,13 +189,15 @@ func Provider() *schema.Provider {
 		return providerConfigure(d, terraformVersion)
 	}
 
-	for {
-		if registrationComplete {
-			break
-		}
+	/*
+		for {
+			if registrationComplete {
+				break
+			}
 
-		time.Sleep(10 * time.Second)
-	}
+			time.Sleep(10 * time.Second)
+		}
+	*/
 
 	provider.DataSourcesMap = dataSources
 	provider.ResourcesMap = resources
