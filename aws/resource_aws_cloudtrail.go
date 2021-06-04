@@ -6,11 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -77,7 +79,7 @@ func resourceAwsCloudTrail() *schema.Resource {
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"event_selector": {
 				Type:     schema.TypeList,
@@ -154,8 +156,8 @@ func resourceAwsCloudTrail() *schema.Resource {
 }
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudTrailConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := cloudtrail.CreateTrailInput{
@@ -200,10 +202,10 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		t, err = conn.CreateTrail(&input)
 		if err != nil {
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -246,9 +248,9 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudTrailConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -336,7 +338,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		TrailName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if !isAWSErr(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
+		if !tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInsightNotEnabledException, "") {
 			return fmt.Errorf("error getting Cloud Trail (%s) Insight Selectors: %w", d.Id(), err)
 		}
 	}
@@ -350,7 +352,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
+	conn := meta.(*awsprovider.AWSClient).CloudTrailConn
 
 	input := cloudtrail.UpdateTrailInput{
 		Name: aws.String(d.Id()),
@@ -393,10 +395,10 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		var err error
 		t, err = conn.UpdateTrail(&input)
 		if err != nil {
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsRoleArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
+			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeInvalidCloudWatchLogsLogGroupArnException, "Access denied.") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -446,7 +448,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsCloudTrailDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudtrailconn
+	conn := meta.(*awsprovider.AWSClient).CloudTrailConn
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
 	_, err := conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
