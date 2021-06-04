@@ -7,15 +7,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSOutpostsOutpostsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outposts.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
-		ErrorCheck:   testAccErrorCheck(t, outposts.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		ErrorCheck:   atest.ErrorCheck(t, outposts.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
@@ -48,13 +50,13 @@ func testAccCheckOutpostsOutpostsAttributes(dataSourceName string) resource.Test
 }
 
 func testAccPreCheckAWSOutpostsOutposts(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).outpostsconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).OutpostsConn
 
 	input := &outposts.ListOutpostsInput{}
 
 	output, err := conn.ListOutposts(input)
 
-	if testAccPreCheckSkipError(err) {
+	if atest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
