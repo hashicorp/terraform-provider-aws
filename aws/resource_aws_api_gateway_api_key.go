@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsApiGatewayApiKey() *schema.Resource {
@@ -73,8 +75,8 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 }
 
 func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway API Key")
 
@@ -95,9 +97,9 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway API Key: %s", d.Id())
 
@@ -106,7 +108,7 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 		IncludeValue: aws.Bool(true),
 	})
 	if err != nil {
-		if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 			log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -127,9 +129,9 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -176,7 +178,7 @@ func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apig
 }
 
 func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
@@ -199,14 +201,14 @@ func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigatewayconn
+	conn := meta.(*awsprovider.AWSClient).APIGatewayConn
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 
 	_, err := conn.DeleteApiKey(&apigateway.DeleteApiKeyInput{
 		ApiKey: aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
 		return nil
 	}
 
