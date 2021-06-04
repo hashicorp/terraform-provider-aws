@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSignerSigningJob() *schema.Resource {
@@ -143,7 +144,7 @@ func dataSourceAwsSignerSigningJob() *schema.Resource {
 }
 
 func dataSourceAwsSignerSigningJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).signerconn
+	conn := meta.(*awsprovider.AWSClient).SignerConn
 	jobId := d.Get("job_id").(string)
 
 	describeSigningJobOutput, err := conn.DescribeSigningJob(&signer.DescribeSigningJobInput{
