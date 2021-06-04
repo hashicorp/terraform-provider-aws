@@ -7,9 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
@@ -40,13 +42,13 @@ func resourceAwsCloudWatchLogDestination() *schema.Resource {
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"target_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"arn": {
@@ -58,7 +60,7 @@ func resourceAwsCloudWatchLogDestination() *schema.Resource {
 }
 
 func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	name := d.Get("name").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -74,7 +76,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err = conn.PutDestination(params)
 
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
+		if tfawserr.ErrMessageContains(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -94,7 +96,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	destination, exists, err := lookupCloudWatchLogDestination(conn, d.Id(), nil)
 	if err != nil {
@@ -114,7 +116,7 @@ func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudWatchLogDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cloudwatchlogsconn
+	conn := meta.(*awsprovider.AWSClient).CloudWatchLogsConn
 
 	params := &cloudwatchlogs.DeleteDestinationInput{
 		DestinationName: aws.String(d.Id()),
