@@ -7,11 +7,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsCloudFormationStackSet() *schema.Resource {
@@ -34,7 +36,7 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"auto_deployment"},
-				ValidateFunc:  validateArn,
+				ValidateFunc:  ValidateArn,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -129,8 +131,8 @@ func resourceAwsCloudFormationStackSet() *schema.Resource {
 }
 
 func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -192,9 +194,9 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &cloudformation.DescribeStackSetInput{
 		StackSetName: aws.String(d.Id()),
@@ -203,7 +205,7 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 	log.Printf("[DEBUG] Reading CloudFormation StackSet: %s", d.Id())
 	output, err := conn.DescribeStackSet(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		log.Printf("[WARN] CloudFormation StackSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -258,8 +260,8 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &cloudformation.UpdateStackSetInput{
@@ -328,7 +330,7 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).cfconn
+	conn := meta.(*awsprovider.AWSClient).CloudFormationConn
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
@@ -337,7 +339,7 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
 	_, err := conn.DeleteStackSet(input)
 
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
 	}
 
