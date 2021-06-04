@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
@@ -75,9 +77,9 @@ func TestAccAWSStorageGatewayUploadBuffer_basic(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  atest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -108,9 +110,9 @@ func TestAccAWSStorageGatewayUploadBuffer_DiskPath(t *testing.T) {
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t) },
-		ErrorCheck: testAccErrorCheck(t, storagegateway.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck:   func() { atest.PreCheck(t) },
+		ErrorCheck: atest.ErrorCheck(t, storagegateway.EndpointsID),
+		Providers:  atest.Providers,
 		// Storage Gateway API does not support removing upload buffers,
 		// but we want to ensure other resources are removed.
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -140,7 +142,7 @@ func testAccCheckAWSStorageGatewayUploadBufferExists(resourceName string) resour
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).storagegatewayconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).StorageGatewayConn
 
 		gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(rs.Primary.ID)
 		if err != nil {
