@@ -10,11 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEbsVolume() *schema.Resource {
@@ -58,7 +60,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"multi_attach_enabled": {
 				Type:     schema.TypeBool,
@@ -82,7 +84,7 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -102,8 +104,8 @@ func resourceAwsEbsVolume() *schema.Resource {
 }
 
 func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	request := &ec2.CreateVolumeInput{
@@ -168,7 +170,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		params := &ec2.ModifyVolumeInput{
@@ -253,9 +255,9 @@ func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefres
 }
 
 func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Id())},
@@ -263,7 +265,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -277,9 +279,9 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	volume := response.Volumes[0]
 
 	arn := arn.ARN{
-		AccountID: meta.(*AWSClient).accountid,
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}
@@ -311,7 +313,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	input := &ec2.DeleteVolumeInput{
 		VolumeId: aws.String(d.Id()),
@@ -320,11 +322,11 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVolume(input)
 
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 			return nil
 		}
 
-		if isAWSErr(err, "VolumeInUse", "") {
+		if tfawserr.ErrMessageContains(err, "VolumeInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
 		}
 
@@ -375,7 +377,7 @@ func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error 
 		output, err = conn.DescribeVolumes(describeInput)
 	}
 
-	if isAWSErr(err, "InvalidVolume.NotFound", "") {
+	if tfawserr.ErrMessageContains(err, "InvalidVolume.NotFound", "") {
 		return nil
 	}
 
