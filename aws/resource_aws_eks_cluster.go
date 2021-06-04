@@ -9,11 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEksCluster() *schema.Resource {
@@ -153,7 +155,7 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -230,8 +232,8 @@ func resourceAwsEksCluster() *schema.Resource {
 }
 
 func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
 
@@ -260,22 +262,22 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		_, err := conn.CreateCluster(input)
 		if err != nil {
 			// InvalidParameterException: roleArn, arn:aws:iam::123456789012:role/XXX, does not exist
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "does not exist") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "does not exist") {
 				return resource.RetryableError(err)
 			}
 			// InvalidParameterException: Error in role params
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
 				return resource.RetryableError(err)
 			}
 			// InvalidParameterException: The provided role doesn't have the Amazon EKS Managed Policies associated with it. Please ensure the following policy is attached: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "The provided role doesn't have the Amazon EKS Managed Policies associated with it") {
 				return resource.RetryableError(err)
 			}
 			// InvalidParameterException: IAM role's policy must include the `ec2:DescribeSubnets` action
-			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
+			if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "IAM role's policy must include") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -306,9 +308,9 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	input := &eks.DescribeClusterInput{
 		Name: aws.String(d.Id()),
@@ -317,7 +319,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading EKS Cluster: %s", input)
 	output, err := conn.DescribeCluster(input)
 	if err != nil {
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -383,7 +385,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -472,7 +474,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsEksClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
 	err := deleteEksCluster(conn, d.Id())
@@ -495,12 +497,12 @@ func deleteEksCluster(conn *eks.EKS, clusterName string) error {
 
 	_, err := conn.DeleteCluster(input)
 	if err != nil {
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		// Sometimes the EKS API returns the ResourceNotFound error in this form:
 		// ClientException: No cluster found for name: tf-acc-test-0o1f8
-		if isAWSErr(err, eks.ErrCodeClientException, "No cluster found for name:") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
 			return nil
 		}
 		return err
@@ -793,12 +795,12 @@ func waitForDeleteEksCluster(conn *eks.EKS, clusterName string, timeout time.Dur
 	}
 	cluster, err := stateConf.WaitForState()
 	if err != nil {
-		if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		// Sometimes the EKS API returns the ResourceNotFound error in this form:
 		// ClientException: No cluster found for name: tf-acc-test-0o1f8
-		if isAWSErr(err, eks.ErrCodeClientException, "No cluster found for name:") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeClientException, "No cluster found for name:") {
 			return nil
 		}
 	}
