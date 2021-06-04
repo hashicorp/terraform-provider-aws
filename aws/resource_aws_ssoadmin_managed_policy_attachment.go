@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ssoadmin/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
@@ -25,14 +26,14 @@ func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"managed_policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"managed_policy_name": {
@@ -44,14 +45,14 @@ func resourceAwsSsoAdminManagedPolicyAttachment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	instanceArn := d.Get("instance_arn").(string)
 	managedPolicyArn := d.Get("managed_policy_arn").(string)
@@ -80,7 +81,7 @@ func resourceAwsSsoAdminManagedPolicyAttachmentCreate(d *schema.ResourceData, me
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -114,7 +115,7 @@ func resourceAwsSsoAdminManagedPolicyAttachmentRead(d *schema.ResourceData, meta
 }
 
 func resourceAwsSsoAdminManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ssoadminconn
+	conn := meta.(*awsprovider.AWSClient).SSOAdminConn
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := parseSsoAdminManagedPolicyAttachmentID(d.Id())
 	if err != nil {
