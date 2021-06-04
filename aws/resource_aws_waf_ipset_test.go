@@ -11,11 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/waf/lister"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -31,11 +34,11 @@ func init() {
 }
 
 func testSweepWafIPSet(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).wafconn
+	conn := client.(*awsprovider.AWSClient).WAFConn
 
 	var sweeperErrs *multierror.Error
 
@@ -81,7 +84,7 @@ func testSweepWafIPSet(region string) error {
 		return !lastPage
 	})
 
-	if testSweepSkipSweepError(err) {
+	if atest.SweepSkipSweepError(err) {
 		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -99,9 +102,9 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -113,7 +116,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 						"type":  "IPV4",
 						"value": "192.0.7.0/24",
 					}),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile("ipset/.+$")),
+					atest.MatchAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile("ipset/.+$")),
 				),
 			},
 			{
@@ -131,9 +134,9 @@ func TestAccAWSWafIPSet_disappears(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -155,9 +158,9 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,9 +200,9 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -241,9 +244,9 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -288,9 +291,9 @@ func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -420,9 +423,9 @@ func TestAccAWSWafIPSet_ipv6(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		ErrorCheck:   testAccErrorCheck(t, waf.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSWaf(t) },
+		ErrorCheck:   atest.ErrorCheck(t, waf.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -442,7 +445,7 @@ func TestAccAWSWafIPSet_ipv6(t *testing.T) {
 
 func testAccCheckAWSWafIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFConn
 
 		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -488,7 +491,7 @@ func testAccCheckAWSWafIPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFConn
 		resp, err := conn.GetIPSet(
 			&waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
@@ -501,7 +504,7 @@ func testAccCheckAWSWafIPSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the IPSet is already destroyed
-		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
 			return nil
 		}
 
@@ -522,7 +525,7 @@ func testAccCheckAWSWafIPSetExists(n string, v *waf.IPSet) resource.TestCheckFun
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).wafconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).WAFConn
 		resp, err := conn.GetIPSet(&waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})
