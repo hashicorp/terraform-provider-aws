@@ -7,10 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	awspolicy "github.com/jen20/awspolicyequivalence"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsSqsQueuePolicy() *schema.Resource {
@@ -44,7 +46,7 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 }
 
 func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*awsprovider.AWSClient).SQSConn
 	policy := d.Get("policy").(string)
 	url := d.Get("queue_url").(string)
 
@@ -116,14 +118,14 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*awsprovider.AWSClient).SQSConn
 
 	out, err := conn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(d.Id()),
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	})
 	if err != nil {
-		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+		if tfawserr.ErrMessageContains(err, sqs.ErrCodeQueueDoesNotExist, "") {
 			log.Printf("[WARN] SQS Queue (%s) not found", d.Id())
 			d.SetId("")
 			return nil
@@ -147,7 +149,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSqsQueuePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sqsconn
+	conn := meta.(*awsprovider.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue Policy of %s", d.Id())
 	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
