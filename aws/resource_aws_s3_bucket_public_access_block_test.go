@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	tfs3 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/s3"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -52,9 +54,9 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -76,9 +78,9 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears_Bucket(t *testing.T) {
 	bucketResourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -99,9 +101,9 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicAcls(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -140,9 +142,9 @@ func TestAccAWSS3BucketPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -181,9 +183,9 @@ func TestAccAWSS3BucketPublicAccessBlock_IgnorePublicAcls(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -222,9 +224,9 @@ func TestAccAWSS3BucketPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resourceName := "aws_s3_bucket_public_access_block.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, s3.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, s3.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,7 +270,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockExists(n string, config *s3.PublicA
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		input := &s3.GetPublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -315,7 +317,7 @@ func testAccCheckAWSS3BucketPublicAccessBlockDisappears(n string) resource.TestC
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).s3conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).S3Conn
 
 		deleteInput := &s3.DeletePublicAccessBlockInput{
 			Bucket: aws.String(rs.Primary.ID),
