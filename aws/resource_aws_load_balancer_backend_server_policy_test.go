@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
@@ -22,9 +24,9 @@ func TestAccAWSLoadBalancerBackendServerPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, elb.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, elb.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSLoadBalancerBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +66,7 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).elbconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -114,9 +116,9 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyDestroy(s *terraform.State) e
 
 func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		elbconn := testAccProvider.Meta().(*AWSClient).elbconn
+		ELBConn := atest.Provider.Meta().(*awsprovider.AWSClient).ELBConn
 
-		loadBalancerDescription, err := elbconn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+		loadBalancerDescription, err := ELBConn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 		})
 		if err != nil {
