@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/macie2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsMacie2Member() *schema.Resource {
@@ -91,9 +92,9 @@ func resourceAwsMacie2Member() *schema.Resource {
 }
 
 func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	accountId := d.Get("account_id").(string)
@@ -187,10 +188,10 @@ func resourceMacie2MemberCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 	input := &macie2.GetMemberInput{
 		Id: aws.String(d.Id()),
 	}
@@ -250,7 +251,7 @@ func resourceMacie2MemberRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	// Invitation workflow
 
@@ -334,7 +335,7 @@ func resourceMacie2MemberUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMacie2MemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*AWSClient).macie2conn
+	conn := meta.(*awsprovider.AWSClient).Macie2Conn
 
 	input := &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),
