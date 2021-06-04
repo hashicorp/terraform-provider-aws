@@ -16,10 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsNetworkAcl() *schema.Resource {
@@ -193,8 +194,8 @@ func resourceAwsNetworkAcl() *schema.Resource {
 
 func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error {
 
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	// Create the Network Acl
@@ -267,9 +268,9 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	var networkAcl *ec2.NetworkAcl
 
@@ -369,9 +370,9 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
+		Region:    meta.(*awsprovider.AWSClient).Region,
 		AccountID: aws.StringValue(networkAcl.OwnerId),
 		Resource:  fmt.Sprintf("network-acl/%s", d.Id()),
 	}.String()
@@ -382,7 +383,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	if d.HasChange("ingress") {
 		err := updateNetworkAclEntries(d, "ingress", conn)
@@ -435,7 +436,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 					NetworkAclId:  defaultAcl.NetworkAclId,
 				})
 				if err != nil {
-					if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+					if tfawserr.ErrMessageContains(err, "InvalidAssociationID.NotFound", "") {
 						continue
 					}
 					return fmt.Errorf("Error Replacing Default Network Acl Association: %s", err)
@@ -579,7 +580,7 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 }
 
 func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	log.Printf("[INFO] Deleting Network Acl: %s", d.Id())
 	input := &ec2.DeleteNetworkAclInput{
@@ -588,10 +589,10 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteNetworkAcl(input)
 		if err != nil {
-			if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+			if tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 				return nil
 			}
-			if isAWSErr(err, "DependencyViolation", "") {
+			if tfawserr.ErrMessageContains(err, "DependencyViolation", "") {
 				err = cleanUpDependencyViolations(d, conn)
 				if err != nil {
 					return resource.NonRetryableError(err)
@@ -607,14 +608,14 @@ func resourceAwsNetworkAclDelete(d *schema.ResourceData, meta interface{}) error
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteNetworkAcl(input)
-		if err != nil && isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+		if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 			return nil
 		}
 		err = cleanUpDependencyViolations(d, conn)
 		if err != nil {
 			// This seems excessive but is probably the best way to make sure it's actually deleted
 			_, err = conn.DeleteNetworkAcl(input)
-			if err != nil && isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+			if err != nil && tfawserr.ErrMessageContains(err, "InvalidNetworkAclID.NotFound", "") {
 				return nil
 			}
 		}
@@ -668,7 +669,7 @@ func cleanUpDependencyViolations(d *schema.ResourceData, conn *ec2.EC2) error {
 			// this call will fail. Here we trap that error and fail
 			// gracefully; the association we tried to replace gone, we trust
 			// someone else has taken ownership.
-			if isAWSErr(replaceErr, "InvalidAssociationID.NotFound", "") {
+			if tfawserr.ErrMessageContains(replaceErr, "InvalidAssociationID.NotFound", "") {
 				log.Printf("[WARN] Network Association (%s) no longer found; Network Association likely updated or removed externally, removing from state", aws.StringValue(a.NetworkAclAssociationId))
 				continue
 			}
@@ -742,7 +743,7 @@ func getDefaultNetworkAcl(vpcId string, conn *ec2.EC2) (defaultAcl *ec2.NetworkA
 
 func findNetworkAclAssociation(subnetId string, conn *ec2.EC2) (networkAclAssociation *ec2.NetworkAclAssociation, err error) {
 	req := &ec2.DescribeNetworkAclsInput{}
-	req.Filters = buildEC2AttributeFilterList(
+	req.Filters = BuildEC2AttributeFilterList(
 		map[string]string{
 			"association.subnet-id": subnetId,
 		},
