@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/securityhub/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsSecurityHubInsight_basic(t *testing.T) {
@@ -20,9 +22,9 @@ func testAccAwsSecurityHubInsight_basic(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -54,16 +56,16 @@ func testAccAwsSecurityHubInsight_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecurityHubInsightConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecurityHubInsightExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSecurityHubInsight(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsSecurityHubInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,9 +81,9 @@ func testAccAwsSecurityHubInsight_DateFilters(t *testing.T) {
 	startDate := time.Now().Format(time.RFC1123)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -128,9 +130,9 @@ func testAccAwsSecurityHubInsight_IpFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -158,9 +160,9 @@ func testAccAwsSecurityHubInsight_KeywordFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -188,9 +190,9 @@ func testAccAwsSecurityHubInsight_MapFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -220,9 +222,9 @@ func testAccAwsSecurityHubInsight_MultipleFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -280,9 +282,9 @@ func testAccAwsSecurityHubInsight_Name(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -315,9 +317,9 @@ func testAccAwsSecurityHubInsight_NumberFilters(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -372,9 +374,9 @@ func testAccAwsSecurityHubInsight_GroupByAttribute(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -407,9 +409,9 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 	resourceName := "aws_securityhub_insight.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, securityhub.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, securityhub.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsSecurityHubInsightDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -435,7 +437,7 @@ func testAccAwsSecurityHubInsight_WorkflowStatus(t *testing.T) {
 }
 
 func testAccCheckAwsSecurityHubInsightDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_insight" {
@@ -469,7 +471,7 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).securityhubconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).SecurityHubConn
 
 		insight, err := finder.Insight(context.Background(), conn, rs.Primary.ID)
 
@@ -490,7 +492,7 @@ func testAccCheckAwsSecurityHubInsightExists(n string) resource.TestCheckFunc {
 // of the ARN is still "aws" while other services utilize the "aws-us-gov" partition
 func testAccCheckAwsSecurityHubInsightArn(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, testAccGetRegion(), testAccGetAccountID(), testAccGetAccountID())
+		expectedArn := fmt.Sprintf(`^arn:aws[^:]*:securityhub:%s:%s:insight/%s/custom/.+$`, atest.Region(), atest.AccountID(), atest.AccountID())
 		//lintignore:AWSAT001
 		return resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(expectedArn))(s)
 	}
