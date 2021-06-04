@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsSfnActivity() *schema.Resource {
@@ -42,8 +43,8 @@ func dataSourceAwsSfnActivity() *schema.Resource {
 }
 
 func dataSourceAwsSfnActivityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*AWSClient)
-	conn := client.sfnconn
+	client := meta.(*awsprovider.AWSClient)
+	conn := client.SFNConn
 	log.Print("[DEBUG] Reading Step Function Activity")
 
 	if nm, ok := d.GetOk("name"); ok {
