@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccAwsGuardDutyIpset_basic(t *testing.T) {
@@ -21,16 +24,16 @@ func testAccAwsGuardDutyIpset_basic(t *testing.T) {
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGuardDutyIpsetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyIpsetExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
@@ -60,9 +63,9 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 	resourceName := "aws_guardduty_ipset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, guardduty.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, guardduty.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsGuardDutyIpsetDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +103,7 @@ func testAccAwsGuardDutyIpset_tags(t *testing.T) {
 }
 
 func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_guardduty_ipset" {
@@ -118,7 +121,7 @@ func testAccCheckAwsGuardDutyIpsetDestroy(s *terraform.State) error {
 
 		resp, err := conn.GetIPSet(input)
 		if err != nil {
-			if isAWSErr(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
+			if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 				return nil
 			}
 			return err
@@ -151,7 +154,7 @@ func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 			IpSetId:    aws.String(ipSetId),
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).GuardDutyConn
 		_, err = conn.GetIPSet(input)
 		return err
 	}
