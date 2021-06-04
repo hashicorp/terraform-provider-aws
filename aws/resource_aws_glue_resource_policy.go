@@ -6,8 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGlueResourcePolicy() *schema.Resource {
@@ -33,7 +35,7 @@ func resourceAwsGlueResourcePolicy() *schema.Resource {
 
 func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
 	return func(d *schema.ResourceData, meta interface{}) error {
-		conn := meta.(*AWSClient).glueconn
+		conn := meta.(*awsprovider.AWSClient).GlueConn
 
 		_, err := conn.PutResourcePolicy(&glue.PutResourcePolicyInput{
 			PolicyInJson:          aws.String(d.Get("policy").(string)),
@@ -42,16 +44,16 @@ func resourceAwsGlueResourcePolicyPut(condition string) func(d *schema.ResourceD
 		if err != nil {
 			return fmt.Errorf("error putting policy request: %s", err)
 		}
-		d.SetId(meta.(*AWSClient).region)
+		d.SetId(meta.(*awsprovider.AWSClient).Region)
 		return resourceAwsGlueResourcePolicyRead(d, meta)
 	}
 }
 
 func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
-	if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
 		log.Printf("[WARN] Glue Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -70,7 +72,7 @@ func resourceAwsGlueResourcePolicyRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsGlueResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).glueconn
+	conn := meta.(*awsprovider.AWSClient).GlueConn
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
 	if err != nil {
