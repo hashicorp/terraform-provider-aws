@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRedshiftParameterGroup() *schema.Resource {
@@ -86,8 +88,8 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 }
 
 func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := redshift.CreateClusterParameterGroupInput{
@@ -122,9 +124,9 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	describeOpts := redshift.DescribeClusterParameterGroupsInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -142,10 +144,10 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
 	}.String()
 
@@ -180,7 +182,7 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -223,12 +225,12 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsRedshiftParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
+	conn := meta.(*awsprovider.AWSClient).RedshiftConn
 
 	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
-	if err != nil && isAWSErr(err, "RedshiftParameterGroupNotFoundFault", "") {
+	if err != nil && tfawserr.ErrMessageContains(err, "RedshiftParameterGroupNotFoundFault", "") {
 		return nil
 	}
 	return err
