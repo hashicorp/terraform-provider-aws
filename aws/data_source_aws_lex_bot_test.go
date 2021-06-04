@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
 )
 
 func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
@@ -14,12 +15,15 @@ func TestAccDataSourceAwsLexBot_basic(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lexmodelbuildingservice.EndpointsID, t)
+		},
+		ErrorCheck: atest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: atest.ComposeConfig(
 					testAccAwsLexBotConfig_intent(rName),
 					testAccAwsLexBotConfig_basic(rName),
 					testAccDataSourceAwsLexBotConfig_basic(),
@@ -53,12 +57,15 @@ func testAccDataSourceAwsLexBot_withVersion(t *testing.T) {
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(lexmodelbuildingservice.EndpointsID, t) },
-		ErrorCheck: testAccErrorCheck(t, lexmodelbuildingservice.EndpointsID),
-		Providers:  testAccProviders,
+		PreCheck: func() {
+			atest.PreCheck(t)
+			atest.PreCheckPartitionService(lexmodelbuildingservice.EndpointsID, t)
+		},
+		ErrorCheck: atest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		Providers:  atest.Providers,
 		Steps: []resource.TestStep{
 			{
-				Config: composeConfig(
+				Config: atest.ComposeConfig(
 					testAccAwsLexBotConfig_intent(rName),
 					testAccAwsLexBotConfig_createVersion(rName),
 					testAccDataSourceAwsLexBotConfig_withVersion(),
