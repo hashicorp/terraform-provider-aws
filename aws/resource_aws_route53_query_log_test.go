@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,11 +25,11 @@ func init() {
 }
 
 func testSweepRoute53QueryLogs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*AWSClient).r53conn
+	conn := client.(*awsprovider.AWSClient).Route53Conn
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
@@ -42,7 +44,7 @@ func testSweepRoute53QueryLogs(region string) error {
 			_, err := conn.DeleteQueryLoggingConfig(&route53.DeleteQueryLoggingConfigInput{
 				Id: aws.String(id),
 			})
-			if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+			if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
 				continue
 			}
 			if err != nil {
@@ -57,7 +59,7 @@ func testSweepRoute53QueryLogs(region string) error {
 	})
 	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
 	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
-	if testSweepSkipSweepError(err) || isAWSErr(err, "SerializationError", "failed to unmarshal error message") || isAWSErr(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+	if atest.SweepSkipSweepError(err) || tfawserr.ErrMessageContains(err, "SerializationError", "failed to unmarshal error message") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -76,9 +78,9 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 	var queryLoggingConfig route53.QueryLoggingConfig
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t); testAccPreCheckRoute53QueryLog(t) },
-		ErrorCheck:        testAccErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:          func() { atest.PreCheck(t); testAccPreCheckRoute53QueryLog(t) },
+		ErrorCheck:        atest.ErrorCheck(t, route53.EndpointsID),
+		ProviderFactories: atest.ProviderFactories,
 		CheckDestroy:      testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -100,7 +102,7 @@ func TestAccAWSRoute53QueryLog_basic(t *testing.T) {
 
 func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
+		conn := testAccProviderRoute53QueryLog.Meta().(*awsprovider.AWSClient).Route53Conn
 		rs, ok := s.RootModule().Resources[pr]
 		if !ok {
 			return fmt.Errorf("Not found: %s", pr)
@@ -127,7 +129,7 @@ func testAccCheckRoute53QueryLogExists(pr string, queryLoggingConfig *route53.Qu
 }
 
 func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
-	conn := testAccProviderRoute53QueryLog.Meta().(*AWSClient).r53conn
+	conn := testAccProviderRoute53QueryLog.Meta().(*awsprovider.AWSClient).Route53Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_query_log" {
@@ -155,7 +157,7 @@ func testAccCheckRoute53QueryLogDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccRoute53QueryLogRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
