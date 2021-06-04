@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func testAccConfigConformancePack_basic(t *testing.T) {
@@ -19,16 +21,16 @@ func testAccConfigConformancePack_basic(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -54,9 +56,9 @@ func testAccConfigConformancePack_forceNew(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -70,7 +72,7 @@ func testAccConfigConformancePack_forceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &after),
 					testAccCheckConfigConformancePackRecreated(&before, &after),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rNameUpdated))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rNameUpdated))),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -95,16 +97,16 @@ func testAccConfigConformancePack_disappears(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsConfigConformancePack(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsConfigConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -118,16 +120,16 @@ func testAccConfigConformancePack_inputParameters(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackInputParameterConfig(rName, "TestKey", "TestValue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -154,16 +156,16 @@ func testAccConfigConformancePack_S3Delivery(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackS3DeliveryConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", rName),
@@ -186,16 +188,16 @@ func testAccConfigConformancePack_S3Template(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackS3TemplateConfig(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -218,9 +220,9 @@ func testAccConfigConformancePack_updateInputParameters(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -268,9 +270,9 @@ func testAccConfigConformancePack_updateS3Delivery(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -283,7 +285,7 @@ func testAccConfigConformancePack_updateS3Delivery(t *testing.T) {
 				Config: testAccConfigConformancePackS3DeliveryConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", bucketName),
@@ -307,9 +309,9 @@ func testAccConfigConformancePack_updateS3Template(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -322,7 +324,7 @@ func testAccConfigConformancePack_updateS3Template(t *testing.T) {
 				Config: testAccConfigConformancePackS3TemplateConfig(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -345,9 +347,9 @@ func testAccConfigConformancePack_updateTemplateBody(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -360,7 +362,7 @@ func testAccConfigConformancePack_updateTemplateBody(t *testing.T) {
 				Config: testAccConfigConformancePackUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -385,16 +387,16 @@ func testAccConfigConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 	resourceName := "aws_config_conformance_pack.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, configservice.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, configservice.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckConfigConformancePackDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConformancePackS3TemplateAndTemplateBodyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigConformancePackExists(resourceName, &pack),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("conformance-pack/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
@@ -415,7 +417,7 @@ func testAccConfigConformancePack_S3TemplateAndTemplateBody(t *testing.T) {
 }
 
 func testAccCheckConfigConformancePackDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).configconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_conformance_pack" {
@@ -447,7 +449,7 @@ func testAccCheckConfigConformancePackExists(resourceName string, detail *config
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).configconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).ConfigConn
 
 		pack, err := configDescribeConformancePack(conn, rs.Primary.ID)
 
@@ -512,7 +514,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 func testAccConfigConformancePackBasicConfig(rName string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test]
@@ -532,7 +534,7 @@ EOT
 }
 
 func testAccConfigConformancePackUpdateConfig(rName string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on    = [aws_config_configuration_recorder.test]
@@ -552,7 +554,7 @@ EOT
 }
 
 func testAccConfigConformancePackInputParameterConfig(rName, pName, pValue string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on = [aws_config_configuration_recorder.test]
@@ -581,7 +583,7 @@ EOT
 }
 
 func testAccConfigConformancePackUpdateInputParameterConfig(rName, pName1, pName2 string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_config_conformance_pack" "test" {
   depends_on = [
@@ -618,7 +620,7 @@ EOT
 }
 
 func testAccConfigConformancePackS3DeliveryConfig(rName, bucketName string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -646,7 +648,7 @@ EOT
 }
 
 func testAccConfigConformancePackS3TemplateConfig(rName, bucketName string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -678,7 +680,7 @@ resource "aws_config_conformance_pack" "test" {
 }
 
 func testAccConfigConformancePackS3TemplateAndTemplateBodyConfig(rName string) string {
-	return composeConfig(testAccConfigConformancePackConfigBase(rName),
+	return atest.ComposeConfig(testAccConfigConformancePackConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
