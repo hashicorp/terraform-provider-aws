@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func dataSourceAwsOutpostsOutpost() *schema.Resource {
@@ -17,7 +18,7 @@ func dataSourceAwsOutpostsOutpost() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -55,7 +56,7 @@ func dataSourceAwsOutpostsOutpost() *schema.Resource {
 }
 
 func dataSourceAwsOutpostsOutpostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).outpostsconn
+	conn := meta.(*awsprovider.AWSClient).OutpostsConn
 
 	input := &outposts.ListOutpostsInput{}
 
