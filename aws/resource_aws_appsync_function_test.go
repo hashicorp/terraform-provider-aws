@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAwsAppsyncFunction_basic(t *testing.T) {
@@ -20,16 +23,16 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, atest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
@@ -37,7 +40,7 @@ func TestAccAwsAppsyncFunction_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName3, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName3, atest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
@@ -59,20 +62,20 @@ func TestAccAwsAppsyncFunction_description(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, testAccGetRegion(), "test description 1"),
+				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, atest.Region(), "test description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 1"),
 				),
 			},
 			{
-				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, testAccGetRegion(), "test description 2"),
+				Config: testAccAWSAppsyncFunctionConfigDescription(rName1, rName2, atest.Region(), "test description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "description", "test description 2"),
@@ -94,13 +97,13 @@ func TestAccAwsAppsyncFunction_responseMappingTemplate(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfigResponseMappingTemplate(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfigResponseMappingTemplate(rName1, rName2, atest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
 				),
@@ -121,16 +124,16 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 	var config appsync.FunctionConfiguration
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPartitionHasServicePreCheck(appsync.EndpointsID, t) },
-		ErrorCheck:   testAccErrorCheck(t, appsync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); atest.PreCheckPartitionService(appsync.EndpointsID, t) },
+		ErrorCheck:   atest.ErrorCheck(t, appsync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAwsAppsyncFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, testAccGetRegion()),
+				Config: testAccAWSAppsyncFunctionConfig(rName1, rName2, atest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncFunctionExists(resourceName, &config),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAppsyncFunction(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsAppsyncFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,7 +142,7 @@ func TestAccAwsAppsyncFunction_disappears(t *testing.T) {
 }
 
 func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_function" {
 			continue
@@ -157,7 +160,7 @@ func testAccCheckAwsAppsyncFunctionDestroy(s *terraform.State) error {
 
 		_, err = conn.GetFunction(input)
 		if err != nil {
-			if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrMessageContains(err, appsync.ErrCodeNotFoundException, "") {
 				return nil
 			}
 			return err
@@ -173,7 +176,7 @@ func testAccCheckAwsAppsyncFunctionExists(name string, config *appsync.FunctionC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).AppSyncConn
 
 		apiID, functionID, err := decodeAppsyncFunctionID(rs.Primary.ID)
 		if err != nil {
