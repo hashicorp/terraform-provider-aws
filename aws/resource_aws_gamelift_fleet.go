@@ -12,9 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsGameliftFleet() *schema.Resource {
@@ -62,7 +63,7 @@ func resourceAwsGameliftFleet() *schema.Resource {
 			"instance_role_arn": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 				Optional:     true,
 			},
 			"description": {
@@ -201,8 +202,8 @@ func resourceAwsGameliftFleet() *schema.Resource {
 }
 
 func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	input := gamelift.CreateFleetInput{
@@ -314,9 +315,9 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Describing Gamelift Fleet: %s", d.Id())
 	out, err := conn.DescribeFleetAttributes(&gamelift.DescribeFleetAttributesInput{
@@ -351,7 +352,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
 	tags, err := keyvaluetags.GameliftListTags(conn, arn)
 
-	if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
+	if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
 		return nil
 	}
 
@@ -374,7 +375,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
 
@@ -429,7 +430,7 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).gameliftconn
+	conn := meta.(*awsprovider.AWSClient).GameLiftConn
 
 	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as Gamelift will keep retrying on errors like
@@ -441,7 +442,7 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 		_, err := conn.DeleteFleet(input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", d.Id())
-			if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+			if tfawserr.ErrMessageContains(err, gamelift.ErrCodeInvalidRequestException, msg) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
