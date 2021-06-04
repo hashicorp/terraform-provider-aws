@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/storagegateway/finder"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
@@ -40,14 +41,14 @@ func resourceAwsStorageGatewayUploadBuffer() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 		},
 	}
 }
 
 func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -96,7 +97,7 @@ func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsStorageGatewayUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).storagegatewayconn
+	conn := meta.(*awsprovider.AWSClient).StorageGatewayConn
 
 	gatewayARN, diskID, err := decodeStorageGatewayUploadBufferID(d.Id())
 	if err != nil {
@@ -105,7 +106,7 @@ func resourceAwsStorageGatewayUploadBufferRead(d *schema.ResourceData, meta inte
 
 	foundDiskID, err := finder.UploadBufferDisk(conn, gatewayARN, diskID)
 
-	if !d.IsNewResource() && isAWSErrStorageGatewayGatewayNotFound(err) {
+	if !d.IsNewResource() && storageGatewayNotFound(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
