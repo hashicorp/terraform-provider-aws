@@ -7,9 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
@@ -19,9 +22,9 @@ func TestAccAWSAPIGatewayV2Route_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -57,16 +60,16 @@ func TestAccAWSAPIGatewayV2Route_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2RouteExists(resourceName, &apiId, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayV2Route(), resourceName),
+					atest.CheckDisappears(atest.Provider, resourceAwsApiGatewayV2Route(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,9 +85,9 @@ func TestAccAWSAPIGatewayV2Route_Authorizer(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -139,9 +142,9 @@ func TestAccAWSAPIGatewayV2Route_JwtAuthorization(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -197,9 +200,9 @@ func TestAccAWSAPIGatewayV2Route_Model(t *testing.T) {
 	rName := strings.ReplaceAll(acctest.RandomWithPrefix("tf-acc-test"), "-", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -236,9 +239,9 @@ func TestAccAWSAPIGatewayV2Route_RequestParameters(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -318,9 +321,9 @@ func TestAccAWSAPIGatewayV2Route_SimpleAttributes(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -389,9 +392,9 @@ func TestAccAWSAPIGatewayV2Route_Target(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -427,9 +430,9 @@ func TestAccAWSAPIGatewayV2Route_UpdateRouteKey(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		ErrorCheck:   testAccErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t) },
+		ErrorCheck:   atest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSAPIGatewayV2RouteDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -475,7 +478,7 @@ func TestAccAWSAPIGatewayV2Route_UpdateRouteKey(t *testing.T) {
 }
 
 func testAccCheckAWSAPIGatewayV2RouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apigatewayv2_route" {
@@ -486,7 +489,7 @@ func testAccCheckAWSAPIGatewayV2RouteDestroy(s *terraform.State) error {
 			ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
 			RouteId: aws.String(rs.Primary.ID),
 		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -510,7 +513,7 @@ func testAccCheckAWSAPIGatewayV2RouteExists(n string, vApiId *string, v *apigate
 			return fmt.Errorf("No API Gateway v2 route ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).APIGatewayV2Conn
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
@@ -570,7 +573,7 @@ resource "aws_apigatewayv2_api" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_basicWebSocket(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -581,7 +584,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_authorizer(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -595,7 +598,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_authorizerUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_basic(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -608,7 +611,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_jwtAuthorization(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -624,7 +627,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_jwtAuthorizationUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2AuthorizerConfig_jwt(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -653,7 +656,7 @@ func testAccAWSAPIGatewayV2RouteConfig_model(rName string) string {
 }
 `
 
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2ModelConfig_basic(rName, schema),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -670,7 +673,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_noRequestParameters(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -681,7 +684,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_requestParameters(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -697,7 +700,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_requestParametersUpdated(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_apiWebSocket(rName),
 		`
 resource "aws_apigatewayv2_route" "test" {
@@ -718,7 +721,7 @@ resource "aws_apigatewayv2_route" "test" {
 }
 
 func testAccAWSAPIGatewayV2RouteConfig_routeKey(rName, routeKey string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		testAccAWSAPIGatewayV2RouteConfig_apiHttp(rName),
 		fmt.Sprintf(`
 resource "aws_apigatewayv2_route" "test" {
