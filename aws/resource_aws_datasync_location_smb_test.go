@@ -10,9 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/atest"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func init() {
@@ -23,17 +26,17 @@ func init() {
 }
 
 func testSweepDataSyncLocationSmbs(region string) error {
-	client, err := sharedClientForRegion(region)
+	client, err := atest.SharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).datasyncconn
+	conn := client.(*awsprovider.AWSClient).DataSyncConn
 
 	input := &datasync.ListLocationsInput{}
 	for {
 		output, err := conn.ListLocations(input)
 
-		if testSweepSkipSweepError(err) {
+		if atest.SweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping DataSync Location SMB sweep for %s: %s", region, err)
 			return nil
 		}
@@ -60,7 +63,7 @@ func testSweepDataSyncLocationSmbs(region string) error {
 
 			_, err := conn.DeleteLocation(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 				continue
 			}
 
@@ -86,9 +89,9 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -96,7 +99,7 @@ func TestAccAWSDataSyncLocationSmb_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationSmbExists(resourceName, &locationSmb1),
 
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					atest.MatchAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
@@ -121,9 +124,9 @@ func TestAccAWSDataSyncLocationSmb_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -144,9 +147,9 @@ func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
-		ErrorCheck:   testAccErrorCheck(t, datasync.EndpointsID),
-		Providers:    testAccProviders,
+		PreCheck:     func() { atest.PreCheck(t); testAccPreCheckAWSDataSync(t) },
+		ErrorCheck:   atest.ErrorCheck(t, datasync.EndpointsID),
+		Providers:    atest.Providers,
 		CheckDestroy: testAccCheckAWSDataSyncLocationSmbDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -187,7 +190,7 @@ func TestAccAWSDataSyncLocationSmb_Tags(t *testing.T) {
 }
 
 func testAccCheckAWSDataSyncLocationSmbDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+	conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datasync_location_smb" {
@@ -200,7 +203,7 @@ func testAccCheckAWSDataSyncLocationSmbDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeLocationSmb(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 			return nil
 		}
 
@@ -219,7 +222,7 @@ func testAccCheckAWSDataSyncLocationSmbExists(resourceName string, locationSmb *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 		input := &datasync.DescribeLocationSmbInput{
 			LocationArn: aws.String(rs.Primary.ID),
 		}
@@ -242,7 +245,7 @@ func testAccCheckAWSDataSyncLocationSmbExists(resourceName string, locationSmb *
 
 func testAccCheckAWSDataSyncLocationSmbDisappears(location *datasync.DescribeLocationSmbOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
+		conn := atest.Provider.Meta().(*awsprovider.AWSClient).DataSyncConn
 
 		input := &datasync.DeleteLocationInput{
 			LocationArn: location.LocationArn,
@@ -265,7 +268,7 @@ func testAccCheckAWSDataSyncLocationSmbNotRecreated(i, j *datasync.DescribeLocat
 }
 
 func testAccAWSDataSyncLocationSmbConfigBase(rName string) string {
-	return composeConfig(
+	return atest.ComposeConfig(
 		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
 		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
