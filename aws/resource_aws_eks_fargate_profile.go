@@ -8,11 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEksFargateProfile() *schema.Resource {
@@ -96,8 +98,8 @@ func resourceAwsEksFargateProfile() *schema.Resource {
 }
 
 func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
@@ -118,15 +120,15 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 
 	// mutex lock for creation/deletion serialization
 	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	awsprovider.MutexKV.Lock(mutexKey)
+	defer awsprovider.MutexKV.Unlock(mutexKey)
 
 	err := resource.Retry(iamwaiter.PropagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
 		// Retry for IAM eventual consistency on error:
 		// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
-		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Misconfigured PodExecutionRole Trust Policy") {
+		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "Misconfigured PodExecutionRole Trust Policy") {
 			return resource.RetryableError(err)
 		}
 
@@ -162,9 +164,9 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EKSConn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	clusterName, fargateProfileName, err := resourceAwsEksFargateProfileParseId(d.Id())
 	if err != nil {
@@ -178,7 +180,7 @@ func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) 
 
 	output, err := conn.DescribeFargateProfile(input)
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] EKS Fargate Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -226,7 +228,7 @@ func resourceAwsEksFargateProfileRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -239,7 +241,7 @@ func resourceAwsEksFargateProfileUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).eksconn
+	conn := meta.(*awsprovider.AWSClient).EKSConn
 
 	clusterName, fargateProfileName, err := resourceAwsEksFargateProfileParseId(d.Id())
 	if err != nil {
@@ -253,12 +255,12 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 
 	// mutex lock for creation/deletion serialization
 	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
-	awsMutexKV.Lock(mutexKey)
-	defer awsMutexKV.Unlock(mutexKey)
+	awsprovider.MutexKV.Lock(mutexKey)
+	defer awsprovider.MutexKV.Unlock(mutexKey)
 
 	_, err = conn.DeleteFargateProfile(input)
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
@@ -358,7 +360,7 @@ func waitForEksFargateProfileDeletion(conn *eks.EKS, clusterName string, fargate
 
 	_, err := stateConf.WaitForState()
 
-	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrMessageContains(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
