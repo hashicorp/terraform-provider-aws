@@ -7,11 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/keyvaluetags"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
@@ -45,7 +47,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 			"server_certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 			"split_tunnel": {
 				Type:     schema.TypeBool,
@@ -82,7 +84,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 						"active_directory_id": {
 							Type:     schema.TypeString,
@@ -93,7 +95,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: ValidateArn,
 						},
 					},
 				},
@@ -138,8 +140,8 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 }
 
 func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateClientVpnEndpointInput{
@@ -202,15 +204,15 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
+	defaultTagsConfig := meta.(*awsprovider.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*awsprovider.AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -266,10 +268,10 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
+		Partition: meta.(*awsprovider.AWSClient).Partition,
 		Service:   ec2.ServiceName,
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
+		Region:    meta.(*awsprovider.AWSClient).Region,
+		AccountID: meta.(*awsprovider.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
@@ -278,7 +280,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	err := deleteClientVpnEndpoint(conn, d.Id())
 	if err != nil {
@@ -289,7 +291,7 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
+	conn := meta.(*awsprovider.AWSClient).EC2Conn
 
 	req := &ec2.ModifyClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
@@ -421,7 +423,7 @@ func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
 	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 	})
-	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+	if tfawserr.ErrMessageContains(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
