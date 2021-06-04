@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	awsprovider "github.com/terraform-providers/terraform-provider-aws/provider"
 )
 
 func resourceAwsRoute53QueryLog() *schema.Resource {
@@ -23,7 +24,7 @@ func resourceAwsRoute53QueryLog() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateArn,
+				ValidateFunc: ValidateArn,
 			},
 
 			"zone_id": {
@@ -36,7 +37,7 @@ func resourceAwsRoute53QueryLog() *schema.Resource {
 }
 
 func resourceAwsRoute53QueryLogCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	input := &route53.CreateQueryLoggingConfigInput{
 		CloudWatchLogsLogGroupArn: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
@@ -56,7 +57,7 @@ func resourceAwsRoute53QueryLogCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	input := &route53.GetQueryLoggingConfigInput{
 		Id: aws.String(d.Id()),
@@ -75,7 +76,7 @@ func resourceAwsRoute53QueryLogRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsRoute53QueryLogDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*AWSClient).r53conn
+	r53 := meta.(*awsprovider.AWSClient).Route53Conn
 
 	input := &route53.DeleteQueryLoggingConfigInput{
 		Id: aws.String(d.Id()),
